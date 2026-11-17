@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Save recipe draft to Files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save recipe draft to Files"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar borrador de receta en Archivos"
+          }
+        }
+      }
+    },
+    "Choose a recipe or draft file…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a recipe or draft file…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un archivo de receta o borrador…"
+          }
+        }
+      }
+    },
+    "Saves the remaining recipes, notes and source links in a readable file. Choose On My iPhone to continue offline, then open it with Choose a recipe or draft file.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saves the remaining recipes, notes and source links in a readable file. Choose On My iPhone to continue offline, then open it with Choose a recipe or draft file."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda las recetas que quedan, las notas y los enlaces de origen en un archivo legible. Elige En mi iPhone para continuar sin conexión y ábrelo con Elegir un archivo de receta o borrador."
+          }
+        }
+      }
+    },
     "Review changes to a saved recipe": {
       "extractionState": "manual",
       "localizations": {

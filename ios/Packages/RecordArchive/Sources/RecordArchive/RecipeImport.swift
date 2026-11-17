@@ -170,3 +170,40 @@ public enum RecipeImporter {
         return RecipeImportReport(recipes: recipes, duplicateCount: duplicates, skippedRows: skipped, unsupportedFields: unsupported.sorted())
     }
 }
+
+/// A portable pending review uses the existing checked archive format. Only the
+/// reviewed recipe sources travel, and opening the file never commits a record.
+public enum RecipeDraftFile {
+    private static let namespace = "recipe-review-v1"
+
+    public static func encode(_ records: [ArchiveRecord]) throws -> Data {
+        _ = try contents(records)
+        return try ArchiveCodec.encode(ArchiveCodec.make(records: records, kind: .personalRecovery,
+            origin: namespace, revision: namespace))
+    }
+
+    public static func readIfPresent(_ data: Data) throws -> (RecipeImportReport, [ArchiveRecord])? {
+        try ArchiveCodec.preflight(data)
+        guard let header = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              header["originNamespace"] as? String == namespace else { return nil }
+        let document = try ArchiveCodec.decode(data)
+        guard document.documentKind == .personalRecovery, document.mediaManifest == nil else { throw ArchiveError.invalidRecipe }
+        let records = document.payload.records
+        let recipes = try contents(records)
+        guard document.sourceRevisionID == namespace else { throw ArchiveError.unsupportedVersion }
+        return (RecipeImportReport(recipes: recipes, duplicateCount: 0, skippedRows: 0, unsupportedFields: []), records)
+    }
+
+    private static func contents(_ records: [ArchiveRecord]) throws -> [ImportedRecipe] {
+        guard !records.isEmpty, records.count <= ArchiveCodec.maximumRecords else { throw ArchiveError.invalidRecipe }
+        return try records.map { record in
+            guard record.kind == .recipe, record.media == nil, let bytes = record.nativePayload else { throw ArchiveError.invalidRecipe }
+            let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: bytes).validated()
+            var expected = try recipe.archiveRecord(origin: record.origin, savedAt: Date(timeIntervalSince1970: 0))
+            expected.id = record.id
+            expected.parentRevision = record.parentRevision
+            guard expected == record else { throw ArchiveError.invalidRecipe }
+            return recipe
+        }
+    }
+}

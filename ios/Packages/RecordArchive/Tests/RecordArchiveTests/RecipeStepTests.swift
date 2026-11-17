@@ -24,6 +24,24 @@ final class RecipeStepTests: XCTestCase {
         XCTAssertEqual(try notes.validated().notes, "Saved notes")
     }
 
+    func testOfflineDraftAcceptsOnlyReviewedRecipeRecordsAndPreservesBatchIdentity() throws {
+        let zero = Date(timeIntervalSince1970: 0)
+        let a = ImportedRecipe(title: "Rice", ingredients: ["1 cup rice"], steps: ["Boil."],
+            reviewedSteps: [RecipeStep("Boil.", ingredientIndices: [0], suggestedTimerMinutes: 8)])
+        var first = try a.archiveRecord(origin: "recipe-library-v1", savedAt: zero)
+        first.id = "original-file-revision"
+        first.parentRevision = first.id
+        let second = try ImportedRecipe(title: "Soup", notes: "Choose vegetables later").archiveRecord(origin: "recipe-library-v1", savedAt: zero)
+        let (report, records) = try XCTUnwrap(RecipeDraftFile.readIfPresent(RecipeDraftFile.encode([second, first])))
+        XCTAssertEqual(Set(records.map(\.id)), [first.id, second.id])
+        XCTAssertEqual(report.recipes.first { $0.title == "Rice" }?.cookingSteps, a.cookingSteps)
+        XCTAssertEqual(report.recipes.first { $0.title == "Soup" }?.missingFields, [.servings, .ingredients, .instructions])
+        var unrelated = first
+        unrelated.kind = .ledger
+        XCTAssertThrowsError(try RecipeDraftFile.encode([unrelated]))
+        XCTAssertNil(try RecipeDraftFile.readIfPresent(Data(#"{"@type":"Recipe","name":"Soup"}"#.utf8)))
+    }
+
     func testLargeTypedRecipeRetainsOrderAndBindingsAcrossAReorder() throws {
         let ingredients = (0..<1000).map { "ingredient " + String($0) }
         let texts = (0..<1000).map { "step " + String($0) }

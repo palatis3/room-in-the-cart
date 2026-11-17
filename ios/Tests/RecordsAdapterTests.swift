@@ -918,6 +918,41 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertTrue(afterUndo.isEmpty)
     }
 
+    @MainActor func testRecipeDraftFileResumesAfterRecreationBeforeAnyImportCommit() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("library.json"))
+        func session() -> RecordsToolsModel {
+            RecordsToolsModel(registry: registry, snapshot: { .init() },
+                validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        }
+        let author = session()
+        let entry = try XCTUnwrap(author.beginImport(.manualRecipe))
+        let recipe = ImportedRecipe(title: "Sopa", ingredients: ["Dos papas"], steps: ["Hervir."],
+                                    reviewedSteps: [RecipeStep("Hervir.", ingredientIndices: [0])])
+        try await author.stageManualRecipe(recipe, from: entry)
+        let prepared = await author.prepareRecipeDraft()
+        XCTAssertTrue(prepared)
+        let file = directory.appendingPathComponent("review.json")
+        try XCTUnwrap(author.preparedDocument).data.write(to: file)
+        let saveID = try XCTUnwrap(author.beginFileSave())
+        await author.finishFileSave(saveID, result: .success(()))
+        XCTAssertNil(author.preparedDocument)
+        author.invalidateForSourceErasure()
+        let clean = try await registry.refreshList()
+        XCTAssertTrue(clean.isEmpty)
+        let reopened = session()
+        await reopened.importFile(file, recipes: true)
+        XCTAssertEqual(reopened.recipeReport?.recipes, [recipe])
+        XCTAssertEqual(reopened.review?.rows.count, 1)
+        await reopened.applyReviewedImport()
+        let saved = try await registry.refreshList()
+        XCTAssertEqual(saved.count, 1)
+        await reopened.importFile(file, recipes: true)
+        await reopened.applyReviewedImport()
+        let replay = try await registry.refreshList()
+        XCTAssertEqual(saved, replay)
+    }
+
     @MainActor func testSavedNotesOnlyRecipeCanReviewANewRevisionWithoutLosingItsOriginal() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("recipes.json"))

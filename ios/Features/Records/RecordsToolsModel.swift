@@ -425,7 +425,11 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             try requireAuthorization(authorize)
             try ArchiveCodec.preflight(data)
             if recipes {
-                try await stageRecipeDocument(data, authorize: authorize)
+                if let (report, records) = try RecipeDraftFile.readIfPresent(data) {
+                    try await stageRecipeReview(report, records: records, authorize: authorize)
+                } else {
+                    try await stageRecipeDocument(data, authorize: authorize)
+                }
             } else {
                 guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
                     throw ArchiveError.malformed
@@ -529,6 +533,30 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         try await stage(envelope, authorize: authorize)
         try requireAuthorization(authorize)
         recipeReport = report
+    }
+
+    func prepareRecipeDraft() async -> Bool {
+        guard !busy, recipeReport != nil, let review, review.canApply, let authorize = reviewAuthorization else { return false }
+        busy = true
+        defer { busy = false }
+        do {
+            try requireAuthorization(authorize)
+            let current = try await registry.review(review.envelope)
+            try requireAuthorization(authorize)
+            guard self.review?.envelope.canonicalPayloadDigest == review.envelope.canonicalPayloadDigest,
+                  current.canApply, current.registryGeneration == review.registryGeneration else { throw ArchiveError.staleReview }
+            let bytes = try RecipeDraftFile.encode(review.rows.map(\.record))
+            let digest = review.envelope.canonicalPayloadDigest
+            let stillReviewing: Authorization = { [weak self] in
+                authorize() && self?.review?.envelope.canonicalPayloadDigest == digest
+            }
+            dismissPreparedFile()
+            preparedName = "Recipe-review"
+            preparedIsPrivate = true
+            exportContext = ExportContext(authorize: stillReviewing, backup: nil, selectedRecords: [], disclosedMedia: [:], recoveredCopyIDs: [])
+            preparedDocument = RecordsFileDocument(data: bytes, kind: .recipeDraft)
+            return true
+        } catch { fail(error, reveal: true); return false }
     }
 
     private var reviewAuthorization: Authorization?
@@ -774,7 +802,13 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     func finishFileSave(_ id: UUID, result: Result<Void, Error>, at date: Date = .now) async {
         guard activeFileSave?.id == id, activeFileSave?.completing == false, let context = exportContext else { return }
         activeFileSave?.completing = true
-        defer { if activeFileSave?.id == id { activeFileSave = nil } }
+        let savingDraft = preparedDocument?.kind == .recipeDraft
+        defer {
+            if activeFileSave?.id == id {
+                activeFileSave = nil
+                if savingDraft { dismissPreparedFile() }
+            }
+        }
         guard context.authorize() else { invalidateForSourceErasure(); return }
         if case let .failure(error) = result {
             if Self.fileSelectionCancelled(error) {

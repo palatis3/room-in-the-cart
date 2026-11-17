@@ -118,6 +118,14 @@ import XCTest
         tap(button("records.saveStepDetails"))
         back(to: "Edit recipe")
         tap(app.buttons["Review recipe"])
+        tap(button("records.saveRecipeDraft"))
+        assertResultVisible("records.status", "File saved.")
+        assertSavedRecipes(1)
+        app.terminate()
+        launch("--recipe-library-fixture", reset: false)
+        XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))
+        chooseRecipeFile()
+        assertText("Weeknight soup")
         tap(element("records.applyImport"))
         assertSavedRecipes(2)
         tap(button("records.recovered.Weeknight soup"))
@@ -227,7 +235,7 @@ import XCTest
     }
 
     private func chooseRecipeFile(upward: Bool = false) {
-        tap(app.buttons["Choose Recipe JSON-LD file…"], upward: upward)
+        tap(button("records.chooseRecipeFile"), upward: upward)
     }
     private func assertLibraryPreview() {
         reveal(element("records.applyImport"), requiresHitTarget: false)

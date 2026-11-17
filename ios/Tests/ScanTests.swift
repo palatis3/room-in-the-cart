@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
@@ -171,6 +172,32 @@ private func image() throws -> Data {
 }
 
 final class RecipeCaptureAdapterTests: XCTestCase {
+    @MainActor func testSpanishRecipeScreenshotYieldsOrderedEditableInstructionsOnDevice() async throws {
+        let words = ["Sopa de tomate", "Rinde: 2", "Ingredientes", "2 tomates", "Instrucciones",
+                     "Corta los tomates.", "Hierve el agua."]
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 850, height: 620), format: format)
+        let png = renderer.pngData { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 850, height: 620))
+            for (index, line) in words.enumerated() {
+                (line as NSString).draw(at: CGPoint(x: 42, y: 35 + index * 80),
+                    withAttributes: [.font: UIFont.systemFont(ofSize: 42), .foregroundColor: UIColor.black])
+            }
+        }
+        let source = try await OnDeviceScanService().scan(png)
+        let draft = try RecipeOCRParser.draft(source.originalText)
+        XCTAssertEqual(draft.title.lowercased(), "sopa de tomate")
+        XCTAssertEqual(draft.servings, "2")
+        XCTAssertTrue(draft.ingredientText.contains("tomates"))
+        XCTAssertEqual(draft.instructionLines.count, 2)
+        XCTAssertTrue(draft.instructionLines.first?.lowercased().contains("corta") == true)
+        XCTAssertTrue(draft.instructionLines.last?.lowercased().contains("hierve") == true)
+        XCTAssertFalse(draft.confirmed)
+    }
+
     func testBilingualHeadingsSeparateIngredientsAndInstructions() throws {
         let draft = try RecipeOCRParser.draft("Tacos\nRinde: 4\nIngredientes\n2 paquetes de 6 tortillas\nPreparación\nCaliente las tortillas\n")
         XCTAssertEqual(draft.title, "Tacos"); XCTAssertEqual(draft.servings, "4")

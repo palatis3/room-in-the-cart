@@ -262,7 +262,7 @@ struct RecordsToolsView: View {
                     .accessibilityIdentifier("records.prepareRecovery")
             }
             .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Encrypted personal recovery"), identifier: "records.encryptedRecovery"))
-            if let document = model.preparedDocument {
+            if let document = model.preparedDocument, document.kind != .recipeDraft {
                 Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"), systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
                 Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file)).font(.caption)
                 Button(recordsText("Save file…")) { savePreparedFile() }.accessibilityIdentifier("records.saveFile")
@@ -324,7 +324,7 @@ struct RecordsToolsView: View {
             .accessibilityIdentifier("records.recipeLink")
     }
     private var recipeFileButton: some View {
-        Button(recordsText("Choose Recipe JSON-LD file…")) { chooseImportFile(recipes: true) }
+        Button(recordsText("Choose a recipe or draft file…")) { chooseImportFile(recipes: true) }
             .accessibilityIdentifier("records.chooseRecipeFile")
     }
     private var importSection: some View {
@@ -385,6 +385,12 @@ struct RecordsToolsView: View {
             Button(recipeLibraryOnly ? recordsText("Save reviewed recipes") : recordsText("Import reviewed copies")) {
                 Task { await model.applyReviewedImport() }
             }.disabled(!review.canApply).accessibilityIdentifier("records.applyImport")
+            if model.recipeReport != nil, review.canApply {
+                Button(recordsText("Save recipe draft to Files")) {
+                    Task { if await model.prepareRecipeDraft() { savePreparedFile() } }
+                }.accessibilityIdentifier("records.saveRecipeDraft")
+                Text(recordsText("Saves the remaining recipes, notes and source links in a readable file. Choose On My iPhone to continue offline, then open it with Choose a recipe or draft file.")).font(.footnote)
+            }
             Button(recordsText("Cancel import"), role: .cancel) { model.cancelReview() }.accessibilityIdentifier("records.cancelImport")
         } header: {
             Text(recordsText("Review before importing"))
