@@ -1808,6 +1808,22 @@
           }
         }
       }
+    },
+    "Shows the first reviewed meal title and the number of fully covered options.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the first reviewed meal title and the number of fully covered options."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra el título de la primera comida revisada y cuántas opciones tienen todos los ingredientes disponibles."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

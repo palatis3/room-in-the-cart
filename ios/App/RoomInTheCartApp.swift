@@ -83,7 +83,7 @@ private struct GroceryWindow: View {
             if scenePhase != .active && access.isProtected {
                 Theme.canvas.ignoresSafeArea()
             } else { root }
-        }.modifier(PantryDigestRuntime(pickup: pickup, access: access, household: household, child: guardianChild))
+        }.modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
             .environment(\.pickupLedger, ledger)
             .environment(\.privatePantryRetry, pantryRetry)
             .environmentObject(model)

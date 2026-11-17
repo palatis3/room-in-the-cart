@@ -1,5 +1,6 @@
 import XCTest
 import CoreDomain
+import DeviceSurfaces
 import LocalStore
 import RecordArchive
 @testable import RoomInTheCart
@@ -15,6 +16,45 @@ import RecordArchive
             foods: [.init(id: food, name: "Wraps", detail: "Reviewed count")],
             freeLots: [.init(id: food, foodID: food, name: "Wraps", usable: q(3), confirmedAt: now, source: .pantry)],
             unresolvedFoods: [], sources: [])
+    }
+    func testHomeSummaryOnlyUsesReviewedFullyCoveredMealsAndCurrentPrivateEvidence() async throws {
+        let food = UUID(), ingredient = MealIngredient(name: "Wraps", quantity: q(2))
+        var recipe = MealTemplate(title: "Dinner wraps", ingredients: [ingredient])
+        var equipment = MealEligibilityEvidence(); equipment.requiredAppliances = []
+        recipe.eligibilityEvidence = equipment
+        let model = TonightMealModel()
+        let unreviewed = input(recipe: recipe, food: food)
+        await model.refresh(authorize: { true }, load: { unreviewed })
+        try model.match(recipeID: recipe.id, ingredientID: ingredient.id, foodID: food)
+        XCTAssertTrue(model.homeScreenChoices.isEmpty)
+        var kitchen = MealPreferenceSettings(); kitchen.availableAppliances = []
+        let reviewed = input(recipe: recipe, food: food, profile: .init(settings: kitchen))
+        await model.refresh(authorize: { true }, load: { reviewed })
+        XCTAssertTrue(model.homeScreenChoices.isEmpty)
+        try model.match(recipeID: recipe.id, ingredientID: ingredient.id, foodID: food)
+        XCTAssertEqual(model.homeScreenChoices.map(\.recipe.title), ["Dinner wraps"])
+        let origin = UUID()
+        let basis = try TonightHomeBasis(ledger: origin, revision: reviewed.ledgerRevision, stock: reviewed.basis)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let directory = root.appendingPathComponent("widget")
+        let home = AdultHomeSummaryStore(directory: root.appendingPathComponent("private"), widgetDirectory: { directory }, reload: { _ in })
+        let identity = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let access = PantryDigestAccess(scope: .init(origin: reviewed.basis.originID, identity: identity), authorized: { true })
+        try home.setEnabled(true, kind: .tonight, access: access)
+        try home.update(.tonight, access: access, count: 1, reviewedTitle: recipe.title, tonightBasis: basis)
+        let projection = try AdultFoodSummaryFile(directory: directory, kind: .tonight).read()
+        XCTAssertEqual(projection.reviewedTitle, "Dinner wraps")
+        XCTAssertTrue(home.permitsTonight(projection.route, access: access, basis: basis))
+        let changed = try TonightHomeBasis(ledger: origin, revision: reviewed.ledgerRevision + 1, stock: reviewed.basis)
+        XCTAssertFalse(home.permitsTonight(projection.route, access: access, basis: changed))
+        try home.eraseLedger(origin)
+        XCTAssertFalse(home.permitsTonight(projection.route, access: access, basis: basis))
+        var settings = kitchen; settings.exclusions = ["Wraps"]
+        let restricted = input(recipe: recipe, food: food, profile: .init(settings: settings))
+        await model.refresh(authorize: { true }, load: { restricted })
+        try model.match(recipeID: recipe.id, ingredientID: ingredient.id, foodID: food)
+        XCTAssertTrue(model.homeScreenChoices.isEmpty)
     }
     func testNoShopBrowseRequiresExplicitMatchAndAllowsKnownShortfallWithoutClaimingFullCoverage() async throws {
         let food = UUID(), ingredient = MealIngredient(name: "Wraps", quantity: q(4))

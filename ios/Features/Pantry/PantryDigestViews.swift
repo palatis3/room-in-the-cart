@@ -32,6 +32,7 @@ extension PantryDigestAccess {
 
 @MainActor struct PantryDigestRuntime: ViewModifier {
     @ObservedObject var pickup: PickupModel
+    @ObservedObject var ledger: LedgerModel
     @ObservedObject var access: WorkspaceAccess
     @ObservedObject var household: HouseholdModel
     @ObservedObject var child: GuardianChildCoordinator
@@ -78,6 +79,10 @@ extension PantryDigestAccess {
                     suspended = false
                     acceptTap(current)
                 } catch { await store.failClosed() }
+            }
+            .onChange(of: ledger.revision) { _, _ in try? home.checkTonightSource(ledger: ledger, pickup: pickup) }
+            .onChange(of: pickup.pantrySnapshot?.state.revision) { _, _ in
+                if current != nil { try? home.checkTonightSource(ledger: ledger, pickup: pickup) }
             }
             .onChange(of: store.generation) { _, _ in refreshHome(current) }
             .onChange(of: home.generation) { _, _ in refreshHome(current) }

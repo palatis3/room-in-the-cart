@@ -79,11 +79,13 @@ private extension AdultFoodWidget {
     }
 }
 
+private struct TonightWidget: AdultFoodWidget { let kind = AdultFoodSummaryKind.tonight }
 private struct UseSoonWidget: AdultFoodWidget { let kind = AdultFoodSummaryKind.useSoon }
 
 @main struct GroceryWidgets: WidgetBundle {
     var body: some Widget {
         RoomInTheCartWidget()
         UseSoonWidget()
+        TonightWidget()
     }
 }

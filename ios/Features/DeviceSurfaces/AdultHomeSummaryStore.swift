@@ -11,6 +11,7 @@ import CoreDomain
         let owner: String
         let token: UUID
         var projection: AdultFoodSummaryProjection?
+        var tonightBasis: TonightHomeBasis?
         func belongs(to scope: PantryDigestScope) -> Bool { origin == scope.origin && owner == scope.owner }
     }
 
@@ -64,16 +65,18 @@ import CoreDomain
         generation = UUID()
     }
     func update(_ kind: AdultFoodSummaryKind, access: PantryDigestAccess, count: Int,
-                reviewedTitle: String? = nil, now: Date = Date(), zone: TimeZone = .current) throws {
+                reviewedTitle: String? = nil, tonightBasis: TonightHomeBasis? = nil, now: Date = Date(), zone: TimeZone = .current) throws {
         guard access.authorized(), UIApplication.shared.isProtectedDataAvailable,
               var receipt = try consent(kind) else { return }
         guard receipt.belongs(to: access.scope) else { try revoke(kind); return }
+        guard (kind == .tonight) == (tonightBasis != nil) else { throw SurfaceError.invalid }
         let projected = try file(kind)
-        if let old = receipt.projection, old.count == count, old.reviewedTitle == reviewedTitle,
-           old.isFresh(at: now, zone: zone), old.expiresAt.timeIntervalSince(now) > 300,
+        if let old = receipt.projection, old.count == count, old.reviewedTitle == reviewedTitle, receipt.tonightBasis == tonightBasis,
+           old.isFresh(at: now, zone: zone),
            (try? projected.read()) == old { return }
         let fresh = try AdultFoodSummaryProjection(kind: kind, scope: receipt.token, now: now, zone: zone,
             count: count, reviewedTitle: reviewedTitle)
+        receipt.tonightBasis = tonightBasis
         receipt.projection = fresh
         try persist(receipt, kind)
         do { try projected.publish(fresh) }
@@ -90,6 +93,20 @@ import CoreDomain
     func permits(_ handle: RouteHandle, kind: AdultFoodSummaryKind, access: PantryDigestAccess, now: Date = Date()) -> Bool {
         access.authorized() && enabled(kind, scope: access.scope) && publishedKind(for: handle, now: now) == kind
     }
+    func permitsTonight(_ handle: RouteHandle, access: PantryDigestAccess, basis: TonightHomeBasis?) -> Bool {
+        guard let basis, permits(handle, kind: .tonight, access: access),
+              let receipt = try? consent(.tonight) else { return false }
+        return receipt.tonightBasis == basis
+    }
+    func checkTonightSource(ledger: LedgerModel, pickup: PickupModel) throws {
+        guard let receipt = try consent(.tonight), let expected = receipt.tonightBasis else { return }
+        guard let current = try? TonightHomeBasis.current(ledger: ledger, pickup: pickup), current == expected else {
+            try invalidate(.tonight, origin: receipt.origin, forget: false); return
+        }
+    }
+    func eraseLedger(_ ledgerID: UUID) throws {
+        if let receipt = try consent(.tonight), receipt.tonightBasis?.ledger == ledgerID { try revoke(.tonight) }
+    }
     func permitsUseSoon(_ handle: RouteHandle, access: PantryDigestAccess, lots: [InventoryLot],
                         digest: PantryDigestStore, now: Date = Date()) -> Bool {
         guard permits(handle, kind: .useSoon, access: access, now: now),
@@ -103,6 +120,7 @@ import CoreDomain
         if forget { try revoke(kind); return }
         guard receipt.projection != nil else { return }
         try file(kind).clear()
+        receipt.tonightBasis = nil
         receipt.projection = nil
         try persist(receipt, kind)
         reload(kind)
@@ -143,6 +161,9 @@ struct AdultHomeSummaryPreference: View {
                 .accessibilityIdentifier("adultHomeSummary." + kind.rawValue)
             if error { Text(SurfaceCopy.text("Could not update the Home Screen setting. Try again.")) }
         } footer: {
+            if kind == .tonight {
+                Text(SurfaceCopy.text("Shows the first reviewed meal title and the number of fully covered options."))
+            }
             Text(SurfaceCopy.text("Anyone who can see your unlocked Home Screen may see this summary. iOS may briefly keep a previous widget image after you turn it off or change accounts."))
         }
     }
@@ -153,17 +174,23 @@ struct AdultHomeSummaryDestination: View {
     let handle: RouteHandle
     @ObservedObject var pickup: PickupModel
     @ObservedObject var household: HouseholdModel
+    @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
     @Environment(\.guardianChildCoordinator) private var child
     @ObservedObject private var home = AdultHomeSummaryStore.shared
     @State private var model: PantryModel?
+    @State private var openedTonight: PantryDigestScope?
     @ObservedObject private var digest = PantryDigestStore.shared
     var body: some View {
         Group {
-            if let child, let current = PantryDigestAccess.current(pickup: pickup, access: access, household: household, child: child),
-               home.permits(handle, kind: kind, access: current) {
-                if kind == .useSoon, let snapshot = pickup.pantrySnapshot,
-                   home.permitsUseSoon(handle, access: current, lots: snapshot.lots, digest: digest) {
+            if let child, let current = PantryDigestAccess.current(pickup: pickup, access: access, household: household, child: child) {
+                if kind == .tonight, openedTonight == current.scope, home.enabled(.tonight, scope: current.scope) {
+                    TonightEntry()
+                } else if kind == .tonight, home.permitsTonight(handle, access: current,
+                            basis: try? TonightHomeBasis.current(ledger: ledger, pickup: pickup)) {
+                    ProgressView().task { openedTonight = current.scope }
+                } else if kind == .useSoon, let snapshot = pickup.pantrySnapshot,
+                          home.permitsUseSoon(handle, access: current, lots: snapshot.lots, digest: digest) {
                     if let model { PantryDigestList(model: model, access: current) }
                     else { ProgressView().task { model = pickup.makePantryModel() } }
                 } else { SurfaceUnavailableView() }
