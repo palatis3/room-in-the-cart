@@ -1,6 +1,198 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This idea conflicts with a household meal constraint.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This idea conflicts with a household meal constraint."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta idea incumple un requisito de comidas del hogar."
+          }
+        }
+      }
+    },
+    "This idea differs from a soft household preference.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This idea differs from a soft household preference."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta idea difiere de una preferencia opcional del hogar."
+          }
+        }
+      }
+    },
+    "Household preferences changed. Review this idea again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household preferences changed. Review this idea again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las preferencias del hogar cambiaron. Vuelve a revisar esta idea."
+          }
+        }
+      }
+    },
+    "Household meal preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household meal preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferencias de comidas del hogar"
+          }
+        }
+      }
+    },
+    "No household meal preferences saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No household meal preferences saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay preferencias de comidas guardadas para el hogar."
+          }
+        }
+      }
+    },
+    "Edit household preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit household preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar preferencias del hogar"
+          }
+        }
+      }
+    },
+    "Adults who can read preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adults who can read preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adultos que pueden ver las preferencias"
+          }
+        }
+      }
+    },
+    "Household preferences are unavailable. Refresh to check current access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household preferences are unavailable. Refresh to check current access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las preferencias del hogar no están disponibles. Actualiza para comprobar el acceso actual."
+          }
+        }
+      }
+    },
+    "Refresh household preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh household preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar las preferencias del hogar"
+          }
+        }
+      }
+    },
+    "Household preference access changed. Reopen Settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household preference access changed. Reopen Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso a las preferencias del hogar cambió. Vuelve a abrir Configuración."
+          }
+        }
+      }
+    },
+    "Available appliances": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available appliances"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparatos disponibles"
+          }
+        }
+      }
+    },
+    "Preferred brands": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferred brands"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcas preferidas"
+          }
+        }
+      }
+    },
     "A brand differs from your preferences.": {
       "localizations": {
         "en": {
@@ -9186,6 +9378,150 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vuelve a la compra original para revisar esta semana."
+          }
+        }
+      }
+    },
+    "Review a household preference from this note": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a household preference from this note"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una preferencia del hogar a partir de esta nota"
+          }
+        }
+      }
+    },
+    "Preference type": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preference type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de preferencia"
+          }
+        }
+      }
+    },
+    "Exact ingredient or brand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact ingredient or brand"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente o marca exactos"
+          }
+        }
+      }
+    },
+    "Review household rule": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review household rule"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar regla del hogar"
+          }
+        }
+      }
+    },
+    "Save this household rule?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save this household rule?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Guardar esta regla del hogar?"
+          }
+        }
+      }
+    },
+    "Save household rule": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save household rule"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar regla del hogar"
+          }
+        }
+      }
+    },
+    "Excluded ingredient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluded ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente excluido"
+          }
+        }
+      }
+    },
+    "Disliked ingredient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disliked ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente que no gusta"
+          }
+        }
+      }
+    },
+    "Preferred brand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferred brand"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marca preferida"
           }
         }
       }

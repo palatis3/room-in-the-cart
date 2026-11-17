@@ -977,6 +977,13 @@ func ht(_ key: String) -> String { String(localized: String.LocalizationValue(ke
 
 // E09 uses the active native session; recovered files never supply this authority.
 extension HouseholdModel {
+    var mealPreferenceScope: HouseholdPreferenceScope? {
+        guard !guardianChildOnly, !locked, let subject = identity?.subject, let p = projection, p.enrolled,
+              p.grantId == nil, p.capabilities.contains("meal_preferences_read"),
+              ["organizer", "shopper", "contributor"].contains(p.role) else { return nil }
+        return .init(generation: generation, enrollment: contributorEnrollmentRevision, subject: subject,
+                     householdID: p.household.id, memberID: p.memberId, administer: p.capabilities.contains("meal_preferences_admin"))
+    }
     var householdPantryScope: HouseholdPantryRuntime? {
         guard !guardianChildOnly, !locked, let subject = identity?.subject, let p = projection, p.enrolled,
               p.grantId == nil, p.capabilities.contains("household_pantry"),

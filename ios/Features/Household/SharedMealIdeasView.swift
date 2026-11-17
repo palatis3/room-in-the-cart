@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreDomain
 import HouseholdClient
 
 struct SharedMealIdeasView: View {
@@ -90,6 +91,26 @@ private struct SharedMealIdeaEditor: View {
                 multilineField(ht("Shared household exclusions, one per line"), values: $draft.exclusions, focus: "exclusions")
                 Text(ht("Review exclusions with the household. This does not read private decision history."))
             }.disabled(!own || model.pending != nil)
+            if model.page?.preferenceRevision != nil {
+                Section(dinnerText("Meal preference details")) {
+                    MealEvidenceFields(draft: Binding(get: {
+                        let shared = draft.preferenceEvidence
+                        var value = MealEligibilityEvidence()
+                        value.reviewedIngredientDetails = shared?.reviewedIngredientDetails
+                        value.requiredAppliances = shared?.requiredAppliances
+                        value.brands = shared?.brands
+                        value.effort = shared?.effort.flatMap(MealEffort.init(rawValue:))
+                        return value
+                    }, set: { value in
+                        var shared = SharedMealPreferenceEvidence()
+                        shared.reviewedIngredientDetails = value.reviewedIngredientDetails
+                        shared.requiredAppliances = value.requiredAppliances
+                        shared.brands = value.brands
+                        shared.effort = value.effort?.rawValue
+                        draft.preferenceEvidence = shared
+                    }))
+                }.disabled(!own || model.pending != nil)
+            }
             ForEach(draft.ingredients) { snapshot in
                 let ingredient = dinnerDraftBinding(snapshot, in: $draft.ingredients)
                 let id = snapshot.id
@@ -140,7 +161,18 @@ private struct SharedMealIdeaEditor: View {
             }
             if let saved, saved.draft == draft {
                 SharedMealIdeaPreviewView(idea: saved)
-                if saved.state == "approved" {
+                if let check = saved.preview.preferenceCheck {
+                    if !check.blocked.isEmpty { Text(dinnerText("This idea conflicts with a household meal constraint.")) }
+                    if check.unresolved.contains("ingredient") { Text(dinnerText("Ingredient details still need review.")) }
+                    if check.unresolved.contains("appliance") { Text(dinnerText("Required appliances are unknown.")) }
+                    if check.unresolved.contains("brand") { Text(dinnerText("Brand details are unknown.")) }
+                    if check.unresolved.contains("effort") { Text(dinnerText("Recipe effort is unknown.")) }
+                    if !check.soft.isEmpty { Text(dinnerText("This idea differs from a soft household preference.")) }
+                }
+                if saved.preview.requiresPreferenceReview == true {
+                    Text(dinnerText("Household preferences changed. Review this idea again."))
+                }
+                if saved.state == "approved" && saved.preview.requiresPreferenceReview != true {
                     Text(ht("Approved idea only. It is not scheduled and has changed no shared shopping lines."))
                     Button(ht("Separately propose this approved meal")) { onPropose(saved, model.scope) }
                         .disabled(!own).accessibilityIdentifier("household-idea-propose")

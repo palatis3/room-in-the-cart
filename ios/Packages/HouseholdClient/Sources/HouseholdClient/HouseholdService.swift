@@ -65,7 +65,9 @@ public actor HouseholdService {
         return try currentHouseholdPantrySession()
     }
 
-    func currentHouseholdPantrySession() throws -> HouseholdPantrySession {
+    func currentHouseholdPantrySession() throws -> HouseholdPantrySession { try currentHouseholdDeviceSession() }
+
+    func currentHouseholdDeviceSession() throws -> HouseholdDeviceSession {
         guard selectedGrantID == nil, childAdoptionBinding == nil, let subject, !subject.isEmpty,
               let householdID, let memberID, let enrollment,
               let household = UUID(uuidString: householdID), let member = UUID(uuidString: memberID),

@@ -277,7 +277,7 @@ export function createHTTPServer(options:HTTPOptions) {
           if(path==='/billing/seats'&&method==='PUT')return options.billing.replaceSeats(ctx,billingSeatsSchema.parse(payload));
         }
         if(path==='/meal-preferences' && method==='GET')return readMealPreferences(ctx);
-        if(path==='/meal-preferences' && method==='POST')return writeMealPreferences(ctx,payload);
+        if(path==='/meal-preferences' && method==='POST')return writeMealPreferences(ctx,payload,decisions);
         if(path==='/meal-preferences/grants' && method==='GET')return preferenceGrants(ctx);
         if(path==='/meal-preferences/grants' && method==='POST')return changePreferenceGrant(ctx,payload);
         if(path==='/pantry' && method==='GET') {

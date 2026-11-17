@@ -368,3 +368,37 @@ test('approved shared idea can be selected with unknown night before a separate 
  assert.deepEqual(after.meals.find(m=>m.occurrenceId===move.occurrenceId).meal,scheduled);
  assert.deepEqual(after.lines,before.lines);
 });
+
+test('meal approvals bind household preference revision and show only relevant constraint categories to a planner',async()=>{
+ const f=await mealFixture(),path=f.path+'/meal-plan/ideas',draft=ideaDraft();
+ const settings={exclusions:['sesame'],availableAppliances:['stove'],preferredBrands:['Casa'],dislikes:[],
+   strictBrands:false,strictDislikes:false,strictEffort:false};
+ const change=(values,expectedRevision)=>call(f.owner,f.base+'/meal-preferences','POST',{
+   v:1,clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:0,expectedRevision,settings:values});
+ const profile=ok(await change(settings,null)), page=ok(await call(f.planner,path));
+ assert.equal(page.preferenceRevision,profile.revision);
+ assert.equal((await call(f.planner,f.base+'/meal-preferences')).status,404);
+ const write={clientKey:randomUUID(),ideaId:randomUUID(),baseRevision:null,shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,
+   grantRevision:page.grantRevision,action:'save',draft,reviewedHouseholdEvidence:false};
+ const initial=ok(await call(f.planner,path,'POST',write));
+ const shown=ok(await call(f.planner,path)).ideas[0];
+ assert.equal(shown.preview.canApprove,false);
+ assert.deepEqual(shown.preview.preferenceCheck.unresolved,['ingredient','appliance']);
+ assert.equal(JSON.stringify(shown.preview).includes('sesame'),false);
+ draft.preferenceEvidence={reviewedIngredientDetails:[],requiredAppliances:['stove'],brands:['Alternate']};
+ const checked=ok(await call(f.planner,path,'POST',{...write,clientKey:randomUUID(),baseRevision:initial.revision,draft}));
+ const approval={...write,clientKey:randomUUID(),action:'approve',baseRevision:checked.revision,reviewedHouseholdEvidence:true};
+ assert.equal((await call(f.planner,path,'POST',approval)).status,409);
+ const approved=ok(await call(f.planner,path,'POST',{...approval,preferenceRevision:profile.revision}));
+ const changed=ok(await change({...settings,exclusions:['Rice']},profile.revision));
+ const again=ok(await call(f.planner,path)).ideas[0];
+ assert.equal(again.state,'approved');
+ assert.equal(again.preview.canApprove,false);
+ assert.equal(again.preview.requiresPreferenceReview,true);
+ assert.equal(again.preview.preferenceCheck.eligible,false);
+ assert.equal((await call(f.planner,f.changePath,'POST',{proposalId:randomUUID(),occurrenceId:randomUUID(),baseMealRevision:null,
+   shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,grantRevision:page.grantRevision,meal:mealFor(draft),
+   reason:'Earlier approval',approvedIdeaId:write.ideaId,approvedIdeaRevision:approved.revision})).status,409);
+ assert.equal((await call(f.planner,path,'POST',{...approval,clientKey:randomUUID(),baseRevision:approved.revision,
+   preferenceRevision:changed.revision})).status,409);
+});

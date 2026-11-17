@@ -446,7 +446,7 @@ test('self-serve adult household creation is atomic, idempotent and rejects chil
   await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Sam.id]);
   assert.equal((await f.http('Sam','POST','/v1/households',{...input,clientKey:randomUUID()})).status,503);
   const enrolled=await f.http('Mia','POST','/v1/households/'+h+'/devices',{});assert.equal(enrolled.status,201);
-  const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['household_pantry','household_pantry_grants','request_queue_permission','own_requests','household_admin']);
+  const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['meal_preferences_read','meal_preferences_admin','household_pantry','household_pantry_grants','request_queue_permission','own_requests','household_admin']);
 });
 
 test('invitation display names use the new member’s language and preserve existing names on blank joins',async()=>{
@@ -1237,8 +1237,16 @@ test('private household preference grants, reviewed updates and revoked retries 
   const removed=await write({...command,clientKey:randomUUID(),expectedRevision:stored.data.revision,settings:null});
   assert.equal(removed.status,200);assert.equal(removed.data.settings,null);assert.notEqual(removed.data.revision,stored.data.revision);
   assert.equal((await write(command)).status,409);
+  assert.equal((await write({...command,expectedRevision:removed.data.revision})).status,409);
   const restored=await write({...command,clientKey:randomUUID(),expectedRevision:removed.data.revision});
   assert.equal(restored.status,200);
+  // A second organizer keeps one existing rule and adds another. Erasing the
+  // original author must remove the inherited inputs while preserving the new rule.
+  await admin.query("UPDATE ritc.member SET organizer=true WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Alex.id]);
+  const transferred=(await get('Alex')).data;
+  const updated=await f.http('Alex','POST',path,{...command,clientKey:randomUUID(),replayWindow:f.actors.Alex.window,
+    expectedRevision:transferred.revision,grantEpoch:transferred.grantEpoch,settings:{...command.settings,exclusions:['peanut','mushroom']}});
+  assert.equal(updated.status,200,JSON.stringify(updated.data));
   const client=await admin.connect(),job=randomUUID(),lease=randomUUID();
   try {
     await client.query('BEGIN');
@@ -1251,8 +1259,10 @@ test('private household preference grants, reviewed updates and revoked retries 
     await client.query('COMMIT');
   } catch(e) { await client.query('ROLLBACK');throw e; } finally {client.release();}
   const erased=await get('Alex');
-  assert.equal(erased.data.settings,null);
-  assert.notEqual(erased.data.revision,restored.data.revision);
+  assert.deepEqual(erased.data.settings.exclusions,['mushroom']);
+  assert.deepEqual(erased.data.settings.preferredBrands,[]);
+  assert.equal(erased.data.settings.availableAppliances,undefined);
+  assert.notEqual(erased.data.revision,updated.data.revision);
   assert.equal((await write(command)).status,409);
   await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
   assert.equal((await write(command)).status,403);
