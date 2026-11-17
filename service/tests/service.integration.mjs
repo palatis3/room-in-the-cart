@@ -1207,3 +1207,53 @@ test('standalone household pantry checks a live adult grant and device before an
   await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
   assert.equal((await write('Mia',keep)).status,403);
 });
+
+test('private household preference grants, reviewed updates and revoked retries are isolated from pantry',async()=>{
+  const f=await fixture({createShop:false}), other=await fixture({createShop:false});
+  const path='/meal-preferences', get=(name,headers={})=>f.http(name,'GET',path,undefined,headers);
+  const grant=(enabled,expectedGrantEpoch)=>f.http('Mia','POST',path+'/grants',
+    {v:1,memberId:f.actors.Alex.id,enabled,expectedGrantEpoch});
+  const command={v:1,clientKey:randomUUID(),replayWindow:f.actors.Mia.window,grantEpoch:0,expectedRevision:null,
+    settings:{exclusions:['peanut'],dislikes:[],preferredBrands:['Casa'],availableAppliances:['stove'],
+      strictDislikes:false,strictBrands:false,strictEffort:false}};
+  const write=(command)=>f.http('Mia','POST',path,command);
+  assert.equal((await get('Mia',{'X-Shop-ID':randomUUID()})).data.revision,null);
+  assert.equal((await get('Alex')).status,404);assert.equal((await get('Sam')).status,404);
+  assert.equal((await get('Mia',{'X-View-Grant-ID':randomUUID()})).status,404);
+  assert.equal((await f.http('Mia','POST','/pantry/grants',{v:1,memberId:f.actors.Alex.id,enabled:true,expectedGrantEpoch:0})).status,200);
+  assert.equal((await get('Alex')).status,404);
+  const stored=await write(command);assert.equal(stored.status,200,JSON.stringify(stored.data));
+  assert.deepEqual(stored.data.settings,command.settings);assert.deepEqual((await write(command)).data,stored.data);
+  assert.equal((await write({...command,settings:null})).status,409);
+  assert.equal((await grant(true,0)).status,200);
+  const reader=await get('Alex');assert.equal(reader.data.canWrite,false);assert.deepEqual(reader.data.settings,command.settings);
+  assert.deepEqual((await other.http('Mia','GET',path)).data.settings,null);
+  assert.equal((await f.http('Alex','POST',path,command)).status,404);
+  assert.equal((await grant(false,1)).status,200);assert.equal((await get('Alex')).status,404);
+  assert.equal((await grant(true,2)).status,200);assert.equal((await get('Alex')).data.grantEpoch,3);
+  assert.equal((await grant(false,1)).status,409);
+  assert.equal((await write({...command,clientKey:randomUUID(),expectedRevision:stored.data.revision,
+    settings:{...command.settings,exclusions:['pin','PIN']}})).status,422);
+  const removed=await write({...command,clientKey:randomUUID(),expectedRevision:stored.data.revision,settings:null});
+  assert.equal(removed.status,200);assert.equal(removed.data.settings,null);assert.notEqual(removed.data.revision,stored.data.revision);
+  assert.equal((await write(command)).status,409);
+  const restored=await write({...command,clientKey:randomUUID(),expectedRevision:removed.data.revision});
+  assert.equal(restored.status,200);
+  const client=await admin.connect(),job=randomUUID(),lease=randomUUID();
+  try {
+    await client.query('BEGIN');
+    const hash=tokenHash(issuer+'\n'+f.actors.Mia.subject);
+    await client.query(`INSERT INTO ritc.privacy_job(job_id,identity_hash,issuer,subject,receipt_hash,payload_digest,state,receipt_retention_days,marker_retention_days,receipt_until,marker_until,lease_id,lease_until)
+      VALUES($1,$2,$3,$4,$5,$5,'processing',1,1,now()+interval '1 day',now()+interval '1 day',$6,now()+interval '1 hour')`,
+      [job,hash,issuer,f.actors.Mia.subject,tokenHash(job),lease]);
+    await client.query("SELECT set_config('app.erasure_job',$1,true),set_config('app.erasure_lease',$2,true)",[job,lease]);
+    await client.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.actors.Mia.id]);
+    await client.query('COMMIT');
+  } catch(e) { await client.query('ROLLBACK');throw e; } finally {client.release();}
+  const erased=await get('Alex');
+  assert.equal(erased.data.settings,null);
+  assert.notEqual(erased.data.revision,restored.data.revision);
+  assert.equal((await write(command)).status,409);
+  await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
+  assert.equal((await write(command)).status,403);
+});

@@ -1,4 +1,5 @@
-import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
+import {readMealPreferences, writeMealPreferences, preferenceGrants, changePreferenceGrant} from './meal-preferences.js';
+import {recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants} from './household-pantry.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -258,7 +259,7 @@ export function createHTTPServer(options:HTTPOptions) {
       // A selected shop is a navigation preference on the explicit household pantry surface.
       // The authenticated household, device and any restricted grant still apply.
       const {selectedShopId: _selectedShop,...householdAuth}=auth;
-      const scopedAuth=('/pantry'===path||path.startsWith('/pantry/'))?householdAuth:historicalReportShopId?{...auth,historicalReportShopId}:auth;
+      const scopedAuth=('/pantry'===path||path.startsWith('/pantry/')||path==='/meal-preferences'||path.startsWith('/meal-preferences/'))?householdAuth:historicalReportShopId?{...auth,historicalReportShopId}:auth;
       const output=await repository.authorized(householdId,scopedAuth,async ctx=>{
         if(path==='/devices/current/request-queue' && method==='PUT'){
           const {enabled}=z.object({enabled:z.boolean()}).strict().parse(payload);
@@ -275,6 +276,10 @@ export function createHTTPServer(options:HTTPOptions) {
           if(path==='/billing/purchase-context'&&method==='POST'){z.object({}).strict().parse(payload);return options.billing.prepare(ctx);}
           if(path==='/billing/seats'&&method==='PUT')return options.billing.replaceSeats(ctx,billingSeatsSchema.parse(payload));
         }
+        if(path==='/meal-preferences' && method==='GET')return readMealPreferences(ctx);
+        if(path==='/meal-preferences' && method==='POST')return writeMealPreferences(ctx,payload);
+        if(path==='/meal-preferences/grants' && method==='GET')return preferenceGrants(ctx);
+        if(path==='/meal-preferences/grants' && method==='POST')return changePreferenceGrant(ctx,payload);
         if(path==='/pantry' && method==='GET') {
           const cursor=url.searchParams.get('cursor');
           return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));
