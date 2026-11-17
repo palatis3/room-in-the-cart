@@ -2,6 +2,18 @@ import Foundation
 import CoreDomain
 import LocalStore
 
+/// All presentations on a physical store's gate revoke synchronous UI access
+/// before any cleanup awaits. Independently recovered stores have their own gate.
+@MainActor protocol PantryErasureObserver: AnyObject {
+    func invalidatePantryPresentation(origin: UUID, initiatedHere: Bool)
+    func drainPantryPresentation(origin: UUID) async throws
+    func pantryCleanupFinished(origin: UUID, initiatedHere: Bool) async
+}
+extension PantryErasureObserver {
+    func drainPantryPresentation(origin: UUID) async throws {}
+    func pantryCleanupFinished(origin: UUID, initiatedHere: Bool) async {}
+}
+
 /// Composition shares this gate with every app-owned writer of the paired stores.
 /// It is not an authorization grant or a substitute for SQLite revision checks.
 @MainActor final class PantryMutationGate {
@@ -9,22 +21,55 @@ import LocalStore
     private var writes: Set<UUID> = []
     private var migration: UUID?
     private var exclusiveWrite: UUID?
+    private var idleWaiters: [CheckedContinuation<Void, Never>] = []
+
+    private let observers = NSHashTable<AnyObject>.weakObjects()
+    func observeErasure(_ observer: any PantryErasureObserver) { observers.add(observer) }
+
+    /// Freeze a single listener set. Every scene is redacted even if an unrelated
+    /// file or worker refuses to drain and cleanup has to resume later.
+    func invalidateForErasure(origin: UUID, initiator: (any PantryErasureObserver)?) async throws {
+        let current = observers.allObjects.compactMap { $0 as? any PantryErasureObserver }
+        for observer in current { observer.invalidatePantryPresentation(origin: origin, initiatedHere: observer === initiator) }
+        for observer in current { try await observer.drainPantryPresentation(origin: origin) }
+    }
+
+    func erasureFinished(origin: UUID, initiator: (any PantryErasureObserver)?) {
+        Task { [weak self, weak initiator] in
+            guard let self else { return }
+            await waitUntilIdle()
+            for observer in observers.allObjects.compactMap({ $0 as? any PantryErasureObserver }) {
+                await observer.pantryCleanupFinished(origin: origin, initiatedHere: observer === initiator)
+            }
+        }
+    }
 
     func beginWrite() throws -> UUID {
         guard migration == nil, exclusiveWrite == nil else { throw Failure.busy }
         let id = UUID(); writes.insert(id); return id
     }
-    func endWrite(_ id: UUID) { writes.remove(id) }
+    func endWrite(_ id: UUID) { writes.remove(id); resumeIdleWaiters() }
     func beginExclusiveWrite() throws -> UUID {
         guard migration == nil, exclusiveWrite == nil, writes.isEmpty else { throw Failure.busy }
         let id = UUID(); exclusiveWrite = id; return id
     }
-    func endExclusiveWrite(_ id: UUID) { if exclusiveWrite == id { exclusiveWrite = nil } }
+    func endExclusiveWrite(_ id: UUID) { if exclusiveWrite == id { exclusiveWrite = nil; resumeIdleWaiters() } }
     func beginMigration() throws -> UUID {
         guard migration == nil, exclusiveWrite == nil, writes.isEmpty else { throw Failure.busy }
         let id = UUID(); migration = id; return id
     }
-    func endMigration(_ id: UUID) { if migration == id { migration = nil } }
+    func endMigration(_ id: UUID) { if migration == id { migration = nil; resumeIdleWaiters() } }
+    /// The owner revokes new work first, then waits before closing/removing its
+    /// private store. Waiting itself grants no access and does not cancel a write.
+    func waitUntilIdle() async {
+        guard !writes.isEmpty || migration != nil || exclusiveWrite != nil else { return }
+        await withCheckedContinuation { idleWaiters.append($0) }
+    }
+    private func resumeIdleWaiters() {
+        guard writes.isEmpty, migration == nil, exclusiveWrite == nil else { return }
+        let pending = idleWaiters; idleWaiters = []
+        pending.forEach { $0.resume() }
+    }
 }
 
 /// Coordinates a reviewed private cutover. Production composition must first route
@@ -59,11 +104,25 @@ import LocalStore
     private let gate: PantryMutationGate
     private let authorize: () -> Bool
     private let clock: () -> Date
+    private let stagingChanged: (Bool) -> Void
 
     init(store: ComparisonStore, ledger: LedgerStore, gate: PantryMutationGate,
-         authorize: @escaping () -> Bool, clock: @escaping () -> Date = Date.init) {
+         authorize: @escaping () -> Bool, clock: @escaping () -> Date = Date.init,
+         stagingChanged: @escaping (Bool) -> Void = { _ in }) {
         self.store = store; self.ledger = ledger; self.gate = gate
-        self.authorize = authorize; self.clock = clock
+        self.authorize = authorize; self.clock = clock; self.stagingChanged = stagingChanged
+    }
+
+    enum SetupState: Equatable { case inactive, staging, active }
+    func setupState() async throws -> SetupState {
+        try requireAccess()
+        let lease = try gate.beginMigration(); defer { gate.endMigration(lease) }
+        let state = try await store.inventoryState()
+        try requireAccess()
+        if state.active { return .active }
+        let pending = try await store.inventoryPendingMigration()
+        try requireAccess()
+        return pending == nil ? .inactive : .staging
     }
 
     func prepare() async throws -> Review {
@@ -116,6 +175,7 @@ import LocalStore
             try requireAccess()
             _ = try await store.cancelInventoryMigration(id: pending.migrationID)
             try requireAccess()
+            stagingChanged(false)
         }
     }
 
@@ -161,6 +221,8 @@ import LocalStore
         try requireAccess()
         let progress = try await store.beginInventoryMigration(plan)
         guard progress.status == .staging else { throw Failure.invalidReview }
+        try requireAccess()
+        stagingChanged(true)
         for chunk in package.chunks.dropFirst(progress.nextChunk) {
             try requireAccess()
             _ = try await store.stageInventoryMigration(id: plan.migrationID, chunk: chunk)

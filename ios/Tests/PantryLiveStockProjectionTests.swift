@@ -199,6 +199,57 @@ import LocalStore
         return (try await activate([XCTUnwrap(pickup.journey)]), keys, observationIDs)
     }
 
+    func testRecentPurchaseOpensOneCanonicalLotAndSavesCountAndLocationInOneRevision() async throws {
+        let (fixture, keys, _) = try await receiptFixture()
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(root, test: self)
+        let ledger = try LedgerStore(url: root.appendingPathComponent("ledger.sqlite"), inventoryProjectionsEnabled: true)
+        let pending = try PantryPickupPendingStore(directory: root.appendingPathComponent("pending"),
+            inventoryWorkspaceID: fixture.store.workspaceID, ledgerWorkspaceID: ledger.workspaceID)
+        let instant = now
+        let pickup = PickupModel(store: fixture.store, clock: { instant }, pantry: .init(ledger: ledger, pendingStore: pending,
+            gate: PantryMutationGate(), authorize: { true }))
+        cleanup.track(ledger, pickup)
+        await pickup.load()
+        let editor = try XCTUnwrap(pickup.makePantryModel())
+        await editor.load()
+        let snapshot = try XCTUnwrap(editor.snapshot)
+        let options = editor.recentPurchases
+        XCTAssertEqual(Set(options.map(\.receiptKey)), Set(keys))
+        let selected = try XCTUnwrap(options.first { $0.receiptKey == keys[0] })
+        let before = try XCTUnwrap(snapshot.lots.first { $0.id == selected.id })
+        let duplicates = PantryLiveStockProjection.recentPurchases(snapshot: snapshot, mapping: fixture.mapping,
+            journeys: fixture.journeys + fixture.journeys)
+        XCTAssertEqual(options, duplicates)
+        var orderOnly = try XCTUnwrap(fixture.journeys.first)
+        let arrival = try XCTUnwrap(orderOnly.pickup)
+        orderOnly.pickup = try PickupLedger(orderID: arrival.orderID, orderLines: arrival.orderLines)
+        XCTAssertTrue(PantryLiveStockProjection.recentPurchases(snapshot: snapshot, mapping: fixture.mapping, journeys: [orderOnly]).isEmpty)
+        for fragment in arrival.receipts { try orderOnly.pickup?.receive(fragment) }
+        XCTAssertTrue(PantryLiveStockProjection.recentPurchases(snapshot: snapshot, mapping: fixture.mapping, journeys: [orderOnly]).isEmpty)
+
+        await editor.prepareRecentPurchase(selected, amount: "3", location: .freezer)
+        let review = try XCTUnwrap(editor.review)
+        XCTAssertEqual(review.command.lotID, before.id)
+        guard case .revise = review.command.change else { return XCTFail("Receipt review must update its original lot") }
+        XCTAssertEqual(review.proposedLot.count, .exact(q(3)))
+        XCTAssertEqual(review.proposedLot.location, .freezer)
+        await editor.confirmReview(acknowledgingReservations: true)
+        let after = try XCTUnwrap(editor.snapshot)
+        XCTAssertEqual(after.state.revision, snapshot.state.revision + 1)
+        XCTAssertEqual(Set(after.lots.map(\.id)), Set(snapshot.lots.map(\.id)))
+        XCTAssertEqual(after.lots.first { $0.id == selected.id }, review.proposedLot)
+        XCTAssertEqual(after.lots.filter { $0.id != selected.id }, snapshot.lots.filter { $0.id != selected.id })
+        await editor.prepareRecentPurchase(selected, amount: "8", location: .cupboard)
+        XCTAssertNil(editor.review)
+        XCTAssertEqual(editor.notice, .stale)
+
+        let independent = PantryModel(repository: fixture.repository, clock: { instant })
+        await independent.load()
+        XCTAssertTrue(independent.recentPurchases.isEmpty)
+    }
+
     func testFullReceiptKeysRemainDistinctAndNewPantryObservationDoesNotRevertToLegacyCount() async throws {
         let (fixture, keys, observationIDs) = try await receiptFixture()
         let original = try await fixture.repository.load(at: now)

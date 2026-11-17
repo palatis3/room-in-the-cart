@@ -6,7 +6,7 @@ import LocalStore
 /// final source checks and ledger CAS do not promise cross-process atomicity.
 @MainActor final class PantryPackSelectionCommitPort {
     enum Failure: Error, Equatable { case unauthorized, actionUnauthorized, invalidRequest, wrongOrigin, operationConflict, staleReview, missingHead, missingJournal }
-    static let maximumRequestBytes = 512 * 1_024
+    nonisolated static let maximumRequestBytes = 512 * 1_024
     /// Admission for a first gross-only save, not food availability evidence.
     /// It binds a complete authorized read and the absence of this shop's source.
     struct GrossBasis: Codable, Equatable {
@@ -22,7 +22,7 @@ import LocalStore
             try result.validate(absentJourneyID: absentJourneyID)
             return result
         }
-        @MainActor func validate(absentJourneyID: UUID) throws {
+        nonisolated func validate(absentJourneyID: UUID) throws {
             guard inventoryRevision >= 0, sourceHeads.count <= PantryLegacyMigration.maximumHeads,
                   Set(sourceHeads.map(\.journeyID)).count == sourceHeads.count,
                   sourceHeads.allSatisfy({ $0.revision > 0 && $0.journeyID != absentJourneyID }),
@@ -232,7 +232,7 @@ import LocalStore
         try access()
         guard !request.requiresActionAuthorization || authorizeAction(request.selection.id) else { throw Failure.actionUnauthorized }
     }
-    static func validate(_ request: Request) throws {
+    nonisolated static func validate(_ request: Request) throws {
         try request.selection.validate()
         guard request.version == 1,
               request.selection.sourceWorkspaceID == request.ledgerWorkspaceID,

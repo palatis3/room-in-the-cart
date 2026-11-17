@@ -81,6 +81,8 @@ final class PantryRecoveryRegistryTests: XCTestCase {
         let current = try await registry.reviewPantryDeletion(copyIDs: [copy.id])
         try await registry.deletePantry(current)
         let reopened = try RecoveryRegistry(url: url)
+        let retired = try await reopened.permanentlyRetiredPantryBundleIDs()
+        XCTAssertEqual(retired, [ref.bundleID])
         let erased = try await reopened.reviewPantry(ref); XCTAssertEqual(erased.disposition, .erased)
         let later = try await reopened.reviewPantry(reference(origin: ref.originID)); XCTAssertTrue(later.canApply)
         do { _ = try await reopened.currentPantryCopy(copy); XCTFail("Deleted lease") }
@@ -105,6 +107,8 @@ final class PantryRecoveryRegistryTests: XCTestCase {
         let completeReview = RecoveryDeletionReview(scope: .allRecovered, displayedCopies: [], displayedPantryCopies: [copy])
         XCTAssertEqual(completeReview.count, 1); XCTAssertEqual(completeReview.copyIDs, [copy.id.uuidString])
         let token = try await registry.delete(completeReview)
+        let heldForUndo = try await registry.permanentlyRetiredPantryBundleIDs()
+        XCTAssertTrue(heldForUndo.isEmpty)
         let empty = try await registry.listPantry(); XCTAssertTrue(empty.isEmpty)
         try await registry.undoDelete(token)
         let reopenedCopies = try await registry.listPantry()

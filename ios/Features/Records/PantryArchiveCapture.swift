@@ -14,7 +14,7 @@ import RecordArchive
         let materializedBytes: Int
         static let standard = Limits(materializedBytes: 128 * 1_024 * 1_024)
     }
-    struct Scope: Codable, Equatable {
+    struct Scope: Codable, Equatable, Sendable {
         let version: Int
         let inventoryOriginID: UUID
         let inventoryRevision: Int64
@@ -29,14 +29,15 @@ import RecordArchive
         let capturedAt: Date
     }
     /// Payload-free archival evidence. Importing these never authorizes root erasure.
-    enum Evidence: Codable, Equatable {
+    enum Evidence: Codable, Equatable, Sendable {
         case inventoryRetired(key: InventoryRecordKey, originID: UUID, revision: Int64, operationID: UUID)
         case sourceRetired(InventorySourceIdentity, originID: UUID, operationID: UUID)
+        case reservationRedacted(InventoryReservationRedaction)
         case comparisonRetired(id: UUID, originID: UUID, revision: Int64, operationID: UUID, at: Date)
         case ledgerRetired(originID: UUID, revision: Int64, replacementID: UUID, operationID: UUID, at: Date)
         case projection(sourceIntentID: UUID, status: ProjectionStatus)
     }
-    enum ProjectionStatus: String, Codable { case applied, unappliedAtCapture, retiredLedgerOrigin }
+    enum ProjectionStatus: String, Codable, Sendable { case applied, unappliedAtCapture, retiredLedgerOrigin }
     struct Captured {
         let snapshot: PantryArchiveCodec.Snapshot
         let scope: Scope
@@ -351,6 +352,8 @@ import RecordArchive
             switch item {
             case let .inventoryRetired(_, origin, revision, _):
                 guard origin == scope.inventoryOriginID, revision > 0 else { throw Failure.invalidEvidence }
+            case .reservationRedacted(let value):
+                guard value.workspaceID == scope.inventoryOriginID, value.throughRevision > 0 else { throw Failure.invalidEvidence }
             case let .sourceRetired(source, origin, _):
                 guard origin == scope.inventoryOriginID, (1...256).contains(source.sourceID.utf8.count) else { throw Failure.invalidEvidence }
             case let .comparisonRetired(_, origin, revision, _, at):
@@ -389,6 +392,175 @@ import RecordArchive
                 guard value.application == nil, retiredLedgers.contains(value.binding.binding.ledgerWorkspaceID) else { throw Failure.invalidEvidence }
             case nil: throw Failure.invalidEvidence
             }
+        }
+    }
+}
+
+extension PantryArchiveCapture {
+    /// Production capture: only a page of records crosses actor boundaries. Complete
+    /// history is verified on the worker's protected disk index before a handle exists.
+    func captureHandle(worker: PantryArchiveWorker, at date: Date) async throws -> PantryArchiveHandle {
+        try access()
+        let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }
+        let state = try await inventory.inventoryState(); try access()
+        guard state.active, date.timeIntervalSinceReferenceDate.isFinite,
+              pending.inventoryWorkspaceID == inventory.workspaceID else { throw Failure.inactive }
+        let token = try await inventory.inventorySourceToken(); try access()
+        let head = try await ledger.load(); try access()
+        let ledgerDigest = try await worker.ledgerDigest(head, at: date); try access()
+        let id = try await worker.begin(descriptor: .init(originID: state.workspaceID, inventoryRevision: state.revision, capturedAt: date))
+        var published: PantryArchiveHandle?
+        do {
+            try access()
+            try await worker.registerLedgerOrigin(ledger.workspaceID, retired: false, to: id); try access()
+            var cursor: UUID?
+            while true {
+                let page = try await ledger.tombstonePage(expectedWorkspaceID: ledger.workspaceID,
+                    expectedRevision: head?.revision ?? 0, after: cursor, limit: 200); try access()
+                for value in page {
+                    try await worker.registerLedgerOrigin(value.workspaceID, retired: true, to: id); try access()
+                    try await worker.appendEvidence(.current(.ledgerRetired(originID: value.workspaceID,
+                        revision: value.erasedRevision, replacementID: value.replacementWorkspaceID,
+                        operationID: value.operationID, at: value.erasedAt)), to: id); try access()
+                }
+                if page.count < 200 { break }; cursor = page.last?.workspaceID
+            }
+            try await Self.stageInventory(inventory, revision: state.revision, token: token, worker: worker, job: id, authorize: access)
+            var bindingCursor: UUID?
+            while true {
+                let page = try await worker.projectionBindings(id, after: bindingCursor, limit: 200); try access()
+                for item in page {
+                    let retired = try await worker.isRetiredLedger(item.value.binding.ledgerWorkspaceID, in: id); try access()
+                    let receipt: LedgerInventoryProjectionReceipt?
+                    if retired { receipt = nil }
+                    else {
+                        guard item.value.binding.ledgerWorkspaceID == ledger.workspaceID else { throw Failure.wrongOrigin }
+                        receipt = try await ledger.inventoryProjectionReceipt(binding: item.value.binding, request: item.value.canonicalRequest); try access()
+                    }
+                    try await worker.completeProjection(id, intentID: item.id, receipt: receipt, retired: retired); try access()
+                }
+                if page.count < 200 { break }; bindingCursor = page.last?.id
+            }
+            let directory = pending.fileURL.deletingLastPathComponent()
+            let journals = try await worker.captureJournals(to: id, directory: directory, pickupLedgerID: pending.ledgerWorkspaceID); try access()
+            let finalState = try await inventory.inventoryState(); try access()
+            let finalToken = try await inventory.inventorySourceToken(); try access()
+            let finalHead = try await ledger.load(); try access()
+            guard finalState == state, finalToken == token, finalHead == head else { throw Failure.stale }
+            let checked = try await worker.captureJournals(to: id, directory: directory,
+                pickupLedgerID: pending.ledgerWorkspaceID, revalidate: true); try access()
+            guard checked == journals else { throw Failure.stale }
+            let scope = Scope(version: 1, inventoryOriginID: state.workspaceID, inventoryRevision: state.revision,
+                sourceToken: token, ledgerOriginID: ledger.workspaceID, ledgerRevision: head?.revision ?? 0,
+                ledgerOperationID: head?.operationID, ledgerPayloadDigest: ledgerDigest,
+                pendingDigest: journals.pickup, foodPendingDigest: journals.food, packPendingDigest: journals.pack, capturedAt: date)
+            let result = try await worker.finish(id, scope: .paired(scope)); published = result; try access()
+            // Raw connections are outside the app gate; detect their changes after the last await.
+            guard try await inventory.inventoryState() == state else { throw Failure.stale }; try access()
+            guard try await inventory.inventorySourceToken() == token else { throw Failure.stale }; try access()
+            guard try await ledger.load() == head else { throw Failure.stale }; try access()
+            return result
+        } catch {
+            try? await worker.cancel(id)
+            if let published { try? await worker.discardUnregistered(published) }
+            throw error
+        }
+    }
+
+    /// Independent recovered copies have a new physical inventory origin and no
+    /// paired ledger. Original history is carried as inert, self-contained lineage.
+    static func captureIndependent(worker: PantryArchiveWorker, inventory: ComparisonStore,
+        original: PantryArchiveHandle, identity: PantryArchiveWorker.RestorationContext,
+        journalDirectory: URL, gate: PantryMutationGate, at date: Date,
+        authorize: @escaping @MainActor () throws -> Void) async throws -> PantryArchiveHandle {
+        try authorize()
+        let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }
+        guard identity.workspaceID == inventory.workspaceID, identity.reference == original.reference,
+              identity.preparedAt <= date else { throw Failure.wrongOrigin }
+        let state = try await inventory.inventoryState(); try authorize()
+        guard state.active else { throw Failure.inactive }
+        let token = try await inventory.inventorySourceToken(); try authorize()
+        let id = try await worker.begin(descriptor: .init(originID: state.workspaceID, inventoryRevision: state.revision, capturedAt: date))
+        var published: PantryArchiveHandle?
+        do {
+            try authorize()
+            try await stageInventory(inventory, revision: state.revision, token: token, worker: worker, job: id, authorize: authorize)
+            // There is no executable paired-work namespace in an independent copy.
+            guard try await worker.projectionBindings(id, limit: 1).isEmpty else { throw Failure.invalidEvidence }; try authorize()
+            let journals = try await worker.captureJournals(to: id, directory: journalDirectory, pickupLedgerID: nil); try authorize()
+            let scope = PantryArchiveWorker.IndependentScope(copyID: identity.copyID, original: original.reference,
+                originalOriginID: original.descriptor.originID, originID: state.workspaceID, inventoryRevision: state.revision,
+                restorationID: identity.restorationID, restoredAt: identity.preparedAt, capturedAt: date, foodPendingDigest: journals.food)
+            try await worker.appendIndependentLineage(original, scope: scope, to: id); try authorize()
+            guard try await inventory.inventoryState() == state else { throw Failure.stale }; try authorize()
+            guard try await inventory.inventorySourceToken() == token else { throw Failure.stale }; try authorize()
+            guard try await worker.captureJournals(to: id, directory: journalDirectory, pickupLedgerID: nil, revalidate: true) == journals else { throw Failure.stale }; try authorize()
+            let result = try await worker.finish(id, scope: .independent(scope)); published = result; try authorize()
+            guard try await inventory.inventoryState() == state else { throw Failure.stale }; try authorize()
+            guard try await inventory.inventorySourceToken() == token else { throw Failure.stale }; try authorize()
+            return result
+        } catch {
+            try? await worker.cancel(id)
+            if let published { try? await worker.discardUnregistered(published) }
+            throw error
+        }
+    }
+
+    private static func stageInventory(_ store: ComparisonStore, revision: Int64, token: InventorySourceToken,
+        worker: PantryArchiveWorker, job: UUID, authorize: @MainActor () throws -> Void) async throws {
+        for kind in InventoryRecordKind.allCases {
+            var cursor: UUID?
+            while true {
+                let page = try await store.inventoryRecords(kind: kind, after: cursor, limit: 200); try authorize()
+                try await worker.appendRecords(page, to: job); try authorize()
+                if page.count < 200 { break }; cursor = page.last?.key.id
+            }
+            cursor = nil
+            while true {
+                let page = try await store.inventoryTombstones(kind: kind, expectedInventoryRevision: revision, after: cursor, limit: 200); try authorize()
+                for value in page {
+                    try await worker.appendEvidence(.current(.inventoryRetired(key: value.key, originID: value.workspaceID,
+                        revision: value.erasedRevision, operationID: value.operationID)), to: job); try authorize()
+                }
+                if page.count < 200 { break }; cursor = page.last?.key.id
+            }
+        }
+        var revisionCursor: InventoryRevisionCursor?
+        while true {
+            let page = try await store.inventoryRevisionPage(expectedRevision: revision, sourceToken: token, after: revisionCursor, limit: 200); try authorize()
+            guard let last = page.last else { break }
+            try await worker.appendRetainedRevisions(page, to: job); try authorize()
+            revisionCursor = .init(kind: last.key.kind, id: last.key.id, revision: last.revision)
+        }
+        var comparisonCursor: InventoryComparisonRevisionCursor?
+        while true {
+            let page = try await store.inventoryComparisonRevisionPage(expectedRevision: revision, sourceToken: token, after: comparisonCursor, limit: 200); try authorize()
+            guard let last = page.last else { break }
+            try await worker.appendSources(page, originID: store.workspaceID, to: job); try authorize()
+            comparisonCursor = .init(id: last.id, revision: last.revision)
+        }
+        var cursor: UUID?
+        while true {
+            let page = try await store.inventoryComparisonTombstones(token: token, after: cursor, limit: 200); try authorize()
+            for value in page {
+                try await worker.appendEvidence(.current(.comparisonRetired(id: value.id, originID: value.workspaceID,
+                    revision: value.erasedRevision, operationID: value.operationID, at: value.erasedAt)), to: job); try authorize()
+            }
+            if page.count < 200 { break }; cursor = page.last?.id
+        }
+        cursor = nil
+        while true {
+            let page = try await store.inventoryReservationRedactions(expectedInventoryRevision: revision, after: cursor, limit: 200); try authorize()
+            for value in page { try await worker.appendEvidence(.current(.reservationRedacted(value)), to: job); try authorize() }
+            if page.count < 200 { break }; cursor = page.last?.reservationID
+        }
+        var sourceCursor: InventorySourceIdentity?
+        while true {
+            let page = try await store.inventoryRetiredSources(expectedInventoryRevision: revision, after: sourceCursor, limit: 200); try authorize()
+            for value in page {
+                try await worker.appendEvidence(.current(.sourceRetired(value.source, originID: value.workspaceID, operationID: value.operationID)), to: job); try authorize()
+            }
+            if page.count < 200 { break }; sourceCursor = page.last?.source
         }
     }
 }

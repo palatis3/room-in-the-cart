@@ -130,9 +130,15 @@ struct PickupRepairView: View {
     @State private var repairDraft = PickupRepairDraft(shopID: nil)
     @State private var submittingRepair = false
     var body: some View {
+        let journey = model.journey
+        let repairNeeds = journey?.currentRepairNeeds ?? []
+        let urgentNeeds = journey?.recoveryCurrentUrgent ?? []
+        let showsCoverage = (journey?.pickup != nil && !repairNeeds.isEmpty) || !urgentNeeds.isEmpty
+        let demands = showsCoverage ? (model.allocation?.demands ?? []) : []
+        let coverageByNeed = Dictionary(demands.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         Form {
             PickupSaveStatus(model: model)
-            if let pickup = model.journey?.pickup {
+            if let pickup = journey?.pickup {
                 Section(pTr("Meal needs and protected portions")) {
                     Text(pTr("Enter separate named needs within the food required. Protected portions allocate before dinner portions."))
                     Picker(pTr("Food"), selection: $lineID) {
@@ -147,7 +153,7 @@ struct PickupRepairView: View {
                         Text(pTr("Flexible")).tag(AllocationPriority.flexible)
                     }
                     Button(pTr("Add reviewed need")) { addNeed() }
-                    ForEach(model.journey?.currentRepairNeeds ?? []) { need in
+                    ForEach(repairNeeds) { need in
                         VStack(alignment: .leading) {
                             Text("\(need.name): \(pQuantity(need.amount))")
                             if let detail = model.journey?.recoveryCurrentDetails.first(where: { $0.id == need.id }) {
@@ -155,7 +161,7 @@ struct PickupRepairView: View {
                                 if let day = detail.scheduledDay { Text("\(day.iso8601) · \(day.timeZoneIdentifier)") }
                                 if let minutes = detail.leadTimeMinutes { Text("\(pTr("Saved elapsed preparation minutes")): \(minutes)") }
                             }
-                            if let coverage = model.allocation?.demands.first(where: { $0.id == need.id }) {
+                            if let coverage = coverageByNeed[need.id] {
                                 Text("\(pTr("Allocated")): \(rationalText(coverage.allocated)) · \(pTr("Still short")): \(rationalText(coverage.shortfall))")
                                 ForEach(coverage.issues, id: \.self) { Text(pTr($0.rawValue)).font(.caption) }
                             }
@@ -163,14 +169,14 @@ struct PickupRepairView: View {
                     }
                 }
             }
-            ForEach(model.journey?.recoveryCurrentUrgent ?? []) { need in
+            ForEach(urgentNeeds) { need in
                 Section(need.meal) {
                     Text(need.food)
                     Text("\(pTr("Required")): \(pQuantity(need.required))")
                     if need.carriedFromID == nil { Text("\(pTr("Confirmed available")): \(pQuantity(need.available))") }
                     else { Text(pTr("Previous stock is not assumed available for this shop. Confirm it again.")) }
                     Text(need.due.map { "\(pTr("Needed by")): \($0.formatted())" } ?? pTr("Deadline unknown · timing remains conditional"))
-                    if let coverage = model.stockAllocation?.demands.first(where: { $0.id == need.id }) {
+                    if let coverage = coverageByNeed[need.id] {
                         Text("\(pTr("Allocated")): \(rationalText(coverage.allocated)) · \(pTr("Still short")): \(rationalText(coverage.shortfall))")
                     }
                     Text(pTr(need.resolved ? "Manually marked handled" : "Open meal need"))
@@ -202,8 +208,8 @@ struct PickupRepairView: View {
             Section(pTr("Free manual meal repair")) {
                 Picker(pTr("Affected meal need"), selection: $repairDraft.fields.needID) {
                     Text(pTr("Choose a need")).tag(UUID?.none)
-                    ForEach(model.journey?.currentRepairNeeds ?? []) { Text($0.name).tag(Optional($0.id)) }
-                    ForEach(model.journey?.recoveryCurrentUrgent ?? []) { Text($0.meal).tag(Optional($0.id)) }
+                    ForEach(repairNeeds) { Text($0.name).tag(Optional($0.id)) }
+                    ForEach(urgentNeeds) { Text($0.meal).tag(Optional($0.id)) }
                 }
                 TextField(pTr("Exact food, portions, exclusions and instructions"), text: $repairDraft.fields.instruction, axis: .vertical).focused($field, equals: .instruction)
                 Toggle(pTr("I agree to an extra top-up trip for this repair"), isOn: $repairDraft.extraTrip)

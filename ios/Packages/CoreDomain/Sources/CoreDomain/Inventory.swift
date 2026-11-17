@@ -136,6 +136,7 @@ public enum InventoryChange: Codable, Equatable, Sendable {
     case opened(Date)
     case usedUp(observationID: UUID)
     case revise(InventoryLotRevision)
+    case reservation(InventoryReservationEdit)
 }
 
 /// The persistence adapter binds the canonical encoded request (including origin,
@@ -198,14 +199,20 @@ public struct InventoryReservation: Codable, Equatable, Sendable, Identifiable {
     public let amount: Quantity?
     public let priority: AllocationPriority
     public let state: InventoryReservationState
+    public let personal: InventoryPersonalReservation?
     public init(id: UUID, originID: UUID, revision: Int64, foodID: UUID, lotID: UUID?, name: String,
-                amount: Quantity?, priority: AllocationPriority = .required, state: InventoryReservationState = .active) {
+                amount: Quantity?, priority: AllocationPriority = .required, state: InventoryReservationState = .active,
+                personal: InventoryPersonalReservation? = nil) {
         self.id = id; self.originID = originID; self.revision = revision; self.foodID = foodID; self.lotID = lotID
-        self.name = name; self.amount = amount; self.priority = priority; self.state = state
+        self.name = name; self.amount = amount; self.priority = priority; self.state = state; self.personal = personal
     }
     public func validate() throws {
         guard revision >= 1, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 512,
               state != .active || amount != nil, amount.map({ $0.amount > .zero }) ?? true else { throw InventoryError.invalid("reservation") }
+        if let personal {
+            guard priority == .protected, state != .active || lotID != nil else { throw InventoryError.invalid("personalReservation") }
+            try personal.day?.validate()
+        }
         try amount?.validate()
     }
 }

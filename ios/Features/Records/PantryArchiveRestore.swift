@@ -5,7 +5,7 @@ import CoreDomain
 /// Produces a separate physical baseline, not executable old commands or ledger authority.
 /// The Records owner stages this state only after all package chunks validate, and retains
 /// large historical evidence in its protected archive storage rather than a 64 KiB intent row.
-@MainActor enum PantryArchiveRestore {
+enum PantryArchiveRestore {
     static func prepare(_ source: PantryArchiveCodec.Snapshot, newOriginID: UUID,
                         restorationID: UUID, at date: Date) throws -> PantryArchiveCodec.Snapshot {
         try PantryArchiveCodec.validate(source)
@@ -40,7 +40,7 @@ import CoreDomain
         let reservations = source.reservations.map { claim in
             InventoryReservation(id: claim.id, originID: newOriginID, revision: 1,
                 foodID: claim.foodID, lotID: claim.lotID, name: claim.name, amount: claim.amount,
-                priority: claim.priority, state: claim.state == .released ? .released : .unresolved)
+                priority: claim.priority, state: claim.state == .released ? .released : .unresolved, personal: claim.personal)
         }
         var seen: Set<Data> = []
         history = try history.filter { seen.insert(try canonical($0)).inserted }
@@ -48,6 +48,20 @@ import CoreDomain
             lots: lots, observations: observations, events: [], reservations: reservations, sourceLinks: links, history: history)
         try PantryArchiveCodec.validate(result)
         return result
+    }
+    /// Pure normalized baseline used by the file-backed independent export path.
+    static func baselineLot(_ original: InventoryLot, newOriginID: UUID, restorationID: UUID) throws -> InventoryLot {
+        try original.validate()
+        guard newOriginID != original.source.originID else { throw PantryArchiveCodec.Failure.wrongOrigin }
+        let source: InventorySource
+        switch original.source {
+        case .manual(_, let id): source = .manual(originID: newOriginID, sourceID: id)
+        case .receipt(_, let key): source = .receipt(originID: newOriginID, key: key)
+        }
+        return InventoryLot(id: original.id, foodID: original.foodID, name: original.name, source: source, revision: 1,
+            location: original.location, openedAt: original.openedAt, unit: original.unit, count: original.count,
+            observationID: identity(restorationID: restorationID, originID: newOriginID, lotID: original.id),
+            confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst)
     }
     private static func historicalOrigins(_ source: PantryArchiveCodec.Snapshot) -> Set<UUID> {
         var result: Set<UUID> = [source.descriptor.originID]

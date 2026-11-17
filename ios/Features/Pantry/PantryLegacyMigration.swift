@@ -7,7 +7,7 @@ import LocalStore
 /// inventory, write either database, or establish that the caller enumerated every head.
 @MainActor enum PantryLegacyMigration {
     enum Failure: Error, Equatable { case capacity, invalidSource, duplicateSource, invalidClock }
-    static let maximumHeads = 1_000
+    nonisolated static let maximumHeads = 1_000
     static let maximumSourceBytes = 64 * 1_024 * 1_024
     static let maximumObservations = 100_000
 
@@ -87,20 +87,26 @@ import LocalStore
     private struct Claim { let journey: UUID; let need: StockNeed; var pin: UUID?; var unresolved: Bool }
 
     static func map(originID: UUID, heads: [SourceHead], ledger: LedgerContext, at now: Date) throws -> Plan {
+        try mapWithJourneys(originID: originID, heads: heads, ledger: ledger, at: now).plan
+    }
+
+    /// Return the same validated heads used by the plan in canonical source ID order.
+    static func mapWithJourneys(originID: UUID, heads: [SourceHead], ledger: LedgerContext, at now: Date) throws
+        -> (plan: Plan, journeys: [PickupJourney]) {
         guard now.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalidClock }
         guard heads.count <= maximumHeads,
               heads.reduce(0, { $0 + $1.payload.count }) <= maximumSourceBytes else { throw Failure.capacity }
         guard Set(heads.map(\.id)).count == heads.count else { throw Failure.duplicateSource }
         let heads = heads.sorted { key($0.id) < key($1.id) }
-        var journeys: [UUID: PickupJourney] = [:]
-        for head in heads {
+        let decoded = try heads.map { head -> PickupJourney in
             guard head.revision > 0, head.payload.count <= ComparisonStore.maximumPayloadBytes,
                   head.savedAt.timeIntervalSinceReferenceDate.isFinite, head.savedAt <= now else { throw Failure.invalidSource }
             let value = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
             guard value.id == head.id, value.savedAt == head.savedAt else { throw Failure.invalidSource }
             try PickupModel.validate(value)
-            journeys[value.id] = value
+            return value
         }
+        let journeys = Dictionary(uniqueKeysWithValues: decoded.map { ($0.id, $0) })
         let ledgerOrigin: UUID?, ledgerRevision: Int64?
         switch ledger {
         case .available(let origin, let revision, let workspace):
@@ -301,9 +307,10 @@ import LocalStore
         for reservation in reservations { try reservation.validate() }
         // Validate canonical projection semantics as well as individual row shapes.
         _ = try InventoryProjection.build(originID: originID, lots: lots, reservations: reservations, at: now)
-        return Plan(originID: originID, sourceHeads: heads, ledgerOriginID: ledgerOrigin, ledgerRevision: ledgerRevision,
+        let plan = Plan(originID: originID, sourceHeads: heads, ledgerOriginID: ledgerOrigin, ledgerRevision: ledgerRevision,
             lots: lots, observations: observations, reservations: reservations, sourceLinks: links,
             observationLinks: observationLinks, claimLinks: claimLinks, pendingLineage: pending, issues: issues)
+        return (plan, decoded)
     }
 
     private static func ledgerDisposition(_ record: AwayCarryoverRecord, ledger: LedgerContext) -> LedgerDisposition {
@@ -319,8 +326,8 @@ import LocalStore
         return .pendingProjection
     }
 
-    private static func key(_ value: UUID) -> String { value.uuidString.lowercased() }
-    private static func bytes<T: Encodable>(_ value: T) throws -> Data {
+    nonisolated private static func key(_ value: UUID) -> String { value.uuidString.lowercased() }
+    nonisolated private static func bytes<T: Encodable>(_ value: T) throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return try encoder.encode(value)
     }
@@ -329,11 +336,11 @@ import LocalStore
     }
     /// The same stable claim identity is used by migration, live deltas and
     /// hypothetical recovery. Planning never invents a second claim namespace.
-    static func claimIdentity(originID: UUID, needID: UUID, foodID: UUID) throws -> UUID {
+    nonisolated static func claimIdentity(originID: UUID, needID: UUID, foodID: UUID) throws -> UUID {
         try identity("claim", [key(originID), key(needID), key(foodID)])
     }
 
-    private static func identity<T: Encodable>(_ kind: String, _ value: T) throws -> UUID {
+    nonisolated private static func identity<T: Encodable>(_ kind: String, _ value: T) throws -> UUID {
         let payload = try bytes(value)
         var input = Data("room-in-the-cart/pantry-legacy/v1/\(kind)/".utf8); input.append(payload)
         var value = Array(SHA256.hash(data: input).prefix(16))

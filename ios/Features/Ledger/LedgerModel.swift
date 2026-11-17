@@ -103,6 +103,10 @@ private enum LedgerDeletionJournal {
     private let clock: () -> Date
     private let inventoryProjectionsEnabled: Bool
     private let mutationGate: PantryMutationGate?
+    private let usesLivePantry: Bool
+    private var privatePantryAuthorization: (() -> Bool)?
+    private var privatePantryDeletionCheck: (() throws -> Bool)?
+    private var privatePantryWritable: Bool { !usesLivePantry || privatePantryAuthorization?() == true }
     @Published private(set) var hasPendingPantryProjection = false
     private var pendingPantryProjection: PantryLedgerProjectionPort.ValidatedSource?
     private var pantryPackPort: PantryPackSelectionCommitPort?
@@ -129,12 +133,41 @@ private enum LedgerDeletionJournal {
 
     init(databaseURL: URL? = nil, clock: @escaping () -> Date = Date.init,
          inventoryProjectionsEnabled: Bool = false, mutationGate: PantryMutationGate? = nil,
-         pantryPackPort: PantryPackSelectionCommitPort? = nil) {
+         pantryPackPort: PantryPackSelectionCommitPort? = nil, usesLivePantry: Bool = false) {
         self.databaseURL = databaseURL
         self.clock = clock
         self.inventoryProjectionsEnabled = inventoryProjectionsEnabled
         self.mutationGate = mutationGate
         self.pantryPackPort = pantryPackPort
+        self.usesLivePantry = usesLivePantry
+    }
+
+    func pantryBackingStore(gate: PantryMutationGate) -> LedgerStore? {
+        guard ready, !hasPendingLedgerDeletion, inventoryProjectionsEnabled, mutationGate === gate,
+              let store, sourceWorkspaceID == store.workspaceID else { return nil }
+        return store
+    }
+
+    func suspendPrivatePantryBinding() {
+        guard usesLivePantry else { return }
+        privatePantryAuthorization = nil
+        privatePantryDeletionCheck = nil
+        pantryPackPort = nil
+        pendingPantryPack = nil; pantryPackWasCommitted = false
+        hasPendingSave = pending != nil
+    }
+
+    func bindPrivatePantryRecovery(_ port: PantryPackSelectionCommitPort?, authorize: @escaping () -> Bool,
+                                   allowLedgerErasure: @escaping () throws -> Bool) async throws {
+        guard usesLivePantry, authorize() else { throw LedgerModelError.notReady }
+        if let port, pantryPackPort !== port || privatePantryAuthorization == nil {
+            try requirePantryPackPort(port)
+            if try port.readPending() != nil { try await configurePantryPackRecovery(port) }
+            else { pantryPackPort = port }
+        }
+        guard authorize() else { throw LedgerModelError.notReady }
+        privatePantryAuthorization = authorize
+        privatePantryDeletionCheck = allowLedgerErasure
     }
 
     var shop: ShoppingLedger? {
@@ -246,7 +279,11 @@ private enum LedgerDeletionJournal {
                         reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
                         authorize: (@MainActor () -> Bool)? = nil,
                         _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
-        guard !saving, ready, !hasPendingLedgerDeletion, !hasPendingPantryProjection, pendingPantryPack == nil else { return false }
+        guard privatePantryWritable, !saving, ready, !hasPendingLedgerDeletion, !hasPendingPantryProjection, pendingPantryPack == nil else { return false }
+        let originalAccess = privatePantryAuthorization
+        let actionAccess: (@MainActor () -> Bool)?
+        if usesLivePantry { actionAccess = { originalAccess?() == true && authorize?() != false } }
+        else { actionAccess = authorize }
         if pending != nil {
             error = ledgerText("Retry or discard the unsaved change before making another change.")
             return false
@@ -257,9 +294,10 @@ private enum LedgerDeletionJournal {
             defer { if let lease {
                 if exclusive { mutationGate?.endExclusiveWrite(lease) } else { mutationGate?.endWrite(lease) }
             } }
-            guard authorize?() != false else { throw LedgerModelError.notReady }
+            guard actionAccess?() != false else { throw LedgerModelError.notReady }
             var candidate = workspace
             try edit(&candidate)
+            candidate.listLayout.applyDepartmentMemory(to: candidate.shops, previous: workspace.shops)
             try candidate.validate()
             guard candidate != workspace else { error = nil; return true }
             guard let store else { return false }
@@ -272,9 +310,9 @@ private enum LedgerDeletionJournal {
                 return false
             }
             if let basis = reviewedPantryBasis { try await verifyPantryBasis(basis) }
-            guard authorize?() != false else { throw LedgerModelError.notReady }
+            guard actionAccess?() != false else { throw LedgerModelError.notReady }
             let change = PendingSave(onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
-                                     operationID: UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis, authorize: authorize)
+                                     operationID: UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis, authorize: actionAccess)
             pending = change
             hasPendingSave = true
             return await commit(change, to: store)
@@ -341,6 +379,7 @@ private enum LedgerDeletionJournal {
 
     @discardableResult
     func retrySave() async -> Bool {
+        guard privatePantryWritable else { return false }
         if pendingPantryPack != nil { return await recoverPantryPack(commitIfUnapplied: true) }
         guard !saving, !hasPendingLedgerDeletion, !hasPendingPantryProjection, let pending, let store else { return false }
         saving = true
@@ -386,6 +425,7 @@ private enum LedgerDeletionJournal {
                 }
                 if pending.reviewedPantryBasis != nil, pantryPackPort?.hasReadAccess != true { throw LedgerModelError.notReady }
             }
+            guard privatePantryWritable else { throw LedgerModelError.notReady }
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
                                               operationID: pending.operationID, savedAt: pending.savedAt)
             // No other mutation can start while saving, including during actor suspension.
@@ -630,6 +670,7 @@ private enum LedgerDeletionJournal {
     /// first be resolved explicitly, rather than silently included in deletion.
     func reviewWholeLedgerDeletion() async throws -> WholeLedgerDeletionReview {
         if let pendingLedgerDeletion { return pendingLedgerDeletion.review }
+        guard try !usesLivePantry || privatePantryDeletionCheck?() == true else { throw LedgerDeletionError.pendingSave }
         guard pending == nil, pendingPantryPack == nil, !hasPendingPantryProjection else { throw LedgerDeletionError.pendingSave }
         guard ready, !saving, !opening, pending == nil, let store else { throw LedgerDeletionError.unavailable }
         let current = try await store.load()
@@ -647,6 +688,7 @@ private enum LedgerDeletionJournal {
         let lease = try mutationGate?.beginWrite()
         defer { if let lease { mutationGate?.endWrite(lease) } }
         if pendingLedgerDeletion != nil { return try await retryWholeLedgerDeletion() }
+        guard try !usesLivePantry || privatePantryDeletionCheck?() == true else { throw LedgerDeletionError.pendingSave }
         guard ready, !saving, !opening, pending == nil, let journal = deletionJournalURL else { throw LedgerDeletionError.unavailable }
         let intent = LedgerDeletionIntent(formatVersion: 1, review: review, operationID: UUID(), requestedAt: clock())
         do { try LedgerDeletionJournal.create(intent, at: journal) }
@@ -677,6 +719,7 @@ private enum LedgerDeletionJournal {
             try await current.close()
             clearRetiredState()
             let replacement = try LedgerStore(url: url, inventoryProjectionsEnabled: inventoryProjectionsEnabled)
+            suspendPrivatePantryBinding()
             store = replacement; sourceWorkspaceID = replacement.workspaceID
             error = nil
             // Keep the journal until Records confirms erasure markers and orphan cleanup.
@@ -688,6 +731,7 @@ private enum LedgerDeletionJournal {
             guard let receipt = try await current.tombstones().first(where: {
                 $0.workspaceID == intent.review.workspaceID && $0.erasedRevision >= intent.review.revision
             }) else { throw LedgerDeletionError.invalidIntent }
+            suspendPrivatePantryBinding()
             store = current; sourceWorkspaceID = current.workspaceID
             clearRetiredState()
             return receipt

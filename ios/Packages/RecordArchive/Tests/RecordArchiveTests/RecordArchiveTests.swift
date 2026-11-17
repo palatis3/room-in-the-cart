@@ -255,6 +255,25 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertEqual(report.recipes.first?.steps, ["Simmer"])
         XCTAssertEqual(report.unsupportedFields, ["recipeInstructions.image"])
     }
+    func testOrderedSectionsAndMissingFieldsSurviveRecipeRecovery() throws {
+        let json = Data(#"""
+        {"@type":"Recipe","name":"Tacos","url":"https://example.org/tacos",
+         "recipeInstructions":[{"@type":"HowToSection","name":"Salsa","itemListElement":[
+             {"@type":"HowToSection","name":"Tomates","itemListElement":[{"@type":"HowToStep","text":"Lavar."}]},
+             {"@type":"HowToStep","text":"Picar."}]},
+             {"@type":"https://schema.org/HowToSection","name":"Servir","itemListElement":[{"@type":"HowToStep","text":"Mezclar."}]}]}
+        """#.utf8)
+        let staged = try XCTUnwrap(RecipeImporter.stage(json).recipes.first)
+        XCTAssertEqual(staged.steps, ["Salsa\nTomates\nLavar.", "Picar.", "Servir\nMezclar."])
+        XCTAssertEqual(staged.missingFields, [.servings, .ingredients])
+        let record = try staged.archiveRecord(origin: "local")
+        let saved = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(record.nativePayload))
+        XCTAssertEqual(saved, staged)
+        XCTAssertEqual(try RecipeImporter.stage(json, existingSourceIDs: [record.id]).duplicateCount, 1)
+        XCTAssertEqual(ImportedRecipe(title: "Soup", yieldText: "2–4 portions", ingredients: ["sal"], steps: [" "]).missingFields,
+                       [.instructions])
+    }
+
     func testRecipeUnknownVersionUnsafeURLAndMalformedInputsFail() throws {
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"{"formatVersion":2,"@type":"Recipe","name":"Dinner"}"#.utf8))) { XCTAssertEqual($0 as? ArchiveError, .unsupportedVersion) }
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"[{"formatVersion":2,"@type":"Recipe","name":"Dinner"}]"#.utf8)))

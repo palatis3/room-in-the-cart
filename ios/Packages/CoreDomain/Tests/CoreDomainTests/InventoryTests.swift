@@ -28,6 +28,49 @@ final class InventoryTests: XCTestCase {
         try InventoryProjection.build(originID: origin, lots: lots, reservations: reservations, at: now)
     }
 
+    private func applyReservation(_ edit: InventoryReservationEdit, to lot: InventoryLot, lots: [InventoryLot],
+                                  claims: [InventoryReservation]) throws -> (InventoryReservation, InventoryProjection) {
+        let command = InventoryCommand(id: UUID(), originID: origin, lotID: lot.id, eventID: UUID(),
+            expectedRevision: lot.revision, occurredAt: now, change: .reservation(edit))
+        return try edit.prepare(command: command, lots: lots, reservations: claims, before: project(lots, claims), at: now)
+    }
+
+    func testDirectReservationConservesExactPinAcrossPartialAndWholeRelease() throws {
+        let a = try lot(.exact(q(4))), b = try lot(.exact(q(4)))
+        let linked = claim(b, amount: q(4), priority: .protected)
+        let day = try MealDay(year: 2026, month: 11, day: 18, timeZoneIdentifier: "America/New_York")
+        let edit = InventoryReservationEdit.reserve(id: UUID(), purpose: "Packed lunch", amount: q(2), day: day)
+        let (held, projection) = try applyReservation(edit, to: a, lots: [a,b], claims: [linked])
+        XCTAssertEqual(held.personal?.day, day)
+        XCTAssertEqual(projection.lots.first { $0.id == a.id }?.free?.amount, q(2).amount)
+        XCTAssertEqual(projection.lots.first { $0.id == b.id }?.free?.amount, .zero)
+        let (one, partiallyFree) = try applyReservation(.release(id: held.id, expectedRevision: 1, amount: q(1)), to: a,
+                                                        lots: [a,b], claims: [linked,held])
+        XCTAssertEqual(one.id, held.id)
+        XCTAssertEqual(one.amount?.amount, .one)
+        XCTAssertEqual(partiallyFree.lots.first { $0.id == a.id }?.free?.amount, q(3).amount)
+        XCTAssertThrowsError(try applyReservation(.release(id: one.id, expectedRevision: 1, amount: nil), to: a,
+                                                 lots: [a,b], claims: [linked,one]))
+        let (released, allFree) = try applyReservation(.release(id: one.id, expectedRevision: 2, amount: nil), to: a,
+                                                       lots: [a,b], claims: [linked,one])
+        XCTAssertEqual(released.state, .released)
+        XCTAssertEqual(allFree.lots.first { $0.id == a.id }?.free?.amount, q(4).amount)
+        XCTAssertEqual(allFree.allocations.map(\.lotID), [b.id])
+        XCTAssertThrowsError(try applyReservation(.release(id: linked.id, expectedRevision: 1, amount: nil), to: b,
+                                                 lots: [a,b], claims: [linked,released]))
+    }
+
+    func testDirectReserveRejectsUnknownInsufficientAndReservedFood() throws {
+        let a = try lot(.exact(q(4))), unknown = try lot(.someLeft)
+        let linked = claim(a, amount: q(3), priority: .protected)
+        let edit = InventoryReservationEdit.reserve(id: UUID(), purpose: "Lunch", amount: q(2), day: nil)
+        XCTAssertThrowsError(try applyReservation(edit, to: a, lots: [a,unknown], claims: [linked]))
+        XCTAssertThrowsError(try applyReservation(edit, to: unknown, lots: [a,unknown], claims: []))
+        XCTAssertThrowsError(try applyReservation(.reserve(id: UUID(), purpose: "Lunch", amount: q(1,.gram), day: nil),
+                                                 to: a, lots: [a], claims: []))
+        XCTAssertThrowsError(try change(a, .reservation(edit)))
+    }
+
     func testQualitativeObservationSupersedesCountAndRecountRestoresOnlyNewQuantity() throws {
         let eight = try lot(), lunch = claim(nil)
         let initial = try project([eight], [lunch])

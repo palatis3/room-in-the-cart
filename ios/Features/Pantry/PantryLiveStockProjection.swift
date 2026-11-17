@@ -288,6 +288,35 @@ struct PantryLiveStockProjection {
         var orderID: UUID?
         var observations: [UUID: UsableObservation] = [:]
         var conflicting = false
+
+        var currentObservation: UsableObservation? {
+            let superseded = Set(observations.values.compactMap(\.supersedesID))
+            let heads = observations.values.filter { !superseded.contains($0.id) }
+            return heads.count == 1 ? heads.first : nil
+        }
+    }
+
+    /// Build once per authorized paired read. Current physical counts come only
+    /// from the canonical editor when a receipt is selected.
+    static func recentPurchases(snapshot: PantryRepository.Snapshot, mapping: PantryLegacyMigration.Plan,
+                                journeys: [PickupJourney]) -> [PantryRecentPurchase] {
+        guard snapshot.state.active, snapshot.state.workspaceID == mapping.originID else { return [] }
+        let evidence = receiptEvidence(in: journeys)
+        let links = Dictionary(grouping: mapping.sourceLinks, by: \.source)
+        let unresolved = Set(mapping.issues.filter { $0.kind == .receiptBranch || $0.kind == .unconfirmedReceipt }.compactMap(\.lotID))
+        return snapshot.lots.compactMap { lot -> PantryRecentPurchase? in
+            guard case let .receipt(origin, key) = lot.source, origin == mapping.originID, !unresolved.contains(lot.id),
+                  let matches = links[lot.source], matches.count == 1, let link = matches.first, link.lotID == lot.id,
+                  let arrival = evidence[key], !arrival.conflicting, let fragment = arrival.fragment,
+                  fragment.disposition != .wrongItem, fragment.disposition != .noFill, fragment.received.amount > .zero,
+                  let usable = arrival.currentObservation, usable.confirmedMatchToOrderLine, usable.usable.amount > .zero,
+                  link.references.contains(where: { $0.receiptKey == key && $0.observationIDs.contains(usable.id) }) else { return nil }
+            return PantryRecentPurchase(id: lot.id, receiptKey: key,
+                reviewedFood: .init(id: lot.foodID, name: lot.name, inventoryWorkspaceID: origin, inventoryRevision: snapshot.state.revision),
+                receivedAt: fragment.receivedAt, usableObservationID: usable.id, confirmedAt: usable.confirmedAt, received: fragment.received)
+        }.sorted { lhs, rhs in
+            lhs.receivedAt != rhs.receivedAt ? lhs.receivedAt > rhs.receivedAt : lhs.id.uuidString < rhs.id.uuidString
+        }
     }
 
     /// Build once for all receipt lots, including copies in different journeys.
@@ -317,9 +346,7 @@ struct PantryLiveStockProjection {
         guard let evidence, !evidence.conflicting, let first = evidence.fragment else { return [.receiptEvidenceUnresolved] }
         guard first.disposition != .wrongItem, first.disposition != .noFill else { return [.receiptIneligible] }
         guard first.receivedAt <= now else { return [.receiptNotCurrent] }
-        let superseded = Set(evidence.observations.values.compactMap(\.supersedesID))
-        let heads = evidence.observations.values.filter { !superseded.contains($0.id) }
-        guard heads.count == 1, let current = heads.first else { return [.receiptEvidenceUnresolved] }
+        guard let current = evidence.currentObservation else { return [.receiptEvidenceUnresolved] }
         guard current.confirmedAt <= now else { return [.receiptNotCurrent] }
         return current.confirmedMatchToOrderLine ? [] : [.receiptIneligible]
     }

@@ -2,9 +2,9 @@ import CoreDomain
 import SwiftUI
 
 private enum PantrySheet: Identifiable {
-    case add, recount(UUID), review
+    case add, recount(UUID), purchase(PantryRecentPurchase), review
     var id: String {
-        switch self { case .add: return "add"; case .recount(let id): return "recount-\(id)"; case .review: return "review" }
+        switch self { case .add: return "add"; case .recount(let id): return "recount-\(id)"; case .purchase(let row): return "purchase-\(row.id)"; case .review: return "review" }
     }
 }
 private enum PantryDestination: Hashable { case lot(UUID) }
@@ -31,7 +31,25 @@ struct PantryHomeView: View {
                             Button(pantryText("Add food")) { sheet = .add }
                                 .frame(minHeight: 44).disabled(!model.canEdit)
                                 .accessibilityIdentifier("pantry.add")
-                            Text(pantryText("Start with food you recently brought home. You do not need to list your whole kitchen."))
+                            let purchases = model.recentPurchases
+                            if !purchases.isEmpty {
+                                DisclosureGroup(pantryText("Choose a recent purchase")) {
+                                    ForEach(purchases) { row in
+                                        Button {
+                                            sheet = .purchase(row)
+                                        } label: {
+                                            VStack(alignment: .leading) {
+                                                Text(row.reviewedFood.name)
+                                                Text(pantryFormat("Received %@ on %@", pantryQuantity(row.received),
+                                                    row.receivedAt.formatted(date: .abbreviated, time: .omitted)))
+                                                Text(pantryFormat("Batch %@", String(row.id.uuidString.suffix(8))))
+                                            }.accessibilityElement(children: .combine)
+                                        }.disabled(!model.canEdit)
+                                        .frame(minHeight: 44)
+                                        .accessibilityIdentifier("pantry.purchase.\(row.id)")
+                                    }
+                                }.accessibilityIdentifier("pantry.recentPurchases")
+                            }
                         }
                         ForEach(InventoryLocation.allCases, id: \.self) { location in
                             Section(pantryLocationName(location)) {
@@ -107,6 +125,50 @@ struct PantryLotEntryView: View {
     }
 }
 
+/// Shared manual acquisition entry. Pending recovery is shown before another
+/// batch can be entered; the repository retains the exact original command.
+struct PantryAddFoodEntryView: View {
+    @ObservedObject var model: PantryModel
+    let accessAllowed: Bool
+    var reviewedFood: PantryReviewedFood? = nil
+    let refreshContext: () async -> Void
+    @State private var sheet: PantrySheet?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        Group {
+            if accessAllowed, model.phase == .ready, model.pending == nil, !model.requiresFreshReview {
+                PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed, reviewedFood: reviewedFood)
+            } else {
+                Form {
+                    Text(accessAllowed ? pantryPhase(model.phase)
+                         : pantryText("Unlock the authorized private workspace to view pantry food."))
+                    if accessAllowed {
+                        if let notice = model.notice { Text(pantryNotice(notice)) }
+                        if model.pending != nil {
+                            Button(pantryText("Review pending save")) { sheet = .review }.frame(minHeight: 44)
+                        }
+                        if model.phase != .accessDenied {
+                            Button(pantryText("Refresh pantry")) {
+                                Task {
+                                    if model.pending == nil { await refreshContext() }
+                                    else { await model.load() }
+                                }
+                            }.frame(minHeight: 44).disabled(model.busy)
+                        }
+                        if model.busy { ProgressView(pantryText("Working…")) }
+                    }
+                }
+            }
+        }
+        .navigationTitle(pantryText("Add food"))
+        .privacySensitive()
+        .navigationBarBackButtonHidden(model.busy || model.pending != nil)
+        .interactiveDismissDisabled(model.busy || model.pending != nil)
+        .modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet) { dismiss() })
+    }
+}
+
 /// One lifecycle keeps add/recount/review behavior and access-loss redaction the
 /// same regardless of the reader that opened a lot.
 private struct PantryEntryPresentation: ViewModifier {
@@ -138,6 +200,7 @@ private struct PantryEntryPresentation: ViewModifier {
                 switch value {
                 case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
                 case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
+                case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
                 case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,
                                                      availabilityNeedsReview: availabilityNeedsReview)
                 }
@@ -185,6 +248,8 @@ private struct PantryLotView: View {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
                 }
+                PantryReservationSection(model: model, lot: lot, availabilityNeedsReview: availabilityNeedsReview)
+                    .id(lot.id)
                 Section {
                     action("Have enough", .haveEnough)
                     action("Some left", .someLeft)
@@ -222,6 +287,8 @@ private struct PantryFoodEditor: View {
     @ObservedObject var model: PantryModel
     let lotID: UUID?
     let accessAllowed: Bool
+    var reviewedFood: PantryReviewedFood? = nil
+    var purchase: PantryRecentPurchase? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var existingFoodID: UUID?
     @State private var name = ""
@@ -239,15 +306,19 @@ private struct PantryFoodEditor: View {
             if accessAllowed && model.phase == .ready {
                 if lotID == nil {
                     Section {
-                        Picker(pantryText("Food identity"), selection: $existingFoodID) {
-                            Text(pantryText("New food identity")).tag(nil as UUID?)
-                            ForEach(foods) { food in
-                                Text(food.name + " · " + food.foodID.uuidString.suffix(8)).tag(Optional(food.foodID))
+                        if let reviewedFood {
+                            LabeledContent(pantryText("Food identity"), value: reviewedFood.name)
+                        } else {
+                            Picker(pantryText("Food identity"), selection: $existingFoodID) {
+                                Text(pantryText("New food identity")).tag(nil as UUID?)
+                                ForEach(foods) { food in
+                                    Text(food.name + " · " + food.foodID.uuidString.suffix(8)).tag(Optional(food.foodID))
+                                }
                             }
-                        }
-                        if existingFoodID == nil {
-                            TextField(pantryText("Food name"), text: $name).focused($editing)
-                                .accessibilityIdentifier("pantry.foodName")
+                            if existingFoodID == nil {
+                                TextField(pantryText("Food name"), text: $name).focused($editing)
+                                    .accessibilityIdentifier("pantry.foodName")
+                            }
                         }
                         Picker(pantryText("Storage location"), selection: $location) {
                             ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
@@ -256,11 +327,24 @@ private struct PantryFoodEditor: View {
                         Text(pantryText("Choose an existing food only when it is the same product. This adds a separate physical batch; matching names are never merged automatically."))
                     }
                 }
+                if let purchase {
+                    Section {
+                        Text(purchase.reviewedFood.name).font(.headline)
+                        LabeledContent(pantryText("Received quantity"), value: pantryQuantity(purchase.received))
+                        Picker(pantryText("Storage location"), selection: $location) {
+                            ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
+                        }
+                    }
+                }
                 Section {
-                    TextField(pantryText("Confirmed amount"), text: $amount).focused($editing)
+                    TextField(pantryText(purchase == nil ? "Confirmed amount" : "Amount remaining"), text: $amount).focused($editing)
                         .accessibilityIdentifier("pantry.amount")
-                    Picker(pantryText("Unit"), selection: $unit) {
-                        ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
+                    if purchase != nil {
+                        LabeledContent(pantryText("Unit"), value: pantryUnit(unit))
+                    } else {
+                        Picker(pantryText("Unit"), selection: $unit) {
+                            ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
+                        }
                     }
                 } footer: {
                     Text(pantryText("Leave blank if unknown. Enter 0 only for confirmed none. Count means individual units, not an assumed package size."))
@@ -268,7 +352,7 @@ private struct PantryFoodEditor: View {
                 if let notice = model.notice { Text(pantryNotice(notice)) }
             } else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
         }
-        .navigationTitle(pantryText(lotID == nil ? "Add food" : "Recount food"))
+        .navigationTitle(pantryText(purchase != nil ? "Review recent purchase" : lotID == nil ? "Add food" : "Recount food"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(pantryText("Cancel")) { dismiss() }.disabled(model.busy)
@@ -277,14 +361,15 @@ private struct PantryFoodEditor: View {
                 Button(pantryText("Review")) {
                     editing = false
                     Task {
-                        if let lotID { await model.prepare(lotID: lotID, action: .recount(amount, unit)) }
-                        else { await model.prepareNewFood(name: name, existingFoodID: existingFoodID, location: location, amount: amount, unit: unit) }
+                        if let purchase { await model.prepareRecentPurchase(purchase, amount: amount, location: location) }
+                        else if let lotID { await model.prepare(lotID: lotID, action: .recount(amount, unit)) }
+                        else { await model.prepareNewFood(name: name, existingFoodID: existingFoodID, reviewedFood: reviewedFood, location: location, amount: amount, unit: unit) }
                     }
-                }.disabled(!accessAllowed || !model.canEdit || (lotID == nil && existingFoodID == nil && name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                }.disabled(!accessAllowed || !model.canEdit || (lotID == nil && reviewedFood == nil && existingFoodID == nil && name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                     .accessibilityIdentifier("pantry.review")
             }
         }
-        .onAppear { if let lot { amount = lot.count.quantity?.amount.description ?? ""; unit = lot.unit } }
+        .onAppear { if let lot { amount = lot.count.quantity?.amount.description ?? ""; unit = lot.unit; location = lot.location } }
         .interactiveDismissDisabled(model.busy)
         .privacySensitive()
     }
@@ -310,6 +395,14 @@ private struct PantryReviewView: View {
                     if let before = review.before.lots.first(where: { $0.id == review.command.lotID }) {
                         LabeledContent(pantryText("Previously recorded"), value: pantryCount(before.count))
                         LabeledContent(pantryText("Previous location"), value: pantryLocationName(before.location))
+                    }
+                }
+                if case let .reservation(edit) = review.command.change {
+                    Section(pantryText("Reservation change")) {
+                        PantryReservationSummary(edit: edit, claim: review.before.reservations.first { $0.id == edit.id })
+                        LabeledContent(pantryText("Previously available"), value: pantryQuantity(review.before.availability.lots.first {
+                            $0.id == review.command.lotID
+                        }?.free))
                     }
                 }
                 if !review.affectedReservations.isEmpty {
@@ -399,6 +492,7 @@ private struct PantryPendingSummary: View {
             case .move(let location): Text(pantryFormat("Move to %@", pantryLocationName(location)))
             case .usedUp: Text(pantryText("Used up"))
             case .revise: Text(pantryText("Review pantry change"))
+            case .reservation(let edit): PantryReservationSummary(edit: edit, claim: nil)
             }
             Text(entry.command.occurredAt.formatted(date: .abbreviated, time: .shortened))
         }.accessibilityElement(children: .combine)

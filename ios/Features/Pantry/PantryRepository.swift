@@ -36,7 +36,9 @@ final class PantryRepository {
         /// Includes newly unresolved or shortfall-backed commitments, not just numeric changes.
         var affectedReservations: [InventoryReservationCoverage] {
             let previous = Dictionary(uniqueKeysWithValues: before.availability.reservations.map { ($0.id, $0) })
-            return proposedAvailability.reservations.filter { previous[$0.id] != $0 }
+            let editedID: UUID?
+            if case .reservation(let edit) = command.change { editedID = edit.id } else { editedID = nil }
+            return proposedAvailability.reservations.filter { $0.id != editedID && previous[$0.id] != $0 }
         }
     }
 
@@ -59,6 +61,8 @@ final class PantryRepository {
     private let authorize: () -> Bool
     private let limits: ReadLimits
     private let mutationGate: PantryMutationGate?
+    var originID: UUID { store.workspaceID }
+    func observeErasure(_ observer: any PantryErasureObserver) { mutationGate?.observeErasure(observer) }
 
     init(store: ComparisonStore, limits: ReadLimits = .standard, mutationGate: PantryMutationGate? = nil,
          pendingStore: PantryPendingStore? = nil,
@@ -124,12 +128,30 @@ final class PantryRepository {
         try requireAccess()
         guard command.originID == store.workspaceID else { throw Failure.wrongWorkspace }
         let before = try await load(at: now)
-        let prepared = try InventoryEngine.prepare(command, current: before.lots.first { $0.id == command.lotID }, at: now)
-        let proposedLots = before.lots.filter { $0.id != command.lotID } + [prepared.lot]
-        try validateCapacity(of: PantryPersistenceCodec.writes(prepared), replacing: before)
-        return Review(command: command, before: before, proposedLot: prepared.lot,
-            proposedAvailability: try InventoryProjection.build(originID: before.state.workspaceID,
-                lots: proposedLots, reservations: before.reservations, at: now))
+        return try preparedChange(command, before: before, at: now).review
+    }
+
+    private func preparedChange(_ command: InventoryCommand, before: Snapshot, at now: Date) throws
+        -> (review: Review, writes: [InventoryWrite]) {
+        let lot: InventoryLot
+        let after: InventoryProjection
+        let writes: [InventoryWrite]
+        if case let .reservation(edit) = command.change {
+            guard let current = before.lots.first(where: { $0.id == command.lotID }) else { throw InventoryError.stale }
+            let (claim, projection) = try edit.prepare(command: command, lots: before.lots, reservations: before.reservations,
+                                                       before: before.availability, at: now)
+            lot = current
+            after = projection
+            writes = [try PantryPersistenceCodec.write(claim, expectedRevision: edit.previousRevision)]
+        } else {
+            let prepared = try InventoryEngine.prepare(command, current: before.lots.first { $0.id == command.lotID }, at: now)
+            lot = prepared.lot
+            after = try InventoryProjection.build(originID: before.state.workspaceID,
+                lots: before.lots.filter { $0.id != command.lotID } + [lot], reservations: before.reservations, at: now)
+            writes = try PantryPersistenceCodec.writes(prepared)
+        }
+        try validateCapacity(of: writes, replacing: before)
+        return (Review(command: command, before: before, proposedLot: lot, proposedAvailability: after), writes)
     }
 
     /// The original command and reviewed global revision are the durable retry input.
@@ -154,14 +176,7 @@ final class PantryRepository {
         }
         let current = try await load(at: now)
         guard current.state.revision == reviewedInventoryRevision else { throw ComparisonStoreError.staleInventory }
-        let prepared = try InventoryEngine.prepare(command, current: current.lots.first { $0.id == command.lotID }, at: now)
-        // Validate the complete resulting physical/claim graph before writing, even
-        // when this caller resumed a saved command instead of keeping an in-memory review.
-        _ = try InventoryProjection.build(originID: current.state.workspaceID,
-            lots: current.lots.filter { $0.id != command.lotID } + [prepared.lot],
-            reservations: current.reservations, at: now)
-        let writes = try PantryPersistenceCodec.writes(prepared)
-        try validateCapacity(of: writes, replacing: current)
+        let writes = try preparedChange(command, before: current, at: now).writes
         let batch = InventoryBatch(workspaceID: current.state.workspaceID, operationID: command.id,
             expectedRevision: reviewedInventoryRevision, request: request, writes: writes)
         try requireAccess()

@@ -34,7 +34,7 @@ import CoreDomain
         let entry: Entry
         let digest: Data
     }
-    static let maximumFileBytes = InventoryPersistenceLimits.requestBytes + 8_192
+    nonisolated static let maximumFileBytes = InventoryPersistenceLimits.requestBytes + 8_192
     let inventoryWorkspaceID: UUID
     let fileURL: URL
     private let directory: URL
@@ -86,10 +86,15 @@ import CoreDomain
               receipt.migrationID == nil, expected.reviewedInventoryRevision < Int64.max,
               receipt.revision == expected.reviewedInventoryRevision + 1,
               currentInventoryRevision >= receipt.revision,
-              receipt.comparisonHeads.isEmpty,
-              receipt.heads.contains(where: { $0.key == .init(.lot, expected.command.lotID) }),
+              receipt.comparisonHeads.isEmpty else { throw Failure.operationConflict }
+        if case .reservation(let edit) = expected.command.change {
+            guard receipt.heads.count == 1, receipt.heads.first?.key == .init(.reservation, edit.id),
+                  receipt.heads.first?.revision == edit.previousRevision + 1 else { throw Failure.operationConflict }
+        } else {
+            guard receipt.heads.contains(where: { $0.key == .init(.lot, expected.command.lotID) }),
               receipt.heads.contains(where: { $0.key == .init(.event, expected.command.eventID) }) else {
-            throw Failure.operationConflict
+                throw Failure.operationConflict
+            }
         }
         let acknowledgment = Acknowledgment(operationID: receipt.operationID, committedInventoryRevision: receipt.revision,
             adoptedInventoryRevision: currentInventoryRevision, receiptDigest: Self.digest(try Self.encode(receipt)))
@@ -131,11 +136,21 @@ import CoreDomain
     }
 
     private func readUnlocked() throws -> Entry? {
-        let handle: FileHandle
-        do { handle = try FileHandle(forReadingFrom: fileURL) }
-        catch let error as NSError where error.domain == NSCocoaErrorDomain &&
-            (error.code == NSFileNoSuchFileError || error.code == NSFileReadNoSuchFileError) { return nil }
+        try Self.archiveEntry(at: fileURL, inventoryWorkspaceID: inventoryWorkspaceID)
+    }
+
+    /// Read-only bounded archival capture; callers fence changes with exact journal digests.
+    nonisolated static func archiveEntry(at fileURL: URL, inventoryWorkspaceID: UUID) throws -> Entry? {
+        let descriptor = Darwin.open(fileURL.path, O_RDONLY | O_NOFOLLOW)
+        guard descriptor >= 0 else {
+            if errno == ENOENT { return nil }
+            throw Failure.io
+        }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
         defer { try? handle.close() }
+        var info = stat()
+        guard fstat(descriptor, &info) == 0, info.st_mode & S_IFMT == S_IFREG,
+              info.st_size > 0, info.st_size <= Self.maximumFileBytes else { throw Failure.corrupt }
         let bytes = try handle.read(upToCount: Self.maximumFileBytes + 1) ?? Data()
         guard !bytes.isEmpty, bytes.count <= Self.maximumFileBytes else { throw Failure.corrupt }
         let envelope: Envelope
@@ -144,7 +159,7 @@ import CoreDomain
         guard envelope.version == 1 else { throw Failure.corrupt }
         guard envelope.inventoryWorkspaceID == inventoryWorkspaceID else { throw Failure.foreignOrigin }
         guard envelope.digest == Self.digest(try Self.encode(envelope.entry)) else { throw Failure.corrupt }
-        do { try validate(envelope.entry) }
+        do { try Self.validateArchiveEntry(envelope.entry, inventoryWorkspaceID: inventoryWorkspaceID) }
         catch Failure.foreignOrigin { throw Failure.foreignOrigin }
         catch { throw Failure.corrupt }
         return envelope.entry
@@ -175,7 +190,7 @@ import CoreDomain
         try Self.validateArchiveEntry(entry, inventoryWorkspaceID: inventoryWorkspaceID)
     }
     /// Validates saved retry bytes, not a durable authorization grant.
-    static func validateArchiveEntry(_ entry: Entry, inventoryWorkspaceID: UUID) throws {
+    nonisolated static func validateArchiveEntry(_ entry: Entry, inventoryWorkspaceID: UUID) throws {
         let command = entry.command
         guard command.originID == inventoryWorkspaceID else { throw Failure.foreignOrigin }
         guard entry.reviewedInventoryRevision >= 0, entry.reviewedInventoryRevision < Int64.max,
@@ -183,6 +198,10 @@ import CoreDomain
               command.expectedRevision.map({ $0 > 0 && $0 < Int64.max }) ?? true,
               try PantryPersistenceCodec.request(command, inventoryRevision: entry.reviewedInventoryRevision).count <= InventoryPersistenceLimits.requestBytes else {
             throw Failure.invalidEntry
+        }
+        if case .reservation(let edit) = command.change {
+            try edit.validate()
+            guard command.expectedRevision != nil else { throw Failure.invalidEntry }
         }
         if let ack = entry.acknowledgment {
             guard ack.operationID == entry.operationID,
@@ -208,9 +227,9 @@ import CoreDomain
         defer { flock(fd, LOCK_UN) }
         return try body()
     }
-    private static func encode<T: Encodable>(_ value: T) throws -> Data {
+    nonisolated private static func encode<T: Encodable>(_ value: T) throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return try encoder.encode(value)
     }
-    private static func digest(_ value: Data) -> Data { Data(SHA256.hash(data: value)) }
+    nonisolated private static func digest(_ value: Data) -> Data { Data(SHA256.hash(data: value)) }
 }

@@ -31,7 +31,7 @@ import CoreDomain
         let entry: Entry
         let digest: Data
     }
-    static let maximumFileBytes = PantryPackSelectionCommitPort.maximumRequestBytes + 8_192
+    nonisolated static let maximumFileBytes = PantryPackSelectionCommitPort.maximumRequestBytes + 8_192
     let inventoryWorkspaceID: UUID
     let ledgerWorkspaceID: UUID
     let fileURL: URL
@@ -103,11 +103,21 @@ import CoreDomain
         }
     }
     private func readUnlocked() throws -> Entry? {
-        let handle: FileHandle
-        do { handle = try FileHandle(forReadingFrom: fileURL) }
-        catch let error as NSError where error.domain == NSCocoaErrorDomain &&
-            (error.code == NSFileNoSuchFileError || error.code == NSFileReadNoSuchFileError) { return nil }
+        try Self.archiveEntry(at: fileURL, inventoryWorkspaceID: inventoryWorkspaceID, ledgerWorkspaceID: ledgerWorkspaceID)
+    }
+
+    /// Read-only bounded archival capture; callers fence changes with exact journal digests.
+    nonisolated static func archiveEntry(at fileURL: URL, inventoryWorkspaceID: UUID, ledgerWorkspaceID: UUID) throws -> Entry? {
+        let descriptor = Darwin.open(fileURL.path, O_RDONLY | O_NOFOLLOW)
+        guard descriptor >= 0 else {
+            if errno == ENOENT { return nil }
+            throw Failure.io
+        }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
         defer { try? handle.close() }
+        var info = stat()
+        guard fstat(descriptor, &info) == 0, info.st_mode & S_IFMT == S_IFREG,
+              info.st_size > 0, info.st_size <= Self.maximumFileBytes else { throw Failure.corrupt }
         let bytes = try handle.read(upToCount: Self.maximumFileBytes + 1) ?? Data()
         guard !bytes.isEmpty, bytes.count <= Self.maximumFileBytes else { throw Failure.corrupt }
         let envelope: Envelope
@@ -116,7 +126,7 @@ import CoreDomain
         guard envelope.version == 1 else { throw Failure.corrupt }
         guard envelope.inventoryWorkspaceID == inventoryWorkspaceID && envelope.ledgerWorkspaceID == ledgerWorkspaceID else { throw Failure.foreignOrigin }
         guard envelope.digest == Self.digest(try Self.encode(envelope.entry)) else { throw Failure.corrupt }
-        do { try validate(envelope.entry) }
+        do { try Self.validateArchiveEntry(envelope.entry, inventoryWorkspaceID: inventoryWorkspaceID, ledgerWorkspaceID: ledgerWorkspaceID) }
         catch Failure.foreignOrigin { throw Failure.foreignOrigin }
         catch { throw Failure.corrupt }
         return envelope.entry
@@ -147,7 +157,7 @@ import CoreDomain
         try Self.validateArchiveEntry(entry, inventoryWorkspaceID: inventoryWorkspaceID, ledgerWorkspaceID: ledgerWorkspaceID)
     }
     /// Archival validation cannot recreate a live pending request or authorization.
-    static func validateArchiveEntry(_ entry: Entry, inventoryWorkspaceID: UUID, ledgerWorkspaceID: UUID) throws {
+    nonisolated static func validateArchiveEntry(_ entry: Entry, inventoryWorkspaceID: UUID, ledgerWorkspaceID: UUID) throws {
         try PantryPackSelectionCommitPort.validate(entry.request)
         guard entry.request.inventoryWorkspaceID == inventoryWorkspaceID,
               entry.request.ledgerWorkspaceID == ledgerWorkspaceID else { throw Failure.foreignOrigin }
@@ -175,9 +185,9 @@ import CoreDomain
         defer { flock(fd, LOCK_UN) }
         return try body()
     }
-    private static func encode<T: Encodable>(_ value: T) throws -> Data {
+    nonisolated private static func encode<T: Encodable>(_ value: T) throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return try encoder.encode(value)
     }
-    private static func digest(_ value: Data) -> Data { Data(SHA256.hash(data: value)) }
+    nonisolated private static func digest(_ value: Data) -> Data { Data(SHA256.hash(data: value)) }
 }

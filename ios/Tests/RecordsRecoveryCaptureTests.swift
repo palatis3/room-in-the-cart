@@ -282,6 +282,31 @@ import UIKit
         await draining.value
         XCTAssertTrue(didDrain)
     }
+    func testPantryLeaseTracksCopyLifetimeThroughMaterializationAndDeletionUndo() async throws {
+        let root = try root(), registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json"))
+        let reference = PantryRecoveryReference(bundleID: UUID(), manifestDigest: Data(repeating: 7, count: 32),
+            originID: UUID(), inventoryRevision: 2)
+        let copy = try await registry.applyPantry(registry.reviewPantry(reference))
+        let lifetime = RecordsRecoveryLifetime()
+        @MainActor final class Access { var allowed = true }
+        let access = Access()
+        let lease = try await lifetime.begin(copy: copy, registry: registry, authorize: { access.allowed })
+        let started = try await registry.beginPantryMaterialization(copy)
+        _ = try await registry.finishPantryMaterialization(started.copy, workspaceID: UUID())
+        try await lifetime.revalidate(lease, copy: copy, registry: registry)
+        access.allowed = false; XCTAssertFalse(lease.authorize())
+        access.allowed = true
+        lifetime.invalidate()
+        let token = try await registry.delete(.copy(copy.id.uuidString))
+        try await registry.undoDelete(token)
+        await assertFails { try await lifetime.revalidate(lease, copy: copy, registry: registry) }
+        await assertFails { _ = try await lifetime.begin(copy: copy, registry: registry, authorize: { true }) }
+        let restoredCopies = try await registry.listPantry()
+        let restored = try XCTUnwrap(restoredCopies.first)
+        let fresh = try await lifetime.begin(copy: restored, registry: registry, authorize: { true })
+        XCTAssertTrue(fresh.authorize()); XCTAssertFalse(lease.authorize())
+        lifetime.finish(lease); lifetime.finish(fresh); await lifetime.drain()
+    }
     func testCancelledOpenCannotReplaceCompletedDeletionOutcomeAndDeniedDeletionCannotMutateRegistry() async throws {
         let root = try root(), registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json")), saved = try await commit(try original(), registry: registry)
         let started = expectation(description: "Open awaits store"), deletion = expectation(description: "Deletion completed")

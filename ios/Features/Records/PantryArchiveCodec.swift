@@ -6,9 +6,9 @@ import RecordArchive
 
 /// Typed native payloads for owner-only pantry archive records. The Records layer owns
 /// envelope versioning, multipart files, registry grouping, authorization and activation.
-@MainActor enum PantryArchiveCodec {
+enum PantryArchiveCodec {
     enum Failure: Error, Equatable { case invalid, incomplete, mixedPackage, capacity, wrongOrigin }
-    struct Descriptor: Codable, Equatable {
+    struct Descriptor: Codable, Equatable, Sendable {
         let originID: UUID
         let inventoryRevision: Int64
         let capturedAt: Date
@@ -245,10 +245,10 @@ import RecordArchive
             reservations: value.reservations, at: value.descriptor.capturedAt)
     }
 
-    private static func validateDescriptor(_ descriptor: Descriptor) throws {
+    static func validateDescriptor(_ descriptor: Descriptor) throws {
         guard descriptor.inventoryRevision >= 0, descriptor.capturedAt.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalid }
     }
-    private static func validateEvent(_ event: InventoryEvent, observations: [UUID: InventoryObservation]) throws {
+    static func validateEvent(_ event: InventoryEvent, observations: [UUID: InventoryObservation]) throws {
         try validateEventShape(event)
         func observation(_ id: UUID, count: InventoryCount?, at date: Date) throws {
             guard let value = observations[id], value.lotID == event.lotID, value.operationID == event.operationID,
@@ -256,6 +256,7 @@ import RecordArchive
                   count.map({ value.count == $0 }) ?? true else { throw Failure.invalid }
         }
         switch event.change {
+        case .reservation: throw Failure.invalid // Claim-only writes never create physical lot events.
         case let .create(seed, id):
             try seed.source.validate(); try seed.count.validate()
             guard event.revision == 1, seed.source.originID == event.originID, !seed.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -320,9 +321,10 @@ import RecordArchive
             guard current == lot else { throw Failure.invalid }
         }
     }
-    private static func validateEventShape(_ event: InventoryEvent) throws {
+    static func validateEventShape(_ event: InventoryEvent) throws {
         guard event.revision >= 1, event.occurredAt.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalid }
         switch event.change {
+        case .reservation: throw Failure.invalid // Claim-only writes never create physical lot events.
         case let .create(seed, _):
             try seed.source.validate(); try seed.count.validate()
             guard event.revision == 1, seed.source.originID == event.originID,
@@ -342,7 +344,7 @@ import RecordArchive
             }
         }
     }
-    private static func validateHistory(_ history: History, at date: Date) throws {
+    static func validateHistory(_ history: History, at date: Date) throws {
         switch history {
         case .migration(let value):
             let row = InventoryRecord(key: .init(.intent, value.id), revision: 1, payload: try ArchiveCodec.canonical(value))

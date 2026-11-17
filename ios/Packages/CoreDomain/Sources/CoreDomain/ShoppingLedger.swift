@@ -531,9 +531,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         contributions.filter { $0.lineID == lineID && $0.removedAt == nil }
     }
 
-    public func search(_ query: String) -> [ShoppingLine] {
+    public func search(_ query: String, department: ((ShoppingLine) -> String)? = nil) -> [ShoppingLine] {
         let term = normalizedProduct(query)
-        let visible = lines.filter { !$0.isTrashed }
+        let active = lines.filter { !$0.isTrashed }
+        let visible = department.map { resolve in active.map { source in
+            var line = source
+            line.aisle = resolve(source)
+            return line
+        } } ?? active
         guard !term.isEmpty else { return visible.sorted { $0.originalOrder < $1.originalOrder } }
         // Search each source once, rather than rescanning every source for each line.
         let matchingSourceLines = Set(contributions.lazy.filter {

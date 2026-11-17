@@ -51,6 +51,23 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
+			<string>com.roominthecart.pantry-recovery</string>
+			<key>UTTypeDescription</key>
+			<string>Room in the Cart encrypted pantry recovery</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.package</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>ritcpantry</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key>
 			<string>com.roominthecart.personal-recovery</string>
 			<key>UTTypeDescription</key>
 			<string>Room in the Cart recovery</string>
