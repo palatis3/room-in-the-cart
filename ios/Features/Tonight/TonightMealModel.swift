@@ -57,7 +57,8 @@ import RecordArchive
         generation = UUID(); input = nil; matches = [:]; foodEvidence = [:]; reviews = []; busy = false; failed = false
     }
     func refresh(authorize: @escaping () -> Bool, load: () async throws -> Input) async {
-        guard authorize(), !busy else { return }
+        guard authorize() else { invalidate(); return }
+        guard !busy else { return }
         let token = generation
         busy = true
         defer { if generation == token { busy = false } }
@@ -81,6 +82,15 @@ import RecordArchive
               foodID == nil || input.foods.contains(where: { $0.id == foodID }) else { throw Failure.stale }
         matches[recipeID, default: [:]][ingredientID] = foodID
         try rebuild()
+    }
+    /// Allocation coverage can normalize repeated ingredients to a shared unit.
+    /// Unknown stock never becomes a known zero merely because a provisional
+    /// coverage row happened to contain zero shortfall.
+    static func missingQuantity(_ row: PantryMealMatcher.IngredientReview) -> Quantity? {
+        guard !row.hasUnresolvedStock else { return nil }
+        guard let coverage = row.coverage else { return row.ingredient.quantity }
+        guard coverage.issues.isEmpty, let amount = coverage.shortfall else { return nil }
+        return Quantity(amount: amount, unit: coverage.unit, originalLiteral: amount.description)
     }
     static func canChoose(_ review: PantryMealMatcher.Review) -> Bool {
         review.eligibility.eligible && review.hasConfirmedPantryFood && !review.recipe.ingredients.isEmpty &&

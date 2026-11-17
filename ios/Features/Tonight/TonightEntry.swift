@@ -58,6 +58,7 @@ struct TonightEntry: View {
         }
         .onChange(of: ledger.workspace.dinnerPlanning.privateMealPreferences?.revision) { _, _ in
             model.invalidate(); preview = nil; choosing = nil
+            Task { await refresh() }
         }
         .sheet(item: $foodToReview) { food in
             if let original = model.input, let originalScope = scope {
@@ -182,7 +183,7 @@ struct TonightEntry: View {
                 Text(tonightText("Similar names are not a match until you review them. Unknown quantities do not count as available."))
                 ForEach(review.ingredients.filter { !$0.covered }) { row in
                     Text(tonightText("Missing or not credited") + ": " + row.ingredient.name + " · " +
-                        (row.coverage?.shortfall.map { amountText($0) + " " + (row.ingredient.quantity?.unit.displayName ?? "") } ?? ledgerQuantity(row.ingredient.quantity)))
+                        ledgerQuantity(TonightMealModel.missingQuantity(row)))
                 }
                 Button(tonightText("Choose…")) {
                     choosing = review.recipe; destination = ledger.workspace.selectedShopID; preview = nil; message = nil

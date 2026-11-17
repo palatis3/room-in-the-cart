@@ -31,6 +31,25 @@ import RecordArchive
         XCTAssertTrue(TonightMealModel.canChoose(review))
         XCTAssertTrue(try XCTUnwrap(model.input).workspace.shops.isEmpty, "Browsing and matching do not create a pickup")
     }
+    func testRepeatedMixedUnitShortfallUsesCoverageUnitAndUnknownIsNotZero() throws {
+        let food = UUID()
+        let grams = MealIngredient(name: "Rice", quantity: .init(amount: try Rational(500), unit: .gram, originalLiteral: "500"))
+        let kilos = MealIngredient(name: "More rice", quantity: .init(amount: .one, unit: .kilogram, originalLiteral: "1"))
+        let recipe = MealTemplate(title: "Rice dinner", ingredients: [grams, kilos])
+        let lot = ConfirmedStockLot(id: food, foodID: food, name: "Rice",
+            usable: .init(amount: .one, unit: .kilogram, originalLiteral: "1"), confirmedAt: now, source: .pantry)
+        let review = try PantryMealMatcher.review(recipe: recipe, reviewedFoods: [grams.id: food, kilos.id: food],
+            globallyFreeLots: [lot], unresolvedFoods: [], profile: nil)
+        let row = try XCTUnwrap(review.ingredients.first { $0.id == kilos.id })
+        let missing = try XCTUnwrap(TonightMealModel.missingQuantity(row))
+        XCTAssertEqual(missing.unit, .gram)
+        XCTAssertEqual(missing.amount, try Rational(500))
+        XCTAssertEqual(try missing.converted(to: .kilogram).amount, try Rational(1, 2))
+        let unknown = try PantryMealMatcher.review(recipe: recipe, reviewedFoods: [grams.id: food, kilos.id: food],
+            globallyFreeLots: [lot], unresolvedFoods: [food], profile: nil)
+        XCTAssertTrue(unknown.ingredients.allSatisfy { TonightMealModel.missingQuantity($0) == nil })
+        XCTAssertFalse(TonightMealModel.canChoose(unknown))
+    }
     func testCountOrPreferenceChangeClearsReviewedMatchesBeforeNewSuggestion() async throws {
         let food = UUID(), ingredient = MealIngredient(name: "Wraps", quantity: q(2))
         let recipe = MealTemplate(title: "Dinner", ingredients: [ingredient]), model = TonightMealModel()
