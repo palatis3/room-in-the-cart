@@ -93,6 +93,40 @@ import XCTest
 }
 
 @MainActor final class RecipeLibraryAcceptanceUITests: LibraryPrivacyUITestCase {
+    func testCookingTimersRestoreInSpanishAtLargestTextAndEndOnRequest() {
+        launch("--recipe-library-fixture")
+        tap(button("records.recovered.Existing family soup"))
+        tap(app.buttons["Open saved recipe"])
+        tap(button("cooking.openRecipe"))
+        assertText("Keep the existing instructions.")
+        assertText("2 cups beans")
+        tap(button("cooking.prepareReadback"))
+        reveal(button("capture.readback.play"))
+        tap(button("cooking.start"))
+        tap(button("cooking.start"))
+        tap(button("cooking.pause.0"), upward: true)
+        XCTAssertTrue(element("cooking.paused.0").exists)
+        app.terminate()
+        app.launchArguments = ["--ui-testing", "--recipe-library-fixture", "-AppleLanguages", "(es)",
+            "-AppleLocale", "es_US", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        tap(button("records.recovered.Existing family soup"))
+        tap(button("records.openSavedRecipe"))
+        tap(button("cooking.openRecipe"))
+        assertText("Keep the existing instructions.")
+        assertText("2 cups beans")
+        reveal(element("cooking.paused.0"), requiresHitTarget: false)
+        XCTAssertEqual(element("cooking.paused.0").label, "En pausa")
+        reveal(element("cooking.timer.1"), requiresHitTarget: false)
+        XCTAssertEqual(element("cooking.timer.1").label, "Temporizador 2")
+        capture("Dos temporizadores guardados con texto grande")
+        tap(button("cooking.end"))
+        tap(button("cooking.confirmEnd"))
+        tap(button("cooking.openRecipe"))
+        reveal(button("cooking.start"))
+        XCTAssertFalse(element("cooking.timer.0").exists)
+    }
+
     func testRecipeLinkAllowsMissingYieldCorrectionBeforeSaving() {
         launch("--recipe-library-fixture")
         XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))

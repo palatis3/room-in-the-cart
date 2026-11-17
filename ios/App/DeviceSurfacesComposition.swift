@@ -493,6 +493,7 @@ import DeviceSurfaces
     func eraseLedgerWorkspace(_ id: UUID) async throws {
         // Replayed by foreground tombstone reconciliation and Records deletion.
         try await CaptureMediaStore.shared.eraseWorkspace(id)
+        try CookingSessionResources.erase(workspace: id)
         try configure()
         if draft?.scope.workspaceID == id || destinationChange?.previous.scope.workspaceID == id {
             draft = nil

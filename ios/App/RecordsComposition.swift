@@ -283,7 +283,9 @@ struct RecordsToolsEntryView: View {
                             NavigationLink(recordsText("Open recovered dinners")) { RecordsRecoveredDinnersView(ledger: model) }
                         }.navigationTitle(recordsText("Recovered workspace")).environmentObject(model)
                     case let .pickup(model): PickupHomeView(model: model).environment(\.pickupLedger, nil)
-                    case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger, dinnerModel: dinnerModel)
+                    case let .recipe(recipe):
+                        RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger, dinnerModel: dinnerModel,
+                            cooking: composition.cookingContext(copy: destination.id, recipe: recipe))
                     case let .sharedRecord(record, text):
                         ScrollView { Text(text).textSelection(.enabled).accessibilityIdentifier("records.sharedRecoveredText").frame(maxWidth: .infinity, alignment: .leading).padding() }
                             .navigationTitle(recordsTitle(record))
@@ -380,6 +382,16 @@ private struct RecordsRecoveredDinnersView: View {
                 self.ledger.sourceWorkspaceID == ledgerID && self.app.store?.workspaceID == comparisonID
         }
     }
+    func cookingContext(copy: String, recipe: ImportedRecipe) -> CookingSessionContext? {
+        guard let source = UUID(uuidString: copy), let workspace = ledger.sourceWorkspaceID,
+              let scope = privateIdentity(), let authorized = captureAuthorization(), authorized(),
+              let key = try? CookingSessionKey(workspace: workspace, actor: scope.identity.actorID,
+                audience: [scope.identity.subject, scope.identity.householdID, scope.identity.memberID, scope.identity.role, scope.shopID, scope.grantID],
+                kind: .recipe, source: source, revision: recipe.id) else { return nil }
+        return CookingSessionContext(key: key, authorize: { [weak self] in
+            authorized() && self?.destination?.id == copy
+        })
+    }
     private let recipeLibraryOnly: Bool
     init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup, recipeLibraryOnly: Bool) {
         self.recipeLibraryOnly = recipeLibraryOnly
@@ -464,8 +476,9 @@ private struct RecordsRecoveredDinnersView: View {
     private func purgeOrphanWorkspaces() async throws {
         guard let registry, let directory else { throw ArchiveError.unavailable }
         let root = directory.appendingPathComponent("Recoveries", isDirectory: true)
-        guard FileManager.default.fileExists(atPath: root.path) else { return }
         let retained = Set(try await registry.refreshList().map(\.id))
+        try CookingSessionResources.eraseUnretainedRecipes(retaining: Set(retained.compactMap(UUID.init(uuidString:))))
+        guard FileManager.default.fileExists(atPath: root.path) else { return }
         let folders = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { UUID(uuidString: $0.lastPathComponent) != nil && !retained.contains($0.lastPathComponent) }
         guard !folders.isEmpty else { return }
@@ -855,6 +868,7 @@ private struct RecordsRecipeAdoptionView: View {
     let recipe: ImportedRecipe
     @ObservedObject var ledger: LedgerModel
     let dinnerModel: DinnerFeatureModel?
+    let cooking: CookingSessionContext?
     @State private var editing = false
     private var template: MealTemplate {
         // The placeholder is never shown or saved. The editor requires the person to
@@ -867,6 +881,15 @@ private struct RecordsRecipeAdoptionView: View {
     var body: some View {
         Form {
             Text(recipe.title).font(.title2.bold())
+            if let cooking {
+                NavigationLink(recordsText("Cook this recipe")) {
+                    CookingSessionView(title: recipe.title, steps: recipe.cookingSteps, ingredients: recipe.ingredients,
+                        legacyNotes: recipe.notes, context: cooking,
+                        finishTitle: ledger.shop == nil ? nil : recordsText("Choose a dinner for this pickup")) {
+                            dinnerEditor
+                        }
+                }.accessibilityIdentifier("cooking.openRecipe")
+            }
             Text(recipe.yieldText)
             ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { _, value in Text(value) }
             if !recipe.steps.isEmpty {
@@ -886,13 +909,14 @@ private struct RecordsRecipeAdoptionView: View {
         }
         .navigationTitle(recordsText("Saved recipe"))
         .sheet(isPresented: $editing) {
-            NavigationStack {
-                if let dinnerModel {
-                    DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: true)
-                } else {
-                    LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true)
-                }
-            }
+            NavigationStack { dinnerEditor }
+        }
+    }
+    @ViewBuilder private var dinnerEditor: some View {
+        if let dinnerModel {
+            DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: true)
+        } else {
+            LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true)
         }
     }
 }

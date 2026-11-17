@@ -512,6 +512,7 @@ struct RecordsToolsView: View {
                 if let source = recipe.sourceURL { Text(source).textSelection(.enabled).font(.caption) }
                 editSavedRecipeButton(saved)
                 Button(recordsText("Open saved recipe")) { Task { await model.openRecovered(saved) } }
+                    .accessibilityIdentifier("records.openSavedRecipe")
             } else if saved.record.nativePayload != nil {
                 Button(recordsText("Open separate recovered copy")) { Task { await model.openRecovered(saved) } }.accessibilityIdentifier("records.openRecovered." + saved.record.id)
             } else {
