@@ -13,22 +13,22 @@ Use existing app infrastructure and Apple frameworks first. Include the named op
 | 3 Storage dates | Reviewed versioned FoodKeeper guidance, package-date OCR and Apple notifications; optional AI proposes a reference-category match only | H1/H2, M2 |
 | 4 Tonight | Reviewed recipe library, available pantry and exact price calculations; optional interpretation of a request and explanations of eligible matches | H1, M2 |
 | 5 Buying enough | Exact package/quantity/fee arithmetic; assisted extraction may propose inputs, never compute authoritative totals | G, M1 |
-| 6 Family lists | Existing shared household service/database, local storage and recoverable sync | C |
+| 6 Family lists | Existing shared household service/database, local storage, recoverable sync and separate last-confirmed/queued indicators | C |
 | 7 Recipe import | Recipe structured data, Apple image/text capture and optional reviewed AI extraction | F, M1 |
 | 8 Repeat last week | Saved plans, current inventory and purchase history | I |
-| 9 Preferences | Explicit household/private profile and deterministic filtering; optional everyday-language interpretation into changes to review | G, M2 |
+| 9 Preferences | Household/private time budget and appliance inventory with deterministic filtering; optional everyday-language interpretation into changes to review | G, M2 |
 | 10 Dinner swap | Existing planner, scoped revisions/Undo; optional suggestions restricted to eligible reviewed recipes | I, M2 |
 | 11 Speech | Existing device speech/dictation and structured list drafts; opt-in OpenAI transcription and structured interpretation as an alternative | K, M1/M2 |
 | 12 Duplicates | Product identity and authorized household records; optional wording-match candidates, never automatic merging | C, M2 |
 | 13 Digital receipts | Share extension, PDFKit/document parsing, OCR and optional extraction; separate future inbox connection tracked below | E, M1, N |
-| 14 Batch products | Camera barcode/photo capture plus Open Food Facts candidate lookup, caching, attribution and correction | E |
+| 14 Batch products | Mixed barcode and multiple barcode-free photos in one editable session plus Open Food Facts candidate lookup, caching, attribution and correction | E |
 | 15 Aliases/deduplication | Store-specific confirmed corrections, receipt identity and evidence matching; optional uncertain-name candidates | D, M2 |
 | 16 Low staples | Confirmed history, conservative purchase-interval rules and stock suppression | J4 |
 | 17 Cooked deductions | Reviewed recipe amounts, canonical batches, explicit consumption/leftovers and Undo | J1 |
 | 18 Lunch reservations | Confirmed portions, schedules and exact held/free calculations | B/C, J1 |
 | 19 Finish a package | Recipe/package matching and exact added cost; optional explanations/suggestions among eligible recipes | H1, M2 |
 | 20 Shelf/checkout images | Apple Vision plus opt-in OpenAI image extraction through the same review path | E, M1 |
-| 21 Actual prices | Confirmed purchase evidence and unit-price arithmetic; future retailer coverage tracked below | D/G, N |
+| 21 Actual prices | Confirmed receipts and manual paid-price entries with source/date and comparable-unit arithmetic; future retailer coverage tracked below | D/G, N |
 | 23 Two options | Reviewed quotes, package/fee/minimum calculations; future retailer coverage tracked below | G, N |
 | 24 Store order | Product categories, remembered customer corrections and store-specific department layout | K |
 | 25 Schedule changes | Household schedule and planning calculations; optional calendar connection tracked below | I, N |
