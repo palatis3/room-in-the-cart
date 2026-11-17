@@ -8,7 +8,7 @@ import PDFKit
 import UniformTypeIdentifiers
 
 enum ReceiptDocumentKind: String, Codable, Sendable { case pdf, image, text }
-enum ReceiptDocumentFailure: Error, Equatable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout }
+enum ReceiptDocumentFailure: Error, Equatable, Sendable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout }
 
 enum ReceiptPhotoSelection: Sendable, Transferable {
     case selected(ReceiptDocumentBytes)
@@ -71,6 +71,7 @@ struct ReceiptDocumentPage: Identifiable, Sendable {
         let text: String
     }
     let lines: [Line]
+    var skipped: ReceiptDocumentFailure? = nil
 }
 
 struct ExtractedReceiptDocument: Sendable {
@@ -156,8 +157,20 @@ struct ReceiptDocumentReader: Sendable {
                 if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     result.append(try page(index + 1, method: .pdfText, text: text))
                 } else {
-                    let bytes = try autoreleasepool { try Self.raster(original) }
-                    result.append(try await page(index + 1, method: .pdfOCR, text: readImage(bytes)))
+                    do {
+                        let bytes = try autoreleasepool { try Self.raster(original) }
+                        result.append(try await page(index + 1, method: .pdfOCR, text: readImage(bytes)))
+                    } catch is CancellationError { throw CancellationError() }
+                    catch let failure as ReceiptDocumentFailure {
+                        switch failure {
+                        case .pixels, .unsupported, .unavailable, .lineLimit:
+                            result.append(.init(id: index + 1, method: .pdfOCR, lines: [], skipped: failure))
+                        default: throw failure
+                        }
+                    } catch {
+                        try Task.checkCancellation()
+                        result.append(.init(id: index + 1, method: .pdfOCR, lines: [], skipped: .unavailable))
+                    }
                 }
             }
             return result

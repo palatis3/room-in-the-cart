@@ -4225,6 +4225,38 @@
           }
         }
       }
+    },
+    "This page exceeds 25 megapixels. Choose a smaller image to review it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This page exceeds 25 megapixels. Choose a smaller image to review it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta página supera los 25 megapíxeles. Elige una imagen más pequeña para revisarla."
+          }
+        }
+      }
+    },
+    "This page exceeds the line limit. You can type the food lines instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This page exceeds the line limit. You can type the food lines instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta página supera el límite de líneas. Puedes escribir las líneas de los alimentos."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
