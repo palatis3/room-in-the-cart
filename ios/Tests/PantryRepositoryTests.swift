@@ -214,4 +214,88 @@ final class PantryRepositoryTests: XCTestCase {
         catch { XCTAssertEqual(error as? PantryRepository.Failure, .invalidProvenance) }
         try await store.close()
     }
+
+    func testDelayedCompoundRevisionSurvivesReopenWithoutReplacingNewerStorage() async throws {
+        let (directory, store) = try database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try await activate(store)
+        let repository = PantryRepository(store: store, authorize: { true })
+        let original = try creation(store)
+        let created = try await repository.apply(original, reviewedInventoryRevision: 1, at: now)
+        let movedAt = now.addingTimeInterval(20)
+        let move = InventoryCommand(id: UUID(), originID: store.workspaceID, lotID: original.lotID,
+            eventID: UUID(), expectedRevision: 1, occurredAt: movedAt, change: .move(.freezer))
+        let moved = try await repository.apply(move, reviewedInventoryRevision: created.current.state.revision, at: movedAt)
+        let savedAt = now.addingTimeInterval(30)
+        let observedAt = now.addingTimeInterval(10)
+        let revision = InventoryCommand(id: UUID(), originID: store.workspaceID, lotID: original.lotID,
+            eventID: UUID(), expectedRevision: 2, occurredAt: savedAt,
+            change: .revise(.init(observation: .init(count: .exact(try quantity(3)), observationID: UUID(),
+                observedAt: observedAt), name: "Corn wraps", useFirst: true)))
+        let revised = try await repository.apply(revision, reviewedInventoryRevision: moved.current.state.revision, at: savedAt)
+        try await store.close()
+        let reopened = try ComparisonStore(url: directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        let retry = try await PantryRepository(store: reopened, authorize: { true })
+            .apply(revision, reviewedInventoryRevision: moved.current.state.revision, at: savedAt)
+        XCTAssertTrue(retry.replayed)
+        XCTAssertEqual(retry.current.state, revised.current.state)
+        let lot = try XCTUnwrap(retry.current.lots.first)
+        XCTAssertEqual(lot.count, .exact(try quantity(3)))
+        XCTAssertEqual(lot.location, .freezer)
+        XCTAssertEqual(lot.name, "Corn wraps")
+        XCTAssertEqual(lot.confirmedAt, observedAt)
+        XCTAssertEqual(lot.updatedAt, savedAt)
+        XCTAssertTrue(lot.useFirst)
+        let observations = try await reopened.inventoryRecords(kind: .observation)
+        XCTAssertEqual(observations.count, 2)
+        try await reopened.close()
+    }
+
+    func testShoppingBatchCapacityCountsClaimReplacementAndEveryNewObservation() async throws {
+        let (directory, store) = try database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try await activate(store)
+        let repository = PantryRepository(store: store, authorize: { true })
+        let original = try creation(store)
+        let created = try await repository.apply(original, reviewedInventoryRevision: 1, at: now)
+        let lot = try XCTUnwrap(created.current.lots.first)
+        let claim = InventoryReservation(id: UUID(), originID: store.workspaceID, revision: 1,
+            foodID: lot.foodID, lotID: lot.id, name: "Lunch", amount: try quantity(2))
+        let firstWrite = InventoryWrite(record: InventoryRecord(key: .init(.reservation, claim.id), revision: 1,
+            payload: try JSONEncoder().encode(claim), lotID: lot.id), expectedRevision: 0)
+        _ = try await store.commitInventory(InventoryBatch(workspaceID: store.workspaceID, operationID: UUID(),
+            expectedRevision: created.current.state.revision, request: Data("lunch".utf8), writes: [firstWrite]), at: now)
+        let snapshot = try await repository.load(at: now)
+        let limited = PantryRepository(store: store,
+            limits: .init(payloadBytes: snapshot.loadedPayloadBytes, observations: 2), authorize: { true })
+        let replacement = InventoryReservation(id: claim.id, originID: claim.originID, revision: 2,
+            foodID: claim.foodID, lotID: claim.lotID, name: claim.name, amount: claim.amount, state: .released)
+        let replacementWrite = InventoryWrite(record: InventoryRecord(key: .init(.reservation, claim.id), revision: 2,
+            payload: try JSONEncoder().encode(replacement), lotID: lot.id), expectedRevision: 1)
+        // 'released' is two bytes longer than 'active'; only the difference counts.
+        let exact = PantryRepository(store: store,
+            limits: .init(payloadBytes: snapshot.loadedPayloadBytes + 2, observations: 2), authorize: { true })
+        XCTAssertNoThrow(try exact.validateCapacity(of: [replacementWrite], replacing: snapshot))
+        XCTAssertThrowsError(try limited.validateCapacity(of: [replacementWrite], replacing: snapshot)) {
+            XCTAssertEqual($0 as? InventoryError, .capacity)
+        }
+        let countLimited = PantryRepository(store: store,
+            limits: .init(payloadBytes: PantryRepository.ReadLimits.standard.payloadBytes, observations: 2), authorize: { true })
+        let newObservations = try (1...2).map { index -> InventoryWrite in
+            let observation = InventoryObservation(id: UUID(), lotID: lot.id, operationID: UUID(), revision: Int64(index + 1),
+                supersedesID: lot.observationID, observedAt: now, count: .unknown)
+            return InventoryWrite(record: InventoryRecord(key: .init(.observation, observation.id), revision: 1,
+                payload: try JSONEncoder().encode(observation), lotID: lot.id), expectedRevision: 0)
+        }
+        XCTAssertThrowsError(try countLimited.validateCapacity(of: newObservations, replacing: snapshot)) {
+            XCTAssertEqual($0 as? InventoryError, .capacity)
+        }
+        try await store.close()
+        let reopened = try ComparisonStore(url: directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        let unchanged = try await PantryRepository(store: reopened, authorize: { true }).load(at: now)
+        XCTAssertEqual(unchanged.state, snapshot.state)
+        XCTAssertEqual(unchanged.reservations, [claim])
+        XCTAssertEqual(unchanged.lots, snapshot.lots)
+        try await reopened.close()
+    }
 }

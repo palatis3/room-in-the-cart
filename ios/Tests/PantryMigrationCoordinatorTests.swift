@@ -20,11 +20,12 @@ import LocalStore
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(directory, test: self), instant = now
-        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        let gate = PantryMutationGate()
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"), mutationGate: gate)
         await ledger.open()
         let ledgerStore = try LedgerStore(url: directory.appendingPathComponent("ledger.sqlite"), inventoryProjectionsEnabled: true)
         let store = try ComparisonStore(url: directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
-        let pickup = PickupModel(store: store, clock: { instant })
+        let pickup = PickupModel(store: store, clock: { instant }, mutationGate: gate)
         cleanup.track(ledger, ledgerStore, store, pickup)
         let food = UUID()
         let added = await pickup.addUrgent(.init(id: food, food: "Wraps", meal: "Dinner", required: try q(6),
@@ -36,7 +37,7 @@ import LocalStore
             usable: try q(4), confirmedAt: now, source: .freezer), in: journey)
         XCTAssertTrue(stocked)
         return Fixture(directory: directory, cleanup: cleanup, store: store, ledgerStore: ledgerStore,
-            pickup: pickup, ledger: ledger, gate: PantryMutationGate(), stockID: stockID)
+            pickup: pickup, ledger: ledger, gate: gate, stockID: stockID)
     }
     private func coordinator(_ f: Fixture) -> PantryMigrationCoordinator {
         let instant = now
@@ -192,5 +193,51 @@ import LocalStore
         f.gate.endMigration(lease)
         let result = try await flow.apply(review)
         XCTAssertTrue(result.state.active)
+    }
+
+    func testActualPickupAndPantryWritersRespectSharedMigrationLease() async throws {
+        let f = try await fixture()
+        let before = try await f.store.list()
+        let lease = try f.gate.beginMigration()
+        let added = await f.pickup.addUrgent(.init(id: UUID(), food: "Milk", meal: "Breakfast",
+            required: try q(1), available: try q(0), due: nil, confirmedAt: now))
+        XCTAssertFalse(added)
+        XCTAssertTrue(f.pickup.hasPendingSave)
+        let blocked = try await f.store.list()
+        XCTAssertEqual(blocked, before)
+        f.gate.endMigration(lease)
+        let retried = await f.pickup.retrySave()
+        XCTAssertTrue(retried)
+        XCTAssertFalse(f.pickup.hasPendingSave)
+        let after = try await f.store.list()
+        XCTAssertEqual(after.count, before.count)
+        XCTAssertEqual(after.first?.revision, (before.first?.revision ?? 0) + 1)
+        let deletionLease = try f.gate.beginMigration()
+        let row = try XCTUnwrap(after.first)
+        do {
+            try await f.pickup.deleteArchived(id: row.id, expectedRevision: row.revision, operationID: UUID())
+            XCTFail("source retirement must wait for migration")
+        } catch { XCTAssertEqual(error as? PantryMutationGate.Failure, .busy) }
+        f.gate.endMigration(deletionLease)
+
+        let flow = coordinator(f)
+        let review = try await flow.prepare()
+        _ = try await flow.apply(review)
+        let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
+        let snapshot = try await repository.load(at: now)
+        let lot = try XCTUnwrap(snapshot.lots.first)
+        let command = InventoryCommand(id: UUID(), originID: f.store.workspaceID, lotID: lot.id,
+            eventID: UUID(), expectedRevision: lot.revision, occurredAt: now, change: .move(.fridge))
+        let pantryLease = try f.gate.beginMigration()
+        do {
+            _ = try await repository.apply(command, reviewedInventoryRevision: snapshot.state.revision, at: now)
+            XCTFail("pantry writer must use the same gate")
+        } catch { XCTAssertEqual(error as? PantryMutationGate.Failure, .busy) }
+        let unchanged = try await f.store.inventoryState()
+        XCTAssertEqual(unchanged, snapshot.state)
+        f.gate.endMigration(pantryLease)
+        let saved = try await repository.apply(command, reviewedInventoryRevision: snapshot.state.revision, at: now)
+        XCTAssertEqual(saved.current.state.revision, snapshot.state.revision + 1)
+        XCTAssertEqual(saved.current.lots.first { $0.id == lot.id }?.location, .fridge)
     }
 }

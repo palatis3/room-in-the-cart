@@ -95,10 +95,37 @@ public struct InventoryLotSeed: Codable, Equatable, Sendable {
     public let unit: UnitOfMeasure
     public let count: InventoryCount
     public let useFirst: Bool
+    public let observedAt: Date?
     public init(foodID: UUID, name: String, source: InventorySource, location: InventoryLocation,
-                unit: UnitOfMeasure, count: InventoryCount, useFirst: Bool = false) {
+                unit: UnitOfMeasure, count: InventoryCount, useFirst: Bool = false, observedAt: Date? = nil) {
         self.foodID = foodID; self.name = name; self.source = source; self.location = location
         self.unit = unit; self.count = count; self.useFirst = useFirst
+        self.observedAt = observedAt
+    }
+}
+
+/// An observation's time is distinct from the time a reviewed edit is saved.
+public struct InventoryCountRevision: Codable, Equatable, Sendable {
+    public let count: InventoryCount
+    public let observationID: UUID
+    public let observedAt: Date
+    public init(count: InventoryCount, observationID: UUID, observedAt: Date) {
+        self.count = count; self.observationID = observationID; self.observedAt = observedAt
+    }
+}
+
+/// One reviewed source edit advances a head once. Omitted fields retain the
+/// canonical pantry value; changing a label must never manufacture a recount.
+public struct InventoryLotRevision: Codable, Equatable, Sendable {
+    public let observation: InventoryCountRevision?
+    public let foodID: UUID?
+    public let name: String?
+    public let useFirst: Bool?
+    public let location: InventoryLocation?
+    public init(observation: InventoryCountRevision? = nil, foodID: UUID? = nil,
+                name: String? = nil, useFirst: Bool? = nil, location: InventoryLocation? = nil) {
+        self.observation = observation; self.foodID = foodID; self.name = name
+        self.useFirst = useFirst; self.location = location
     }
 }
 
@@ -108,6 +135,7 @@ public enum InventoryChange: Codable, Equatable, Sendable {
     case move(InventoryLocation)
     case opened(Date)
     case usedUp(observationID: UUID)
+    case revise(InventoryLotRevision)
 }
 
 /// The persistence adapter binds the canonical encoded request (including origin,

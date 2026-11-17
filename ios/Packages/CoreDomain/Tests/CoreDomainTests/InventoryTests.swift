@@ -90,6 +90,94 @@ final class InventoryTests: XCTestCase {
         XCTAssertEqual(lunch.state, .active)
     }
 
+    func testMetadataRevisionPreservesQualitativeObservationAndStorage() throws {
+        let original = try lot(.someLeft, useFirst: true)
+        let frozen = try change(original, .move(.freezer)).lot
+        let opened = try change(frozen, .opened(now.addingTimeInterval(-30))).lot
+        let correctedFood = UUID()
+        let renamed = try change(opened, .revise(.init(foodID: correctedFood, name: "Corn wraps", useFirst: false)))
+        XCTAssertEqual(renamed.lot.foodID, correctedFood)
+        XCTAssertEqual(renamed.lot.name, "Corn wraps")
+        XCTAssertFalse(renamed.lot.useFirst)
+        XCTAssertEqual(renamed.lot.revision, opened.revision + 1)
+        XCTAssertEqual(renamed.lot.count, .someLeft)
+        XCTAssertEqual(renamed.lot.observationID, original.observationID)
+        XCTAssertEqual(renamed.lot.confirmedAt, original.confirmedAt)
+        XCTAssertEqual(renamed.lot.location, .freezer)
+        XCTAssertEqual(renamed.lot.openedAt, opened.openedAt)
+        XCTAssertEqual(renamed.lot.source, original.source)
+        XCTAssertNil(renamed.observation)
+    }
+
+    func testDelayedObservationAfterStorageMoveKeepsActualTimeAndUsesOneRevision() throws {
+        let original = try lot()
+        let movedAt = now.addingTimeInterval(20)
+        let moved = try InventoryEngine.prepare(InventoryCommand(id: UUID(), originID: origin, lotID: original.id,
+            eventID: UUID(), expectedRevision: original.revision, occurredAt: movedAt, change: .move(.freezer)),
+            current: original, at: movedAt).lot
+        let savedAt = now.addingTimeInterval(30)
+        let countedAt = now.addingTimeInterval(10)
+        let observationID = UUID()
+        let command = InventoryCommand(id: UUID(), originID: origin, lotID: original.id, eventID: UUID(),
+            expectedRevision: moved.revision, occurredAt: savedAt,
+            change: .revise(.init(observation: .init(count: .exact(q(3)), observationID: observationID,
+                observedAt: countedAt), name: "Wraps remaining", useFirst: true)))
+        let result = try InventoryEngine.prepare(command, current: moved, at: savedAt)
+        XCTAssertEqual(result.lot.revision, 3)
+        XCTAssertEqual(result.lot.location, .freezer)
+        XCTAssertEqual(result.lot.count, .exact(q(3)))
+        XCTAssertEqual(result.lot.confirmedAt, countedAt)
+        XCTAssertEqual(result.lot.updatedAt, savedAt)
+        XCTAssertEqual(result.observation?.observedAt, countedAt)
+        XCTAssertEqual(result.observation?.supersedesID, original.observationID)
+        XCTAssertEqual(result.lot.name, "Wraps remaining")
+        XCTAssertTrue(result.lot.useFirst)
+        XCTAssertEqual(try JSONDecoder().decode(InventoryCommand.self, from: JSONEncoder().encode(command)), command)
+    }
+
+    func testRevisionCannotReviveOlderObservationOrIntroduceFutureOrDuplicateCount() throws {
+        let original = try lot()
+        for observedAt in [now.addingTimeInterval(-1), now.addingTimeInterval(1)] {
+            XCTAssertThrowsError(try change(original, .revise(.init(observation: .init(
+                count: .exact(q(99)), observationID: UUID(), observedAt: observedAt))))) {
+                XCTAssertEqual($0 as? InventoryError, .invalid("observationChronology"))
+            }
+        }
+        XCTAssertThrowsError(try change(original, .revise(.init(observation: .init(
+            count: .unknown, observationID: original.observationID, observedAt: now))))) {
+            XCTAssertEqual($0 as? InventoryError, .duplicateIdentity)
+        }
+        XCTAssertThrowsError(try change(original, .revise(.init())))
+        XCTAssertThrowsError(try change(original, .revise(.init(name: " "))))
+    }
+
+    func testNewReceiptPreservesObservationDateAndLegacySeedDecoding() throws {
+        let observedAt = now.addingTimeInterval(-3_600)
+        let seed = InventoryLotSeed(foodID: food, name: "Wraps",
+            source: .receipt(originID: origin, key: ReceiptKey(sourceEventID: "arrival", orderLineID: food,
+                branchID: "store", segmentID: "one")), location: .fridge, unit: .count,
+            count: .exact(q(4)), observedAt: observedAt)
+        let result = try InventoryEngine.prepare(InventoryCommand(id: UUID(), originID: origin, lotID: UUID(),
+            eventID: UUID(), expectedRevision: nil, occurredAt: now, change: .create(seed, observationID: UUID())),
+            current: nil, at: now)
+        XCTAssertEqual(result.lot.confirmedAt, observedAt)
+        XCTAssertEqual(result.observation?.observedAt, observedAt)
+        XCTAssertEqual(result.lot.updatedAt, now)
+        var legacyJSON = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(seed)) as? [String: Any])
+        legacyJSON.removeValue(forKey: "observedAt")
+        let legacySeed = try JSONDecoder().decode(InventoryLotSeed.self, from: JSONSerialization.data(withJSONObject: legacyJSON))
+        XCTAssertNil(legacySeed.observedAt)
+        let legacy = try InventoryEngine.prepare(InventoryCommand(id: UUID(), originID: origin, lotID: UUID(),
+            eventID: UUID(), expectedRevision: nil, occurredAt: now, change: .create(legacySeed, observationID: UUID())),
+            current: nil, at: now)
+        XCTAssertEqual(legacy.lot.confirmedAt, now)
+        let futureSeed = InventoryLotSeed(foodID: food, name: "Wraps", source: seed.source,
+            location: .fridge, unit: .count, count: .exact(q(4)), observedAt: now.addingTimeInterval(1))
+        XCTAssertThrowsError(try InventoryEngine.prepare(InventoryCommand(id: UUID(), originID: origin, lotID: UUID(),
+            eventID: UUID(), expectedRevision: nil, occurredAt: now, change: .create(futureSeed, observationID: UUID())),
+            current: nil, at: now))
+    }
+
     func testPinKeepsBReservedDespiteAUseFirst() throws {
         let a = try lot(.exact(q(4)), useFirst: true), b = try lot(.exact(q(4)))
         let result = try project([a, b], [claim(b, amount: q(4))])
@@ -106,6 +194,8 @@ final class InventoryTests: XCTestCase {
         XCTAssertTrue(result.reservations.allSatisfy { $0.shortfall?.amount == .zero && !$0.unresolved })
         XCTAssertTrue(result.lots.allSatisfy { $0.held?.amount == (try? Rational(4)) && $0.free?.amount == .zero })
         XCTAssertEqual(pinnedLunch.priority, .protected)
+        XCTAssertEqual(result.allocations.filter { $0.needID == pinnedLunch.id }.map(\.lotID), [b.id])
+        XCTAssertEqual(result.allocations.filter { $0.needID == otherLunch.id }.map(\.lotID), [a.id])
     }
 
     func testUnknownOrMissingPinnedSourceNeverBorrowsAnotherLot() throws {

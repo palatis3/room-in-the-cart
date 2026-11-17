@@ -73,6 +73,29 @@ final class PantryModelTests: XCTestCase {
         try await reopened.close()
     }
 
+    func testOversizedReviewDoesNotTrapPendingSaveAndSmallerEditStillWorks() async throws {
+        let (directory, store) = try await database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = PantryModel(repository: PantryRepository(store: store,
+            limits: .init(payloadBytes: PantryRepository.ReadLimits.standard.payloadBytes, observations: 1), authorize: { true }),
+            clock: { self.now })
+        await model.load()
+        let lot = try await add(model)
+        await model.prepare(lotID: lot.id, action: .someLeft)
+        XCTAssertNil(model.review)
+        XCTAssertNil(model.pending)
+        XCTAssertEqual(model.notice, .changeTooLarge)
+        XCTAssertTrue(model.canEdit)
+        XCTAssertEqual(model.snapshot?.lots.first?.count, lot.count)
+        await model.prepare(lotID: lot.id, action: .move(.freezer))
+        XCTAssertNotNil(model.review)
+        await model.confirmReview(acknowledgingReservations: true)
+        XCTAssertEqual(model.notice, .saved)
+        XCTAssertEqual(model.snapshot?.lots.first?.location, .freezer)
+        XCTAssertEqual(model.snapshot?.lots.first?.count, lot.count)
+        try await store.close()
+    }
+
     func testReservationImpactRequiresAcknowledgmentAndQualitativeCountDoesNotFreeFood() async throws {
         let (directory, store) = try await database()
         defer { try? FileManager.default.removeItem(at: directory) }

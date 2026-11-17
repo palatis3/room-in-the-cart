@@ -51,5 +51,6 @@ func pantryNotice(_ notice: PantryModel.Notice) -> String {
     case .loadFailed: return pantryText("Could not load a complete pantry. No partial availability is shown.")
     case .invalidEntry: return pantryText("Check the food name, amount and unit before reviewing.")
     case .reservationReviewRequired: return pantryText("Review the affected reservations before confirming.")
+    case .changeTooLarge: return pantryText("This change is too large to save. Your pantry is unchanged.")
     }
 }

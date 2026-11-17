@@ -8,14 +8,20 @@ import LocalStore
     enum Failure: Error, Equatable { case busy }
     private var writes: Set<UUID> = []
     private var migration: UUID?
+    private var exclusiveWrite: UUID?
 
     func beginWrite() throws -> UUID {
-        guard migration == nil else { throw Failure.busy }
+        guard migration == nil, exclusiveWrite == nil else { throw Failure.busy }
         let id = UUID(); writes.insert(id); return id
     }
     func endWrite(_ id: UUID) { writes.remove(id) }
+    func beginExclusiveWrite() throws -> UUID {
+        guard migration == nil, exclusiveWrite == nil, writes.isEmpty else { throw Failure.busy }
+        let id = UUID(); exclusiveWrite = id; return id
+    }
+    func endExclusiveWrite(_ id: UUID) { if exclusiveWrite == id { exclusiveWrite = nil } }
     func beginMigration() throws -> UUID {
-        guard migration == nil, writes.isEmpty else { throw Failure.busy }
+        guard migration == nil, exclusiveWrite == nil, writes.isEmpty else { throw Failure.busy }
         let id = UUID(); migration = id; return id
     }
     func endMigration(_ id: UUID) { if migration == id { migration = nil } }

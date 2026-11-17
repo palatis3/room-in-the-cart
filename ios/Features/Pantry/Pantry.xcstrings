@@ -307,6 +307,38 @@
         }
       }
     },
+    "Food is saved. Its plan update still needs review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food is saved. Its plan update still needs review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos están guardados. La actualización del plan aún necesita revisión."
+          }
+        }
+      }
+    },
+    "Food is saved. Retry the same plan update or review its current status.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food is saved. Retry the same plan update or review its current status."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos están guardados. Vuelve a intentar la misma actualización del plan o revisa su estado actual."
+          }
+        }
+      }
+    },
     "Food name": {
       "extractionState": "manual",
       "localizations": {
@@ -660,6 +692,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "La despensa está lista."
+          }
+        }
+      }
+    },
+    "Pantry setup is in progress. Retry this change when it finishes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry setup is in progress. Retry this change when it finishes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se está preparando la despensa. Vuelve a intentar este cambio cuando termine."
           }
         }
       }
@@ -1442,6 +1490,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "unidades"
+          }
+        }
+      }
+    },
+    "This change is too large to save. Your pantry is unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This change is too large to save. Your pantry is unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este cambio es demasiado grande para guardarlo. Tu despensa no ha cambiado."
           }
         }
       }

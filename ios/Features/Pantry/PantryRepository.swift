@@ -24,6 +24,7 @@ final class PantryRepository {
         let loadedPayloadBytes: Int
         fileprivate let observationCount: Int
         fileprivate let lotPayloadBytes: [UUID: Int]
+        fileprivate let reservationPayloadBytes: [UUID: Int]
     }
 
     struct Review {
@@ -48,11 +49,14 @@ final class PantryRepository {
     private let store: ComparisonStore
     private let authorize: () -> Bool
     private let limits: ReadLimits
+    private let mutationGate: PantryMutationGate?
 
-    init(store: ComparisonStore, limits: ReadLimits = .standard, authorize: @escaping () -> Bool) {
+    init(store: ComparisonStore, limits: ReadLimits = .standard, mutationGate: PantryMutationGate? = nil,
+         authorize: @escaping () -> Bool) {
         self.store = store
         self.authorize = authorize
         self.limits = limits
+        self.mutationGate = mutationGate
     }
 
     /// Read every live claim, including other shops. Never publish partially read pages.
@@ -101,7 +105,8 @@ final class PantryRepository {
             availability: try InventoryProjection.build(originID: final.workspaceID, lots: lots, reservations: claims, at: now),
             loadedPayloadBytes: limits.payloadBytes - remainingBytes + observationRows.reduce(0) { $0 + $1.payload.count },
             observationCount: observationRows.count,
-            lotPayloadBytes: Dictionary(uniqueKeysWithValues: lotRows.map { ($0.key.id, $0.payload.count) }))
+            lotPayloadBytes: Dictionary(uniqueKeysWithValues: lotRows.map { ($0.key.id, $0.payload.count) }),
+            reservationPayloadBytes: Dictionary(uniqueKeysWithValues: claimRows.map { ($0.key.id, $0.payload.count) }))
     }
 
     func review(_ command: InventoryCommand, at now: Date) async throws -> Review {
@@ -110,6 +115,7 @@ final class PantryRepository {
         let before = try await load(at: now)
         let prepared = try InventoryEngine.prepare(command, current: before.lots.first { $0.id == command.lotID }, at: now)
         let proposedLots = before.lots.filter { $0.id != command.lotID } + [prepared.lot]
+        try validateCapacity(of: PantryPersistenceCodec.writes(prepared), replacing: before)
         return Review(command: command, before: before, proposedLot: prepared.lot,
             proposedAvailability: try InventoryProjection.build(originID: before.state.workspaceID,
                 lots: proposedLots, reservations: before.reservations, at: now))
@@ -120,6 +126,8 @@ final class PantryRepository {
     /// heads rather than restoring the old proposed count over intervening changes.
     func apply(_ command: InventoryCommand, reviewedInventoryRevision: Int64, at now: Date) async throws -> Result {
         try requireAccess()
+        let lease = try mutationGate?.beginWrite()
+        defer { if let lease { mutationGate?.endWrite(lease) } }
         guard command.originID == store.workspaceID else { throw Failure.wrongWorkspace }
         let request = try PantryPersistenceCodec.request(command, inventoryRevision: reviewedInventoryRevision)
         if let prior = try await store.inventoryCommittedOperation(id: command.id, request: request) {
@@ -135,16 +143,51 @@ final class PantryRepository {
             lots: current.lots.filter { $0.id != command.lotID } + [prepared.lot],
             reservations: current.reservations, at: now)
         let writes = try PantryPersistenceCodec.writes(prepared)
-        let addedReadBytes = writes.filter { $0.record.key.kind != .event }.reduce(0) { $0 + $1.record.payload.count }
-        let resultingBytes = current.loadedPayloadBytes - (current.lotPayloadBytes[command.lotID] ?? 0) + addedReadBytes
-        guard current.observationCount + (prepared.observation == nil ? 0 : 1) <= limits.observations,
-              resultingBytes <= limits.payloadBytes else { throw InventoryError.capacity }
+        try validateCapacity(of: writes, replacing: current)
         let batch = InventoryBatch(workspaceID: current.state.workspaceID, operationID: command.id,
             expectedRevision: reviewedInventoryRevision, request: request, writes: writes)
         try requireAccess()
         let receipt = try await store.commitInventory(batch, at: now)
         try requireAccess()
         return Result(receipt: receipt, current: try await load(at: now), replayed: false)
+    }
+
+    /// Shared by single-food edits and atomic shopping deltas. Call after validating
+    /// the proposed graph and before committing against this exact global revision.
+    /// Observation/source rows are append-only; mutable heads replace their old bytes.
+    func validateCapacity(of writes: [InventoryWrite], replacing snapshot: Snapshot) throws {
+        try requireAccess()
+        guard snapshot.state.workspaceID == store.workspaceID else { throw Failure.wrongWorkspace }
+        var seen = Set<InventoryRecordKey>()
+        var bytes = snapshot.loadedPayloadBytes
+        var observations = snapshot.observationCount
+        var lots = snapshot.lots.count
+        var reservations = snapshot.reservations.count
+        for write in writes {
+            let record = write.record
+            guard seen.insert(record.key).inserted else { throw InventoryError.duplicateIdentity }
+            switch record.key.kind {
+            case .lot:
+                let old = snapshot.lotPayloadBytes[record.key.id]
+                bytes += record.payload.count - (old ?? 0)
+                if old == nil { lots += 1 }
+            case .reservation:
+                let old = snapshot.reservationPayloadBytes[record.key.id]
+                bytes += record.payload.count - (old ?? 0)
+                if old == nil { reservations += 1 }
+            case .observation:
+                guard write.expectedRevision == 0 else { throw Failure.invalidProvenance }
+                observations += 1
+                bytes += record.payload.count
+            case .sourceLink:
+                guard write.expectedRevision == 0 else { throw Failure.invalidProvenance }
+                bytes += record.payload.count
+            case .event, .intent: break
+            }
+        }
+        guard observations <= limits.observations, bytes <= limits.payloadBytes,
+              lots <= InventoryProjection.maximumLots,
+              reservations <= InventoryProjection.maximumReservations else { throw InventoryError.capacity }
     }
 
     private func records(_ kind: InventoryRecordKind, maximum: Int, maximumBytes: Int) async throws -> [InventoryRecord] {

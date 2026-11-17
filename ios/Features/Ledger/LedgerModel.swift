@@ -101,6 +101,10 @@ private enum LedgerDeletionJournal {
     @Published var search = ""
     private let databaseURL: URL?
     private let clock: () -> Date
+    private let inventoryProjectionsEnabled: Bool
+    private let mutationGate: PantryMutationGate?
+    @Published private(set) var hasPendingPantryProjection = false
+    private var pendingPantryProjection: PantryLedgerProjectionPort.ValidatedSource?
     private var store: LedgerStore?
     private var committedPayload: Data?
     private var resolvedDatabaseURL: URL?
@@ -118,9 +122,12 @@ private enum LedgerDeletionJournal {
     }
     private var pending: PendingSave?
 
-    init(databaseURL: URL? = nil, clock: @escaping () -> Date = Date.init) {
+    init(databaseURL: URL? = nil, clock: @escaping () -> Date = Date.init,
+         inventoryProjectionsEnabled: Bool = false, mutationGate: PantryMutationGate? = nil) {
         self.databaseURL = databaseURL
         self.clock = clock
+        self.inventoryProjectionsEnabled = inventoryProjectionsEnabled
+        self.mutationGate = mutationGate
     }
 
     var shop: ShoppingLedger? {
@@ -174,7 +181,7 @@ private enum LedgerDeletionJournal {
             }
             #endif
             resolvedDatabaseURL = url
-            let opened = try LedgerStore(url: url)
+            let opened = try LedgerStore(url: url, inventoryProjectionsEnabled: inventoryProjectionsEnabled)
             store = opened
             sourceWorkspaceID = opened.workspaceID
             if let intent = try LedgerDeletionJournal.read(url.appendingPathExtension("erase-intent.json")) {
@@ -207,12 +214,14 @@ private enum LedgerDeletionJournal {
     }
 
     private func change(key: String, onShopSelected: ((UUID) -> Void)?, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
-        guard !saving, ready, !hasPendingLedgerDeletion else { return false }
+        guard !saving, ready, !hasPendingLedgerDeletion, !hasPendingPantryProjection else { return false }
         if pending != nil {
             error = ledgerText("Retry or discard the unsaved change before making another change.")
             return false
         }
         do {
+            let lease = try mutationGate?.beginWrite()
+            defer { if let lease { mutationGate?.endWrite(lease) } }
             var candidate = workspace
             try edit(&candidate)
             try candidate.validate()
@@ -293,10 +302,17 @@ private enum LedgerDeletionJournal {
 
     @discardableResult
     func retrySave() async -> Bool {
-        guard !saving, !hasPendingLedgerDeletion, let pending, let store else { return false }
+        guard !saving, !hasPendingLedgerDeletion, !hasPendingPantryProjection, let pending, let store else { return false }
         saving = true
         defer { saving = false }
-        return await commit(pending, to: store)
+        do {
+            let lease = try mutationGate?.beginWrite()
+            defer { if let lease { mutationGate?.endWrite(lease) } }
+            return await commit(pending, to: store)
+        } catch {
+            self.error = pantryText("Pantry setup is in progress. Retry this change when it finishes.")
+            return false
+        }
     }
 
     @concurrent private static func encodeForSave(_ workspace: LedgerWorkspace) async throws -> Data {
@@ -342,12 +358,90 @@ private enum LedgerDeletionJournal {
         }
     }
 
+    /// The inventory binding is durable. Recovery never needs an obsolete ledger payload.
+    func recoverPreparedProjection(_ source: PantryLedgerProjectionPort.Source,
+                                   using port: PantryLedgerProjectionPort) async throws -> PantryLedgerProjectionPort.Result? {
+        try await performPreparedProjection(source, payload: nil, using: port)
+    }
+
+    @discardableResult
+    func applyPreparedProjection(_ source: PantryLedgerProjectionPort.Source, payload: Data,
+                                 using port: PantryLedgerProjectionPort) async throws -> PantryLedgerProjectionPort.Result {
+        guard let result = try await performPreparedProjection(source, payload: payload, using: port) else { throw LedgerModelError.notReady }
+        return result
+    }
+
+    private func performPreparedProjection(_ source: PantryLedgerProjectionPort.Source, payload: Data?,
+                                           using port: PantryLedgerProjectionPort) async throws -> PantryLedgerProjectionPort.Result? {
+        guard inventoryProjectionsEnabled, ready, !saving, !opening, !hasPendingLedgerDeletion,
+              pending == nil, sourceWorkspaceID == port.ledgerWorkspaceID else { throw LedgerModelError.notReady }
+        guard pendingPantryProjection == nil || pendingPantryProjection?.source == source else { throw LedgerModelError.pendingChange }
+        saving = true; defer { saving = false }
+        do {
+            if pendingPantryProjection == nil {
+                pendingPantryProjection = try await port.preflight(source)
+                hasPendingPantryProjection = true
+            }
+            let result: PantryLedgerProjectionPort.Result?
+            if let payload { result = try await port.apply(source, payload: payload) }
+            else { result = try await port.recover(source) }
+            guard let result else {
+                error = pantryText("Food is saved. Its plan update still needs review.")
+                return nil
+            }
+            guard result.current.workspaceID == sourceWorkspaceID else { throw LedgerModelError.notReady }
+            workspace = result.workspace; committedPayload = result.current.payload
+            revision = result.current.revision; savedAt = result.current.savedAt
+            pendingPantryProjection = nil; hasPendingPantryProjection = false; error = nil
+            return result
+        } catch LedgerStoreError.erased where pendingPantryProjection == nil {
+            clearRetiredState()
+            await open()
+            throw LedgerStoreError.erased
+        } catch {
+            if hasPendingPantryProjection {
+                self.error = pantryText("Food is saved. Retry the same plan update or review its current status.")
+            }
+            throw error
+        }
+    }
+
+    /// Only an explicit review action may disposition unrecognized work; errors retain the validated pending source.
+    @discardableResult
+    func reconcilePreparedProjection(using port: PantryLedgerProjectionPort) async throws -> PantryLedgerProjectionPort.Reconciliation {
+        guard !saving, !opening, !hasPendingLedgerDeletion, let pendingPantryProjection,
+              sourceWorkspaceID == port.ledgerWorkspaceID else { throw LedgerModelError.notReady }
+        saving = true; defer { saving = false }
+        let result = try await port.reconcile(pendingPantryProjection)
+        switch result {
+        case let .applied(applied):
+            workspace = applied.workspace; committedPayload = applied.current.payload
+            revision = applied.current.revision; savedAt = applied.current.savedAt
+            error = nil
+        case let .needsReview(current):
+            workspace = current.workspace; committedPayload = current.record?.payload
+            revision = current.record?.revision ?? 0; savedAt = current.record?.savedAt
+            error = pantryText("Food is saved. Its plan update still needs review.")
+        case let .sourceRetired(current):
+            workspace = current.workspace; committedPayload = current.record?.payload
+            revision = current.record?.revision ?? 0; savedAt = current.record?.savedAt
+            error = nil
+        case .ledgerRetired:
+            clearRetiredState()
+        }
+        self.pendingPantryProjection = nil; hasPendingPantryProjection = false
+        if case .ledgerRetired = result { await open() }
+        return result
+    }
+
     /// Reload first, because an I/O interruption may hide a successful commit.
     func discardPendingSave() async {
-        guard !saving, !hasPendingLedgerDeletion, let store else { return }
+        guard !saving, !hasPendingLedgerDeletion, !hasPendingPantryProjection, let store else { return }
         saving = true
         defer { saving = false }
         do {
+            let lease = try mutationGate?.beginWrite()
+            defer { if let lease { mutationGate?.endWrite(lease) } }
             if let record = try await store.load() {
                 workspace = try Self.validatePayload(record.payload)
                 committedPayload = record.payload
@@ -368,7 +462,7 @@ private enum LedgerDeletionJournal {
     /// first be resolved explicitly, rather than silently included in deletion.
     func reviewWholeLedgerDeletion() async throws -> WholeLedgerDeletionReview {
         if let pendingLedgerDeletion { return pendingLedgerDeletion.review }
-        guard pending == nil else { throw LedgerDeletionError.pendingSave }
+        guard pending == nil, !hasPendingPantryProjection else { throw LedgerDeletionError.pendingSave }
         guard ready, !saving, !opening, pending == nil, let store else { throw LedgerDeletionError.unavailable }
         let current = try await store.load()
         let source = try current.map { try Self.validatePayload($0.payload) } ?? LedgerWorkspace()
@@ -381,6 +475,9 @@ private enum LedgerDeletionJournal {
     }
     @discardableResult
     func eraseWholeLedger(_ review: WholeLedgerDeletionReview) async throws -> LedgerWorkspaceTombstone {
+        guard !hasPendingPantryProjection else { throw LedgerDeletionError.pendingSave }
+        let lease = try mutationGate?.beginWrite()
+        defer { if let lease { mutationGate?.endWrite(lease) } }
         if pendingLedgerDeletion != nil { return try await retryWholeLedgerDeletion() }
         guard ready, !saving, !opening, pending == nil, let journal = deletionJournalURL else { throw LedgerDeletionError.unavailable }
         let intent = LedgerDeletionIntent(formatVersion: 1, review: review, operationID: UUID(), requestedAt: clock())
@@ -398,17 +495,20 @@ private enum LedgerDeletionJournal {
     }
     @discardableResult
     func retryWholeLedgerDeletion() async throws -> LedgerWorkspaceTombstone {
+        guard !hasPendingPantryProjection else { throw LedgerDeletionError.pendingSave }
+        let lease = try mutationGate?.beginWrite()
+        defer { if let lease { mutationGate?.endWrite(lease) } }
         guard !saving, !opening, let intent = pendingLedgerDeletion,
               let url = resolvedDatabaseURL, let journal = deletionJournalURL else { throw LedgerDeletionError.unavailable }
         saving = true; defer { saving = false }
         do {
             // Reopen even after an uncertain result: the old actor may be retired.
-            let current = try LedgerStore(url: url)
+            let current = try LedgerStore(url: url, inventoryProjectionsEnabled: inventoryProjectionsEnabled)
             let receipt = try await current.eraseWorkspace(workspaceID: intent.review.workspaceID,
                 expectedRevision: intent.review.revision, operationID: intent.operationID, at: intent.requestedAt)
             try await current.close()
             clearRetiredState()
-            let replacement = try LedgerStore(url: url)
+            let replacement = try LedgerStore(url: url, inventoryProjectionsEnabled: inventoryProjectionsEnabled)
             store = replacement; sourceWorkspaceID = replacement.workspaceID
             error = nil
             // Keep the journal until Records confirms erasure markers and orphan cleanup.
@@ -416,7 +516,7 @@ private enum LedgerDeletionJournal {
         } catch LedgerStoreError.erased {
             // Another authorized local instance may already have retired this source.
             // Reconcile its receipt without ever applying deletion to the replacement.
-            let current = try LedgerStore(url: url)
+            let current = try LedgerStore(url: url, inventoryProjectionsEnabled: inventoryProjectionsEnabled)
             guard let receipt = try await current.tombstones().first(where: {
                 $0.workspaceID == intent.review.workspaceID && $0.erasedRevision >= intent.review.revision
             }) else { throw LedgerDeletionError.invalidIntent }
@@ -438,6 +538,8 @@ private enum LedgerDeletionJournal {
     }
     /// Called only after origin-wide recovery markers and native orphan cleanup succeed.
     func finishWholeLedgerDeletion() async throws {
+        let lease = try mutationGate?.beginWrite()
+        defer { if let lease { mutationGate?.endWrite(lease) } }
         guard !saving, !opening, let intent = pendingLedgerDeletion,
               let journal = deletionJournalURL, let store else { throw LedgerDeletionError.unavailable }
         saving = true; defer { saving = false }

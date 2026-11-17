@@ -353,6 +353,7 @@ struct PickupPersistenceLocation {
     private let databaseURL: URL?
     private let clock: () -> Date
     private let launchArguments: [String]
+    private let mutationGate: PantryMutationGate?
     private var opening = false
     private var storeRevisions: [UUID: Int64] = [:]
     private weak var cookLedger: LedgerModel?
@@ -368,8 +369,9 @@ struct PickupPersistenceLocation {
     // Ephemeral review receipts allow an exact double tap to succeed without another write.
     var appliedStockReviewRevisions: [UUID: Int64] = [:]
     init(store: ComparisonStore? = nil, databaseURL: URL? = nil, clock: @escaping () -> Date = Date.init,
-         launchArguments: [String] = ProcessInfo.processInfo.arguments) {
+         launchArguments: [String] = ProcessInfo.processInfo.arguments, mutationGate: PantryMutationGate? = nil) {
         self.store = store; self.databaseURL = databaseURL; self.clock = clock; self.launchArguments = launchArguments
+        self.mutationGate = mutationGate
     }
     var sourceWorkspaceID: UUID? { store?.workspaceID }
     var recoveryLedger: LedgerModel? { cookLedger }
@@ -473,6 +475,8 @@ struct PickupPersistenceLocation {
         return try await store.tombstones()
     }
     func deleteArchived(id: UUID, expectedRevision: Int64, operationID: UUID) async throws {
+        let lease = try mutationGate?.beginWrite()
+        defer { if let lease { mutationGate?.endWrite(lease) } }
         if !ready { await load() }
         guard ready, !saving, pending == nil, let store else { throw PickupModelError.pending }
         saving = true; defer { saving = false }
@@ -550,6 +554,13 @@ struct PickupPersistenceLocation {
     }
     @discardableResult func retrySave() async -> Bool {
         guard !saving, let pending, let store else { return false }
+        let lease: UUID?
+        do { lease = try mutationGate?.beginWrite() }
+        catch {
+            self.error = pantryText("Pantry setup is in progress. Retry this change when it finishes.")
+            return false
+        }
+        defer { if let lease { mutationGate?.endWrite(lease) } }
         guard pending.authorize?() != false else {
             if pending.recoveryOperationID == nil {
                 discardPending()

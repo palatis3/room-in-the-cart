@@ -8,7 +8,7 @@ import LocalStore
 @MainActor
 final class PantryModel: ObservableObject {
     enum Phase: Equatable { case idle, ready, migrationRequired, accessDenied, unavailable }
-    enum Notice: Equatable { case saved, saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired }
+    enum Notice: Equatable { case saved, saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired, changeTooLarge }
     enum Action { case haveEnough, someLeft, opened, move(InventoryLocation), usedUp, recount(String, UnitOfMeasure) }
     struct Pending: Equatable {
         let command: InventoryCommand
@@ -111,7 +111,8 @@ final class PantryModel: ObservableObject {
             snapshot = result.before; review = result; requiresFreshReview = false
         } catch {
             guard token == generation else { return }
-            if error is DomainError { notice = .invalidEntry }
+            if error as? InventoryError == .capacity { notice = .changeTooLarge }
+            else if error is DomainError { notice = .invalidEntry }
             else if let inventoryError = error as? InventoryError, case .invalid = inventoryError { notice = .invalidEntry }
             else { fail(error, saving: false) }
         }

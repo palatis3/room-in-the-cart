@@ -26,6 +26,10 @@ public struct InventoryProjection: Equatable, Sendable {
     public static let maximumReservations = 20_000
     public let lots: [InventoryLotAvailability]
     public let reservations: [InventoryReservationCoverage]
+    /// Exact backing from the complete all-shop allocation. A scoped reader must
+    /// use these edges instead of allocating the full stock again for each shop.
+    /// Consult coverage issues before treating partial backing as a fulfilled claim.
+    public let allocations: [StockAllocationEdge]
 
     /// Input must be one authoritative, revision-consistent private snapshot,
     /// including claims from every shop. A selected-shop subset is insufficient.
@@ -128,6 +132,6 @@ public struct InventoryProjection: Equatable, Sendable {
             let shortfall = issues.isEmpty ? result.shortfall.map { Quantity(amount: $0, unit: result.unit, originalLiteral: $0.description) } : nil
             return InventoryReservationCoverage(id: claim.id, requested: requested, backed: backed, shortfall: shortfall, issues: issues)
         }
-        return InventoryProjection(lots: rows, reservations: claims)
+        return InventoryProjection(lots: rows, reservations: claims, allocations: edges)
     }
 }
