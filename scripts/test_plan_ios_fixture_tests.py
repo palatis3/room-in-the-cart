@@ -91,9 +91,12 @@ class PlanIOSFixtureTests(unittest.TestCase):
                          sorted(self.inventory["RecordsMediaUITests"]))
         self.assertNotIn("suites", records)
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
-        self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
+        dinner = plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]
+        self.assertEqual(dinner["suite"], "DinnerDecisionSheetUITests")
+        pricing = f"{UI_TARGET}/DinnerDecisionSheetUITests/testCurrentDinnerCostSeparatesServingValueFromPackagesAndCheckout"
+        self.assertEqual([identifier.removesuffix("()") for identifier in dinner["test_identifiers"]].count(pricing), 1)
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 94)
+                             for shard in plan["shards"].values()), 95)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
