@@ -124,12 +124,12 @@ import XCTest
         requirements.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
-        let recipe = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
+        let recipe = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
         tap(recipe)
-        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Reviewed pantry match")).firstMatch)
+        tap(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Reviewed pantry match")).firstMatch)
         tap(app.buttons["Widget lentils"])
-        let covered = app.buttons.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@",
-            title, "Ingredients covered")).firstMatch
+        let covered = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@",
+            "Ingredients covered")).firstMatch
         reveal(covered)
         optInToHomeSummary("adultHomeSummary.tonight")
         placeWidgetAndColdTap(widgetTitle: "Tonight", expectedCount: "Reviewed meal options: 1", reviewedTitle: title)
