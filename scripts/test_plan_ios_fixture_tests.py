@@ -93,7 +93,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 94)
+                             for shard in plan["shards"].values()), 95)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
@@ -103,6 +103,8 @@ class PlanIOSFixtureTests(unittest.TestCase):
         large_lunches = f"{UI_TARGET}/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
         decision_shard = plans["contributor"]["shards"]["contributor-balanced-03"]["test_identifiers"]
         civil_shard = plans["contributor"]["shards"]["contributor-balanced-04"]["test_identifiers"]
+        recipe_link = f"{UI_TARGET}/RecipeLibraryAcceptanceUITests/testRecipeLinkAllowsMissingYieldCorrectionBeforeSaving"
+        self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(recipe_link), 1)
         for language in ("English", "Spanish"):
             optional_night = f"{UI_TARGET}/SharedMealCivilDateUITests/test{language}UnscheduledMealCanBeScheduledWithoutReplacingItsNeeds"
             self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(optional_night), 1)

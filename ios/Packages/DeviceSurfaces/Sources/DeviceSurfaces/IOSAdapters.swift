@@ -27,6 +27,9 @@ public enum IOSSurfaceContainers {
     public static func inbox(bundle: Bundle = .main) throws -> SelectedTextInbox {
         try SelectedTextInbox(url: directory(groupKey: SurfaceInfo.inboxGroupKey, bundle: bundle).appendingPathComponent("selected-text.sqlite"))
     }
+    public static func sharedCaptures(bundle: Bundle = .main) throws -> SharedCaptureInbox {
+        try SharedCaptureInbox(url: directory(groupKey: SurfaceInfo.inboxGroupKey, bundle: bundle).appendingPathComponent("shared-captures.sqlite"))
+    }
     public static func urls(bundle: Bundle = .main) throws -> SurfaceURLCodec { try SurfaceURLCodec(scheme: bundle.object(forInfoDictionaryKey: SurfaceInfo.schemeKey) as? String) }
 }
 

@@ -93,6 +93,42 @@ import XCTest
 }
 
 @MainActor final class RecipeLibraryAcceptanceUITests: LibraryPrivacyUITestCase {
+    func testRecipeLinkAllowsMissingYieldCorrectionBeforeSaving() {
+        launch("--recipe-library-fixture")
+        XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))
+        tap(button("records.recipeLink"))
+        let address = app.textFields["HTTPS recipe link"]
+        XCTAssertTrue(address.waitForExistence(timeout: 10))
+        address.tap()
+        address.typeText("https://example.org/soup")
+        app.buttons["Read recipe"].tap()
+        assertText("Missing servings or yield")
+        tap(button("records.cancelImport"))
+        assertSavedRecipes(1)
+
+        tap(button("records.recipeLink"))
+        tap(app.buttons["Choose a shared recipe link"])
+        tap(app.buttons["https://example.org/soup"])
+        XCTAssertEqual(address.value as? String, "https://example.org/soup")
+        app.buttons["Read recipe"].tap()
+        assertText("Missing servings or yield")
+        assertSavedRecipes(1)
+        tap(app.buttons["Edit recipe, Weeknight soup"])
+        let yield = app.textFields["Servings or yield, in your words"]
+        XCTAssertTrue(yield.waitForExistence(timeout: 10))
+        yield.tap()
+        yield.typeText("Two bowls")
+        tap(app.buttons["Review recipe"])
+        tap(element("records.applyImport"))
+        assertSavedRecipes(2)
+        tap(button("records.recovered.Weeknight soup"))
+        tap(app.buttons["Open saved recipe"])
+        XCTAssertTrue(app.navigationBars["Saved recipe"].waitForExistence(timeout: 10))
+        assertText("Two bowls")
+        assertText("Simmer.")
+        capture("Recipe page corrected and saved")
+    }
+
     func testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice() {
         launch("--recipe-library-fixture")
         XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))

@@ -13,6 +13,16 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
         self.title = title; self.yieldText = yieldText; self.ingredients = ingredients
         self.steps = steps; self.sourceURL = sourceURL; self.notes = notes
     }
+    public enum MissingField: Hashable, Sendable { case servings, ingredients, instructions }
+    public var missingFields: [MissingField] {
+        func blank(_ value: String) -> Bool { value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        var result: [MissingField] = []
+        if blank(yieldText) { result.append(.servings) }
+        if ingredients.allSatisfy(blank) { result.append(.ingredients) }
+        if steps.allSatisfy(blank) { result.append(.instructions) }
+        return result
+    }
+
     public func validated() throws -> ImportedRecipe {
         guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               title.utf8.count <= 4096, yieldText.utf8.count <= 4096, notes.utf8.count <= 32768,
@@ -34,9 +44,9 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
     }
 }
 public struct RecipeImportReport: Sendable {
-    public let recipes: [ImportedRecipe]
+    public var recipes: [ImportedRecipe]
     public let duplicateCount: Int
-    public let skippedRows: Int
+    public var skippedRows: Int
     public let unsupportedFields: [String]
 }
 
@@ -49,7 +59,53 @@ public enum RecipeImporter {
               number == NSNumber(value: 1) else { throw ArchiveError.unsupportedVersion }
     }
 
-    public static func stage(_ data: Data, existing: [ImportedRecipe] = []) throws -> RecipeImportReport {
+    // Carry each section heading with its first actual instruction. Existing saved
+    // recipes, exports and dinner adoption all use the same ordered string steps.
+    private static func collectInstructions(_ node: Any, steps: inout [String], unsupported: inout Set<String>) -> Bool {
+        if let children = node as? [Any] {
+            for child in children {
+                guard collectInstructions(child, steps: &steps, unsupported: &unsupported) else { return false }
+            }
+            return true
+        }
+        if let text = node as? String {
+            guard steps.count < 1000 else { return false }
+            steps.append(text)
+            return true
+        }
+        guard let object = node as? [String: Any] else { return false }
+        let types = object["@type"] as? [String] ?? (object["@type"] as? String).map { [$0] } ?? []
+        func hasType(_ name: String) -> Bool {
+            types.contains(name) || types.contains("https://schema.org/" + name) || types.contains("http://schema.org/" + name)
+        }
+        let allowed: Set<String>
+        if hasType("HowToSection") {
+            allowed = ["@type", "name", "itemListElement"]
+            guard object["name"] == nil || object["name"] is String,
+                  object["itemListElement"] == nil || object["itemListElement"] is [Any] else { return false }
+            let first = steps.count
+            if let children = object["itemListElement"] {
+                guard collectInstructions(children, steps: &steps, unsupported: &unsupported) else { return false }
+            }
+            if let name = object["name"] as? String, !name.isEmpty {
+                if let i = steps[first...].firstIndex(where: { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+                    guard name.utf8.count + steps[i].utf8.count + 1 <= 32768 else { return false }
+                    steps[i] = name + "\n" + steps[i]
+                } else {
+                    unsupported.insert("recipeInstructions.itemListElement")
+                }
+            }
+        } else {
+            allowed = ["@type", "text"]
+            guard hasType("HowToStep"), let text = object["text"] as? String, steps.count < 1000 else { return false }
+            steps.append(text)
+        }
+        for key in object.keys where !allowed.contains(key) { unsupported.insert("recipeInstructions." + key.prefix(80)) }
+        return true
+    }
+
+    public static func stage(_ data: Data, existing: [ImportedRecipe] = [],
+                             existingSourceIDs: Set<String> = []) throws -> RecipeImportReport {
         try ArchiveCodec.preflight(data)
         let root: Any
         do { root = try JSONSerialization.jsonObject(with: data) } catch { throw ArchiveError.malformed }
@@ -61,7 +117,7 @@ public enum RecipeImporter {
         else { throw ArchiveError.invalidRecipe }
         guard nodes.count <= ArchiveCodec.maximumRecords else { throw ArchiveError.tooLarge }
         var recipes: [ImportedRecipe] = [], duplicates = 0, skipped = 0, unsupported = Set<String>()
-        var known = Set(existing.map(\.id))
+        var known = existingSourceIDs.union(existing.map(\.id))
         let allowed: Set<String> = ["@context", "@type", "@id", "formatVersion", "name", "recipeYield", "recipeIngredient", "recipeInstructions", "url", "notes", "description"]
         for node in nodes {
             guard let object = node as? [String: Any] else { skipped += 1; continue }
@@ -76,21 +132,12 @@ public enum RecipeImporter {
                   object["notes"] == nil || object["notes"] is String,
                   object["notes"] != nil || object["description"] == nil || object["description"] is String else { skipped += 1; continue }
             var steps: [String] = []
-            if let text = object["recipeInstructions"] as? String { steps = [text] }
-            else if let array = object["recipeInstructions"] as? [Any] {
-                var valid = true
-                for step in array {
-                    if let text = step as? String { steps.append(text) }
-                    else if let object = step as? [String: Any], object["@type"] as? String == "HowToStep", let text = object["text"] as? String {
-                        steps.append(text)
-                        for key in object.keys where key != "@type" && key != "text" {
-                            unsupported.insert("recipeInstructions." + key.prefix(80))
-                        }
-                    }
-                    else { valid = false }
+            if let instructions = object["recipeInstructions"] {
+                guard collectInstructions(instructions, steps: &steps, unsupported: &unsupported) else {
+                    skipped += 1
+                    continue
                 }
-                if !valid { skipped += 1; continue }
-            } else if object["recipeInstructions"] != nil { skipped += 1; continue }
+            }
             let recipe = ImportedRecipe(title: title, yieldText: object["recipeYield"] as? String ?? "", ingredients: object["recipeIngredient"] as? [String] ?? [], steps: steps, sourceURL: object["url"] as? String, notes: object["notes"] as? String ?? object["description"] as? String ?? "")
             guard (try? recipe.validated()) != nil else { skipped += 1; continue }
             let payload = try ArchiveCodec.canonical(recipe)

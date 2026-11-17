@@ -1,6 +1,7 @@
 #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
 import SwiftUI
 import CoreDomain
+import DeviceSurfaces
 import RecordArchive
 
 /// Fictional documented Recipe JSON-LD input. The saved match and repeated row
@@ -111,6 +112,9 @@ enum RecipeLibraryUIFixtureSamples {
             guard let self else { return nil }
             self.fileSelections += 1
             return self.corruptFileSelected ? self.corruptFile : self.libraryFile
+        }, recipePage: { address in
+            guard address == "https://example.org/soup" else { throw ArchiveError.invalidRecipe }
+            return Data(#"{"@type":"Recipe","name":"Weeknight soup","url":"https://example.org/soup","recipeIngredient":["1 onion"],"recipeInstructions":[{"@type":"HowToSection","name":"Soup","itemListElement":[{"@type":"HowToStep","text":"Simmer."}]}]}"#.utf8)
         })
     }
     var erasureCleanup: RecordsErasureCleanup {
@@ -153,6 +157,9 @@ enum RecipeLibraryUIFixtureSamples {
     }
 
     private func seedRecipes() async throws {
+        let inbox = try SharedCaptureInbox(url: recordsDirectory.appendingPathComponent("test-shared-captures.sqlite"))
+        let selected = try SharedCaptureEnvelope(recipeURL: URL(string: "https://example.org/soup")!)
+        _ = try await inbox.stage(selected, id: UUID(uuidString: "B9FE51E6-1B86-4868-9948-ED1DB0655042")!, now: Date())
         try FileManager.default.createDirectory(at: recordsDirectory, withIntermediateDirectories: true,
             attributes: [.protectionKey: FileProtectionType.complete])
         let registry = try RecoveryRegistry(url: recordsDirectory.appendingPathComponent("recovery-v1.json"))

@@ -135,9 +135,11 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
             require(extension_info.get("RITCSurfaceURLScheme") == scheme, "Wrong Widget extension URL scheme")
         else:
             activation_rule = extension_metadata.get("NSExtensionAttributes", {}).get("NSExtensionActivationRule")
-            require(isinstance(activation_rule, dict) and set(activation_rule) == {"NSExtensionActivationSupportsText"}
-                    and activation_rule["NSExtensionActivationSupportsText"] is True,
-                    "Share extension must activate for text only")
+            require(isinstance(activation_rule, dict) and set(activation_rule) == {"NSExtensionActivationSupportsText", "NSExtensionActivationSupportsWebURLWithMaxCount"}
+                    and activation_rule["NSExtensionActivationSupportsText"] is True
+                    and type(activation_rule["NSExtensionActivationSupportsWebURLWithMaxCount"]) is int
+                    and activation_rule["NSExtensionActivationSupportsWebURLWithMaxCount"] == 1,
+                    "Share extension must accept text and one web URL")
 
 
 def dwarf_uuids(path):

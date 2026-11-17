@@ -265,7 +265,7 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 "RITCShareInboxAppGroup": share_group,
                 "NSExtension": {"NSExtensionPointIdentifier": "com.apple.share-services",
                                 "NSExtensionAttributes": {"NSExtensionActivationRule": {
-                                    "NSExtensionActivationSupportsText": True}}},
+                                    "NSExtensionActivationSupportsText": True, "NSExtensionActivationSupportsWebURLWithMaxCount": 1}}},
             },
         }
         for bundle, metadata in bundles.items():
@@ -375,12 +375,13 @@ class BuiltAppVerificationTests(unittest.TestCase):
         self.expect_plist_rejected(self.widget, {"CFBundleShortVersionString": "0.2.0"}, "Widget extension version mismatch")
         self.expect_plist_rejected(self.share, {"CFBundleVersion": "999"}, "Share extension version mismatch")
         for rule in ("TRUEPREDICATE", {"NSExtensionActivationSupportsText": True,
-                                       "NSExtensionActivationSupportsImageWithMaxCount": 1}):
+                                       "NSExtensionActivationSupportsImageWithMaxCount": 1},
+                     {"NSExtensionActivationSupportsText": True, "NSExtensionActivationSupportsWebURLWithMaxCount": 2}):
             with self.subTest(rule=rule):
                 self.expect_plist_rejected(self.share, {"NSExtension": {
                     "NSExtensionPointIdentifier": "com.apple.share-services",
                     "NSExtensionAttributes": {"NSExtensionActivationRule": rule},
-                }}, "Share extension must activate for text only")
+                }}, "Share extension must accept text and one web URL")
 
     def test_rejects_test_bundles_in_release_including_the_known_debug_unit_bundle(self):
         for bundle in (self.app / "PlugIns/RoomInTheCartTests.xctest", self.share / "LeakedFixture.xctest"):
