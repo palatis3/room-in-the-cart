@@ -67,7 +67,7 @@ import XCTest
         tap(done)
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "preferences.keyboardDone"))
         let required = app.switches["preferences.requireMinutes"]
-        tap(required)
+        enableSwitch("preferences.requireMinutes")
         tap(element("preferences.review"))
         tap(element("preferences.save"))
         XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8))
