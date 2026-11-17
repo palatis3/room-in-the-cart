@@ -116,19 +116,21 @@ extension DinnerFeatureModel {
         let candidates = try RepeatWeekEngine.candidates(targetStart: start, workspace: visible, recoveredMeals: recovered, access: access, at: now)
         let mealShops = Set(candidates.map { $0.source.shopID })
         let dates = Set(sourceDays)
-        let staples = access.hasPaidTools ? visible.priorStaples(for: shop.id).filter { row in
+        func sourceBelongsToWeek(_ row: ReviewedStaple) -> Bool {
             if mealShops.contains(row.source.shopID) { return true }
             let events = [row.line.handledAt, row.line.checkedAt, row.approval.approvedAt].compactMap { $0 }
             return events.contains { instant in
                 (try? MealDay(date: instant, timeZoneIdentifier: start.timeZoneIdentifier)).map(dates.contains) == true
             }
-        } : []
+        }
+        let staples = access.hasPaidTools ? visible.priorStaples(for: shop.id).filter(sourceBelongsToWeek) : []
+        let settled = access.hasPaidTools ? visible.reviewedStapleHistory(for: shop.id).filter(sourceBelongsToWeek) : []
         let context = try pickup.pantryReviewContext()
         let canonical = try context.map { try DinnerPantrySupply.build(context: $0, shopID: shop.id) }
         let unknownFoods = Set(context?.snapshot.lots.filter { $0.count.quantity == nil }.map(\.foodID) ?? [])
         let evidence = try DinnerRepeatEvidence.build(candidates: candidates, workspace: visible, workspaceID: workspaceID,
             authorizedShopIDs: allowed, targetShopID: shop.id, sourceDays: sourceDays, targetDays: targetDays,
-            staples: staples, recoveredMeals: recovered, canonical: canonical, unknownFoodIDs: unknownFoods, asOf: now)
+            staples: staples + settled, recoveredMeals: recovered, canonical: canonical, unknownFoodIDs: unknownFoods, asOf: now)
         return DinnerRepeatReview(start: start, identity: identity, targetRevision: shop.revisionID,
             planningRevision: state.revisionID, pantryBasis: canonical?.basis, meals: candidates.map(DinnerRepeatChoice.init),
             staples: staples, evidence: evidence)
