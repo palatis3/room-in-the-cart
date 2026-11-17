@@ -583,8 +583,12 @@ import StoreKitTest
                 && !unfinished.contains { self.id($0) == String(original.id) }
         }
         try session.forceRenewalOfSubscription(productIdentifier: productID)
-        try await eventually("The renewed transaction retains the original purchase identity") {
-            await storefront.currentTransactions().contains {
+        try await eventually("The renewal is current with the original purchase identity and the prior term is no longer current") {
+            let current = await storefront.currentTransactions()
+            // A visible renewal alone does not establish that StoreKit has retired
+            // the prior entitlement. Check both facts in this same completed read.
+            guard !current.contains(where: { self.id($0) == String(original.id) }) else { return false }
+            return current.contains {
                 guard case .verified(let transaction) = $0 else { return false }
                 return transaction.originalTransactionID == String(original.originalID)
                     && transaction.transactionID != String(original.id)
