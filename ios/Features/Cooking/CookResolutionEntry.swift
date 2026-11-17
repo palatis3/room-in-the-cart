@@ -118,6 +118,11 @@ struct CookResolutionEntry: View {
                 Text(cookResolutionExplanation(review.decision.action))
                 if let basis = review.reconstructionBasis {
                     LabeledContent(cookCompletionText("Original checked count before cooking"), value: pantryQuantity(basis))
+                    if let reconstruction = review.reconstruction {
+                        LabeledContent(cookCompletionText("Previously accounted use"), value: pantryQuantity(Quantity(amount: reconstruction.previouslyAccounted,
+                            unit: reconstruction.original.unit, originalLiteral: reconstruction.previouslyAccounted.description)))
+                        LabeledContent(cookCompletionText("Other unmeasured uses"), value: String(reconstruction.otherUnmeasured))
+                    }
                     Text(cookCompletionText("This recorded use is combined with other reviewed uses from the same original count. The quantity stays unknown while another unmeasured use remains."))
                 }
                 if let before = review.before { LabeledContent(cookCompletionText("Before"), value: pantryCount(before)) }
