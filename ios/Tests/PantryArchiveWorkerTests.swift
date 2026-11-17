@@ -58,6 +58,124 @@ import RecordArchive
             writes: PantryPersistenceCodec.writes(prepared)), at: command.occurredAt)
     }
 
+    private func receiptDraft(_ store: ComparisonStore) throws -> ReceiptImportDraft {
+        let source = SourceMediaRecord(id: UUID(), target: .init(workspaceID: store.workspaceID, containerID: UUID(),
+            objectID: UUID(), revision: 1, kind: .receiptEvidence), originalText: "RICE\nBEANS\nFEE",
+            reviewedLabel: "East market", imageJPEG: nil, barcode: nil,
+            receiptLines: [.init(originalText: "RICE", reviewedText: "Rice"), .init(originalText: "BEANS", reviewedText: "Beans"),
+                           .init(originalText: "FEE")], capturedAt: now)
+        var draft = try ReceiptImportDraft(source: source)
+        draft.reference = "transaction-14"
+        draft.dateConfirmed = true
+        draft.purchaseDate = now
+        draft.lines[0].treatment = .add
+        draft.lines[0].received = "3"
+        draft.lines[0].usable = "2"
+        return draft
+    }
+
+    func testReceiptPartialReviewRetryPriceCorrectionRecoveryAndErasure() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, authorize: { true })
+        f.cleanup.track(repository)
+        var draft = try receiptDraft(f.store)
+        let state = try await f.store.inventoryState()
+        let review = try await repository.reviewReceipt(draft, expected: state, at: now)
+        XCTAssertEqual(review.facts.count, 1)
+        let first = try XCTUnwrap(review.facts.first)
+        XCTAssertNil(first.paidLineTotal)
+        try await repository.applyReceipt(review, at: now)
+        try await repository.applyReceipt(review, at: now)
+        let snapshot = try await repository.load(at: now)
+        XCTAssertEqual(snapshot.lots.count, 2)
+        XCTAssertTrue(snapshot.receiptAcquiredLots.contains(first.lotID))
+        let limited = PantryRepository(store: f.store, limits: .init(payloadBytes: snapshot.loadedPayloadBytes - 1, observations: 20),
+                                      authorize: { true })
+        do { _ = try await limited.load(at: now); XCTFail("Receipt evidence must fit the reviewed read budget") }
+        catch InventoryError.capacity {}
+        let mapping = try PantryLegacyMigration.map(originID: f.store.workspaceID, heads: [], ledger: .unavailable, at: now)
+        let projection = try PantryLiveStockProjection.buildGlobal(snapshot: snapshot, mapping: mapping, at: now)
+        XCTAssertEqual(projection.lot(canonicalID: first.lotID)?.free?.amount, try Rational(2))
+        let same = try await repository.reviewReceipt(try receiptDraft(f.store), expected: snapshot.state, at: now)
+        XCTAssertNil(same.batch)
+        draft.lines[1].treatment = .add
+        draft.lines[1].received = "1"
+        draft.lines[1].usable = "1"
+        draft.lines[1].paid = "4.10"
+        let partial = try await repository.reviewReceipt(draft, expected: snapshot.state, at: now)
+        XCTAssertEqual(partial.existing, [first.lineID])
+        try await repository.applyReceipt(partial, at: now)
+        let after = try await repository.load(at: now)
+        XCTAssertEqual(after.lots.count, 3)
+        let paid = try Money(decimal: "2.14")
+        try await repository.correctPaidTotal(first, total: paid, state: after.state, at: now)
+        let rows = try await repository.acquisitionHistory(receiptID: draft.receiptID, after: nil, limit: 20)
+        XCTAssertEqual(rows.count, 3)
+        let corrected = try XCTUnwrap(rows.first(where: { $0.supersedesID == first.id }))
+        XCTAssertEqual(corrected.paidLineTotal, paid)
+        let handle = try await f.capture.captureHandle(worker: f.worker, at: now)
+        let key = Data(repeating: 0x37, count: 32).base64EncodedString()
+        let package = try await f.worker.encryptedExport(handle, key: key)
+        let reader = try PantryArchiveWorker(root: f.directory.appendingPathComponent("receipt-reader"))
+        let imported = try await reader.prepareImport(url: package.url, key: key)
+        let target = try ComparisonStore(url: f.directory.appendingPathComponent("independent.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(target)
+        let restore = try await reader.prepareRestoration(source: imported.handle,
+            context: .init(version: 1, copyID: UUID(), reference: imported.handle.reference, workspaceID: target.workspaceID, restorationID: UUID(), preparedAt: now),
+            sourceToken: target.inventorySourceToken())
+        _ = try await target.beginInventoryMigration(restore.plan)
+        for index in 0..<restore.plan.expectedChunkCount {
+            let chunk = try await reader.restorationChunk(restore, index: index)
+            _ = try await target.stageInventoryMigration(id: restore.plan.migrationID, chunk: chunk)
+        }
+        _ = try await target.finishInventoryMigration(id: restore.plan.migrationID, at: now)
+        let restored = try await target.acquisitionRows(receiptID: draft.receiptID)
+        XCTAssertEqual(try restored.map(PantryAcquisitionCodec.record), rows)
+        try await reader.discardRestoration(restore)
+        let importRegistry = try RecoveryRegistry(url: f.directory.appendingPathComponent("receipt-reader-registry.json"))
+        try await reader.discardImport(imported, registry: importRegistry)
+        try await f.worker.discardExport(package)
+        let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json"))
+        let coordinator = eraser(f, registry, cleanup: { _, _ in })
+        let erase = try await coordinator.prepare(.lot(first.lotID, revision: 1))
+        XCTAssertTrue(erase.canCommit)
+        XCTAssertEqual(erase.receiptRevisionCount, 2)
+        _ = try await coordinator.commit(erase)
+        let remaining = try await f.store.acquisitionRows(receiptID: draft.receiptID)
+        XCTAssertEqual(remaining.count, 1)
+        XCTAssertNotEqual(remaining.first?.lotID, first.lotID)
+        do { try await repository.applyReceipt(review, at: now); XCTFail("An erased receipt cannot be replayed") } catch {}
+    }
+
+    func testReceiptLinkedEvidenceKeepsDeliveredStockAndRejectsChangedDuplicate() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, authorize: { true })
+        let base = try await repository.load(at: now)
+        let lotID = UUID()
+        let key = ReceiptKey(sourceEventID: "partial-delivery", orderLineID: UUID(), branchID: "East", segmentID: "2")
+        let amount = Quantity(amount: try Rational(3), unit: .count, originalLiteral: "3")
+        let command = InventoryCommand(id: UUID(), originID: f.store.workspaceID, lotID: lotID, eventID: UUID(), expectedRevision: nil, occurredAt: now,
+            change: .create(.init(foodID: UUID(), name: "Rice", source: .receipt(originID: f.store.workspaceID, key: key),
+                                  location: .cupboard, unit: .count, count: .exact(amount), observedAt: now), observationID: UUID()))
+        let writes = try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: now))
+        _ = try await f.store.commitInventory(.init(workspaceID: f.store.workspaceID, operationID: UUID(),
+            expectedRevision: base.state.revision, request: Data([1]), writes: writes), at: now)
+        var draft = try receiptDraft(f.store)
+        draft.lines[0].treatment = .link(lotID)
+        let before = try await repository.load(at: now)
+        let review = try await repository.reviewReceipt(draft, expected: before.state, at: now)
+        XCTAssertEqual(review.batch?.writes.count, 0)
+        try await repository.applyReceipt(review, at: now)
+        let after = try await repository.load(at: now)
+        XCTAssertEqual(before.lots, after.lots)
+        draft.lines[0].received = "5"
+        do { _ = try await repository.reviewReceipt(draft, expected: after.state, at: now); XCTFail("Changed evidence") }
+        catch PantryReceiptError.changedEvidence {}
+        draft.lines[0].treatment = .skip
+        do { _ = try await repository.reviewReceipt(draft, expected: after.state, at: now); XCTFail("Skipped all receipt lines") }
+        catch PantryReceiptError.selection {}
+    }
+
     func testPagedCaptureReopensAllFactsWithoutMaterializedSnapshot() async throws {
         let f = try await fixture(count: 205)
         let handle = try await f.capture.captureHandle(worker: f.worker, at: now)

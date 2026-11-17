@@ -357,6 +357,11 @@ import RecordArchive
                     result.matches.formUnion(copy.matches.map { .init(subject: $0.subject, role: .incidentalCopy) })
                     result.unresolved.formUnion(copy.unresolved)
                 }
+            case .acquisition(let origin, let row):
+                guard origin == context.originID else { result.unresolved.insert(.foreignLineage); break }
+                result.add(.lot(row.lotID), .incidentalCopy)
+                if let pickup = row.savedPickup, pickup.originID == context.originID { result.add(.journey(pickup.id), .incidentalCopy) }
+                if case .linked(let fragment) = row.stock { result.source(.receipt(originID: origin, key: fragment), .incidentalCopy) }
             case .originalLot(let value): result.lot(value, .incidentalCopy)
             case .originalObservation(let origin, let value):
                 if origin != context.originID { result.unresolved.insert(.foreignLineage) } else { result.add(.lot(value.lotID), .incidentalCopy) }

@@ -92,6 +92,8 @@ final class PantryArchiveIndex {
             try PantryArchiveCodec.validateHistory(value, at: date)
             kind = "history"; id = ArchiveCodec.digest(bytes); lot = ""; revision = 0
             switch value {
+            case .acquisition(let origin, let row):
+                try putMetadata(kind: "receipt/" + origin.uuidString, id: row.id.uuidString, bytes: ArchiveCodec.canonical(row))
             case .originalLot(let original) where original.revision == 1:
                 try execute("INSERT INTO baselines(lot,payload) VALUES (?,?)", texts: [original.id.uuidString], data: ArchiveCodec.canonical(original))
             case .migration(let envelope):
@@ -158,6 +160,18 @@ final class PantryArchiveIndex {
         let row = try statement("SELECT count(*) FROM items c LEFT JOIN items l ON l.kind='lot' AND l.id=c.lot WHERE c.kind IN ('observation','event','sourceLink') AND l.id IS NULL")
         defer { sqlite3_finalize(row) }
         guard sqlite3_step(row) == SQLITE_ROW, sqlite3_column_int64(row, 0) == 0 else { throw Failure.invalid }
+        try forEach(kind: "history") { item in
+            guard case .historical(.acquisition(let origin, let fact)) = item else { return }
+            if origin == descriptor.originID {
+                guard case .lot(let lot)? = try self.item(kind: "lot", id: fact.lotID.uuidString) else { throw Failure.invalid }
+                try PantryAcquisitionCodec.validateLot(fact, lot: lot)
+            }
+            if let id = fact.supersedesID {
+                guard let bytes = try self.metadata(kind: "receipt/" + origin.uuidString, id: id.uuidString) else { throw Failure.invalid }
+                let prior = try JSONDecoder().decode(ReceiptAcquisition.self, from: bytes)
+                guard try prior.correctingPaidTotal(fact.paidLineTotal) == fact else { throw Failure.invalid }
+            }
+        }
         var lots: [InventoryLot] = [], claims: [InventoryReservation] = []
         try forEach(kind: "lot") { item in
             guard case .lot(let lot) = item, lot.source.originID == descriptor.originID,

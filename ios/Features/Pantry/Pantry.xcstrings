@@ -2401,6 +2401,822 @@
           }
         }
       }
+    },
+    "A correction adds a price revision. Pantry quantities and posted spending stay the same.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A correction adds a price revision. Pantry quantities and posted spending stay the same."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La corrección añade una revisión del precio. Las cantidades de la despensa y los gastos registrados se mantienen."
+          }
+        }
+      }
+    },
+    "Add %@ to %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add %@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir %@ a %@"
+          }
+        }
+      }
+    },
+    "Add a separate physical batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a separate physical batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un lote físico aparte"
+          }
+        }
+      }
+    },
+    "Amount actually received": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount actually received"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad recibida"
+          }
+        }
+      }
+    },
+    "Amount usable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount usable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable"
+          }
+        }
+      }
+    },
+    "Check the printed wording first. Then confirm what arrived and how much is usable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the printed wording first. Then confirm what arrived and how much is usable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa primero el texto impreso. Después confirma qué recibiste y cuánto puedes usar."
+          }
+        }
+      }
+    },
+    "Check the store, purchase date, food, received amount, usable amount and optional paid total.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the store, purchase date, food, received amount, usable amount and optional paid total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la tienda, la fecha de compra, el alimento, las cantidades recibida y utilizable y el importe pagado opcional."
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Confirm receipt lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar líneas del recibo"
+          }
+        }
+      }
+    },
+    "Confirmed paid line total in USD, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed paid line total in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe pagado por esta línea en USD, opcional"
+          }
+        }
+      }
+    },
+    "Confirmed transaction reference, if printed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed transaction reference, if printed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de la transacción, si aparece impresa"
+          }
+        }
+      }
+    },
+    "Correct paid price": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct paid price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corregir el precio pagado"
+          }
+        }
+      }
+    },
+    "Correct this paid total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct this paid total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corregir este importe pagado"
+          }
+        }
+      }
+    },
+    "Corrected paid line total in USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrected paid line total in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe pagado corregido de la línea en USD"
+          }
+        }
+      }
+    },
+    "Edit receipt lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar líneas del recibo"
+          }
+        }
+      }
+    },
+    "I checked the purchase date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the purchase date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "He comprobado la fecha de compra."
+          }
+        }
+      }
+    },
+    "Link delivery: %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link delivery: %@ · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular entrega: %@ · %@"
+          }
+        }
+      }
+    },
+    "Link evidence to the delivered batch. Its pantry count stays the same.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link evidence to the delivered batch. Its pantry count stays the same."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular el comprobante al lote entregado. La cantidad en la despensa se mantiene."
+          }
+        }
+      }
+    },
+    "Load receipt lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar líneas del recibo"
+          }
+        }
+      }
+    },
+    "No confirmed receipt lines yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No confirmed receipt lines yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay líneas de recibo confirmadas."
+          }
+        }
+      }
+    },
+    "Paid line total %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid line total %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe pagado por la línea %@"
+          }
+        }
+      }
+    },
+    "Paid price unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid price unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio pagado desconocido"
+          }
+        }
+      }
+    },
+    "Previously saved on this receipt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously saved on this receipt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya se guardó en este recibo."
+          }
+        }
+      }
+    },
+    "Price correction saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price correction saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó la corrección del precio."
+          }
+        }
+      }
+    },
+    "Purchase date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de compra"
+          }
+        }
+      }
+    },
+    "Receipt details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos del recibo"
+          }
+        }
+      }
+    },
+    "Receipt history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt history"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historial de recibos"
+          }
+        }
+      }
+    },
+    "Receipt line action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt line action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción para esta línea"
+          }
+        }
+      }
+    },
+    "Receipt revision %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt revision %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión del recibo %@"
+          }
+        }
+      }
+    },
+    "Received %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad recibida %@"
+          }
+        }
+      }
+    },
+    "Review a receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar un recibo"
+          }
+        }
+      }
+    },
+    "Review received food in My Pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review received food in My Pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los alimentos recibidos en Mi despensa"
+          }
+        }
+      }
+    },
+    "Review selected food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review selected food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los alimentos seleccionados"
+          }
+        }
+      }
+    },
+    "Reviewed receipt lines saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed receipt lines saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardaron las líneas revisadas del recibo."
+          }
+        }
+      }
+    },
+    "Save price correction": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save price correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar corrección del precio"
+          }
+        }
+      }
+    },
+    "Save reviewed lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar líneas revisadas"
+          }
+        }
+      }
+    },
+    "Saving receipt evidence does not post a payment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving receipt evidence does not post a payment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El comprobante se guarda sin registrar un pago."
+          }
+        }
+      }
+    },
+    "Scan or type receipt lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan or type receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear o escribir líneas del recibo"
+          }
+        }
+      }
+    },
+    "Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona solo los alimentos que recibiste. Omite cargos, descuentos, productos no alimentarios y líneas ilegibles."
+          }
+        }
+      }
+    },
+    "Skip this line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip this line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir esta línea"
+          }
+        }
+      }
+    },
+    "Storage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lugar de almacenamiento"
+          }
+        }
+      }
+    },
+    "Store or branch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store or branch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda o sucursal"
+          }
+        }
+      }
+    },
+    "The pantry changed. Refresh and review the receipt again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pantry changed. Refresh and review the receipt again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La despensa ha cambiado. Actualiza y vuelve a revisar el recibo."
+          }
+        }
+      }
+    },
+    "The receipt changed or the price is invalid. Reopen the latest revision.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receipt changed or the price is invalid. Reopen the latest revision."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El recibo ha cambiado o el precio no es válido. Abre la revisión más reciente."
+          }
+        }
+      }
+    },
+    "These lines were already saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These lines were already saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas líneas ya estaban guardadas."
+          }
+        }
+      }
+    },
+    "This receipt line already has different confirmed evidence. Open Receipt history to review it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This receipt line already has different confirmed evidence. Open Receipt history to review it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta línea ya tiene datos confirmados distintos. Abre el historial de recibos para revisarla."
+          }
+        }
+      }
+    },
+    "Receipt and paid-price revisions to delete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt and paid-price revisions to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisiones de recibos y precios pagados que se eliminarán"
+          }
+        }
+      }
+    },
+    "A retained food batch has receipt evidence from this pickup. Review that batch before deleting the pickup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A retained food batch has receipt evidence from this pickup. Review that batch before deleting the pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un lote de alimentos conservado contiene datos del recibo de esta recogida. Revisa ese lote antes de eliminar la recogida."
+          }
+        }
+      }
+    },
+    "Usable %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable %@"
+          }
+        }
+      }
+    },
+    "Review the current price and your correction, then confirm again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the current price and your correction, then confirm again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el precio actual y la corrección y vuelve a confirmar."
+          }
+        }
+      }
+    },
+    "This saved source is unavailable. Reopen the receipt in its private workspace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved source is unavailable. Reopen the receipt in its private workspace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta referencia guardada ya no está disponible. Vuelve a abrir el recibo en su espacio privado."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

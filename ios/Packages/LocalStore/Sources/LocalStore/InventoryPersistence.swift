@@ -96,11 +96,13 @@ public struct InventoryBatch: Codable, Equatable, Sendable {
     public let writes: [InventoryWrite]
     public let erasures: [InventoryErase]
     public let comparisons: [InventoryComparisonEffect]
+    public let acquisitions: [InventoryAcquisitionRow]?
     public init(workspaceID: UUID, operationID: UUID, expectedRevision: Int64, request: Data, mode: Mode = .mutate,
                 sourceToken: InventorySourceToken? = nil, writes: [InventoryWrite] = [],
-                erasures: [InventoryErase] = [], comparisons: [InventoryComparisonEffect] = []) {
+                erasures: [InventoryErase] = [], comparisons: [InventoryComparisonEffect] = [], acquisitions: [InventoryAcquisitionRow] = []) {
         self.workspaceID = workspaceID; self.operationID = operationID; self.expectedRevision = expectedRevision
         self.mode = mode; self.request = request; self.sourceToken = sourceToken; self.writes = writes; self.erasures = erasures; self.comparisons = comparisons
+        self.acquisitions = acquisitions.isEmpty ? nil : acquisitions
     }
 }
 
@@ -118,6 +120,7 @@ public struct InventoryOperationReceipt: Codable, Equatable, Sendable {
     public let comparisonHeads: [UUID: Int64]
     public let committedAt: Date
     public let migrationID: UUID?
+    public internal(set) var acquisitionLotIDs: [UUID]? = nil
 }
 
 public enum InventoryPersistenceLimits {
@@ -216,6 +219,7 @@ extension ComparisonStore {
         guard receipt.workspaceID == workspaceID else { throw ComparisonStoreError.corruptRecord }
         try database.requireInventoryOriginLive()
         if let migration = receipt.migrationID { try database.validateMigrationReceiptAccess(migration, receipt: receipt) }
+        for id in receipt.acquisitionLotIDs ?? [] where try database.inventoryErased(.init(.lot, id)) { throw ComparisonStoreError.erased }
         for head in receipt.heads {
             let retiredBy = try database.inventoryRetirementOperation(head.key)
             if head.key.kind == .reservation, head.revision > 0, try database.reservationRedactionFloor(head.key.id) >= head.revision { throw ComparisonStoreError.erased }
@@ -275,6 +279,7 @@ extension ComparisonStore {
                 try database.eraseInventory(erase, operationID: batch.operationID)
                 heads.append(InventoryHead(key: erase.key, revision: 0))
             }
+            for row in batch.acquisitions ?? [] { try database.insertAcquisition(row) }
             var comparisonHeads: [UUID: Int64] = [:]
             for effect in batch.comparisons {
                 let actual = try database.head(id: effect.id, workspaceID: workspaceID) ?? 0
@@ -290,8 +295,9 @@ extension ComparisonStore {
                     comparisonHeads[effect.id] = 0
                 }
             }
-            let receipt = InventoryOperationReceipt(workspaceID: workspaceID, operationID: batch.operationID,
+            var receipt = InventoryOperationReceipt(workspaceID: workspaceID, operationID: batch.operationID,
                 revision: state.revision + 1, heads: heads, comparisonHeads: comparisonHeads, committedAt: date, migrationID: nil)
+            receipt.acquisitionLotIDs = batch.acquisitions.map { Array(Set($0.map(\.lotID))).sorted { $0.uuidString < $1.uuidString } }
             try database.run("INSERT INTO inventory_operations (id, digest, request_digest, receipt) VALUES (?, ?, ?, ?)",
                 [.text(batch.operationID.uuidString), .blob(digest), .blob(requestDigest), .blob(try inventoryCanonical(receipt))])
             try database.run("UPDATE inventory_state SET revision = ?, active = ? WHERE singleton = 1",
@@ -305,8 +311,8 @@ extension ComparisonStore {
     private func validateInventoryBatch(_ batch: InventoryBatch, date: Date) throws {
         guard batch.workspaceID == workspaceID, batch.expectedRevision >= 0, date.timeIntervalSinceReferenceDate.isFinite,
               !batch.request.isEmpty, batch.request.count <= InventoryPersistenceLimits.requestBytes,
-              batch.writes.count + batch.erasures.count + batch.comparisons.count <= InventoryPersistenceLimits.batchItems,
-              batch.mode == .activate || !batch.writes.isEmpty || !batch.erasures.isEmpty || !batch.comparisons.isEmpty,
+              batch.writes.count + batch.erasures.count + batch.comparisons.count + (batch.acquisitions?.count ?? 0) <= InventoryPersistenceLimits.batchItems,
+              batch.mode == .activate || batch.acquisitions?.isEmpty == false || !batch.writes.isEmpty || !batch.erasures.isEmpty || !batch.comparisons.isEmpty,
               (batch.mode == .activate) == (batch.sourceToken != nil),
               batch.sourceToken.map({ $0.workspaceID == workspaceID && $0.generation >= 0 && $0.digest.count == 32 }) ?? true,
               Set(batch.writes.map(\.record.key) + batch.erasures.map(\.key)).count == batch.writes.count + batch.erasures.count,
@@ -317,6 +323,16 @@ extension ComparisonStore {
             }
         }
         var rawBytes = batch.request.count
+        if let rows = batch.acquisitions {
+            guard !rows.isEmpty, batch.mode == .mutate, batch.erasures.isEmpty, batch.comparisons.isEmpty,
+                  Set(rows.map(\.id)).count == rows.count else { throw ComparisonStoreError.invalidInput }
+            for row in rows {
+                guard !row.payload.isEmpty, row.payload.count <= InventoryPersistenceLimits.recordBytes,
+                      row.revision > 0, (row.revision == 1) == (row.supersedesID == nil) else { throw ComparisonStoreError.invalidInput }
+                rawBytes += row.payload.count
+                guard rawBytes <= InventoryPersistenceLimits.batchBytes else { throw ComparisonStoreError.payloadTooLarge }
+            }
+        }
         for write in batch.writes {
             let record = write.record
             guard write.expectedRevision >= 0, write.expectedRevision < Int64.max, record.revision == write.expectedRevision + 1,

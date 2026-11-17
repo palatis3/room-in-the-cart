@@ -255,6 +255,10 @@ import RecordArchive
         }
         func check(_ history: PantryArchiveCodec.History) throws {
             switch history {
+            case .acquisition(let origin, let row):
+                try key(.lot, row.lotID, origin)
+                if let pickup = row.savedPickup { try journeyID(pickup.id, pickup.originID) }
+                if case .linked(let fragment) = row.stock { try source(.receipt(originID: origin, key: fragment)) }
             case .originalLot(let value): try lot(value)
             case .originalObservation(let origin, let value): try observation(value, origin)
             case .originalEvent(let value): try change(value.change, lot: value.lotID, event: value.id, origin: value.originID)

@@ -12,7 +12,7 @@ import RecordArchive
     typealias CleanupHandler = @MainActor (Cleanup, InventoryErasureReceipt) async throws -> Void
     enum Failure: Error, Equatable { case unauthorized, stale, blocked, cleanupPending, invalid }
     enum Outcome: Equatable { case deleted, cleanupPending }
-    enum Blocker: String, Hashable { case collateralPickups, ledgerHistory, unknownContent, recoveredRecords }
+    enum Blocker: String, Hashable { case collateralPickups, ledgerHistory, unknownContent, recoveredRecords, retainedReceiptEvidence }
     struct Choice { let selection: Selection; let title: String }
     struct FileMark: Codable, Equatable { let name: String; let digest: Data }
     struct Cleanup: Codable, Equatable {
@@ -35,6 +35,7 @@ import RecordArchive
     struct Review {
         let id: UUID
         let selection: Selection
+        var receiptRevisionCount: Int = 0
         let foodNames: [String]
         let pickupIDs: [UUID]
         let pickupTitles: [String]
@@ -175,7 +176,7 @@ import RecordArchive
             sourceToken: impact.token, scope: whole ? .origin : .sourceGraph, chunkCount: Int64(chunks.count),
             entryCount: Int64(impact.entries.count), manifestDigest: chain)
         try await verify(basis)
-        return Review(id: id, selection: selection, foodNames: impact.foodNames,
+        return Review(id: id, selection: selection, receiptRevisionCount: impact.receiptRevisionCount, foodNames: impact.foodNames,
             pickupIDs: cleanup.pickupIDs, pickupTitles: impact.pickups.map(\.title), collateralPickupIDs: impact.collateral.map(\.id),
             collateralPickupTitles: impact.collateral.map(\.title), retainedReceiptFoodNames: impact.retainedReceiptNames,
             affectedReservationNames: impact.affectedReservationNames,
@@ -191,6 +192,7 @@ import RecordArchive
         let ledgerOrigins: Set<UUID>
         let entries: [InventoryErasureEntry]
         let blockers: Set<Blocker>
+        var receiptRevisionCount: Int = 0
         let foodNames: [String]
         let pickups: [(id: UUID, title: String)]
         let collateral: [(id: UUID, title: String)]
@@ -206,7 +208,7 @@ import RecordArchive
             }
             return SQLImpact(revision: all.state.revision, token: all.token,
                 rules: .init(origin: inventory.workspaceID, retiredOrigin: true), links: [], ledgerOrigins: [], entries: [], blockers: [],
-                foodNames: all.food.map(\.title), pickups: pickups, collateral: [], retainedReceiptNames: [],
+                receiptRevisionCount: try await receiptImpact(lots: nil, pickups: []).count, foodNames: all.food.map(\.title), pickups: pickups, collateral: [], retainedReceiptNames: [],
                 affectedReservationNames: all.reservationNames)
         }
         let base = try await sourceBasis(at: date), context = base.context
@@ -221,6 +223,8 @@ import RecordArchive
         }
         var blockers = Set<Blocker>()
         if !scan.sqlDependenciesVerified { blockers.insert(.unknownContent) }
+        let receipts = try await receiptImpact(lots: lots, pickups: pickups)
+        if !receipts.retainedLots.isEmpty { blockers.insert(.retainedReceiptEvidence) }
         if scan.needsExpandedReview { blockers.insert(.collateralPickups) }
         let foodReview = try InventoryPrivacyErasure.review(originID: context.originID, lots: context.lots, reservations: context.claims,
             erasingLots: lots, erasingReservations: [], at: date)
@@ -243,9 +247,27 @@ import RecordArchive
         }
         return SQLImpact(revision: context.inventoryRevision, token: context.sourceToken, rules: rules,
             links: context.mapping.sourceLinks, ledgerOrigins: scan.ledgerOrigins, entries: graph.entries, blockers: blockers,
-            foodNames: context.lots.filter { lots.contains($0.id) }.map(\.name), pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
-            retainedReceiptNames: context.lots.filter { scan.retainedReceiptLotIDsInCollateralPickups.contains($0.id) }.map(\.name),
+            receiptRevisionCount: receipts.count, foodNames: context.lots.filter { lots.contains($0.id) }.map(\.name), pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
+            retainedReceiptNames: context.lots.filter { scan.retainedReceiptLotIDsInCollateralPickups.contains($0.id) || receipts.retainedLots.contains($0.id) }.map(\.name),
             affectedReservationNames: context.claims.filter { graph.reservations.contains($0.id) }.map(\.name))
+    }
+
+    private func receiptImpact(lots: Set<UUID>?, pickups: Set<UUID>) async throws -> (count: Int, retainedLots: Set<UUID>) {
+        var cursor: UUID?, count = 0, retainedLots = Set<UUID>()
+        while true {
+            let page = try await inventory.acquisitionRows(after: cursor)
+            try access()
+            for row in page {
+                let fact = try PantryAcquisitionCodec.record(row)
+                if lots?.contains(fact.lotID) ?? true { count += 1 }
+                else if let source = fact.savedPickup, source.originID == inventory.workspaceID, pickups.contains(source.id) {
+                    retainedLots.insert(fact.lotID)
+                }
+            }
+            guard let last = page.last else { break }
+            cursor = last.id
+        }
+        return (count, retainedLots)
     }
 
     private func sourceBasis(at date: Date) async throws -> (context: PantryErasureDependencies.Context, heads: [SavedComparison]) {

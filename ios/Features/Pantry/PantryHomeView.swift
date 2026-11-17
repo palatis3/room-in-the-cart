@@ -2,9 +2,9 @@ import CoreDomain
 import SwiftUI
 
 private enum PantrySheet: Identifiable {
-    case add, recount(UUID), purchase(PantryRecentPurchase), review
+    case add, recount(UUID), purchase(PantryRecentPurchase), review, receipt, prices
     var id: String {
-        switch self { case .add: return "add"; case .recount(let id): return "recount-\(id)"; case .purchase(let row): return "purchase-\(row.id)"; case .review: return "review" }
+        switch self { case .add: return "add"; case .recount(let id): return "recount-\(id)"; case .purchase(let row): return "purchase-\(row.id)"; case .review: return "review"; case .receipt: return "receipt"; case .prices: return "prices" }
     }
 }
 
@@ -30,6 +30,10 @@ struct PantryHomeView: View {
                             Button(pantryText("Add food")) { sheet = .add }
                                 .frame(minHeight: 44).disabled(!model.canEdit)
                                 .accessibilityIdentifier("pantry.add")
+                            Button(pantryText("Review a receipt")) { sheet = .receipt }
+                                .disabled(!model.canEdit).accessibilityIdentifier("pantry.receipt")
+                            Button(pantryText("Receipt history")) { sheet = .prices }
+                                .disabled(!model.canEdit).accessibilityIdentifier("pantry.receiptHistory")
                             let purchases = model.recentPurchases
                             if !purchases.isEmpty {
                                 DisclosureGroup(pantryText("Choose a recent purchase")) {
@@ -199,6 +203,8 @@ private struct PantryEntryPresentation: ViewModifier {
                 case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
                 case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
                 case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
+                case .receipt: PantryReceiptEntry(model: model)
+                case .prices: PantryReceiptHistory(model: model)
                 case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,
                                                      availabilityNeedsReview: availabilityNeedsReview)
                 }

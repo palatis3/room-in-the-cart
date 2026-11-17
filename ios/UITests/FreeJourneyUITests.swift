@@ -54,6 +54,72 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
+    func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
+        func receiptTap(_ control: XCUIElement) {
+            for _ in 0..<4 {
+                if control.exists, control.isHittable { control.tap(); return }
+                if control.exists { control.tap(); return }
+                app.collectionViews.firstMatch.swipeUp()
+            }
+            XCTAssertTrue(control.waitForExistence(timeout: 5), app.debugDescription)
+            control.tap()
+        }
+        func check(_ title: String) {
+            let toggle = app.switches[title]
+            for _ in 0..<6 {
+                if toggle.exists, toggle.isHittable { break }
+                app.collectionViews.firstMatch.swipeUp()
+            }
+            XCTAssertTrue(toggle.isHittable, app.debugDescription)
+            if toggle.value as? String == "0" {
+                toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            }
+            XCTAssertEqual(toggle.value as? String, "1")
+        }
+        launch(reset: true)
+        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.buttons["pantry.setup.apply"])
+        receiptTap(app.buttons["pantry.receipt"])
+        receiptTap(app.buttons["receipt.scan"])
+        let wording = app.textViews["scan.sourceEditor"]
+        receiptTap(wording)
+        wording.typeText("Oats")
+        if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
+        let label = app.textFields["Source reference label"]
+        receiptTap(label)
+        label.typeText("Market")
+        if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
+        let printed = app.buttons["Review printed lines"]
+        XCTAssertTrue(printed.waitForExistence(timeout: 8))
+        printed.tap()
+        check("I reviewed these lines as source evidence only.")
+        receiptTap(app.buttons["scan.receipt.review"])
+        check("I checked the purchase date.")
+        receiptTap(app.buttons["receipt.action.0"])
+        receiptTap(app.buttons["Add a separate physical batch"])
+        let received = app.textFields["receipt.received.0"]
+        receiptTap(received)
+        received.typeText("3")
+        let usable = app.textFields["receipt.usable.0"]
+        receiptTap(usable)
+        usable.typeText("2")
+        if app.buttons["receipt.keyboardDone"].exists { app.buttons["receipt.keyboardDone"].tap() }
+        receiptTap(app.buttons["receipt.review"])
+        XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["receipt.commit"])
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        XCTAssertEqual(app.staticTexts["receipt.status"].label, "Reviewed receipt lines saved.")
+        receiptTap(app.buttons["Done"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Oats")).firstMatch
+        XCTAssertTrue(lot.waitForExistence(timeout: 8))
+        app.terminate()
+        launch(reset: false)
+        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.buttons["pantry.receiptHistory"])
+        XCTAssertTrue(app.staticTexts["Oats"].firstMatch.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Paid price unknown"].exists)
+    }
+
     /// F02: ordinary Dinners removal, with an independently checked SQLite history.
     func testRemovingOneDinnerPreservesOtherMealManualGroceriesAndProtectedLunchAfterRestart() throws {
         launch(reset: true, sourceRemoval: true)
