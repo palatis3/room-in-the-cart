@@ -266,8 +266,14 @@ export class HouseholdRepository {
       AND (NOT (r.carried_forward OR r.from_previous_shop) OR (r.author_active AND (r.author_kind='adult' OR r.live_notice=$4)))
       ${cursor?'AND (r.received_at,r.request_id)>($5,$6)':''} ORDER BY r.received_at,r.request_id LIMIT 51`,params);
     const rows=result.rows.slice(0,50);
-    return{requests:rows.map(r=>({...ownRequest(r),...(shopId?{authorAlias:r.author_alias}:{}),
-      ...(shop && r.linked_line_id ? (shop.phase==='draft' ? {draftBasketLineId:r.linked_line_id} : {linkedLineId:r.linked_line_id}) : {})})),nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
+    const requests=rows.map(r=>({
+      ...ownRequest(r),
+      ...(shop ? {authorAlias:r.author_alias} : {}),
+      ...(shop && r.linked_line_id
+        ? (shop.phase==='draft' ? {draftBasketLineId:r.linked_line_id} : {linkedLineId:r.linked_line_id})
+        : {})
+    }));
+    return {asOf:ctx.now.toISOString(),requests,nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
   }
   async shop(ctx:Context,shopId:string):Promise<Shop> {
     if(ctx.selectedShopId&&ctx.selectedShopId!==shopId)throw unavailable();

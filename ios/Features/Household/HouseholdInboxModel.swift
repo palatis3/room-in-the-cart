@@ -2,6 +2,17 @@ import Foundation
 import SwiftUI
 import HouseholdClient
 
+/// Each row keeps the timestamp of the page that actually supplied its contents.
+struct RequestReadTimes {
+    var rows: [String: String] = [:]
+    var emptyPage: String?
+
+    mutating func include(_ page: OwnRequestsPage) {
+        emptyPage = page.requests.isEmpty ? page.asOf : nil
+        for row in page.requests { rows[row.id] = page.asOf }
+    }
+}
+
 enum ShopperChoice: String, CaseIterable, Identifiable {
     case add, link, deferRequest = "defer", dismiss, handled
     var id: String { rawValue }
@@ -20,6 +31,7 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var busy = false
     @Published private(set) var shop: ShopperShop?
     @Published private(set) var requests: [OwnRequest] = []
+    @Published private(set) var requestReadTimes = RequestReadTimes()
     @Published private(set) var deferredRequests: [DeferredRequest] = []
     @Published private(set) var deferredPage: DeferredRequestsPage?
     private var deferredLoad = UUID()
@@ -165,6 +177,7 @@ enum ShopperDelivery: Equatable {
                 guard start == generation else { return }
                 guard page.requests.allSatisfy({ $0.shopId == shopID }) else { throw ClientError.invalidResponse }
                 for request in page.requests { requests.removeAll { $0.id == request.id }; requests.append(request) }
+                requestReadTimes.include(page)
                 nextCursor = page.nextCursor
             } else {
                 try await refreshFacts(start: start)
@@ -210,6 +223,8 @@ enum ShopperDelivery: Equatable {
         if case .confirmed(let receipt) = delivery, receipt.kind == "request.apply", receipt.shopId == shopID {
             target = receipt.requestId
         } else { target = nil }
+        var readTimes = RequestReadTimes()
+        readTimes.include(page)
         var refreshed = page.requests
         var seenIDs = Set(refreshed.map(\.id))
         var seenCursors = Set<String>()
@@ -223,6 +238,7 @@ enum ShopperDelivery: Equatable {
             guard page.requests.allSatisfy({ $0.shopId == shopID && seenIDs.insert($0.id).inserted }) else {
                 throw ClientError.invalidResponse
             }
+            readTimes.include(page)
             refreshed += page.requests
         }
         if target != nil {
@@ -234,7 +250,7 @@ enum ShopperDelivery: Equatable {
             }
         }
         forgetDeferred()
-        shop = value; requests = refreshed; nextCursor = page.nextCursor; invalidatePreview()
+        shop = value; requests = refreshed; requestReadTimes = readTimes; nextCursor = page.nextCursor; invalidatePreview()
         if let selected { self.selected = requests.first { $0.id == selected.id } }
     }
     func checkMealNeeds(for request: OwnRequest) async {
@@ -447,10 +463,10 @@ enum ShopperDelivery: Equatable {
             // refresh below may still report their own actionable warning.
             notice = nil
             delivery = .confirmed(receipt); pending = nil; selected = nil; clarification = ""; invalidatePreview()
-            do { try await outbox.remove(operation.id) }
+            do { try await outbox.removeIfUnchanged([operation]) }
             catch { notice = ht("The decision was confirmed. Local retry cleanup needs another attempt.") }
             guard start == generation else { return }
-            shop = nil; requests = []; nextCursor = nil
+            shop = nil; requests = []; requestReadTimes = RequestReadTimes(); nextCursor = nil
             do { try await refreshFacts(start: start) }
             catch { await handleConfirmedRefresh(error, start: start) }
         } catch {
@@ -467,14 +483,14 @@ enum ShopperDelivery: Equatable {
         guard authorized, !busy, reviewedCurrentFacts, let pending, pending.sharedTrackingBinding == nil, pending.sharedRequestUndoBinding == nil else { return }
         busy = true; defer { busy = false }; let start = generation
         do {
-            try await outbox.remove(pending.id)
+            try await outbox.removeIfUnchanged([pending])
             guard start == generation else { return }
             self.pending = nil; delivery = .none; attempts = 0; notice = nil; selected = nil; invalidatePreview()
         } catch { await handle(error, start: start) }
     }
     func clear() {
         forgetDeferred()
-        generation = UUID(); authorized = false; shop = nil; requests = []; selected = nil; nextCursor = nil
+        generation = UUID(); authorized = false; shop = nil; requests = []; requestReadTimes = RequestReadTimes(); selected = nil; nextCursor = nil
         pending = nil; delivery = .none; notice = nil; clarification = ""; lineItem = ""; price = ""; linkedLineID = ""; invalidatePreview()
     }
     private func handleConfirmedRefresh(_ error: Error, start: UUID) async {
