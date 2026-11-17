@@ -30,8 +30,9 @@ extension EnvironmentValues {
               snapshot.state.active, household.projection?.grantId == nil,
               let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
         let scope = PantryDigestScope(origin: origin, identity: identity)
+        let generation = pickup.privatePantryGeneration
         return PantryDigestAccess(scope: scope) {
-            !child.presented && pickup.pantryRouteAvailable && pickup.pantryReadIsCurrent && pickup.sourceWorkspaceID == origin &&
+            pickup.privatePantryGeneration == generation && !child.presented && pickup.pantryRouteAvailable && pickup.pantryReadIsCurrent && pickup.sourceWorkspaceID == origin &&
                 household.projection?.grantId == nil && CapturePrivateIdentity.current(access: access, household: household) == identity
         }
     }
