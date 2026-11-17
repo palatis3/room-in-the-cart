@@ -86,14 +86,14 @@ enum StructuredCaptureParser {
         let proposal = try NaturalListSegmenter.propose(text, maximumItems: CaptureLimits.lines)
         guard !proposal.requiresTimingReview, !proposal.items.isEmpty else { throw StructuredCaptureFailure.timingReviewRequired }
         let drafts = proposal.items.map { item in
-            var draft = parse(String(item.wording), destination: destination)
+            var draft = parse(String(item.wording), destination: destination, naturalList: true)
             if item.needsBoundaryReview && !draft.warnings.contains(.ambiguous) { draft.warnings.append(.ambiguous) }
             return draft
         }
         return (drafts, proposal.timing.map(String.init))
     }
 
-    private static func parse(_ original: String, destination: String) -> CaptureLineDraft {
+    private static func parse(_ original: String, destination: String, naturalList: Bool = false) -> CaptureLineDraft {
         var body = original.trimmingCharacters(in: .whitespacesAndNewlines)
         var purpose = "", requestedDestination = "", exclusions = ""
         // Split bounded suffix labels in their actual order, preserving every source word.
@@ -134,6 +134,12 @@ enum StructuredCaptureParser {
                 } else { warnings.append(.ambiguous) }
             } else { warnings.append(.quantityUnknown) }
         } else { tokens = originalTokens; warnings.append(.quantityUnknown) }
+        // An omitted amount can stay unknown. An explicitly spoken range, zero
+        // or unreadable number needs the shopper's review before batch import.
+        if naturalList, warnings.contains(.quantityUnknown),
+           ranged || number != nil || originalTokens.first?.first?.isNumber == true {
+            warnings.append(.ambiguous)
+        }
         if tokens.contains(where: ListQuantityParser.isPackMarker) {
             if !warnings.contains(.packUnknown) { warnings.append(.packUnknown) }
             amount = ""; perPack = ""

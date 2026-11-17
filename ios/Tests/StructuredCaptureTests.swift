@@ -32,6 +32,14 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(try StructuredCaptureParser.lines(text, destination: destination).count, 1)
     }
 
+    func testNaturalCaptureDistinguishesUnspecifiedAmountsFromUnclearSpokenNumbers() throws {
+        let list = try StructuredCaptureParser.naturalList("bread, two to three apples, 1,000 tortillas, 0 eggs", destination: destination)
+        XCTAssertEqual(list.lines.count, 4)
+        XCTAssertTrue(list.lines.allSatisfy { $0.amount.isEmpty })
+        XCTAssertFalse(list.lines[0].warnings.contains(.ambiguous))
+        XCTAssertTrue(list.lines.dropFirst().allSatisfy { $0.warnings.contains(.ambiguous) })
+    }
+
     func testRangeConnectorsRemainAmountsAndKeepTheRealDestination() throws {
         let simple = try row("2 to 3 apples")
         XCTAssertEqual(simple.amount, "")
