@@ -1584,6 +1584,102 @@
           }
         }
       }
+    },
+    "Add grocery item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add grocery item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un artículo"
+          }
+        }
+      }
+    },
+    "Append to saved draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append to saved draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir al borrador guardado"
+          }
+        }
+      }
+    },
+    "Item wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto del artículo"
+          }
+        }
+      }
+    },
+    "Open an editable draft and confirm before adding anything.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open an editable draft and confirm before adding anything."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre un borrador editable y confirma antes de añadir artículos."
+          }
+        }
+      }
+    },
+    "Open shopping list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir lista de compras"
+          }
+        }
+      }
+    },
+    "Shortcut item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo del atajo"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

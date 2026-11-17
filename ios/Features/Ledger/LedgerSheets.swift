@@ -36,10 +36,16 @@ struct LedgerImportView: View {
     @AccessibilityFocusState private var focus: Focus?
     let firstDraft: FirstListEditor?
     let onFirstSave: ((UUID) -> Void)?
-    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, onFirstSave: ((UUID) -> Void)? = nil) {
+    let authorizeEntry: @MainActor () -> Bool
+    @State private var incomingWording: String?
+    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
         self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onFirstSave = onFirstSave
-        if let content = firstDraft?.content {
+        self.authorizeEntry = authorizeEntry
+        _original = State(initialValue: prefill)
+        if let firstDraft { _importID = State(initialValue: firstDraft.content.importID) }
+        if let content = firstDraft?.content, firstDraft?.version != nil {
             _original = State(initialValue: content.original); _source = State(initialValue: content.source)
+            _incomingWording = State(initialValue: prefill.isEmpty ? nil : prefill)
             _importID = State(initialValue: content.importID); _preview = State(initialValue: content.preview)
             _choices = State(initialValue: content.choices); _invalidAmounts = State(initialValue: content.invalidAmounts)
             _explicitSeparate = State(initialValue: content.explicitSeparate); _matchesAreCurrent = State(initialValue: content.matchesAreCurrent)
@@ -59,6 +65,17 @@ struct LedgerImportView: View {
         let review = preview.map { LedgerImportReview(shop: shop, preview: $0, choices: choices) }
         return ScrollViewReader { scroll in
             Form {
+                if let incomingWording {
+                    Section(SurfaceCopy.text("Shortcut item")) {
+                        Text(verbatim: incomingWording)
+                        Button(SurfaceCopy.text("Append to saved draft")) {
+                            guard authorizeEntry() else { return }
+                            original = [original, incomingWording].filter { !$0.isEmpty }.joined(separator: "\n")
+                            preview = nil; choices = [:]; invalidAmounts = [:]; explicitSeparate = []
+                            importID = UUID(); captured = nil; self.incomingWording = nil
+                        }.disabled(model.saving || model.hasPendingSave)
+                    }
+                }
                 if let firstDraft {
                     FirstListDraftStatus(editor: firstDraft, contents: firstContents, blocked: model.saving || model.hasPendingSave)
                 }
@@ -207,7 +224,7 @@ struct LedgerImportView: View {
         let needsAmountCorrection = invalidAmounts.keys.contains { review.choices[$0] != .skip }
         return Button(ledgerText("Add reviewed list")) {
             Task {
-                guard captured == nil || captureAuthorized else {
+                guard authorizeEntry(), captured == nil || captureAuthorized else {
                     model.error = captureText("This capture belongs to an earlier workspace or list revision. Review it again before adding anything.")
                     focus = .status; return
                 }

@@ -124,6 +124,8 @@ struct FirstListResumeButton: View {
 
 struct FirstListEntry: View {
     @ObservedObject var model: LedgerModel
+    var prefill: String = ""
+    var authorizeEntry: @MainActor () -> Bool = { true }
     let onSaved: (UUID) -> Void
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
@@ -139,7 +141,7 @@ struct FirstListEntry: View {
     var body: some View {
         Group {
             if let editor, editor.authorize() {
-                FirstListForm(model: model, editor: editor, onSaved: onSaved)
+                FirstListForm(model: model, editor: editor, prefill: prefill, onSaved: onSaved)
             } else if failed || identity == nil || editor != nil {
                 ContentUnavailableView(ledgerText("Draft unavailable"), systemImage: "lock",
                     description: Text(ledgerText("Reopen the private shopping list to check the current workspace.")))
@@ -157,7 +159,7 @@ struct FirstListEntry: View {
         guard let store = model.firstListStore, let original = identity else { failed = true; return }
         let base = model.revision, child = child, access = access, household = household, model = model
         let authorize: @MainActor () -> Bool = { [weak model, weak access, weak household, weak child] in
-            guard let model, let access, let household, child?.presented != true,
+            guard authorizeEntry(), let model, let access, let household, child?.presented != true,
                   household.projection?.grantId == nil, model.firstListStore === store,
                   model.revision == base, UIApplication.shared.isProtectedDataAvailable else { return false }
             return CapturePrivateIdentity.current(access: access, household: household) == original
@@ -175,6 +177,7 @@ struct FirstListEntry: View {
 private struct FirstListForm: View {
     @ObservedObject var model: LedgerModel
     @ObservedObject var editor: FirstListEditor
+    let prefill: String
     let onSaved: (UUID) -> Void
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -186,7 +189,7 @@ private struct FirstListForm: View {
                 Button(ledgerText("Discard draft"), role: .destructive) { Task { if await editor.discard() { dismiss() } } }
             }.toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
         } else {
-            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, onFirstSave: onSaved)
+            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, authorizeEntry: editor.authorize, onFirstSave: onSaved)
         }
     }
 }

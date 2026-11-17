@@ -47,7 +47,7 @@ import DeviceSurfaces
     private var reconciling = false
     private var reconcileAgain = false
     private enum Shortcut {
-        case capture, current(RouteHandle)
+        case capture, current(RouteHandle), shopping(ShoppingIntentRequest)
     }
     private var pendingShortcut: Shortcut?
     private var pendingHandle: RouteHandle?
@@ -108,9 +108,15 @@ import DeviceSurfaces
         for publisher in [ledgerChanges, pickup.objectWillChange.eraseToAnyPublisher(), household.objectWillChange.eraseToAnyPublisher(), access.objectWillChange.eraseToAnyPublisher()] {
             publisher.receive(on: RunLoop.main).sink { [weak self] in Task { @MainActor in await self?.sourceDidChange() } }.store(in: &subscriptions)
         }
+        captureRequests.now = clock
+        captureRequests.binding = { [weak self] in self?.shoppingIntentBinding }
         captureRequests.$pending.filter { $0 }.receive(on: RunLoop.main).sink { [weak self] _ in
-            guard let self, self.captureRequests.takePending() else { return }
-            self.receive(.capture)
+            guard let self, let request = self.captureRequests.takeRequest() else { return }
+            switch request {
+            case .capture: self.receive(.capture)
+            case .shopping(let intent): self.receive(.shopping(intent))
+            case .unavailable: self.destination = .unavailable(UUID())
+            }
         }.store(in: &subscriptions)
         // Adult links drain after store reconciliation. An invited contributor
         // can open their own request without opening the adult stores.
@@ -150,7 +156,7 @@ import DeviceSurfaces
     func background() {
         active = false; nonce = UUID(); entries = []; draft = nil; destinationChange = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
-        if ledger != nil { captureRequests.takePending() }
+        if ledger != nil { captureRequests.takeRequest() }
         // A cold child/locked launch may never open the adult stores. Resolve
         // only the widget file so a prior process's shortcut is still cleared.
         if projection == nil {
@@ -166,7 +172,7 @@ import DeviceSurfaces
     func scopeChanged() {
         nonce = UUID(); entries = []; draft = nil; destinationChange = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
-        if ledger != nil { captureRequests.takePending() }
+        if ledger != nil { captureRequests.takeRequest() }
         pendingReminderTap = nil; authorityKey = nil; reminderSaveGeneration = UUID()
         Task { await sourceDidChange() }
     }
@@ -392,6 +398,15 @@ import DeviceSurfaces
         switch shortcut {
         case .capture:
             openCapture()
+        case .shopping(let request):
+            guard let binding = shoppingIntentBinding, scope != nil, active, !hasPendingSave,
+                  let workspace = binding.workspace, clock() >= request.issuedAt, clock() < request.expiresAt,
+                  request.binding.map({ origin in
+                      origin.identity == binding.identity && (origin.workspace == nil ||
+                        (origin.workspace == workspace && origin.shop == binding.shop))
+                  }) ?? true else { destination = .unavailable(UUID()); return }
+            let review = ShoppingIntentReview(id: UUID(), request: request, binding: binding, generation: nonce)
+            destination = .shopping(review)
         case .current(let handle):
             guard privateAuthorized else { destination = .unavailable(UUID()); return }
             let start = nonce
@@ -401,6 +416,17 @@ import DeviceSurfaces
             }
         }
     }
+    private var shoppingIntentBinding: ShoppingIntentBinding? {
+        guard UIApplication.shared.isProtectedDataAvailable, let access, let household,
+              household.projection?.grantId == nil,
+              let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
+        return ShoppingIntentBinding(identity: identity, workspace: ledger?.sourceWorkspaceID, shop: ledger?.shop?.id)
+    }
+    func allows(_ review: ShoppingIntentReview) -> Bool {
+        privateAuthorized && scope != nil && nonce == review.generation && shoppingIntentBinding == review.binding &&
+            clock() >= review.request.issuedAt && clock() < review.request.expiresAt
+    }
+
     private func openCapture() {
         ownRequestPersona = nil
         if privateAuthorized { destination = .capture(UUID()) }
@@ -616,7 +642,14 @@ struct SurfaceReminderTarget: Identifiable, Equatable, Sendable {
     let cutoff: Date?
     let timeZoneID: String
 }
+struct ShoppingIntentReview: Identifiable {
+    let id: UUID
+    let request: ShoppingIntentRequest
+    let binding: ShoppingIntentBinding
+    let generation: UUID
+}
 enum SurfacePresentedDestination: Identifiable {
+    case shopping(ShoppingIntentReview)
     case capture(UUID), ownRequest(UUID), shop(UUID), offer(UUID, UUID), deferral(UUID, UUID), unavailable(UUID)
-    var id: UUID { switch self { case .capture(let id), .ownRequest(let id), .shop(let id), .unavailable(let id): return id; case .offer(_, let id), .deferral(_, let id): return id } }
+    var id: UUID { switch self { case .shopping(let review): return review.id; case .capture(let id), .ownRequest(let id), .shop(let id), .unavailable(let id): return id; case .offer(_, let id), .deferral(_, let id): return id } }
 }

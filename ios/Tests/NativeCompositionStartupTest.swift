@@ -120,6 +120,42 @@ import CoreDomain
         XCTAssertFalse(requests.pending)
         XCTAssertNil(f.composition.destination)
     }
+    func testShoppingShortcutsOpenDistinctReviewedDestinationsWithoutWriting() async throws {
+        let requests = SurfaceCaptureRequests()
+        let f = try await coldURLFixture(captureRequests: requests)
+        let initial = f.ledger.workspace, revision = f.ledger.revision
+        requests.requestShopping(.openList)
+        await waitForSurfaceDestination(f.composition)
+        guard case .shopping(let list) = f.composition.destination, case .openList = list.request.action else {
+            return XCTFail("Open list must reach the current authorized list")
+        }
+        XCTAssertEqual(list.binding.shop, f.ledger.shop?.id)
+        XCTAssertTrue(f.composition.allows(list))
+        f.composition.destination = nil
+        requests.requestShopping(.addItem("Milk, no nuts"))
+        await waitForSurfaceDestination(f.composition)
+        guard case .shopping(let item) = f.composition.destination, case .addItem(let words) = item.request.action else {
+            return XCTFail("Add item must reach an editable draft")
+        }
+        XCTAssertEqual(words, "Milk, no nuts")
+        XCTAssertEqual(f.ledger.workspace, initial)
+        XCTAssertEqual(f.ledger.revision, revision)
+        f.composition.scopeChanged()
+        XCTAssertFalse(f.composition.allows(item))
+        XCTAssertNil(f.composition.destination)
+    }
+
+    func testShoppingIntentRejectsExpiredWording() async throws {
+        let requests = SurfaceCaptureRequests()
+        let f = try await coldURLFixture(captureRequests: requests)
+        let expected = f.ledger.workspace
+        let now = requests.now()
+        requests.now = { now.addingTimeInterval(-601) }
+        requests.requestShopping(.addItem("Stale wording"))
+        await waitForSurfaceDestination(f.composition)
+        guard case .unavailable = f.composition.destination else { return XCTFail("Expired draft must be withheld") }
+        XCTAssertEqual(f.ledger.workspace, expected)
+    }
     func testColdCurrentURLWaitsForActiveAndReadyModels() async throws {
         let f = try await coldURLFixture()
         let coldLedger = LedgerModel(databaseURL: f.base.appendingPathComponent("ledger.sqlite"))
