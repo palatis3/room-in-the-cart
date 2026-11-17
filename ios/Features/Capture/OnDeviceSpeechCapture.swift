@@ -10,6 +10,7 @@ import Speech
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var recognition: SFSpeechRecognitionTask?
     private var continuation: AsyncThrowingStream<SpeechCaptureUpdate, Error>.Continuation?
+    private var interruptionObserver: NSObjectProtocol?
     private var runID = UUID()
     private var hasTap = false
     private let audio: CookAudioSession
@@ -64,6 +65,16 @@ import Speech
                     Task { @MainActor [weak self] in if self?.runID == run { self?.stop() } }
                 }
             }
+            interruptionObserver = NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification,
+                object: nil, queue: .main) { [weak self] note in
+                guard let type = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                      type == AVAudioSession.InterruptionType.began.rawValue else { return }
+                Task { @MainActor [weak self] in
+                    guard let self, self.runID == run else { return }
+                    self.continuation?.finish(throwing: CaptureFailure.audioUnavailable)
+                    self.stop()
+                }
+            }
             recognition = recognizer.recognitionTask(with: request) { [weak self] result, error in
                 let update = result.map { SpeechCaptureUpdate(text: $0.bestTranscription.formattedString,
                     isFinal: $0.isFinal, uncertain: $0.bestTranscription.segments.contains { $0.confidence < 0.7 }) }
@@ -88,6 +99,10 @@ import Speech
 
     func stop() {
         runID = UUID()
+        if let interruptionObserver {
+            NotificationCenter.default.removeObserver(interruptionObserver)
+            self.interruptionObserver = nil
+        }
         engine?.stop()
         if hasTap { engine?.inputNode.removeTap(onBus: 0); hasTap = false }
         request?.endAudio(); recognition?.cancel()

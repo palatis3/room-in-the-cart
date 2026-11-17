@@ -34,7 +34,10 @@ struct LedgerImportView: View {
     @FocusState private var inputFocus: LedgerImportField?
     private enum Focus: Hashable { case preview, status, inputLimit }
     @AccessibilityFocusState private var focus: Focus?
-    private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
+    private var currentShop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
+    private var shop: ShoppingLedger? {
+        model.workspace.shops.first { $0.id == (preview?.shopID ?? shopID) }
+    }
 
     var body: some View {
         let review = preview.map { LedgerImportReview(shop: shop, preview: $0, choices: choices) }
@@ -47,6 +50,12 @@ struct LedgerImportView: View {
                 if let preview, let review {
                     Section(ledgerText("Original wording")) {
                         Text(original).textSelection(.enabled).accessibilityFocused($focus, equals: .preview)
+                        if let pickup = captured?.naturalBatch?.pickup {
+                            Text(captureText("Pickup for all items") + ": " + pickup.title)
+                            if !availablePickup(pickup) {
+                                Text(captureText("This pickup changed. Edit captured fields to choose a pickup again."))
+                            }
+                        }
                         if let data = captured?.previewImageData ?? captured?.sourceImageData, let image = UIImage(data: data) {
                             Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 240)
                                 .accessibilityLabel(captureText("Selected source photo"))
@@ -69,7 +78,7 @@ struct LedgerImportView: View {
 
                         if captured != nil {
                             Button(captureText("Edit captured fields")) { beginCapture() }
-                                .disabled(model.saving || model.hasPendingSave || !captureAuthorized)
+                                .disabled(model.saving || model.hasPendingSave || liveCaptureBinding != captureBinding)
                         } else {
                             Button(ledgerText("Edit original text")) { self.preview = nil; choices = [:]; importID = UUID() }
                                 .disabled(model.saving || model.hasPendingSave)
@@ -136,10 +145,13 @@ struct LedgerImportView: View {
                 .interactiveDismissDisabled(model.saving)
                 .sheet(item: $capturePresentation) { presentation in
                     let binding = presentation.binding
+                    let pickups = liveCaptureBinding == binding ? model.workspace.shops.map(CapturePickup.init) : []
                     NavigationStack {
                         CaptureReviewView(initialText: presentation.text, initialSource: presentation.source, localeIdentifier: binding.captureLanguage,
                             destination: presentation.destination, existingCapture: presentation.reviewed,
                             correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: binding.captureLanguage),
+                            currentPickup: pickups.first { $0.id == binding.shopID }, availablePickups: pickups,
+                            authorizePickup: { liveCaptureBinding == binding && availablePickup($0) },
                             authorize: { liveCaptureBinding == binding }, onReviewed: { receiveCapture($0, binding: binding) })
                     }
                 }
@@ -178,14 +190,16 @@ struct LedgerImportView: View {
 
     private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview) -> some View {
         let needsAmountCorrection = invalidAmounts.keys.contains { review.choices[$0] != .skip }
+        let reviewedBinding = captureBinding
         return Button(ledgerText("Add reviewed list")) {
             Task {
-                guard captured == nil || captureAuthorized else {
+                guard self.preview == preview, captureBinding == reviewedBinding,
+                      reviewedBinding == nil || captureAuthorized else {
                     model.error = captureText("This capture belongs to an earlier workspace or list revision. Review it again before adding anything.")
                     focus = .status; return
                 }
                 let decisions = review.choices
-                if await model.editShop(key: "import-\(preview.id)", shopID: shopID, { try $0.commitImport(preview, decisions: decisions) }) {
+                if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, { try $0.commitImport(preview, decisions: decisions) }) {
                     dismiss()
                 } else { focus = .status }
             }
@@ -196,7 +210,7 @@ struct LedgerImportView: View {
     private var liveCaptureBinding: LedgerCaptureBinding? {
         guard access.unlocked, !household.locked, model.ready,
               !model.hasPendingLedgerDeletion, let workspaceID = model.sourceWorkspaceID,
-              let shop, model.workspace.selectedShopID == shopID else { return nil }
+              let shop = currentShop, model.workspace.selectedShopID == shopID else { return nil }
         if let projection = household.projection {
             guard household.identity != nil, projection.enrolled, ["shopper", "organizer"].contains(projection.role) else { return nil }
         } else if household.identity != nil { return nil }
@@ -205,17 +219,24 @@ struct LedgerImportView: View {
             householdID: household.projection?.household.id, memberID: household.projection?.memberId,
             role: household.projection?.role, localeIdentifier: locale.identifier, captureLanguage: CaptureCorrectionScope.appLanguage())
     }
-    private var captureAuthorized: Bool { captureBinding != nil && liveCaptureBinding == captureBinding }
+    private func availablePickup(_ pickup: CapturePickup) -> Bool {
+        model.workspace.shops.first(where: { $0.id == pickup.id }).map(CapturePickup.init) == pickup
+    }
+    private var captureAuthorized: Bool {
+        guard let captureBinding, liveCaptureBinding == captureBinding else { return false }
+        guard let batch = captured?.naturalBatch else { return true }
+        return batch.pickup.map(availablePickup) == true
+    }
     private func beginCapture() {
-        guard let binding = liveCaptureBinding, let shop, !model.saving, !model.hasPendingSave else { return }
+        guard let binding = liveCaptureBinding, let shop = currentShop, !model.saving, !model.hasPendingSave else { return }
         inputFocus = nil
         capturePresentation = LedgerCapturePresentation(binding: binding, destination: shop.title,
             text: original, source: source == .paste ? .paste : .typed, reviewed: captured)
     }
     private func receiveCapture(_ capture: ReviewedCapture, binding: LedgerCaptureBinding) {
-        guard liveCaptureBinding == binding, !model.saving, !model.hasPendingSave, let shop else { return }
+        guard liveCaptureBinding == binding, !model.saving, !model.hasPendingSave else { return }
         do {
-            let staged = try CaptureLedgerImport.stage(capture, in: shop)
+            let staged = try CaptureLedgerImport.stage(capture, in: model.workspace, currentShopID: shopID)
             if staged.alreadyApplied { capturePresentation = nil; dismiss(); return }
             captureBinding = binding
             captured = capture; importID = capture.id; original = capture.originalText
@@ -225,6 +246,9 @@ struct LedgerImportView: View {
             explicitSeparate = []
             matchesAreCurrent = true
             capturePresentation = nil; focus = .preview; model.error = nil
+        } catch StructuredCaptureFailure.destinationMismatch {
+            model.error = captureText("Choose an available pickup before continuing.")
+            focus = .status
         } catch {
             model.error = captureText("Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers.")
             focus = .status

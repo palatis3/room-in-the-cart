@@ -10,8 +10,13 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @StateObject private var corrections = CaptureCorrectionsModel()
     @State private var structuredLines: [CaptureLineDraft] = []
     @State private var reviewingFields = false
-    @State private var guestDetected = false
-    @State private var structuredFailure = false
+    @State private var naturalBatch: NaturalCaptureBatch?
+    @State private var stagedText: String?
+    let currentPickup: CapturePickup?
+    let availablePickups: [CapturePickup]
+    let authorizePickup: (CapturePickup) -> Bool
+    private enum StagingIssue { case guest, timing, invalid }
+    @State private var stagingIssue: StagingIssue?
     let destination: String
     let requestMode: Bool
     let dismissOnReview: Bool
@@ -30,17 +35,26 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
 
     init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = CaptureCorrectionScope.appLanguage(),
          destination: String = captureText("This pickup"), requestMode: Bool = false, dismissOnReview: Bool = true, existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
-         authorize: @escaping () -> Bool, onReviewed: @escaping (ReviewedCapture) -> Void) {
+         currentPickup: CapturePickup? = nil, availablePickups: [CapturePickup] = [],
+         authorizePickup: @escaping (CapturePickup) -> Bool = { _ in false }, authorize: @escaping () -> Bool, onReviewed: @escaping (ReviewedCapture) -> Void) {
         let evidence = existingCapture.map { CaptureEvidence(text: $0.originalText, source: $0.source,
             uncertainLines: [], sourceImageData: $0.sourceImageData, previewImageData: $0.previewImageData) }
             ?? (initialSource == .paste && !initialText.isEmpty ? CaptureEvidence(text: initialText, source: .paste,
                 uncertainLines: [], sourceImageData: nil, previewImageData: nil) : nil)
         let model = CaptureModel(initialText: existingCapture?.text ?? initialText, localeIdentifier: localeIdentifier,
-            id: existingCapture?.id ?? UUID(), speech: OnDeviceSpeechCapture(), ocr: OnDeviceTextCapture(), initialEvidence: evidence)
+            id: existingCapture?.id ?? UUID(), speech: OnDeviceSpeechCapture(), ocr: OnDeviceTextCapture(), initialEvidence: evidence,
+            naturalListMode: existingCapture.map { $0.naturalBatch != nil })
         if existingCapture != nil { model.confirmed = true }
         _model = StateObject(wrappedValue: model)
         _structuredLines = State(initialValue: existingCapture?.fieldDrafts ?? [])
         _reviewingFields = State(initialValue: existingCapture?.fieldDrafts != nil)
+        var existingBatch = existingCapture?.naturalBatch
+        existingBatch?.refreshPickups(availablePickups)
+        _naturalBatch = State(initialValue: existingBatch)
+        _stagedText = State(initialValue: existingCapture?.text)
+        self.currentPickup = currentPickup
+        self.availablePickups = availablePickups
+        self.authorizePickup = authorizePickup
         self.onReviewed = onReviewed
         self.destination = destination; self.requestMode = requestMode; self.dismissOnReview = dismissOnReview; self.correctionScope = correctionScope; self.authorize = authorize
     }
@@ -93,11 +107,12 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         Form {
             if reviewingFields {
                 StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, correctionScope: correctionScope,
-                    fieldFocus: $structuredFieldFocus, destination: destination,
+                    fieldFocus: $structuredFieldFocus, naturalBatch: $naturalBatch, currentPickupID: currentPickup?.id,
+                    availablePickups: availablePickups, authorizePickup: authorizePickup, destination: destination,
                     source: model.acceptedEvidence?.source ?? .typed, context: requestMode ? .request : .list, originalText: model.acceptedEvidence?.text ?? model.text,
                     imageData: model.acceptedEvidence?.previewImageData ?? model.acceptedEvidence?.sourceImageData,
                     authorize: authorize, onBack: { reviewingFields = false }) { lines in
-                        guard authorize(), let capture = model.reviewed(lines: lines, fieldDrafts: structuredLines) else { return }
+                        guard authorize(), let capture = model.reviewed(lines: lines, fieldDrafts: structuredLines, naturalBatch: naturalBatch) else { return }
                         onReviewed(capture); if dismissOnReview { dismiss() }
                     }
             } else {
@@ -120,7 +135,14 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 }
             }
             Section(captureText(requestMode ? "Your editable request" : "Your editable list")) {
-                Text(captureText(requestMode ? "Review one request at a time. Check the item, amount, packs, purpose and exclusions; skip any other captured lines." : "One item per line. Check item names, amounts, units and any exclusions."))
+                if !requestMode {
+                    Toggle(captureText("Split a spoken or typed list into items"), isOn: $model.naturalListMode)
+                        .disabled(model.busy || loadingPhoto || model.closed)
+                        .accessibilityIdentifier("capture.naturalMode")
+                }
+                if requestMode || !model.naturalListMode {
+                    Text(captureText(requestMode ? "Review one request at a time. Check the item, amount, packs, purpose and exclusions; skip any other captured lines." : "One item per line. Check item names, amounts, units and any exclusions."))
+                }
                 TextEditor(text: $model.text).frame(minHeight: 180)
                     .focused($sourceTextFocused)
                     .accessibilityLabel(captureText(requestMode ? "Request text to review" : "List text to review"))
@@ -175,15 +197,21 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 }
             }
             Section {
-                Toggle(captureText("I checked the wording, amounts, units and exclusions."), isOn: $model.confirmed)
-                    .disabled(model.busy || loadingPhoto || model.candidate != nil || model.closed)
+                if !usesNaturalList {
+                    Toggle(captureText("I checked the wording, amounts, units and exclusions."), isOn: $model.confirmed)
+                        .disabled(model.busy || loadingPhoto || model.candidate != nil || model.closed)
+                }
                 Button(captureText("Review captured fields")) { stageFields() }
-                    .disabled(!model.canContinue || loadingPhoto || !authorize()).accessibilityIdentifier("capture.reviewFields")
-                if guestDetected {
+                    .disabled(!canStageFields || loadingPhoto || !authorize()).accessibilityIdentifier("capture.reviewFields")
+                if stagingIssue == .guest {
                     Text(captureText("This may be a guest change. Open Guests and protected portions to choose the meal, group and new total before previewing."))
                     Button(captureText("This is grocery wording — review it as items")) { stageFields(explicitlyTreatAsItems: true) }
                 }
-                if structuredFailure { Text(captureText("The draft could not be parsed. Keep typing or shorten the list, then review again.")) }
+                if stagingIssue == .timing {
+                    Text(captureText("These items may be for different pickups. Review one pickup at a time or edit the timing in your wording."))
+                        .accessibilityIdentifier("capture.timingError")
+                }
+                if stagingIssue == .invalid { Text(captureText("The draft could not be parsed. Keep typing or shorten the list, then review again.")) }
                 Text(captureText("The next screen reviews parsed quantities and duplicates. Captured text does not verify a price, a safe ingredient, a paid receipt or what arrived."))
                     .font(.footnote)
             }
@@ -202,6 +230,9 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 if !authorize() { close(); dismiss(); return }
             }
         }
+        .onChange(of: model.text) { _, _ in stagingIssue = nil }
+        .onChange(of: model.naturalListMode) { _, _ in stagingIssue = nil }
+        .onChange(of: availablePickups) { _, pickups in naturalBatch?.refreshPickups(pickups) }
         .onChange(of: photo) { _, item in load(item) }
         .onChange(of: scenePhase) { _, phase in if phase == .background { close(); dismiss() } }
         .onDisappear { close() }
@@ -240,15 +271,34 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             }
         }
     }
+    private var usesNaturalList: Bool { !requestMode && model.naturalListMode }
+    private var canStageFields: Bool { usesNaturalList ? model.canReviewText : model.canContinue }
+
     private func stageFields(explicitlyTreatAsItems: Bool = false) {
-        guard model.canContinue, authorize() else { return }
+        guard canStageFields, !loadingPhoto, authorize() else { return }
         do {
-            structuredLines = try StructuredCaptureParser.lines(model.text, destination: destination, explicitlyTreatAsItems: explicitlyTreatAsItems)
-            reviewingFields = true; guestDetected = false; structuredFailure = false
-        } catch StructuredCaptureFailure.guestReviewRequired { guestDetected = true }
-        catch { structuredFailure = true }
+            let natural = usesNaturalList
+            if stagedText != model.text || natural != (naturalBatch != nil) || structuredLines.isEmpty {
+                let result = try model.fields(forList: !requestMode, destination: destination, explicitlyTreatAsItems: explicitlyTreatAsItems)
+                structuredLines = result.lines
+                naturalBatch = natural ? NaturalCaptureBatch(timing: result.timing, lines: result.lines, currentPickup: currentPickup) : nil
+                stagedText = model.text
+            }
+            reviewingFields = true
+            stagingIssue = nil
+        } catch StructuredCaptureFailure.guestReviewRequired { stagingIssue = .guest }
+        catch StructuredCaptureFailure.timingReviewRequired { stagingIssue = .timing }
+        catch { stagingIssue = .invalid }
     }
-    private func close() { photoTask?.cancel(); photoTask = nil; model.close(); corrections.invalidate(); structuredLines = [] }
+    private func close() {
+        photoTask?.cancel()
+        photoTask = nil
+        model.close()
+        corrections.invalidate()
+        structuredLines = []
+        stagedText = nil
+        naturalBatch = nil
+    }
     private func failureText(_ failure: CaptureFailure) -> String {
         switch failure {
         case .notConfigured: return captureText("Speech is not available in this build. Type or paste your list instead.")

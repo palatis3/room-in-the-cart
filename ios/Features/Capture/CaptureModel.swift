@@ -5,6 +5,14 @@ import Combine
 @MainActor final class CaptureModel: ObservableObject {
     @Published var text: String { didSet { confirmed = false } }
     @Published var confirmed = false
+    @Published private var preferredNaturalListMode: Bool?
+    var naturalListMode: Bool {
+        get { preferredNaturalListMode ?? (acceptedEvidence?.source == .speech) }
+        set {
+            preferredNaturalListMode = newValue
+            confirmed = false
+        }
+    }
     @Published private(set) var candidate: CaptureEvidence?
     @Published private(set) var acceptedEvidence: CaptureEvidence?
     @Published private(set) var busy = false
@@ -21,15 +29,17 @@ import Combine
     let localeIdentifier: String
 
     init(initialText: String = "", localeIdentifier: String = CaptureCorrectionScope.appLanguage(), id: UUID = UUID(),
-         speech: any CaptureSpeechService, ocr: any CaptureOCRService, initialEvidence: CaptureEvidence? = nil) {
+         speech: any CaptureSpeechService, ocr: any CaptureOCRService, initialEvidence: CaptureEvidence? = nil, naturalListMode: Bool? = nil) {
+        self.preferredNaturalListMode = naturalListMode
         text = initialText; self.localeIdentifier = localeIdentifier; self.id = id
         self.speech = speech; self.ocr = ocr; self.acceptedEvidence = initialEvidence
     }
 
-    var canContinue: Bool {
-        !closed && !delivered && !busy && candidate == nil && confirmed &&
+    var canReviewText: Bool {
+        !closed && !delivered && !busy && candidate == nil &&
         !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (try? CaptureLimits.validate(text)) != nil
     }
+    var canContinue: Bool { canReviewText && confirmed }
     var containsExclusion: Bool { CaptureLimits.containsExclusion(text) }
 
     /// Paste is invoked only from the system PasteButton; there is no clipboard read at startup.
@@ -94,16 +104,28 @@ import Combine
         do {
             try CaptureLimits.validate(candidate.text)
             guard !candidate.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CaptureFailure.noText }
+            if candidate.source == .photoOCR { preferredNaturalListMode = nil }
             acceptedEvidence = candidate; text = candidate.text; self.candidate = nil; failure = nil
         } catch { failure = error as? CaptureFailure ?? .recognitionFailed }
     }
     func discardCandidate() { guard !busy else { return }; candidate = nil; failure = nil }
-    func reviewed(lines: [CaptureImportLine]? = nil, fieldDrafts: [CaptureLineDraft]? = nil) -> ReviewedCapture? {
-        guard canContinue else { return nil }
+    func fields(forList: Bool, destination: String, explicitlyTreatAsItems: Bool = false) throws -> (lines: [CaptureLineDraft], timing: String?) {
+        if forList && naturalListMode {
+            return try StructuredCaptureParser.naturalList(text, destination: destination, explicitlyTreatAsItems: explicitlyTreatAsItems)
+        }
+        return (try StructuredCaptureParser.lines(text, destination: destination, explicitlyTreatAsItems: explicitlyTreatAsItems), nil)
+    }
+
+    func reviewed(lines: [CaptureImportLine]? = nil, fieldDrafts: [CaptureLineDraft]? = nil, naturalBatch: NaturalCaptureBatch? = nil) -> ReviewedCapture? {
+        if let naturalBatch {
+            guard canReviewText, naturalBatch.pickup != nil, lines?.isEmpty == false else { return nil }
+        } else {
+            guard canContinue else { return nil }
+        }
         delivered = true
         return .init(id: id, text: text, originalText: acceptedEvidence?.text ?? text,
             source: acceptedEvidence?.source ?? .typed, localeIdentifier: localeIdentifier,
-            sourceImageData: acceptedEvidence?.sourceImageData, previewImageData: acceptedEvidence?.previewImageData, lines: lines, fieldDrafts: fieldDrafts)
+            sourceImageData: acceptedEvidence?.sourceImageData, previewImageData: acceptedEvidence?.previewImageData, lines: lines, fieldDrafts: fieldDrafts, naturalBatch: naturalBatch)
     }
     /// Call on route/scope exit or background. Late permission and recognition callbacks cannot restore data.
     func close() {

@@ -414,6 +414,38 @@ import XCTest
         capture("B09-typed-amount-reopened-after-microphone-refusal")
     }
 
+    func testNaturalListReviewsTimingThenAddsOnlyToChosenPickup() {
+        launch(reset: true)
+        openShoppingList()
+        app.renameSelectedPickup("Next week's pickup")
+        startAnotherPickupFromList()
+        fill("Today's pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        fill("Two milks, bread and cereal for next week", into: "ledgerImportText")
+        tap(element("ledger.capture"))
+        enableSwitch("capture.naturalMode")
+        tap(element("capture.reviewFields"))
+        assertText("Timing in your wording: for next week")
+        XCTAssertFalse(app.textFields["Total amount, unknown if blank"].exists)
+        capture("Natural-list-compact-review-and-unresolved-timing")
+        let proceed = element("capture.continue")
+        reveal(proceed)
+        XCTAssertFalse(proceed.isEnabled)
+        tap(element("capture.batchPickup"))
+        tap(app.buttons["Next week's pickup"])
+        tap(proceed)
+        assertText("Pickup for all items: Next week's pickup")
+        tap(element("ledgerCommitImport"))
+        XCTAssertTrue(app.navigationBars["Today's pickup"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["Inspect cereal"].exists)
+        tap(app.buttons["ledgerShopPicker"])
+        tap(app.buttons["Next week's pickup"])
+        for item in ["milks", "bread", "cereal"] {
+            reveal(app.buttons["Inspect " + item])
+        }
+    }
+
     func testCameraRefusalReturnsToTypedDraft() throws {
         launch(reset: true)
         openShoppingList()
