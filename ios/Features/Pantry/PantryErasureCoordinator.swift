@@ -75,7 +75,7 @@ import RecordArchive
     let journalDirectory: URL
     let recoveredDirectory: URL?
     private weak var initiatingPresentation: (any PantryErasureObserver)?
-    let claimedReceiptFiles: @MainActor (UUID, Date) async throws -> [SharedReceiptRetirement]
+    let receiptFilesForErasure: @MainActor (UUID, Date) async throws -> [SharedReceiptRetirement]
     let cleanupHandler: CleanupHandler
     let authorize: @MainActor () -> Bool
     let clock: () -> Date
@@ -83,13 +83,13 @@ import RecordArchive
 
     init(inventory: ComparisonStore, ledger: LedgerStore, gate: PantryMutationGate, pendingDirectory: URL,
          registry: RecoveryRegistry, worker: PantryArchiveWorker, journalDirectory: URL,
-         claimedReceiptFiles: @escaping @MainActor (UUID, Date) async throws -> [SharedReceiptRetirement] = { _, _ in [] },
+         receiptFilesForErasure: @escaping @MainActor (UUID, Date) async throws -> [SharedReceiptRetirement] = { _, _ in [] },
          recoveredDirectory: URL? = nil, initiatingPresentation: (any PantryErasureObserver)? = nil, cleanup: @escaping CleanupHandler, authorize: @escaping @MainActor () -> Bool,
          clock: @escaping () -> Date = Date.init) {
         self.inventory = inventory; self.ledger = ledger; self.gate = gate; self.pendingDirectory = pendingDirectory
         self.registry = registry; self.worker = worker; self.journalDirectory = journalDirectory
         self.recoveredDirectory = recoveredDirectory
-        self.claimedReceiptFiles = claimedReceiptFiles
+        self.receiptFilesForErasure = receiptFilesForErasure
         self.initiatingPresentation = initiatingPresentation
         cleanupHandler = cleanup; self.authorize = authorize; self.clock = clock
     }
@@ -173,9 +173,9 @@ import RecordArchive
         let chain = try chunks.reduce(InventoryErasureManifest.initialDigest) { try InventoryErasureManifest.appending($1, to: $0) }
         let inspection = try await external(rules: impact.rules, links: impact.links, expectedLedgers: impact.ledgerOrigins, at: date)
         let blockers = impact.blockers.union(inspection.blockers)
-        let claimed = try await claimedReceiptFiles(inventory.workspaceID, date)
+        let claimed = try await receiptFilesForErasure(inventory.workspaceID, date)
         try access()
-        let affected = claimed.filter { whole || impact.documentDigests.contains($0.fileDigest) }
+        let affected = claimed.filter { (whole && $0.unclaimed != true) || impact.documentDigests.contains($0.fileDigest) }
         let cleanup = Cleanup(originID: inventory.workspaceID, wholeOrigin: whole, pickupIDs: impact.pickups.map(\.id),
             copyIDs: inspection.copies.map(\.id), bundleIDs: inspection.copies.map(\.bundleID), files: inspection.files, sharedReceipts: affected.isEmpty ? nil : affected)
         let basis = Basis(revision: impact.revision, token: impact.token, ledgerOrigin: ledger.workspaceID,
@@ -219,9 +219,10 @@ import RecordArchive
                 guard case .pickup(let id, _, _) = choice.selection else { return nil }
                 return (id, choice.title)
             }
-            return SQLImpact(revision: all.state.revision, token: all.token,
+            let receipts = try await receiptImpact(lots: nil, pickups: [])
+            return SQLImpact(documentDigests: receipts.digests, revision: all.state.revision, token: all.token,
                 rules: .init(origin: inventory.workspaceID, retiredOrigin: true), links: [], ledgerOrigins: [], entries: [], blockers: [],
-                aliasCount: try await inventory.receiptAliasCount(), receiptRevisionCount: try await receiptImpact(lots: nil, pickups: []).count, foodNames: all.food.map(\.title), pickups: pickups, collateral: [], retainedReceiptNames: [],
+                aliasCount: try await inventory.receiptAliasCount(), receiptRevisionCount: receipts.count, foodNames: all.food.map(\.title), pickups: pickups, collateral: [], retainedReceiptNames: [],
                 affectedReservationNames: all.reservationNames)
         }
         let base = try await sourceBasis(at: date), context = base.context

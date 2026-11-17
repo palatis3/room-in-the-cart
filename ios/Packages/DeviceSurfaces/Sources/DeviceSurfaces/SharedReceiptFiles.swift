@@ -36,6 +36,7 @@ public struct SharedReceiptRetirement: Codable, Equatable, Hashable, Sendable {
     public let id: UUID
     public let receiptDigest: String
     public let fileDigest: String
+    public let unclaimed: Bool?
 }
 
 extension SharedCaptureInbox {
@@ -54,8 +55,8 @@ extension SharedCaptureInbox {
     public func finishReceipt(_ item: SharedReceiptItem, scope: SharedReceiptScope, committed: Bool, now: Date) async throws {
         try await storage.finishReceipt(item, scope: scope, committed: committed, now: now)
     }
-    public func claimedReceipts(origin: UUID, now: Date) async throws -> [SharedReceiptRetirement] {
-        try await storage.claimedReceipts(origin: origin, now: now)
+    public func receiptErasureCandidates(origin: UUID, now: Date) async throws -> [SharedReceiptRetirement] {
+        try await storage.receiptErasureCandidates(origin: origin, now: now)
     }
     public func retireReceipts(_ clips: [SharedReceiptRetirement], origin: UUID, now: Date) async throws {
         try await storage.retireReceipts(clips, origin: origin, now: now)
@@ -159,16 +160,16 @@ extension SelectedTextInbox {
         }
     }
 
-    func claimedReceipts(origin: UUID, now: Date) throws -> [SharedReceiptRetirement] {
+    func receiptErasureCandidates(origin: UUID, now: Date) throws -> [SharedReceiptRetirement] {
         guard validDate(now) else { throw SurfaceError.invalid }
         return try database.transaction {
             try expire(now)
             return try database.rows("""
-                SELECT r.id,i.digest,r.digest FROM receipt_file r JOIN inbox i ON i.id=r.id
-                WHERE r.origin=? AND i.disposition='pending' ORDER BY r.id
+                SELECT r.id,i.digest,r.digest,r.origin FROM receipt_file r JOIN inbox i ON i.id=r.id
+                WHERE (r.origin=? OR r.origin IS NULL) AND i.disposition='pending' ORDER BY r.id
                 """, [.text(origin.uuidString)]).map { row in
                     guard let id = UUID(uuidString: row[0] ?? ""), let token = row[1], let digest = row[2] else { throw SurfaceError.corrupt }
-                    return SharedReceiptRetirement(id: id, receiptDigest: token, fileDigest: digest)
+                    return SharedReceiptRetirement(id: id, receiptDigest: token, fileDigest: digest, unclaimed: row[3] == nil ? true : nil)
                 }
         }
     }
@@ -182,8 +183,8 @@ extension SelectedTextInbox {
                 guard existing.disposition == .pending else { continue }
                 guard try database.execute("""
                     UPDATE inbox SET disposition='discarded',original=NULL,edited=NULL,bytes=0
-                    WHERE id=? AND EXISTS(SELECT 1 FROM receipt_file WHERE id=? AND origin=? AND digest=?)
-                    """, [.text(clip.id.uuidString), .text(clip.id.uuidString), .text(origin.uuidString), .text(clip.fileDigest)]) == 1
+                    WHERE id=? AND EXISTS(SELECT 1 FROM receipt_file WHERE id=? AND (origin=? OR (?=1 AND origin IS NULL)) AND digest=?)
+                    """, [.text(clip.id.uuidString), .text(clip.id.uuidString), .text(origin.uuidString), .integer(clip.unclaimed == true ? 1 : 0), .text(clip.fileDigest)]) == 1
                 else { throw SurfaceError.stale }
             }
         }

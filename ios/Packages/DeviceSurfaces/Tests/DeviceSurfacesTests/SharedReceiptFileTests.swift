@@ -23,7 +23,7 @@ final class SharedReceiptFileTests: XCTestCase {
         XCTAssertTrue(hidden.isEmpty)
         do { _ = try await first.openReceipt(item, scope: other, now: now); XCTFail("A stale choice may not open another profile's bytes") }
         catch SurfaceError.stale {}
-        let clips = try await reopened.claimedReceipts(origin: scope.origin, now: now)
+        let clips = try await reopened.receiptErasureCandidates(origin: scope.origin, now: now)
         XCTAssertEqual(clips.map(\.id), [id])
         do { try await reopened.retireReceipts(clips, origin: UUID(), now: now); XCTFail("Wrong origin may not erase an attachment") }
         catch SurfaceError.stale {}

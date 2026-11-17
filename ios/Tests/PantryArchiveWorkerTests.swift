@@ -208,7 +208,13 @@ import RecordArchive
         let bytes = Data("BEANS\nFEE".utf8)
         _ = try await writer.stageReceipt(bytes, kind: .text, id: first, now: now)
         _ = try await writer.stageReceipt(Data("MILK".utf8), kind: .text, id: other, now: now)
+        _ = try await writer.stageReceipt(bytes, kind: .text, id: UUID(), now: now)
+        let independent = UUID(), otherScope = SharedReceiptScope(origin: UUID(), persona: UUID())
+        _ = try await writer.stageReceipt(bytes, kind: .text, id: independent, now: now)
         let inbox = try SharedCaptureInbox(url: url)
+        let initial = try await inbox.pendingReceiptFiles(scope: otherScope, now: now)
+        let otherItem = try XCTUnwrap(initial.first(where: { $0.id == independent }))
+        _ = try await inbox.openReceipt(otherItem, scope: otherScope, now: now)
         let pending = try await inbox.pendingReceiptFiles(scope: scope, now: now)
         let selected = try XCTUnwrap(pending.first(where: { $0.id == first }))
         let raw = try await inbox.openReceipt(selected, scope: scope, now: now)
@@ -227,17 +233,19 @@ import RecordArchive
         let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json"))
         let coordinator = PantryErasureCoordinator(inventory: f.store, ledger: f.ledger, gate: f.gate,
             pendingDirectory: f.pending.fileURL.deletingLastPathComponent(), registry: registry, worker: f.worker,
-            journalDirectory: f.directory.appendingPathComponent("erasure"), claimedReceiptFiles: { origin, date in
-                try await inbox.claimedReceipts(origin: origin, now: date)
+            journalDirectory: f.directory.appendingPathComponent("erasure"), receiptFilesForErasure: { origin, date in
+                try await inbox.receiptErasureCandidates(origin: origin, now: date)
             }, cleanup: { impact, _ in
                 try await inbox.retireReceipts(impact.sharedReceipts ?? [], origin: impact.originID, now: self.now)
             }, authorize: { true }, clock: { self.now })
         let erase = try await coordinator.prepare(.lot(fact.lotID, revision: 1))
-        XCTAssertEqual(erase.sharedReceiptCount, 1)
+        XCTAssertEqual(erase.sharedReceiptCount, 2)
         XCTAssertEqual(erase.receiptRevisionCount, 1)
         _ = try await coordinator.commit(erase)
         let surviving = try await inbox.pendingReceiptFiles(scope: scope, now: now)
         XCTAssertEqual(surviving.map(\.id), [other])
+        let unaffected = try await inbox.openReceipt(otherItem, scope: otherScope, now: now)
+        XCTAssertEqual(unaffected, bytes)
         do { _ = try await inbox.openReceipt(selected, scope: scope, now: now); XCTFail("Erased attachment must be gone") }
         catch SurfaceError.stale {}
     }

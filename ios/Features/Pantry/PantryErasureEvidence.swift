@@ -119,7 +119,7 @@ extension PantryErasureCoordinator {
 
     func verify(_ basis: Basis) async throws {
         try access()
-        let claimed = try await claimedReceiptFiles(inventory.workspaceID, clock())
+        let claimed = try await receiptFilesForErasure(inventory.workspaceID, clock())
         guard claimed == basis.sharedReceipts ?? [] else { throw Failure.stale }
 
         try access()
