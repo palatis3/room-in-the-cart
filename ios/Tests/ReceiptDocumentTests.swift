@@ -42,6 +42,10 @@ import XCTest
         XCTAssertEqual(first.lines.first?.original, scanned)
         XCTAssertEqual(first.lines.first?.treatment, .skip)
         XCTAssertFalse(first.dateConfirmed)
+        let offline = try await ReceiptDocumentReader(recognize: { _ in throw CaptureFailure.onDeviceUnavailable }).extract(input)
+        XCTAssertEqual(offline.pages[0].lines.first?.text, "OATS")
+        XCTAssertEqual(offline.pages[1].skipped, .unavailable)
+        XCTAssertTrue(offline.pages[1].lines.isEmpty)
     }
 
     func testFileLimitsAndLockedOrUnreadableInputsHaveRecoverableOutcomes() async throws {

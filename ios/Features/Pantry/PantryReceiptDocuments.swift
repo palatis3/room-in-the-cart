@@ -57,7 +57,9 @@ struct PantryReceiptDocuments: View {
                 }
                 ForEach(document.pages) { page in
                     Section(pantryFormat("Page %@", page.id.formatted())) {
-                        if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
+                        if page.skipped == .pixels { Text(pantryText("This page exceeds 25 megapixels. Choose a smaller image to review it.")) }
+                        else if page.skipped == .lineLimit { Text(pantryText("This page exceeds the line limit. You can type the food lines instead.")) }
+                        else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
                         ForEach(page.lines) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
                             Toggle(isOn: Binding(get: { selection.contains(position) }, set: { include in
