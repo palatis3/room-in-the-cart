@@ -68,6 +68,8 @@ def config_list(key, base, is_project=False):
             settings["PRODUCT_BUNDLE_IDENTIFIER"] = "dev.roominthecart.app" + {"Debug": ".debug", "Staging": ".staging", "Release": ""}[name]
             settings["INFOPLIST_KEY_CFBundleDisplayName"] = "Room in the Cart"
             settings["ASSETCATALOG_COMPILER_APPICON_NAME"] = "AppIcon"
+            if name == "Debug":
+                settings["INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription[sdk=iphonesimulator*]"] = "Add a synthetic receipt to this test simulator for the Photos picker check."
             settings.update(build_settings(load_configuration(ROOT, name), name))
         configs.append(obj(f"config:{key}:{name}", "XCBuildConfiguration", buildSettings=settings, name=name))
     return obj("configs:" + key, "XCConfigurationList", buildConfigurations=configs, defaultConfigurationIsVisible="0", defaultConfigurationName="Release")

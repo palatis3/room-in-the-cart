@@ -352,6 +352,7 @@
 				"RITC_SURFACE_URL_SCHEME" = "roominthecart-debug";
 				"INFOPLIST_KEY_CFBundleDisplayName" = "Room in the Cart";
 				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription[sdk=iphonesimulator*]" = "Add a synthetic receipt to this test simulator for the Photos picker check.";
 				"RITC_SUPABASE_URL" = "https://uwjxrotnocxxomqdetzk.supabase.co";
 				"RITC_SUPABASE_PUBLISHABLE_KEY" = "sb_publishable_1xdXiFaWaZ0rngagT4sVrg_X7q-YbG6";
 				"RITC_SERVICE_URL" = "https://room-in-the-cart-staging.vercel.app";

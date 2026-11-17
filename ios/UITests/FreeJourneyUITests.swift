@@ -111,26 +111,26 @@ import XCTest
     func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        let photo = app.buttons["Share sample receipt photo"]
-        XCTAssertTrue(photo.waitForExistence(timeout: 10), app.debugDescription); photo.tap()
-        let save = app.descendants(matching: .any).matching(NSPredicate(format: "label IN %@", ["Save Image", "Save to Photos"])).firstMatch
-        if !save.waitForExistence(timeout: 3) {
-            let more = app.cells["View More"].firstMatch
-            if more.waitForExistence(timeout: 8), more.isHittable { more.tap() }
-        }
-        XCTAssertTrue(save.waitForExistence(timeout: 12), app.debugDescription); save.tap()
+        let add = app.buttons["Add sample receipt to simulator Photos"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
+        add.tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let allow = springboard.alerts.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
-        if allow.waitForExistence(timeout: 3) { allow.tap() }
-        XCTAssertTrue(save.waitForNonExistence(timeout: 12), app.debugDescription)
+        if allow.waitForExistence(timeout: 6) { allow.tap() }
+        let saved = app.staticTexts["fixture.receipt.photoResult"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(saved.label, "Test photo saved")
         app.terminate()
         launch(reset: true)
         tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
         tap(app.buttons["Choose a receipt from Photos"])
-        let photoCell = app.collectionViews.cells.firstMatch
-        XCTAssertTrue(photoCell.waitForExistence(timeout: 12), app.debugDescription)
-        photoCell.tap()
+        let photoName = NSPredicate(format: "label BEGINSWITH[c] %@", "Photo,")
+        let images = app.images.matching(photoName).firstMatch
+        let cells = app.cells.matching(photoName).firstMatch
+        let pickerAsset = images.waitForExistence(timeout: 5) ? images : cells
+        XCTAssertTrue(pickerAsset.waitForExistence(timeout: 12), app.debugDescription)
+        pickerAsset.tap()
         let oats = app.switches["receipt.document.line.1.1"]
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
