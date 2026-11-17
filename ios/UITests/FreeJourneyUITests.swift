@@ -1195,11 +1195,8 @@ import XCTest
     func testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable() {
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
-        fill("Peppers", into: "Food that is short")
-        fill("Wednesday rice", into: "Meal or purpose")
-        fill("4", into: "Required amount")
-        fill("1", into: "Usable amount available now")
-        enableSwitch("I checked this food’s identity and usable amount")
+        enterNeed(food: "Peppers", meal: "Wednesday rice", required: "4", available: "1")
+        enableSwitch("I checked this food’s identity and usable amount", diagnosticName: "free-repair-confirmation")
         tap(app.buttons["Save need and repair meal"])
         tap(app.buttons["Recover with an accepted dinner"])
         assertText("This assisted tool requires paid access.")
