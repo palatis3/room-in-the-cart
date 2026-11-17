@@ -4,6 +4,31 @@ import CoreDomain
 
 final class StructuredCaptureTests: XCTestCase {
     private let destination = "Saturday pickup"
+    func testNaturalReviewImportsOnceAndKeepsTimingOutOfIngredientPurpose() throws {
+        let text = "Two milks, bread and cereal for next week"
+        let proposed = try StructuredCaptureParser.naturalList(text, destination: destination)
+        XCTAssertEqual(proposed.timing, "for next week")
+        XCTAssertEqual(proposed.lines.map(\.name), ["milks", "bread", "cereal"])
+        XCTAssertEqual(proposed.lines.map(\.amount), ["2", "", ""])
+        XCTAssertTrue(proposed.lines.allSatisfy { $0.purpose.isEmpty && !$0.confirmed })
+        let lines = try proposed.lines.map { draft in
+            var reviewed = draft
+            reviewed.confirmed = true
+            return try XCTUnwrap(reviewed.reviewed(expectedDestination: destination))
+        }
+        let capture = ReviewedCapture(id: UUID(), text: text, originalText: text, source: .speech,
+                                     localeIdentifier: "en-US", sourceImageData: nil, lines: lines)
+        var list = ShoppingLedger()
+        let staged = try CaptureLedgerImport.stage(capture, in: list)
+        try list.commitImport(staged.preview)
+        XCTAssertTrue(try CaptureLedgerImport.stage(capture, in: list).alreadyApplied)
+        XCTAssertEqual(list.contributions.count, 3)
+        XCTAssertEqual(list.importBatches.first?.preview.originalText, text)
+        XCTAssertEqual(list.contributions.compactMap { $0.quantity?.amount }, [try Rational(2)])
+        XCTAssertThrowsError(try StructuredCaptureParser.naturalList("two guests and eggs", destination: destination))
+        XCTAssertEqual(try StructuredCaptureParser.lines(text, destination: destination).count, 1)
+    }
+
     func testRangeConnectorsRemainAmountsAndKeepTheRealDestination() throws {
         let simple = try row("2 to 3 apples")
         XCTAssertEqual(simple.amount, "")

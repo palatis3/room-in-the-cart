@@ -79,6 +79,19 @@ enum StructuredCaptureParser {
         guard explicitlyTreatAsItems || !isGuestProposal(text) else { throw StructuredCaptureFailure.guestReviewRequired }
         return text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.map { parse($0, destination: destination) }
     }
+    static func naturalList(_ text: String, destination: String, explicitlyTreatAsItems: Bool = false) throws
+        -> (lines: [CaptureLineDraft], timing: String?) {
+        try CaptureLimits.validate(text)
+        guard explicitlyTreatAsItems || !isGuestProposal(text) else { throw StructuredCaptureFailure.guestReviewRequired }
+        let proposal = try NaturalListSegmenter.propose(text, maximumItems: CaptureLimits.lines)
+        let drafts = proposal.items.map { item in
+            var draft = parse(String(item.wording), destination: destination)
+            if item.needsBoundaryReview && !draft.warnings.contains(.ambiguous) { draft.warnings.append(.ambiguous) }
+            return draft
+        }
+        return (drafts, proposal.timing.map(String.init))
+    }
+
     private static func parse(_ original: String, destination: String) -> CaptureLineDraft {
         var body = original.trimmingCharacters(in: .whitespacesAndNewlines)
         var purpose = "", requestedDestination = "", exclusions = ""
