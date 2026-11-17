@@ -109,12 +109,14 @@ import XCTest
         XCTAssertTrue(yield.waitForExistence(timeout: 10))
         yield.tap()
         yield.typeText("Two bowls")
+        dismissRecipeKeyboard("records.recipeEditorDone")
         tap(app.buttons["Review ingredients and timers by step"])
         tap(button("records.cookingStep.0"))
         setSwitch(app.switches["records.stepIngredient.0"], enabled: true)
         let timer = app.textFields["Suggested timer in minutes (optional)"]
         tap(timer)
         timer.typeText("7")
+        dismissRecipeKeyboard("records.stepTimerDone")
         tap(button("records.saveStepDetails"))
         back(to: "Edit recipe")
         tap(app.buttons["Review recipe"])
@@ -170,6 +172,18 @@ import XCTest
         XCTAssertTrue(waitForLabel("fixture.library.sourceUnchanged", "E01 local source unchanged: no"))
         XCTAssertTrue(waitForLabel("fixture.library.recipeCount", "E01 saved recipes: 3"))
         capture("E01 original recipe after explicit pickup choice")
+    }
+
+    private func dismissRecipeKeyboard(_ identifier: String) {
+        let tip = app.staticTexts["Speed up your typing by sliding your finger across the letters to compose a word."]
+        if tip.exists {
+            app.buttons["Continue"].tap()
+            XCTAssertTrue(tip.waitForNonExistence(timeout: 5))
+        }
+        let done = app.buttons[identifier]
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
     }
 
     private func enterMealAmount(_ value: String, in field: XCUIElement) {

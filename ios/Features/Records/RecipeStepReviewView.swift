@@ -102,7 +102,7 @@ private struct RecipeStepDetail: View {
             }
         }
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: editingMinutes, title: ledgerText("Done")) { editingMinutes = false }
+        .keyboardDoneAction(visible: editingMinutes, title: ledgerText("Done"), identifier: "records.stepTimerDone") { editingMinutes = false }
         .navigationTitle(recordsText("Cooking step"))
     }
 

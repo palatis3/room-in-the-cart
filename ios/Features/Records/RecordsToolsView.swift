@@ -776,7 +776,7 @@ private struct ManualRecipeEntryView: View {
                     NavigationLink(recordsText("Review ingredients and timers by step")) {
                         RecipeStepReviewView(steps: currentSteps, ingredients: ingredientLines) { index, value in
                             stepEdits.apply(value, at: index, instructions: instructionLines, ingredients: ingredientLines)
-                        }
+                        }.onAppear { editing = nil }
                     }
                 }
                 TextField(recordsText("Source URL (optional)"), text: $source).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -804,7 +804,7 @@ private struct ManualRecipeEntryView: View {
                 }.disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .scrollDismissesKeyboard(.interactively)
-            .keyboardDoneAction(visible: editing != nil, title: ledgerText("Done")) { editing = nil }
+            .keyboardDoneAction(visible: editing != nil, title: ledgerText("Done"), identifier: "records.recipeEditorDone") { editing = nil }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if let submissionError, !dynamicTypeSize.isAccessibilitySize {
                     Text(submissionError)
