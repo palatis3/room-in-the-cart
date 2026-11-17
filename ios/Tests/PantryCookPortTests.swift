@@ -49,6 +49,9 @@ import LocalStore
         do { try await port.apply(review); XCTFail("Revoked confirmation") } catch PantryCookPort.Failure.unavailable {}
         allowed = true
         try await port.apply(review)
+        let committedSource = try await store.load(id: shop.id)
+        let source = try JSONDecoder().decode(PickupJourney.self, from: XCTUnwrap(committedSource?.payload))
+        XCTAssertEqual(source.cookedMeals?.map(\.draft), [draft], "The physical changes and their cooking receipt must survive the same save")
         // Simulate losing the first response and reopening the two actual databases.
         let reopenedStore = try ComparisonStore(url: url, inventoryEnabled: true)
         let reopenedLedger = try LedgerStore(url: ledgerURL, inventoryProjectionsEnabled: true)
