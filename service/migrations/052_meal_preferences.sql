@@ -81,6 +81,10 @@ BEGIN
   IF amended->'availableAppliances'='[]'::jsonb AND NOT COALESCE((authors->'appliancesReviewed') ? 'yes',false) THEN
    amended:=amended-'availableAppliances';
   END IF;
+  IF amended->>'timeLimit' IS NOT NULL AND NOT COALESCE((authors->'timeLimit') ?
+      ((amended->'timeLimit'->>'maximumMinutes') || '/' || (amended->'timeLimit'->>'strict')),false) THEN
+    amended:=amended-'timeLimit';
+  END IF;
   IF NOT COALESCE((authors->'maximumEffort') ? (amended->>'maximumEffort'),false) THEN amended:=amended-'maximumEffort'; END IF;
   FOREACH k IN ARRAY ARRAY['strictDislikes','strictBrands','strictEffort'] LOOP
    IF NOT COALESCE((authors->k) ? 'true',false)
@@ -91,7 +95,7 @@ BEGIN
    END IF;
   END LOOP;
   IF amended->'exclusions'='[]'::jsonb AND amended->'dislikes'='[]'::jsonb AND amended->'preferredBrands'='[]'::jsonb
-   AND amended->>'availableAppliances' IS NULL AND amended->>'maximumEffort' IS NULL THEN amended:=NULL;authors:='{}'::jsonb; END IF;
+   AND amended->>'availableAppliances' IS NULL AND amended->>'maximumEffort' IS NULL AND amended->>'timeLimit' IS NULL THEN amended:=NULL;authors:='{}'::jsonb; END IF;
  END IF;
  UPDATE ritc.meal_preference_profile SET revision=gen_random_uuid(),settings=amended,rule_authors=authors WHERE household_id=h;
 END $$;

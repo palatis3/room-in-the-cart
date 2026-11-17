@@ -84,7 +84,7 @@ private struct HouseholdMealPreferencesView: View {
         .sheet(isPresented: $editing) {
             if active, let page, page.canWrite, let session {
                 NavigationStack {
-                    MealPreferenceEditor(profile: page.revision.map { MealPreferenceProfile(revision: $0, settings: page.settings ?? .init()) }) { settings, revision in
+                    MealPreferenceEditor(profile: page.revision.map { MealPreferenceProfile(revision: $0, settings: page.settings ?? .init()) }, canSetTimeLimit: page.supportsTimeLimit == true) { settings, revision in
                         guard active, scope.administer, page.revision == revision else { return false }
                         return await save(settings, reviewed: page, session: session)
                     }.navigationTitle(dinnerText("Edit household preferences"))
@@ -101,7 +101,7 @@ private struct HouseholdMealPreferencesView: View {
         do {
             try settings.validate()
             let value = settings == MealPreferenceSettings() ? nil : settings
-            let intent = try await service.preparePreferenceWrite(value, reviewed: reviewed, session: session, sourceDecision: source)
+            let intent = try await service.preparePreferenceWrite(value, reviewed: reviewed, session: session, sourceDecision: source, timeLimitReviewed: true)
             guard active, request == current else { return false }
             let updated = try await service.savePreferences(intent, as: MealPreferenceSettings.self)
             guard active, request == current else { return false }
@@ -174,6 +174,10 @@ private struct MealPreferenceSummary: View {
             if !settings.preferredBrands.isEmpty {
                 LabeledContent(dinnerText("Preferred brands"), value: settings.preferredBrands.joined(separator: ", "))
                 if settings.strictBrands { Text(dinnerText("Require preferred brands")) }
+            }
+            if let limit = settings.timeLimit {
+                LabeledContent(dinnerText("Available cooking minutes"), value: limit.maximumMinutes.formatted())
+                if limit.strict { Text(dinnerText("Require meals within this time")) }
             }
             if let effort = settings.maximumEffort {
                 switch effort {

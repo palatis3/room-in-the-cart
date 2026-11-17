@@ -86,7 +86,7 @@ private struct SharedMealIdeaEditor: View {
                     .focused($inputFocus, equals: "title")
                 Text(draft.source == "app_template" ? ht("Source: app-owned editable template") : ht("Source: household manual entry"))
                 Stepper(value: $draft.servings, in: 1...1000) { LabeledContent(ht("Suggested servings"), value: draft.servings.formatted()) }
-                number(ht("Preparation minutes, if known"), value: $draft.minutes).focused($inputFocus, equals: "minutes")
+                number(dinnerText("Total elapsed preparation minutes, if known"), value: $draft.minutes).focused($inputFocus, equals: "minutes")
                 multilineField(ht("Assumed extras, one per line"), values: $draft.assumedExtras, focus: "extras")
                 multilineField(ht("Shared household exclusions, one per line"), values: $draft.exclusions, focus: "exclusions")
                 Text(ht("Review exclusions with the household. This does not read private decision history."))
@@ -154,6 +154,8 @@ private struct SharedMealIdeaEditor: View {
                     if check.unresolved.contains("ingredient") { Text(dinnerText("Ingredient details still need review.")) }
                     if check.unresolved.contains("appliance") { Text(dinnerText("Required appliances are unknown.")) }
                     if check.unresolved.contains("brand") { Text(dinnerText("Brand details are unknown.")) }
+                    if check.unresolved.contains("duration_unknown") || check.soft.contains("duration_unknown") { Text(dinnerText("Total elapsed preparation time is unknown.")) }
+                    if check.blocked.contains("duration_over") || check.soft.contains("duration_over") { Text(dinnerText("Total preparation time exceeds your available time.")) }
                     if check.unresolved.contains("effort") { Text(dinnerText("Recipe effort is unknown.")) }
                     if !check.soft.isEmpty { Text(dinnerText("This idea differs from a soft household preference.")) }
                 }

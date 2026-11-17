@@ -9637,6 +9637,38 @@
           }
         }
       }
+    },
+    "Available cooking minutes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available cooking minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos disponibles para cocinar"
+          }
+        }
+      }
+    },
+    "Total elapsed preparation minutes, if known": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total elapsed preparation minutes, if known"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo total de preparación en minutos, si se conoce"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

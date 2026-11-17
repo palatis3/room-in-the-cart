@@ -32,7 +32,8 @@ export class SharedMealChanges {
     return { ...(profile.revision ? {preferenceRevision:profile.revision}:{}), shopId:id, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch, grantRevision,
       phase:shop.phase, shopper, meals:await this.repo.meals(ctx,id),
       proposals:rows.map(row => {
-        const changed = row.original_meal ? ingredientsChanged(row.original_meal,row.body.meal) : true;
+        const changed = !row.original_meal || ingredientsChanged(row.original_meal,row.body.meal) ||
+          ((profile.settings?.timeLimit || row.body.preferenceReview) && row.original_meal.planning?.leadTimeMinutes !== row.body.meal.planning?.leadTimeMinutes);
         const revision = row.original_meal ? row.body.preferenceReview?.revision ?? null : row.idea_preference_revision;
         const bound = !row.original_meal || row.body.preferenceReview != null || profile.settings != null;
         const staleReview = bound && row.state === 'pending' && changed &&

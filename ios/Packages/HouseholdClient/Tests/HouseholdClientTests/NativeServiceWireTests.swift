@@ -23,7 +23,12 @@ private final class LoopbackTrust: NSObject, URLSessionDelegate, @unchecked Send
 }
 
 final class NativeServiceWireTests: XCTestCase {
+    private struct WireLimit: Codable, Equatable, Sendable {
+        var maximumMinutes = 20
+        var strict = true
+    }
     private struct WirePreferences: Codable, Equatable, Sendable {
+        var timeLimit: WireLimit? = .init()
         var exclusions = ["peanut"]
         var dislikes: [String] = []
         var preferredBrands = ["Casa"]
@@ -37,7 +42,8 @@ final class NativeServiceWireTests: XCTestCase {
         let initial = try await service.preferencePage(WirePreferences.self, session: session)
         XCTAssertNil(initial.settings)
         let preferences = WirePreferences()
-        let intent = try await service.preparePreferenceWrite(preferences, reviewed: initial, session: session)
+        XCTAssertEqual(initial.supportsTimeLimit, true)
+        let intent = try await service.preparePreferenceWrite(preferences, reviewed: initial, session: session, timeLimitReviewed: true)
         let written = try await service.savePreferences(intent, as: WirePreferences.self)
         let retry = try await service.savePreferences(intent, as: WirePreferences.self)
         XCTAssertEqual(retry, written)

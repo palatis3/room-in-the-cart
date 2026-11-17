@@ -54,7 +54,7 @@ public struct SharedMealPreferenceCheck: Codable, Equatable, Sendable {
     public let soft: [String]
 
     func validate() throws {
-        let categories: Set<String> = ["ingredient", "dislike", "appliance", "brand", "effort"]
+        let categories: Set<String> = ["ingredient", "dislike", "appliance", "brand", "effort", "duration_unknown", "duration_over"]
         for values in [blocked, unresolved, soft] {
             guard Set(values).count == values.count, Set(values).isSubset(of: categories) else { throw ClientError.invalidResponse }
         }

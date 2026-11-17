@@ -402,3 +402,38 @@ test('meal approvals bind household preference revision and show only relevant c
  assert.equal((await call(f.planner,path,'POST',{...approval,clientKey:randomUUID(),baseRevision:approved.revision,
    preferenceRevision:changed.revision})).status,409);
 });
+
+test('the reviewed elapsed cooking-time limit uses each recipe duration and survives a legacy edit',async()=>{
+  const f=await mealFixture(),path=f.path+'/meal-plan/ideas',profilePath=f.base+'/meal-preferences';
+  const base={exclusions:[],dislikes:[],preferredBrands:[],strictBrands:false,strictDislikes:false,strictEffort:false};
+  const change=(settings,expectedRevision,opts={})=>call(f.owner,profilePath,'POST',{v:1,clientKey:randomUUID(),
+    replayWindow:f.owner.window,grantEpoch:0,expectedRevision,settings,...opts});
+  const limit={maximumMinutes:20,strict:true};
+  const profile=ok(await change({...base,timeLimit:limit},null,{timeLimitReviewed:true}));
+  const legacy=ok(await change({...base,dislikes:['celery']},profile.revision));
+  assert.deepEqual(legacy.settings.timeLimit,limit);
+  const page=ok(await call(f.planner,path)), write={clientKey:randomUUID(),ideaId:randomUUID(),baseRevision:null,
+    shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,grantRevision:page.grantRevision,action:'save',reviewedHouseholdEvidence:false};
+  const draft=ideaDraft();draft.minutes=null;
+  draft.preferenceEvidence={effort:'low'};
+  const unknown=ok(await call(f.planner,path,'POST',{...write,draft}));
+  const read=async()=>ok(await call(f.planner,path)).ideas[0].preview;
+  assert.deepEqual((await read()).preferenceCheck.unresolved,['duration_unknown']);
+  const approve=(revision,preferenceRevision)=>call(f.planner,path,'POST',{...write,draft,action:'approve',baseRevision:revision,
+    clientKey:randomUUID(),reviewedHouseholdEvidence:true,preferenceRevision});
+  assert.equal((await approve(unknown.revision,legacy.revision)).status,409);
+  draft.minutes=25;
+  const long=ok(await call(f.planner,path,'POST',{...write,draft,clientKey:randomUUID(),baseRevision:unknown.revision}));
+  assert.deepEqual((await read()).preferenceCheck.blocked,['duration_over']);
+  assert.equal((await approve(long.revision,legacy.revision)).status,409);
+  draft.minutes=20;
+  const fits=ok(await call(f.planner,path,'POST',{...write,draft,clientKey:randomUUID(),baseRevision:long.revision}));
+  const approved=ok(await approve(fits.revision,legacy.revision));
+  const amended=ok(await change({...base,timeLimit:{maximumMinutes:15,strict:false}},legacy.revision,{timeLimitReviewed:true}));
+  const soft=await read();assert.equal(soft.requiresPreferenceReview,true);assert.equal(soft.preferenceCheck.eligible,true);
+  assert.deepEqual(soft.preferenceCheck.soft,['duration_over']);
+  assert.equal((await approve(approved.revision,legacy.revision)).status,409);
+  ok(await approve(approved.revision,amended.revision));
+  const cleared=ok(await change(base,amended.revision,{timeLimitReviewed:true}));
+  assert.equal(cleared.settings.timeLimit,undefined);
+});

@@ -188,7 +188,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
             if path.hasSuffix("/meal-preferences") {
                 if preferenceReader && profile == nil {
-                    profile = ["exclusions": ["peanut"], "preferredBrands": [], "dislikes": [], "strictBrands": false,
+                    profile = ["exclusions": ["peanut"], "timeLimit": ["maximumMinutes": 20, "strict": true], "preferredBrands": [], "dislikes": [], "strictBrands": false,
                                "strictDislikes": false, "strictEffort": false]
                     preferenceRevision = UUID().uuidString
                 }
@@ -197,7 +197,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                     profile = json["settings"] as? [String: Any]
                     preferenceRevision = UUID().uuidString
                 }
-                return try response(["v": 1, "householdId": household, "grantEpoch": 0, "canWrite": preferenceOrganizer,
+                return try response(["v": 1, "householdId": household, "grantEpoch": 0, "supportsTimeLimit": true, "canWrite": preferenceOrganizer,
                                      "settings": profile as Any? ?? NSNull(), "revision": preferenceRevision as Any? ?? NSNull()])
             }
             if path.hasSuffix("/meal-preferences/grants") {

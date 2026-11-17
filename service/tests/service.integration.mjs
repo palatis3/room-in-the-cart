@@ -1214,7 +1214,7 @@ test('private household preference grants, reviewed updates and revoked retries 
   const grant=(enabled,expectedGrantEpoch)=>f.http('Mia','POST',path+'/grants',
     {v:1,memberId:f.actors.Alex.id,enabled,expectedGrantEpoch});
   const command={v:1,clientKey:randomUUID(),replayWindow:f.actors.Mia.window,grantEpoch:0,expectedRevision:null,
-    settings:{exclusions:['peanut'],dislikes:[],preferredBrands:['Casa'],availableAppliances:['stove'],
+    settings:{exclusions:['peanut'],dislikes:[],preferredBrands:['Casa'],availableAppliances:['stove'],timeLimit:{maximumMinutes:20,strict:true},
       strictDislikes:false,strictBrands:false,strictEffort:false}};
   const write=(command)=>f.http('Mia','POST',path,command);
   assert.equal((await get('Mia',{'X-Shop-ID':randomUUID()})).data.revision,null);
@@ -1263,6 +1263,7 @@ test('private household preference grants, reviewed updates and revoked retries 
   assert.deepEqual(erased.data.settings.preferredBrands,[]);
   assert.equal(erased.data.settings.availableAppliances,undefined);
   assert.notEqual(erased.data.revision,updated.data.revision);
+  assert.equal(erased.data.settings.timeLimit,undefined);
   assert.equal((await write(command)).status,409);
   await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
   assert.equal((await write(command)).status,403);

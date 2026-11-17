@@ -7,6 +7,7 @@ public struct HouseholdPreferencePage<Settings: Codable & Equatable & Sendable>:
     public let revision: UUID?
     public let settings: Settings?
     public let canWrite: Bool
+    public let supportsTimeLimit: Bool?
 
     func validate(in session: HouseholdDeviceSession) throws {
         guard v == 1, grantEpoch >= 0, householdId == session.householdID, revision != nil || settings == nil else {
@@ -43,7 +44,8 @@ private struct PreferenceCommand<Settings: Codable>: Encodable {
     let expectedRevision: UUID?
     let settings: Settings?
     let sourceDecision: HouseholdPreferenceSource?
-    enum CodingKeys: CodingKey { case v, clientKey, replayWindow, grantEpoch, expectedRevision, settings, sourceDecision }
+    let timeLimitReviewed: Bool?
+    enum CodingKeys: CodingKey { case v, clientKey, replayWindow, grantEpoch, expectedRevision, settings, sourceDecision, timeLimitReviewed }
     func encode(to encoder: Encoder) throws {
         var box = encoder.container(keyedBy: CodingKeys.self)
         try box.encode(1, forKey: .v)
@@ -52,6 +54,7 @@ private struct PreferenceCommand<Settings: Codable>: Encodable {
         try box.encode(grantEpoch, forKey: .grantEpoch)
         try box.encode(expectedRevision, forKey: .expectedRevision)
         try box.encode(settings, forKey: .settings)
+        try box.encodeIfPresent(timeLimitReviewed, forKey: .timeLimitReviewed)
         try box.encodeIfPresent(sourceDecision, forKey: .sourceDecision)
     }
 }
@@ -73,14 +76,15 @@ extension HouseholdService {
         return result
     }
 
-    public func preparePreferenceWrite<S>(_ settings: S?, reviewed: HouseholdPreferencePage<S>, session: HouseholdDeviceSession, sourceDecision: HouseholdPreferenceSource? = nil) async throws -> HouseholdPreferenceWrite {
+    public func preparePreferenceWrite<S>(_ settings: S?, reviewed: HouseholdPreferencePage<S>, session: HouseholdDeviceSession, sourceDecision: HouseholdPreferenceSource? = nil, timeLimitReviewed: Bool = false) async throws -> HouseholdPreferenceWrite {
         guard try currentHouseholdDeviceSession() == session, reviewed.canWrite else { throw ClientError.accessEnded }
         try reviewed.validate(in: session)
         let window: ReplayWindow = try await perform("replay-windows", method: "POST", body: Data("{}".utf8), omitSelectedShop: true)
         guard let id = UUID(uuidString: window.id), validHelperTimestamp(window.expiresAt) else { throw ClientError.invalidResponse }
         guard try currentHouseholdDeviceSession() == session else { throw ClientError.accessEnded }
         let command = PreferenceCommand(clientKey: UUID(), replayWindow: id, grantEpoch: reviewed.grantEpoch,
-                                        expectedRevision: reviewed.revision, settings: settings, sourceDecision: sourceDecision)
+                                        expectedRevision: reviewed.revision, settings: settings, sourceDecision: sourceDecision,
+                                        timeLimitReviewed: reviewed.supportsTimeLimit == true && timeLimitReviewed ? true : nil)
         return .init(session: session, bytes: try JSONEncoder().encode(command))
     }
 

@@ -14,6 +14,7 @@ const term = z.string().trim().min(1).refine(value => Buffer.byteLength(value) <
 const terms = z.array(term).max(64).refine(values => new Set(values.map(normalized)).size === values.length);
 const settings = z.object({
   exclusions: terms, availableAppliances: terms.nullish(), dislikes: terms, preferredBrands: terms,
+  timeLimit: z.object({maximumMinutes:z.number().int().min(0).max(525_600),strict:z.boolean()}).strict().nullish(),
   maximumEffort: z.enum(['low', 'medium', 'high']).nullish(),
   strictDislikes: z.boolean(), strictBrands: z.boolean(), strictEffort: z.boolean()
 }).strict().refine(value => (!value.strictDislikes || value.dislikes.length > 0) &&
@@ -22,7 +23,7 @@ const sourceDecision = z.object({shopId:id,decisionId:id,version:z.number().int(
   field:z.enum(['exclusions','dislikes','preferredBrands']),term}).strict();
 type DecisionReference = z.infer<typeof sourceDecision>;
 const update = z.object({v: z.literal(1), clientKey: id, replayWindow: id, grantEpoch: epoch,
-  expectedRevision: id.nullable(), settings: settings.nullable(), sourceDecision:sourceDecision.optional()}).strict();
+  expectedRevision: id.nullable(), settings: settings.nullable(), sourceDecision:sourceDecision.optional(), timeLimitReviewed:z.literal(true).optional()}).strict();
 const grant = z.object({v: z.literal(1), memberId: id, enabled: z.boolean(), expectedGrantEpoch: epoch}).strict();
 
 async function authority(ctx: Context, writing = false): Promise<number> {
@@ -37,7 +38,7 @@ async function authority(ctx: Context, writing = false): Promise<number> {
 export async function readMealPreferences(ctx: Context) {
   const grantEpoch = await authority(ctx);
   const row = (await ctx.db.query('SELECT revision,settings FROM ritc.meal_preference_profile WHERE household_id=$1',[ctx.householdId])).rows[0];
-  return {v: 1, householdId: ctx.householdId, grantEpoch, canWrite: ctx.member.organizer,
+  return {v: 1, householdId: ctx.householdId, grantEpoch, supportsTimeLimit:true, canWrite: ctx.member.organizer,
     revision: row?.revision ?? null, settings: row?.settings ?? null};
 }
 
@@ -62,6 +63,10 @@ function origins(value: Settings | null, previous: Provenance, author: string, s
   if (value.availableAppliances != null) {
     result.appliancesReviewed = {yes: previous.appliancesReviewed?.yes ?? [author]};
   }
+  if (value.timeLimit) {
+    const key = [value.timeLimit.maximumMinutes,value.timeLimit.strict].join('/');
+    result.timeLimit = {[key]:previous.timeLimit?.[key] ?? [author]};
+  }
   for (const key of scalarFields) {
     const v = value[key];
     if (v) result[key] = {[String(v)]: previous[key]?.[String(v)] ?? [author]};
@@ -76,7 +81,7 @@ export async function writeMealPreferences(ctx: Context, input: unknown, decisio
   const window = await ctx.db.query('SELECT 1 FROM ritc.replay_window WHERE household_id=$1 AND window_id=$2 AND member_id=$3 AND device_id=$4 AND revoked_at IS NULL AND expires_at>$5',
     [ctx.householdId, command.replayWindow, ctx.member.member_id, ctx.deviceId, ctx.now]);
   if (!window.rowCount) throw refresh();
-  const previous = (await ctx.db.query('SELECT revision,rule_authors FROM ritc.meal_preference_profile WHERE household_id=$1',[ctx.householdId])).rows[0];
+  const previous = (await ctx.db.query('SELECT revision,settings,rule_authors FROM ritc.meal_preference_profile WHERE household_id=$1',[ctx.householdId])).rows[0];
   let source: {rule:DecisionReference; member:string} | undefined;
   if (command.sourceDecision) {
     const rule = command.sourceDecision;
@@ -101,10 +106,14 @@ export async function writeMealPreferences(ctx: Context, input: unknown, decisio
   if (source && Object.keys(previous?.rule_authors?.[source.rule.field] ?? {}).some(t => normalized(t) === normalized(source.rule.term))) throw refresh();
   // HouseholdRepository.authorized already holds the tenant lock for this transaction.
   const revision = randomUUID();
+  // Earlier editors replace their known fields. Preserving an unknown limit
+  // prevents a legacy save from silently relaxing an existing meal constraint.
+  const updated = command.settings && !command.timeLimitReviewed && command.settings.timeLimit == null && previous?.settings?.timeLimit
+    ? {...command.settings,timeLimit:previous.settings.timeLimit} : command.settings;
   await ctx.db.query(`INSERT INTO ritc.meal_preference_profile(household_id,revision,settings,rule_authors)
     VALUES($1,$2,$3,$4) ON CONFLICT(household_id) DO UPDATE SET
     revision=excluded.revision,settings=excluded.settings,rule_authors=excluded.rule_authors`,
-    [ctx.householdId, revision, command.settings, origins(command.settings, previous?.rule_authors ?? {}, ctx.member.member_id, source)]);
+    [ctx.householdId, revision, updated, origins(updated, previous?.rule_authors ?? {}, ctx.member.member_id, source)]);
   await ctx.db.query(`INSERT INTO ritc.meal_preference_write_key(household_id,client_key,actor_id,device_id,window_id,accepted_revision,request_digest)
     VALUES($1,$2,$3,$4,$5,$6,$7)`,[ctx.householdId,command.clientKey,ctx.member.member_id,ctx.deviceId,command.replayWindow,revision,fingerprint]);
   return readMealPreferences(ctx);
@@ -122,7 +131,7 @@ export async function mealConstraints(ctx: Context): Promise<{revision: string |
 
 // The shared meal preview discloses only decision categories for a meal already
 // in its actor's shop projection. Whole preference values never enter cook copies.
-export function mealEligibility(value: Settings | null, ingredients: string[], evidence?: z.infer<typeof mealEvidence>) {
+export function mealEligibility(value: Settings | null, ingredients: string[], evidence?: z.infer<typeof mealEvidence>, elapsedMinutes?: number | null) {
   const blocked: string[] = [], unresolved: string[] = [], soft: string[] = [];
   if (value) {
     const names = [...ingredients,...(evidence?.reviewedIngredientDetails ?? [])].map(v => ' '+normalized(v)+' ');
@@ -139,6 +148,13 @@ export function mealEligibility(value: Settings | null, ingredients: string[], e
       const preferred = new Set(value.preferredBrands.map(normalized));
       if (evidence?.brands == null) (value.strictBrands ? unresolved : soft).push('brand');
       else if (!evidence.brands.length || evidence.brands.some(v => !preferred.has(normalized(v)))) (value.strictBrands ? blocked : soft).push('brand');
+    }
+    if (value.timeLimit) {
+      if (elapsedMinutes == null || elapsedMinutes < 0 || elapsedMinutes > 525_600) {
+        (value.timeLimit.strict ? unresolved : soft).push('duration_unknown');
+      } else if (elapsedMinutes > value.timeLimit.maximumMinutes) {
+        (value.timeLimit.strict ? blocked : soft).push('duration_over');
+      }
     }
     if (value.maximumEffort) {
       const order = ['low','medium','high'];
@@ -159,11 +175,15 @@ export function ingredientsChanged(original: SharedMealValue, next: SharedMealVa
 
 export async function checkIngredientChange(ctx: Context, original: SharedMealValue | undefined,
     next: SharedMealValue | null, review?: z.infer<typeof recipeReview>) {
-  if (!original || !next || !ingredientsChanged(original,next)) return;
+  if (!original || !next) return;
+  const changedIngredients = ingredientsChanged(original,next);
+  const changedTime = original.planning?.leadTimeMinutes !== next.planning?.leadTimeMinutes;
+  if (!changedIngredients && !changedTime) return;
   const current = await mealConstraints(ctx);
+  if (!changedIngredients && !current.settings?.timeLimit && !review) return;
   if (!review && !current.settings) return;
   if (review?.revision !== current.revision) throw refresh();
-  const result = mealEligibility(current.settings,(next.planning?.ingredients ?? []).map(i=>i.name),review?.evidence);
+  const result = mealEligibility(current.settings,(next.planning?.ingredients ?? []).map(i=>i.name),review?.evidence,next.planning?.leadTimeMinutes);
   if (!result.eligible) throw refresh();
 }
 

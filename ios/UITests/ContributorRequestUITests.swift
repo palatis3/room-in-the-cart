@@ -41,6 +41,7 @@ import XCTest
         app.launch()
         open()
         XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Exigir que las comidas estén listas dentro de este tiempo"].exists)
         XCTAssertFalse(edit.exists)
         XCTAssertFalse(app.switches["Alex"].exists)
     }

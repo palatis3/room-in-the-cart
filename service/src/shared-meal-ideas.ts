@@ -69,7 +69,7 @@ export class SharedMealIdeas {
     return {...(profile.revision ? {preferenceRevision:profile.revision}:{}),shopId:id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,grantRevision,shopper,
       ideas:rows.map(row=>{
         const draft=sharedIdeaDraftSchema.parse(row.draft), preview=evaluateSharedIdea(draft);
-        const match=mealEligibility(profile.settings,draft.ingredients.map(i=>i.name),draft.preferenceEvidence);
+        const match=mealEligibility(profile.settings,draft.ingredients.map(i=>i.name),draft.preferenceEvidence,draft.minutes);
         const requiresReview=row.state==='approved' && (row.preference_revision??null)!==profile.revision;
         return {ideaId:row.idea_id,revision:row.revision,actorId:row.actor_id,state:row.state,draft:row.draft,
           preview:{...preview,canApprove:preview.canApprove&&match.eligible,...(profile.revision?{preferenceCheck:match,requiresPreferenceReview:requiresReview}:{})}};
@@ -87,7 +87,7 @@ export class SharedMealIdeas {
     const profile=await mealConstraints(ctx);
     if(input.action==='approve'){
       if ((profile.settings || input.preferenceRevision != null) && (input.preferenceRevision??null)!==profile.revision) throw stale();
-      if (!mealEligibility(profile.settings,input.draft.ingredients.map(i=>i.name),input.draft.preferenceEvidence).eligible) {
+      if (!mealEligibility(profile.settings,input.draft.ingredients.map(i=>i.name),input.draft.preferenceEvidence,input.draft.minutes).eligible) {
         throw new ServiceError(409,'idea_review_required','Review the meal constraints and missing ingredients or appliance details.');
       }
     }
@@ -114,7 +114,7 @@ export async function requireApprovedSharedIdea(ctx:Context,shopId:string,author
   if(!evaluateSharedIdea(draft).canApprove)throw stale();
   if(!exactProposalReceipt){
     const profile=await mealConstraints(ctx);
-    if((row.preference_revision??null)!==profile.revision || !mealEligibility(profile.settings,draft.ingredients.map(i=>i.name),draft.preferenceEvidence).eligible)throw stale();
+    if((row.preference_revision??null)!==profile.revision || !mealEligibility(profile.settings,draft.ingredients.map(i=>i.name),draft.preferenceEvidence,draft.minutes).eligible)throw stale();
   }
   const ingredients=draft.ingredients.map(i=>({
     id:i.id,name:i.name,quantity:i.required===null ? null : {
