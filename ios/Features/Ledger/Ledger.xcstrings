@@ -1,6 +1,150 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Give this store its own short name.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give this store its own short name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dale a esta tienda un nombre breve y único."
+          }
+        }
+      }
+    },
+    "Match store name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match store name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular nombre de la tienda"
+          }
+        }
+      }
+    },
+    "No store matched": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No store matched"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin tienda vinculada"
+          }
+        }
+      }
+    },
+    "Create separate store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create separate store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear una tienda aparte"
+          }
+        }
+      }
+    },
+    "Name for this store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name for this store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de esta tienda"
+          }
+        }
+      }
+    },
+    "Saving matches this pickup’s store name for future lists.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving matches this pickup’s store name for future lists."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al guardar, este nombre de tienda quedará vinculado para futuras listas."
+          }
+        }
+      }
+    },
+    "Department assignment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Department assignment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asignar departamento"
+          }
+        }
+      }
+    },
+    "This row": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This row"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo esta fila"
+          }
+        }
+      }
+    },
+    "Remember at this store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember at this store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordar en esta tienda"
+          }
+        }
+      }
+    },
     "Clear search": {
       "localizations": {
         "en": {

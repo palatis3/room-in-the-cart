@@ -2,7 +2,56 @@ import SwiftUI
 import UIKit
 import CoreDomain
 
-private enum AisleScope { case storeDefault, thisShop, followStore }
+struct LedgerDepartmentOrderDraft {
+    enum Store: Hashable { case current, saved(UUID), new }
+    enum Scope { case storeDefault, thisShop, followStore }
+
+    private(set) var store = Store.current
+    private(set) var scope: Scope
+    var name: String
+    var aisles: [String]
+
+    init(layout: LedgerListLayout, shop: ShoppingLedger) {
+        let branch = shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines)
+        name = branch
+        let saved = layout.layout(for: shop)
+        scope = branch.isEmpty || (saved.aisleOverride != nil && saved.branch == branch) ? .thisShop : .followStore
+        aisles = layout.aisleNames(in: shop)
+    }
+
+    func isNameValid(in layout: LedgerListLayout) -> Bool {
+        guard store == .new else { return true }
+        let label = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !label.isEmpty && label.utf8.count <= 512 &&
+            layout.departmentDirectory?.stores.values.contains(where: { $0.name == label }) != true
+    }
+
+    func matchChosenStore(in layout: inout LedgerListLayout, shop: ShoppingLedger) throws {
+        switch store {
+        case .current: break
+        case .saved(let id): try layout.matchStore(in: shop, to: id)
+        case .new: try layout.matchStore(in: shop, to: nil, name: name)
+        }
+    }
+
+    mutating func select(_ store: Store, scope: Scope, in saved: LedgerListLayout, shop: ShoppingLedger) {
+        guard self.store != store || self.scope != scope else { return }
+        self.store = store
+        self.scope = scope
+        var preview = saved
+        let shopKey = shop.id.uuidString.lowercased()
+        if store == .new {
+            // A new store inherits the legacy branch order and has no remembered
+            // products. Its display name is independent of this preview.
+            if preview.shopLayouts[shopKey]?.departmentStore != nil {
+                preview.shopLayouts[shopKey]?.departmentStore = nil
+                preview.shopLayouts[shopKey]?.aisleOverride = nil
+            }
+        } else { try? matchChosenStore(in: &preview, shop: shop) }
+        if scope != .thisShop { preview.shopLayouts[shopKey]?.aisleOverride = nil }
+        aisles = preview.aisleNames(in: shop)
+    }
+}
 
 struct LedgerLayoutEditor: View {
     @ObservedObject var model: LedgerModel
@@ -10,12 +59,14 @@ struct LedgerLayoutEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var mode: LedgerListOrder
     @State private var lineIDs: [UUID]
-    @State private var aisles: [String]
-    @State private var scope: AisleScope
+    @State private var draft: LedgerDepartmentOrderDraft
     @State private var baseRevision: Int64
     @State private var reviewedShopID: UUID
     private var current: Bool {
         model.revision == baseRevision && model.workspace.selectedShopID == reviewedShopID && shop.id == reviewedShopID
+    }
+    private var isStoreNameValid: Bool {
+        mode != .aisle || draft.isNameValid(in: model.workspace.listLayout)
     }
     private let branch: String
     private let lineNames: [UUID:String]
@@ -25,10 +76,9 @@ struct LedgerLayoutEditor: View {
         _baseRevision = State(initialValue: model.revision)
         _reviewedShopID = State(initialValue: shop.id)
         branch = shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines)
+        _draft = State(initialValue: LedgerDepartmentOrderDraft(layout: model.workspace.listLayout, shop: shop))
         let layout = model.workspace.listLayout.layout(for: shop)
         _mode = State(initialValue: layout.mode)
-        _scope = State(initialValue: branch.isEmpty || (layout.aisleOverride != nil && layout.branch == branch) ? .thisShop : .followStore)
-        _aisles = State(initialValue: model.workspace.listLayout.aisleNames(in: shop))
         let active = shop.search("").filter { !$0.isTrashed && !$0.isChecked && !$0.isHandled }
         lineNames = Dictionary(uniqueKeysWithValues: active.map { ($0.id,$0.name) })
         let previous = Set(layout.lineOrder)
@@ -46,18 +96,41 @@ struct LedgerLayoutEditor: View {
             if mode == .aisle {
                 if !branch.isEmpty {
                     Section(branch) {
-                        Picker(ledgerText("Aisle order"), selection: $scope) {
-                            Text(ledgerText("Use store order")).tag(AisleScope.followStore)
-                            Text(ledgerText("Set order for this store")).tag(AisleScope.storeDefault)
-                            Text(ledgerText("Override for this pickup")).tag(AisleScope.thisShop)
+                        Picker(ledgerText("Match store name"), selection: Binding(get: { draft.store }, set: { store in
+                            draft.select(store, scope: draft.scope, in: model.workspace.listLayout, shop: shop)
+                        })) {
+                            let matched = model.workspace.listLayout.layout(for: shop).departmentStore.flatMap { $0.branch == branch ? $0.storeID : nil }
+                            let currentStore = matched.flatMap { model.workspace.listLayout.departmentDirectory?.stores[$0.uuidString.lowercased()] }
+                            if let currentStore { Text(verbatim: currentStore.name).tag(LedgerDepartmentOrderDraft.Store.current) }
+                            else { Text(ledgerText("No store matched")).tag(LedgerDepartmentOrderDraft.Store.current) }
+                            ForEach((model.workspace.listLayout.departmentDirectory?.stores.values.map { $0 } ?? [])
+                                .filter { $0.id != matched }.sorted { $0.name < $1.name }) { store in
+                                Text(verbatim: store.name).tag(LedgerDepartmentOrderDraft.Store.saved(store.id))
+                            }
+                            Text(ledgerText("Create separate store")).tag(LedgerDepartmentOrderDraft.Store.new)
+                        }
+                        if draft.store == .new {
+                            TextField(ledgerText("Name for this store"), text: $draft.name)
+                            if !isStoreNameValid { Text(ledgerText("Give this store its own short name.")) }
+                        }
+                        if draft.store != .current {
+                            Text(ledgerText("Saving matches this pickup’s store name for future lists."))
+                                .font(.footnote)
+                        }
+                        Picker(ledgerText("Aisle order"), selection: Binding(get: { draft.scope }, set: { scope in
+                            draft.select(draft.store, scope: scope, in: model.workspace.listLayout, shop: shop)
+                        })) {
+                            Text(ledgerText("Use store order")).tag(LedgerDepartmentOrderDraft.Scope.followStore)
+                            Text(ledgerText("Set order for this store")).tag(LedgerDepartmentOrderDraft.Scope.storeDefault)
+                            Text(ledgerText("Override for this pickup")).tag(LedgerDepartmentOrderDraft.Scope.thisShop)
                         }
                     }
                 }
                 Section(ledgerText("Aisles")) {
-                    if aisles.isEmpty { Text(ledgerText("Set an aisle in item details to group items here.")) }
-                    ForEach(aisles, id: \.self) { aisle in
-                        if scope == .followStore { Text(aisle) }
-                        else { moveRow(aisle, id: aisle, values: $aisles) }
+                    if draft.aisles.isEmpty { Text(ledgerText("Set an aisle in item details to group items here.")) }
+                    ForEach(draft.aisles, id: \.self) { aisle in
+                        if draft.scope == .followStore { Text(aisle) }
+                        else { moveRow(aisle, id: aisle, values: $draft.aisles) }
                     }
                 }
             }
@@ -69,16 +142,9 @@ struct LedgerLayoutEditor: View {
             if !current { Text(ledgerText("The list changed. Reopen list options to review its current order.")) }
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
             Button(ledgerText("Save list order")) { Task { await save() } }
-                .disabled(!current || model.saving || model.hasPendingSave).accessibilityIdentifier("saveListOrder")
+                .disabled(!current || !isStoreNameValid || model.saving || model.hasPendingSave).accessibilityIdentifier("saveListOrder")
         }.navigationTitle(ledgerText("List order and aisles"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() } } }
-        .onChange(of: scope) { _, next in
-            var projected = model.workspace.listLayout
-            if next != .thisShop {
-                projected.shopLayouts.removeValue(forKey: shop.id.uuidString.lowercased())
-            }
-            aisles = projected.aisleNames(in: shop)
-        }
     }
 
     private func moveRow<ID: Hashable>(_ title: String, id: ID, values: Binding<[ID]>) -> some View {
@@ -103,6 +169,10 @@ struct LedgerLayoutEditor: View {
         let ok = await model.change(key: "list-layout-\(shop.id)") { workspace in
             guard current, workspace.selectedShopID == reviewedShopID else { throw LedgerError.stalePreview }
             let id = shop.id.uuidString.lowercased()
+            if mode == .aisle {
+                try draft.matchChosenStore(in: &workspace.listLayout, shop: shop)
+                if draft.scope == .storeDefault && !branch.isEmpty { try workspace.listLayout.setStoreOrder(draft.aisles, in: shop) }
+            }
             var layout = workspace.listLayout.layout(for: shop)
             layout.mode = mode
             if mode == .manual {
@@ -110,8 +180,7 @@ struct LedgerLayoutEditor: View {
             }
             if mode == .aisle {
                 layout.branch = branch
-                layout.aisleOverride = scope == .thisShop ? aisles : nil
-                if scope == .storeDefault && !branch.isEmpty { workspace.listLayout.storeAisles[branch] = aisles }
+                layout.aisleOverride = draft.scope == .thisShop ? draft.aisles : nil
             }
             workspace.listLayout.shopLayouts[id] = layout
         }

@@ -337,6 +337,10 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/bootstrap'&&method==='GET')return repository.bootstrap(ctx);
         if(path==='/replay-windows'&&method==='POST'){z.object({}).strict().parse(payload);return repository.window(ctx);}
         if(path==='/requests/mine'&&method==='GET') {
+          // A browsing context can switch accounts between pages. Bind newer clients'
+          // reads to the scoped session they verified before starting the list.
+          const readToken=req.headers['x-csrf-token'];
+          if(session && readToken!==undefined && (typeof readToken!=='string'||!equal(readToken,session.csrf)))throw accessEnded();
           const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);
           return repository.requests(ctx,cursor);
         }

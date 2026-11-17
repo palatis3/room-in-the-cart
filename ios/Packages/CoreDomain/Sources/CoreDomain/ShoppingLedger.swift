@@ -155,6 +155,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public var sourceURL: String?
     public var eligibilityEvidence: MealEligibilityEvidence? = nil
     public var sourceEvidence: RecipeSourceEvidence? = nil
+    public var recipeSteps: [RecipeStep]? = nil
     public var exclusions: [String]
     public var servingGroups: [ServingGroup]
     public var leadTimeMinutes: Int?
@@ -163,12 +164,13 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public init(id: UUID = UUID(), title: String, servings: Rational = .one,
                 ingredients: [MealIngredient] = [], notes: String = "", sourceURL: String? = nil,
                 exclusions: [String] = [], revision: Int = 0, servingGroups: [ServingGroup] = [],
-                leadTimeMinutes: Int? = nil, completedSteps: [String] = [], sourceEvidence: RecipeSourceEvidence? = nil) {
+                leadTimeMinutes: Int? = nil, completedSteps: [String] = [], sourceEvidence: RecipeSourceEvidence? = nil, recipeSteps: [RecipeStep]? = nil) {
         self.id = id; self.revision = revision; self.title = title; self.servings = servings
         self.ingredients = ingredients; self.notes = notes; self.sourceURL = sourceURL
         self.exclusions = exclusions; self.servingGroups = servingGroups
         self.leadTimeMinutes = leadTimeMinutes; self.completedSteps = completedSteps
         self.sourceEvidence = sourceEvidence
+        self.recipeSteps = recipeSteps
     }
 
     public func validate() throws {
@@ -176,6 +178,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
         if let sourceURL { try ledgerText(sourceURL, maximum: 2048) }
         try eligibilityEvidence?.validate()
         try sourceEvidence?.validate()
+        if let recipeSteps { try RecipeStep.validate(recipeSteps, ingredientCount: ingredients.count) }
         try validateExclusions(exclusions)
         guard revision >= 0, servings > .zero, ingredients.count <= 200,
               servingGroups.count <= 100, completedSteps.count <= 100,
@@ -204,6 +207,7 @@ public struct MealOccurrence: Codable, Equatable, Sendable, Identifiable {
     public var notes: String
     public var sourceURL: String?
     public var sourceEvidence: RecipeSourceEvidence? = nil
+    public var recipeSteps: [RecipeStep]? = nil
     public var exclusions: [String]
     public var servingGroups: [ServingGroup]
     public var leadTimeMinutes: Int?
@@ -533,9 +537,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         contributions.filter { $0.lineID == lineID && $0.removedAt == nil }
     }
 
-    public func search(_ query: String) -> [ShoppingLine] {
+    public func search(_ query: String, department: ((ShoppingLine) -> String)? = nil) -> [ShoppingLine] {
         let term = normalizedProduct(query)
-        let visible = lines.filter { !$0.isTrashed }
+        let active = lines.filter { !$0.isTrashed }
+        let visible = department.map { resolve in active.map { source in
+            var line = source
+            line.aisle = resolve(source)
+            return line
+        } } ?? active
         guard !term.isEmpty else { return visible.sorted { $0.originalOrder < $1.originalOrder } }
         // Search each source once, rather than rescanning every source for each line.
         let matchingSourceLines = Set(contributions.lazy.filter {
@@ -920,7 +929,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
             next.mealOccurrences.append(MealOccurrence(id: occurrenceID, templateID: template.id, templateRevision: template.revision,
                 title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
-                sourceEvidence: template.sourceEvidence, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
+                sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
                 completedSteps: template.completedSteps, ingredientContributionIDs: ingredientIDs, scheduledDay: scheduledDay,
                 isHidden: false, removedAt: nil))
             return occurrenceID
@@ -1066,6 +1075,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             if let url = meal.sourceURL { try ledgerText(url, maximum: 2048) }
             guard meal.servings > .zero, meal.templateRevision.map({ $0 >= 0 }) ?? true,
                   meal.ingredientContributionIDs.count <= 200 else { throw LedgerError.invalid("mealOccurrence") }
+            if let steps = meal.recipeSteps { try RecipeStep.validate(steps, ingredientCount: meal.ingredientContributionIDs.count) }
             try uniqueIDs(meal.ingredientContributionIDs); try meal.scheduledDay?.validate(); try ledgerDate(meal.removedAt)
             let validationTemplate = MealTemplate(title: meal.title, servings: meal.servings, notes: meal.notes,
                 sourceURL: meal.sourceURL, exclusions: meal.exclusions, servingGroups: meal.servingGroups,
@@ -1144,7 +1154,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     let template = dinner.template
                     next.mealOccurrences.append(MealOccurrence(id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
                         title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
-                        sourceEvidence: template.sourceEvidence, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
+                        sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
                         completedSteps: template.completedSteps, ingredientContributionIDs: dinner.contributionIDs,
                         scheduledDay: dinner.day, isHidden: false, removedAt: nil))
                 case .move(let occurrenceID, let day):

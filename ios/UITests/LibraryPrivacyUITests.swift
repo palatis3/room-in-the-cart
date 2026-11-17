@@ -93,6 +93,90 @@ import XCTest
 }
 
 @MainActor final class RecipeLibraryAcceptanceUITests: LibraryPrivacyUITestCase {
+    func testCookingTimersRestoreInSpanishAtLargestTextAndEndOnRequest() {
+        launch("--recipe-library-fixture")
+        tap(button("records.recovered.Existing family soup"))
+        tap(app.buttons["Open saved recipe"])
+        tap(button("cooking.openRecipe"))
+        assertText("Keep the existing instructions.")
+        assertText("2 cups beans")
+        tap(button("cooking.prepareReadback"))
+        reveal(button("capture.readback.play"))
+        tap(button("cooking.start"))
+        tap(button("cooking.start"))
+        tap(button("cooking.pause.0"), upward: true)
+        XCTAssertTrue(element("cooking.paused.0").exists)
+        app.terminate()
+        app.launchArguments = ["--ui-testing", "--recipe-library-fixture", "-AppleLanguages", "(es)",
+            "-AppleLocale", "es_US", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        tap(button("records.recovered.Existing family soup"))
+        tap(button("records.openSavedRecipe"))
+        tap(button("cooking.openRecipe"))
+        assertText("Keep the existing instructions.")
+        assertText("2 cups beans")
+        reveal(element("cooking.paused.0"), requiresHitTarget: false)
+        XCTAssertEqual(element("cooking.paused.0").label, "En pausa")
+        reveal(element("cooking.timer.1"), requiresHitTarget: false)
+        XCTAssertEqual(element("cooking.timer.1").label, "Temporizador 2")
+        capture("Dos temporizadores guardados con texto grande")
+        tap(button("cooking.end"))
+        tap(button("cooking.confirmEnd"))
+        tap(button("cooking.openRecipe"))
+        reveal(button("cooking.start"))
+        XCTAssertFalse(element("cooking.timer.0").exists)
+    }
+
+    func testRecipeLinkAllowsMissingYieldCorrectionBeforeSaving() {
+        launch("--recipe-library-fixture")
+        XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))
+        tap(button("records.recipeLink"))
+        let address = app.textFields["HTTPS recipe link"]
+        XCTAssertTrue(address.waitForExistence(timeout: 10))
+        address.tap()
+        address.typeText("https://example.org/soup")
+        app.buttons["Read recipe"].tap()
+        assertText("Missing servings or yield")
+        assertSavedRecipes(1)
+        tap(app.buttons["Edit recipe, Weeknight soup"])
+        let yield = app.textFields["Servings or yield, in your words"]
+        XCTAssertTrue(yield.waitForExistence(timeout: 10))
+        yield.tap()
+        yield.typeText("Two bowls")
+        dismissRecipeKeyboard("records.recipeEditorDone")
+        tap(app.buttons["Review ingredients and timers by step"])
+        tap(button("records.cookingStep.0"))
+        setSwitch(app.switches["records.stepIngredient.0"], enabled: true)
+        let timer = app.textFields["Suggested timer in minutes (optional)"]
+        tap(timer)
+        timer.typeText("7")
+        dismissRecipeKeyboard("records.stepTimerDone")
+        tap(button("records.saveStepDetails"))
+        back(to: "Edit recipe")
+        tap(app.buttons["Review recipe"])
+        tap(button("records.saveRecipeDraft"))
+        assertResultVisible("records.status", "File saved.")
+        assertSavedRecipes(1)
+        app.terminate()
+        launch("--recipe-library-fixture", reset: false)
+        XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))
+        chooseRecipeFile()
+        assertText("Weeknight soup")
+        tap(element("records.applyImport"))
+        assertSavedRecipes(2)
+        tap(button("records.recovered.Weeknight soup"))
+        tap(app.buttons["Open saved recipe"])
+        XCTAssertTrue(app.navigationBars["Saved recipe"].waitForExistence(timeout: 10))
+        assertText("Two bowls")
+        assertText("Simmer.")
+        tap(app.buttons["Cooking steps"])
+        tap(button("records.cookingStep.0"))
+        assertText("Ingredients for this step")
+        assertText("1 onion")
+        assertText("Suggested timer: 7 min")
+        capture("Recipe page corrected and saved")
+    }
+
     func testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice() {
         launch("--recipe-library-fixture")
         XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))
@@ -122,6 +206,18 @@ import XCTest
         XCTAssertTrue(waitForLabel("fixture.library.sourceUnchanged", "E01 local source unchanged: no"))
         XCTAssertTrue(waitForLabel("fixture.library.recipeCount", "E01 saved recipes: 3"))
         capture("E01 original recipe after explicit pickup choice")
+    }
+
+    private func dismissRecipeKeyboard(_ identifier: String) {
+        let tip = app.staticTexts["Speed up your typing by sliding your finger across the letters to compose a word."]
+        if tip.exists {
+            app.buttons["Continue"].tap()
+            XCTAssertTrue(tip.waitForNonExistence(timeout: 5))
+        }
+        let done = app.buttons[identifier]
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
     }
 
     private func enterMealAmount(_ value: String, in field: XCUIElement) {
@@ -187,7 +283,7 @@ import XCTest
     }
 
     private func chooseRecipeFile(upward: Bool = false) {
-        tap(app.buttons["Choose Recipe JSON-LD file…"], upward: upward)
+        tap(button("records.chooseRecipeFile"), upward: upward)
     }
     private func assertLibraryPreview() {
         reveal(element("records.applyImport"), requiresHitTarget: false)

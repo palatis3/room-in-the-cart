@@ -535,6 +535,41 @@ import XCTest
     }
 #endif
 
+    func testNaturalListReviewsTimingThenAddsOnlyToChosenPickup() {
+        launch(reset: true)
+        openShoppingList()
+        app.renameSelectedPickup("Next week groceries")
+        startAnotherPickupFromList()
+        fill("Friday groceries", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        fill("Two milks, bread and cereal for next week", into: "ledgerImportText")
+        tap(element("ledger.capture"))
+        enableSwitch("capture.naturalMode")
+        tap(element("capture.reviewFields"))
+        assertText("Timing in your wording: for next week")
+        XCTAssertFalse(app.textFields["Total amount, unknown if blank"].exists)
+        capture("Natural-list-compact-review-and-unresolved-timing")
+        let proceed = element("capture.continue")
+        reveal(proceed)
+        XCTAssertFalse(proceed.isEnabled)
+        let pickup = element("capture.batchPickup")
+        reveal(pickup, initiallyUpward: false)
+        pickup.tap()
+        tap(app.buttons["Next week groceries"])
+        tap(proceed)
+        assertText("Pickup for all items: Next week groceries")
+        tap(element("ledgerCommitImport"))
+        XCTAssertTrue(app.navigationBars["Friday groceries"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["Inspect cereal"].exists)
+        tap(app.buttons["ledgerShopPicker"])
+        tap(app.buttons["Next week groceries"])
+        for item in ["milks", "bread", "cereal"] {
+            reveal(app.buttons["Inspect " + item])
+        }
+    }
+
+
     func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() throws {
         try exerciseRetailerShareCancellation()
 
@@ -1865,13 +1900,20 @@ import XCTest
             }
         }
 
-        tapVisibleFormRow(app.buttons[copy("Protect a lunch or side", "Proteger un almuerzo o acompañamiento")])
+        if spanish {
+            tapVisibleFormRow(element(dayNoteID))
+            tapVisibleFormRow(app.buttons["dinner.day.protectLunch"])
+        } else {
+            tapVisibleFormRow(app.buttons["Protect a lunch or side"])
+        }
         XCTAssertTrue(app.navigationBars[copy("Protect food", "Proteger alimentos")].waitForExistence(timeout: 8))
         fill(food, into: copy("Food name", "Nombre del alimento"), requireDone: true)
         fill("2", into: copy("Protected amount", "Cantidad protegida"), requireDone: true)
         fill(purpose, into: copy("Purpose, such as lunch", "Finalidad, por ejemplo almuerzo"), requireDone: true)
-        enableSwitch(assignDate)
-        chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
+        if !spanish {
+            enableSwitch(assignDate)
+            chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
+        }
         tap(app.buttons[copy("Review protected need", "Revisar necesidad protegida")])
         let reviewed = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerPreviewNeed-")).firstMatch
         reveal(reviewed)

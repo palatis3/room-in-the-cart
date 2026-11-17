@@ -6,8 +6,26 @@ struct CapturedLedgerStage {
     let alreadyApplied: Bool
 }
 enum CaptureLedgerImport {
+    static func stage(_ capture: ReviewedCapture, in workspace: LedgerWorkspace, currentShopID: UUID) throws -> CapturedLedgerStage {
+        guard workspace.selectedShopID == currentShopID else { throw StructuredCaptureFailure.destinationMismatch }
+        let targetID = capture.naturalBatch?.pickup?.id ?? currentShopID
+        guard let shop = workspace.shops.first(where: { $0.id == targetID }),
+              !workspace.shops.contains(where: { $0.id != targetID && $0.importBatches.contains { $0.id == capture.id } }) else {
+            throw StructuredCaptureFailure.destinationMismatch
+        }
+        return try stage(capture, in: shop)
+    }
+
     static func stage(_ capture: ReviewedCapture, in shop: ShoppingLedger) throws -> CapturedLedgerStage {
         guard let lines = capture.lines, !lines.isEmpty else { throw StructuredCaptureFailure.reviewRequired }
+        if let batch = capture.naturalBatch {
+            guard let pickup = batch.pickup, pickup.id == shop.id, lines.allSatisfy({ $0.destination == pickup.title }) else {
+                throw StructuredCaptureFailure.destinationMismatch
+            }
+            if !shop.importBatches.contains(where: { $0.id == capture.id }), pickup != CapturePickup(shop) {
+                throw StructuredCaptureFailure.destinationMismatch
+            }
+        }
         let source: ImportSource
         switch capture.source {
         case .typed: source = .typed

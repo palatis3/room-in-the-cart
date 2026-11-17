@@ -273,6 +273,19 @@ import CoreDomain
             Text(captureText("Ingredient wording, one per line"))
             TextEditor(text: recipeField(\.ingredientText)).frame(minHeight: 140).accessibilityLabel(captureText("Ingredient wording, one per line"))
                 .focused($focusedField, equals: .ingredients)
+            if recipe?.notes.isEmpty == false {
+                Toggle(captureText("Use each instruction line as a cooking step"), isOn: Binding(
+                    get: { recipe?.useInstructionLines ?? false }, set: { recipe?.useInstructionLines = $0 }
+                ))
+            }
+            if let current = recipe, !current.instructionLines.isEmpty {
+                NavigationLink(recordsText("Review ingredients and timers by step")) {
+                    RecipeStepReviewView(steps: current.stepEdits.current(instructions: current.instructionLines, ingredients: current.ingredientLines),
+                                         ingredients: current.ingredientLines) { index, step in
+                        recipe?.stepEdits.apply(step, at: index, instructions: current.instructionLines, ingredients: current.ingredientLines)
+                    }
+                }
+            }
             if let text = recipe?.unclassifiedText, !text.isEmpty {
                 Text(captureText("Unclassified source wording — copy only what belongs in the recipe"))
                 Text(text).textSelection(.enabled)

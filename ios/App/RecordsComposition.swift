@@ -113,16 +113,7 @@ private struct RecordsPlanningProjection: Codable {
         let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: shop).decoded()
         var value = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id, dinnerPlanning: planning,
             packSelections: workspace.packSelections.filter { $0.shopID == shop.id })
-        let shopKey = shop.id.uuidString.lowercased()
-        let visibleAisles = Set(shop.lines.map { $0.aisle.trimmingCharacters(in: .whitespacesAndNewlines) })
-        if var local = workspace.listLayout.shopLayouts[shopKey] {
-            local.aisleOverride = local.aisleOverride?.filter(visibleAisles.contains)
-            value.listLayout.shopLayouts[shopKey] = local
-        }
-        let branch = shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let order = workspace.listLayout.storeAisles[branch]?.filter(visibleAisles.contains), !order.isEmpty {
-            value.listLayout.storeAisles[branch] = order
-        }
+        value.listLayout = workspace.listLayout.scoped(to: shop)
         try value.validate()
         return value
     }
@@ -294,7 +285,9 @@ struct RecordsToolsEntryView: View {
                         }.navigationTitle(recordsText("Recovered workspace")).environmentObject(model)
                     case let .pickup(model): PickupHomeView(model: model).environment(\.pickupLedger, nil)
                     case let .pantry(session): RecordsRecoveredPantryView(session: session)
-                    case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger, dinnerModel: dinnerModel)
+                    case let .recipe(recipe):
+                        RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger, dinnerModel: dinnerModel,
+                            cooking: composition.cookingContext(copy: destination.id, recipe: recipe))
                     case let .sharedRecord(record, text):
                         ScrollView { Text(text).textSelection(.enabled).accessibilityIdentifier("records.sharedRecoveredText").frame(maxWidth: .infinity, alignment: .leading).padding() }
                             .navigationTitle(recordsTitle(record))
@@ -518,6 +511,16 @@ private struct RecordsRecoveredPantryView: View {
                 self.pickup.sourceWorkspaceID == pickupID
         }
     }
+    func cookingContext(copy: String, recipe: ImportedRecipe) -> CookingSessionContext? {
+        guard let source = UUID(uuidString: copy), let workspace = ledger.sourceWorkspaceID,
+              let scope = privateIdentity(), let authorized = captureAuthorization(), authorized(),
+              let key = try? CookingSessionKey(workspace: workspace, actor: scope.identity.actorID,
+                audience: [scope.identity.subject, scope.identity.householdID, scope.identity.memberID, scope.identity.role, scope.shopID, scope.grantID],
+                kind: .recipe, source: source, revision: recipe.id) else { return nil }
+        return CookingSessionContext(key: key, authorize: { [weak self] in
+            authorized() && self?.destination?.id == copy
+        })
+    }
     private let recipeLibraryOnly: Bool
     init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup, recipeLibraryOnly: Bool) {
         self.recipeLibraryOnly = recipeLibraryOnly
@@ -707,8 +710,9 @@ private struct RecordsRecoveredPantryView: View {
             try await pantryWorker.removePermanentlyRetiredBundles(retired)
         }
         let root = directory.appendingPathComponent("Recoveries", isDirectory: true)
-        guard FileManager.default.fileExists(atPath: root.path) else { return }
         let retained = try await registry.retainedRecoveryCopyIDs()
+        try CookingSessionResources.eraseUnretainedRecipes(retaining: Set(retained.compactMap(UUID.init(uuidString:))))
+        guard FileManager.default.fileExists(atPath: root.path) else { return }
         let folders = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { UUID(uuidString: $0.lastPathComponent) != nil && !retained.contains($0.lastPathComponent) }
         guard !folders.isEmpty else { return }
@@ -1115,19 +1119,33 @@ private struct RecordsRecipeAdoptionView: View {
     let recipe: ImportedRecipe
     @ObservedObject var ledger: LedgerModel
     let dinnerModel: DinnerFeatureModel?
+    let cooking: CookingSessionContext?
     @State private var editing = false
     private var template: MealTemplate {
         // The placeholder is never shown or saved. The editor requires the person to
         // enter positive servings; original yield and ingredient words remain intact.
         MealTemplate(title: recipe.title, servings: .one,
             ingredients: recipe.ingredients.map { MealIngredient(name: $0, quantity: nil) },
-            notes: ([recipe.yieldText, recipe.notes] + recipe.steps).filter { !$0.isEmpty }.joined(separator: "\n"), sourceURL: recipe.sourceURL)
+            notes: [recipe.yieldText, recipe.notes].filter { !$0.isEmpty }.joined(separator: "\n"), sourceURL: recipe.sourceURL,
+            recipeSteps: recipe.steps.isEmpty ? nil : recipe.cookingSteps)
     }
     var body: some View {
         Form {
             Text(recipe.title).font(.title2.bold())
+            if let cooking {
+                NavigationLink(recordsText("Cook this recipe")) {
+                    CookingSessionView(title: recipe.title, steps: recipe.cookingSteps, ingredients: recipe.ingredients,
+                        legacyNotes: recipe.notes, context: cooking,
+                        finishTitle: ledger.shop == nil ? nil : recordsText("Choose a dinner for this pickup")) {
+                            dinnerEditor
+                        }
+                }.accessibilityIdentifier("cooking.openRecipe")
+            }
             Text(recipe.yieldText)
             ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { _, value in Text(value) }
+            if !recipe.steps.isEmpty {
+                NavigationLink(recordsText("Cooking steps")) { RecipeStepReviewView(steps: recipe.cookingSteps, ingredients: recipe.ingredients) }
+            }
             ForEach(Array(recipe.steps.enumerated()), id: \.offset) { _, value in Text(value) }
             Text(recipe.notes)
             if let source = recipe.sourceURL { Text(source).textSelection(.enabled) }
@@ -1142,13 +1160,14 @@ private struct RecordsRecipeAdoptionView: View {
         }
         .navigationTitle(recordsText("Saved recipe"))
         .sheet(isPresented: $editing) {
-            NavigationStack {
-                if let dinnerModel {
-                    DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: true)
-                } else {
-                    LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true)
-                }
-            }
+            NavigationStack { dinnerEditor }
+        }
+    }
+    @ViewBuilder private var dinnerEditor: some View {
+        if let dinnerModel {
+            DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: true)
+        } else {
+            LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true)
         }
     }
 }

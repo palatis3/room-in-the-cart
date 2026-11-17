@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Use each instruction line as a cooking step": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use each instruction line as a cooking step"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar cada línea de instrucciones como un paso de la receta"
+          }
+        }
+      }
+    },
     "Type item": {
       "extractionState": "manual",
       "localizations": {
@@ -4303,6 +4320,227 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo confirmar la configuración de correcciones. Vuelve a cargarla antes de reintentar."
+          }
+        }
+      }
+    },
+    "Split a spoken or typed list into items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split a spoken or typed list into items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separar una lista dictada o escrita en artículos"
+          }
+        }
+      }
+    },
+    "Pickup for all items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup for all items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra para todos los artículos"
+          }
+        }
+      }
+    },
+    "Timing in your wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timing in your wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuándo, según tu texto"
+          }
+        }
+      }
+    },
+    "Choose a pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una compra"
+          }
+        }
+      }
+    },
+    "Current pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra actual"
+          }
+        }
+      }
+    },
+    "Choose an available pickup before continuing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an available pickup before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una compra disponible antes de continuar."
+          }
+        }
+      }
+    },
+    "Skipped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitido"
+          }
+        }
+      }
+    },
+    "Amount unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad desconocida"
+          }
+        }
+      }
+    },
+    "Check this wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check this wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa estas palabras"
+          }
+        }
+      }
+    },
+    "I checked this wording and amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked this wording and amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé estas palabras y la cantidad."
+          }
+        }
+      }
+    },
+    "Edit or skip this item.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit or skip this item."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edita u omite este artículo."
+          }
+        }
+      }
+    },
+    "This pickup changed. Edit captured fields to choose a pickup again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup changed. Edit captured fields to choose a pickup again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra cambió. Edita los campos capturados para volver a elegir una compra."
+          }
+        }
+      }
+    },
+    "These items may be for different pickups. Review one pickup at a time or edit the timing in your wording.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These items may be for different pickups. Review one pickup at a time or edit the timing in your wording."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos artículos podrían ser para compras distintas. Revisa una compra a la vez o cambia en el texto cuándo quieres los artículos."
           }
         }
       }

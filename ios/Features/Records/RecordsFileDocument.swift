@@ -9,11 +9,11 @@ extension UTType {
 }
 
 struct RecordsFileDocument: FileDocument {
-    enum Kind: Equatable { case recovery, helper, text }
+    enum Kind: Equatable { case recovery, helper, text, recipeDraft }
     static var readableContentTypes: [UTType] { [.roomRecovery, .roomHelper, .json, .plainText] }
     let data: Data
     let kind: Kind
-    var contentType: UTType { switch kind { case .recovery: return .roomRecovery; case .helper: return .roomHelper; case .text: return .plainText } }
+    var contentType: UTType { switch kind { case .recovery: return .roomRecovery; case .helper: return .roomHelper; case .text: return .plainText; case .recipeDraft: return .json } }
     init(data: Data, kind: Kind) { self.data = data; self.kind = kind }
     init(configuration: ReadConfiguration) throws {
         guard let data = configuration.file.regularFileContents, data.count <= ArchiveCodec.maximumFileBytes else { throw ArchiveError.tooLarge }

@@ -9223,6 +9223,23 @@
           }
         }
       }
+    },
+    "Adjust plans for this day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust plans for this day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustar los planes de este día"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

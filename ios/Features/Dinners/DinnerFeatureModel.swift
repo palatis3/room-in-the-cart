@@ -165,9 +165,12 @@ extension DinnerWorkspaceStore {
             try workspace.dinnerPlanning.selectFreeReusableDinner(id, access: access, at: now)
         }
     }
-    @discardableResult func saveNote(_ note: DinnerWeekNote) async -> Bool {
+    @discardableResult func saveNote(_ note: DinnerWeekNote, replacing original: DinnerWeekNote? = nil,
+                                     editor: EditorIdentity) async -> Bool {
         await mutate(key: "dinner-note-\(note.id)", shopID: note.shopID) { workspace, _, access, now in
-            try workspace.dinnerPlanning.recordWeekNote(note, access: access, at: now)
+            guard workspace.selectedShopID == editor.shopID, note.shopID == editor.shopID,
+                  editor.scope == access.scope, editor.actorID == access.actorID else { throw DinnerPlanningError.forbidden }
+            try workspace.dinnerPlanning.recordWeekNote(note, replacing: original, access: access, at: now)
         }
     }
     @discardableResult func saveRotation(_ rotation: DinnerRotation) async -> Bool {

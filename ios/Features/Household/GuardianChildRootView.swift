@@ -154,6 +154,10 @@ struct GuardianChildRequestsView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(request.originalItem).font(.headline)
                             if let quantity = request.ownQuantity { Text(quantity) }
+                            RequestReadTimeLabel(asOf: household.requestReadTimes.rows[request.id])
+                            if let proposed = household.pendingCorrection(for: request) {
+                                LabeledContent(ht("Correction on this device"), value: proposed)
+                            }
                             if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                             Text(requestStatus(request)).foregroundStyle(.secondary)
                             if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
@@ -168,7 +172,10 @@ struct GuardianChildRequestsView: View {
                             }
                         }
                     }
-                    if household.requests.isEmpty { Text(ht("No received requests in this view.")) }
+                    if household.requests.isEmpty {
+                        Text(ht("No received requests in this view."))
+                        RequestReadTimeLabel(asOf: household.requestReadTimes.emptyPage)
+                    }
                     if household.nextRequestCursor != nil { Button(ht("Load more requests")) { Task { await household.loadMoreRequests() } } }
                 }
                 Section(household.contributorDraftTitle) {

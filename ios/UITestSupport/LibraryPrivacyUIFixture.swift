@@ -107,10 +107,19 @@ enum RecipeLibraryUIFixtureSamples {
     }
 
     var fileAdapter: RecordsMediaUITestFileAdapter {
-        RecordsMediaUITestFileAdapter(save: { _ in throw ArchiveError.unavailable }, selectedURL: { [weak self] in
+        RecordsMediaUITestFileAdapter(save: { [weak self] document in
+            guard let self, document.kind == .recipeDraft else { throw ArchiveError.unavailable }
+            try document.data.write(to: self.directory.appendingPathComponent("saved-recipe-draft.json"),
+                                    options: [.atomic, .completeFileProtection])
+        }, selectedURL: { [weak self] in
             guard let self else { return nil }
             self.fileSelections += 1
+            let draft = self.directory.appendingPathComponent("saved-recipe-draft.json")
+            if FileManager.default.fileExists(atPath: draft.path) { return draft }
             return self.corruptFileSelected ? self.corruptFile : self.libraryFile
+        }, recipePage: { address in
+            guard address == "https://example.org/soup" else { throw ArchiveError.invalidRecipe }
+            return Data(#"{"@type":"Recipe","name":"Weeknight soup","url":"https://example.org/soup","recipeIngredient":["1 onion"],"recipeInstructions":[{"@type":"HowToSection","name":"Soup","itemListElement":[{"@type":"HowToStep","text":"Simmer."}]}]}"#.utf8)
         })
     }
     var erasureCleanup: RecordsErasureCleanup {

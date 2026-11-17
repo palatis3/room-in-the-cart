@@ -336,11 +336,23 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         return ReadableArchive.heading(record, locale: recordsInterfaceLocale) + "\n" + body
     }
 
-    enum ImportEntry { case recordsFile, recipeFile, manualRecipe }
+    enum ImportEntry {
+        case recordsFile, recipeFile, manualRecipe, recipePage
+        var usesFiles: Bool { self == .recordsFile || self == .recipeFile }
+    }
     struct ImportPresentation: Identifiable {
         let id = UUID()
         let entry: ImportEntry
         fileprivate let authorize: Authorization
+        fileprivate var correction: RecipeCorrection?
+        fileprivate var savedRecipe: RecoveredRecord?
+        fileprivate var savedRecipeContents: ImportedRecipe?
+        var initialRecipe: ImportedRecipe? { correction?.recipe ?? savedRecipeContents }
+    }
+    fileprivate struct RecipeCorrection {
+        let recipe: ImportedRecipe
+        let row: ArchiveIdentity
+        let reviewDigest: String
     }
     @Published private(set) var importPresentation: ImportPresentation?
 
@@ -352,6 +364,31 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             return presentation
         } catch { fail(error); return nil }
     }
+    func beginSavedRecipeEdit(_ saved: RecoveredRecord) async {
+        guard !busy, saved.record.kind == .recipe, let bytes = saved.record.nativePayload else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            let authorize = try authorization()
+            guard try await registry.refreshList().contains(saved) else { throw ArchiveError.staleReview }
+            try await validateRecord(saved.record)
+            try requireAuthorization(authorize)
+            let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: bytes).validated()
+            importPresentation = ImportPresentation(entry: .manualRecipe, authorize: authorize,
+                savedRecipe: saved, savedRecipeContents: recipe)
+        } catch { fail(error, reveal: true) }
+    }
+    @discardableResult func beginRecipeCorrection(_ row: RecoveryReviewRow) -> ImportPresentation? {
+        guard !busy, let review, review.canApply, [.absent, .sibling].contains(row.disposition),
+              review.rows.contains(row), let authorize = reviewAuthorization,
+              let recipe = recipeReport?.recipes.first(where: { $0.id == row.record.revision }) else { return nil }
+        guard authorize() else { invalidateForSourceErasure(); return nil }
+        let correction = RecipeCorrection(recipe: recipe, row: row.id, reviewDigest: review.envelope.canonicalPayloadDigest)
+        let presentation = ImportPresentation(entry: .manualRecipe, authorize: authorize, correction: correction)
+        importPresentation = presentation
+        return presentation
+    }
+
     func dismissImport(_ presentation: ImportPresentation) {
         if importPresentation?.id == presentation.id { importPresentation = nil }
     }
@@ -361,7 +398,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         return true
     }
     func finishFileImport(_ result: Result<URL, Error>, from presentation: ImportPresentation) async {
-        guard presentation.entry != .manualRecipe, accepts(presentation) else { return }
+        guard presentation.entry.usesFiles, accepts(presentation) else { return }
         dismissImport(presentation)
         switch result {
         case .success(let url):
@@ -388,23 +425,11 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             try requireAuthorization(authorize)
             try ArchiveCodec.preflight(data)
             if recipes {
-                let existing = try await registry.refreshList().compactMap { record -> ImportedRecipe? in
-                    guard record.record.kind == .recipe, let bytes = record.record.nativePayload else { return nil }
-                    return try? JSONDecoder().decode(ImportedRecipe.self, from: bytes)
+                if let (report, records) = try RecipeDraftFile.readIfPresent(data) {
+                    try await stageRecipeReview(report, records: records, authorize: authorize)
+                } else {
+                    try await stageRecipeDocument(data, authorize: authorize)
                 }
-                try requireAuthorization(authorize)
-                let report = try RecipeImporter.stage(data, existing: existing)
-                let records = try report.recipes.map { try $0.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0)) }
-                if records.isEmpty {
-                    recipeReport = report
-                    let message = recordsText(report.skippedRows == 0 ? "These recipes are already saved." : "No new recipes were saved.")
-                    publishOutcome([message, report.localizedSummary, report.localizedUnsupportedFields].compactMap { $0 }.joined(separator: "\n"))
-                    return
-                }
-                let envelope = try ArchiveCodec.make(records: records, kind: .personalRecovery, origin: "recipe-library-v1", revision: ArchiveCodec.digest(try ArchiveCodec.canonical(report.recipes)))
-                try await stage(envelope, authorize: authorize)
-                try requireAuthorization(authorize)
-                recipeReport = report
             } else {
                 guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
                     throw ArchiveError.malformed
@@ -414,15 +439,126 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
         } catch { fail(error, reveal: true) }
     }
+    func importRecipePage(_ address: String, from presentation: ImportPresentation,
+                          read: (String) async throws -> Data = RecipePageReader.document(at:)) async throws {
+        guard !busy, presentation.entry == .recipePage, accepts(presentation) else { throw ArchiveError.unavailable }
+        let data = try await read(address)
+        try Task.checkCancellation()
+        guard !busy, accepts(presentation) else { throw ArchiveError.unavailable }
+        busy = true
+        error = nil
+        defer { busy = false }
+        try await stageRecipeDocument(data, authorize: presentation.authorize)
+    }
+
+    private func stageRecipeDocument(_ data: Data, authorize: @escaping Authorization) async throws {
+        let saved = try await registry.refreshList()
+        try Task.checkCancellation()
+        var correctedSources = Set<String>()
+        let existing = saved.compactMap { record -> ImportedRecipe? in
+            guard record.record.kind == .recipe, let bytes = record.record.nativePayload else { return nil }
+            let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: bytes)
+            if record.record.origin == "recipe-library-v1", record.record.parentRevision == record.record.id,
+               recipe?.id == record.record.revision { correctedSources.insert(record.record.id) }
+            return recipe
+        }
+        try requireAuthorization(authorize)
+        let report = try RecipeImporter.stage(data, existing: existing, existingSourceIDs: correctedSources)
+        let records = try report.recipes.map { try $0.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0)) }
+        if records.isEmpty {
+            discardImportReview()
+            recipeReport = report
+            let message = recordsText(report.skippedRows == 0 ? "These recipes are already saved." : "No new recipes were saved.")
+            publishOutcome([message, report.localizedSummary, report.localizedUnsupportedFields].compactMap { $0 }.joined(separator: "\n"))
+            return
+        }
+        try await stageRecipeReview(report, records: records, authorize: authorize)
+    }
+
     func stageManualRecipe(_ recipe: ImportedRecipe, from presentation: ImportPresentation) async throws {
         guard !busy, presentation.entry == .manualRecipe, accepts(presentation) else { throw ArchiveError.unavailable }
-        busy = true; error = nil; discardImportReview()
+        busy = true; error = nil
         defer { busy = false }
-        let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
-        let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery,
-                                             origin: record.origin, revision: record.revision)
-        try await stage(envelope, authorize: presentation.authorize)
+        if let correction = presentation.correction {
+            try await restageCorrectedRecipe(recipe, correction: correction, authorize: presentation.authorize)
+            return
+        }
+        var record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
+        if let saved = presentation.savedRecipe {
+            guard try await registry.refreshList().contains(saved), accepts(presentation) else { throw ArchiveError.staleReview }
+            // Bind the new revision to the original source and its erasure history.
+            record.origin = saved.record.origin
+            record.id = saved.record.id
+            record.parentRevision = record.id == record.revision ? nil : record.id
+        }
+        try await stageRecipeReview(.manual(recipe), records: [record], authorize: presentation.authorize)
     }
+    private func restageCorrectedRecipe(_ recipe: ImportedRecipe, correction: RecipeCorrection,
+                                        authorize: @escaping Authorization) async throws {
+        guard let review, review.canApply, var report = recipeReport,
+              review.envelope.canonicalPayloadDigest == correction.reviewDigest,
+              let row = review.rows.first(where: { $0.id == correction.row && [.absent, .sibling].contains($0.disposition) }),
+              let index = report.recipes.firstIndex(of: correction.recipe) else { throw ArchiveError.staleReview }
+
+        var updated = try recipe.archiveRecord(origin: row.record.origin, savedAt: Date(timeIntervalSince1970: 0))
+        guard !report.recipes.indices.contains(where: { $0 != index && report.recipes[$0].id == updated.revision }) else {
+            throw ArchiveError.conflict
+        }
+        // Keep the source file identity through corrections, so retry and erasure still target the same recipe.
+        updated.id = row.record.id
+        updated.parentRevision = updated.revision == updated.id ? nil : updated.id
+        report.recipes[index] = recipe
+        let records = review.rows.map { $0.id == row.id ? updated : $0.record }
+        try await stageRecipeReview(report, records: records, authorize: authorize)
+    }
+
+    func skipRecipe(_ row: RecoveryReviewRow) async {
+        guard !busy, let review, review.canApply, review.rows.count > 1, review.rows.contains(row),
+              var report = recipeReport, let authorize = reviewAuthorization,
+              let index = report.recipes.firstIndex(where: { $0.id == row.record.revision }) else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            try requireAuthorization(authorize)
+            report.recipes.remove(at: index)
+            report.skippedRows += 1
+            try await stageRecipeReview(report, records: review.rows.filter { $0.id != row.id }.map(\.record), authorize: authorize)
+        } catch { fail(error) }
+    }
+
+    private func stageRecipeReview(_ report: RecipeImportReport, records: [ArchiveRecord],
+                                   authorize: @escaping Authorization) async throws {
+        let envelope = try ArchiveCodec.make(records: records, kind: .personalRecovery, origin: "recipe-library-v1",
+                                             revision: ArchiveCodec.digest(try ArchiveCodec.canonical(report.recipes)))
+        try await stage(envelope, authorize: authorize)
+        try requireAuthorization(authorize)
+        recipeReport = report
+    }
+
+    func prepareRecipeDraft() async -> Bool {
+        guard !busy, recipeReport != nil, let review, review.canApply, let authorize = reviewAuthorization else { return false }
+        busy = true
+        defer { busy = false }
+        do {
+            try requireAuthorization(authorize)
+            let current = try await registry.review(review.envelope)
+            try requireAuthorization(authorize)
+            guard self.review?.envelope.canonicalPayloadDigest == review.envelope.canonicalPayloadDigest,
+                  current.canApply, current.registryGeneration == review.registryGeneration else { throw ArchiveError.staleReview }
+            let bytes = try RecipeDraftFile.encode(review.rows.map(\.record))
+            let digest = review.envelope.canonicalPayloadDigest
+            let stillReviewing: Authorization = { [weak self] in
+                authorize() && self?.review?.envelope.canonicalPayloadDigest == digest
+            }
+            dismissPreparedFile()
+            preparedName = "Recipe-review"
+            preparedIsPrivate = true
+            exportContext = ExportContext(authorize: stillReviewing, backup: nil, selectedRecords: [], disclosedMedia: [:], recoveredCopyIDs: [])
+            preparedDocument = RecordsFileDocument(data: bytes, kind: .recipeDraft)
+            return true
+        } catch { fail(error, reveal: true); return false }
+    }
+
     private var reviewAuthorization: Authorization?
     private func stage(_ envelope: ArchiveEnvelope, authorize: @escaping Authorization) async throws {
         for record in envelope.payload.records { try await validateRecord(record); try requireAuthorization(authorize) }
@@ -438,6 +574,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
         }
         let staged = try await registry.review(envelope)
+        try Task.checkCancellation()
         try requireAuthorization(authorize)
         reviewAuthorization = authorize
         review = staged
@@ -665,7 +802,13 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     func finishFileSave(_ id: UUID, result: Result<Void, Error>, at date: Date = .now) async {
         guard activeFileSave?.id == id, activeFileSave?.completing == false, let context = exportContext else { return }
         activeFileSave?.completing = true
-        defer { if activeFileSave?.id == id { activeFileSave = nil } }
+        let savingDraft = preparedDocument?.kind == .recipeDraft
+        defer {
+            if activeFileSave?.id == id {
+                activeFileSave = nil
+                if savingDraft { dismissPreparedFile() }
+            }
+        }
         guard context.authorize() else { invalidateForSourceErasure(); return }
         if case let .failure(error) = result {
             if Self.fileSelectionCancelled(error) {
