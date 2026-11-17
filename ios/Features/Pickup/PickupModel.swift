@@ -356,6 +356,10 @@ struct PickupPersistenceLocation {
     @Published private(set) var saving = false
     @Published private(set) var hasPendingSave = false
     @Published private(set) var pantrySnapshot: PantryRepository.Snapshot?
+    @Published private(set) var pantryReadIsCurrent = false
+    /// Remains true if private data is cleared, so views cannot fall back to an
+    /// old journey's copied stock after this model has observed cutover.
+    @Published private(set) var pantryIsActive = false
     @Published var error: String?
     private var store: ComparisonStore?
     private let databaseURL: URL?
@@ -441,15 +445,61 @@ struct PickupPersistenceLocation {
     }
     var allocation: StockAllocationResult? {
         guard let value = journey else { return nil }
-        if pantrySnapshot != nil {
+        if pantryIsActive {
             return try? liveStockProjection(for: value.id)?.legacyAllocation()
         }
         return try? value.carryoverAllocation(at: clock())
     }
     func liveStockProjection(for journeyID: UUID) throws -> PantryLiveStockProjection? {
         guard let snapshot = pantrySnapshot else { return nil }
-        guard pantryConfiguration?.authorize() == true, let mapping = pantryReaderMapping else { throw PickupModelError.missing }
+        guard pantryConfiguration?.authorize() == true, pantryReadIsCurrent,
+              let mapping = pantryReaderMapping else { throw PickupModelError.missing }
         return try PantryLiveStockProjection.build(snapshot: snapshot, mapping: mapping, journeyID: journeyID, at: clock())
+    }
+    /// All private pantry entry points use this factory so an independent count
+    /// updates the pickup/cook read basis after the repository releases its lease.
+    func makePantryModel() -> PantryModel? {
+        guard let configuration = pantryConfiguration, let store, configuration.authorize(),
+              !hasPendingSave, !saving, pantrySnapshot != nil else { return nil }
+        return PantryModel(repository: PantryRepository(store: store, mutationGate: configuration.gate,
+            authorize: configuration.authorize), clock: clock, didSave: { [weak self] in
+                _ = await self?.refreshPantryStock()
+            })
+    }
+
+    /// Unlike load(), refreshes an already-ready model. It never replaces a
+    /// pending submission, acknowledges it, or copies its old authorization.
+    @discardableResult func refreshPantryStock() async -> Bool {
+        guard let configuration = pantryConfiguration, let store else { return false }
+        pantryReadIsCurrent = false
+        guard !saving, !opening else { return false }
+        saving = true; defer { saving = false }
+        do {
+            let current = try await pantryPort(configuration: configuration, store: store).loadCurrent()
+            let decoded = try current.sources.map { head -> PickupJourney in
+                let value = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
+                try Self.validate(value)
+                guard value.id == head.id, value.savedAt == head.savedAt else { throw PickupModelError.invalid }
+                return value
+            }
+            let mapping = try PantryLegacyMigration.map(originID: current.inventory.state.workspaceID,
+                heads: current.sources, ledger: .unavailable, at: clock())
+            guard configuration.authorize() else { throw PickupModelError.missing }
+            journeys = decoded.sorted { $0.savedAt == $1.savedAt ? $0.id.uuidString < $1.id.uuidString : $0.savedAt > $1.savedAt }
+            storeRevisions = Dictionary(uniqueKeysWithValues: current.sources.map { ($0.id, $0.revision) })
+            pantryReaderMapping = mapping; pantrySnapshot = current.inventory; pantryReadIsCurrent = true; pantryIsActive = true
+            if !journeys.contains(where: { $0.id == selectedID }) { selectedID = journeys.first?.id }
+            ready = true
+            if !hasPendingSave { error = nil }
+            return true
+        } catch {
+            if !configuration.authorize() {
+                journeys = []; storeRevisions = [:]; pantrySnapshot = nil; pantryReaderMapping = nil
+                pending = nil; pendingPantry = nil; hasPendingSave = false; ready = false
+            }
+            self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
+            return false
+        }
     }
     var stockAllocation: StockAllocationResult? { allocation }
     var stockReviewDate: Date { clock() }
@@ -490,6 +540,7 @@ struct PickupPersistenceLocation {
                 let state = try await store.inventoryState()
                 guard configuration.authorize() else { throw PickupModelError.missing }
                 if state.active {
+                    pantryIsActive = true
                     let current = try await pantryPort(configuration: configuration, store: store).loadCurrent()
                     // This map supplies only stable source/need aliases. Live
                     // quantity, pins and claim status come from canonical state;
@@ -497,6 +548,7 @@ struct PickupPersistenceLocation {
                     pantryReaderMapping = try PantryLegacyMigration.map(originID: current.inventory.state.workspaceID,
                         heads: current.sources, ledger: .unavailable, at: clock())
                     pantrySnapshot = current.inventory
+                    pantryReadIsCurrent = true
                     decoded = try current.sources.map { head in
                         let value = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
                         try Self.validate(value)
@@ -516,7 +568,7 @@ struct PickupPersistenceLocation {
             ready = true
             error = pendingPantry == nil ? nil : pantryText("A saved change is waiting for recovery. Retry it or review its saved status.")
         } catch {
-            if pantryConfiguration != nil { journeys = []; pantrySnapshot = nil; pantryReaderMapping = nil; storeRevisions = [:] }
+            if pantryConfiguration != nil { journeys = []; pantrySnapshot = nil; pantryReaderMapping = nil; pantryReadIsCurrent = false; storeRevisions = [:] }
             self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
         }
     }
@@ -1279,7 +1331,7 @@ extension PickupModel {
             return true
         } catch {
             if !configuration.authorize() {
-                journeys = []; storeRevisions = [:]; pantrySnapshot = nil; pantryReaderMapping = nil; pending = nil; pendingPantry = nil
+                journeys = []; storeRevisions = [:]; pantrySnapshot = nil; pantryReaderMapping = nil; pantryReadIsCurrent = false; pending = nil; pendingPantry = nil
                 hasPendingSave = false; ready = false
             }
             self.error = pantryText(pendingPantry?.acknowledgment != nil
@@ -1328,6 +1380,8 @@ extension PickupModel {
         storeRevisions = Dictionary(uniqueKeysWithValues: result.sources.map { ($0.id, $0.revision) })
         pantryReaderMapping = mapping
         pantrySnapshot = result.current
+        pantryReadIsCurrent = true
+        pantryIsActive = true
         if case .select(let id) = entry.selection, journeys.contains(where: { $0.id == id }) { selectedID = id }
         if !journeys.contains(where: { $0.id == selectedID }) { selectedID = journeys.first?.id }
         let acknowledged = try configuration.pendingStore.acknowledgeAdoption(expected: entry,

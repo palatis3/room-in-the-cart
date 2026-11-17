@@ -267,4 +267,73 @@ import SQLite3
         let sourcesAfter = try await f.inventory.list(); XCTAssertEqual(sourcesAfter, sourcesBefore)
         XCTAssertTrue(model.journey?.notes.isEmpty == true)
     }
+
+    func testPantryEditorSaveRefreshesAlreadyReadyPickupCoverageWithoutRewritingLegacyCount() async throws {
+        let f = try await fixture(), pickup = await model(f)
+        let pantry = try XCTUnwrap(pickup.makePantryModel())
+        await pantry.load()
+        let lot = try XCTUnwrap(pantry.snapshot?.lots.first { $0.name == "Freezer wraps" })
+        await pantry.prepare(lotID: lot.id, action: .recount("3", .count))
+        XCTAssertNotNil(pantry.review)
+        await pantry.confirmReview(acknowledgingReservations: true)
+        XCTAssertEqual(pantry.notice, .saved)
+        XCTAssertTrue(pickup.ready); XCTAssertTrue(pickup.pantryReadIsCurrent)
+        XCTAssertEqual(pickup.allocation?.demands.first?.allocated, try Rational(3))
+        XCTAssertEqual(pickup.allocation?.demands.first?.shortfall, try Rational(3))
+        XCTAssertEqual(pickup.journey?.stockLots.first(where: { $0.name == "Freezer wraps" })?.usable, try q(8))
+        XCTAssertEqual(pickup.pantrySnapshot?.state, pantry.snapshot?.state)
+    }
+
+    func testCanonicalRefreshPreservesExactUncommittedJournalUntilExplicitDiscard() async throws {
+        let f = try await fixture(), pickup = await model(f)
+        let pantry = try XCTUnwrap(pickup.makePantryModel())
+        await pantry.load()
+        var lock: OpaquePointer? = try writerLock(f.inventoryURL)
+        defer { unlock(&lock) }
+        let saved = await note("Pending original", in: pickup); XCTAssertFalse(saved)
+        let original = try XCTUnwrap(f.pendingStore.read())
+        unlock(&lock)
+        XCTAssertNil(pickup.makePantryModel(), "Resolve pending work before opening another editor.")
+        let lot = try XCTUnwrap(pantry.snapshot?.lots.first { $0.name == "Freezer wraps" })
+        await pantry.prepare(lotID: lot.id, action: .recount("3", .count))
+        await pantry.confirmReview(acknowledgingReservations: true)
+        XCTAssertEqual(pantry.notice, .saved)
+        XCTAssertTrue(pickup.hasPendingSave); XCTAssertTrue(pickup.pantryReadIsCurrent)
+        XCTAssertEqual(try f.pendingStore.read(), original)
+        XCTAssertEqual(pickup.allocation?.demands.first?.allocated, try Rational(3))
+        let retried = await pickup.retrySave(); XCTAssertFalse(retried)
+        XCTAssertEqual(try f.pendingStore.read(), original, "Refresh cannot rebase the original reviewed submission.")
+        await pickup.discardPendingSafely()
+        XCTAssertFalse(pickup.hasPendingSave); XCTAssertNil(try f.pendingStore.read())
+        XCTAssertTrue(pickup.journey?.notes.isEmpty == true)
+        XCTAssertEqual(pickup.allocation?.demands.first?.allocated, try Rational(3))
+    }
+
+    func testBusyRefreshWithholdsOldCoverageUntilFreshSnapshotCanBeRead() async throws {
+        let f = try await fixture(), pickup = await model(f)
+        XCTAssertNotNil(pickup.allocation)
+        let lease = try f.gate.beginMigration()
+        let blocked = await pickup.refreshPantryStock()
+        XCTAssertFalse(blocked); XCTAssertFalse(pickup.pantryReadIsCurrent)
+        XCTAssertNil(pickup.allocation, "A failed refresh must not silently display old confirmed coverage.")
+        f.gate.endMigration(lease)
+        let refreshed = await pickup.refreshPantryStock()
+        XCTAssertTrue(refreshed); XCTAssertTrue(pickup.pantryReadIsCurrent)
+        XCTAssertEqual(pickup.allocation?.demands.first?.allocated, try Rational(6))
+    }
+
+    func testCanonicalRefreshAfterPrivateAccessLossClearsVisibleFood() async throws {
+        let f = try await fixture(), instant = now
+        var allowed = true
+        let pickup = PickupModel(store: f.inventory, clock: { instant }, pantry: .init(ledger: f.ledger,
+            pendingStore: f.pendingStore, gate: f.gate, authorize: { allowed }))
+        f.cleanup.track(pickup)
+        await pickup.load(); XCTAssertNotNil(pickup.allocation)
+        allowed = false
+        let refreshed = await pickup.refreshPantryStock()
+        XCTAssertFalse(refreshed); XCTAssertFalse(pickup.ready); XCTAssertFalse(pickup.pantryReadIsCurrent)
+        XCTAssertTrue(pickup.pantryIsActive, "Private access loss must not select legacy stock readers after cutover.")
+        XCTAssertTrue(pickup.journeys.isEmpty); XCTAssertNil(pickup.pantrySnapshot)
+        XCTAssertNil(pickup.allocation); XCTAssertNil(pickup.makePantryModel())
+    }
 }

@@ -66,6 +66,58 @@ struct PantryHomeView: View {
         }
         .navigationTitle(pantryText("My Pantry"))
         .privacySensitive()
+
+        .navigationDestination(for: PantryDestination.self) { destination in
+            switch destination {
+            case .lot(let id):
+                PantryLotView(model: model, lotID: id, accessAllowed: accessAllowed) { sheet = .recount(id) }
+            }
+        }
+        .modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet) {
+            resultFocused = true
+        })
+    }
+}
+
+/// Shared canonical lot entry for My Pantry and live pickup readers. A source
+/// alias never becomes a new acquisition: every action names this canonical ID.
+struct PantryLotEntryView: View {
+    @ObservedObject var model: PantryModel
+    let lotID: UUID
+    let accessAllowed: Bool
+    var availabilityNeedsReview = false
+    @State private var sheet: PantrySheet?
+
+    var body: some View {
+        PantryLotView(model: model, lotID: lotID, accessAllowed: accessAllowed,
+                      availabilityNeedsReview: availabilityNeedsReview) { sheet = .recount(lotID) }
+            .safeAreaInset(edge: .bottom) {
+                if accessAllowed, model.pending != nil {
+                    Button(pantryText("Review pending save")) { sheet = .review }
+                        .frame(minHeight: 44).buttonStyle(.borderedProminent)
+                } else if accessAllowed, model.phase != .ready, model.phase != .accessDenied {
+                    Button(pantryText("Refresh pantry")) { Task { await model.load() } }
+                        .frame(minHeight: 44).disabled(model.busy)
+                }
+            }
+            .navigationBarBackButtonHidden(model.busy || model.pending != nil)
+            .interactiveDismissDisabled(model.busy || model.pending != nil)
+            .modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet,
+                                             availabilityNeedsReview: availabilityNeedsReview))
+    }
+}
+
+/// One lifecycle keeps add/recount/review behavior and access-loss redaction the
+/// same regardless of the reader that opened a lot.
+private struct PantryEntryPresentation: ViewModifier {
+    @ObservedObject var model: PantryModel
+    let accessAllowed: Bool
+    @Binding var sheet: PantrySheet?
+    var availabilityNeedsReview = false
+    var didSave: () -> Void = {}
+
+    func body(content: Content) -> some View {
+        content
         .task(id: accessAllowed) {
             if accessAllowed { await model.load() } else { sheet = nil; model.accessLost() }
         }
@@ -76,32 +128,28 @@ struct PantryHomeView: View {
             if id != nil && accessAllowed { sheet = .review }
         }
         .onChange(of: model.savedLotID) { _, id in
-            if id != nil { sheet = nil; resultFocused = true }
+            if id != nil { sheet = nil; didSave() }
         }
         .onChange(of: model.phase) { _, phase in
             if phase == .accessDenied { sheet = nil }
-        }
-        .navigationDestination(for: PantryDestination.self) { destination in
-            switch destination {
-            case .lot(let id):
-                PantryLotView(model: model, lotID: id, accessAllowed: accessAllowed) { sheet = .recount(id) }
-            }
         }
         .sheet(item: Binding(get: { accessAllowed && model.phase != .accessDenied ? sheet : nil }, set: { sheet = $0 })) { value in
             NavigationStack {
                 switch value {
                 case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
                 case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
-                case .review: PantryReviewView(model: model, accessAllowed: accessAllowed)
+                case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,
+                                                     availabilityNeedsReview: availabilityNeedsReview)
                 }
             }
         }
     }
 }
 
-private struct PantryLotSummary: View {
+struct PantryLotSummary: View {
     let lot: InventoryLot
     let availability: InventoryLotAvailability?
+    var availabilityNeedsReview = false
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(lot.name).font(.headline)
@@ -109,8 +157,8 @@ private struct PantryLotSummary: View {
             Text(pantryFormat("Batch %@", String(lot.id.uuidString.suffix(8))))
                 .font(.caption)
             LabeledContent(pantryText("Reserved"), value: pantryQuantity(availability?.held))
-            LabeledContent(pantryText("Available for other meals"), value: pantryQuantity(availability?.free))
-            if availability == nil || availability?.issues.isEmpty == false {
+            LabeledContent(pantryText("Available for other meals"), value: pantryQuantity(availabilityNeedsReview ? nil : availability?.free))
+            if availabilityNeedsReview || availability == nil || availability?.issues.isEmpty == false {
                 Text(pantryText("Availability needs review. Unknown food is not counted as free."))
             }
             LabeledContent(pantryText("Last quantity confirmation"), value: lot.confirmedAt.formatted(date: .abbreviated, time: .shortened))
@@ -122,6 +170,7 @@ private struct PantryLotView: View {
     @ObservedObject var model: PantryModel
     let lotID: UUID
     let accessAllowed: Bool
+    var availabilityNeedsReview = false
     let recount: () -> Void
     @AccessibilityFocusState private var resultFocused: Bool
     private var lot: InventoryLot? { accessAllowed ? model.snapshot?.lots.first { $0.id == lotID } : nil }
@@ -129,7 +178,8 @@ private struct PantryLotView: View {
         Form {
             if let lot {
                 Section {
-                    PantryLotSummary(lot: lot, availability: model.snapshot?.availability.lots.first { $0.id == lotID })
+                    PantryLotSummary(lot: lot, availability: model.snapshot?.availability.lots.first { $0.id == lotID },
+                                     availabilityNeedsReview: availabilityNeedsReview)
                     LabeledContent(pantryText("Storage location"), value: pantryLocationName(lot.location))
                     if let opened = lot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
@@ -151,6 +201,11 @@ private struct PantryLotView: View {
                     Text(pantryText("Have enough and Some left replace the old count with an unknown amount. Reservations stay protected and may need review."))
                 }.disabled(!model.canEdit)
                 if let notice = model.notice { Text(pantryNotice(notice)).accessibilityFocused($resultFocused) }
+            } else if !accessAllowed {
+                Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+            } else if model.phase != .ready {
+                Text(pantryPhase(model.phase))
+                if model.busy { ProgressView(pantryText("Working…")) }
             } else { Text(pantryText("This food is unavailable. Return to My Pantry and refresh.")) }
         }
         .navigationTitle(lot?.name ?? pantryText("Pantry food"))
@@ -238,6 +293,7 @@ private struct PantryFoodEditor: View {
 private struct PantryReviewView: View {
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
+    var availabilityNeedsReview = false
     @Environment(\.dismiss) private var dismiss
     @State private var acknowledged = false
     var body: some View {
@@ -245,7 +301,8 @@ private struct PantryReviewView: View {
             if accessAllowed, let review = model.review {
                 Section(pantryText("Proposed food record")) {
                     PantryLotSummary(lot: review.proposedLot,
-                        availability: review.proposedAvailability.lots.first { $0.id == review.command.lotID })
+                        availability: review.proposedAvailability.lots.first { $0.id == review.command.lotID },
+                        availabilityNeedsReview: availabilityNeedsReview)
                     LabeledContent(pantryText("Storage location"), value: pantryLocationName(review.proposedLot.location))
                     if let opened = review.proposedLot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))

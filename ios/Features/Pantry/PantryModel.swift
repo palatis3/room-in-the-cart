@@ -25,11 +25,14 @@ final class PantryModel: ObservableObject {
     @Published private(set) var savedLotID: UUID?
     private let repository: PantryRepository
     private let clock: () -> Date
+    private let didSave: (@MainActor () async -> Void)?
     private var generation = UUID()
 
-    init(repository: PantryRepository, clock: @escaping () -> Date = Date.init) {
+    init(repository: PantryRepository, clock: @escaping () -> Date = Date.init,
+         didSave: (@MainActor () async -> Void)? = nil) {
         self.repository = repository
         self.clock = clock
+        self.didSave = didSave
     }
 
     var canEdit: Bool { phase == .ready && snapshot != nil && !busy && pending == nil && review == nil && !requiresFreshReview }
@@ -143,6 +146,7 @@ final class PantryModel: ObservableObject {
             guard token == generation else { return }
             snapshot = result.current; phase = .ready; self.pending = nil; review = nil
             requiresFreshReview = false; notice = .saved; savedLotID = pending.command.lotID
+            await didSave?()
         } catch {
             guard token == generation else { return }
             fail(error, saving: true)
