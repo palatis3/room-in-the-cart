@@ -261,6 +261,14 @@ private enum LedgerDeletionJournal {
     }
 
     @discardableResult
+    func saveMealPreferences(_ settings: MealPreferenceSettings, expectedRevision: UUID?, workspaceID: UUID,
+                             authorize: @escaping @MainActor () -> Bool) async -> Bool {
+        await change(key: "meal-preferences", onShopSelected: nil, authorize: authorize) { candidate in
+            guard self.sourceWorkspaceID == workspaceID else { throw LedgerModelError.notReady }
+            try candidate.dinnerPlanning.updateMealPreferences(settings, expectedRevision: expectedRevision)
+        }
+    }
+
     func change(key: String, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
         await change(key: key, onShopSelected: nil, edit)
     }

@@ -40,6 +40,14 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     if let shop = model.shop { Text(shop.title).font(.headline) }
                     Text(dinnerText("Manual dinners and calendar changes stay available on Free. A preview changes nothing until you apply it."))
                 }
+                if let liveLedger, liveLedger.ready, model.store === liveLedger {
+                    Section {
+                        NavigationLink(dinnerText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: liveLedger) }
+                            .accessibilityIdentifier("dinner.mealPreferences")
+                        NavigationLink(tonightText("Tonight")) { TonightEntry() }
+                            .accessibilityIdentifier("dinner.tonight")
+                    }
+                }
                 if model.shop == nil {
                     Section {
                         Text(dinnerText("Start a pickup to plan dinners and review the groceries you’ll need."))
