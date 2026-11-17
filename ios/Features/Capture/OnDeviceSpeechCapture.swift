@@ -5,6 +5,7 @@ import Speech
 /// In-memory buffers go only to Apple's explicitly on-device recognizer. No file, HTTP or analytics path exists.
 @MainActor final class OnDeviceSpeechCapture: CaptureSpeechService {
     private let bundle: Bundle
+    private let punctuatesList: Bool
     private var recognizer: SFSpeechRecognizer?
     private var engine: AVAudioEngine?
     private var request: SFSpeechAudioBufferRecognitionRequest?
@@ -16,7 +17,11 @@ import Speech
     private let audio: CookAudioSession
     private var audioLease: CookCaptureAudioRequest?
 
-    init(bundle: Bundle = .main, audio: CookAudioSession = .shared) { self.bundle = bundle; self.audio = audio }
+    init(bundle: Bundle = .main, audio: CookAudioSession = .shared, punctuatesList: Bool = false) {
+        self.bundle = bundle
+        self.audio = audio
+        self.punctuatesList = punctuatesList
+    }
 
     func begin(localeIdentifier: String) async throws -> AsyncThrowingStream<SpeechCaptureUpdate, Error> {
         stop(); let run = runID
@@ -56,6 +61,7 @@ import Speech
             request.requiresOnDeviceRecognition = true
             request.shouldReportPartialResults = true
             request.taskHint = .dictation
+            if punctuatesList { request.addsPunctuation = true }
             let format = engine.inputNode.outputFormat(forBus: 0)
             guard format.sampleRate > 0, format.channelCount > 0 else { throw CaptureFailure.audioUnavailable }
             self.recognizer = recognizer; self.engine = engine; self.request = request

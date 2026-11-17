@@ -42,7 +42,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             ?? (initialSource == .paste && !initialText.isEmpty ? CaptureEvidence(text: initialText, source: .paste,
                 uncertainLines: [], sourceImageData: nil, previewImageData: nil) : nil)
         let model = CaptureModel(initialText: existingCapture?.text ?? initialText, localeIdentifier: localeIdentifier,
-            id: existingCapture?.id ?? UUID(), speech: OnDeviceSpeechCapture(), ocr: OnDeviceTextCapture(), initialEvidence: evidence,
+            id: existingCapture?.id ?? UUID(), speech: OnDeviceSpeechCapture(punctuatesList: !requestMode), ocr: OnDeviceTextCapture(), initialEvidence: evidence,
             naturalListMode: existingCapture.map { $0.naturalBatch != nil })
         if existingCapture != nil { model.confirmed = true }
         _model = StateObject(wrappedValue: model)

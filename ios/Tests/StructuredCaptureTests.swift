@@ -36,6 +36,15 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(try StructuredCaptureParser.lines(text, destination: destination).count, 1)
     }
 
+    func testNaturalDictationPunctuationPreservesEvidenceAndQuotedProductNames() throws {
+        let spoken = "milk and bread."
+        let proposal = try StructuredCaptureParser.naturalList(spoken, destination: destination)
+        XCTAssertEqual(proposal.lines.map(\.name), ["milk", "bread"])
+        XCTAssertEqual(proposal.lines.map(\.originalText), ["milk", "bread."])
+        XCTAssertEqual(try StructuredCaptureParser.naturalList("“Yum!”", destination: destination).lines.first?.name, "“Yum!”")
+        XCTAssertEqual(try StructuredCaptureParser.lines("bread.", destination: destination).first?.name, "bread.")
+    }
+
     func testNaturalCaptureDistinguishesUnspecifiedAmountsFromUnclearSpokenNumbers() throws {
         let list = try StructuredCaptureParser.naturalList("bread, two to three apples, 1,000 tortillas, 0 eggs", destination: destination)
         XCTAssertEqual(list.lines.count, 4)

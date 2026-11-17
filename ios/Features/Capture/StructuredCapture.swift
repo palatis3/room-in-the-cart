@@ -101,6 +101,10 @@ enum StructuredCaptureParser {
 
     private static func parse(_ original: String, destination: String, naturalList: Bool = false) -> CaptureLineDraft {
         var body = original.trimmingCharacters(in: .whitespacesAndNewlines)
+        // The recognizer may append sentence punctuation. Keep the exact span in originalText.
+        if naturalList, let last = body.last, ".!?".contains(last) {
+            body.removeLast()
+        }
         var purpose = "", requestedDestination = "", exclusions = ""
         // Split bounded suffix labels in their actual order, preserving every source word.
         let source = body
