@@ -10,16 +10,28 @@ import UniformTypeIdentifiers
 enum ReceiptDocumentKind: String, Codable, Sendable { case pdf, image, text }
 enum ReceiptDocumentFailure: Error, Equatable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout }
 
-struct ReceiptDocumentBytes: Sendable, Transferable {
-    static let maximumBytes = 10_000_000
-    let data: Data
-    let kind: ReceiptDocumentKind
+enum ReceiptPhotoSelection: Sendable, Transferable {
+    case selected(ReceiptDocumentBytes)
+    case rejected(ReceiptDocumentFailure)
 
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(importedContentType: .image) { received in
-            try Self.read(received.file, kind: .image)
+            do { return Self.selected(try ReceiptDocumentBytes.read(received.file, kind: .image)) }
+            catch let failure as ReceiptDocumentFailure { return Self.rejected(failure) }
         }
     }
+
+    var bytes: ReceiptDocumentBytes {
+        get throws {
+            switch self { case .selected(let input): return input; case .rejected(let failure): throw failure }
+        }
+    }
+}
+
+struct ReceiptDocumentBytes: Sendable {
+    static let maximumBytes = 10_000_000
+    let data: Data
+    let kind: ReceiptDocumentKind
 
     static func read(_ url: URL, kind: ReceiptDocumentKind) throws -> Self {
         do { return Self(data: try readRegularFile(at: url, maximumBytes: maximumBytes), kind: kind) }
@@ -54,7 +66,11 @@ struct ReceiptDocumentBytes: Sendable, Transferable {
 struct ReceiptDocumentPage: Identifiable, Sendable {
     let id: Int
     let method: ReceiptAcquisition.DocumentLine.Method
-    let lines: [String]
+    struct Line: Identifiable, Sendable {
+        let id: Int
+        let text: String
+    }
+    let lines: [Line]
 }
 
 struct ExtractedReceiptDocument: Sendable {
@@ -68,9 +84,9 @@ struct ExtractedReceiptDocument: Sendable {
         let id = ReceiptAcquisition.identity(["document", digest.base64EncodedString()])
         var rows: [ScanReceiptLine] = []
         for page in pages {
-            for (offset, text) in page.lines.enumerated() where selection.contains(.init(page: page.id, line: offset + 1)) {
-                let place = ReceiptAcquisition.DocumentLine(method: page.method, stage: stage, page: page.id, line: offset + 1)
-                var row = ScanReceiptLine(id: ReceiptAcquisition.lineID(receiptID: id, ordinal: place.ordinal), originalText: text)
+            for line in page.lines where selection.contains(.init(page: page.id, line: line.id)) {
+                let place = ReceiptAcquisition.DocumentLine(method: page.method, stage: stage, page: page.id, line: line.id)
+                var row = ScanReceiptLine(id: ReceiptAcquisition.lineID(receiptID: id, ordinal: place.ordinal), originalText: line.text)
                 row.documentLine = place
                 rows.append(row)
             }
@@ -111,8 +127,12 @@ struct ReceiptDocumentReader: Sendable {
         func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, text: String) throws -> ReceiptDocumentPage {
             characterCount += text.count
             guard characterCount <= 100_000, !text.contains("\0") else { throw ReceiptDocumentFailure.characters }
-            let lines = text.split(whereSeparator: \.isNewline).map(String.init).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-            guard lines.count <= 200 else { throw ReceiptDocumentFailure.lineLimit }
+            var lines: [ReceiptDocumentPage.Line] = []
+            for (index, row) in text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated() {
+                guard !row.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
+                guard index < 200 else { throw ReceiptDocumentFailure.lineLimit }
+                lines.append(.init(id: index + 1, text: String(row)))
+            }
             return .init(id: number, method: method, lines: lines)
         }
         switch input.kind {
