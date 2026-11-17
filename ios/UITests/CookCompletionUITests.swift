@@ -24,6 +24,7 @@ import XCTest
         tap(app.buttons["ledgerCreateShop"])
         tap(app.buttons["dinnerManual"])
         fill(app.textFields["ledgerDinnerTitle"], "Actual rice dinner")
+        fill(app.textFields["ledgerDinnerServings"], "2")
         let ingredient = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH 'ingredient.' AND identifier ENDSWITH '.name'")).firstMatch
         fill(ingredient, "Rice")
         tap(app.buttons["ledgerReviewDinner"]); tap(app.buttons["dinnerApply"])
