@@ -188,6 +188,11 @@ def matrix(inventory=None, *, github_mac_only=False):
         "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 7,
     }
     m4_slots = {
+        # Dinner hit the same GitHub runtime retirement failure. Shared Records'
+        # runtime queries and owned cleanup also timed out on GitHub. Lanes 3
+        # and 4 finished early while required fixture groups were still running.
+        "DinnerDecisionSheetUITests": 3,
+        "SharedRecordsUITests": 4,
         # Both groups hit the GitHub watchOS runtime retirement guard before tests.
         # These M4 lanes freed first in that batch and use the pinned fixture runtime.
         "SharedCreatedMealUndoUITests-testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple": 0,

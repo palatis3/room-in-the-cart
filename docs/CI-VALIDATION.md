@@ -447,8 +447,8 @@ slot 0. The following jobs share the six M4 slots.
 | Full core UI01, UI03, known-trip quote adoption and Spanish created-meal Undo | 0 |
 | Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 |
 | Contributor balanced-03, core UI10 and delivery stock/purchase | 2 |
-| Delivery recovery/cook/closeout and core UI07 and UI08 | 3 |
-| Core UI02, English expired quote, filled financial fields and Spanish skipped-dinner Undo | 4 |
+| Delivery recovery/cook/closeout, core UI07 and UI08, and Dinner Decision Sheet | 3 |
+| Core UI02, English expired quote, filled financial fields, Spanish skipped-dinner Undo, and Shared Records | 4 |
 | Core UI09, stale quote save and contributor balanced-05 | 5 |
 
 On the November 17 UTC candidate, Spanish created-meal Undo and delivery
@@ -457,9 +457,22 @@ watchOS runtime would not retire. Their unchanged fixture groups now use M4
 slots 0 and 2 on trusted runs. Those lanes freed at 03:02:21 and 03:03:49 UTC,
 while required GitHub fixture jobs were still waiting. A related delivery
 group on M4 passed 7/7 in 12m39s on the required iOS 27.0/24A434 runtime.
-This supports the choice of lanes and avoids the failing setup step on M4;
-the five selected cases and any savings still need hosted verification.
-[Fixture jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/44002671109)
+The next candidate qualified all five moved cases on that runtime with zero
+XCTest runtime warnings.
+[Prior fixtures](https://github.com/palatis3/room-in-the-cart/actions/runs/44002671109) ·
+[Successor fixtures](https://github.com/palatis3/room-in-the-cart/actions/runs/44011632756)
+
+On `f787d310`, Dinner and Shared Records each got a GitHub runner in three
+seconds. Dinner again stopped before XCTest when the watchOS registration did
+not retire. Shared Records passed import, product restore and boot, but XCTest
+results were unavailable; CoreSimulator did not answer the runtime-list
+postcheck and simulator cleanup timed out. Both Records cases passed locally
+using the exact hosted products on iOS 27.0/24A434, with zero runtime warnings.
+The unchanged groups now use M4 lanes 3 and 4 respectively on trusted runs.
+Those lanes finished at 04:25:50 and 04:26:44 UTC while required M2 fixture work
+continued. GitHub-only fallback and privacy-safe Records reporting remain
+unchanged. The new provider assignments still need hosted qualification; total
+runtime on the next combined run is unmeasured.
 
 The English expired-quote editor journey took 13m00s and 17m59s in its last two successful GitHub jobs. Its Spanish counterpart took 7m16s and 5m50s on Bitrise M4. M4 slot 4 finished its final job at least 27 minutes before the core gate in both batches. The English journey now uses that slot on trusted runs, reducing GitHub queue pressure for the wire test and Records fixture. Its selectors and assertions are unchanged. Compare the next English run's elapsed time and the other slot 4 jobs to measure the effect. [English GitHub job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240228) · [Spanish M4 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240529).
 

@@ -63,9 +63,9 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 2), ('bitrise-m4', 2),
             ('bitrise-m4', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('bitrise', 0), ('github', 1), ('bitrise-m4', 2), ('github', 3),
+            ('bitrise', 0), ('github', 1), ('bitrise-m4', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise-m4', 0), ('bitrise', 2), ('bitrise', 2),
-            ('bitrise-m4', 0), ('github', 1),
+            ('bitrise-m4', 0), ('bitrise-m4', 1),
         ])
         self.assertEqual({row['shard']: (row['provider'], row['macos_slot'])
                           for row in fixtures if row['shard'] in {
@@ -96,9 +96,11 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('SharedFoodEditorUITests-testExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 3, 4),
             ('SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 4, 1),
             ('SharedOperationUndoUITests-testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple', 2, 4),
+            ('SharedRecordsUITests', 3, 4),
             ('SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult', 4, 4),
             ('SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption', 0, 0),
-            ('SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction', 0, 5)])
+            ('SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction', 0, 5),
+            ('DinnerDecisionSheetUITests', 1, 3)])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedRecordsUITests'], ['contributor'])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedFallbackUITests'], ['contributor'])
         self.assertEqual(set(fixtures[0]), {'profile', 'shard', 'provider', 'macos_slot'})
