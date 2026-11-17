@@ -10,6 +10,7 @@ func pCook(_ key: String, language: String) -> String {
     let bundle = Bundle.main.path(forResource: code, ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
     return bundle.localizedString(forKey: key, value: key, table: "Pickup")
 }
+
 func pMoney(_ money: Money) -> String { Decimal(money.minorUnits).dividing(by: 100).formatted(.currency(code: "USD")) }
 private extension Decimal { func dividing(by value: Decimal) -> Decimal { self / value } }
 func pExclusions(_ values: [String]) -> String {
@@ -343,17 +344,29 @@ struct PickupPersistenceLocation {
 /// One durable document per journey. Candidate data is published only after SQLite
 /// commits; retry writes the identical encoded candidate and original event IDs.
 @MainActor final class PickupModel: ObservableObject {
+    struct PantryConfiguration {
+        let ledger: LedgerStore
+        let pendingStore: PantryPickupPendingStore
+        let gate: PantryMutationGate
+        let authorize: () -> Bool
+    }
     @Published private(set) var journeys: [PickupJourney] = []
     @Published var selectedID: UUID?
     @Published private(set) var ready = false
     @Published private(set) var saving = false
     @Published private(set) var hasPendingSave = false
+    @Published private(set) var pantrySnapshot: PantryRepository.Snapshot?
     @Published var error: String?
     private var store: ComparisonStore?
     private let databaseURL: URL?
     private let clock: () -> Date
     private let launchArguments: [String]
     private let mutationGate: PantryMutationGate?
+    private let pantryConfiguration: PantryConfiguration?
+    private var pendingPantry: PantryPickupPendingStore.Entry?
+    private var validatingRecoveryOperationID: UUID?
+    var hasPendingPantrySave: Bool { pendingPantry != nil }
+    func isValidatingRecoverySave(_ operationID: UUID) -> Bool { validatingRecoveryOperationID == operationID }
     private var opening = false
     private var storeRevisions: [UUID: Int64] = [:]
     private weak var cookLedger: LedgerModel?
@@ -369,9 +382,11 @@ struct PickupPersistenceLocation {
     // Ephemeral review receipts allow an exact double tap to succeed without another write.
     var appliedStockReviewRevisions: [UUID: Int64] = [:]
     init(store: ComparisonStore? = nil, databaseURL: URL? = nil, clock: @escaping () -> Date = Date.init,
-         launchArguments: [String] = ProcessInfo.processInfo.arguments, mutationGate: PantryMutationGate? = nil) {
+         launchArguments: [String] = ProcessInfo.processInfo.arguments, mutationGate: PantryMutationGate? = nil,
+         pantry: PantryConfiguration? = nil) {
         self.store = store; self.databaseURL = databaseURL; self.clock = clock; self.launchArguments = launchArguments
-        self.mutationGate = mutationGate
+        self.mutationGate = pantry?.gate ?? mutationGate
+        pantryConfiguration = pantry
     }
     var sourceWorkspaceID: UUID? { store?.workspaceID }
     var recoveryLedger: LedgerModel? { cookLedger }
@@ -379,8 +394,13 @@ struct PickupPersistenceLocation {
                                authorize: @escaping @MainActor () -> Bool) async -> Bool {
         await save(value, selecting: false, recoveryOperationID: operationID, authorize: authorize)
     }
-    func retryRecoveryCandidate(operationID: UUID, matches: (PickupJourney) -> Bool) async -> Bool {
+    func retryRecoveryCandidate(operationID: UUID, authorize: (@MainActor () -> Bool)? = nil,
+                                matches: (PickupJourney) -> Bool) async -> Bool {
         guard let pending, pending.recoveryOperationID == operationID, matches(pending.value) else { return false }
+        if let authorize {
+            self.pending = Pending(value: pending.value, payload: pending.payload, requiredRevisions: pending.requiredRevisions,
+                selectsPickup: pending.selectsPickup, recoveryOperationID: operationID, authorize: authorize)
+        }
         return await retrySave()
     }
     var journey: PickupJourney? { journeys.first { $0.id == selectedID } }
@@ -428,6 +448,7 @@ struct PickupPersistenceLocation {
         guard !ready, !opening else { return }
         opening = true; defer { opening = false }
         do {
+            if let configuration = pantryConfiguration, !configuration.authorize() { throw PickupModelError.missing }
             if store == nil {
                 let location = try PickupPersistenceLocation.resolve(databaseURL: databaseURL, arguments: launchArguments) {
                     try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
@@ -443,21 +464,47 @@ struct PickupPersistenceLocation {
                         if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
                     }
                 }
-                store = try ComparisonStore(url: location.databaseURL)
+                store = try ComparisonStore(url: location.databaseURL, inventoryEnabled: pantryConfiguration != nil)
             }
             guard let store else { throw PickupModelError.missing }
             let records = try await store.list()
-            let decoded = try records.map { record -> PickupJourney in
+            var decoded = try records.map { record -> PickupJourney in
                 let value = try JSONDecoder().decode(PickupJourney.self, from: record.payload)
                 guard value.feedback == nil || value.eligibleForFeedback, value.version == 1, value.id == record.id else { throw PickupModelError.unsupported }
                 try Self.validate(value)
                 return value
             }
-            storeRevisions = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0.revision) })
+            var revisions = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0.revision) })
+            if let configuration = pantryConfiguration {
+                guard configuration.authorize(), configuration.pendingStore.inventoryWorkspaceID == store.workspaceID,
+                      configuration.pendingStore.ledgerWorkspaceID == configuration.ledger.workspaceID else { throw PickupModelError.missing }
+                let state = try await store.inventoryState()
+                guard configuration.authorize() else { throw PickupModelError.missing }
+                if state.active {
+                    let current = try await pantryPort(configuration: configuration, store: store).loadCurrent()
+                    pantrySnapshot = current.inventory
+                    decoded = try current.sources.map { head in
+                        let value = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
+                        try Self.validate(value)
+                        guard value.id == head.id, value.savedAt == head.savedAt else { throw PickupModelError.invalid }
+                        return value
+                    }
+                    revisions = Dictionary(uniqueKeysWithValues: current.sources.map { ($0.id, $0.revision) })
+                }
+                if let entry = try configuration.pendingStore.read() {
+                    try restorePantryPending(entry)
+                }
+                guard configuration.authorize() else { throw PickupModelError.missing }
+            }
+            storeRevisions = revisions
             journeys = decoded
             if !decoded.contains(where: { $0.id == selectedID }) { selectedID = decoded.first?.id }
-            ready = true; error = nil
-        } catch { self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.") }
+            ready = true
+            error = pendingPantry == nil ? nil : pantryText("A saved change is waiting for recovery. Retry it or review its saved status.")
+        } catch {
+            if pantryConfiguration != nil { journeys = []; pantrySnapshot = nil; storeRevisions = [:] }
+            self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
+        }
     }
     func archiveSnapshot() async throws -> (workspaceID: UUID, records: [SavedComparison]) {
         if !ready { await load() }
@@ -521,8 +568,10 @@ struct PickupPersistenceLocation {
     }
     @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true,
         recoveryOperationID: UUID? = nil, authorize: (@MainActor () -> Bool)? = nil) async -> Bool {
-        guard ready, !saving, pending == nil, authorize?() != false else { return false }
+        guard ready, !saving, pending == nil, evaluateAuthorization(authorize, operationID: recoveryOperationID) else { return false }
         do {
+            saving = true
+            defer { saving = false }
             let instant = clock()
             var candidate = value; candidate.savedAt = instant
             let previous = journeys.first(where: { $0.id == value.id })
@@ -546,13 +595,56 @@ struct PickupPersistenceLocation {
                 guard let revision = storeRevisions[source] else { throw PickupModelError.missing }
                 revisions[source] = revision
             }
+            if let configuration = pantryConfiguration, let store,
+               try await store.inventoryState().active {
+                guard configuration.authorize(), evaluateAuthorization(authorize, operationID: recoveryOperationID), let pantrySnapshot else { throw PickupModelError.missing }
+                let payload = try encoder.encode(candidate)
+                let sourceRevision = storeRevisions[candidate.id] ?? 0
+                guard sourceRevision < Int64.max else { throw PickupModelError.invalid }
+                let head = PantryLegacyMigration.SourceHead(id: candidate.id,
+                    revision: sourceRevision + 1, payload: payload, savedAt: instant)
+                let review = try await pantryPort(configuration: configuration, store: store)
+                    .prepare(operationID: UUID(), changedHeads: [head], preparedAt: instant)
+                guard review.submission.request.inventoryRevision == pantrySnapshot.state.revision,
+                      revisions.allSatisfy({ (review.sourceRevisions[$0.key] ?? 0) == $0.value }),
+                      configuration.authorize(), evaluateAuthorization(authorize, operationID: recoveryOperationID) else { throw ComparisonStoreError.staleInventory }
+                let selection: PantryPickupPendingStore.Selection = selecting ? .select(candidate.id) : .preserve
+                let staged = Pending(value: candidate, payload: payload, requiredRevisions: revisions,
+                    selectsPickup: selecting, recoveryOperationID: recoveryOperationID, authorize: authorize)
+                let entry: PantryPickupPendingStore.Entry
+                do {
+                    entry = try configuration.pendingStore.save(submission: review.submission, selection: selection,
+                        recoveryOperationID: recoveryOperationID, requiresActionAuthorization: authorize != nil)
+                } catch {
+                    // Atomic bytes may exist even when subsequent protection metadata failed.
+                    if let saved = try? configuration.pendingStore.read(), saved.submission == review.submission,
+                       saved.selection == selection, saved.recoveryOperationID == recoveryOperationID,
+                       saved.requiresActionAuthorization == (authorize != nil) {
+                        pending = staged; pendingPantry = saved; hasPendingSave = true
+                    }
+                    throw error
+                }
+                pending = staged; pendingPantry = entry; hasPendingSave = true
+                saving = false
+                return await retryPantrySave()
+            }
             pending = Pending(value: candidate, payload: try encoder.encode(candidate), requiredRevisions: revisions, selectsPickup: selecting,
                 recoveryOperationID: recoveryOperationID, authorize: authorize)
             hasPendingSave = true
+            saving = false
             return await retrySave()
+        } catch ComparisonStoreError.staleInventory {
+            ready = false; await load()
+            error = pantryText("Food or reservations changed. Refresh and review again before saving.")
+            return false
+        } catch PantryPickupDelta.Failure.staleSource {
+            ready = false; await load()
+            error = pantryText("Food or reservations changed. Refresh and review again before saving.")
+            return false
         } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
     }
     @discardableResult func retrySave() async -> Bool {
+        if pendingPantry != nil { return await retryPantrySave() }
         guard !saving, let pending, let store else { return false }
         let lease: UUID?
         do { lease = try mutationGate?.beginWrite() }
@@ -606,7 +698,13 @@ struct PickupPersistenceLocation {
         await load()
         error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
     }
-    func discardPending() { guard !saving else { return }; pending = nil; hasPendingSave = false; error = nil }
+    func discardPending() {
+        guard !saving else { return }
+        guard pendingPantry == nil else {
+            error = pantryText("Review the saved status before discarding this change."); return
+        }
+        pending = nil; hasPendingSave = false; error = nil
+    }
     func recordFeedback(_ feedback: PickupFeedback?, shopID: UUID, revision: Int64,
                         consent: LocalPickupFeedbackConsent) async -> Bool {
         guard let workspaceID = sourceWorkspaceID, var current = journey else { return false }
@@ -615,6 +713,12 @@ struct PickupPersistenceLocation {
             guard let self, self.sourceWorkspaceID == workspaceID, let selected = self.journey,
                   selected.id == shopID, selected.revision == revision, selected.eligibleForFeedback else { return false }
             return feedback == nil || currentConsent()
+        }
+        if pendingPantry != nil, let pending, pending.recoveryOperationID == nil,
+           pending.value.id == shopID, pending.value.feedback == feedback {
+            self.pending = Pending(value: pending.value, payload: pending.payload, requiredRevisions: pending.requiredRevisions,
+                selectsPickup: pending.selectsPickup, recoveryOperationID: nil, authorize: authorized)
+            return await retrySave()
         }
         current.feedback = feedback
         return await save(current, selecting: false, authorize: authorized)
@@ -811,7 +915,7 @@ struct PickupPersistenceLocation {
             return false
         }
         if hasPendingSave {
-            return await retryRecoveryCandidate(operationID: event.id) { $0.basket?.amendments.last == event }
+            return await retryRecoveryCandidate(operationID: event.id, authorize: authorized) { $0.basket?.amendments.last == event }
         }
         do {
             try review.validate(in: basket, now: clock())
@@ -1080,5 +1184,138 @@ struct PickupPersistenceLocation {
             next.needDetails = previous.recoveryCurrentDetails.filter { carriedIDs.contains($0.id) }
             return await save(next, reviewing: previous.id)
         } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
+    }
+}
+
+extension PickupModel {
+    private func evaluateAuthorization(_ authorize: (@MainActor () -> Bool)?, operationID: UUID?) -> Bool {
+        let prior = validatingRecoveryOperationID
+        validatingRecoveryOperationID = operationID
+        defer { validatingRecoveryOperationID = prior }
+        return authorize?() != false
+    }
+    private func authorizePendingAction() -> Bool {
+        guard let pending, let authorize = pending.authorize else { return false }
+        return evaluateAuthorization(authorize, operationID: pending.recoveryOperationID)
+    }
+    private func pantryPort(configuration: PantryConfiguration, store: ComparisonStore,
+                            entry: PantryPickupPendingStore.Entry? = nil,
+                            requireActionAuthorization: Bool = false) throws -> PantryPickupCommitPort {
+        guard configuration.pendingStore.inventoryWorkspaceID == store.workspaceID,
+              configuration.pendingStore.ledgerWorkspaceID == configuration.ledger.workspaceID else { throw PickupModelError.missing }
+        return PantryPickupCommitPort(store: store, ledger: configuration.ledger, gate: configuration.gate,
+            authorize: { [weak self] _, _ in
+                guard configuration.authorize() else { return false }
+                if let entry {
+                    guard (try? configuration.pendingStore.read()) == entry else { return false }
+                    if requireActionAuthorization && entry.requiresActionAuthorization {
+                        guard self?.authorizePendingAction() == true else { return false }
+                    }
+                }
+                return true
+            }, clock: clock)
+    }
+
+    private func restorePantryPending(_ entry: PantryPickupPendingStore.Entry) throws {
+        guard entry.submission.changedHeads.count == 1, let head = entry.submission.changedHeads.first else { throw PickupModelError.invalid }
+        let value = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
+        try Self.validate(value)
+        guard value.id == head.id, value.savedAt == head.savedAt else { throw PickupModelError.invalid }
+        let selecting: Bool
+        switch entry.selection { case .preserve: selecting = false; case .select(let id):
+            guard id == value.id else { throw PickupModelError.invalid }; selecting = true }
+        pending = Pending(value: value, payload: head.payload, requiredRevisions: [head.id: head.revision - 1],
+            selectsPickup: selecting, recoveryOperationID: entry.recoveryOperationID, authorize: nil)
+        pendingPantry = entry; hasPendingSave = true
+    }
+
+    /// A previous write may have reached disk before an attribute/cleanup error.
+    /// Accept only advancement of acknowledgment, never a changed submitted action.
+    private func currentPantryPending(_ configuration: PantryConfiguration) throws -> PantryPickupPendingStore.Entry {
+        guard configuration.authorize(), let previous = pendingPantry,
+              let current = try configuration.pendingStore.read(),
+              previous.submission == current.submission, previous.selection == current.selection,
+              previous.recoveryOperationID == current.recoveryOperationID,
+              previous.requiresActionAuthorization == current.requiresActionAuthorization,
+              previous.acknowledgment == nil || previous.acknowledgment == current.acknowledgment else { throw PickupModelError.pending }
+        try configuration.pendingStore.ensureProtected(expected: current)
+        pendingPantry = current
+        return current
+    }
+
+    @discardableResult private func retryPantrySave() async -> Bool {
+        guard !saving, let configuration = pantryConfiguration, let store, pendingPantry != nil else { return false }
+        saving = true; defer { saving = false }
+        do {
+            let entry = try currentPantryPending(configuration)
+            let recovery = try pantryPort(configuration: configuration, store: store, entry: entry)
+            if let committed = try await recovery.recover(entry.submission) {
+                try adoptPantry(committed, entry: entry, configuration: configuration)
+                return true
+            }
+            guard entry.acknowledgment == nil else { throw PickupModelError.invalid }
+            guard !entry.requiresActionAuthorization || authorizePendingAction() else {
+                error = pantryText("Review this action again before retrying. Your saved pantry has not changed.")
+                return false
+            }
+            let writer = try pantryPort(configuration: configuration, store: store, entry: entry, requireActionAuthorization: true)
+            let result = try await writer.apply(entry.submission)
+            try adoptPantry(result, entry: entry, configuration: configuration)
+            return true
+        } catch {
+            if !configuration.authorize() {
+                journeys = []; storeRevisions = [:]; pantrySnapshot = nil; pending = nil; pendingPantry = nil
+                hasPendingSave = false; ready = false
+            }
+            self.error = pantryText(pendingPantry?.acknowledgment != nil
+                ? "Your change is saved. Retry to finish recovery."
+                : "Could not confirm the save. Retry the exact reviewed change.")
+            return false
+        }
+    }
+
+    private func adoptPantry(_ result: PantryPickupCommitPort.Result, entry: PantryPickupPendingStore.Entry,
+                            configuration: PantryConfiguration) throws {
+        guard configuration.authorize(), result.current.state.workspaceID == configuration.pendingStore.inventoryWorkspaceID else {
+            throw PickupModelError.missing
+        }
+        let decoded = try result.sources.map { head -> PickupJourney in
+            let value = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
+            try Self.validate(value)
+            guard value.id == head.id, value.savedAt == head.savedAt else { throw PickupModelError.invalid }
+            return value
+        }
+        journeys = decoded.sorted { $0.savedAt == $1.savedAt ? $0.id.uuidString < $1.id.uuidString : $0.savedAt > $1.savedAt }
+        storeRevisions = Dictionary(uniqueKeysWithValues: result.sources.map { ($0.id, $0.revision) })
+        pantrySnapshot = result.current
+        if case .select(let id) = entry.selection, journeys.contains(where: { $0.id == id }) { selectedID = id }
+        if !journeys.contains(where: { $0.id == selectedID }) { selectedID = journeys.first?.id }
+        let acknowledged = try configuration.pendingStore.acknowledgeAdoption(expected: entry,
+            receipt: result.receipt, currentInventoryRevision: result.current.state.revision)
+        pendingPantry = acknowledged
+        try configuration.pendingStore.clearAcknowledged(expected: acknowledged)
+        pending = nil; pendingPantry = nil; hasPendingSave = false; error = nil
+    }
+
+    /// Discard is a read-before-clear operation for durable pantry saves. If the
+    /// save actually committed, adopt it; never pretend that deleting a file undoes food.
+    func discardPendingSafely() async {
+        guard !saving else { return }
+        guard pendingPantry != nil else { discardPending(); return }
+        guard let configuration = pantryConfiguration, let store else { return }
+        saving = true; defer { saving = false }
+        do {
+            let entry = try currentPantryPending(configuration)
+            let port = try pantryPort(configuration: configuration, store: store, entry: entry)
+            if let committed = try await port.reconcileForDiscard(entry.submission, whenUnapplied: {
+                try configuration.pendingStore.discardUnapplied(expected: entry)
+            }) {
+                try adoptPantry(committed, entry: entry, configuration: configuration)
+            } else {
+                pending = nil; pendingPantry = nil; hasPendingSave = false
+                ready = false
+                await load()
+            }
+        } catch { self.error = pantryText("Could not confirm the save. Retry the exact reviewed change.") }
     }
 }

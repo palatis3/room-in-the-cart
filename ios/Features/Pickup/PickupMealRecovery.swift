@@ -246,8 +246,8 @@ extension PickupModel {
         return result
     }
 
-    private func permitsRecovery(_ authority: PickupRecoveryAuthority, allowPending: Bool = false) -> Bool {
-        guard ready, !saving, allowPending || !hasPendingSave, let scope = authority.scope, scope.permitsReview,
+    private func permitsRecovery(_ authority: PickupRecoveryAuthority, allowPending: Bool = false, savingOperationID: UUID? = nil) -> Bool {
+        guard ready, (!saving || savingOperationID.map(isValidatingRecoverySave) == true), allowPending || !hasPendingSave, let scope = authority.scope, scope.permitsReview,
               scope.workspaceID == sourceWorkspaceID, authority.selectedPickupID == selectedID,
               let current = journey, current.id == authority.selectedPickupID, current.closedAt == nil,
               !current.awayCarryovers.contains(where: { $0.phase == .prepared || $0.phase == .reserved }),
@@ -293,7 +293,20 @@ extension PickupModel {
             error = recoveryText("The meal or your access changed. Review the replacement again."); return false
         }
         if hasPendingSave {
-            return await retryRecoveryCandidate(operationID: review.id) { pending in
+            return await retryRecoveryCandidate(operationID: review.id, authorize: { [weak self] in
+                guard let self, let latest = currentAuthority() else { return false }
+                guard latest == authority, self.permitsRecovery(latest, allowPending: true, savingOperationID: review.id),
+                      let live = self.journey, live.revision == review.journeyRevision else { return false }
+                do {
+                    let instant = self.stockReviewDate
+                    try self.validateCurrentAcceptedTemplate(review.definition)
+                    try self.validateMatchedIngredientRules(review.definition, evidence: live.recoveryStockEvidence, at: instant)
+                    var checked = review.domain.source
+                    try MealRecoveryEngine.apply(review.domain, to: &checked, stockEvidence: live.recoveryStockEvidence,
+                        reservations: live.carryoverStockReservations, at: instant)
+                    return true
+                } catch { return false }
+            }) { pending in
                 guard let history = pending.mealRecovery, let event = history.domain.events.first(where: { $0.id == review.id }) else { return false }
                 return event.request == review.domain.request && event.stockEvidence == review.domain.stockEvidence &&
                     event.reservations == review.domain.reservations && history.definitions.first(where: { $0.operationID == review.id })?.definition == review.definition
@@ -334,7 +347,7 @@ extension PickupModel {
             candidate.mealRecovery = fresh
             return await saveRecoveryCandidate(candidate, operationID: review.id) { [weak self] in
                 guard let self, let latest = currentAuthority() else { return false }
-                guard latest == authority, self.permitsRecovery(latest, allowPending: true),
+                guard latest == authority, self.permitsRecovery(latest, allowPending: true, savingOperationID: review.id),
                       let live = self.journey, live.revision == review.journeyRevision else { return false }
                 do {
                     let instant = self.stockReviewDate
@@ -369,7 +382,10 @@ extension PickupModel {
                            currentAuthority: @escaping @MainActor () -> PickupRecoveryAuthority?) async -> Bool {
         guard let authority = currentAuthority(), authority == review.authority, permitsRecovery(authority, allowPending: true) else { return false }
         if hasPendingSave {
-            return await retryRecoveryCandidate(operationID: review.domain.request.id) { pending in
+            return await retryRecoveryCandidate(operationID: review.domain.request.id, authorize: { [weak self] in
+                guard let self, let latest = currentAuthority() else { return false }
+                return latest == authority && self.permitsRecovery(latest, allowPending: true, savingOperationID: review.domain.request.id)
+            }) { pending in
                 pending.mealRecovery?.domain.contextChanges.first(where: { $0.id == review.domain.request.id })?.request == review.domain.request
             }
         }
@@ -386,7 +402,7 @@ extension PickupModel {
             candidate.mealRecovery = history
             return await saveRecoveryCandidate(candidate, operationID: review.domain.request.id) { [weak self] in
                 guard let self, let latest = currentAuthority() else { return false }
-                return latest == authority && self.permitsRecovery(latest, allowPending: true)
+                return latest == authority && self.permitsRecovery(latest, allowPending: true, savingOperationID: review.domain.request.id)
             }
         } catch { self.error = recoveryText("The meal changed. Review its date again."); return false }
     }

@@ -1509,6 +1509,70 @@
           }
         }
       }
+    },
+    "Review the saved status before discarding this change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the saved status before discarding this change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el estado guardado antes de descartar este cambio."
+          }
+        }
+      }
+    },
+    "A saved change is waiting for recovery. Retry it or review its saved status.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved change is waiting for recovery. Retry it or review its saved status."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay un cambio guardado pendiente de recuperación. Vuelve a intentarlo o revisa su estado guardado."
+          }
+        }
+      }
+    },
+    "Review this action again before retrying. Your saved pantry has not changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this action again before retrying. Your saved pantry has not changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa esta acción de nuevo antes de volver a intentarlo. Tu despensa guardada no ha cambiado."
+          }
+        }
+      }
+    },
+    "Your change is saved. Retry to finish recovery.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your change is saved. Retry to finish recovery."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cambio está guardado. Vuelve a intentarlo para terminar la recuperación."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

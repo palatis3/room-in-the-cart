@@ -17,12 +17,17 @@ import LocalStore
     struct Review {
         let submission: Submission
         let affectedReservations: [InventoryReservationCoverage]
+        let sourceRevisions: [UUID: Int64]
     }
     struct Result {
         let receipt: LocalStore.InventoryOperationReceipt
         let current: PantryRepository.Snapshot
         let sources: [PantryLegacyMigration.SourceHead]
         let replayed: Bool
+    }
+    struct CurrentSnapshot {
+        let inventory: PantryRepository.Snapshot
+        let sources: [PantryLegacyMigration.SourceHead]
     }
     private struct HeadBinding: Codable {
         let id: UUID
@@ -84,7 +89,44 @@ import LocalStore
         try repository.validateCapacity(of: batch.writes, replacing: current.inventory)
         try await requireLedger(planning)
         try await requireCurrent(current)
-        return Review(submission: submission, affectedReservations: delta.affectedReservations)
+        return Review(submission: submission, affectedReservations: delta.affectedReservations,
+            sourceRevisions: Dictionary(uniqueKeysWithValues: current.sources.map { ($0.id, $0.revision) }))
+    }
+
+    func loadCurrent() async throws -> CurrentSnapshot {
+        try requireAccess()
+        let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }
+        let current = try await readCurrent(at: clock())
+        return CurrentSnapshot(inventory: current.inventory, sources: current.sources)
+    }
+
+    /// Read-only recognition also works when an action-specific grant has expired.
+    /// The supplied authorization still must permit reading this private workspace.
+    func recover(_ submission: Submission) async throws -> Result? {
+        try requireAccess()
+        let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }
+        return try await recognized(submission)
+    }
+
+    /// The caller removes its exact pending file while this lease still excludes
+    /// writers. Every resumed writer must reauthorize against that file; it must
+    /// never recreate a missing journal just to retry a cached submission.
+    func reconcileForDiscard(_ submission: Submission, whenUnapplied: () throws -> Void) async throws -> Result? {
+        try requireAccess()
+        let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }
+        if let result = try await recognized(submission) { return result }
+        try requireAccess()
+        try whenUnapplied()
+        return nil
+    }
+
+    private func recognized(_ submission: Submission) async throws -> Result? {
+        let request = try envelope(submission)
+        let receipt = try await store.inventoryCommittedOperation(id: submission.request.operationID, request: request)
+        try requireAccess()
+        guard let receipt else { return nil }
+        let current = try await readCurrent(at: clock())
+        return Result(receipt: receipt, current: current.inventory, sources: current.sources, replayed: true)
     }
 
     func apply(_ submission: Submission) async throws -> Result {

@@ -104,7 +104,7 @@ struct PickupSaveStatus: View {
                 Text(error).foregroundStyle(.red).accessibilityIdentifier("pickup-save-error")
                 if model.hasPendingSave {
                     Button(pTr("Retry save")) { Task { if await model.retrySave() { onRetried?() } } }
-                    Button(pTr("Discard unsaved change"), role: .destructive) { model.discardPending() }
+                    Button(pTr("Discard unsaved change"), role: .destructive) { Task { await model.discardPendingSafely() } }
                 } else if !model.ready { Button(pTr("Retry opening")) { Task { await model.load() } } }
             }
         }
