@@ -150,7 +150,9 @@ private struct GroceryWindow: View {
     }
     @ViewBuilder private var root: some View {
         #if DEBUG && targetEnvironment(simulator)
-        if recoveryFixture.requested && recoveryFixture.phase != .ready {
+        if ProcessInfo.processInfo.arguments.contains("--receipt-file-source-fixture") {
+            ReceiptFileSourceFixture()
+        } else if recoveryFixture.requested && recoveryFixture.phase != .ready {
             if recoveryFixture.phase == .failed { Text(verbatim: "Recovery fixture setup failed") }
             else { ProgressView() }
         } else { RootView() }
