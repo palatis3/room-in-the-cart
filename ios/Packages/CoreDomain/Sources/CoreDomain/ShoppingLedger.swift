@@ -1450,7 +1450,7 @@ private func normalizedProduct(_ value: String) -> String {
     return value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
         .split(whereSeparator: \.isWhitespace).joined(separator: " ")
 }
-private func ledgerText(_ value: String, nonempty: Bool = false, maximum: Int = 8192) throws {
+func ledgerText(_ value: String, nonempty: Bool = false, maximum: Int = 8192) throws {
     guard value.utf8.count <= maximum, !nonempty || !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
         throw LedgerError.invalid("text")
     }

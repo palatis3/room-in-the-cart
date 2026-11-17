@@ -258,10 +258,25 @@ extension PickupJourney {
         return lots
     }
     var physicalStockNeeds: [StockNeed] {
-        guard let history = mealRecovery else { return rawPhysicalStockNeeds }
-        // Validated persisted histories always project. Invalid transient data must
-        // not fall back to superseded original demands and claim their coverage.
-        return (try? MealRecoveryEngine.project(history.domain).demands) ?? []
+        (try? remainingPhysicalNeeds()) ?? []
+    }
+
+    func remainingPhysicalNeeds() throws -> [StockNeed] {
+        let needs = try mealRecovery.map { try MealRecoveryEngine.project($0.domain).demands } ?? rawPhysicalStockNeeds
+        let spent = Dictionary(grouping: (cookedMeals ?? []).flatMap(\.fulfilledNeeds), by: \.id)
+        guard !spent.isEmpty else { return needs }
+        return try needs.map { need in
+            guard let uses = spent[need.id] else { return need }
+            var remaining = need.amount.amount
+            for use in uses {
+                guard use.foodID == need.foodID, let used = try use.amount.converted(to: need.amount.unit, using: need.amount.confirmedConversion)
+                else { throw InventoryError.invalid("cookedNeedChanged") }
+                remaining = try remaining.subtracting(min(remaining, used))
+            }
+            let amount = Quantity(amount: remaining, unit: need.amount.unit, originalLiteral: remaining.description,
+                                  confirmedConversion: need.amount.confirmedConversion)
+            return StockNeed(id: need.id, foodID: need.foodID, name: need.name, amount: amount, priority: need.priority)
+        }
     }
     /// Omit the instant only for structural/history validation. Live projections
     /// and business decisions supply their injected clock.

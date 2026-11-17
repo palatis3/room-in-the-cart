@@ -211,6 +211,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var needDetails: [PickupNeedDetail] = []
     var mealSource: PickupCheckoutMealSource?
     var mealRecovery: PickupMealRecoveryHistory?
+    var cookedMeals: [PantryCookRecord]?
     var ledgerBasis: ShopBasis?
     var ledgerSourceRevisionID: UUID?
     var ledgerPackSelections: [LedgerPackSelection] = []
@@ -829,6 +830,17 @@ struct PickupPersistenceLocation {
 
     /// Unlike load(), refreshes an already-ready model. It never replaces a
     /// pending submission, acknowledges it, or copies its old authorization.
+    func cookCompletionPort(ledger: LedgerModel, authorize: @escaping @MainActor () -> Bool) throws -> PantryCookPort {
+        guard let store, let configuration = pantryConfiguration, pantryIsActive, ready, !saving, !hasPendingSave,
+              ledger.pantryBackingStore(gate: configuration.gate) === configuration.ledger, configuration.authorize(), authorize() else {
+            throw PantryCookPort.Failure.unavailable
+        }
+        return PantryCookPort(store: store, ledger: configuration.ledger, gate: configuration.gate, authorize: { [weak self, weak ledger] in
+            guard let self, let ledger else { return false }
+            return configuration.authorize() && authorize() && !self.saving && !self.hasPendingSave &&
+                !ledger.saving && !ledger.hasPendingSave && ledger.pantryBackingStore(gate: configuration.gate) === configuration.ledger
+        }, clock: clock)
+    }
     @discardableResult func refreshPantryStock() async -> Bool {
         guard let configuration = pantryConfiguration, let store else { return false }
         pantryReadIsCurrent = false
@@ -1551,12 +1563,18 @@ struct PickupPersistenceLocation {
     }
     nonisolated static func validate(_ value: PickupJourney) throws {
         guard value.feedback == nil || value.eligibleForFeedback, value.version == 1, value.revision >= 0, value.savedAt.timeIntervalSinceReferenceDate.isFinite,
-              value.basket != nil || !value.urgent.isEmpty || value.stockLots.contains(where: { $0.id == $0.foodID && $0.source != .manual }),
+              value.basket != nil || value.cookedMeals?.isEmpty == false || !value.urgent.isEmpty || value.stockLots.contains(where: { $0.id == $0.foodID && $0.source != .manual }),
               value.basket == nil || value.basket?.id == value.id,
               Set(value.urgent.map(\.id)).count == value.urgent.count,
               Set(value.notes.map(\.id)).count == value.notes.count,
               Set(value.repairs.map(\.id)).count == value.repairs.count,
               Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
+        if let cooked = value.cookedMeals {
+            guard !cooked.isEmpty, cooked.count <= 500, Set(cooked.map(\.draft.meal.id)).count == cooked.count,
+                  Set(cooked.map(\.draft.id)).count == cooked.count else { throw PickupModelError.invalid }
+            for record in cooked { try record.validate(shopID: value.id) }
+            _ = try value.remainingPhysicalNeeds()
+        }
         try value.validateRecipientSends()
         try value.mealSource?.validate()
         if let history = value.mealRecovery {
