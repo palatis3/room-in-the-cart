@@ -50,6 +50,17 @@ final class NaturalListSegmenterTests: XCTestCase {
         XCTAssertFalse(try NaturalListSegmenter.propose("tea, “cake for next week”").requiresTimingReview)
     }
 
+    func testDecimalCommaAfterConjunctionSeparatesSpanishQuantityAndPreservesGroupingAmbiguity() throws {
+        let items = try NaturalListSegmenter.propose("pan y 2,5 litros de leche").items
+        XCTAssertEqual(items.map(\.wording), ["pan", "2,5 litros de leche"])
+        let decimal = ListQuantityParser.naturalAmountToken("2,5L")
+        var tokens = [decimal][...]
+        XCTAssertEqual(try ListQuantityParser.takeAmount(from: &tokens), try Rational(5, 2))
+        XCTAssertEqual(ListQuantityParser.takeUnit(from: &tokens), .liter)
+        XCTAssertEqual(ListQuantityParser.naturalAmountToken("1,000"), "1,000")
+        XCTAssertEqual(ListQuantityParser.naturalAmountToken("Brand2,5"), "Brand2,5")
+    }
+
     func testExpansionLimitCountsItemsInsideOneUtterance() throws {
         XCTAssertThrowsError(try NaturalListSegmenter.propose("tea, rice, eggs", maximumItems: 2)) {
             XCTAssertEqual($0 as? ImportTextLimit, .nonblankLines(maximum: 2))
