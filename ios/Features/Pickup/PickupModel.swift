@@ -419,7 +419,7 @@ struct PickupPersistenceLocation {
     private let mutationGate: PantryMutationGate?
     private var pantryConfiguration: PantryConfiguration?
     let usesLivePantry: Bool
-    private var privatePantryGeneration = UUID()
+    private(set) var privatePantryGeneration = UUID()
     private var livePantryScope: (@MainActor () -> Bool)?
     @Published private(set) var retiredPantryOrigins: Set<UUID> = []
     @Published private var retiredPantryReceipt: InventoryErasureReceipt?

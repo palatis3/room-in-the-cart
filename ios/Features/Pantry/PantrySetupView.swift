@@ -16,27 +16,28 @@ struct PantrySetupView: View {
     private enum Phase {
         case loading, staging, unavailable
         case review(PantryMigrationCoordinator, PantryMigrationCoordinator.Review)
-        case ready(PantryModel)
+        case ready(Scope, PantryModel)
     }
     private enum Action { case inspect, apply, resume, discard }
     private struct Scope: Equatable {
         let adult: CapturePrivateIdentity
         let inventory: UUID
         let ledger: UUID
+        let generation: UUID
     }
     private var scope: Scope? {
         guard scene == .active, child?.presented != true, pickup.pantryRouteAvailable,
               let identity = CapturePrivateIdentity.current(access: access, household: household),
               let stockID = pickup.sourceWorkspaceID, let ledgerID = ledger.sourceWorkspaceID else { return nil }
-        return Scope(adult: identity, inventory: stockID, ledger: ledgerID)
+        return Scope(adult: identity, inventory: stockID, ledger: ledgerID, generation: pickup.privatePantryGeneration)
     }
 
     var body: some View {
         Group {
             if scope == nil {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
-            } else if case .ready(let model) = phase {
-                PantryHomeView(model: model, accessAllowed: scope != nil)
+            } else if case .ready(let original, let model) = phase, original == scope, model.phase != .accessDenied {
+                PantryHomeView(model: model, accessAllowed: true)
             } else {
                 List {
                     if busy { ProgressView(pantryText("Working…")) }
@@ -69,7 +70,10 @@ struct PantrySetupView: View {
         .privacySensitive()
         .navigationTitle(pantryText("My Pantry"))
         .task(id: scope) {
-            if case .ready(let model) = phase { model.accessLost() }
+            if case .ready(let original, let model) = phase {
+                if original == scope && model.phase != .accessDenied { return }
+                model.accessLost()
+            }
             generation = UUID(); phase = .loading; busy = false
             if scope != nil { await perform(.inspect) }
         }
@@ -110,7 +114,7 @@ struct PantrySetupView: View {
                     guard await pickup.refreshPantryStock() else { throw PantryMigrationCoordinator.Failure.sourceChanged }
                 }
                 guard current(), let model = pickup.makePantryModel() else { throw PantryMigrationCoordinator.Failure.unauthorized }
-                phase = .ready(model)
+                phase = .ready(original, model)
             }
         } catch { if current() { phase = .unavailable } }
     }
