@@ -112,6 +112,9 @@ import XCTest
         if !on.waitForExistence(timeout: 8) { tap(app.buttons["pantry.digest.enable"]) }
         XCTAssertTrue(on.waitForExistence(timeout: 8))
         capture("Pantry digest enabled by explicit OS consent")
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["My Pantry"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.navigationBars["Use soon"].exists)
         XCUIDevice.shared.press(.home)
         let text = "Open My Pantry to review the foods you chose to check."
         let notification = board.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
