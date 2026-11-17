@@ -1227,7 +1227,8 @@ import XCTest
         assertText("This assisted tool requires paid access.")
         app.navigationBars.buttons.element(boundBy: 0).tap()
         assertText("Free manual meal repair")
-        assertText("Open meal need")
+        // The need sits above the manual-repair section when returning from the paid option.
+        reveal(app.staticTexts["Open meal need"], initiallyUpward: false)
         choose("Affected meal need", value: "Wednesday rice")
         fill("Use the remaining peppers in rice.", into: "Exact food, portions, exclusions and instructions")
         let trip = "I agree to an extra top-up trip for this repair"
