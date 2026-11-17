@@ -360,8 +360,9 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     func beforeLotCommit(_ batch: InventoryBatch) async throws {
         let ids = Set(batch.writes.filter { $0.record.key.kind == .lot && $0.expectedRevision > 0 }.map(\.record.key.id) +
                       batch.erasures.filter { $0.key.kind == .lot }.map(\.key.id))
+        if !batch.writes.isEmpty || !batch.erasures.isEmpty { try invalidateHome(.tonight, batch.workspaceID, false) }
         guard !ids.isEmpty else { return }
-        for kind in AdultFoodSummaryKind.allCases { try invalidateHome(kind, batch.workspaceID, false) }
+        try invalidateHome(.useSoon, batch.workspaceID, false)
         for url in try documents(for: batch.workspaceID) {
             let doc = try read(url)
             guard doc.origin == batch.workspaceID else { throw PantryDigestFailure.invalid }

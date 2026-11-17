@@ -12,6 +12,7 @@ import CoreDomain
         let token: UUID
         var projection: AdultFoodSummaryProjection?
         var tonightBasis: TonightHomeBasis?
+        var reviewedLedger: UUID?
         func belongs(to scope: PantryDigestScope) -> Bool { origin == scope.origin && owner == scope.owner }
     }
 
@@ -77,6 +78,7 @@ import CoreDomain
         let fresh = try AdultFoodSummaryProjection(kind: kind, scope: receipt.token, now: now, zone: zone,
             count: count, reviewedTitle: reviewedTitle)
         receipt.tonightBasis = tonightBasis
+        receipt.reviewedLedger = tonightBasis?.ledger
         receipt.projection = fresh
         try persist(receipt, kind)
         do { try projected.publish(fresh) }
@@ -118,8 +120,9 @@ import CoreDomain
             try invalidate(.tonight, origin: receipt.origin, forget: false)
         }
     }
-    func eraseLedger(_ ledgerID: UUID) throws {
-        if let receipt = try consent(.tonight), receipt.tonightBasis?.ledger == ledgerID { try revoke(.tonight) }
+    func invalidateLedger(_ ledgerID: UUID, forget: Bool) throws {
+        guard let receipt = try consent(.tonight), (receipt.reviewedLedger ?? receipt.tonightBasis?.ledger) == ledgerID else { return }
+        try invalidate(.tonight, origin: receipt.origin, forget: forget)
     }
     func permitsUseSoon(_ handle: RouteHandle, access: PantryDigestAccess, lots: [InventoryLot],
                         digest: PantryDigestStore, now: Date = Date()) -> Bool {

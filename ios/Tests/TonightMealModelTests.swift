@@ -48,7 +48,11 @@ import RecordArchive
         XCTAssertTrue(home.permitsTonight(projection.route, access: access, basis: basis))
         let changed = try TonightHomeBasis(ledger: origin, revision: reviewed.ledgerRevision + 1, stock: reviewed.basis)
         XCTAssertFalse(home.permitsTonight(projection.route, access: access, basis: changed))
-        try home.eraseLedger(origin)
+        try home.invalidateLedger(origin, forget: false)
+        XCTAssertTrue(home.enabled(.tonight, scope: access.scope))
+        XCTAssertFalse(home.permitsTonight(projection.route, access: access, basis: basis))
+        try home.invalidateLedger(origin, forget: true)
+        XCTAssertFalse(home.enabled(.tonight, scope: access.scope))
         XCTAssertFalse(home.permitsTonight(projection.route, access: access, basis: basis))
         var settings = kitchen; settings.exclusions = ["Wraps"]
         let restricted = input(recipe: recipe, food: food, profile: .init(settings: settings))

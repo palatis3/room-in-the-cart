@@ -436,6 +436,7 @@ private enum LedgerDeletionJournal {
                 if pending.reviewedPantryBasis != nil, pantryPackPort?.hasReadAccess != true { throw LedgerModelError.notReady }
             }
             guard privatePantryWritable else { throw LedgerModelError.notReady }
+            try AdultHomeSummaryStore.shared.invalidateLedger(store.workspaceID, forget: false)
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
                                               operationID: pending.operationID, savedAt: pending.savedAt, consuming: pending.firstListDraft)
             // No other mutation can start while saving, including during actor suspension.

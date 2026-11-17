@@ -560,7 +560,7 @@ import DeviceSurfaces
         try routes?.remove(row.route.handle)
     }
     func eraseLedgerWorkspace(_ id: UUID) async throws {
-        try AdultHomeSummaryStore.shared.eraseLedger(id)
+        try AdultHomeSummaryStore.shared.invalidateLedger(id, forget: true)
         // Replayed by foreground tombstone reconciliation and Records deletion.
         try await CaptureMediaStore.shared.eraseWorkspace(id)
         try configure()
