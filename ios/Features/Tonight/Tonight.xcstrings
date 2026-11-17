@@ -1683,6 +1683,125 @@
           }
         }
       }
+    },
+    "Choose the saved recipe version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the saved recipe version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir la versión guardada de la receta"
+          }
+        }
+      }
+    },
+    "These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas copias comparten una identidad de receta, pero tienen datos distintos. Selecciona la fuente exacta antes de revisar la despensa."
+          }
+        }
+      }
+    },
+    "Accepted dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena aceptada"
+          }
+        }
+      }
+    },
+    "Free reusable dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free reusable dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena reutilizable del plan Free"
+          }
+        }
+      }
+    },
+    "Recipe revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de receta"
+          }
+        }
+      }
+    },
+    "Use this saved version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this saved version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta versión guardada"
+          }
+        }
+      }
+    },
+    "This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guarda una copia revisada del plan Free. La receta aceptada y las cenas ya elegidas conservan sus datos originales."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -30,6 +30,28 @@ import RecordArchive
         XCTAssertFalse(review.allIngredientsCovered)
         XCTAssertTrue(TonightMealModel.canChoose(review))
         XCTAssertTrue(try XCTUnwrap(model.input).workspace.shops.isEmpty, "Browsing and matching do not create a pickup")
+        var differing = recipe; differing.revision += 1; differing.ingredients[0].quantity = q(2)
+        var workspace = read.workspace
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "owner", shopID: UUID(),
+            assignedShopperID: "owner", canPlan: true, canReadBudget: false, hasPaidTools: false,
+            roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(30))
+        try workspace.dinnerPlanning.accept(.init(id: UUID(), template: differing, acceptedAt: now), access: access, at: now)
+        let ambiguous = TonightMealModel.Input(workspace: workspace, ledgerRevision: 2, basis: read.basis,
+            foods: read.foods, freeLots: read.freeLots, unresolvedFoods: [], sources: [])
+        await model.refresh(authorize: { true }, load: { ambiguous })
+        XCTAssertTrue(model.recipes.isEmpty, "Two different saved versions must not silently choose a winner")
+        XCTAssertEqual(model.conflictingRecipes.count, 2)
+        let accepted = try XCTUnwrap(model.conflictingRecipes.first { $0.acceptedAt != nil })
+        try model.selectVersion(accepted)
+        XCTAssertEqual(model.recipes, [differing])
+        XCTAssertTrue(model.matches.isEmpty, "Selecting a version requires new pantry matches")
+        XCTAssertEqual(model.input?.workspace.mealTemplates, [recipe], "Selecting a source is read-only")
+        let unrelated = MealTemplate(title: "Another restored recipe", ingredients: [.init(name: "Rice", quantity: q(1))])
+        workspace.mealTemplates.append(unrelated)
+        let reviewedCopy = MealTemplate(title: differing.title, ingredients: differing.ingredients)
+        try TonightMealModel.saveReviewedTemplate(reviewedCopy, editing: differing, in: &workspace)
+        XCTAssertEqual(workspace.mealTemplates, [reviewedCopy, unrelated])
+        XCTAssertEqual(workspace.dinnerPlanning.acceptedDinners.first?.template, differing, "Reviewing a copy must retain the accepted original")
     }
     func testRepeatedMixedUnitShortfallUsesCoverageUnitAndUnknownIsNotZero() throws {
         let food = UUID()

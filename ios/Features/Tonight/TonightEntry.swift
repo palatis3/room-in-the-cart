@@ -16,6 +16,7 @@ struct TonightEntry: View {
     @State private var choosing: MealTemplate?
     @State private var sourceToReview: TonightMealModel.Source?
     @State private var manual = false
+    @State private var recipeToReview: MealTemplate?
     @State private var foodToReview: TonightMealModel.Food?
     @State private var destination: UUID?
     @State private var newTitle = ""
@@ -53,7 +54,7 @@ struct TonightEntry: View {
         .navigationTitle(tonightText("Tonight"))
         .privacySensitive()
         .task(id: scope) {
-            model.invalidate(); preview = nil; choosing = nil; sourceToReview = nil; manual = false; foodToReview = nil
+            model.invalidate(); preview = nil; choosing = nil; sourceToReview = nil; manual = false; foodToReview = nil; recipeToReview = nil
             if scope != nil && pickup.pantryIsActive { await refresh() }
         }
         .onChange(of: ledger.workspace.dinnerPlanning.privateMealPreferences?.revision) { _, _ in
@@ -68,6 +69,9 @@ struct TonightEntry: View {
                     }
                 }
             }
+        }
+        .sheet(item: $recipeToReview, onDismiss: { Task { await refresh() } }) { recipe in
+            NavigationStack { TonightRecipeReview(ledger: ledger, source: nil, template: recipe, currentIdentity: currentIdentity) }
         }
         .sheet(isPresented: $manual, onDismiss: { Task { await refresh() } }) {
             NavigationStack { TonightRecipeReview(ledger: ledger, source: nil, currentIdentity: currentIdentity) }
@@ -119,9 +123,26 @@ struct TonightEntry: View {
                     Button(tonightText("Cancel")) { self.choosing = nil }
                 }
             }
-            if model.recipes.isEmpty && !model.busy {
+            if model.input != nil && model.savedRecipes.isEmpty && !model.busy {
                 Section(tonightText("Save a reviewed recipe")) {
                     Text(tonightText("No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup."))
+                }
+            }
+            if !model.conflictingRecipes.isEmpty {
+                Section(tonightText("Choose the saved recipe version")) {
+                    Text(tonightText("These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches."))
+                    ForEach(model.conflictingRecipes) { source in
+                        VStack(alignment: .leading) {
+                            Text(source.template.title).font(.headline)
+                            Text(source.acceptedAt.map { tonightText("Accepted dinner") + " · " + $0.formatted(date: .abbreviated, time: .shortened) } ?? tonightText("Free reusable dinner"))
+                            Text(tonightText("Recipe revision") + ": " + source.template.revision.formatted())
+                            Button(tonightText("Use this saved version")) {
+                                do { try model.selectVersion(source); preview = nil; choosing = nil }
+                                catch { message = tonightText("Refresh before reviewing this match.") }
+                            }
+                            Button(tonightText("Review recipe facts")) { recipeToReview = source.template }
+                        }
+                    }
                 }
             }
             if !model.suggestions.isEmpty {
@@ -153,6 +174,7 @@ struct TonightEntry: View {
     }
     @ViewBuilder private func recipeRow(_ review: PantryMealMatcher.Review) -> some View {
         DisclosureGroup {
+            Button(tonightText("Review recipe facts")) { recipeToReview = review.recipe }
             ForEach(Array((review.eligibility.blocked + review.eligibility.unresolved + review.eligibility.softDifferences).enumerated()), id: \.offset) { _, issue in
                 Text(tonightIssue(issue))
             }
