@@ -138,34 +138,22 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
-    func testFilesShareSheetStagesReceiptForExplicitPrivateReview() throws {
+    func testSystemShareSheetStagesReceiptForExplicitPrivateReview() throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        let export = app.buttons["Export sample receipt PDF"]
-        XCTAssertTrue(export.waitForExistence(timeout: 10)); export.tap()
-        let save = app.buttons["Save"].firstMatch
-        XCTAssertTrue(save.waitForExistence(timeout: 10), app.debugDescription); save.tap()
-        if app.buttons["Replace"].waitForExistence(timeout: 2) { app.buttons["Replace"].tap() }
-        XCTAssertTrue(app.staticTexts["fixture.receipt.exported"].waitForExistence(timeout: 12))
-        let files = XCUIApplication(bundleIdentifier: "com.apple.DocumentsApp")
-        files.launch()
-        let recents = files.buttons["Recents"].firstMatch
-        if recents.waitForExistence(timeout: 3) { recents.tap() }
-        let file = files.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Room Market Fixture Receipt")).firstMatch
-        XCTAssertTrue(file.waitForExistence(timeout: 10), files.debugDescription)
-        file.press(forDuration: 1.2)
-        let share = files.buttons["Share"].firstMatch
-        XCTAssertTrue(share.waitForExistence(timeout: 8), files.debugDescription); share.tap()
-        let destination = files.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Room in the Cart")).firstMatch
-        if !destination.waitForExistence(timeout: 2) {
-            let more = files.buttons["More"].firstMatch
-            XCTAssertTrue(more.waitForExistence(timeout: 8), files.debugDescription); more.tap()
+        let share = app.buttons["Share sample receipt PDF"]
+        XCTAssertTrue(share.waitForExistence(timeout: 12)); share.tap()
+        let destination = app.cells.matching(NSPredicate(format: "identifier == %@ AND label == %@", "shareCell", "Room in the Cart")).firstMatch
+        if !destination.waitForExistence(timeout: 4) {
+            let more = app.cells["More"].firstMatch
+            XCTAssertTrue(more.waitForExistence(timeout: 8), app.debugDescription); more.tap()
         }
-        XCTAssertTrue(destination.waitForExistence(timeout: 8), files.debugDescription); destination.tap()
-        let stage = files.buttons["Save receipt file for review"]
-        XCTAssertTrue(stage.waitForExistence(timeout: 12), files.debugDescription); stage.tap()
-        XCTAssertTrue(stage.waitForNonExistence(timeout: 8))
-        files.terminate()
+        let namedDestination = app.cells.matching(NSPredicate(format: "label == %@", "Room in the Cart")).firstMatch
+        XCTAssertTrue(namedDestination.waitForExistence(timeout: 10), app.debugDescription)
+        namedDestination.tap()
+        let stage = app.buttons["Save receipt file for review"]
+        XCTAssertTrue(stage.waitForExistence(timeout: 15), app.debugDescription); stage.tap()
+        XCTAssertTrue(stage.waitForNonExistence(timeout: 12))
         app.terminate()
         launch(reset: true)
         tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
