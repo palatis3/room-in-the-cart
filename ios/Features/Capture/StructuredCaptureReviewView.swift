@@ -211,7 +211,7 @@ struct StructuredCaptureField: Hashable {
                 ForEach(Array(Set(lines.filter { $0.warnings.contains(.destination) }.map(\.destination))).sorted(), id: \.self) { wording in
                     Text(captureText("Destination wording") + ": " + wording)
                 }
-                Picker(captureText("Choose a pickup"), selection: Binding(get: { batch.pickup }, set: { pickup in
+                Picker(captureText("Pickup for all items"), selection: Binding(get: { batch.pickup }, set: { pickup in
                     naturalBatch.wrappedValue?.pickup = pickup
                     validationMessage = nil
                 })) {
@@ -222,7 +222,11 @@ struct StructuredCaptureField: Hashable {
                         Text(pickup.id == currentPickupID ? name + " (" + captureText("Current pickup") + ")" : name)
                             .tag(Optional(pickup))
                     }
-                }.pickerStyle(.menu).accessibilityIdentifier("capture.batchPickup")
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .accessibilityLabel(captureText("Pickup for all items"))
+                .accessibilityIdentifier("capture.batchPickup")
             }
         }
     }
@@ -234,12 +238,12 @@ struct StructuredCaptureField: Hashable {
                 Text(captureText("Skipped"))
             } else {
                 if !line.amount.isEmpty {
-                    Text(line.amount + " " + captureText(captureUnitKey(line.unit)))
+                    Text(naturalAmount(line.amount, unit: line.unit))
                 }
                 if !line.packCount.isEmpty || !line.amountPerPack.isEmpty {
                     Text(captureText("Number of packs") + ": " + (line.packCount.isEmpty ? captureText("Unknown") : line.packCount))
                     if !line.amountPerPack.isEmpty {
-                        Text(captureText("Usable amount in each pack") + ": " + line.amountPerPack + " " + captureText(captureUnitKey(line.packUnit)))
+                        Text(captureText("Usable amount in each pack") + ": " + naturalAmount(line.amountPerPack, unit: line.packUnit))
                     }
                 }
                 if line.amount.isEmpty && (line.packCount.isEmpty || line.amountPerPack.isEmpty) {
@@ -254,6 +258,11 @@ struct StructuredCaptureField: Hashable {
             }
         }
         .foregroundStyle(.primary)
+    }
+
+    private func naturalAmount(_ literal: String, unit: UnitOfMeasure) -> String {
+        guard let amount = try? CaptureNumber.parse(literal) else { return literal + " " + unit.displayName }
+        return literal + " " + unit.comparisonLabel(for: amount)
     }
 
     private func changeSpellings(_ change: @escaping @MainActor () async -> Void) {
