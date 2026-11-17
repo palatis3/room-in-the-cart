@@ -29,7 +29,20 @@ final class RoomInTheCartUITests: XCTestCase {
             let wording = language == "en" ? "2 kg rice" : "2 kg arroz"
             tap(field)
             field.typeText(wording)
-            let saved = element("firstList.draftStatus")
+            let done = language == "en" ? "Done" : "Listo"
+            let doneButton = app.buttons[done]
+            XCTAssertTrue(doneButton.waitForExistence(timeout: 5) && doneButton.isHittable)
+            doneButton.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+            let saved = app.staticTexts["firstList.draftStatus"]
+            // At accessibility sizes the focused editor scrolls the status row
+            // above the visible part of the Form. Bring it back before reading it.
+            let form = app.collectionViews["ledgerImportForm"]
+            for _ in 0..<5 {
+                if saved.exists && saved.isHittable { break }
+                form.swipeDown(velocity: .slow)
+            }
+            XCTAssertTrue(saved.exists && saved.isHittable)
             let label = language == "en" ? "Private draft saved on this device. It expires 7 days after your last edit." :
                 "Borrador privado guardado en este dispositivo. Caduca 7 días después del último cambio."
             expectation(for: NSPredicate(format: "label == %@", label), evaluatedWith: saved)
