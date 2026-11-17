@@ -40,11 +40,6 @@ class PlanIOSFixtureTests(unittest.TestCase):
         isolated = {f"{suite}-{method.rsplit('/', 1)[1]}"
                     for suite in ISOLATED_SUITES for method in self.inventory[suite]}
         self.assertCountEqual(actual, grouped | isolated | set(DELIVERY_SHARDS))
-        self.assertEqual(len(actual), 26)
-        self.assertEqual(self.inventory["SharedCreatedMealUndoUITests"], {
-            f"{UI_TARGET}/SharedCreatedMealUndoUITests/testCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple",
-            f"{UI_TARGET}/SharedCreatedMealUndoUITests/testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple",
-        })
         self.assertIn("RecipeLibraryAcceptanceUITests", suites_for("contributor"))
         self.assertIn("CorrectionPrivacyAcceptanceUITests", suites_for("contributor"))
         self.assertNotIn("LibraryPrivacyUITestCase", actual)
@@ -81,6 +76,18 @@ class PlanIOSFixtureTests(unittest.TestCase):
                     selectors.extend(lines)
                 self.assertCountEqual(selectors, enabled)
 
+    def test_previously_executed_selectors_keep_their_profile_and_shard(self):
+        # Each row comes from a passing XCTest result in GitHub Actions run 44150889945.
+        # New methods are covered by the exact current-source test above, without changing this fixture.
+        historical = Path(__file__).with_name("fixtures") / "ios-fixture-selectors.tsv"
+        remaining = set(historical.read_text(encoding="utf-8").splitlines())
+        for profile in ("contributor", "dinner"):
+            plan = make_plan(enumeration(self.enabled_for(profile)), profile, self.inventory)
+            for shard, details in plan["shards"].items():
+                for identifier in details["test_identifiers"]:
+                    remaining.discard(f"{profile}\t{shard}\t{identifier.removesuffix('()')}")
+        self.assertEqual(sorted(remaining), [], "Previously executed fixture selectors were dropped or rerouted")
+
     def test_records_and_dinner_keep_exact_standalone_names_profiles_and_selectors(self):
         plans = {profile: make_plan(enumeration(self.enabled_for(profile)), profile, self.inventory)
                  for profile in ("contributor", "dinner")}
@@ -92,8 +99,6 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertNotIn("suites", records)
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
-        self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 95)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
@@ -130,7 +135,6 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertIn(first_sign_in, [value.removesuffix("()") for value in enrollment])
         fallbacks = plans["contributor"]["shards"]["SharedFallbackUITests"]
         self.assertEqual(fallbacks["suite"], "SharedFallbackUITests")
-        self.assertEqual(len(fallbacks["test_identifiers"]), 2)
         paid_case = f"{UI_TARGET}/PaidPickupRecoveryUITests/testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy"
         group = plans["contributor"]["shards"]["contributor-balanced-04"]
         self.assertIn(paid_case, [identifier.removesuffix("()") for identifier in group["test_identifiers"]])
@@ -142,9 +146,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         shards = make_plan(enumeration(self.enabled_for("contributor")), "contributor", self.inventory)["shards"]
         delivery = {name: shard["test_identifiers"] for name, shard in shards.items()
                     if shard.get("suite") == "SharedDeliveryUITests"}
-        self.assertEqual({name: len(cases) for name, cases in delivery.items()},
-                         {"SharedDeliveryUITests-stock-and-purchase": 4,
-                          "SharedDeliveryUITests-recovery-cook-and-closeout": 7})
+        self.assertEqual(set(delivery), set(DELIVERY_SHARDS))
         recovery = delivery["SharedDeliveryUITests-recovery-cook-and-closeout"]
         for method in ("testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
                        "testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart"):
