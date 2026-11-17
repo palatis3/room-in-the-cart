@@ -54,6 +54,48 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
+    func testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let export = app.buttons["Export sample receipt PDF"]
+        XCTAssertTrue(export.waitForExistence(timeout: 10))
+        export.tap()
+        let save = app.buttons["Save"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 10), app.debugDescription)
+        save.tap()
+        if app.buttons["Replace"].waitForExistence(timeout: 2) { app.buttons["Replace"].tap() }
+        XCTAssertTrue(app.staticTexts["fixture.receipt.exported"].waitForExistence(timeout: 10), app.debugDescription)
+        app.terminate()
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.receipt"])
+        tap(app.buttons["receipt.document"])
+        tap(app.buttons["Choose a receipt from Files"])
+        let file = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Room Market Fixture Receipt")).firstMatch
+        if !file.waitForExistence(timeout: 3), app.buttons["Recents"].exists { app.buttons["Recents"].tap() }
+        XCTAssertTrue(file.waitForExistence(timeout: 10), app.debugDescription)
+        file.tap()
+        let choose = app.buttons["Open"]
+        if choose.waitForExistence(timeout: 2), choose.isHittable { choose.tap() }
+        let oats = app.switches["receipt.document.line.1.1"], fee = app.switches["receipt.document.line.1.2"]
+        XCTAssertTrue(oats.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(oats.label.contains("OATS"))
+        XCTAssertTrue(fee.label.contains("SERVICE FEE"))
+        XCTAssertEqual(fee.value as? String, "0")
+        enableSwitch("receipt.document.line.1.1")
+        let name = app.textFields["Store or branch"]
+        tap(name); name.typeText("Room Market")
+        if app.buttons["receipt.document.keyboardDone"].exists { app.buttons["receipt.document.keyboardDone"].tap() }
+        enableSwitch("I checked these printed lines and physically received food from this purchase.")
+        tap(app.buttons["receipt.document.accept"])
+        let action = app.buttons["receipt.action.0"]
+        XCTAssertTrue(action.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["receipt.action.1"].exists)
+        XCTAssertEqual(app.switches["I checked the purchase date."].value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+    }
+
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         func receiptTap(_ control: XCUIElement) {
             for _ in 0..<4 {
