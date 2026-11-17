@@ -12,6 +12,7 @@ private enum PantrySheet: Identifiable {
 struct PantryHomeView: View {
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
+    var offersStaplePrompts = false
     @State private var sheet: PantrySheet?
     @AccessibilityFocusState private var resultFocused: Bool
 
@@ -37,6 +38,10 @@ struct PantryHomeView: View {
                             }
                             Button(pantryText("Receipt history")) { sheet = .prices }
                                 .disabled(!model.canEdit).accessibilityIdentifier("pantry.receiptHistory")
+                            if offersStaplePrompts && model.supportsReceiptAliases {
+                                NavigationLink(pantryText("Running-low staples")) { PantryStaplesView(model: model) }
+                                    .accessibilityIdentifier("pantry.staples")
+                            }
                             let purchases = model.recentPurchases
                             if !purchases.isEmpty {
                                 DisclosureGroup(pantryText("Choose a recent purchase")) {

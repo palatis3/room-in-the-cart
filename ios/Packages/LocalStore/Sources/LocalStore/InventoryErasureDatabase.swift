@@ -5,7 +5,7 @@ extension ComparisonDatabase {
   func migrateInventoryErasure() throws {
     try transaction {
       let version = try integer("PRAGMA user_version")
-      if (4...6).contains(version) {
+      if (4...7).contains(version) {
         try validateInventoryErasure()
         return
       }
@@ -393,6 +393,7 @@ extension ComparisonStore {
       "DELETE FROM inventory_erasure_entries WHERE operation_id IN (SELECT id FROM inventory_erasures WHERE status='cancelled')",
       [])
     if plan.scope == .origin {
+      try database.run("DELETE FROM inventory_staple_preferences", [])
       let records = try database.integer("SELECT count(*) FROM inventory_heads")
       let comparisons = try database.integer("SELECT count(*) FROM comparisons")
       try database.run(

@@ -37,7 +37,7 @@ struct PantrySetupView: View {
             if scope == nil {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if case .ready(let original, let model) = phase, original == scope, model.phase != .accessDenied {
-                PantryHomeView(model: model, accessAllowed: true)
+                PantryHomeView(model: model, accessAllowed: true, offersStaplePrompts: true)
             } else {
                 List {
                     if busy { ProgressView(pantryText("Working…")) }

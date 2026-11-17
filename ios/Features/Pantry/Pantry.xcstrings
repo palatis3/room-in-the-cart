@@ -3569,6 +3569,210 @@
           }
         }
       }
+    },
+    "Running-low staples": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running-low staples"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Básicos por revisar"
+          }
+        }
+      }
+    },
+    "Ask about regularly purchased staples": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask about regularly purchased staples"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preguntar por los básicos que compro con frecuencia"
+          }
+        }
+      }
+    },
+    "No staples are due for a check. A suggestion needs at least three comparable purchase days.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No staples are due for a check. A suggestion needs at least three comparable purchase days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por ahora no hay básicos que revisar. Para sugerir uno se necesitan compras comparables en al menos tres días distintos."
+          }
+        }
+      }
+    },
+    "Need %@ this week?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Need %@ this week?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Necesitas %@ esta semana?"
+          }
+        }
+      }
+    },
+    "Usually purchased about every %@ days.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usually purchased about every %@ days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sueles comprarlo aproximadamente cada %@ días."
+          }
+        }
+      }
+    },
+    "Still have it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still have it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía tengo"
+          }
+        }
+      }
+    },
+    "Snooze one week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snooze one week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posponer una semana"
+          }
+        }
+      }
+    },
+    "Dismiss this suggestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss this suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar esta sugerencia"
+          }
+        }
+      }
+    },
+    "Use confirmed purchases on this device to suggest when to check a staple. You decide what to buy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use confirmed purchases on this device to suggest when to check a staple. You decide what to buy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa las compras confirmadas en este dispositivo para sugerir cuándo revisar un básico. Tú decides qué comprar."
+          }
+        }
+      }
+    },
+    "Open shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la lista de compras"
+          }
+        }
+      }
+    },
+    "Couldn’t read staple reminders. Refresh to try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t read staple reminders. Refresh to try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron leer los recordatorios de básicos. Actualiza para volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Your confirmed counts show none left in the recorded batches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your confirmed counts show none left in the recorded batches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Según tus recuentos confirmados, no queda nada en los lotes registrados."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

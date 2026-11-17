@@ -376,6 +376,56 @@ final class PantryRepository {
         }
     }
 
+    func staplePreferences() async throws -> StaplePromptPreferences {
+        try requireAccess()
+        guard let persona = aliasPersonaID else { throw Failure.unauthorized }
+        let value = try await store.staplePreferences(persona: persona)
+        try requireAccess()
+        return value
+    }
+
+    func setStaplePrompts(_ enabled: Bool, expected: UUID?) async throws {
+        try requireAccess()
+        guard let persona = aliasPersonaID else { throw Failure.unauthorized }
+        try await store.setStaplePrompts(enabled, persona: persona, expectedRevision: expected)
+        try requireAccess()
+    }
+
+    func answerStaple(_ answer: StaplePromptAnswer, prompt: StaplePrompt, revision: UUID, expected: InventoryState) async throws {
+        try requireAccess()
+        guard let persona = aliasPersonaID, expected.workspaceID == originID else { throw Failure.unauthorized }
+        try await store.answerStaplePrompt(answer, foodID: prompt.id, sourceID: prompt.latestAcquisitionID,
+            persona: persona, expectedRevision: revision, inventoryRevision: expected.revision)
+        try requireAccess()
+    }
+
+    func staplePurchases(expected: InventoryState) async throws -> [ReceiptAcquisition] {
+        try requireAccess()
+        guard aliasPersonaID != nil, expected.workspaceID == originID,
+              try await store.inventoryState() == expected else { throw Failure.inconsistentSnapshot }
+        var purchases: [ReceiptAcquisition] = []
+        var remainingBytes = limits.payloadBytes
+        var cursor: UUID?
+        repeat {
+            try requireAccess()
+            try Task.checkCancellation()
+            let rows = try await store.acquisitionRows(firstRevisionOnly: true, after: cursor, limit: 200)
+            remainingBytes -= rows.reduce(0) { $0 + $1.payload.count }
+            guard remainingBytes >= 0, purchases.count + rows.count <= limits.observations else { throw InventoryError.capacity }
+            let page = try await Self.decodeStaplePurchases(rows)
+            purchases.append(contentsOf: page)
+            cursor = rows.count == 200 ? rows.last?.id : nil
+        } while cursor != nil
+        guard try await store.inventoryState() == expected else { throw Failure.inconsistentSnapshot }
+        try requireAccess()
+        return purchases
+    }
+
+    @concurrent private static func decodeStaplePurchases(_ rows: [InventoryAcquisitionRow]) async throws -> [ReceiptAcquisition] {
+        try Task.checkCancellation()
+        return try rows.map(PantryAcquisitionCodec.record)
+    }
+
     func acquisitionHistory(receiptID: UUID? = nil, after: UUID? = nil, limit: Int = 30) async throws -> [ReceiptAcquisition] {
         try requireAccess()
         let rows = try await store.acquisitionRows(receiptID: receiptID, after: after, limit: limit)

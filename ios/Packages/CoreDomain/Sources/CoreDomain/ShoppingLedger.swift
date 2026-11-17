@@ -1440,7 +1440,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
 }
 
-private func normalizedProduct(_ value: String) -> String {
+func normalizedProduct(_ value: String) -> String {
     // Printable ASCII only needs case folding and space normalization.
     if value.utf8.allSatisfy({ (0x20...0x7e).contains($0) }) {
         return value.lowercased().split(separator: " ").joined(separator: " ")

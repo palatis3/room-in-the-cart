@@ -35,9 +35,9 @@ final class InventoryPersistenceTests: XCTestCase {
         XCTAssertEqual(store.workspaceID, workspace)
         let snapshot = try await store.inventoryCutoverSnapshot()
         XCTAssertEqual(snapshot.sources, [saved])
-        XCTAssertEqual(try scalar("PRAGMA user_version"), 6)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 7)
         try await store.close()
-        XCTAssertThrowsError(try ComparisonStore(url: url)) { XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(6)) }
+        XCTAssertThrowsError(try ComparisonStore(url: url)) { XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(7)) }
         let other = directory.appendingPathComponent("comparisons.sqlite")
         let generic = try ComparisonStore(url: other)
         _ = try await generic.save(id: UUID(), title: "Pack", payload: Data([1]), savedAt: Date())
@@ -45,6 +45,48 @@ final class InventoryPersistenceTests: XCTestCase {
         catch { XCTAssertEqual(error as? ComparisonStoreError, .inventoryDisabled) }
         try await generic.close()
         XCTAssertEqual(try scalar("PRAGMA user_version", at: other), 2)
+    }
+
+    func testStapleConsentSnoozeAndDismissPersistOnlyForTheCurrentPersonaAndReceipt() async throws {
+        let initial = try ComparisonStore(url: url, inventoryEnabled: true)
+        try await activate(initial)
+        let parent = lot(), persona = UUID(), other = UUID(), food = UUID()
+        let source = InventoryAcquisitionRow(id: UUID(), receiptID: UUID(), lineID: UUID(), lotID: parent.record.key.id,
+            revision: 1, supersedesID: nil, payload: Data([9]))
+        _ = try await initial.commitInventory(.init(workspaceID: initial.workspaceID, operationID: UUID(), expectedRevision: 1,
+            request: Data([2]), writes: [parent], acquisitions: [source]))
+        try await initial.close()
+        try sql("DROP TABLE inventory_staple_answers; DROP TABLE inventory_staple_preferences; PRAGMA user_version=6;")
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        let off = try await store.staplePreferences(persona: persona)
+        XCTAssertFalse(off.enabled)
+        try await store.setStaplePrompts(true, persona: persona, expectedRevision: nil)
+        let enabled = try await store.staplePreferences(persona: persona)
+        let revision = try XCTUnwrap(enabled.revision)
+        let until = Date(timeIntervalSince1970: 1_800_000_000)
+        try await store.answerStaplePrompt(.snooze(until: until), foodID: food, sourceID: source.id, persona: persona,
+                                          expectedRevision: revision, inventoryRevision: 2)
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        let saved = try await reopened.staplePreferences(persona: persona)
+        let unrelated = try await reopened.staplePreferences(persona: other)
+        XCTAssertEqual(saved.answers, [source.id: .snooze(until: until)])
+        XCTAssertFalse(unrelated.enabled)
+        do {
+            try await reopened.answerStaplePrompt(.dismiss, foodID: food, sourceID: source.id, persona: persona,
+                                                  expectedRevision: revision, inventoryRevision: 2)
+            XCTFail("An outdated reminder must not overwrite a newer choice")
+        } catch ComparisonStoreError.staleInventory {}
+        try await reopened.answerStaplePrompt(.dismiss, foodID: food, sourceID: source.id, persona: persona,
+                                              expectedRevision: XCTUnwrap(saved.revision), inventoryRevision: 2)
+        let dismissed = try await reopened.staplePreferences(persona: persona)
+        XCTAssertEqual(dismissed.answers, [source.id: .dismiss])
+        try await reopened.setStaplePrompts(false, persona: persona, expectedRevision: dismissed.revision)
+        let disabled = try await reopened.staplePreferences(persona: persona)
+        XCTAssertEqual(disabled, off)
+        let finalState = try await reopened.inventoryState()
+        XCTAssertEqual(finalState.revision, 2, "Reminder answers must never change stock")
+        try await reopened.close()
     }
 
     func testVersionFiveReceiptEvidenceMigratesToAnEmptySpellingStore() async throws {
@@ -56,12 +98,12 @@ final class InventoryPersistenceTests: XCTestCase {
         _ = try await original.commitInventory(.init(workspaceID: original.workspaceID, operationID: UUID(), expectedRevision: 1,
             request: Data([3]), writes: [parent], acquisitions: [row]))
         try await original.close()
-        try sql("DROP TABLE inventory_receipt_aliases; PRAGMA user_version=5;")
+        try sql("DROP TABLE inventory_staple_answers; DROP TABLE inventory_staple_preferences; DROP TABLE inventory_receipt_aliases; PRAGMA user_version=5;")
         let migrated = try ComparisonStore(url: url, inventoryEnabled: true)
         let rows = try await migrated.acquisitionRows(), aliases = try await migrated.receiptAliasCount()
         XCTAssertEqual(rows, [row])
         XCTAssertEqual(aliases, 0)
-        XCTAssertEqual(try scalar("PRAGMA user_version"), 6)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 7)
         try await migrated.close()
     }
 
