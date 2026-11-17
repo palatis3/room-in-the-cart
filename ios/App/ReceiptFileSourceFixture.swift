@@ -13,10 +13,10 @@ struct ReceiptFileSourceFixture: View {
     var body: some View {
         VStack {
             if let pdfURL {
-                ShareLink("Share sample receipt PDF", item: pdfURL)
-                Button("Export sample receipt PDF") { exporting = true }
+                ShareLink(item: pdfURL) { Text(verbatim: "Share sample receipt PDF") }
+                Button { exporting = true } label: { Text(verbatim: "Export sample receipt PDF") }
             }
-            if let photoURL { ShareLink("Share sample receipt photo", item: photoURL) }
+            if let photoURL { ShareLink(item: photoURL) { Text(verbatim: "Share sample receipt photo") } }
             if saved { Text(verbatim: "Sample receipt exported").accessibilityIdentifier("fixture.receipt.exported") }
         }
         .task {
