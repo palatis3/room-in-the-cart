@@ -295,6 +295,8 @@ func tonightIssue(_ issue: MealEligibilityPolicy.Issue) -> String {
     case .disliked(let term): tonightText("Preference difference") + ": " + term
     case .appliancesUnavailable(let items): tonightText("Unavailable appliances") + ": " + items.joined(separator: ", ")
     case .brandMismatch: tonightText("Brand preferences differ.")
+    case .durationAboveLimit: dinnerText("Total preparation time exceeds your available time.")
+    case .durationUnknown: dinnerText("Total elapsed preparation time is unknown.")
     case .effortAboveLimit: tonightText("Preparation effort exceeds your preference.")
     case .ingredientsUnknown: tonightText("Ingredient details need review for your restrictions.")
     case .appliancesUnknown: tonightText("Required appliances have not been reviewed.")
