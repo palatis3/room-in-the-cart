@@ -57,6 +57,7 @@ import DeviceSurfaces
     private let directory: URL
     private let runtime: SurfaceRuntimeIsolation
     private let bundle: Bundle
+    let homeSummaries: AdultHomeSummaryStore
     private let captureRequests: SurfaceCaptureRequests
     private let clock: () -> Date
     private let reminderScheduler: (any NotificationScheduling)?
@@ -67,6 +68,10 @@ import DeviceSurfaces
         let runtime = SurfaceRuntimeIsolation(directory: directory, launchArguments: launchArguments,
             applicationSupport: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0])
         self.runtime = runtime; self.directory = runtime.directory
+        if directory != nil {
+            homeSummaries = AdultHomeSummaryStore(directory: runtime.directory.appendingPathComponent("AdultHome"),
+                widgetDirectory: { runtime.directory.appendingPathComponent("TestWidget") }, reload: { _ in })
+        } else { homeSummaries = .shared }
         self.bundle = bundle; self.clock = clock
         self.reminderScheduler = reminderScheduler
         self.captureRequests = captureRequests ?? .shared
@@ -175,6 +180,7 @@ import DeviceSurfaces
         try? projection?.clear(now: clock()); runtime.performSystemEffect { WidgetCenter.shared.reloadTimelines(ofKind: "RoomInTheCartCapture") }
     }
     func scopeChanged() {
+        homeSummaries.revokeAll()
         resumeShoppingBinding = nil; shoppingExpiry?.cancel()
         nonce = UUID(); entries = []; draft = nil; destinationChange = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
@@ -483,7 +489,7 @@ import DeviceSurfaces
     func open(_ handle: RouteHandle) async {
         guard ledger != nil, ledger?.ready == true, pickup?.ready == true else { pendingHandle = handle; return }
         guard privateAuthorized else { destination = .unavailable(UUID()); return }
-        if let kind = AdultHomeSummaryStore.shared.publishedKind(for: handle, now: clock()) {
+        if let kind = homeSummaries.publishedKind(for: handle, now: clock()) {
             destination = .adultSummary(UUID(), kind, handle); return
         }
         await sourceDidChange()
@@ -560,7 +566,7 @@ import DeviceSurfaces
         try routes?.remove(row.route.handle)
     }
     func eraseLedgerWorkspace(_ id: UUID) async throws {
-        try AdultHomeSummaryStore.shared.invalidateLedger(id, forget: true)
+        try homeSummaries.invalidateLedger(id, forget: true)
         // Replayed by foreground tombstone reconciliation and Records deletion.
         try await CaptureMediaStore.shared.eraseWorkspace(id)
         try configure()
