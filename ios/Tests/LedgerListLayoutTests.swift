@@ -38,6 +38,67 @@ import CoreDomain
         XCTAssertEqual(model.shop?.search(model.search).map(\.name), ["beans"])
     }
 
+    func testRememberedDepartmentSurvivesRealLedgerReopenAndScopedRecordsProjection() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let original = try populated("Market North")
+        let starting = await model.change(key: "department-start") { workspace in
+            workspace.shops = [original]
+            workspace.selectedShopID = original.id
+        }
+        XCTAssertTrue(starting)
+        let remembered = await model.change(key: "remember-apples") { workspace in
+            try workspace.listLayout.setDepartment("Fresh fruit", for: original.lines[0], in: original, remember: true)
+            try workspace.listLayout.setDepartment("Private cooler", for: original.lines[1], in: original, remember: true)
+        }
+        XCTAssertTrue(remembered)
+        var next = ShoppingLedger(basis: ShopBasis(branch: "Market North"))
+        let apples = try next.addManualLine(name: "Apples", quantity: nil)
+        let created = await model.change(key: "next-department-list") { workspace in
+            workspace.shops.append(next)
+            workspace.selectedShopID = next.id
+        }
+        XCTAssertTrue(created)
+        let reopened = LedgerModel(databaseURL: url)
+        await reopened.open()
+        let shop = try XCTUnwrap(reopened.shop)
+        XCTAssertEqual(shop, next)
+        let scoped = try RecordsNativeCodec.ledgerScope(reopened.workspace, shop: shop)
+        XCTAssertEqual(scoped.listLayout.groups(shop: shop, search: "fruit").flatMap(\.lines).map(\.id), [apples])
+        let restored = try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(scoped))
+        XCTAssertEqual(restored.listLayout.groups(shop: shop).map(\.aisle), ["Fresh fruit"])
+        let encoded = String(decoding: try JSONEncoder().encode(restored), as: UTF8.self)
+        XCTAssertFalse(encoded.contains("Private cooler"))
+        XCTAssertEqual(reopened.workspace.shops.first, original)
+    }
+
+    func testNewStoreNameCorrectionsPreserveReorderedAisles() throws {
+        let shop = try populated("Market A")
+        var layout = LedgerListLayout()
+        _ = try layout.matchStore(in: shop, to: nil)
+        try layout.setStoreOrder(["Dairy", "Produce"], in: shop)
+        var draft = LedgerDepartmentOrderDraft(layout: layout, shop: shop)
+        draft.select(.new, scope: .storeDefault, in: layout, shop: shop)
+        XCTAssertFalse(draft.isNameValid(in: layout), "The initial branch name already belongs to another store.")
+        XCTAssertEqual(draft.aisles, ["Produce", "Dairy"])
+        draft.name = "Another market"
+        XCTAssertTrue(draft.isNameValid(in: layout))
+        draft.aisles.swapAt(0, 1)
+        draft.name = "Market A"
+        XCTAssertFalse(draft.isNameValid(in: layout))
+        XCTAssertEqual(draft.aisles, ["Dairy", "Produce"])
+        draft.name = "Market A Annex"
+        XCTAssertTrue(draft.isNameValid(in: layout))
+        XCTAssertEqual(draft.aisles, ["Dairy", "Produce"])
+        try draft.matchChosenStore(in: &layout, shop: shop)
+        try layout.setStoreOrder(draft.aisles, in: shop)
+        XCTAssertEqual(layout.aisleNames(in: shop), ["Dairy", "Produce"])
+        XCTAssertEqual(layout.departmentDirectory?.stores.values.first { $0.name == "Market A Annex" }?.order, draft.aisles)
+    }
+
     func testStoreOrderShopOverrideSearchAndOriginalIdentitySurviveRelaunch() throws {
         var a = try populated("Market A")
         let b = try populated("Market A"), other = try populated("Market B")
