@@ -595,6 +595,7 @@ private struct RecordsRecoveredPantryView: View {
                             recoveredDirectory: directory.appendingPathComponent("Recoveries", isDirectory: true),
                             initiatingPresentation: self, cleanup: { [weak self] cleanup, receipt in
                                 guard let self, authorize(), cleanup.originID == receipt.workspaceID else { throw ArchiveError.unavailable }
+                                try await PantryDigestStore.shared.erase(origin: cleanup.originID, whole: cleanup.wholeOrigin, inventory: stores.inventory)
                                 self.pantryErasureChangedRecords = true
                                 try await worker.reconcilePreparedImports(registry: registry, requireIdle: true)
                                 for id in cleanup.pickupIDs {

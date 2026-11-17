@@ -163,6 +163,8 @@ import LocalStore
         try await requireLedger(planning)
         try await requireCurrent(current)
         try requireAccess()
+        try await PantryDigestStore.shared.beforeLotCommit(batch)
+        try requireAccess()
         let receipt = try await store.commitInventory(batch, at: submission.preparedAt)
         try requireAccess()
         let after = try await readCurrent(at: now)
