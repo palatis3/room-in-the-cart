@@ -1779,6 +1779,40 @@ import XCTest
 
     func testEnglishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: false) }
     func testSpanishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: true) }
+    func testFreeRepeatLastWeekPreviewsAndAddsOneNewDatedDinner() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"])
+        tap(element("dinnerStartPickup"))
+        fill("Weekly groceries", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("dinnerManual"))
+        fill("Rice supper", into: "ledgerDinnerTitle")
+        fill("2", into: "ledgerDinnerServings", replacing: true)
+        fill("Rice", into: "Ingredient name")
+        fill("1", into: "Amount, optional")
+        enableSwitch("Assign a date")
+        tap(app.buttons["ledgerReviewDinner"])
+        tap(element("dinnerApply"))
+        XCTAssertTrue(element("dinnerApply").waitForNonExistence(timeout: 10))
+        dinnerRoot()
+        tap(element("dinner.repeatWeek"))
+        tap(element("repeatWeek.next"))
+        let included = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@", "repeatWeek.meal.")).firstMatch
+        reveal(included)
+        XCTAssertTrue(included.label.contains("Rice supper"), included.debugDescription)
+        XCTAssertEqual(included.value as? String, "1")
+        tap(element("repeatWeek.preview"))
+        XCTAssertTrue(app.buttons["dinnerApply"].waitForExistence(timeout: 10))
+        tap(app.buttons["dinnerApply"])
+        XCTAssertTrue(app.buttons["dinnerApply"].waitForNonExistence(timeout: 10))
+        tap(app.buttons["All chosen dinners, including earlier dates"])
+        let meals = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "dinnerOccurrence-", "Rice supper"))
+        XCTAssertEqual(meals.count, 2, app.debugDescription)
+        XCTAssertNotEqual(meals.element(boundBy: 0).identifier, meals.element(boundBy: 1).identifier)
+        XCTAssertNotEqual(meals.element(boundBy: 0).label, meals.element(boundBy: 1).label)
+    }
+
     func testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence() { verifyDatedMealWeek(spanish: false, moveAcrossWeek: true) }
 
     private func verifyDatedMealWeek(spanish: Bool, moveAcrossWeek: Bool = false) {

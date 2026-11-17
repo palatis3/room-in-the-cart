@@ -70,6 +70,10 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                 DinnerWeekView(model: model, shopID: shop.id, weekStart: $weekStart,
                                     showWeekGrid: $showWeekGrid, saveStatus: saveStatus)
                             }.accessibilityIdentifier("dinnerWeekEntry")
+                            DinnerDecisionButton(model: model, title: dinnerText("Repeat last week"),
+                                                 identifier: "dinner.repeatWeek") {
+                                DinnerRepeatWeekView(model: model, initialDate: weekStart)
+                            }.disabled(!model.editable)
                         }
                     }
                     Section(dinnerText("Plan")) {
