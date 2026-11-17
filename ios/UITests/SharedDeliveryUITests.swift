@@ -632,6 +632,11 @@ import XCTest
         tap(reviewReservation)
         enter("2", in: app.textFields["delivery.reservation.amount"])
         tap(app.buttons["Save amount set aside"])
+        // Saving dismisses the whole review stack asynchronously. The delivery
+        // button can already exist underneath it before hit testing is ready.
+        let matchSheet = app.navigationBars.matching(NSPredicate(format: "identifier IN %@",
+            ["Set food aside", "Tortillas", "Meal ingredient matches"])).firstMatch
+        XCTAssertTrue(matchSheet.waitForNonExistence(timeout: 8), "Saving the reservation should close its review")
         tap(app.buttons["Record usable quantity"])
         enter(XCUIKeyboardKey.delete.rawValue + "1", in: app.textFields["delivery.amount"])
         tap(save)
@@ -653,8 +658,6 @@ import XCTest
         tap(app.buttons["Release amount set aside"])
         // The delivery row remains in the accessibility tree behind the review
         // sheet while the reservation is released and its navigation stack closes.
-        let matchSheet = app.navigationBars.matching(NSPredicate(format: "identifier IN %@",
-            ["Set food aside", "Tortillas", "Meal ingredient matches"])).firstMatch
         XCTAssertTrue(matchSheet.waitForNonExistence(timeout: 8), "Releasing the reservation should close its review")
         tap(openMatches)
         tap(ingredient)
