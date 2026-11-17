@@ -95,6 +95,11 @@ import HouseholdClient
             }
             guard let workspace = model.workspaces.first else { setupFailure = true; return }
             model.keepLocalPrivate = true; await model.join(workspace)
+            if server.pantryCorrection {
+                guard model.householdPantryScope?.managesGrants == true else { setupFailure = true; return }
+                household = model
+                return
+            }
             guard model.contributorRequestScope != nil else { setupFailure = true; return }
             if server.rejectedCorrection {
                 model.item = "Cereal"
@@ -136,6 +141,10 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     let rejectedCorrection = ProcessInfo.processInfo.arguments.contains("--rejected-correction-fixture")
     let helperReadback = ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture")
     let grant = UUID().uuidString.lowercased()
+    let pantryCorrection = ProcessInfo.processInfo.arguments.contains("--household-pantry-correction")
+    private let pantryDevice = UUID().uuidString, pantryLot = UUID().uuidString
+    private var pantryRow: [String: Any]?
+    private var pantryReceipts: [String: [String: Any]] = [:]
     let childPickups = ProcessInfo.processInfo.arguments.contains("--guardian-request-pickups-fixture")
     private let nextOnlyPickup = "22222222-2222-4222-8222-222222222222"
     private let childSession = UUID().uuidString.lowercased()
@@ -157,6 +166,45 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         }
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
         func response(_ value: Any, _ status: Int = 200) throws -> (Int, Data) { (status, try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) }
+        if pantryCorrection {
+            if path == "/v1/me/workspaces" {
+                return try response(["workspaces": [["householdId": household, "label": "Fixture home", "role": "organizer"]]])
+            }
+            if path.hasSuffix("/devices") { return try response(["deviceId": pantryDevice, "deviceToken": "fixture-token"], 201) }
+            if path.hasSuffix("/bootstrap") {
+                return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member, "role": "organizer",
+                                     "enrolled": true, "queueConsent": false, "capabilities": ["household_pantry", "household_pantry_grants"]])
+            }
+            if path.hasSuffix("/pantry") {
+                return try response(["v": 1, "householdId": household, "grantEpoch": 0, "pantryRevision": pantryReceipts.count,
+                                     "asOf": "2026-11-17T10:00:00Z", "lots": pantryRow.map { [$0] } ?? [], "nextCursor": NSNull()])
+            }
+            if path.hasSuffix("/pantry/commands"), let kind = json["kind"] as? String, let key = json["clientKey"] as? String,
+               let body = json["body"] as? [String: Any] {
+                if let existing = pantryReceipts[key] { return try response(existing) }
+                guard json["pantryRevision"] as? Int == pantryReceipts.count, let quantity = body["quantity"],
+                      let time = body["confirmedAt"] as? String else { throw URLError(.badServerResponse) }
+                let operation: String
+                switch kind {
+                case "pantry.addLot" where pantryRow == nil:
+                    operation = pantryLot
+                    pantryRow = ["lotId": pantryLot, "foodName": body["foodName"]!, "location": body["location"]!,
+                                 "origin": "manual", "exclusionTags": []]
+                case "pantry.correctCount":
+                    guard let predecessor = (pantryRow?["observation"] as? [String: Any])?["observationId"] as? String,
+                          (body["lotId"] as? String)?.lowercased() == pantryLot.lowercased(),
+                          (body["predecessorId"] as? String)?.lowercased() == predecessor.lowercased() else { throw URLError(.badServerResponse) }
+                    operation = UUID().uuidString
+                default: throw URLError(.badServerResponse)
+                }
+                pantryRow?["observation"] = ["observationId": operation, "quantity": quantity, "confirmedAt": time]
+                let receipt: [String: Any] = ["v": 1, "kind": kind, "householdId": household, "operationId": operation,
+                                              "lotId": pantryLot, "grantEpoch": 0, "pantryRevision": pantryReceipts.count + 1]
+                pantryReceipts[key] = receipt
+                if kind == "pantry.correctCount" { throw URLError(.networkConnectionLost) }
+                return try response(receipt)
+            }
+        }
         if childPickups {
             if path == "/auth/v1/verify" {
                 let claims = ["iss": "https://contributor-identity.invalid/auth/v1", "sub": "fixture-sam", "session_id": childSession]

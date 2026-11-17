@@ -42,9 +42,9 @@ extension PendingShopWriteStore where Write == PendingPantryAddition {
 protocol HouseholdPantryServing: Sendable {
     func householdPantrySession(for bootstrap: HouseholdBootstrap) async throws -> HouseholdPantrySession
     func householdPantryPage(for session: HouseholdPantrySession, after previous: HouseholdPantryPage?) async throws -> HouseholdPantryPage
-    func prepareHouseholdPantryAddition(_ body: HouseholdPantryAddition, reviewed page: HouseholdPantryPage,
+    func prepareHouseholdPantryChange(_ body: HouseholdPantryChange, reviewed page: HouseholdPantryPage,
                                         session: HouseholdPantrySession) async throws -> HouseholdPantryIntent
-    func submitHouseholdPantryAddition(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) async throws -> HouseholdPantryReceipt
+    func submitHouseholdPantryChange(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) async throws -> HouseholdPantryReceipt
     func householdPantryGrants(for session: HouseholdPantrySession) async throws -> HouseholdPantryGrants
     func changeHouseholdPantryGrant(_ adult: HouseholdPantryGrants.Adult, enabled: Bool, session: HouseholdPantrySession) async throws -> HouseholdPantryGrants
 }
@@ -116,7 +116,7 @@ extension HouseholdService: HouseholdPantryServing {}
                 notice = pantryText("Pantry access has changed. Check household access again.")
                 await recheckAccess()
             case .service(status: 409, code: _, correlationID: _, retryAfter: _):
-                notice = pantryText("The pantry or its permissions changed. Reload and check the stock before adding food.")
+                notice = pantryText("The pantry or its permissions changed. Reload and check the current stock.")
             case .cancelled: break
             default: notice = pantryText("The result could not be confirmed. Reload the pantry to check stock and any saved retry.")
             }
@@ -148,7 +148,7 @@ extension HouseholdService: HouseholdPantryServing {}
             } else {
                 try await store.complete(record, expectedEpoch: epoch)
                 try check(start)
-                notice = pantryText("An earlier retry ended when pantry access changed. Check the stock before adding food.")
+                notice = pantryText("An earlier retry ended when pantry access changed. Check the current stock.")
             }
         }
         session = currentSession
@@ -169,9 +169,16 @@ extension HouseholdService: HouseholdPantryServing {}
     }
 
     func confirm(_ addition: HouseholdPantryAddition, reviewed: HouseholdPantryPage) async {
+        await confirmChange(.addition(addition), reviewed: reviewed)
+    }
+    func confirmChange(_ change: HouseholdPantryChange, reviewed: HouseholdPantryPage) async {
         guard let session, let storeEpoch, pending == nil, page == reviewed else { return }
+        if case .correction(let correction) = change {
+            guard lots.contains(where: { $0.id == correction.lotId && $0.origin == .manual &&
+                $0.observation?.observationId == correction.predecessorId }) else { return }
+        }
         await perform { start in
-            let intent = try await service.prepareHouseholdPantryAddition(addition, reviewed: reviewed, session: session)
+            let intent = try await service.prepareHouseholdPantryChange(change, reviewed: reviewed, session: session)
             try check(start)
             let record = PendingPantryAddition(subject: scope.subject, intent: intent)
             try await store.save(record, expectedEpoch: storeEpoch)
@@ -189,21 +196,27 @@ extension HouseholdService: HouseholdPantryServing {}
     private func submit(_ record: PendingPantryAddition, session: HouseholdPantrySession, epoch: UUID, start: UUID) async throws {
         guard try await store.contains(record, expectedEpoch: epoch) else { throw ClientError.cancelled }
         try check(start)
-        _ = try await service.submitHouseholdPantryAddition(record.intent, session: session)
+        _ = try await service.submitHouseholdPantryChange(record.intent, session: session)
         try check(start)
         clearFacts()
         do {
             try await store.complete(record, expectedEpoch: epoch)
             try check(start)
             try await loadFirstPage(start)
-            notice = pantryText("Food added to the household pantry.")
+            switch record.intent.change {
+            case .addition: notice = pantryText("Food added to the household pantry.")
+            case .correction: notice = pantryText("Count corrected.")
+            }
         } catch {
             try check(start)
             switch error as? ClientError {
             case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
                 throw error
             default:
-                notice = pantryText("Food added. Reload to see the updated stock.")
+                switch record.intent.change {
+                case .addition: notice = pantryText("Food added. Reload to see the updated stock.")
+                case .correction: notice = pantryText("Count corrected. Reload to see the updated stock.")
+                }
             }
         }
     }

@@ -13,6 +13,11 @@ private actor PantryTestService: HouseholdPantryServing {
     var accessDenied = false
     var failsRefreshAfterReceipt = false
     var paged = false
+    let initialObservation = UUID()
+    var countedLot: UUID?
+    var latestCorrection: (id: UUID, count: HouseholdPantryCountCorrection)?
+    var correctionReceipts: [UUID: HouseholdPantryReceipt] = [:]
+    func enableCorrections() { countedLot = UUID() }
     func lotID(_ n: Int) -> String { String(format: "30000000-0000-4000-8000-%012d", n) }
     let adultID = UUID()
     var adultEnabled = false
@@ -32,23 +37,50 @@ private actor PantryTestService: HouseholdPantryServing {
         guard !accessDenied else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
         if failsRefreshAfterReceipt && !sent.isEmpty { throw ClientError.transport }
         let range = previous == nil ? 1...50 : 51...51
-        let lots: [[String: Any]] = paged ? range.map { n in
+        var lots: [[String: Any]] = paged ? range.map { n in
             ["lotId": lotID(n), "origin": "manual", "foodName": "Food \(n)", "location": "fridge", "storedAt": NSNull(),
              "useFirstAt": NSNull(), "exclusionTags": [], "observation": NSNull()]
         } : []
+        if let countedLot {
+            let amount: Any
+            if let latestCorrection {
+                amount = try JSONSerialization.jsonObject(with: JSONEncoder().encode(latestCorrection.count.quantity), options: .fragmentsAllowed)
+            } else {
+                amount = ["amount": ["numerator": 2, "denominator": 1], "unit": "count", "originalLiteral": "2"]
+            }
+            lots = [["lotId": countedLot.uuidString, "origin": "manual", "foodName": "Limes", "location": "fridge",
+                     "exclusionTags": [], "observation": ["observationId": (latestCorrection?.id ?? initialObservation).uuidString,
+                     "confirmedAt": "2026-11-17T10:00:00Z", "quantity": amount]]]
+        }
         return try pantryFixture(["v": 1, "householdId": session.householdID.uuidString, "grantEpoch": grantEpoch,
             "pantryRevision": sent.isEmpty ? 0 : 1, "asOf": "2026-11-17T10:00:00Z", "lots": lots,
             "nextCursor": paged && previous == nil ? lotID(50) as Any : NSNull()])
     }
-    func prepareHouseholdPantryAddition(_ body: HouseholdPantryAddition, reviewed page: HouseholdPantryPage,
+    func prepareHouseholdPantryChange(_ body: HouseholdPantryChange, reviewed page: HouseholdPantryPage,
                                         session: HouseholdPantrySession) throws -> HouseholdPantryIntent {
-        try pantryFixture(["session": JSONSerialization.jsonObject(with: JSONEncoder().encode(session)),
-            "expiresAt": "2099-12-31T00:00:00Z", "command": ["v": 1, "kind": "pantry.addLot", "clientKey": UUID().uuidString,
+        let kind: String
+        switch body {
+        case .addition: kind = "pantry.addLot"
+        case .correction: kind = "pantry.correctCount"
+        }
+        return try pantryFixture(["session": JSONSerialization.jsonObject(with: JSONEncoder().encode(session)),
+            "expiresAt": "2099-12-31T00:00:00Z", "command": ["v": 1, "kind": kind, "clientKey": UUID().uuidString,
             "replayWindow": UUID().uuidString, "grantEpoch": page.grantEpoch, "pantryRevision": page.pantryRevision,
             "body": JSONSerialization.jsonObject(with: JSONEncoder().encode(body))]])
     }
-    func submitHouseholdPantryAddition(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) throws -> HouseholdPantryReceipt {
+    func submitHouseholdPantryChange(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) throws -> HouseholdPantryReceipt {
         sent.append(intent)
+        if case .correction(let correction) = intent.change {
+            if let receipt = correctionReceipts[intent.id] { return receipt }
+            let operation = UUID()
+            let receipt: HouseholdPantryReceipt = try pantryFixture(["v": 1, "kind": "pantry.correctCount",
+                "householdId": session.householdID.uuidString, "grantEpoch": grantEpoch, "operationId": operation.uuidString,
+                "lotId": correction.lotId.uuidString, "pantryRevision": 1])
+            latestCorrection = (operation, correction)
+            correctionReceipts[intent.id] = receipt
+            if losesResponse { throw ClientError.transport }
+            return receipt
+        }
         if losesResponse { throw ClientError.transport }
         let id = UUID().uuidString
         return try pantryFixture(["v": 1, "kind": "pantry.addLot", "householdId": session.householdID.uuidString,
@@ -205,6 +237,33 @@ private actor PantryTestService: HouseholdPantryServing {
         XCTAssertTrue(granted.enabled)
         await organizer.changeGrant(granted)
         XCTAssertEqual(organizer.grants?.adults.first?.enabled, false)
+    }
+
+    func testReopenCorrectedCountAndRecoverLostReceiptWithOneStoredIntent() async throws {
+        let service = try PantryTestService(), url = temporaryURL()
+        await service.enableCorrections()
+        let first = try makeModel(service: service, store: .init(url: url))
+        await first.load()
+        let page = try XCTUnwrap(first.page), lot = try XCTUnwrap(first.lots.first)
+        XCTAssertEqual(lot.observation?.quantity?.amount.numerator, 2)
+        let zero = SharedMealQuantity(amount: .init(numerator: 0, denominator: 1), unit: "count", originalLiteral: "0")
+        let correction = try HouseholdPantryCountCorrection(lot: lot, confirmedAt: "2026-11-17T11:00:00Z", quantity: zero)
+        await service.setLoss(true)
+        await first.confirmChange(.correction(correction), reviewed: page)
+        first.dismiss()
+        let recovered = try makeModel(service: service, store: .init(url: url))
+        await recovered.load()
+        XCTAssertEqual(recovered.lots.map(\.id), [lot.id])
+        XCTAssertEqual(recovered.lots.first?.observation?.quantity, zero)
+        let pending = try XCTUnwrap(recovered.pending?.intent)
+        XCTAssertEqual(pending.change, .correction(correction))
+        await service.setLoss(false)
+        await recovered.retry()
+        XCTAssertNil(recovered.pending)
+        XCTAssertEqual(recovered.lots.first?.observation?.quantity, zero)
+        let receipts = await service.correctionReceipts, sent = await service.sent
+        XCTAssertEqual(receipts.count, 1)
+        XCTAssertEqual(sent, [pending, pending])
     }
 
     func testExplicitZeroUnknownAndFractionReview() throws {

@@ -19,9 +19,9 @@ private struct HouseholdPantryView: View {
     @State private var sheet: Sheet?
     @State private var clearingRetry = false
     private enum Sheet: Identifiable {
-        case addition(HouseholdPantryPage), grants
+        case addition(HouseholdPantryPage), correction(HouseholdPantryPage, HouseholdPantryPage.Lot), grants
         var id: Int {
-            switch self { case .addition: 0; case .grants: 1 }
+            switch self { case .addition: 0; case .grants: 1; case .correction: 2 }
         }
     }
     init(household: HouseholdModel, scope: HouseholdPantryRuntime, service: HouseholdService) {
@@ -46,11 +46,16 @@ private struct HouseholdPantryView: View {
                             }
                         }
                         if let pending = model.pending {
-                            Section(pantryText("Earlier addition")) {
-                                PantryAdditionFacts(addition: pending.intent.addition)
-                                Text(pantryText("Check the stock below. Retrying sends the same addition."))
+                            Section(pantryText("Saved pantry change")) {
+                                switch pending.intent.change {
+                                case .addition(let addition): PantryAdditionFacts(addition: addition)
+                                case .correction(let correction):
+                                    if let lot = model.lots.first(where: { $0.id == correction.lotId }) { Text(lot.foodName) }
+                                    LabeledContent(pantryText("Corrected count"), value: deliveryQuantityText(correction.quantity))
+                                }
+                                Text(pantryText("Check the stock below. Retrying sends the same change."))
                                 if let deadline = serviceDate(pending.intent.expiresAt), deadline > Date() {
-                                    Button(pantryText("Retry the same addition")) { Task { await model.retry() } }
+                                    Button(pantryText("Retry the same change")) { Task { await model.retry() } }
                                         .accessibilityIdentifier("householdPantry.retry")
                                 } else { Text(pantryText("The retry period has ended.")) }
                                 Button(pantryText("Clear saved retry"), role: .destructive) { clearingRetry = true }
@@ -72,6 +77,11 @@ private struct HouseholdPantryView: View {
                                     }
                                     PantryStorageFacts(storedAt: lot.storedAt, useFirstAt: lot.useFirstAt, tags: lot.exclusionTags)
                                 }.accessibilityElement(children: .combine)
+                                if model.pending == nil, lot.origin == .manual, lot.observation != nil {
+                                    Button(pantryText("Correct count")) { sheet = .correction(page, lot) }
+                                        .accessibilityLabel(Text(pantryText("Correct count")) + Text(verbatim: " · " + lot.foodName))
+                                        .accessibilityIdentifier("householdPantry.correct." + lot.id.uuidString)
+                                }
                             }
                             if page.nextCursor != nil {
                                 Button(pantryText("Load more food")) { Task { await model.loadMore() } }
@@ -98,6 +108,7 @@ private struct HouseholdPantryView: View {
                 NavigationStack {
                     switch item {
                     case .addition(let reviewed): HouseholdPantryEditor(model: model, page: reviewed)
+                    case .correction(let page, let lot): HouseholdPantryCountEditor(model: model, page: page, lot: lot)
                     case .grants: HouseholdPantryGrantsView(model: model)
                     }
                 }.interactiveDismissDisabled(model.busy)
@@ -142,10 +153,7 @@ struct HouseholdPantryDraft {
     func review(at now: Date = Date()) throws -> HouseholdPantryAddition {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let quantity = try DinnerEntry.quantity(literal, unit: unit).map {
-            SharedMealQuantity(amount: .init(numerator: Int($0.amount.numerator), denominator: Int($0.amount.denominator)),
-                               unit: unit.rawValue, originalLiteral: $0.originalLiteral)
-        }
+        let quantity = try pantryEntryQuantity(literal, unit: unit)
         guard !knownStored || storedAt <= now else { throw ClientError.configuration }
         let value = HouseholdPantryAddition(foodName: name.trimmingCharacters(in: .whitespacesAndNewlines), location: location,
             storedAt: knownStored ? formatter.string(from: storedAt) : nil, useFirstAt: knownUseFirst ? formatter.string(from: useFirstAt) : nil,
@@ -201,6 +209,67 @@ private struct HouseholdPantryEditor: View {
     }
 }
 
+private func pantryEntryQuantity(_ literal: String, unit: UnitOfMeasure) throws -> SharedMealQuantity? {
+    try DinnerEntry.quantity(literal, unit: unit).map {
+        SharedMealQuantity(amount: .init(numerator: Int($0.amount.numerator), denominator: Int($0.amount.denominator)),
+                           unit: unit.rawValue, originalLiteral: $0.originalLiteral)
+    }
+}
+
+private struct HouseholdPantryCountEditor: View {
+    @ObservedObject var model: HouseholdPantryModel
+    let page: HouseholdPantryPage
+    let lot: HouseholdPantryPage.Lot
+    @Environment(\.dismiss) private var dismiss
+    @State private var literal: String
+    @State private var unit: UnitOfMeasure
+    @State private var reviewed: HouseholdPantryCountCorrection?
+    @State private var invalid = false
+
+    init(model: HouseholdPantryModel, page: HouseholdPantryPage, lot: HouseholdPantryPage.Lot) {
+        self.model = model
+        self.page = page
+        self.lot = lot
+        let count = lot.observation?.quantity
+        _literal = State(initialValue: count?.originalLiteral ?? "")
+        _unit = State(initialValue: count.flatMap { UnitOfMeasure(rawValue: $0.unit) } ?? .count)
+    }
+
+    var body: some View {
+        Form {
+            Section(lot.foodName) {
+                LabeledContent(pantryText("Previous count"), value: deliveryQuantityText(lot.observation?.quantity))
+                if let reviewed {
+                    LabeledContent(pantryText("Corrected count"), value: deliveryQuantityText(reviewed.quantity))
+                }
+            }
+            if let reviewed {
+                Button(pantryText("Edit count")) { self.reviewed = nil }
+                Button(pantryText("Confirm corrected count")) {
+                    Task { await model.confirmChange(.correction(reviewed), reviewed: page); dismiss() }
+                }.accessibilityIdentifier("householdPantry.confirmCount")
+            } else {
+                Section {
+                    TextField(pantryText("Corrected count"), text: $literal).accessibilityIdentifier("householdPantry.correctedQuantity")
+                    Picker(ht("Unit"), selection: $unit) {
+                        ForEach(UnitOfMeasure.allCases, id: \.self) { Text(dinnerUnit($0)).tag($0) }
+                    }
+                } footer: { Text(ht("Leave the quantity blank if it is unknown. Enter 0 for a confirmed zero.")) }
+                if invalid { Text(pantryText("Check the count and unit.")) }
+                Button(pantryText("Review count")) {
+                    do {
+                        reviewed = try .init(lot: lot, confirmedAt: Date.now.ISO8601Format(),
+                                             quantity: pantryEntryQuantity(literal, unit: unit))
+                        invalid = false
+                    } catch { invalid = true }
+                }.accessibilityIdentifier("householdPantry.reviewCount")
+            }
+        }.disabled(model.busy)
+            .navigationTitle(pantryText("Correct count"))
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(model.busy) } }
+    }
+}
+
 private struct HouseholdPantryGrantsView: View {
     @ObservedObject var model: HouseholdPantryModel
     @Environment(\.dismiss) private var dismiss
@@ -208,7 +277,7 @@ private struct HouseholdPantryGrantsView: View {
     var body: some View {
         List {
             Section {
-                Text(pantryText("Adults with pantry access can see stored food and add food for the household."))
+                Text(pantryText("Adults with pantry access can see stored food, add food and correct counts."))
                 if let grants = model.grants {
                     if grants.adults.isEmpty { Text(pantryText("There are no other active adults to manage.")) }
                     ForEach(grants.adults) { adult in

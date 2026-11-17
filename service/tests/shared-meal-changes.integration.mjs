@@ -1723,7 +1723,12 @@ test('standalone pantry freezer enters the legacy shared allocator once while fr
  assert.equal(basis.basis.sources.find(s=>s.id===lotId).shopId,null);
  const fromHouse=ok(await call(f.owner,f.base+'/pantry')).lots.find(l=>l.lotId===lotId);
  assert.deepEqual(fromHouse.observation.quantity,q(5));assert(!('reservations' in fromHouse));
- const correction=await p.preview(lotId,q(1));ok(await p.send(correction.cmd));
+ const householdPage=ok(await call(f.owner,f.base+'/pantry'));
+ const correction={...freezer.c,kind:'pantry.correctCount',clientKey:randomUUID(),pantryRevision:householdPage.pantryRevision,
+   body:{lotId,predecessorId:fromHouse.observation.observationId,confirmedAt:p.time,quantity:q(1)}};
+ const corrected=ok(await call(f.owner,f.base+'/pantry/commands','POST',correction));
+ assert.equal(corrected.lotId,lotId);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/pantry/commands','POST',correction)),corrected);
  assert.deepEqual(ok(await call(f.owner,f.base+'/pantry')).lots.find(l=>l.lotId===lotId).observation.quantity,q(1));
  assert.equal((await p.joint()).needs.flatMap(n=>n.reservations).find(r=>r.reservationId===pin.operationId).backed.numerator,'1');
  // A separate shop shares an ordinary lot but never selected the standalone

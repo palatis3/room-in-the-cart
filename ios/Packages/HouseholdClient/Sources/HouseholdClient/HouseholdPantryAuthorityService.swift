@@ -10,9 +10,19 @@ extension HouseholdService {
         return page
     }
 
+    public func prepareHouseholdPantryAddition(_ body: HouseholdPantryAddition, reviewed page: HouseholdPantryPage,
+                                               session: HouseholdPantrySession) async throws -> HouseholdPantryIntent {
+        try await prepareHouseholdPantryChange(.addition(body), reviewed: page, session: session)
+    }
+
+    public func submitHouseholdPantryAddition(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) async throws -> HouseholdPantryReceipt {
+        guard case .addition = intent.change else { throw ClientError.configuration }
+        return try await submitHouseholdPantryChange(intent, session: session)
+    }
+
     /// Make a durable intent from exactly the page reviewed. Retrying sends the
     /// same command key, grant epoch and base even if the household has since moved on.
-    public func prepareHouseholdPantryAddition(_ body: HouseholdPantryAddition, reviewed page: HouseholdPantryPage,
+    public func prepareHouseholdPantryChange(_ body: HouseholdPantryChange, reviewed page: HouseholdPantryPage,
                                                session: HouseholdPantrySession) async throws -> HouseholdPantryIntent {
         try body.validate()
         guard page.v == 1, page.householdId == session.householdID, page.grantEpoch >= 0, page.pantryRevision >= 0 else {
@@ -24,11 +34,11 @@ extension HouseholdService {
         guard generation == start else { throw ClientError.cancelled }
         guard let id = UUID(uuidString: window.id), validHelperTimestamp(window.expiresAt) else { throw ClientError.invalidResponse }
         return HouseholdPantryIntent(session: session, expiresAt: window.expiresAt,
-            command: .init(v: 1, kind: "pantry.addLot", clientKey: UUID(), replayWindow: id,
+            command: .init(v: 1, kind: body.kind, clientKey: UUID(), replayWindow: id,
                            grantEpoch: page.grantEpoch, pantryRevision: page.pantryRevision, body: body))
     }
 
-    public func submitHouseholdPantryAddition(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) async throws -> HouseholdPantryReceipt {
+    public func submitHouseholdPantryChange(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) async throws -> HouseholdPantryReceipt {
         try intent.validate(for: session)
         try requireHouseholdPantrySession(session)
         let receipt: HouseholdPantryReceipt = try await perform("pantry/commands", method: "POST",

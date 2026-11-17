@@ -1,4 +1,4 @@
-import { addHouseholdPantryLot, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
+import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -279,7 +279,7 @@ export function createHTTPServer(options:HTTPOptions) {
           const cursor=url.searchParams.get('cursor');
           return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));
         }
-        if(path==='/pantry/commands' && method==='POST')return addHouseholdPantryLot(ctx,payload);
+        if(path==='/pantry/commands' && method==='POST')return recordHouseholdPantryCommand(ctx,payload);
         if(path==='/pantry/grants' && method==='GET')return pantryGrants(ctx);
         if(path==='/pantry/grants' && method==='POST')return changePantryGrant(ctx,payload);
         if(path==='/members'&&method==='GET')return lifecycle.members(ctx);

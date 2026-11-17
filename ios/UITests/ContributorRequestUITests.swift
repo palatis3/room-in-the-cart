@@ -12,6 +12,35 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("Contributor-request-failure") }
         app.terminate()
     }
+    func testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen() {
+        app.launchArguments = ["--ui-testing", "--household-pantry-correction", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let entry = app.buttons["household.pantry"]
+        tap(entry)
+        tap(app.buttons["householdPantry.add"])
+        fill("Limes", into: "householdPantry.name")
+        fill("2", into: "householdPantry.quantity")
+        tap(app.buttons["householdPantry.review"])
+        tap(app.buttons["householdPantry.confirm"])
+        let correct = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdPantry.correct.")).firstMatch
+        tap(correct)
+        fill("0", into: "householdPantry.correctedQuantity", replacing: true)
+        tap(app.buttons["householdPantry.reviewCount"])
+        tap(app.buttons["householdPantry.confirmCount"])
+        XCTAssertTrue(element("householdPantry.notice").waitForExistence(timeout: 10))
+        tap(app.navigationBars.buttons.firstMatch)
+        tap(entry)
+        let retry = app.buttons["householdPantry.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 10))
+        tap(retry)
+        XCTAssertTrue(correct.waitForExistence(timeout: 10))
+        XCTAssertFalse(retry.exists)
+        tap(app.navigationBars.buttons.firstMatch)
+        tap(entry)
+        tap(correct)
+        XCTAssertEqual(element("householdPantry.correctedQuantity").value as? String, "0")
+    }
+
     func testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages() {
         for (language, entry, label, refresh) in [
             ("en", "Cook instructions", "Current instruction revision", "Refresh instructions"),

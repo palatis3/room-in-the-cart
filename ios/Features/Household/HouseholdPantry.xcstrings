@@ -1,34 +1,50 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Adults with pantry access can see stored food and add food for the household.": {
+    "Adults with pantry access can see stored food, add food and correct counts.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adults with pantry access can see stored food and add food for the household."
+            "value": "Adults with pantry access can see stored food, add food and correct counts."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los adultos con acceso a la despensa pueden ver los alimentos guardados y añadir alimentos para el hogar."
+            "value": "Los adultos con acceso a la despensa pueden ver y añadir alimentos y corregir cantidades."
           }
         }
       }
     },
-    "An earlier retry ended when pantry access changed. Check the stock before adding food.": {
+    "An earlier retry ended when pantry access changed. Check the current stock.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "An earlier retry ended when pantry access changed. Check the stock before adding food."
+            "value": "An earlier retry ended when pantry access changed. Check the current stock."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El reintento anterior terminó al cambiar el acceso a la despensa. Revisa las existencias antes de añadir alimentos."
+            "value": "El reintento anterior dejó de estar disponible al cambiar el acceso a la despensa. Revisa las existencias actuales."
+          }
+        }
+      }
+    },
+    "Check the count and unit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the count and unit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad y la unidad."
           }
         }
       }
@@ -49,18 +65,18 @@
         }
       }
     },
-    "Check the stock below. Retrying sends the same addition.": {
+    "Check the stock below. Retrying sends the same change.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check the stock below. Retrying sends the same addition."
+            "value": "Check the stock below. Retrying sends the same change."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revisa las existencias que aparecen abajo. Al reintentar, se vuelve a enviar el mismo registro."
+            "value": "Revisa las existencias a continuación. Al reintentar se envía el mismo cambio."
           }
         }
       }
@@ -113,18 +129,82 @@
         }
       }
     },
-    "Earlier addition": {
+    "Confirm corrected count": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Earlier addition"
+            "value": "Confirm corrected count"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alimento pendiente de confirmación"
+            "value": "Confirmar la cantidad corregida"
+          }
+        }
+      }
+    },
+    "Correct count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corregir cantidad"
+          }
+        }
+      }
+    },
+    "Corrected count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrected count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad corregida"
+          }
+        }
+      }
+    },
+    "Count corrected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count corrected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad corregida."
+          }
+        }
+      }
+    },
+    "Count corrected. Reload to see the updated stock.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count corrected. Reload to see the updated stock."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad corregida. Vuelve a cargar para ver las existencias actualizadas."
           }
         }
       }
@@ -141,6 +221,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Editar el alimento"
+          }
+        }
+      }
+    },
+    "Edit count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar cantidad"
           }
         }
       }
@@ -337,6 +433,22 @@
         }
       }
     },
+    "Previous count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad anterior"
+          }
+        }
+      }
+    },
     "Refrigerator": {
       "localizations": {
         "en": {
@@ -417,18 +529,34 @@
         }
       }
     },
-    "Retry the same addition": {
+    "Retry the same change": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retry the same addition"
+            "value": "Retry the same change"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reintentar el mismo registro"
+            "value": "Reintentar el mismo cambio"
+          }
+        }
+      }
+    },
+    "Review count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la cantidad"
           }
         }
       }
@@ -449,6 +577,22 @@
         }
       }
     },
+    "Saved pantry change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved pantry change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio guardado en la despensa"
+          }
+        }
+      }
+    },
     "Stored food": {
       "localizations": {
         "en": {
@@ -465,18 +609,18 @@
         }
       }
     },
-    "The pantry or its permissions changed. Reload and check the stock before adding food.": {
+    "The pantry or its permissions changed. Reload and check the current stock.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The pantry or its permissions changed. Reload and check the stock before adding food."
+            "value": "The pantry or its permissions changed. Reload and check the current stock."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cambió la despensa o sus permisos. Vuelve a cargarla y revisa las existencias antes de añadir alimentos."
+            "value": "La despensa o sus permisos cambiaron. Vuelve a cargar y revisa las existencias actuales."
           }
         }
       }

@@ -1152,6 +1152,28 @@ test('standalone household pantry checks a live adult grant and device before an
   const committed=await write('Alex',request);assert.equal(committed.status,200,JSON.stringify(committed.data));
   assert.deepEqual((await write('Alex',request)).data,committed.data);
   assert.equal((await write('Alex',{...request,body:{...request.body,foodName:'different'}})).data.error.code,'key_reused');
+  const lotId=committed.data.lotId,quantity={unit:'count',amount:{numerator:0,denominator:1},originalLiteral:'0'};
+  const correction={...request,kind:'pantry.correctCount',clientKey:randomUUID(),pantryRevision:committed.data.pantryRevision,
+    body:{lotId,predecessorId:committed.data.operationId,confirmedAt:time,quantity}};
+  assert.equal((await write('Alex',{...correction,body:{...correction.body,predecessorId:randomUUID()}})).data.error.code,'stale_supply');
+  assert.equal((await write('Alex',{...correction,body:{...correction.body,lotId:randomUUID()}})).status,404);
+  const fixed=await write('Alex',correction);assert.equal(fixed.status,200,JSON.stringify(fixed.data));
+  assert.equal(fixed.data.lotId,lotId);assert.notEqual(fixed.data.operationId,lotId);
+  assert.deepEqual((await get('Mia')).data.lots.find(l=>l.lotId===lotId).observation.quantity,quantity);
+  const missing={...correction,clientKey:randomUUID(),pantryRevision:fixed.data.pantryRevision,
+    body:{...correction.body,predecessorId:fixed.data.operationId,quantity:null}};
+  const unknown=await write('Alex',missing);assert.equal(unknown.status,200);
+  assert.deepEqual((await write('Alex',correction)).data,fixed.data);
+  assert.equal((await write('Alex',{...correction,body:{...correction.body,quantity:null}})).data.error.code,'key_reused');
+  assert.equal((await write('Alex',{...correction,clientKey:randomUUID()})).data.error.code,'stale_supply');
+  const reopened=(await get('Alex')).data;
+  assert.equal(reopened.pantryRevision,unknown.data.pantryRevision);
+  assert.equal(reopened.lots.length,2);assert.equal(reopened.lots.find(l=>l.lotId===lotId).observation.quantity,null);
+  const events=(await admin.query(`SELECT operation_id,predecessor_observation_id AS predecessor,quantity,shop_id
+    FROM ritc.pantry_event WHERE household_id=$1 AND lot_id=$2 ORDER BY pantry_revision`,[f.h,lotId])).rows;
+  assert.deepEqual(events.map(e=>[e.operation_id,e.predecessor,e.quantity,e.shop_id]),[
+    [lotId,null,request.body.quantity,null],[fixed.data.operationId,lotId,quantity,null],
+    [unknown.data.operationId,fixed.data.operationId,null,null]]);
   const scoped=(await get('Mia','/pantry',{'X-View-Grant-ID':randomUUID()}));assert(scoped.status>=400);
   assert.equal((await foreign.http('Mia','GET','/pantry')).data.lots.length,0);
   assert.equal((await foreign.http(f.actors.Alex,'GET','/pantry')).status,404);
@@ -1159,18 +1181,26 @@ test('standalone household pantry checks a live adult grant and device before an
 
   assert.equal((await grant(false,1)).data.adults[0].grantEpoch,2);
   assert.equal((await get('Alex')).status,404);assert.equal((await write('Alex',request)).status,404);
+  assert.equal((await write('Alex',correction)).status,404);
   assert.equal((await grant(true,0)).status,409);
   assert.equal((await grant(true,2)).data.adults[0].grantEpoch,3);
   assert.equal((await write('Alex',request)).data.error.code,'refresh_required');
   assert.equal((await write('Alex',{...request,grantEpoch:3})).data.error.code,'refresh_required');
+  assert.equal((await write('Alex',{...correction,grantEpoch:3})).data.error.code,'refresh_required');
   const now=(await get('Mia')).data;
   const keep={...data,clientKey:randomUUID(),grantEpoch:now.grantEpoch,replayWindow:f.actors.Mia.window,pantryRevision:now.pantryRevision,
     body:{...data.body,foodName:'Independent flour',location:'pantry',quantity:null}};
-  assert.equal((await write('Mia',keep)).status,200);
+  const survivor=await write('Mia',keep);assert.equal(survivor.status,200);
   const edited={...data,grantEpoch:3,clientKey:randomUUID(),pantryRevision:now.pantryRevision+1};
-  assert.equal((await write('Alex',edited)).status,200);
+  const later=await write('Alex',edited);assert.equal(later.status,200);
+  const erasedCorrection={...correction,clientKey:randomUUID(),grantEpoch:3,pantryRevision:later.data.pantryRevision,
+    body:{...correction.body,lotId:survivor.data.lotId,predecessorId:survivor.data.operationId}};
+  assert.equal((await write('Alex',erasedCorrection)).status,200);
   await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.actors.Alex.id]);
-  assert.deepEqual((await get('Mia')).data.lots.map(l=>l.foodName),['Independent flour']);
+  const survivingLots=(await get('Mia')).data.lots;
+  assert.deepEqual(survivingLots.map(l=>l.foodName),['Independent flour']);
+  assert.equal(survivingLots[0].observation,null);
+  assert.equal((await write('Alex',erasedCorrection)).data.error.code,'refresh_required');
   assert.equal((await write('Alex',edited)).data.error.code,'refresh_required');
   await admin.query("UPDATE ritc.replay_window SET revoked_at=clock_timestamp() WHERE household_id=$1 AND window_id=$2",[f.h,f.actors.Mia.window]);
   assert.equal((await write('Mia',keep)).data.error.code,'refresh_required');

@@ -104,6 +104,76 @@ public struct HouseholdPantryAddition: Codable, Equatable, Sendable {
     }
 }
 
+public struct HouseholdPantryCountCorrection: Codable, Equatable, Sendable {
+    public let lotId: UUID
+    public let predecessorId: UUID
+    public let confirmedAt: String
+    public let quantity: SharedMealQuantity?
+
+    public init(lot: HouseholdPantryPage.Lot, confirmedAt: String, quantity: SharedMealQuantity?) throws {
+        guard lot.origin == .manual, let head = lot.observation else { throw ClientError.configuration }
+        lotId = lot.id
+        predecessorId = head.observationId
+        self.confirmedAt = confirmedAt
+        self.quantity = quantity
+        try validate()
+    }
+
+    func validate() throws {
+        guard validHelperTimestamp(confirmedAt), quantity?.validStockQuantity != false else { throw ClientError.configuration }
+    }
+
+    private enum CodingKeys: CodingKey { case lotId, predecessorId, confirmedAt, quantity }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        lotId = try values.decode(UUID.self, forKey: .lotId)
+        predecessorId = try values.decode(UUID.self, forKey: .predecessorId)
+        confirmedAt = try values.decode(String.self, forKey: .confirmedAt)
+        quantity = try values.decode(SharedMealQuantity?.self, forKey: .quantity)
+        try validate()
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(lotId, forKey: .lotId)
+        try values.encode(predecessorId, forKey: .predecessorId)
+        try values.encode(confirmedAt, forKey: .confirmedAt)
+        try values.encode(quantity, forKey: .quantity)
+    }
+}
+
+public enum HouseholdPantryChange: Codable, Equatable, Sendable {
+    case addition(HouseholdPantryAddition)
+    case correction(HouseholdPantryCountCorrection)
+
+    var kind: String {
+        switch self { case .addition: "pantry.addLot"; case .correction: "pantry.correctCount" }
+    }
+
+    private enum Keys: CodingKey { case lotId }
+    public init(from decoder: Decoder) throws {
+        if try decoder.container(keyedBy: Keys.self).contains(.lotId) {
+            self = .correction(try HouseholdPantryCountCorrection(from: decoder))
+        } else {
+            self = .addition(try HouseholdPantryAddition(from: decoder))
+        }
+    }
+    public func encode(to encoder: Encoder) throws {
+        switch self {
+        case .addition(let addition): try addition.encode(to: encoder)
+        case .correction(let correction): try correction.encode(to: encoder)
+        }
+    }
+
+    func validate() throws {
+        switch self {
+        case .addition(let addition): try addition.validate()
+        case .correction(let correction): try correction.validate()
+        }
+    }
+}
+
 public struct HouseholdPantryIntent: Codable, Equatable, Sendable {
     struct Command: Codable, Equatable, Sendable {
         let v: Int
@@ -112,22 +182,22 @@ public struct HouseholdPantryIntent: Codable, Equatable, Sendable {
         let replayWindow: UUID
         let grantEpoch: Int
         let pantryRevision: Int
-        let body: HouseholdPantryAddition
+        let body: HouseholdPantryChange
     }
 
     public let session: HouseholdPantrySession
     public let expiresAt: String
     let command: Command
-    public var addition: HouseholdPantryAddition { command.body }
+    public var change: HouseholdPantryChange { command.body }
     public var id: UUID { command.clientKey }
     public var grantEpoch: Int { command.grantEpoch }
 
     public func validate(for expected: HouseholdPantrySession) throws {
-        guard session == expected, command.v == 1, command.kind == "pantry.addLot",
+        guard session == expected, command.v == 1, command.kind == change.kind,
               command.pantryRevision >= 0, grantEpoch >= 0, validHelperTimestamp(expiresAt) else {
             throw ClientError.configuration
         }
-        try addition.validate()
+        try change.validate()
     }
 }
 
@@ -143,8 +213,15 @@ public struct HouseholdPantryReceipt: Decodable, Equatable, Sendable {
     func validate(_ intent: HouseholdPantryIntent) throws {
         let revision = intent.command.pantryRevision
         guard v == 1, kind == intent.command.kind, householdId == intent.session.householdID,
-              lotId == operationId, grantEpoch == intent.grantEpoch, revision >= 0 && revision < Int.max,
+              grantEpoch == intent.grantEpoch, revision >= 0 && revision < Int.max,
               pantryRevision == revision + 1 else { throw ClientError.invalidResponse }
+        switch intent.change {
+        case .addition: guard lotId == operationId else { throw ClientError.invalidResponse }
+        case .correction(let correction):
+            guard lotId == correction.lotId, operationId != lotId, operationId != correction.predecessorId else {
+                throw ClientError.invalidResponse
+            }
+        }
     }
 }
 
