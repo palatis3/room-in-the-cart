@@ -59,7 +59,13 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
     private var applied: [String] = []
     private var previews = 0
     private let pageBoundary: Bool
-    init(pageBoundary: Bool = false) { self.pageBoundary = pageBoundary }
+    private let basketName: String
+    private let mealNames: [String]
+    init(pageBoundary: Bool = false, basketName: String = "Cereal already in the basket", mealNames: [String] = []) {
+        self.mealNames = mealNames
+        self.pageBoundary = pageBoundary
+        self.basketName = basketName
+    }
     var changed: ((Int) -> Void)?
     var commandCount: Int { lock.lock(); defer { lock.unlock() }; return applied.count }
     var previewCount: Int { lock.lock(); defer { lock.unlock() }; return previews }
@@ -98,15 +104,23 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
             let quote = try ShopperQuote(scope:"wholeCheckout", complete:true, capMinor:3800, capScope:"wholeCheckout", fee:.fixed(0), taxesMinor:0, depositsMinor:0, discountsMinor:0,
                 observedAt:Date(timeIntervalSince1970:1_793_718_000), expiresAt:Date(timeIntervalSince1970:4_070_908_800))
             return try json(["shopId":Self.shopID, "shopRevision":revision, "authorityEpoch":1, "phase":"draft", "quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),
-                "lines":[["lineId":Self.lineID, "originalItem":"Cereal already in the basket", "packs":1, "unitPriceMinor":349, "feeEligible":true]]])
+                "lines":[["lineId":Self.lineID, "originalItem":basketName, "packs":1, "unitPriceMinor":349, "feeEligible":true]]])
         }
         if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shopID + "/demand/tracking") {
-            let basket: [[String: Any]] = [["lineId": Self.lineID, "originalItem": "Cereal already in the basket", "packs": 1, "unitPriceMinor": 349, "feeEligible": true]]
+            let basket: [[String: Any]] = [["lineId": Self.lineID, "originalItem": basketName, "packs": 1, "unitPriceMinor": 349, "feeEligible": true]]
             let catalog: [[String: Any]] = requestRows().filter { statuses[$0["requestId"] as! String] == "added" }.map { row in
                 let id = row["requestId"] as! String
                 return ["id": id, "revision": (revisions[id] ?? 2)-1, "source": ["kind": "request", "requestId": id, "appliedRequestRevision": (revisions[id] ?? 2)-1], "sourceLabel": "Request", "originalText": row["originalItem"]!, "originalQuantityText": row["ownQuantity"]!, "quantity": NSNull(), "sourceExclusions": [], "requiredLineId": Self.lineID]
             }
-            return try json(ModelTrackingReadFixture.page(household: Self.householdID, shop: Self.shopID, revision: revision, basket: basket, checkout: budget(349), catalog: catalog))
+            let meals: [[String: Any]] = mealNames.enumerated().map { index, name in
+                let ingredient = String(format: "b0000000-0000-4000-8000-%012d", index)
+                return ["id": ingredient, "revision": 1,
+                        "source": ["kind": "meal", "occurrenceId": Self.wrapsID, "ingredientId": ingredient,
+                                   "groupId": NSNull(), "bindingId": NSNull()],
+                        "sourceLabel": "Breakfast", "originalText": name, "originalQuantityText": "1 bowl",
+                        "quantity": NSNull(), "sourceExclusions": [], "requiredLineId": NSNull()]
+            }
+            return try json(ModelTrackingReadFixture.page(household: Self.householdID, shop: Self.shopID, revision: revision, basket: basket, checkout: budget(349), catalog: catalog + meals))
         }
         if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shopID + "/demand") {
             return try json(["schemaVersion":1,"shopId":Self.shopID,"shopRevision":revision,"authorityEpoch":1,"status":"legacy","graph":NSNull(),"totals":[]])

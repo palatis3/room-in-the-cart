@@ -20,6 +20,7 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var busy = false
     @Published private(set) var shop: ShopperShop?
     @Published private(set) var requests: [OwnRequest] = []
+    @Published private(set) var matchingMealNeeds: [RequestMealCandidate]?
     @Published private(set) var deferredRequests: [DeferredRequest] = []
     @Published private(set) var deferredPage: DeferredRequestsPage?
     private var deferredLoad = UUID()
@@ -235,6 +236,33 @@ enum ShopperDelivery: Equatable {
         shop = value; requests = refreshed; nextCursor = page.nextCursor; invalidatePreview()
         if let selected { self.selected = requests.first { $0.id == selected.id } }
     }
+    func checkMealNeeds(for request: OwnRequest) async {
+        guard canReadFood, !busy, pending == nil, selected == request, let shop,
+              let id = UUID(uuidString: shop.shopId),
+              let group = duplicateRequestGroup(containing: request.id) else { return }
+        let start = generation, draft = draftGeneration
+        matchingMealNeeds = nil
+        busy = true
+        defer { busy = false }
+        do {
+            let page = try await service.sharedTracking(shopID: id)
+            guard generation == start, draftGeneration == draft, selected == request, canReadFood else { return }
+            guard page.authorityEpoch == shop.authorityEpoch, page.shopRevision == shop.shopRevision,
+                  page.status != .reviewRequired, let state = page.state else {
+                notice = ht("The shop, request, or assigned shopper changed. Refresh and review before creating a new decision.")
+                return
+            }
+            matchingMealNeeds = RequestDuplicateGrouping.mealCandidates(for: group, state: state, lines: shop.lines)
+        } catch {
+            guard generation == start, draftGeneration == draft else { return }
+            switch error as? ClientError {
+            case .sessionNeeded, .accessEnded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
+                await handle(error, start: start)
+            case .cancelled: break
+            default: notice = String(localized: "Meal needs could not be checked. Try again.", table: "RequestDuplicates")
+            }
+        }
+    }
     func select(_ request: OwnRequest) {
         guard authorized, !busy, pending == nil, request.shopId == shopID else { return }
         selected = request; lineItem = request.originalItem; packs = 1; price = ""; linkedLineID = ""
@@ -243,6 +271,7 @@ enum ShopperDelivery: Equatable {
         invalidatePreview()
     }
     func invalidatePreview(preservePackSelection: Bool = false) {
+        matchingMealNeeds = nil
         draftGeneration = UUID(); preview = nil; reviewedDecision = nil; cancelRequestFood(); acceptOverage = false; acceptUnknown = false
         if !preservePackSelection { packSelection = nil }
     }
