@@ -53,7 +53,8 @@ import LocalStore
                 roleRevision: 0, verifiedAt: self.now.addingTimeInterval(-60), validUntil: self.now.addingTimeInterval(3600))
         }, phase: { _ in .reportedPlaced }, clock: { self.now })
     }
-    private func fixture(receivedSource: Bool = false) async throws -> Fixture {
+    private func fixture(receivedSource: Bool = false, protectedLunch: Bool = true, stockCount: Int64 = 6,
+                         receiptDisposition: ReceiptDisposition = .received) async throws -> Fixture {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let cleanup = SQLiteFixtureDirectory(dir, test: self)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -64,16 +65,16 @@ import LocalStore
         let mealID = try shop.chooseMeal(template, on: now.addingTimeInterval(-86400), at: now.addingTimeInterval(-86400))
         let meal = try XCTUnwrap(shop.mealOccurrences.first), needID = try XCTUnwrap(meal.ingredientContributionIDs.first)
         let source = try XCTUnwrap(shop.contributions.first { $0.id == needID })
-        let lunchID = try shop.addProtectedNeed(name: "Wraps", quantity: q(2), purpose: "Protected lunch", at: now.addingTimeInterval(-86400))
+        let lunchID = protectedLunch ? try shop.addProtectedNeed(name: "Wraps", quantity: q(2), purpose: "Protected lunch", at: now.addingTimeInterval(-86400)) : UUID()
         let saved = await ledger.change(key: "fixture") { $0 = LedgerWorkspace(shops: [shop], selectedShopID: shop.id) }
         XCTAssertTrue(saved)
         let pickup = PickupModel(databaseURL: dir.appendingPathComponent("pickup.sqlite"), clock: { self.now })
         cleanup.track(pickup)
         let context = CheckoutContext(storeID: "Store", branchID: "Branch", mode: .pickup, slot: "Evening", commitmentsID: shop.id, observedAt: now, source: "Shopper")
         let needs = [AllocationNeed(id: needID, orderLineID: source.lineID, name: "Wrap dinner", amount: q(4), priority: .required),
-                     AllocationNeed(id: lunchID, orderLineID: source.lineID, name: "Protected lunch", amount: q(2), priority: .protected)]
+                     AllocationNeed(id: lunchID, orderLineID: source.lineID, name: "Protected lunch", amount: q(2), priority: .protected)].filter { protectedLunch || $0.id != lunchID }
         let details = [PickupNeedDetail(id: needID, mealName: meal.title, exclusions: [], scheduledDay: meal.scheduledDay, leadTimeMinutes: nil, completedSteps: [], sourceContributionID: needID),
-                       PickupNeedDetail(id: lunchID, mealName: "Protected lunch", exclusions: [], scheduledDay: meal.scheduledDay, leadTimeMinutes: nil, completedSteps: [])]
+                       PickupNeedDetail(id: lunchID, mealName: "Protected lunch", exclusions: [], scheduledDay: meal.scheduledDay, leadTimeMinutes: nil, completedSteps: [])].filter { protectedLunch || $0.id != lunchID }
         let started = await pickup.start(from: [BasketLine(id: source.lineID, name: "Wraps", quantity: q(6), expectedCost: .exact(Money(minorUnits: 700)))],
             shopID: shop.id, context: context, plannedNeeds: needs, ledgerBasis: shop.basis, ledgerSourceRevisionID: shop.revisionID, needDetails: details)
         XCTAssertTrue(started)
@@ -82,14 +83,14 @@ import LocalStore
         let frozen = await pickup.freeze(); XCTAssertTrue(frozen, pickup.error ?? "freeze")
         let placed = await pickup.reportPlaced(); XCTAssertTrue(placed, pickup.error ?? "place")
         let key = ReceiptKey(sourceEventID: "actual-bag", orderLineID: source.lineID, branchID: "Branch", segmentID: "one")
-        let receipt = ReceiptFragment(key: key, itemName: "Wraps", received: q(6), disposition: .received, receivedAt: now)
+        let receipt = ReceiptFragment(key: key, itemName: "Wraps", received: q(6), disposition: receiptDisposition, receivedAt: now)
         let observation = UsableObservation(id: UUID(), receipt: key, usable: q(6), confirmedAt: now, confirmedMatchToOrderLine: true)
         let received = await pickup.receive(receipt, usable: receivedSource ? observation : nil); XCTAssertTrue(received)
         let charged = await pickup.settle(SettlementEntry(id: UUID(), evidenceKey: "posted", kind: .postedCharge, amount: Money(minorUnits: 700), occurredAt: now)); XCTAssertTrue(charged)
         let supply: AwayCarryoverSupply
         if receivedSource { supply = .received(receipt, observation) }
         else {
-            let lot = ConfirmedStockLot(id: UUID(), foodID: source.lineID, name: "Existing freezer wraps", usable: q(6), confirmedAt: now, source: .freezer)
+            let lot = ConfirmedStockLot(id: UUID(), foodID: source.lineID, name: "Existing freezer wraps", usable: q(stockCount), confirmedAt: now, source: .freezer)
             let stocked = await pickup.saveStockLot(lot, in: shop.id); XCTAssertTrue(stocked); supply = .batch(lot)
         }
         let dinner = model(ledger, pickup: pickup)
@@ -133,6 +134,74 @@ import LocalStore
         XCTAssertThrowsError(try ledger.scheduleMeal(occurrenceID: target.id, day: nil, at: now))
         XCTAssertThrowsError(try ledger.removeMeal(occurrenceID: target.id, at: now))
     }
+    func testPairingKeepsExactCarryoverLotReservedThroughFailedCalendarSaveAndRestart() async throws {
+        let f = try await fixture(protectedLunch: false, stockCount: 4)
+        let a = ConfirmedStockLot(id: UUID(), foodID: f.supply.foodID, name: "Use-first wraps A",
+            usable: q(4), confirmedAt: now, source: .pantry, useFirst: true)
+        let stocked = await f.pickup.saveStockLot(a, in: try XCTUnwrap(f.pickup.journey).id)
+        XCTAssertTrue(stocked)
+        let before = try XCTUnwrap(f.pickup.journey)
+        XCTAssertTrue(try prepare(f, counted: 4, reserved: 4))
+        let intent = try XCTUnwrap(f.coordinator.review)
+        f.ledger.failNext = true
+        let applied = await f.coordinator.apply()
+        XCTAssertFalse(applied)
+        XCTAssertEqual(f.coordinator.pending?.phase, .reserved)
+
+        func assertFreeLot(_ journey: PickupJourney) throws {
+            let allocation = try journey.carryoverAllocation(at: now)
+            XCTAssertEqual(allocation.allocations.filter { $0.needID == intent.plan.link.reservationID }.map(\.lotID), [f.supply.id])
+            XCTAssertEqual(allocation.remainingLots.first { $0.lotID == a.id }?.remainingUnallocated, try Rational(4))
+            XCTAssertEqual(allocation.remainingLots.first { $0.lotID == f.supply.id }?.remainingUnallocated, .zero)
+            let free = try DinnerLibraryPairings.unreservedLots(journey, at: now)
+            XCTAssertEqual(free.map(\.id), [a.id], "The pinned B lot must never be offered as an unreserved leftover")
+            XCTAssertEqual(free.first?.usable.amount, try Rational(4))
+            XCTAssertEqual(free.first?.name, a.name)
+            XCTAssertEqual(journey.basket, before.basket)
+            XCTAssertEqual(journey.pickup, before.pickup)
+        }
+        try assertFreeLot(XCTUnwrap(f.pickup.journey))
+
+        let pickup = PickupModel(databaseURL: f.directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        f.cleanup.track(pickup)
+        await pickup.load()
+        try assertFreeLot(XCTUnwrap(pickup.journey))
+        let resumed = DinnerAwayCarryoverModel(dinner: f.dinner, pickup: pickup, clock: { self.now })
+        let retried = await resumed.retry(try XCTUnwrap(resumed.pending))
+        XCTAssertTrue(retried)
+        XCTAssertEqual(resumed.records.first?.phase, .completed)
+        try assertFreeLot(XCTUnwrap(pickup.journey))
+        let completedPickup = PickupModel(databaseURL: f.directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        f.cleanup.track(completedPickup)
+        await completedPickup.load()
+        let completedJourney = try XCTUnwrap(completedPickup.journey)
+        XCTAssertEqual(completedJourney.awayCarryovers.first?.phase, .completed)
+        try assertFreeLot(completedJourney)
+        XCTAssertEqual(f.dinner.shop?.mealOccurrences.filter { $0.id == intent.plan.occurrenceID }.count, 1)
+    }
+
+    func testPairingExcludedWrongItemCannotReleaseAnotherConfirmedReceipt() async throws {
+        let f = try await fixture(receivedSource: true, protectedLunch: false, receiptDisposition: .wrongItem)
+        let key = ReceiptKey(sourceEventID: "correct-bag", orderLineID: f.supply.foodID, branchID: "Branch", segmentID: "two")
+        let receipt = ReceiptFragment(key: key, itemName: "Correct wraps", received: q(4), disposition: .received, receivedAt: now)
+        let observation = UsableObservation(id: UUID(), receipt: key, usable: q(4), confirmedAt: now, confirmedMatchToOrderLine: true)
+        let received = await f.pickup.receive(receipt, usable: observation)
+        XCTAssertTrue(received)
+        let journey = try XCTUnwrap(f.pickup.journey)
+        // The physical ledger accepts a reviewed match for a wrong-item arrival;
+        // this comparison has deliberately narrower receipt eligibility.
+        XCTAssertEqual(try journey.carryoverAllocation(at: now).remainingLots.first { $0.lotID == observation.id }?.remainingUnallocated, try Rational(4))
+        XCTAssertEqual(PickupFallbackOptions.lots(journey, at: now).map(\.id), [observation.id])
+        XCTAssertTrue(try DinnerLibraryPairings.unreservedLots(journey, at: now).isEmpty,
+                      "The excluded wrong-item receipt cannot cover dinner and free the correct receipt")
+        let pickup = PickupModel(databaseURL: f.directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        f.cleanup.track(pickup)
+        await pickup.load()
+        let restored = try XCTUnwrap(pickup.journey)
+        XCTAssertEqual(restored.pickup, journey.pickup)
+        XCTAssertTrue(try DinnerLibraryPairings.unreservedLots(restored, at: now).isEmpty)
+    }
+
     func testFailedCalendarWriteSurvivesRestartAndOverlappingReviewIsBlocked() async throws {
         let f = try await fixture()
         f.ledger.failNext = true; XCTAssertTrue(try prepare(f)); let intent = try XCTUnwrap(f.coordinator.review)
