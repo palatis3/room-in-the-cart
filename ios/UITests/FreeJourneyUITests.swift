@@ -83,6 +83,71 @@ import XCTest
         capture("Private manual food check retained after notifications denied")
     }
 
+    #if ADULT_WIDGET_LIVE_ACCEPTANCE
+    /// Uses the real widget group and SpringBoard. Run on a freshly created dedicated simulator.
+    func testOptedInUseSoonHomeWidgetReopensTheAuthorizedPantryAfterTermination() {
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        tap(app.textFields["pantry.foodName"])
+        app.textFields["pantry.foodName"].typeText("Widget lentils")
+        tap(app.textFields["pantry.amount"])
+        app.textFields["pantry.amount"].typeText("2")
+        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "pantry.lot.", "Widget lentils")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.digest.checkDate"])
+        tap(app.buttons["pantry.digest.saveDate"])
+        XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 15))
+        app.terminate()
+        app.launch()
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.digest"])
+        let setting = app.switches["adultHomeSummary.useSoon"]
+        reveal(setting)
+        XCTAssertEqual(setting.value as? String, "0")
+        setting.tap()
+        XCTAssertEqual(setting.value as? String, "1")
+        XCUIDevice.shared.press(.home)
+        let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        board.coordinate(withNormalizedOffset: CGVector(dx: 0.50, dy: 0.78)).press(forDuration: 1.6)
+        let addButton = board.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Add Widget")).firstMatch
+        let edit = board.buttons["Edit"]
+        if edit.exists { edit.tap() }
+        XCTAssertTrue(addButton.waitForExistence(timeout: 8))
+        addButton.tap()
+        let search = board.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap()
+        search.typeText("Room in the Cart")
+        let appResult = board.descendants(matching: .any).matching(NSPredicate(format: "label ==[c] %@", "Room in the Cart")).firstMatch
+        XCTAssertTrue(appResult.waitForExistence(timeout: 10))
+        appResult.tap()
+        let useSoon = board.staticTexts["Use soon"].firstMatch
+        for _ in 0..<5 where !useSoon.isHittable { board.swipeLeft() }
+        XCTAssertTrue(useSoon.isHittable)
+        XCTAssertTrue(addButton.isHittable)
+        addButton.tap()
+        let done = board.buttons["Done"]
+        if done.waitForExistence(timeout: 8) { done.tap() }
+        let entry = board.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@",
+            "Batches to check today or earlier: 1")).firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: 35))
+        let screenshot = XCTAttachment(screenshot: board.screenshot())
+        screenshot.name = "Opted-in Use soon Home Screen count"; screenshot.lifetime = .keepAlways; add(screenshot)
+        app.terminate()
+        entry.tap()
+        let reviewed = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Widget lentils")).firstMatch
+        XCTAssertTrue(reviewed.waitForExistence(timeout: 30))
+        XCTAssertTrue(app.navigationBars["Use soon"].exists)
+    }
+    #endif
+
     #if PANTRY_DIGEST_LIVE_ACCEPTANCE
     /// Run only on a fresh, dedicated simulator. The ordinary app asks iOS for notification consent.
     func testSystemDeliversPrivatePantryDigestAndReopensCurrentCheckList() {
