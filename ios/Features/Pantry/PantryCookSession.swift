@@ -97,7 +97,7 @@ struct PantryCookRecord: Codable, Equatable {
     }
     func apply(_ review: CookCompletion.Review) async throws {
         try await pickup.cookCompletionPort(ledger: ledger, authorize: authorize).apply(review)
-        if authorize() { await pickup.load() }
+        if authorize() { await pickup.refreshPantryStock() }
     }
 }
 

@@ -260,7 +260,7 @@ extension PantryCookSession {
     }
     func applyResolution(_ review: PantryCookResolution.Review) async throws {
         try await pickup.cookCompletionPort(ledger: ledger, authorize: authorize).applyResolution(review)
-        if authorize() { await pickup.load() }
+        if authorize() { await pickup.refreshPantryStock() }
     }
 }
 
