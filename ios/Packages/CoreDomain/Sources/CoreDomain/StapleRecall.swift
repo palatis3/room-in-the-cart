@@ -67,6 +67,25 @@ extension LedgerWorkspace {
             seen.insert(GroupKey(name:row.line.name,purpose:row.approval.purpose,store:row.approval.branch)).inserted && !completed.contains(row.source)
         }
     }
+    /// Exact decisions already made for this destination, in original shop/line order.
+    /// They remain available as history even when another approval has the same label.
+    public func reviewedStapleHistory(for targetID: UUID) -> [ReviewedStaple] {
+        guard let index = shops.firstIndex(where: { $0.id == targetID }) else { return [] }
+        let target = shops[index]
+        let decided = Set((target.stapleReviews ?? []).map(\.source))
+        guard !decided.isEmpty else { return [] }
+        var history: [ReviewedStaple] = []
+        for source in shops[..<index] {
+            for line in source.lines {
+                let key = StapleSource(shopID: source.id, lineID: line.id)
+                guard decided.contains(key), let approval = line.stapleApproval else { continue }
+                history.append(.init(source: key, sourceRevision: source.revisionID, targetID: targetID,
+                                     targetRevision: target.revisionID, approval: approval, line: line))
+            }
+        }
+        return history
+    }
+
     public mutating func applyStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?,
                                      handledLine: HandledStapleLine? = nil, at date: Date) throws {
         guard (handledLine == nil || choice == .alreadyHandled), (choice == .needed || quantity == nil), quantity.map({ $0.amount > .zero }) ?? true else { throw LedgerError.invalid("stapleQuantity") }

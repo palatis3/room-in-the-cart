@@ -106,6 +106,23 @@ final class RepeatWeekTests: XCTestCase {
         XCTAssertEqual(w, changed)
     }
 
+    func testDecidedStapleHistoryUsesExactSourceAndIsNeverOfferedAgain() throws {
+        var w = try fixture()
+        let target = w.shops[1]
+        let reviewed = try XCTUnwrap(w.priorStaples(for: target.id).first)
+        try w.applyStaple(reviewed, choice: .alreadyHandled, quantity: nil, at: now)
+        let similar = try w.shops[0].addManualLine(name: "Coffee", quantity: quantity(2), at: now)
+        try w.shops[0].approveStaple(lineID: similar, purpose: "Second purpose", at: now)
+        let history = w.reviewedStapleHistory(for: target.id)
+        XCTAssertEqual(history.map(\.source), [reviewed.source])
+        XCTAssertEqual(history.first?.line.id, reviewed.line.id)
+        XCTAssertEqual(history.first?.sourceRevision, w.shops[0].revisionID)
+        XCTAssertEqual(history.first?.targetRevision, w.shops[1].revisionID)
+        XCTAssertEqual(history.first?.approval, reviewed.approval)
+        XCTAssertEqual(w.priorStaples(for: target.id).map(\.line.id), [similar])
+        XCTAssertTrue(w.reviewedStapleHistory(for: w.shops[0].id).isEmpty)
+    }
+
     func testNewStapleAndNewMealShareOneRevisionAndRetainTheirReviewedLineIDs() throws {
         var w = try fixture()
         let target = ShoppingLedger(title: "New destination", basis: w.shops[1].basis)
