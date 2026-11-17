@@ -263,7 +263,7 @@ extension PickupJourney {
 
     func remainingPhysicalNeeds() throws -> [StockNeed] {
         let needs = try mealRecovery.map { try MealRecoveryEngine.project($0.domain).demands } ?? rawPhysicalStockNeeds
-        let spent = Dictionary(grouping: (cookedMeals ?? []).flatMap(\.fulfilledNeeds), by: \.id)
+        let spent = Dictionary(grouping: (cookedMeals ?? []).filter(\.isActive).flatMap(\.fulfilledNeeds), by: \.id)
         guard !spent.isEmpty else { return needs }
         return try needs.map { need in
             guard let uses = spent[need.id] else { return need }

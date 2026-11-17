@@ -1570,8 +1570,10 @@ struct PickupPersistenceLocation {
               Set(value.repairs.map(\.id)).count == value.repairs.count,
               Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
         if let cooked = value.cookedMeals {
-            guard !cooked.isEmpty, cooked.count <= 500, Set(cooked.map(\.draft.meal.id)).count == cooked.count,
-                  Set(cooked.map(\.draft.id)).count == cooked.count else { throw PickupModelError.invalid }
+            let active = cooked.filter(\.isActive)
+            let operationIDs = cooked.map(\.draft.id) + cooked.compactMap { $0.undo?.id }
+            guard !cooked.isEmpty, cooked.count <= 500, Set(active.map(\.draft.meal.id)).count == active.count,
+                  Set(operationIDs).count == operationIDs.count else { throw PickupModelError.invalid }
             for record in cooked { try record.validate(shopID: value.id) }
             _ = try value.remainingPhysicalNeeds()
         }

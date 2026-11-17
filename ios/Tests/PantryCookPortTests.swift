@@ -20,7 +20,9 @@ import LocalStore
         var shop = ShoppingLedger(title: "Pickup")
         let mealID = try shop.chooseMeal(recipe, at: now)
         let workspace = LedgerWorkspace(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)
-        _ = try await ledger.save(payload: JSONEncoder().encode(workspace), expectedRevision: 0, operationID: UUID(), savedAt: now)
+        struct LedgerDocument: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
+        let payload = try JSONEncoder().encode(LedgerDocument(workspace: workspace))
+        _ = try await ledger.save(payload: payload, expectedRevision: 0, operationID: UUID(), savedAt: now)
         let lot = UUID(), operation = UUID()
         let seed = InventoryLotSeed(foodID: UUID(), name: "Wraps", source: .manual(originID: store.workspaceID, sourceID: lot),
                                     location: .cupboard, unit: .count, count: .exact(count))
@@ -65,5 +67,54 @@ import LocalStore
         catch PantryCookPort.Failure.alreadyCompleted {}
         var altered = draft; altered.servingsMade = .one
         do { _ = try await reopened.review(altered); XCTFail("Changed replay") } catch {}
+
+        let undo = try await reopened.reviewUndo(shopID: shop.id, mealID: mealID)
+        XCTAssertEqual(undo.restoredInputs.map(\.count), [.exact(count)])
+        XCTAssertEqual(undo.removedLeftovers, [output.name])
+        let lunchID = UUID()
+        func changeLunch(revision: Int64, state: InventoryReservationState) async throws {
+            let lunch = InventoryReservation(id: lunchID, originID: reopenedStore.workspaceID, revision: revision,
+                foodID: output.foodID, lotID: output.id, name: "Tomorrow’s lunch", amount: one, priority: .protected, state: state)
+            let snapshot = try await reopenedStore.inventoryState()
+            let write = try PantryPersistenceCodec.write(lunch, expectedRevision: revision - 1)
+            _ = try await reopenedStore.commitInventory(.init(workspaceID: reopenedStore.workspaceID, operationID: UUID(),
+                expectedRevision: snapshot.revision, request: Data([UInt8(revision)]), writes: [write]), at: now)
+        }
+        try await changeLunch(revision: 1, state: .active)
+        do { try await reopened.applyUndo(undo); XCTFail("Lunch was reserved after the preview") }
+        catch PantryCookPort.Failure.changed {}
+        do { _ = try await reopened.reviewUndo(shopID: shop.id, mealID: mealID); XCTFail("A new preview must protect lunch too") }
+        catch PantryCookPort.Failure.changed {}
+        try await changeLunch(revision: 2, state: .released)
+        let released = try await reopened.reviewUndo(shopID: shop.id, mealID: mealID)
+        allowed = false
+        do { try await port.applyUndo(released); XCTFail("Revoked Undo") } catch PantryCookPort.Failure.unavailable {}
+        allowed = true
+        try await reopened.applyUndo(released)
+        try await port.applyUndo(released)
+        try await reopened.apply(review) // Redelivery of the original cook cannot resurrect its effects.
+        let undone = try await port.load(shopID: shop.id, mealID: mealID)
+        XCTAssertNil(undone.completed)
+        XCTAssertEqual(undone.inventory.state.revision, released.inventoryRevision + 1)
+        XCTAssertEqual(undone.inventory.lots.first { $0.id == lot }?.count, .exact(count))
+        XCTAssertEqual(undone.inventory.lots.first { $0.id == output.id }?.count.quantity?.amount, .zero)
+        let savedUndo = try await store.load(id: shop.id)
+        let storedJourney = try JSONDecoder().decode(PickupJourney.self, from: XCTUnwrap(savedUndo?.payload))
+        XCTAssertEqual(storedJourney.cookedMeals?.first?.undo?.id, released.id)
+
+        let newOutput = CookCompletionDraft.Leftovers(name: "Fresh portions", portions: .one, location: .fridge)
+        let corrected = CookCompletionDraft(inventoryID: store.workspaceID, inventoryRevision: undone.inventory.state.revision,
+            ledgerID: ledger.workspaceID, shop: shop, meal: undone.meal, cookedAt: now, servingsMade: .one,
+            parts: ids.map { .init(contributionID: $0, use: .notUsed) }, leftovers: [newOutput])
+        try await port.apply(port.review(corrected))
+        let fresh = try await port.load(shopID: shop.id, mealID: mealID)
+        XCTAssertEqual(fresh.completed, corrected)
+        let consume = InventoryCommand(id: UUID(), originID: store.workspaceID, lotID: newOutput.id, eventID: UUID(),
+            expectedRevision: 1, occurredAt: now, change: .usedUp(observationID: UUID()))
+        let consumed = try InventoryEngine.prepare(consume, current: fresh.inventory.lots.first { $0.id == newOutput.id }, at: now)
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: consume.id,
+            expectedRevision: fresh.inventory.state.revision, request: Data([9]), writes: PantryPersistenceCodec.writes(consumed)), at: now)
+        do { _ = try await port.reviewUndo(shopID: shop.id, mealID: mealID); XCTFail("A later use of the output must survive") }
+        catch PantryCookPort.Failure.changed {}
     }
 }

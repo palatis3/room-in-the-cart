@@ -404,6 +404,9 @@ import RecordArchive
                     try key(.lot, lotID, record.draft.inventoryID)
                     try key(.observation, observationID, record.draft.inventoryID)
                 }
+                if let undo = record.undo {
+                    for id in undo.observations.values { try key(.observation, id, record.draft.inventoryID) }
+                }
                 for claim in record.priorClaims { try key(.reservation, claim.id, record.draft.inventoryID) }
             }
             for row in value.stockLots { try legacyLot(row.id, ns) }

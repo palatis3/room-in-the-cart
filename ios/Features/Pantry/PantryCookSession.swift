@@ -19,6 +19,9 @@ struct PantryCookRecord: Codable, Equatable {
     let fulfilledNeeds: [StockNeed]
     let resultingObservations: [UUID: UUID]
 
+    var undo: PantryCookUndoReceipt? = nil
+    var isActive: Bool { undo == nil }
+
     func validate(shopID: UUID) throws {
         let inputs = Set(draft.parts.compactMap { part -> UUID? in
             if case .lot(let id, _, _) = part.use { return id }
@@ -36,6 +39,13 @@ struct PantryCookRecord: Codable, Equatable {
               Set(priorClaims.map(\.id)).count == priorClaims.count else { throw PantryCookPort.Failure.changed }
         guard fulfilledNeeds.count == priorClaims.count, Set(fulfilledNeeds.map(\.id)).count == fulfilledNeeds.count,
               fulfilledNeeds.allSatisfy({ $0.amount.amount > .zero }) else { throw PantryCookPort.Failure.changed }
+        if let undo {
+            guard undo.id != draft.id, undo.confirmedAt.timeIntervalSinceReferenceDate.isFinite,
+                  undo.confirmedAt >= draft.cookedAt, Set(undo.observations.keys) == inputs.union(outputs),
+                  Set(undo.observations.values).count == undo.observations.count,
+                  Set(undo.observations.values).isDisjoint(with: resultingObservations.values)
+            else { throw PantryCookPort.Failure.changed }
+        }
         for row in priorCounts { try row.count.validate() }
         for row in priorClaims { try row.validate() }
     }
@@ -51,9 +61,9 @@ struct PantryCookRecord: Codable, Equatable {
         let asOf: Date
         let preferences: MealPreferenceProfile?
     }
-    private let ledger: LedgerModel
-    private let pickup: PickupModel
-    private let authorize: @MainActor () -> Bool
+    let ledger: LedgerModel
+    let pickup: PickupModel
+    let authorize: @MainActor () -> Bool
     init(ledger: LedgerModel, pickup: PickupModel, authorize: @escaping @MainActor () -> Bool) {
         self.ledger = ledger; self.pickup = pickup; self.authorize = authorize
     }
@@ -71,19 +81,19 @@ struct PantryCookRecord: Codable, Equatable {
 
 @MainActor final class PantryCookPort {
     enum Failure: Error, Equatable { case unavailable, changed, alreadyCompleted, capacity }
-    private let store: ComparisonStore
-    private let ledger: LedgerStore
-    private let gate: PantryMutationGate
+    let store: ComparisonStore
+    let ledger: LedgerStore
+    let gate: PantryMutationGate
     private let repository: PantryRepository
-    private let authorize: () -> Bool
-    private let clock: () -> Date
+    let authorize: () -> Bool
+    let clock: () -> Date
     init(store: ComparisonStore, ledger: LedgerStore, gate: PantryMutationGate, authorize: @escaping () -> Bool,
          clock: @escaping () -> Date = Date.init) {
         self.store = store; self.ledger = ledger; self.gate = gate; self.authorize = authorize; self.clock = clock
         repository = PantryRepository(store: store, authorize: authorize)
     }
 
-    private struct Read {
+    struct Read {
         let context: PantryCookSession.Context
         let journey: PickupJourney
         let saved: SavedComparison?
@@ -91,7 +101,7 @@ struct PantryCookRecord: Codable, Equatable {
         let claims: [UUID: Set<UUID>]
         let sourceNeeds: [UUID: StockNeed]
     }
-    private func read(shopID: UUID, mealID: UUID) async throws -> Read {
+    func read(shopID: UUID, mealID: UUID) async throws -> Read {
         guard authorize(), let ledgerRecord = try await ledger.load(), authorize() else { throw Failure.unavailable }
         let workspace = try LedgerModel.validatePayload(ledgerRecord.payload)
         guard let shop = workspace.shops.first(where: { $0.id == shopID }),
@@ -115,7 +125,7 @@ struct PantryCookRecord: Codable, Equatable {
         if let history = journey.mealRecovery, history.domain.events.contains(where: { $0.request.target.id == mealID }) {
             throw Failure.changed
         }
-        let completed = journey.cookedMeals?.first { $0.draft.meal.id == mealID }?.draft
+        let completed = journey.cookedMeals?.first { $0.isActive && $0.draft.meal.id == mealID }?.draft
         let context = PantryCookSession.Context(inventory: inventory, ledgerID: ledger.workspaceID, shop: shop, meal: meal,
             completed: completed, asOf: now, preferences: workspace.dinnerPlanning.privateMealPreferences)
         var owned: [UUID: Set<UUID>] = [:]
@@ -185,18 +195,27 @@ struct PantryCookRecord: Codable, Equatable {
         }, priorClaims: priorClaims, fulfilledNeeds: fulfilled,
             resultingObservations: Dictionary(uniqueKeysWithValues: actual.changes.map { ($0.lot.id, $0.lot.observationID) }))
         var next = read.journey
-        guard next.revision < Int64.max else { throw Failure.capacity }
-        next.revision += 1; next.savedAt = read.context.asOf
         next.cookedMeals = (next.cookedMeals ?? []) + [saved]
-        try PickupModel.validate(next)
-        let payload = try encoder.encode(next)
-        guard payload.count <= ComparisonStore.maximumPayloadBytes else { throw Failure.capacity }
         var writes = try actual.changes.flatMap(PantryPersistenceCodec.writes)
         writes += try actual.reservations.map { try PantryPersistenceCodec.write($0, expectedRevision: $0.revision - 1) }
+        try await persist(next, read: read, writes: writes, request: request, operationID: draft.id)
+    }
+
+    func persist(_ journey: PickupJourney, read: Read, writes: [InventoryWrite], request: Data, operationID: UUID) async throws {
+        var next = journey
+        guard next.revision < Int64.max else { throw Failure.capacity }
+        next.revision += 1
+        next.savedAt = read.context.asOf
+        try PickupModel.validate(next)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let payload = try encoder.encode(next)
+        guard payload.count <= ComparisonStore.maximumPayloadBytes else { throw Failure.capacity }
+        let inventory = read.context.inventory
         try repository.validateCapacity(of: writes, replacing: inventory)
         let effect = InventoryComparisonEffect(action: .save, id: next.id, expectedRevision: read.saved?.revision ?? 0,
             title: read.saved?.title ?? read.context.shop.title, payload: payload)
-        let batch = InventoryBatch(workspaceID: store.workspaceID, operationID: draft.id, expectedRevision: inventory.state.revision,
+        let batch = InventoryBatch(workspaceID: store.workspaceID, operationID: operationID, expectedRevision: inventory.state.revision,
             request: request, writes: writes, comparisons: [effect])
         guard try await ledger.load()?.revision == read.ledgerRevision, authorize() else { throw Failure.changed }
         _ = try await store.commitInventory(batch, at: next.savedAt)
