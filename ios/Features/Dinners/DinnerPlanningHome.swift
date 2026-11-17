@@ -42,6 +42,8 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 }
                 if let liveLedger, liveLedger.ready, model.store === liveLedger {
                     Section {
+                        NavigationLink(dinnerText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: liveLedger) }
+                            .accessibilityIdentifier("dinner.mealPreferences")
                         NavigationLink(tonightText("Tonight")) { TonightEntry() }
                             .accessibilityIdentifier("dinner.tonight")
                     }
