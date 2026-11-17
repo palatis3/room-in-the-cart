@@ -107,10 +107,6 @@ jobs:
   performance-build:
     if: ${{ !inputs.simulator_signpost_control }}
     needs: performance-plan
-    concurrency:
-      group: ritc-macos-slot-2
-      queue: max
-      cancel-in-progress: false
     name: ${{ inputs.capture_preflight_only && 'Check scroll capture capabilities (no build)' || 'Build optimized iPhone test products' }}
     runs-on: xcode-27
     timeout-minutes: 35
@@ -227,10 +223,6 @@ jobs:
 
   performance-tests:
     if: ${{ !inputs.capture_preflight_only && !inputs.simulator_signpost_control }}
-    concurrency:
-      group: ritc-macos-slot-${{ matrix.macos_slot }}
-      queue: max
-      cancel-in-progress: false
     name: Release performance (${{ matrix.case }})
     needs: performance-build
     runs-on: xcode-27
@@ -467,10 +459,6 @@ jobs:
     needs: performance-plan
     runs-on: xcode-27
     timeout-minutes: 12
-    concurrency:
-      group: ritc-macos-slot-2
-      queue: max
-      cancel-in-progress: false
     env:
       TEST_SHARD: simulator-helper
       SIMULATOR_HELPER_DIRECT_INVENTORY: 'true'

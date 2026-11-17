@@ -15,10 +15,6 @@ permissions:
 
 jobs:
   control:
-    concurrency:
-      group: ritc-macos-slot-4
-      queue: max
-      cancel-in-progress: false
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'diagnostic:form-toggle'
     runs-on: xcode-27
     timeout-minutes: 45

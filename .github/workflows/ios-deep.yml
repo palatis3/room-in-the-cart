@@ -59,10 +59,6 @@ concurrency:
 jobs:
   sanitizers:
     name: sanitizers (${{ matrix.sanitizer }})
-    concurrency:
-      group: ritc-macos-slot-${{ matrix.macos_slot }}
-      queue: max
-      cancel-in-progress: false
     runs-on: xcode-27
     timeout-minutes: 45
     strategy:
@@ -121,10 +117,6 @@ jobs:
   storekit-build:
     name: Build shared LocalStoreKit test products
     needs: storekit-plan
-    concurrency:
-      group: ritc-macos-slot-2
-      queue: max
-      cancel-in-progress: false
     runs-on: xcode-27
     timeout-minutes: 35
     env:
@@ -224,13 +216,13 @@ jobs:
   storekit:
     needs: storekit-build
     name: StoreKit ${{ matrix.locale }}
-    # Each locale starts on a fresh runner. Both use the same provider slot and compiled products.
+    # Both locales use the shared products on fresh runners. Bitrise runs them in the same lane.
     strategy:
       fail-fast: false
       matrix:
         locale: [en, es]
     concurrency:
-      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}2
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-2' || format('ritc-github-job-ios-deep-storekit-{0}-{1}-{2}', github.run_id, github.run_attempt, matrix.locale) }}
       queue: max
       cancel-in-progress: false
     runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}

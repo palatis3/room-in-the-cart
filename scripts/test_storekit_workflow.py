@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 import check_storekit_runtime_mount as runtime_mount
-from check_ci_workflows import FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX, parse_workflow
+from check_ci_workflows import FIXTURE_RUNNER, STOREKIT_JOB, POLICY, bitrise_group, parse_workflow
 from is_storekit_launch_failure import is_launch_failure
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,9 +102,11 @@ class StoreKitWorkflowTests(unittest.TestCase):
         tests = self.jobs['storekit']
         self.assertEqual(build['needs'], 'storekit-plan')
         self.assertEqual(tests['needs'], 'storekit-build')
-        self.assertEqual(build['concurrency'], {'group': 'ritc-macos-slot-2', 'queue': 'max', 'cancel-in-progress': False})
+        self.assertEqual(build['runs-on'], 'xcode-27')
+        self.assertNotIn('concurrency', build)
         self.assertEqual(tests['runs-on'], FIXTURE_RUNNER)
-        self.assertEqual(tests['concurrency'], {'group': FIXTURE_SLOT_PREFIX + '2', 'queue': 'max', 'cancel-in-progress': False})
+        self.assertEqual(tests['concurrency'], {'group': bitrise_group(STOREKIT_JOB, POLICY[STOREKIT_JOB]),
+                                               'queue': 'max', 'cancel-in-progress': False})
         commands = '\n'.join(step.get('run', '') for step in build['steps'])
         self.assertEqual(commands.count('build-for-testing'), 1)
         self.assertIn('-scheme RoomInTheCart-LocalStoreKit', commands)

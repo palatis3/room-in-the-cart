@@ -116,10 +116,6 @@ jobs:
   staging-iphone:
     needs: source-preflight
     name: Installed iPhone app against staging
-    concurrency:
-      group: ritc-macos-slot-2
-      queue: max
-      cancel-in-progress: false
     runs-on: xcode-27
     timeout-minutes: 30
     env:
