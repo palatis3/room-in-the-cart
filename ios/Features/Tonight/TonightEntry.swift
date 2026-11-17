@@ -144,11 +144,7 @@ struct TonightEntry: View {
                                 do { try model.selectVersion(source); preview = nil; choosing = nil }
                                 catch { message = tonightText("Refresh before reviewing this match.") }
                             }
-                            NavigationLink(dinnerText("Private meal feedback")) {
-                MealFeedbackEntry(ledger: ledger, source: .recipe(id: review.id, revision: review.recipe.revision),
-                                  title: review.recipe.title)
-            }
-            Button(tonightText("Review recipe facts")) { recipeToReview = source.template }
+                            Button(tonightText("Review recipe facts")) { recipeToReview = source.template }
                         }
                     }
                 }
