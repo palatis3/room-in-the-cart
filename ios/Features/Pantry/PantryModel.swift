@@ -101,12 +101,40 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         return latest
     }
 
+    var supportsReceiptAliases: Bool { repository.aliasPersonaID != nil }
+
+    func receiptAliases(merchant: String? = nil, language: String? = nil) async throws -> [InventoryReceiptAlias] {
+        guard canEdit else { throw PantryReceiptError.stale }
+        let token = generation
+        let aliases = try await repository.receiptAliases(merchant: merchant, language: language)
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+        return aliases
+    }
+
+    func rememberReceiptAlias(_ source: ReceiptAcquisition, wording: String, language: String, state: InventoryState) async throws {
+        try await changeReceipt(state) {
+            try await repository.rememberReceiptAlias(source, wording: wording, language: language, expected: state, at: clock())
+        }
+    }
+
+    func forgetReceiptAliases(_ aliases: [InventoryReceiptAlias], state: InventoryState) async throws {
+        try await changeReceipt(state) {
+            try await repository.forgetReceiptAliases(aliases, expected: state, at: clock())
+        }
+    }
+
     func correctReceiptPrice(_ original: ReceiptAcquisition, total: Money?, reviewedState: InventoryState) async throws {
+        try await changeReceipt(reviewedState) {
+            try await repository.correctPaidTotal(original, total: total, state: reviewedState, at: clock())
+        }
+    }
+
+    private func changeReceipt(_ reviewedState: InventoryState, change: () async throws -> Void) async throws {
         guard canEdit, snapshot?.state == reviewedState else { throw PantryReceiptError.stale }
         let token = generation
         busy = true
         defer { if token == generation { busy = false } }
-        try await repository.correctPaidTotal(original, total: total, state: reviewedState, at: clock())
+        try await change()
         let updated = try await repository.load(at: clock())
         guard token == generation else { throw PantryReceiptError.stale }
         snapshot = updated

@@ -108,6 +108,9 @@ private struct PantryErasureImpactView: View {
             }
         }
         rows(recordsText("Food batches to delete"), review.foodNames)
+        if review.aliasCount > 0 {
+            LabeledContent(pantryText("Saved receipt spellings to delete"), value: review.aliasCount.formatted())
+        }
         if review.receiptRevisionCount > 0 {
             LabeledContent(pantryText("Receipt and paid-price revisions to delete"), value: review.receiptRevisionCount.formatted())
         }

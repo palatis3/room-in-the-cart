@@ -35,9 +35,9 @@ final class InventoryPersistenceTests: XCTestCase {
         XCTAssertEqual(store.workspaceID, workspace)
         let snapshot = try await store.inventoryCutoverSnapshot()
         XCTAssertEqual(snapshot.sources, [saved])
-        XCTAssertEqual(try scalar("PRAGMA user_version"), 5)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 6)
         try await store.close()
-        XCTAssertThrowsError(try ComparisonStore(url: url)) { XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(5)) }
+        XCTAssertThrowsError(try ComparisonStore(url: url)) { XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(6)) }
         let other = directory.appendingPathComponent("comparisons.sqlite")
         let generic = try ComparisonStore(url: other)
         _ = try await generic.save(id: UUID(), title: "Pack", payload: Data([1]), savedAt: Date())
@@ -45,6 +45,68 @@ final class InventoryPersistenceTests: XCTestCase {
         catch { XCTAssertEqual(error as? ComparisonStoreError, .inventoryDisabled) }
         try await generic.close()
         XCTAssertEqual(try scalar("PRAGMA user_version", at: other), 2)
+    }
+
+    func testVersionFiveReceiptEvidenceMigratesToAnEmptySpellingStore() async throws {
+        let original = try ComparisonStore(url: url, inventoryEnabled: true)
+        try await activate(original)
+        let parent = lot()
+        let row = InventoryAcquisitionRow(id: UUID(), receiptID: UUID(), lineID: UUID(), lotID: parent.record.key.id,
+            revision: 1, supersedesID: nil, payload: Data([2]))
+        _ = try await original.commitInventory(.init(workspaceID: original.workspaceID, operationID: UUID(), expectedRevision: 1,
+            request: Data([3]), writes: [parent], acquisitions: [row]))
+        try await original.close()
+        try sql("DROP TABLE inventory_receipt_aliases; PRAGMA user_version=5;")
+        let migrated = try ComparisonStore(url: url, inventoryEnabled: true)
+        let rows = try await migrated.acquisitionRows(), aliases = try await migrated.receiptAliasCount()
+        XCTAssertEqual(rows, [row])
+        XCTAssertEqual(aliases, 0)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 6)
+        try await migrated.close()
+    }
+
+    func testReceiptSpellingsSurviveReopenAndForgetOnlyTheReviewedPersonaRows() async throws {
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        try await activate(store)
+        let parent = lot(), persona = UUID(), other = UUID(), food = UUID()
+        let row = InventoryAcquisitionRow(id: UUID(), receiptID: UUID(), lineID: UUID(), lotID: parent.record.key.id,
+            revision: 1, supersedesID: nil, payload: Data([7]))
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(),
+            expectedRevision: 1, request: Data([1]), writes: [parent], acquisitions: [row]))
+        func alias(_ persona: UUID, _ language: String) -> InventoryReceiptAlias {
+            .init(personaID: persona, merchant: "Market", language: language, wording: "BN", product: "Beans", foodID: food,
+                sourceID: row.id, lotID: parent.record.key.id)
+        }
+        let english = alias(persona, "en"), spanish = alias(persona, "es"), independent = alias(other, "en")
+        for (index, item) in [english, spanish, independent].enumerated() {
+            _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: Int64(index + 2),
+                request: Data([UInt8(index)]), aliasEdit: .remember(item)))
+        }
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        let filtered = try await reopened.receiptAliases(personaID: persona, merchant: " market ", language: "en")
+        XCTAssertEqual(filtered, [english])
+        do {
+            _ = try await reopened.commitInventory(.init(workspaceID: reopened.workspaceID, operationID: UUID(), expectedRevision: 5,
+                request: Data([2]), aliasEdit: .forget(personaID: persona, ids: [english.id, independent.id])))
+            XCTFail("Mixed scope must roll back all removals")
+        } catch { XCTAssertEqual(error as? ComparisonStoreError, .staleInventory) }
+        let count = try await reopened.receiptAliasCount(lotIDs: [row.lotID])
+        XCTAssertEqual(count, 3)
+        let removal = InventoryBatch(workspaceID: reopened.workspaceID, operationID: UUID(), expectedRevision: 5,
+            request: Data([5]), aliasEdit: .forget(personaID: persona, ids: [english.id, spanish.id]))
+        _ = try await reopened.commitInventory(removal)
+        _ = try await reopened.commitInventory(removal)
+        let kept = try await reopened.receiptAliases(personaID: other), cleared = try await reopened.receiptAliases(personaID: persona)
+        XCTAssertEqual(kept, [independent])
+        XCTAssertTrue(cleared.isEmpty)
+        let evidence = try await reopened.acquisitionRows()
+        XCTAssertEqual(evidence, [row])
+        _ = try await reopened.commitInventory(.init(workspaceID: reopened.workspaceID, operationID: UUID(),
+            expectedRevision: 6, request: Data([8]), erasures: [.init(key: parent.record.key, expectedRevision: 1)]))
+        let remaining = try await reopened.receiptAliasCount()
+        XCTAssertEqual(remaining, 0)
+        try await reopened.close()
     }
 
     func testReceiptEvidenceIdentitiesAreAtomicAndRemainRetiredAcrossReopen() async throws {

@@ -1,3 +1,4 @@
+import CoreDomain
 import SwiftUI
 import DeviceSurfaces
 
@@ -208,7 +209,9 @@ private struct GroceryWindow: View {
         let authorize = pantryRuntime.authorization(for: identity, access: access, household: household, child: guardianChild)
         guard authorize(), !Task.isCancelled, ledger.sourceWorkspaceID == scope.ledgerOrigin else { return }
         do {
-            try await pickup.bindPrivatePantry(ledger: ledger, authorize: authorize)
+            let persona = ReceiptAcquisition.identity(["private-receipt-aliases", identity.actorID.uuidString,
+                identity.subject ?? "", identity.householdID ?? "", identity.memberID ?? ""])
+            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona, authorize: authorize)
             if !pickup.ready { await pickup.load() }
             if pickup.pantryRouteAvailable { Diagnostics.record(.pantryRouteReady) }
             else if !pickup.pantryRestartAvailable {

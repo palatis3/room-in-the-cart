@@ -15,7 +15,7 @@ extension ComparisonDatabase {
     func migrateInventory() throws {
         try transaction {
             let version = try integer("PRAGMA user_version")
-            if (3...5).contains(version) { try validateInventory(); return }
+            if (3...6).contains(version) { try validateInventory(); return }
             guard version == 2 else { throw ComparisonStoreError.unsupportedSchema(version) }
             try validate(version: 2, beforeMigration: true)
             try execute(Self.inventorySchema)

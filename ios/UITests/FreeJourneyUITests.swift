@@ -117,6 +117,19 @@ import XCTest
         receiptTap(app.buttons["pantry.receiptHistory"])
         XCTAssertTrue(app.staticTexts["Oats"].firstMatch.waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["Paid price unknown"].exists)
+        receiptTap(app.buttons["Remember this product spelling"])
+        let printedWording = app.textFields["Product wording from the printed line"]
+        receiptTap(printedWording)
+        printedWording.typeText("Oats")
+        if app.buttons["receipt.alias.keyboardDone"].exists { app.buttons["receipt.alias.keyboardDone"].tap() }
+        receiptTap(app.buttons["Save receipt spelling"])
+        XCTAssertTrue(printedWording.waitForNonExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+        receiptTap(app.buttons["Saved receipt spellings"])
+        XCTAssertTrue(app.staticTexts["Oats"].firstMatch.waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Reset all my receipt spellings"])
+        receiptTap(app.alerts.buttons["Forget"])
+        XCTAssertTrue(app.staticTexts["No saved receipt spellings."].waitForExistence(timeout: 8))
     }
 
     /// F02: ordinary Dinners removal, with an independently checked SQLite history.

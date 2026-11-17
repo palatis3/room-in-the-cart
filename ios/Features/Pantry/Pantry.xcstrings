@@ -3217,6 +3217,358 @@
           }
         }
       }
+    },
+    "Printed receipt language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed receipt language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma del recibo impreso"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inglés"
+          }
+        }
+      }
+    },
+    "Spanish": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spanish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Español"
+          }
+        }
+      }
+    },
+    "Confirmed receipt line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed receipt line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea confirmada del recibo"
+          }
+        }
+      }
+    },
+    "Product wording from the printed line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product wording from the printed line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del producto tal como aparece en la línea impresa"
+          }
+        }
+      }
+    },
+    "Future receipts can suggest this food for the same store and language. You choose whether to use it each time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Future receipts can suggest this food for the same store and language. You choose whether to use it each time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En futuros recibos de la misma tienda y en el mismo idioma, podrás elegir si usas este alimento sugerido."
+          }
+        }
+      }
+    },
+    "Saved spellings are private to your profile on this device and are excluded from pantry recovery copies.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved spellings are private to your profile on this device and are excluded from pantry recovery copies."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los nombres guardados son privados de tu perfil en este dispositivo y se excluyen de las copias de recuperación de la despensa."
+          }
+        }
+      }
+    },
+    "Save receipt spelling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save receipt spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar nombre del recibo"
+          }
+        }
+      }
+    },
+    "Check the printed wording and your saved spellings before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the printed wording and your saved spellings before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el texto impreso y tus nombres guardados antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Remember this product spelling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember this product spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordar este nombre de producto"
+          }
+        }
+      }
+    },
+    "No saved receipt spellings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved receipt spellings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay nombres de recibos guardados."
+          }
+        }
+      }
+    },
+    "Forget this spelling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget this spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar este nombre"
+          }
+        }
+      }
+    },
+    "Reset all my receipt spellings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset all my receipt spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar todos mis nombres de recibos guardados"
+          }
+        }
+      }
+    },
+    "Saved receipt spellings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved receipt spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombres de recibos guardados"
+          }
+        }
+      }
+    },
+    "Forget %@ saved receipt spellings?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget %@ saved receipt spellings?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Olvidar los nombres de recibos seleccionados (%@)?"
+          }
+        }
+      }
+    },
+    "Previous receipts and pantry food keep their confirmed details.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous receipts and pantry food keep their confirmed details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recibos anteriores y los alimentos de la despensa conservan sus datos confirmados."
+          }
+        }
+      }
+    },
+    "Forget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar"
+          }
+        }
+      }
+    },
+    "The pantry changed. Check the current spellings and confirm again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pantry changed. Check the current spellings and confirm again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La despensa cambió. Revisa los nombres actuales y vuelve a confirmar."
+          }
+        }
+      }
+    },
+    "Reopen the private pantry to review saved receipt spellings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the private pantry to review saved receipt spellings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir la despensa privada para revisar los nombres de recibos guardados."
+          }
+        }
+      }
+    },
+    "Use saved product %@ for %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use saved product %@ for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el producto guardado %@ para %@"
+          }
+        }
+      }
+    },
+    "Undo saved spelling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo saved spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer el uso del nombre guardado"
+          }
+        }
+      }
+    },
+    "Saved receipt spellings to delete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved receipt spellings to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombres de recibos guardados que se eliminarán"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

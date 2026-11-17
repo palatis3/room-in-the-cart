@@ -2,9 +2,9 @@ import CoreDomain
 import SwiftUI
 
 private enum PantrySheet: Identifiable {
-    case add, recount(UUID), purchase(PantryRecentPurchase), review, receipt, prices
+    case add, recount(UUID), purchase(PantryRecentPurchase), review, receipt, prices, aliases
     var id: String {
-        switch self { case .add: return "add"; case .recount(let id): return "recount-\(id)"; case .purchase(let row): return "purchase-\(row.id)"; case .review: return "review"; case .receipt: return "receipt"; case .prices: return "prices" }
+        switch self { case .add: return "add"; case .recount(let id): return "recount-\(id)"; case .purchase(let row): return "purchase-\(row.id)"; case .review: return "review"; case .receipt: return "receipt"; case .prices: return "prices"; case .aliases: return "aliases" }
     }
 }
 
@@ -32,6 +32,9 @@ struct PantryHomeView: View {
                                 .accessibilityIdentifier("pantry.add")
                             Button(pantryText("Review a receipt")) { sheet = .receipt }
                                 .disabled(!model.canEdit).accessibilityIdentifier("pantry.receipt")
+                            if model.supportsReceiptAliases {
+                                Button(pantryText("Saved receipt spellings")) { sheet = .aliases }
+                            }
                             Button(pantryText("Receipt history")) { sheet = .prices }
                                 .disabled(!model.canEdit).accessibilityIdentifier("pantry.receiptHistory")
                             let purchases = model.recentPurchases
@@ -204,6 +207,7 @@ private struct PantryEntryPresentation: ViewModifier {
                 case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
                 case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
                 case .receipt: PantryReceiptEntry(model: model)
+                case .aliases: PantryReceiptAliasList(model: model)
                 case .prices: PantryReceiptHistory(model: model)
                 case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,
                                                      availabilityNeedsReview: availabilityNeedsReview)

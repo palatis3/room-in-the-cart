@@ -35,6 +35,7 @@ import RecordArchive
     struct Review {
         let id: UUID
         let selection: Selection
+        var aliasCount: Int = 0
         var receiptRevisionCount: Int = 0
         let foodNames: [String]
         let pickupIDs: [UUID]
@@ -176,7 +177,7 @@ import RecordArchive
             sourceToken: impact.token, scope: whole ? .origin : .sourceGraph, chunkCount: Int64(chunks.count),
             entryCount: Int64(impact.entries.count), manifestDigest: chain)
         try await verify(basis)
-        return Review(id: id, selection: selection, receiptRevisionCount: impact.receiptRevisionCount, foodNames: impact.foodNames,
+        return Review(id: id, selection: selection, aliasCount: impact.aliasCount, receiptRevisionCount: impact.receiptRevisionCount, foodNames: impact.foodNames,
             pickupIDs: cleanup.pickupIDs, pickupTitles: impact.pickups.map(\.title), collateralPickupIDs: impact.collateral.map(\.id),
             collateralPickupTitles: impact.collateral.map(\.title), retainedReceiptFoodNames: impact.retainedReceiptNames,
             affectedReservationNames: impact.affectedReservationNames,
@@ -192,6 +193,7 @@ import RecordArchive
         let ledgerOrigins: Set<UUID>
         let entries: [InventoryErasureEntry]
         let blockers: Set<Blocker>
+        var aliasCount: Int = 0
         var receiptRevisionCount: Int = 0
         let foodNames: [String]
         let pickups: [(id: UUID, title: String)]
@@ -208,7 +210,7 @@ import RecordArchive
             }
             return SQLImpact(revision: all.state.revision, token: all.token,
                 rules: .init(origin: inventory.workspaceID, retiredOrigin: true), links: [], ledgerOrigins: [], entries: [], blockers: [],
-                receiptRevisionCount: try await receiptImpact(lots: nil, pickups: []).count, foodNames: all.food.map(\.title), pickups: pickups, collateral: [], retainedReceiptNames: [],
+                aliasCount: try await inventory.receiptAliasCount(), receiptRevisionCount: try await receiptImpact(lots: nil, pickups: []).count, foodNames: all.food.map(\.title), pickups: pickups, collateral: [], retainedReceiptNames: [],
                 affectedReservationNames: all.reservationNames)
         }
         let base = try await sourceBasis(at: date), context = base.context
@@ -247,7 +249,7 @@ import RecordArchive
         }
         return SQLImpact(revision: context.inventoryRevision, token: context.sourceToken, rules: rules,
             links: context.mapping.sourceLinks, ledgerOrigins: scan.ledgerOrigins, entries: graph.entries, blockers: blockers,
-            receiptRevisionCount: receipts.count, foodNames: context.lots.filter { lots.contains($0.id) }.map(\.name), pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
+            aliasCount: try await inventory.receiptAliasCount(lotIDs: lots), receiptRevisionCount: receipts.count, foodNames: context.lots.filter { lots.contains($0.id) }.map(\.name), pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
             retainedReceiptNames: context.lots.filter { scan.retainedReceiptLotIDsInCollateralPickups.contains($0.id) || receipts.retainedLots.contains($0.id) }.map(\.name),
             affectedReservationNames: context.claims.filter { graph.reservations.contains($0.id) }.map(\.name))
     }
