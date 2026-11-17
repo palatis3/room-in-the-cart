@@ -41,7 +41,7 @@ struct CookCompletionEntry: View {
             } else if let undo = model.undoReview {
                 CookCompletionUndoView(model: model, review: undo)
             } else if let completed = model.completed {
-                CookCompletionSavedView(model: model, draft: completed)
+                CookCompletionSavedView(model: model, ledger: ledger, pickup: pickup, draft: completed)
             } else if let review = model.review {
                 CookCompletionReviewView(model: model, review: review)
             } else if model.context != nil {
@@ -283,7 +283,10 @@ private struct CookCompletionReviewView: View {
 
 private struct CookCompletionSavedView: View {
     @ObservedObject var model: CookCompletionEditorModel
+    @ObservedObject var ledger: LedgerModel
+    @ObservedObject var pickup: PickupModel
     let draft: CookCompletionDraft
+    @State private var reviewingUse = false
     var body: some View {
         List {
             Section {
@@ -291,15 +294,35 @@ private struct CookCompletionSavedView: View {
                 Text(draft.meal.title)
                 LabeledContent(cookCompletionText("Servings made"), value: draft.servingsMade.description)
                 Text(draft.cookedAt.formatted(date: .abbreviated, time: .shortened))
-                Text(cookCompletionText(draft.unresolvedUseIDs.isEmpty ? "Inventory changes recorded." : "Inventory needs review. Unresolved use remains linked to this cooking event."))
+                Text(cookCompletionText(model.remainingUnresolvedUseIDs.isEmpty ? "Inventory changes recorded." : "Inventory needs review. Unresolved use remains linked to this cooking event."))
                     .accessibilityIdentifier("cook.inventoryStatus")
             }
             Section(cookCompletionText("Recorded ingredient use")) {
                 ForEach(draft.parts) { part in
                     VStack(alignment: .leading) {
                         Text(model.context?.shop.contributions.first { $0.id == part.contributionID }?.productName ?? cookCompletionText("Ingredient"))
-                        Text(cookUseText(part.use, lots: model.context?.inventory.lots ?? []))
+                        Text(cookUseText(part.use, lots: model.context?.inventory.lots ?? [], recorded: true))
                         if let substitute = part.substitution { Text(cookCompletionText("Actual substitution") + ": " + substitute) }
+                    }
+                }
+            }
+            if let receipts = model.context?.completedRecord?.resolutions, !receipts.isEmpty {
+                Section(cookCompletionText("Saved ingredient-use corrections")) {
+                    ForEach(receipts, id: \.eventID) { receipt in
+                        VStack(alignment: .leading) {
+                            if let part = draft.parts.first(where: { $0.id == receipt.eventID }) {
+                                Text(model.context?.shop.contributions.first { $0.id == part.contributionID }?.productName ?? cookCompletionText("Ingredient"))
+                            }
+                            Text(cookResolutionAction(receipt.decision.action))
+                            switch receipt.decision {
+                            case .outsidePantry: EmptyView()
+                            case .alreadyIncluded(_, let used), .recount(_, _, let used):
+                                LabeledContent(cookCompletionText("Actual amount used"), value: pantryQuantity(used))
+                            case .deduct(_, let used): LabeledContent(cookCompletionText("Actual amount used"), value: pantryQuantity(used))
+                            }
+                            Text(receipt.confirmedAt.formatted(date: .abbreviated, time: .shortened)).font(.caption)
+                            if let after = receipt.after { Text(pantryCount(after)) }
+                        }
                     }
                 }
             }
@@ -311,9 +334,20 @@ private struct CookCompletionSavedView: View {
             }
             CookCompletionNotice(model: model)
             Section {
+                if !model.remainingUnresolvedUseIDs.isEmpty {
+                    Button(cookCompletionText("Review unresolved ingredient use")) { reviewingUse = true }
+                        .disabled(model.busy || !model.hasAccess).accessibilityIdentifier("cook.resolution.open")
+                }
                 Button(cookCompletionText("Review Undo for this cooking")) { Task { await model.prepareUndo() } }
                     .disabled(!model.canReviewUndo).accessibilityIdentifier("cook.undo.review")
                 Text(cookCompletionText("Undo is available only while the affected counts, leftovers and holds still match this cooking record."))
+            }
+        }
+        .sheet(isPresented: $reviewingUse, onDismiss: { Task { await model.reload() } }) {
+            NavigationStack {
+                CookResolutionEntry(ledger: ledger, pickup: pickup, shopID: draft.shopID, mealID: draft.meal.id,
+                    ingredientNames: Dictionary(uniqueKeysWithValues: (model.context?.shop.contributions ?? []).map { ($0.id, $0.productName) }),
+                    authorize: { model.hasAccess })
             }
         }
     }
@@ -360,13 +394,13 @@ private struct CookCompletionNotice: View {
         if model.busy { ProgressView(cookCompletionText("Working…")) }
     }
 }
-private func cookUseText(_ use: CookCompletionDraft.Part.Use, lots: [InventoryLot]) -> String {
+private func cookUseText(_ use: CookCompletionDraft.Part.Use, lots: [InventoryLot], recorded: Bool = false) -> String {
     switch use {
     case .notUsed: cookCompletionText("Not used")
-    case .untracked: cookCompletionText("Used food not tracked in this pantry — unresolved")
+    case .untracked: cookCompletionText(recorded ? "Food was untracked when cooking; see any later ingredient-use correction." : "Used food not tracked in this pantry — unresolved")
     case .lot(let id, _, let amount):
         (lots.first(where: { $0.id == id })?.name ?? cookCompletionText("Selected batch")) + " · " +
-            (amount.map { pantryQuantity($0) } ?? cookCompletionText("Used an unmeasured amount — remaining count becomes unknown"))
+            (amount.map { pantryQuantity($0) } ?? cookCompletionText(recorded ? "Use was unmeasured when cooking; see any later ingredient-use correction." : "Used an unmeasured amount — remaining count becomes unknown"))
     }
 }
 private func cookNoticeText(_ notice: CookCompletionEditorModel.Notice) -> String {

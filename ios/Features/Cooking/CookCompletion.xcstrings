@@ -1785,6 +1785,720 @@
           }
         }
       }
+    },
+    "Reload saved ingredient use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload saved ingredient use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar el uso de ingredientes guardado"
+          }
+        }
+      }
+    },
+    "Review unresolved ingredient use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review unresolved ingredient use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el uso de ingredientes sin resolver"
+          }
+        }
+      }
+    },
+    "The original cooking record stays unchanged. Review each unresolved use separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original cooking record stays unchanged. Review each unresolved use separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El registro original de preparación no cambia. Revisa cada uso sin resolver por separado."
+          }
+        }
+      }
+    },
+    "All ingredient-use reviews are saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All ingredient-use reviews are saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardaron todas las revisiones del uso de ingredientes."
+          }
+        }
+      }
+    },
+    "Ingredient use to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient use to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso de ingrediente por revisar"
+          }
+        }
+      }
+    },
+    "Ingredient use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso de ingrediente"
+          }
+        }
+      }
+    },
+    "This use was not linked to a pantry batch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This use was not linked to a pantry batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este uso no estaba vinculado a un lote de la despensa."
+          }
+        }
+      }
+    },
+    "This use was unmeasured and belongs to the original selected batch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This use was unmeasured and belongs to the original selected batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este uso no se midió y pertenece al lote seleccionado originalmente."
+          }
+        }
+      }
+    },
+    "Batch to reconcile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batch to reconcile"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lote por conciliar"
+          }
+        }
+      }
+    },
+    "Current pantry count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current pantry count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad actual de la despensa"
+          }
+        }
+      }
+    },
+    "What can you confirm?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What can you confirm?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué puedes confirmar?"
+          }
+        }
+      }
+    },
+    "Choose a correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una corrección"
+          }
+        }
+      }
+    },
+    "Remaining quantity checked now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining quantity checked now"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad restante comprobada ahora"
+          }
+        }
+      }
+    },
+    "I also know how much was used": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I also know how much was used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También sé cuánto se usó"
+          }
+        }
+      }
+    },
+    "Actual amount used": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actual amount used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad que se usó"
+          }
+        }
+      }
+    },
+    "Review this ingredient-use correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this ingredient-use correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta corrección del uso de ingredientes"
+          }
+        }
+      }
+    },
+    "Review ingredient-use correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review ingredient-use correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la corrección del uso de ingredientes"
+          }
+        }
+      }
+    },
+    "Before": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes"
+          }
+        }
+      }
+    },
+    "After": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después"
+          }
+        }
+      }
+    },
+    "Backed after correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backed after correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cubierto después de la corrección"
+          }
+        }
+      }
+    },
+    "Shortfall after correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortfall after correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad faltante después de la corrección"
+          }
+        }
+      }
+    },
+    "Other uses still requiring individual review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other uses still requiring individual review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otros usos que aún requieren revisión individual"
+          }
+        }
+      }
+    },
+    "Retry the same correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la misma corrección"
+          }
+        }
+      }
+    },
+    "Confirm ingredient-use correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm ingredient-use correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la corrección del uso de ingredientes"
+          }
+        }
+      }
+    },
+    "Saved ingredient use could not be verified. Reload before making a correction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved ingredient use could not be verified. Reload before making a correction."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar el uso de ingredientes guardado. Vuelve a cargar antes de corregirlo."
+          }
+        }
+      }
+    },
+    "Choose an available correction and enter the amounts you actually checked.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an available correction and enter the amounts you actually checked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una corrección disponible e ingresa las cantidades que comprobaste."
+          }
+        }
+      }
+    },
+    "The saved use, count or holds changed. Reload and review before confirming.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved use, count or holds changed. Reload and review before confirming."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió el uso guardado, la cantidad o las reservas. Vuelve a cargar y revisar antes de confirmar."
+          }
+        }
+      }
+    },
+    "This correction may have saved. Retry the same correction or reload the saved ingredient use.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This correction may have saved. Retry the same correction or reload the saved ingredient use."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es posible que esta corrección se haya guardado. Reintenta la misma corrección o vuelve a cargar el uso guardado."
+          }
+        }
+      }
+    },
+    "The ingredient-use correction was saved. The original cooking record is preserved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The ingredient-use correction was saved. The original cooking record is preserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó la corrección del uso de ingredientes. Se conserva el registro original de preparación."
+          }
+        }
+      }
+    },
+    "The food came from outside this pantry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The food came from outside this pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El alimento vino de fuera de esta despensa"
+          }
+        }
+      }
+    },
+    "The current count already includes this use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current count already includes this use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad actual ya incluye este uso"
+          }
+        }
+      }
+    },
+    "Deduct a known amount from the supported earlier count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deduct a known amount from the supported earlier count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restar una cantidad conocida del conteo anterior respaldado"
+          }
+        }
+      }
+    },
+    "Replace the count with the remaining quantity checked now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace the count with the remaining quantity checked now"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar el conteo con la cantidad restante comprobada ahora"
+          }
+        }
+      }
+    },
+    "Confirm that this food was outside the tracked pantry. No pantry count changes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm that this food was outside the tracked pantry. No pantry count changes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma que este alimento no formaba parte de la despensa registrada. No cambia ninguna cantidad de la despensa."
+          }
+        }
+      }
+    },
+    "Confirm that the current checked count already includes this cooking use. It will not be deducted again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm that the current checked count already includes this cooking use. It will not be deducted again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma que la cantidad comprobada actual ya incluye este uso al cocinar. No se volverá a restar."
+          }
+        }
+      }
+    },
+    "This earlier count supports a deduction. Enter only the actual amount used in this event.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This earlier count supports a deduction. Enter only the actual amount used in this event."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este conteo anterior permite una deducción. Ingresa solo la cantidad que se usó en este evento."
+          }
+        }
+      }
+    },
+    "Count what remains now, including the effect of all earlier uses. This replaces the pantry quantity; it does not subtract the cooking amount again or close other ingredient-use reviews.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count what remains now, including the effect of all earlier uses. This replaces the pantry quantity; it does not subtract the cooking amount again or close other ingredient-use reviews."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta lo que queda ahora, incluyendo todos los usos anteriores. Esto reemplaza la cantidad de la despensa; no vuelve a restar lo usado al cocinar ni cierra otras revisiones de uso."
+          }
+        }
+      }
+    },
+    "Original checked count before cooking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original checked count before cooking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad comprobada original antes de cocinar"
+          }
+        }
+      }
+    },
+    "This recorded use is combined with other reviewed uses from the same original count. The quantity stays unknown while another unmeasured use remains.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This recorded use is combined with other reviewed uses from the same original count. The quantity stays unknown while another unmeasured use remains."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este uso registrado se combina con otros usos revisados del mismo conteo original. La cantidad sigue siendo desconocida mientras quede otro uso sin medir."
+          }
+        }
+      }
+    },
+    "Saved ingredient-use corrections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved ingredient-use corrections"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correcciones guardadas del uso de ingredientes"
+          }
+        }
+      }
+    },
+    "Food was untracked when cooking; see any later ingredient-use correction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food was untracked when cooking; see any later ingredient-use correction."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El alimento no estaba registrado al cocinar; consulta cualquier corrección posterior del uso."
+          }
+        }
+      }
+    },
+    "Use was unmeasured when cooking; see any later ingredient-use correction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use was unmeasured when cooking; see any later ingredient-use correction."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El uso no se midió al cocinar; consulta cualquier corrección posterior del uso."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -70,6 +70,11 @@ import CoreDomain
     var canEdit: Bool { context != nil && completed == nil && review == nil && !busy && !attemptedApply && authorize() }
     var canConfirm: Bool { review != nil && completed == nil && !busy && authorize() }
     var hasAccess: Bool { authorize() }
+    var remainingUnresolvedUseIDs: [UUID] {
+        guard let completed else { return [] }
+        if context?.completed?.id == completed.id { return context?.remainingUnresolvedUseIDs ?? [] }
+        return completed.unresolvedUseIDs
+    }
     var hasAttemptedMutation: Bool { attemptedApply || attemptedUndo }
     var canReviewUndo: Bool { completed != nil && undoReview == nil && !busy && authorize() }
     var canConfirmUndo: Bool { undoReview != nil && !busy && authorize() }

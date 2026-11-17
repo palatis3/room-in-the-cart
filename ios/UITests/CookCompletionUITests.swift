@@ -58,6 +58,16 @@ import XCTest
         tap(app.buttons["Close"]); tap(app.buttons["dinner.cookCompletion"])
         XCTAssertTrue(app.staticTexts["cook.saved"].waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(app.buttons["cook.confirm"].exists, "Saved cooking cannot be recorded twice")
+        tap(app.buttons["cook.resolution.open"])
+        tap(app.buttons["cook.resolution.action"])
+        tap(app.buttons["The food came from outside this pantry"])
+        tap(app.buttons["cook.resolution.review"])
+        tap(app.buttons["cook.resolution.confirm"])
+        XCTAssertTrue(app.staticTexts["cook.resolution.complete"].waitForExistence(timeout: 12), app.debugDescription)
+        tap(app.buttons["Cancel"])
+        let resolved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Inventory changes recorded."), object: app.staticTexts["cook.inventoryStatus"])
+        XCTAssertEqual(XCTWaiter.wait(for: [resolved], timeout: 10), .completed, app.debugDescription)
+        XCTAssertFalse(app.buttons["cook.resolution.open"].exists, "The original unresolved history must not appear as unfinished after resolution")
     }
     private func tap(_ element: XCUIElement) {
         _ = element.waitForExistence(timeout: 4)
