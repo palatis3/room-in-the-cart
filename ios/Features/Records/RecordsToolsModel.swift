@@ -345,7 +345,9 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         let entry: ImportEntry
         fileprivate let authorize: Authorization
         fileprivate var correction: RecipeCorrection?
-        var initialRecipe: ImportedRecipe? { correction?.recipe }
+        fileprivate var savedRecipe: RecoveredRecord?
+        fileprivate var savedRecipeContents: ImportedRecipe?
+        var initialRecipe: ImportedRecipe? { correction?.recipe ?? savedRecipeContents }
     }
     fileprivate struct RecipeCorrection {
         let recipe: ImportedRecipe
@@ -362,8 +364,22 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             return presentation
         } catch { fail(error); return nil }
     }
+    func beginSavedRecipeEdit(_ saved: RecoveredRecord) async {
+        guard !busy, saved.record.kind == .recipe, let bytes = saved.record.nativePayload else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            let authorize = try authorization()
+            guard try await registry.refreshList().contains(saved) else { throw ArchiveError.staleReview }
+            try await validateRecord(saved.record)
+            try requireAuthorization(authorize)
+            let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: bytes).validated()
+            importPresentation = ImportPresentation(entry: .manualRecipe, authorize: authorize,
+                savedRecipe: saved, savedRecipeContents: recipe)
+        } catch { fail(error, reveal: true) }
+    }
     @discardableResult func beginRecipeCorrection(_ row: RecoveryReviewRow) -> ImportPresentation? {
-        guard !busy, let review, review.canApply, row.disposition == .absent,
+        guard !busy, let review, review.canApply, [.absent, .sibling].contains(row.disposition),
               review.rows.contains(row), let authorize = reviewAuthorization,
               let recipe = recipeReport?.recipes.first(where: { $0.id == row.record.revision }) else { return nil }
         guard authorize() else { invalidateForSourceErasure(); return nil }
@@ -463,17 +479,21 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             try await restageCorrectedRecipe(recipe, correction: correction, authorize: presentation.authorize)
             return
         }
-        discardImportReview()
-        let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
-        let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery,
-                                             origin: record.origin, revision: record.revision)
-        try await stage(envelope, authorize: presentation.authorize)
+        var record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
+        if let saved = presentation.savedRecipe {
+            guard try await registry.refreshList().contains(saved), accepts(presentation) else { throw ArchiveError.staleReview }
+            // Bind the new revision to the original source and its erasure history.
+            record.origin = saved.record.origin
+            record.id = saved.record.id
+            record.parentRevision = record.id == record.revision ? nil : record.id
+        }
+        try await stageRecipeReview(.manual(recipe), records: [record], authorize: presentation.authorize)
     }
     private func restageCorrectedRecipe(_ recipe: ImportedRecipe, correction: RecipeCorrection,
                                         authorize: @escaping Authorization) async throws {
         guard let review, review.canApply, var report = recipeReport,
               review.envelope.canonicalPayloadDigest == correction.reviewDigest,
-              let row = review.rows.first(where: { $0.id == correction.row && $0.disposition == .absent }),
+              let row = review.rows.first(where: { $0.id == correction.row && [.absent, .sibling].contains($0.disposition) }),
               let index = report.recipes.firstIndex(of: correction.recipe) else { throw ArchiveError.staleReview }
 
         var updated = try recipe.archiveRecord(origin: row.record.origin, savedAt: Date(timeIntervalSince1970: 0))

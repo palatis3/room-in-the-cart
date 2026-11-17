@@ -861,13 +861,17 @@ private struct RecordsRecipeAdoptionView: View {
         // enter positive servings; original yield and ingredient words remain intact.
         MealTemplate(title: recipe.title, servings: .one,
             ingredients: recipe.ingredients.map { MealIngredient(name: $0, quantity: nil) },
-            notes: ([recipe.yieldText, recipe.notes] + recipe.steps).filter { !$0.isEmpty }.joined(separator: "\n"), sourceURL: recipe.sourceURL)
+            notes: [recipe.yieldText, recipe.notes].filter { !$0.isEmpty }.joined(separator: "\n"), sourceURL: recipe.sourceURL,
+            recipeSteps: recipe.steps.isEmpty ? nil : recipe.cookingSteps)
     }
     var body: some View {
         Form {
             Text(recipe.title).font(.title2.bold())
             Text(recipe.yieldText)
             ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { _, value in Text(value) }
+            if !recipe.steps.isEmpty {
+                NavigationLink(recordsText("Cooking steps")) { RecipeStepReviewView(steps: recipe.cookingSteps, ingredients: recipe.ingredients) }
+            }
             ForEach(Array(recipe.steps.enumerated()), id: \.offset) { _, value in Text(value) }
             Text(recipe.notes)
             if let source = recipe.sourceURL { Text(source).textSelection(.enabled) }

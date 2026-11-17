@@ -68,6 +68,14 @@ final class RecordsAdapterTests: XCTestCase {
         let manual = try XCTUnwrap(tools.beginImport(.manualRecipe))
         try await tools.stageManualRecipe(ImportedRecipe(title: "Current handwritten recipe"), from: manual)
         XCTAssertEqual(tools.review?.rows.map(\.record.title), ["Current handwritten recipe"])
+        XCTAssertEqual(tools.recipeReport?.recipes.first?.missingFields, [.servings, .ingredients, .instructions])
+        let partial = try XCTUnwrap(tools.review?.rows.first)
+        let correction = try XCTUnwrap(tools.beginRecipeCorrection(partial))
+        var corrected = try XCTUnwrap(correction.initialRecipe)
+        corrected.ingredients = ["1 cup of rice"]
+        corrected.steps = ["Simmer the rice."]
+        try await tools.stageManualRecipe(corrected, from: correction)
+        XCTAssertEqual(tools.recipeReport?.recipes.first?.missingFields, [.servings])
         let saved = try await registry.refreshList()
         XCTAssertTrue(saved.isEmpty)
     }
@@ -908,6 +916,38 @@ final class RecordsAdapterTests: XCTestCase {
         await model.undoImport()
         let afterUndo = try await reopened.refreshList()
         XCTAssertTrue(afterUndo.isEmpty)
+    }
+
+    @MainActor func testSavedNotesOnlyRecipeCanReviewANewRevisionWithoutLosingItsOriginal() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("recipes.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let original = ImportedRecipe(title: "Family soup", notes: "Use the old pot")
+        let entry = try XCTUnwrap(model.beginImport(.manualRecipe))
+        try await model.stageManualRecipe(original, from: entry)
+        await model.applyReviewedImport()
+        let baseline = try await registry.refreshList()
+        let saved = try XCTUnwrap(baseline.first)
+        await model.beginSavedRecipeEdit(saved)
+        let edit = try XCTUnwrap(model.importPresentation)
+        var changed = try XCTUnwrap(edit.initialRecipe)
+        changed.ingredients = ["Two carrots"]
+        changed.steps = ["Slice the carrots."]
+        changed.reviewedSteps = [RecipeStep("Slice the carrots.", ingredientIndices: [0])]
+        try await model.stageManualRecipe(changed, from: edit)
+        let row = try XCTUnwrap(model.review?.rows.first)
+        XCTAssertEqual(row.disposition, .sibling)
+        XCTAssertEqual(row.record.id, saved.record.id)
+        XCTAssertEqual(row.record.revision, changed.id)
+        await model.applyReviewedImport()
+        let versions = try await registry.refreshList()
+        XCTAssertEqual(versions.count, 2)
+        XCTAssertTrue(versions.contains(saved))
+        let newer = try XCTUnwrap(versions.first { $0.record.revision == changed.id })
+        let reopened = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(newer.record.nativePayload))
+        XCTAssertEqual(reopened.notes, original.notes)
+        XCTAssertEqual(reopened.cookingSteps, changed.cookingSteps)
     }
 
     @MainActor func testOversizedIngredientSkipsOnlyItsRecipeAndTheReviewedBatchReopens() async throws {

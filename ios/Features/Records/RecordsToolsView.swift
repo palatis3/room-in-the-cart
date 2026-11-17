@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreDomain
 import UniformTypeIdentifiers
 import RecordArchive
 
@@ -87,6 +88,7 @@ struct RecordsToolsView: View {
                     ForEach(recipes) { saved in
                         Button(recordsTitle(saved.record)) { Task { await model.openRecovered(saved) } }
                             .accessibilityIdentifier("dinner.savedRecipe." + saved.id)
+                        editSavedRecipeButton(saved)
                     }
                 }
             } else {
@@ -397,7 +399,7 @@ struct RecordsToolsView: View {
             }
             if review.canApply {
                 HStack(spacing: 16) {
-                    if row.disposition == .absent {
+                    if row.disposition == .absent || row.disposition == .sibling {
                         Button(recordsText("Edit recipe")) { model.beginRecipeCorrection(row) }
                             .accessibilityLabel(recordsText("Edit recipe") + ", " + recipe.title)
                             .accessibilityIdentifier("records.editRecipe." + row.record.id)
@@ -479,6 +481,12 @@ struct RecordsToolsView: View {
             }
         }
     }
+    private func editSavedRecipeButton(_ saved: RecoveredRecord) -> some View {
+        Button(recordsText("Review changes to a saved recipe")) { Task { await model.beginSavedRecipeEdit(saved) } }
+            .accessibilityLabel(recordsText("Review changes to a saved recipe") + ", " + recordsTitle(saved.record))
+            .accessibilityIdentifier("records.editSavedRecipe." + saved.id)
+    }
+
     private func recoveredCopy(_ saved: RecoveredRecord) -> some View {
         DisclosureGroup(recordsTitle(saved.record),
             isExpanded: Binding(get: { recoveredExpandedIDs.contains(saved.id) }, set: { expanded in
@@ -496,6 +504,7 @@ struct RecordsToolsView: View {
                 ForEach(Array(recipe.steps.enumerated()), id: \.offset) { _, text in Text(text) }
                 if !recipe.notes.isEmpty { Text(recipe.notes) }
                 if let source = recipe.sourceURL { Text(source).textSelection(.enabled).font(.caption) }
+                editSavedRecipeButton(saved)
                 Button(recordsText("Open saved recipe")) { Task { await model.openRecovered(saved) } }
             } else if saved.record.nativePayload != nil {
                 Button(recordsText("Open separate recovered copy")) { Task { await model.openRecovered(saved) } }.accessibilityIdentifier("records.openRecovered." + saved.record.id)
@@ -717,6 +726,7 @@ private struct ManualRecipeEntryView: View {
         self.submit = submit
         let separator = initial?.steps.contains(where: { $0.contains("\n") }) == true ? "\n\n" : "\n"
         stepSeparator = separator
+        _stepEdits = State(initialValue: RecipeStepEdits(reviewed: initial?.cookingSteps ?? [], ingredientLines: initial?.ingredients ?? []))
         _title = State(initialValue: initial?.title ?? "")
         _servings = State(initialValue: initial?.yieldText ?? "")
         _ingredients = State(initialValue: initial?.ingredients.joined(separator: "\n") ?? "")
@@ -735,6 +745,12 @@ private struct ManualRecipeEntryView: View {
     @State private var steps = ""
     @State private var source = ""
     @State private var notes = ""
+    @State private var stepEdits: RecipeStepEdits
+    private var ingredientLines: [String] { reviewedLines(ingredients, original: initial?.ingredients, separator: "\n") }
+    private var instructionLines: [String] { reviewedLines(steps, original: initial?.steps, separator: stepSeparator) }
+    private var currentSteps: [RecipeStep] {
+        stepEdits.current(instructions: instructionLines, ingredients: ingredientLines)
+    }
     private func reviewedLines(_ text: String, original: [String]?, separator: String) -> [String] {
         if let original, original.joined(separator: separator) == text { return original }
         return text.components(separatedBy: separator).filter { !$0.isEmpty }
@@ -750,6 +766,13 @@ private struct ManualRecipeEntryView: View {
                     .focused($editing, equals: .ingredients)
                 TextField(stepSeparator == "\n" ? recordsText("Steps, one per line") : recordsText("Steps, one per paragraph"), text: $steps, axis: .vertical).lineLimit(3...12)
                     .focused($editing, equals: .steps)
+                if !instructionLines.isEmpty {
+                    NavigationLink(recordsText("Review ingredients and timers by step")) {
+                        RecipeStepReviewView(steps: currentSteps, ingredients: ingredientLines) { index, value in
+                            stepEdits.apply(value, at: index, instructions: instructionLines, ingredients: ingredientLines)
+                        }
+                    }
+                }
                 TextField(recordsText("Source URL (optional)"), text: $source).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                     .focused($editing, equals: .source)
                 TextField(recordsText("Your notes"), text: $notes, axis: .vertical).lineLimit(3...12)
@@ -761,9 +784,8 @@ private struct ManualRecipeEntryView: View {
                     editing = nil
                     submitting = true
                     let recipe = ImportedRecipe(title: title, yieldText: servings,
-                        ingredients: reviewedLines(ingredients, original: initial?.ingredients, separator: "\n"),
-                        steps: reviewedLines(steps, original: initial?.steps, separator: stepSeparator),
-                        sourceURL: source.isEmpty ? nil : source, notes: notes)
+                        ingredients: ingredientLines, steps: instructionLines,
+                        sourceURL: source.isEmpty ? nil : source, notes: notes, reviewedSteps: currentSteps)
                     Task {
                         submissionError = await submit(recipe)
                         submitting = false

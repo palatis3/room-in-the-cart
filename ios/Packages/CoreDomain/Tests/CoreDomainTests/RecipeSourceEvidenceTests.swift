@@ -23,6 +23,30 @@ final class RecipeSourceEvidenceTests: XCTestCase {
     }
     private func data(_ value: [String: Any]) throws -> Data { try JSONSerialization.data(withJSONObject: value, options: .sortedKeys) }
 
+    func testReviewedStepsFollowChosenIngredientOrderAndSurviveLegacyDecoding() throws {
+        var ledger = ShoppingLedger(title: "Meal")
+        var recipe = MealTemplate(title: "Beans", ingredients: [
+            MealIngredient(name: "1 onion", quantity: nil), MealIngredient(name: "2 cups beans", quantity: nil)
+        ], notes: "Old family notes")
+        let before = try JSONEncoder().encode(recipe)
+        XCTAssertNil(try JSONDecoder().decode(MealTemplate.self, from: before).recipeSteps)
+        let step = RecipeStep("Simmer the beans.", ingredientIndices: [1], suggestedTimerMinutes: 12)
+        recipe.recipeSteps = [step]
+        let id = try ledger.chooseMeal(recipe, at: at)
+        let copy = try XCTUnwrap(ledger.mealOccurrences.first { $0.id == id })
+        XCTAssertEqual(copy.notes, recipe.notes)
+        XCTAssertEqual(copy.recipeSteps, [step])
+        let contributionID = copy.ingredientContributionIDs[1]
+        XCTAssertEqual(ledger.contributions.first { $0.id == contributionID }?.productName, "2 cups beans")
+        let changed = [recipe.ingredients[1], recipe.ingredients[0]]
+        XCTAssertEqual(RecipeStep.rebinding([step], from: recipe.ingredients, to: changed)[0].ingredientIndices, [0])
+        var renamed = recipe.ingredients
+        renamed[1].name = "Peas"
+        XCTAssertEqual(RecipeStep.rebinding([step], from: recipe.ingredients, to: renamed)[0].ingredientIndices, [])
+        recipe.recipeSteps?[0].ingredientIndices = [8]
+        XCTAssertThrowsError(try recipe.validate())
+    }
+
     func testOriginalEvidenceSurvivesIndependentRecipeAndOccurrenceEdits() throws {
         let source = try evidence("  Original OCR: aróz?\n1 / ? cup; retain verbatim.  ")
         var recipe = try template(source)

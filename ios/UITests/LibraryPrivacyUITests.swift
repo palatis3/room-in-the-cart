@@ -109,6 +109,14 @@ import XCTest
         XCTAssertTrue(yield.waitForExistence(timeout: 10))
         yield.tap()
         yield.typeText("Two bowls")
+        tap(app.buttons["Review ingredients and timers by step"])
+        tap(button("records.cookingStep.0"))
+        setSwitch(app.switches["records.stepIngredient.0"], enabled: true)
+        let timer = app.textFields["Suggested timer in minutes (optional)"]
+        tap(timer)
+        timer.typeText("7")
+        tap(button("records.saveStepDetails"))
+        back(to: "Edit recipe")
         tap(app.buttons["Review recipe"])
         tap(element("records.applyImport"))
         assertSavedRecipes(2)
@@ -117,6 +125,11 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Saved recipe"].waitForExistence(timeout: 10))
         assertText("Two bowls")
         assertText("Simmer.")
+        tap(app.buttons["Cooking steps"])
+        tap(button("records.cookingStep.0"))
+        assertText("Ingredients for this step")
+        assertText("1 onion")
+        assertText("Suggested timer: 7 min")
         capture("Recipe page corrected and saved")
     }
 

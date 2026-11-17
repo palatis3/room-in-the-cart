@@ -105,6 +105,9 @@ struct DinnerTemplateDraft {
         var value = MealTemplate(id: id, title: title, servings: enteredServings, ingredients: try ingredients.map { try $0.ingredient() },
             notes: notes, sourceURL: source.isEmpty ? nil : source, exclusions: DinnerEntry.list(exclusions),
             revision: original?.revision ?? 0, servingGroups: try groups.map { try $0.group() }, leadTimeMinutes: try DinnerEntry.minutes(lead), completedSteps: DinnerEntry.list(completed), sourceEvidence: original?.sourceEvidence)
+        if let original, let steps = original.recipeSteps {
+            value.recipeSteps = RecipeStep.rebinding(steps, from: original.ingredients, to: value.ingredients)
+        }
         if let original, original != value {
             let (revision, overflow) = original.revision.addingReportingOverflow(1)
             guard !overflow else { throw DomainError.overflow }; value.revision = revision

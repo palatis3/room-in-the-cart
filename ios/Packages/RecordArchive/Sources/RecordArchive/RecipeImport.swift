@@ -1,4 +1,5 @@
 import CoreFoundation
+import CoreDomain
 import Foundation
 
 public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
@@ -7,10 +8,13 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
     public var yieldText: String
     public var ingredients: [String]
     public var steps: [String]
+    public var reviewedSteps: [RecipeStep]?
+    public var cookingSteps: [RecipeStep] { reviewedSteps ?? steps.map { RecipeStep($0) } }
     public var sourceURL: String?
     public var notes: String
-    public init(title: String, yieldText: String = "", ingredients: [String] = [], steps: [String] = [], sourceURL: String? = nil, notes: String = "") {
+    public init(title: String, yieldText: String = "", ingredients: [String] = [], steps: [String] = [], sourceURL: String? = nil, notes: String = "", reviewedSteps: [RecipeStep]? = nil) {
         self.title = title; self.yieldText = yieldText; self.ingredients = ingredients
+        self.reviewedSteps = reviewedSteps?.contains(where: \.hasReviewedDetails) == true ? reviewedSteps : nil
         self.steps = steps; self.sourceURL = sourceURL; self.notes = notes
     }
     public enum MissingField: Hashable, Sendable { case servings, ingredients, instructions }
@@ -29,6 +33,12 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
               [title, yieldText, notes].allSatisfy({ !$0.contains("\0") }),
               ingredients.count <= 1000, steps.count <= 1000,
               (ingredients + steps).allSatisfy({ $0.utf8.count <= 32768 && !$0.contains("\0") }) else { throw ArchiveError.invalidRecipe }
+        if let reviewedSteps {
+            guard reviewedSteps.map(\.instruction) == steps,
+                  (try? RecipeStep.validate(reviewedSteps, ingredientCount: ingredients.count)) != nil else {
+                throw ArchiveError.invalidRecipe
+            }
+        }
         if let sourceURL, !sourceURL.isEmpty {
             guard sourceURL.utf8.count <= 4096, let components = URLComponents(string: sourceURL),
                   ["http", "https"].contains(components.scheme?.lowercased() ?? ""), let host = components.host, !host.isEmpty,
@@ -48,6 +58,10 @@ public struct RecipeImportReport: Sendable {
     public let duplicateCount: Int
     public var skippedRows: Int
     public let unsupportedFields: [String]
+
+    public static func manual(_ recipe: ImportedRecipe) -> Self {
+        Self(recipes: [recipe], duplicateCount: 0, skippedRows: 0, unsupportedFields: [])
+    }
 }
 
 /// Documented Recipe JSON-LD profile. Context URLs are inert text, never fetched.

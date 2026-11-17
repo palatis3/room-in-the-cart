@@ -136,6 +136,9 @@ import CoreDomain
             if meal.isHidden { lines.append(ledgerText("Hidden from the ordinary view")) }
             lines += mealFacts(servings: meal.servings, groups: meal.servingGroups, notes: meal.notes, exclusions: meal.exclusions,
                                leadTime: meal.leadTimeMinutes, steps: meal.completedSteps, source: meal.sourceURL, evidence: meal.sourceEvidence)
+            if let steps = meal.recipeSteps {
+                lines += cookingSteps(steps, ingredients: meal.ingredientContributionIDs.map { ingredientNames[$0] ?? recordsText("Ingredient no longer available") })
+            }
             let groups = Dictionary(uniqueKeysWithValues: meal.servingGroups.map { ($0.id, $0) })
             for binding in bindings[meal.id] ?? [] {
                 if let group = groups[binding.groupID], let name = ingredientNames[binding.contributionID] {
@@ -257,12 +260,22 @@ import CoreDomain
         var lines = [joined([meal.title, revision(meal.revision)])]
         lines += mealFacts(servings: meal.servings, groups: meal.servingGroups, notes: meal.notes, exclusions: meal.exclusions,
                            leadTime: meal.leadTimeMinutes, steps: meal.completedSteps, source: meal.sourceURL, evidence: meal.sourceEvidence)
+        if let steps = meal.recipeSteps { lines += cookingSteps(steps, ingredients: meal.ingredients.map(\.name)) }
         if !meal.ingredients.isEmpty { lines.append(ledgerText("Ingredients")) }
         for ingredient in meal.ingredients {
             lines.append(joined(["• " + ingredient.name, quantity(ingredient.quantity), ingredient.notes]))
             if !ingredient.exclusions.isEmpty { lines.append(exclusions(ingredient.exclusions)) }
         }
         return lines
+    }
+
+    private static func cookingSteps(_ steps: [RecipeStep], ingredients: [String]) -> [String] {
+        steps.enumerated().map { index, step in
+            let label = String(format: recordsText("Step %lld"), Int64(index + 1))
+            let matched = step.ingredientIndices.compactMap { ingredients.indices.contains($0) ? ingredients[$0] : nil }
+            let timer = step.suggestedTimerMinutes.map { String(format: recordsText("Suggested timer: %lld min"), Int64($0)) }
+            return joined([label, step.instruction] + matched + [timer ?? ""])
+        }
     }
 
     private static func mealFacts(servings: Rational, groups: [ServingGroup], notes: String, exclusions excluded: [String],
