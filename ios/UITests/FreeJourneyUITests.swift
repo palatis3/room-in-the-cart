@@ -193,8 +193,13 @@ import XCTest
         XCTAssertTrue(element("pantry.foodKeeper.range").exists)
         capture(spanish ? "Intervalo de calidad guardado en el lote" : "Saved USDA range on the ordinary lot after relaunch")
         tap(app.buttons["pantry.move.freezer"])
-        tap(app.buttons["pantry.confirm"])
-        XCTAssertTrue(element("pantry.foodKeeper.needsReview").waitForExistence(timeout: 8))
+        let commit = app.buttons["pantry.confirm"]
+        tap(commit)
+        XCTAssertTrue(commit.waitForNonExistence(timeout: 8))
+        let staleRange = element("pantry.foodKeeper.needsReview")
+        // The move action is below the saved range. Return to that section after the review sheet closes.
+        reveal(staleRange, initiallyUpward: false)
+        XCTAssertTrue(staleRange.label.contains(spanish ? "Vuelve a revisar" : "Review its current storage"))
         XCTAssertFalse(element("pantry.foodKeeper.range").exists)
         tap(app.buttons["pantry.foodKeeper"])
         tap(app.buttons["foodKeeper.product.142"])
