@@ -153,6 +153,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public var ingredients: [MealIngredient]
     public var notes: String
     public var sourceURL: String?
+    public var eligibilityEvidence: MealEligibilityEvidence? = nil
     public var sourceEvidence: RecipeSourceEvidence? = nil
     public var exclusions: [String]
     public var servingGroups: [ServingGroup]
@@ -173,6 +174,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public func validate() throws {
         try ledgerText(title, nonempty: true, maximum: 512); try ledgerText(notes)
         if let sourceURL { try ledgerText(sourceURL, maximum: 2048) }
+        try eligibilityEvidence?.validate()
         try sourceEvidence?.validate()
         try validateExclusions(exclusions)
         guard revision >= 0, servings > .zero, ingredients.count <= 200,

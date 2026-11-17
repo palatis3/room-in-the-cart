@@ -87,11 +87,13 @@ enum DinnerDraftValidationError: LocalizedError, Equatable {
 }
 
 struct DinnerTemplateDraft {
+    var evidence: MealEligibilityEvidence
     let id: UUID
     let original: MealTemplate?
     var title: String; var servings: String; var ingredients: [DinnerIngredientDraft]; var groups: [DinnerGroupDraft]
     var notes: String; var source: String; var exclusions: String; var lead: String; var completed: String
     init(_ template: MealTemplate? = nil) {
+        evidence = template?.eligibilityEvidence ?? .init()
         original = template; id = template?.id ?? UUID(); title = template?.title ?? ""; servings = template?.servings.description ?? ""
         ingredients = template?.ingredients.map(DinnerIngredientDraft.init) ?? [DinnerIngredientDraft()]
         groups = template?.servingGroups.map(DinnerGroupDraft.init) ?? []
@@ -105,6 +107,7 @@ struct DinnerTemplateDraft {
         var value = MealTemplate(id: id, title: title, servings: enteredServings, ingredients: try ingredients.map { try $0.ingredient() },
             notes: notes, sourceURL: source.isEmpty ? nil : source, exclusions: DinnerEntry.list(exclusions),
             revision: original?.revision ?? 0, servingGroups: try groups.map { try $0.group() }, leadTimeMinutes: try DinnerEntry.minutes(lead), completedSteps: DinnerEntry.list(completed), sourceEvidence: original?.sourceEvidence)
+        if evidence != MealEligibilityEvidence() { value.eligibilityEvidence = evidence }
         if let original, original != value {
             let (revision, overflow) = original.revision.addingReportingOverflow(1)
             guard !overflow else { throw DomainError.overflow }; value.revision = revision
