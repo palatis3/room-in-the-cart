@@ -62,6 +62,12 @@ import XCTest
         XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
         done.tap()
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "preferences.keyboardDone"))
+        let minutes = element("preferences.availableMinutes")
+        tap(minutes); minutes.typeText("20")
+        tap(done)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "preferences.keyboardDone"))
+        let required = app.switches["preferences.requireMinutes"]
+        tap(required)
         tap(element("preferences.review"))
         tap(element("preferences.save"))
         XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8))
@@ -70,6 +76,10 @@ import XCTest
         open()
         reveal(field)
         XCTAssertEqual(field.value as? String, "peanut")
+        reveal(minutes)
+        XCTAssertEqual(minutes.value as? String, "20")
+        reveal(required)
+        XCTAssertEqual(required.value as? String, "1")
     }
 
     func testRemovingOneDinnerPreservesOtherMealManualGroceriesAndProtectedLunchAfterRestart() throws {
