@@ -47,6 +47,10 @@ public enum ComparisonStoreError: Error, Equatable, Sendable {
     case unsupportedEnvelope(Int)
     case database(Int32)
     case closed
+    case inventoryRequired
+    case inventoryDisabled
+    case inventoryInactive
+    case staleInventory
 }
 
 /// Installation-local, offline persistence. The caller owns payload semantics and its own
@@ -54,19 +58,20 @@ public enum ComparisonStoreError: Error, Equatable, Sendable {
 public actor ComparisonStore {
     public nonisolated let workspaceID: UUID
     public nonisolated static let maximumPayloadBytes = 1_048_576
-    private let database: Database
+    let database: ComparisonDatabase
+    let inventoryEnabled: Bool
 
     /// The parent directory must already exist. At the iOS composition root, protect that
     /// directory with completeUntilFirstUserAuthentication so journals inherit protection.
-    public init(url: URL) throws {
+    public init(url: URL, inventoryEnabled: Bool = false) throws {
         guard url.isFileURL else { throw ComparisonStoreError.invalidURL }
-        let database = try Database(url: url)
+        let database = try ComparisonDatabase(url: url)
         do {
             // Inspect first: opening an unsupported future schema must not change its data,
             // metadata, journal mode, or schema version.
             let version = try database.transaction(immediate: false) {
                 let version = try database.integer("PRAGMA user_version")
-                guard version <= 2 else { throw ComparisonStoreError.unsupportedSchema(version) }
+                guard version <= (inventoryEnabled ? 3 : 2) else { throw ComparisonStoreError.unsupportedSchema(version) }
                 guard version >= 0 else { throw ComparisonStoreError.unrecognizedSchema }
                 if version == 0 {
                     guard try database.integer("SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'") == 0
@@ -74,6 +79,7 @@ public actor ComparisonStore {
                     try database.checkIntegrity()
                 } else {
                     try database.validate(version: version, beforeMigration: version == 1)
+                    if version == 3 { try database.validateInventory() }
                 }
                 return version
             }
@@ -83,6 +89,9 @@ public actor ComparisonStore {
             try database.execute("PRAGMA secure_delete = ON")
             try database.execute("PRAGMA journal_size_limit = 0")
             if version < 2 { try database.migrate() }
+            if inventoryEnabled { try database.migrateInventory() }
+            let finalVersion = try database.integer("PRAGMA user_version")
+            guard finalVersion <= (inventoryEnabled ? 3 : 2) else { throw ComparisonStoreError.unsupportedSchema(finalVersion) }
             guard try database.integer("SELECT count(*) FROM workspace") == 1,
                   let id = UUID(uuidString: try database.string("SELECT id FROM workspace WHERE singleton = 1"))
             else { throw ComparisonStoreError.corruptRecord }
@@ -93,6 +102,7 @@ public actor ComparisonStore {
             )
             #endif
             self.database = database
+            self.inventoryEnabled = inventoryEnabled
             self.workspaceID = id
         } catch {
             try? database.close()
@@ -105,37 +115,44 @@ public actor ComparisonStore {
     @discardableResult
     public func save(id: UUID, title: String, payload: Data, savedAt: Date,
                      requiring revisions: [UUID: Int64] = [:]) throws -> SavedComparison {
+        return try database.transaction {
+            try database.requireLegacyWritesAllowed()
+            return try saveComparison(id: id, title: title, payload: payload, savedAt: savedAt, requiring: revisions)
+        }
+    }
+
+    // Caller must own the transaction; only inventory's reviewed compound port bypasses the fence.
+    func saveComparison(id: UUID, title: String, payload: Data, savedAt: Date,
+                        requiring revisions: [UUID: Int64]) throws -> SavedComparison {
         guard payload.count <= Self.maximumPayloadBytes else { throw ComparisonStoreError.payloadTooLarge }
         guard title.utf8.count <= 4096, !title.contains("\0"), savedAt.timeIntervalSinceReferenceDate.isFinite
         else { throw ComparisonStoreError.invalidInput }
-        return try database.transaction {
-            guard try !isErased(id: id) else { throw ComparisonStoreError.erased }
-            let previous = try load(id: id)
-            if let previous, previous.title == title, previous.payload == payload { return previous }
-            // The source and destination must still match the reviewed SQLite heads.
-            // Zero denotes a new record. Check in the same transaction as the write.
-            for (recordID, expected) in revisions {
-                guard expected >= 0 else { throw ComparisonStoreError.invalidInput }
-                let head = try database.head(id: recordID, workspaceID: workspaceID) ?? 0
-                guard head == expected else { throw ComparisonStoreError.staleRevision(expected: expected, actual: head) }
-            }
-            guard previous?.revision != Int64.max else { throw ComparisonStoreError.corruptRecord }
-            let revision = (previous?.revision ?? 0) + 1
-            let encoder = JSONEncoder()
-            // Base64 may consist almost entirely of '/'. Escaping each slash can
-            // double the envelope and exceed SQLite's bound for a valid 1 MiB payload.
-            encoder.outputFormatting = [.withoutEscapingSlashes]
-            let envelope = try encoder.encode(Envelope(version: 1, payload: payload))
-            try database.run(
-                "INSERT INTO comparison_revisions (comparison_id, revision, title, envelope, saved_at) VALUES (?, ?, ?, ?, ?)",
-                [.text(id.uuidString), .integer(revision), .text(title), .blob(envelope), .real(savedAt.timeIntervalSinceReferenceDate)]
-            )
-            try database.run(
-                "INSERT INTO comparisons (id, workspace_id, head_revision) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET head_revision = excluded.head_revision",
-                [.text(id.uuidString), .text(workspaceID.uuidString), .integer(revision)]
-            )
-            return SavedComparison(id: id, title: title, payload: payload, savedAt: savedAt, revision: revision)
+        guard try !isErased(id: id) else { throw ComparisonStoreError.erased }
+        let previous = try load(id: id)
+        if let previous, previous.title == title, previous.payload == payload { return previous }
+        // The source and destination must still match the reviewed SQLite heads.
+        // Zero denotes a new record. Check in the same transaction as the write.
+        for (recordID, expected) in revisions {
+            guard expected >= 0 else { throw ComparisonStoreError.invalidInput }
+            let head = try database.head(id: recordID, workspaceID: workspaceID) ?? 0
+            guard head == expected else { throw ComparisonStoreError.staleRevision(expected: expected, actual: head) }
         }
+        guard previous?.revision != Int64.max else { throw ComparisonStoreError.corruptRecord }
+        let revision = (previous?.revision ?? 0) + 1
+        let encoder = JSONEncoder()
+        // Base64 may consist almost entirely of '/'. Escaping each slash can
+        // double the envelope and exceed SQLite's bound for a valid 1 MiB payload.
+        encoder.outputFormatting = [.withoutEscapingSlashes]
+        let envelope = try encoder.encode(Envelope(version: 1, payload: payload))
+        try database.run(
+            "INSERT INTO comparison_revisions (comparison_id, revision, title, envelope, saved_at) VALUES (?, ?, ?, ?, ?)",
+            [.text(id.uuidString), .integer(revision), .text(title), .blob(envelope), .real(savedAt.timeIntervalSinceReferenceDate)]
+        )
+        try database.run(
+            "INSERT INTO comparisons (id, workspace_id, head_revision) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET head_revision = excluded.head_revision",
+            [.text(id.uuidString), .text(workspaceID.uuidString), .integer(revision)]
+        )
+        return SavedComparison(id: id, title: title, payload: payload, savedAt: savedAt, revision: revision)
     }
 
     public func list() throws -> [SavedComparison] {
@@ -165,37 +182,42 @@ public actor ComparisonStore {
     /// guarantee. Recovery must also consult this tombstone's origin before making a sibling.
     @discardableResult
     public func erase(id: UUID, expectedRevision: Int64, operationID: UUID, at: Date) throws -> ComparisonTombstone {
-        guard expectedRevision > 0, at.timeIntervalSinceReferenceDate.isFinite
-        else { throw ComparisonStoreError.invalidInput }
         let result = try database.transaction {
-            if let receipt = try database.tombstones(
-                "WHERE operation_id = ?", values: [.text(operationID.uuidString)]).first {
-                guard receipt.id == id, receipt.workspaceID == workspaceID,
-                      receipt.erasedRevision == expectedRevision
-                else { throw ComparisonStoreError.operationConflict }
-                return receipt
-            }
-            guard try !isErased(id: id) else { throw ComparisonStoreError.erased }
-            guard let revision = try database.head(id: id, workspaceID: workspaceID)
-            else { throw ComparisonStoreError.notFound }
-            guard revision == expectedRevision else {
-                throw ComparisonStoreError.staleRevision(expected: expectedRevision, actual: revision)
-            }
-            try database.run("""
-                INSERT INTO comparison_tombstones
-                    (comparison_id, workspace_id, erased_revision, operation_id, erased_at)
-                VALUES (?, ?, ?, ?, ?)
-                """, [.text(id.uuidString), .text(workspaceID.uuidString), .integer(revision),
-                      .text(operationID.uuidString), .real(at.timeIntervalSinceReferenceDate)])
-            try database.run("DELETE FROM comparison_revisions WHERE comparison_id = ?", [.text(id.uuidString)])
-            let changed = try database.run("DELETE FROM comparisons WHERE id = ? AND head_revision = ?",
-                                          [.text(id.uuidString), .integer(revision)])
-            guard changed == 1 else { throw ComparisonStoreError.corruptRecord }
-            return ComparisonTombstone(id: id, workspaceID: workspaceID, erasedRevision: revision,
-                                       operationID: operationID, erasedAt: at)
+            try database.requireLegacyWritesAllowed()
+            return try eraseComparison(id: id, expectedRevision: expectedRevision, operationID: operationID, at: at)
         }
         database.checkpointAfterErasure()
         return result
+    }
+
+    func eraseComparison(id: UUID, expectedRevision: Int64, operationID: UUID, at: Date) throws -> ComparisonTombstone {
+        guard expectedRevision > 0, at.timeIntervalSinceReferenceDate.isFinite
+        else { throw ComparisonStoreError.invalidInput }
+        if let receipt = try database.tombstones(
+            "WHERE operation_id = ?", values: [.text(operationID.uuidString)]).first {
+            guard receipt.id == id, receipt.workspaceID == workspaceID,
+                  receipt.erasedRevision == expectedRevision
+            else { throw ComparisonStoreError.operationConflict }
+            return receipt
+        }
+        guard try !isErased(id: id) else { throw ComparisonStoreError.erased }
+        guard let revision = try database.head(id: id, workspaceID: workspaceID)
+        else { throw ComparisonStoreError.notFound }
+        guard revision == expectedRevision else {
+            throw ComparisonStoreError.staleRevision(expected: expectedRevision, actual: revision)
+        }
+        try database.run("""
+            INSERT INTO comparison_tombstones
+                (comparison_id, workspace_id, erased_revision, operation_id, erased_at)
+            VALUES (?, ?, ?, ?, ?)
+            """, [.text(id.uuidString), .text(workspaceID.uuidString), .integer(revision),
+                  .text(operationID.uuidString), .real(at.timeIntervalSinceReferenceDate)])
+        try database.run("DELETE FROM comparison_revisions WHERE comparison_id = ?", [.text(id.uuidString)])
+        let changed = try database.run("DELETE FROM comparisons WHERE id = ? AND head_revision = ?",
+                                      [.text(id.uuidString), .integer(revision)])
+        guard changed == 1 else { throw ComparisonStoreError.corruptRecord }
+        return ComparisonTombstone(id: id, workspaceID: workspaceID, erasedRevision: revision,
+                                   operationID: operationID, erasedAt: at)
     }
 
     public func isErased(id: UUID) throws -> Bool {
@@ -210,7 +232,7 @@ public actor ComparisonStore {
     /// Releasing the actor also closes the connection. Calling close twice is safe.
     public func close() throws { try database.close() }
 
-    private static let select = """
+    static let select = """
         SELECT c.id, r.title, r.envelope, r.saved_at, r.revision
         FROM comparisons c JOIN comparison_revisions r
         ON c.id = r.comparison_id AND c.head_revision = r.revision
@@ -222,12 +244,12 @@ private struct Envelope: Codable {
     let payload: Data
 }
 
-private enum Value {
-    case text(String), integer(Int64), real(Double), blob(Data)
+enum ComparisonSQLValue {
+    case text(String), integer(Int64), real(Double), blob(Data), null
 }
 
 /// This connection is exclusively owned by one actor after initialization.
-private final class Database: @unchecked Sendable {
+final class ComparisonDatabase: @unchecked Sendable {
     private var handle: OpaquePointer?
     private let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
@@ -274,7 +296,7 @@ private final class Database: @unchecked Sendable {
         try transaction {
             // Recheck under the write lock in case another opener just migrated this file.
             var version = try integer("PRAGMA user_version")
-            if version == 2 { try validate(version: 2); return }
+            if version == 2 || version == 3 { try validate(version: version); return }
             guard version == 0 || version == 1 else { throw ComparisonStoreError.unsupportedSchema(version) }
             if version == 0 {
                 guard try integer("SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'") == 0
@@ -380,7 +402,7 @@ private final class Database: @unchecked Sendable {
         if beforeMigration {
             _ = try records("SELECT comparison_id, title, envelope, saved_at, revision FROM comparison_revisions", values: [], keepingRecords: false)
         }
-        if version == 2 {
+        if version >= 2 {
             let erased = try tombstones("", values: [])
             guard erased.allSatisfy({ $0.workspaceID == workspaceID }),
                   try integer("SELECT count(*) FROM comparison_tombstones t JOIN comparisons c ON c.id = t.comparison_id") == 0,
@@ -402,7 +424,7 @@ private final class Database: @unchecked Sendable {
         return revision
     }
 
-    func tombstones(_ suffix: String, values: [Value]) throws -> [ComparisonTombstone] {
+    func tombstones(_ suffix: String, values: [ComparisonSQLValue]) throws -> [ComparisonTombstone] {
         let row = try statement("SELECT comparison_id, workspace_id, erased_revision, operation_id, erased_at FROM comparison_tombstones " + suffix, values: values)
         defer { sqlite3_finalize(row) }
         var result: [ComparisonTombstone] = []
@@ -434,7 +456,7 @@ private final class Database: @unchecked Sendable {
         sqlite3_wal_checkpoint_v2(handle, nil, SQLITE_CHECKPOINT_TRUNCATE, nil, nil)
     }
 
-    private func statement(_ sql: String, values: [Value] = []) throws -> OpaquePointer {
+    func statement(_ sql: String, values: [ComparisonSQLValue] = []) throws -> OpaquePointer {
         guard let handle else { throw ComparisonStoreError.closed }
         var statement: OpaquePointer?
         let status = sqlite3_prepare_v2(handle, sql, -1, &statement, nil)
@@ -444,6 +466,7 @@ private final class Database: @unchecked Sendable {
                 let index = Int32(offset + 1)
                 let result: Int32
                 switch value {
+                case .null: result = sqlite3_bind_null(statement, index)
                 case let .text(text): result = sqlite3_bind_text(statement, index, text, -1, transient)
                 case let .integer(number): result = sqlite3_bind_int64(statement, index, number)
                 case let .real(number): result = sqlite3_bind_double(statement, index, number)
@@ -460,7 +483,7 @@ private final class Database: @unchecked Sendable {
     }
 
     @discardableResult
-    func run(_ sql: String, _ values: [Value]) throws -> Int32 {
+    func run(_ sql: String, _ values: [ComparisonSQLValue]) throws -> Int32 {
         let statement = try statement(sql, values: values)
         defer { sqlite3_finalize(statement) }
         let result = sqlite3_step(statement)
@@ -484,7 +507,7 @@ private final class Database: @unchecked Sendable {
         return try text(statement, column: 0)
     }
 
-    private func text(_ statement: OpaquePointer, column: Int32) throws -> String {
+    func text(_ statement: OpaquePointer, column: Int32) throws -> String {
         guard sqlite3_column_type(statement, column) == SQLITE_TEXT,
               let pointer = sqlite3_column_text(statement, column)
         else { throw ComparisonStoreError.corruptRecord }
@@ -494,7 +517,7 @@ private final class Database: @unchecked Sendable {
         return value
     }
 
-    func records(_ sql: String, values: [Value], keepingRecords: Bool = true) throws -> [SavedComparison] {
+    func records(_ sql: String, values: [ComparisonSQLValue], keepingRecords: Bool = true) throws -> [SavedComparison] {
         let statement = try statement(sql, values: values)
         defer { sqlite3_finalize(statement) }
         var records: [SavedComparison] = []
