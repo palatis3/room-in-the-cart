@@ -10,6 +10,12 @@ struct RequestDuplicateGroup: Identifiable, Equatable {
     var hasPossibleDuplicates: Bool { requests.count > 1 }
 }
 
+struct RequestMealCandidate: Identifiable, Equatable {
+    let fact: SharedTrackingFact
+    let line: ShopperBasketLine?
+    var id: SharedDemandID { fact.id }
+}
+
 enum RequestDuplicateGrouping {
     /// Group only the current shop's supplied projection. No additional request
     /// fetch, contributor projection, basket lookup or command is involved.
@@ -39,6 +45,38 @@ enum RequestDuplicateGrouping {
         return keys.map { RequestDuplicateGroup(id: shopID + ":" + $0, requests: grouped[$0] ?? []) }
     }
 
+    static func basketCandidates(for group: RequestDuplicateGroup, lines: [ShopperBasketLine]) -> [ShopperBasketLine] {
+        guard let request = group.requests.first else { return [] }
+        let name = comparisonName(request.originalItem)
+        let reviewedLinks = Set(group.requests.compactMap(\.draftBasketLineId))
+        return lines.filter { line in
+            if let id = UUID(uuidString: line.id), reviewedLinks.contains(id) { return true }
+            return !name.isEmpty && comparisonName(line.originalItem) == name
+        }
+    }
+
+    static func mealCandidates(for group: RequestDuplicateGroup, state: SharedTrackingState,
+                               lines: [ShopperBasketLine]) -> [RequestMealCandidate] {
+        guard let request = group.requests.first else { return [] }
+        let name = comparisonName(request.originalItem)
+        let matchingLines = Set(basketCandidates(for: group, lines: lines).map(\.id))
+        let basket = Dictionary(uniqueKeysWithValues: lines.map { ($0.id, $0) })
+        let contributions = Dictionary(uniqueKeysWithValues: state.graph.contributions.filter { $0.removedAt == nil }.map { ($0.id, $0) })
+        let bindings = Dictionary(uniqueKeysWithValues: state.bindings.map { ($0.factId, $0.contributionId) })
+        return state.catalog.compactMap { fact in
+            switch fact.source {
+            case .meal: break
+            case .reservation(_, _, let occurrence, _, _, _) where occurrence != nil: break
+            default: return nil
+            }
+            let contribution = bindings[fact.id].flatMap { contributions[$0] }
+            let line = contribution.flatMap { basket[$0.lineId.string] }
+            let matchesWording = !name.isEmpty && comparisonName(fact.originalText) == name
+            guard matchesWording || line.map({ matchingLines.contains($0.id) }) == true else { return nil }
+            return RequestMealCandidate(fact: fact, line: line)
+        }
+    }
+
     private static func comparisonName(_ original: String) -> String {
         original.precomposedStringWithCanonicalMapping
             .split(whereSeparator: \.isWhitespace).joined(separator: " ")
@@ -54,5 +92,17 @@ enum RequestDuplicateGrouping {
 
     func duplicateRequestGroup(containing requestID: String) -> RequestDuplicateGroup? {
         duplicateRequestGroups.first { group in group.requests.contains { $0.id == requestID } }
+    }
+
+    /// Recheck the selection and the displayed line before prefilling the ordinary decision preview.
+    func selectDuplicateLine(_ line: ShopperBasketLine, for request: OwnRequest, shopRevision: Int) {
+        guard authorized, !busy, pending == nil, selected == request, availableChoices.contains(.link),
+              let shop, shop.shopRevision == shopRevision,
+              let group = duplicateRequestGroup(containing: request.id),
+              shop.lines.contains(line),
+              RequestDuplicateGrouping.basketCandidates(for: group, lines: shop.lines).contains(line)
+                || matchingMealNeeds?.contains(where: { $0.line == line }) == true else { return }
+        choice = .link
+        linkedLineID = line.id
     }
 }

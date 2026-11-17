@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Request received. Refresh to check its current status.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request received. Refresh to check its current status."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud recibida. Actualiza para consultar su estado actual."
+          }
+        }
+      }
+    },
+    "Checked on server": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked on server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultada en el servidor"
+          }
+        }
+      }
+    },
+    "Correction on this device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correction on this device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrección en este dispositivo"
+          }
+        }
+      }
+    },
     "Replace your current draft with the saved correction?": {
       "localizations": {
         "en": {

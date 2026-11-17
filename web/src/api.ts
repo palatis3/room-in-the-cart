@@ -1,6 +1,7 @@
 import type { Language } from './i18n.js';
 import type { OwnRequest, CommandEnvelope } from '../../shared/contracts/service-v1.js';
 export type { OwnRequest };
+export interface ReadRequest extends OwnRequest { serverReadAt?:string }
 export type Command = CommandEnvelope;
 export interface Session {
   authenticated: true; role: string; household: { id: string; label: string }; memberId: string;
@@ -232,17 +233,19 @@ export class API {
     }while(cursor);
     return pickups;
   }
-  async requests(session: Session): Promise<OwnRequest[]> {
+  async requests(session: Session, firstPageRead?: (asOf:string|undefined)=>void): Promise<ReadRequest[]> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
-    const rows: OwnRequest[] = [], ids = new Set<string>(), cursors = new Set<string>();
+    const rows: ReadRequest[] = [], ids = new Set<string>(), cursors = new Set<string>();
     let cursor: string | null = null;
     do {
-      const d = record(await this.call(`/v1/households/${segment(session.household.id)}/requests/mine${cursor ? `?cursor=${segment(cursor)}` : ''}`));
+      const d = record(await this.call(`/v1/households/${segment(session.household.id)}/requests/mine${cursor ? `?cursor=${segment(cursor)}` : ''}`, 'GET', undefined, session.csrf));
+      const asOf = d.asOf === undefined ? undefined : timestamp(d.asOf);
+      if (!cursor) firstPageRead?.(asOf);
       if (!Array.isArray(d.requests) || d.requests.length > 50) return invalid();
       for (const value of d.requests) {
         const row = ownRequest(value);
         if (ids.has(row.requestId)) return invalid();
-        ids.add(row.requestId); rows.push(row);
+        ids.add(row.requestId); rows.push(asOf ? {...row, serverReadAt:asOf} : row);
       }
       cursor = d.nextCursor === null ? null : identity(d.nextCursor);
       if (cursor) { if (cursors.has(cursor) || cursors.size >= 20) return invalid(); cursors.add(cursor); }
