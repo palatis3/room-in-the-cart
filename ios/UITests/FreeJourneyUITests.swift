@@ -86,6 +86,58 @@ import XCTest
     #if ADULT_WIDGET_LIVE_ACCEPTANCE
     /// Uses the real widget group and SpringBoard. Run on a freshly created dedicated simulator.
     func testOptedInUseSoonHomeWidgetReopensTheAuthorizedPantryAfterTermination() {
+        launchAndAddWidgetLentils()
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "pantry.lot.", "Widget lentils")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.digest.checkDate"])
+        tap(app.buttons["pantry.digest.saveDate"])
+        XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 15))
+        app.terminate()
+        app.launch()
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.digest"])
+        optInToHomeSummary("adultHomeSummary.useSoon")
+        placeWidgetAndColdTap(widgetTitle: "Use soon", expectedCount: "Batches to check today or earlier: 1")
+        let reviewed = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Widget lentils")).firstMatch
+        XCTAssertTrue(reviewed.waitForExistence(timeout: 30))
+        XCTAssertTrue(app.navigationBars["Use soon"].exists)
+    }
+
+    func testOptedInTonightHomeWidgetShowsReviewedMealAndReopensItsPrivateWorkspace() {
+        launchAndAddWidgetLentils()
+        tap(app.buttons["pantry.tonight"])
+        tap(app.buttons["tonight.preferences"])
+        let appliances = app.switches["Limit recipes to available appliances"]
+        reveal(appliances)
+        appliances.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        tap(app.buttons["preferences.review"])
+        tap(app.buttons["preferences.save"])
+        tap(app.buttons["Review a recipe by hand"])
+        let title = "Lentil supper"
+        fill(title, into: "tonight.recipe.title")
+        fill("1", into: "tonight.recipe.servings")
+        fill("Lentils", into: "tonight.recipe.ingredient")
+        fill("1", into: "Amount, unknown if blank")
+        let requirements = app.switches["I reviewed required appliances"]
+        reveal(requirements)
+        requirements.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        tap(app.buttons["tonight.recipe.review"])
+        tap(app.buttons["tonight.recipe.save"])
+        let recipe = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
+        tap(recipe)
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Reviewed pantry match")).firstMatch)
+        tap(app.buttons["Widget lentils"])
+        let covered = app.buttons.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@",
+            title, "Ingredients covered")).firstMatch
+        reveal(covered)
+        optInToHomeSummary("adultHomeSummary.tonight")
+        placeWidgetAndColdTap(widgetTitle: "Tonight", expectedCount: "Reviewed meal options: 1", reviewedTitle: title)
+        XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 30))
+        reveal(recipe)
+    }
+
+    private func launchAndAddWidgetLentils() {
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         tap(app.buttons["shop.myPantry"])
@@ -98,21 +150,17 @@ import XCTest
         if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
         tap(app.buttons["pantry.review"])
         tap(app.buttons["pantry.confirm"])
-        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
-            "pantry.lot.", "Widget lentils")).firstMatch
-        tap(lot)
-        tap(app.buttons["pantry.digest.checkDate"])
-        tap(app.buttons["pantry.digest.saveDate"])
-        XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 15))
-        app.terminate()
-        app.launch()
-        tap(app.buttons["shop.myPantry"])
-        tap(app.buttons["pantry.digest"])
-        let setting = app.switches["adultHomeSummary.useSoon"]
-        reveal(setting)
+    }
+
+    private func optInToHomeSummary(_ identifier: String) {
+        let setting = app.switches[identifier]
+        reveal(setting, initiallyUpward: false)
         XCTAssertEqual(setting.value as? String, "0")
         setting.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         XCTAssertEqual(setting.value as? String, "1")
+    }
+
+    private func placeWidgetAndColdTap(widgetTitle: String, expectedCount: String, reviewedTitle: String? = nil) {
         XCUIDevice.shared.press(.home)
         let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         board.coordinate(withNormalizedOffset: CGVector(dx: 0.50, dy: 0.78)).press(forDuration: 1.6)
@@ -128,9 +176,9 @@ import XCTest
         let appResult = board.descendants(matching: .any).matching(NSPredicate(format: "label ==[c] %@", "Room in the Cart")).firstMatch
         XCTAssertTrue(appResult.waitForExistence(timeout: 10), board.debugDescription)
         appResult.tap()
-        let useSoon = board.staticTexts["Use soon"].firstMatch
-        for _ in 0..<5 where !useSoon.isHittable { board.swipeLeft() }
-        XCTAssertTrue(useSoon.isHittable, board.debugDescription)
+        let card = board.staticTexts[widgetTitle].firstMatch
+        for _ in 0..<5 where !card.isHittable { board.swipeLeft() }
+        XCTAssertTrue(card.isHittable, board.debugDescription)
         // SpringBoard keeps the Home Screen add button mounted behind the gallery.
         let galleryAdd = board.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Add Widget"))
             .allElementsBoundByIndex.first(where: \.isHittable)
@@ -139,15 +187,18 @@ import XCTest
         let done = board.buttons["Done"]
         if done.waitForExistence(timeout: 8) { done.tap() }
         let entry = board.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@",
-            "Batches to check today or earlier: 1")).firstMatch
+            expectedCount)).firstMatch
         XCTAssertTrue(entry.waitForExistence(timeout: 35), board.debugDescription)
+        if let reviewedTitle {
+            let meal = board.staticTexts[reviewedTitle]
+            XCTAssertTrue(meal.waitForExistence(timeout: 10), board.debugDescription)
+        }
         let screenshot = XCTAttachment(screenshot: board.screenshot())
-        screenshot.name = "Opted-in Use soon Home Screen count"; screenshot.lifetime = .keepAlways; add(screenshot)
+        screenshot.name = "Opted-in " + widgetTitle + " Home Screen summary"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
         app.terminate()
         entry.tap()
-        let reviewed = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Widget lentils")).firstMatch
-        XCTAssertTrue(reviewed.waitForExistence(timeout: 30))
-        XCTAssertTrue(app.navigationBars["Use soon"].exists)
     }
     #endif
 
