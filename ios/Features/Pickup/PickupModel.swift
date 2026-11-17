@@ -829,8 +829,6 @@ struct PickupPersistenceLocation {
         }
     }
 
-    /// Unlike load(), refreshes an already-ready model. It never replaces a
-    /// pending submission, acknowledges it, or copies its old authorization.
     func cookCompletionPort(ledger: LedgerModel, authorize: @escaping @MainActor () -> Bool) throws -> PantryCookPort {
         guard let store, let configuration = pantryConfiguration, pantryIsActive, ready, !saving, !hasPendingSave,
               ledger.pantryBackingStore(gate: configuration.gate) === configuration.ledger, configuration.authorize(), authorize() else {
@@ -842,6 +840,8 @@ struct PickupPersistenceLocation {
                 !ledger.saving && !ledger.hasPendingSave && ledger.pantryBackingStore(gate: configuration.gate) === configuration.ledger
         }, clock: clock)
     }
+    /// Unlike load(), refreshes an already-ready model. It never replaces a
+    /// pending submission, acknowledges it, or copies its old authorization.
     @discardableResult func refreshPantryStock() async -> Bool {
         guard let configuration = pantryConfiguration, let store else { return false }
         pantryReadIsCurrent = false

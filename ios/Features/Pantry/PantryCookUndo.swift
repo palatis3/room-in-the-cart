@@ -49,7 +49,7 @@ extension PantryCookSession {
     }
     func applyUndo(_ review: PantryCookUndoReview) async throws {
         try await pickup.cookCompletionPort(ledger: ledger, authorize: authorize).applyUndo(review)
-        if authorize() { await pickup.load() }
+        if authorize() { await pickup.refreshPantryStock() }
     }
 }
 
