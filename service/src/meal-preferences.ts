@@ -52,8 +52,9 @@ function origins(value: Settings | null, previous: Provenance, author: string, s
   if (!value) return {};
   const result: Provenance = {};
   for (const key of termFields) {
+    const previousTerms = new Map(Object.entries(previous[key] ?? {}).map(([term, members]) => [normalized(term), members]));
     result[key] = Object.fromEntries((value[key] ?? []).map(term => {
-      const earlier = previous[key]?.[term];
+      const earlier = previousTerms.get(normalized(term));
       const members = source?.rule.field === key && source.rule.term === term ? [author,source.member] : [author];
       return [term, Array.isArray(earlier) ? earlier : [...new Set(members)]];
     }));
@@ -97,6 +98,7 @@ export async function writeMealPreferences(ctx: Context, input: unknown, decisio
     return readMealPreferences(ctx);
   }
   if ((previous?.revision ?? null) !== command.expectedRevision) throw refresh();
+  if (source && Object.keys(previous?.rule_authors?.[source.rule.field] ?? {}).some(t => normalized(t) === normalized(source.rule.term))) throw refresh();
   // HouseholdRepository.authorized already holds the tenant lock for this transaction.
   const revision = randomUUID();
   await ctx.db.query(`INSERT INTO ritc.meal_preference_profile(household_id,revision,settings,rule_authors)

@@ -1,6 +1,7 @@
 import test, {before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
+import {tokenHash} from '../dist/database.js';
 import pg from 'pg';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
@@ -275,4 +276,20 @@ test('structured promotion binds an explicitly reviewed note version, organizer,
   assert.deepEqual(profile.rule_authors.preferredBrands.Casa,[f.owner.id]);
   subscriptions.set(paid,{...subscriptions.get(paid),status:'expired',signedAt:Date.now()+1});
   code(await save(command),403,'membership_inactive');
+  const client=await admin.connect(),job=randomUUID(),lease=randomUUID();
+  try {
+    await client.query('BEGIN');
+    const {rows:[session]}=await client.query('SELECT user_id FROM auth.sessions WHERE id=$1',[author.session]);
+    const hash=tokenHash(issuer+'\n'+session.user_id);
+    await client.query(`INSERT INTO ritc.privacy_job(job_id,identity_hash,issuer,subject,receipt_hash,payload_digest,state,receipt_retention_days,marker_retention_days,receipt_until,marker_until,lease_id,lease_until)
+      VALUES($1,$2,$3,$4,$5,$5,'processing',1,1,now()+interval '1 day',now()+interval '1 day',$6,now()+interval '1 hour')`,
+      [job,hash,issuer,session.user_id,tokenHash(job),lease]);
+    await client.query("SELECT set_config('app.erasure_job',$1,true),set_config('app.erasure_lease',$2,true)",[job,lease]);
+    await client.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,author.id]);
+    await client.query('COMMIT');
+  } catch(error) { await client.query('ROLLBACK');throw error; } finally { client.release(); }
+  const erased=ok(await request(f.owner,path));
+  assert.notEqual(erased.revision,saved.revision);
+  assert.deepEqual(erased.settings.dislikes,[]);
+  assert.deepEqual(erased.settings.preferredBrands,['Casa']);
 });

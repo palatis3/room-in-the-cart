@@ -1245,7 +1245,7 @@ test('private household preference grants, reviewed updates and revoked retries 
   await admin.query("UPDATE ritc.member SET organizer=true WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Alex.id]);
   const transferred=(await get('Alex')).data;
   const updated=await f.http('Alex','POST',path,{...command,clientKey:randomUUID(),replayWindow:f.actors.Alex.window,
-    expectedRevision:transferred.revision,grantEpoch:transferred.grantEpoch,settings:{...command.settings,exclusions:['peanut','mushroom']}});
+    expectedRevision:transferred.revision,grantEpoch:transferred.grantEpoch,settings:{...command.settings,exclusions:['Peanut','mushroom']}});
   assert.equal(updated.status,200,JSON.stringify(updated.data));
   const client=await admin.connect(),job=randomUUID(),lease=randomUUID();
   try {
