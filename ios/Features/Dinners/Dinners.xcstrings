@@ -9557,6 +9557,22 @@
           }
         }
       }
+    },
+    "Household meal preferences changed. Review the ingredients again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household meal preferences changed. Review the ingredients again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las preferencias de comidas del hogar han cambiado. Vuelve a revisar los ingredientes."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

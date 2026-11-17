@@ -34,7 +34,8 @@ export class SharedMealChanges {
       proposals:rows.map(row => {
         const changed = row.original_meal ? ingredientsChanged(row.original_meal,row.body.meal) : true;
         const revision = row.original_meal ? row.body.preferenceReview?.revision ?? null : row.idea_preference_revision;
-        const staleReview = row.state === 'pending' && changed &&
+        const bound = !row.original_meal || row.body.preferenceReview != null || profile.settings != null;
+        const staleReview = bound && row.state === 'pending' && changed &&
           (revision !== profile.revision || (!row.original_meal && row.idea_revision !== row.body.approvedIdeaRevision));
         return { proposalId:row.proposal_id, request:row.body, original:row.original_meal, state:row.state,
           ...(staleReview ? {requiresPreferenceReview:true}:{}) };

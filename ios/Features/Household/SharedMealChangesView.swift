@@ -197,6 +197,7 @@ private struct SharedMealChangeContent: View {
         Binding(get: { candidate![keyPath: key] }, set: { candidate?[keyPath: key] = $0; model.cancelReview() })
     }
     private func status(_ proposal: SharedMealChangePage.Proposal, _ page: SharedMealChangePage) -> String {
+        if proposal.requiresPreferenceReview == true { return dinnerText("Household meal preferences changed. Review the ingredients again.") }
         switch proposal.state {
         case "applied": return ht("Applied once by the shopper.")
         case "dismissed": return ht("Dismissed by the shopper.")
