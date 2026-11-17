@@ -141,7 +141,12 @@ final class ShareViewController: UIViewController {
         Task {
             defer { saving = false }
             do {
-                let inbox = try IOSSurfaceContainers.sharedCaptures()
+                let inbox: SharedCaptureInbox
+                #if DEBUG && targetEnvironment(simulator)
+                inbox = try ReceiptShareSystemFixture.registeredInbox(for: data, now: Date()) ?? IOSSurfaceContainers.sharedCaptures()
+                #else
+                inbox = try IOSSurfaceContainers.sharedCaptures()
+                #endif
                 let saved = try await inbox.stageReceipt(data, kind: kind, id: operationID, now: Date())
                 guard saved.disposition == .pending else { throw SurfaceError.stale }
                 onSaved?()

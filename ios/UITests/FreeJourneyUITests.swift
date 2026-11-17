@@ -139,8 +139,12 @@ import XCTest
     }
 
     func testSystemShareSheetStagesReceiptForExplicitPrivateReview() throws {
-        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--receipt-share-test-sender", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
+        let marker = app.staticTexts["fixture.receipt.shareToken"]
+        XCTAssertTrue(marker.waitForExistence(timeout: 12), app.debugDescription)
+        let token = marker.label
+        XCTAssertEqual(token.count, 64)
         let share = app.buttons["Share sample receipt PDF"]
         XCTAssertTrue(share.waitForExistence(timeout: 12)); share.tap()
         let destination = app.cells.matching(NSPredicate(format: "identifier == %@ AND label == %@", "shareCell", "Room in the Cart")).firstMatch
@@ -155,7 +159,7 @@ import XCTest
         XCTAssertTrue(stage.waitForExistence(timeout: 15), app.debugDescription); stage.tap()
         XCTAssertTrue(stage.waitForNonExistence(timeout: 12))
         app.terminate()
-        launch(reset: true)
+        launch(reset: true, sharedReceiptToken: token)
         tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
         let open = app.buttons["Open shared receipt"].firstMatch
@@ -2616,9 +2620,10 @@ import XCTest
         XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
     }
 
-    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false) {
+    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false, sharedReceiptToken: String? = nil) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
+        if let sharedReceiptToken { app.launchArguments += ["--receipt-share-test-store", sharedReceiptToken] }
         if privateRecovery { app.launchArguments.append("--seed-private-recovery") }
         if sourceRemoval { app.launchArguments.append("--seed-source-removal") }
         app.launch()

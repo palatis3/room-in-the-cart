@@ -190,3 +190,35 @@ extension SelectedTextInbox {
         }
     }
 }
+
+#if DEBUG && os(iOS) && targetEnvironment(simulator)
+/// A system Share exercise crosses processes. Only the exact synthetic document
+/// registered by its test sender is routed to this separate, protected test store.
+public enum ReceiptShareSystemFixture {
+    private static func folder(_ token: String) throws -> URL {
+        guard token.utf8.count == 64, token.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }) else { throw SurfaceError.invalid }
+        return try IOSSurfaceContainers.directory(groupKey: SurfaceInfo.inboxGroupKey)
+            .appendingPathComponent("UITestReceiptShare", isDirectory: true).appendingPathComponent(token, isDirectory: true)
+    }
+    public static func register(_ document: Data, now: Date) throws -> String {
+        let token = SharedReceiptDescriptor.digest(document), directory = try folder(token)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true,
+            attributes: [.protectionKey: FileProtectionType.complete])
+        let expiry = now.addingTimeInterval(3600).timeIntervalSince1970
+        try Data(String(expiry).utf8).write(to: directory.appendingPathComponent("sender"), options: [.atomic, .completeFileProtection])
+        return token
+    }
+    public static func open(token: String, now: Date) throws -> SharedCaptureInbox {
+        let directory = try folder(token)
+        let stamp = try readRegularFile(at: directory.appendingPathComponent("sender"), maximumBytes: 64)
+        guard let expiry = Double(String(decoding: stamp, as: UTF8.self)), expiry.isFinite,
+              expiry > now.timeIntervalSince1970, expiry <= now.addingTimeInterval(3600).timeIntervalSince1970 else { throw SurfaceError.stale }
+        return try SharedCaptureInbox(url: directory.appendingPathComponent("test-receipts.sqlite"))
+    }
+    public static func registeredInbox(for data: Data, now: Date) throws -> SharedCaptureInbox? {
+        let token = SharedReceiptDescriptor.digest(data), directory = try folder(token)
+        guard FileManager.default.fileExists(atPath: directory.appendingPathComponent("sender").path) else { return nil }
+        return try open(token: token, now: now)
+    }
+}
+#endif

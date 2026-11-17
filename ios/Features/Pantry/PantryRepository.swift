@@ -539,7 +539,7 @@ final class PantryRepository {
         defer { gate.endExclusiveWrite(lease) }
         guard try await store.inventoryOriginRetirement() == nil, try await store.inventoryState().active else { throw Failure.inactive }
         try requireAccess()
-        let inbox = try IOSSurfaceContainers.sharedCaptures()
+        let inbox = try PrivateReceiptInbox.open()
         let result = try await operation(inbox, .init(origin: originID, persona: aliasPersonaID))
         try requireAccess()
         return result

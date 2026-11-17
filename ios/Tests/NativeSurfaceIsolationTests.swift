@@ -92,6 +92,22 @@ final class SurfaceRuntimeIsolationTests: XCTestCase {
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }
+    func testOrdinaryReceiptFixtureCannotResolveLiveSharedInbox() async throws {
+        #if DEBUG
+        let base = try directory()
+        defer { try? FileManager.default.removeItem(at: base) }
+        let runtime = SurfaceRuntimeIsolation(directory: nil, launchArguments: ["--ui-testing"], applicationSupport: base)
+        let inbox = try runtime.makeReceiptInbox {
+            XCTFail("An ordinary UI fixture must use its test-local receipt store")
+            throw SurfaceError.unconfigured
+        }
+        let now = Date()
+        _ = try await inbox.stageReceipt(Data("OATS".utf8), kind: .text, id: UUID(), now: now)
+        let entries = try await inbox.pendingReceiptFiles(scope: .init(origin: UUID(), persona: UUID()), now: now)
+        XCTAssertEqual(entries.count, 1)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: runtime.directory.appendingPathComponent("test-receipts.sqlite").path))
+        #endif
+    }
     func testDefaultUIFlagUsesOwnedTestRootOnlyInDebug() throws {
         let base = try directory()
         let runtime = SurfaceRuntimeIsolation(directory: nil, launchArguments: ["--ui-testing", "--reset-test-workspace"], applicationSupport: base)

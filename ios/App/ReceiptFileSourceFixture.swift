@@ -1,4 +1,5 @@
 #if DEBUG && targetEnvironment(simulator)
+import DeviceSurfaces
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -6,6 +7,7 @@ import UniformTypeIdentifiers
 struct ReceiptFileSourceFixture: View {
     @State private var exporting = false
     @State private var saved = false
+    @State private var shareToken: String?
     @State private var pdfURL: URL?
     @State private var photo: UIImage?
     static let name = "Room Market Fixture Receipt"
@@ -22,6 +24,7 @@ struct ReceiptFileSourceFixture: View {
                     Text(verbatim: "Share sample receipt photo")
                 }
             }
+            if let shareToken { Text(verbatim: shareToken).accessibilityIdentifier("fixture.receipt.shareToken") }
             if saved { Text(verbatim: "Sample receipt exported").accessibilityIdentifier("fixture.receipt.exported") }
         }
         .task {
@@ -36,6 +39,9 @@ struct ReceiptFileSourceFixture: View {
             }
             let pdf = root.appendingPathComponent(Self.name + ".pdf")
             let data = UIGraphicsPDFRenderer(bounds: bounds).pdfData { context in context.beginPage(); draw() }
+            if ProcessInfo.processInfo.arguments.contains("--receipt-share-test-sender") {
+                shareToken = try? ReceiptShareSystemFixture.register(data, now: Date())
+            }
             try? data.write(to: pdf, options: .atomic)
             let image = UIGraphicsImageRenderer(bounds: bounds).image { _ in draw() }
             pdfURL = pdf; photo = image
