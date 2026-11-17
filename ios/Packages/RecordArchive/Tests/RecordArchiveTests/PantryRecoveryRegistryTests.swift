@@ -141,6 +141,53 @@ final class PantryRecoveryRegistryTests: XCTestCase {
         let review = try await erasingRegistry.reviewPantry(ref); XCTAssertEqual(review.disposition, .erased)
     }
 
+    func testReceiptExpiresAnotherInstancesOrdinaryUndoWithoutDisablingUnrelatedCopies() async throws {
+        let (url, first) = try fixture(), second = try RecoveryRegistry(url: url)
+        func record(_ id: String, kind: ArchiveRecordKind) -> ArchiveRecord {
+            .init(id: id, origin: "foreign-owner", revision: "one", kind: kind,
+                title: id, savedAtMilliseconds: 100, nativePayload: Data("{}".utf8))
+        }
+        let hidden = record("hidden-pickup", kind: .pickup), independent = record("retained", kind: .comparison)
+        let envelope = try ArchiveCodec.make(records: [hidden, independent], kind: .personalRecovery, origin: "foreign-owner", revision: "one")
+        let saved = try await first.apply(first.review(envelope))
+        let removed = try XCTUnwrap(saved.records.first { $0.record == hidden })
+        let retained = try XCTUnwrap(saved.records.first { $0.record == independent })
+        let token = try await first.delete(.copy(removed.id))
+        let reviewed = try await second.pantryErasureBasis(), operation = UUID()
+        try await second.beginPantryErasure(operationID: operation, expectedGeneration: reviewed.generation) {}
+        do { try await first.undoDelete(token); XCTFail("Undo crossed the SQLite commit reservation") }
+        catch { XCTAssertEqual(error as? ArchiveError, .staleReview) }
+        let restarted = try RecoveryRegistry(url: url)
+        try await restarted.cancelPantryErasure(operationID: UUID())
+        do { try await first.undoDelete(token); XCTFail("Another operation released the reservation") }
+        catch { XCTAssertEqual(error as? ArchiveError, .staleReview) }
+        try await restarted.cancelPantryErasure(operationID: operation)
+        try await first.undoDelete(token)
+        let restored = try await first.refreshList()
+        XCTAssertEqual(Set(restored.map(\.id)), [removed.id, retained.id])
+
+        let erased = try await first.delete(.copy(removed.id))
+        let next = try await second.pantryErasureBasis()
+        try await second.beginPantryErasure(operationID: operation, expectedGeneration: next.generation) {}
+        try await second.registerErasedPantryBundles([], operationID: operation)
+        do { try await first.undoDelete(erased); XCTFail("Restored private native bytes after source erasure") }
+        catch { XCTAssertEqual(error as? ArchiveError, .unavailable) }
+        let surviving = try await first.refreshList()
+        XCTAssertEqual(surviving, [retained])
+        let check = try await first.review(envelope)
+        XCTAssertEqual(check.rows.first { $0.record.id == hidden.id }?.disposition, .erased)
+        XCTAssertEqual(check.rows.first { $0.record.id == independent.id }?.disposition, .identical)
+        let laterOperation = UUID()
+        let laterBasis = try await second.pantryErasureBasis()
+        try await second.beginPantryErasure(operationID: laterOperation, expectedGeneration: laterBasis.generation) {}
+        try await second.registerErasedPantryBundles([], operationID: laterOperation)
+        let freshToken = try await first.delete(.copy(retained.id))
+        try await restarted.registerErasedPantryBundles([], operationID: operation)
+        try await first.undoDelete(freshToken)
+        let afterRetry = try await restarted.refreshList()
+        XCTAssertEqual(afterRetry.map(\.id), [retained.id])
+    }
+
     func testInvalidReferenceNeverCreatesManifest() async throws {
         let (url, registry) = try fixture()
         let invalid = PantryRecoveryReference(bundleID: UUID(), manifestDigest: Data([0]), originID: UUID(), inventoryRevision: -1)

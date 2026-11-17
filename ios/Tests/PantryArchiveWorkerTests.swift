@@ -445,6 +445,70 @@ extension PantryArchiveWorkerTests {
         let after = try await repository.load(at: now); XCTAssertEqual(after.state, current.state)
     }
 
+    func testErasureReviewsAnotherInstancesDeletedPackageAndExpiresItsUndo() async throws {
+        let f = try await fixture(), url = f.directory.appendingPathComponent("registry.json")
+        let owner = try RecoveryRegistry(url: url), planner = try RecoveryRegistry(url: url)
+        let selected = try await firstLot(f.store)
+        let captured = try await f.capture.captureHandle(worker: f.worker, at: now)
+        let reference = PantryRecoveryReference(bundleID: captured.reference.bundleID, manifestDigest: captured.reference.manifestDigest,
+            originID: captured.descriptor.originID, inventoryRevision: captured.descriptor.inventoryRevision)
+        let copy = try await owner.applyPantry(owner.reviewPantry(reference), now: now)
+        let token = try await owner.delete(.copy(copy.id.uuidString))
+        let other = ArchiveRecord(id: "retained", origin: "unrelated", revision: "one", kind: .comparison,
+            title: "Independent prices", savedAtMilliseconds: 100, nativePayload: Data("{}".utf8))
+        let envelope = try ArchiveCodec.make(records: [other], kind: .personalRecovery, origin: other.origin, revision: "one")
+        let inserted = try await planner.apply(planner.review(envelope))
+        let coordinator = eraser(f, planner, cleanup: { effects, _ in
+            XCTAssertEqual(effects.bundleIDs, [reference.bundleID])
+            let retired = try await planner.permanentlyRetiredPantryBundleIDs()
+            try await f.worker.removePermanentlyRetiredBundles(retired)
+        })
+        let review = try await coordinator.prepare(.lot(selected.id, revision: selected.revision))
+        XCTAssertTrue(review.canCommit)
+        XCTAssertEqual(review.copyIDs, [reference.bundleID])
+        let result = try await coordinator.commit(review)
+        XCTAssertEqual(result, .deleted)
+        do { try await owner.undoDelete(token); XCTFail("Restored a deleted package with an erased source") }
+        catch { XCTAssertEqual(error as? ArchiveError, .unavailable) }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: captured.directory.path))
+        let remaining = try await owner.refreshList()
+        XCTAssertEqual(remaining, inserted.records)
+    }
+
+    func testAbortedSQLReleasesRegistryReservationAndRelaunchRecoversInterruptedJournal() async throws {
+        let f = try await fixture(), url = f.directory.appendingPathComponent("registry.json")
+        let first = try RecoveryRegistry(url: url), second = try RecoveryRegistry(url: url)
+        let selected = try await firstLot(f.store)
+        let journalDirectory = f.directory.appendingPathComponent("erasure-journal")
+        var crashImage: (manifest: Data, journal: Data, file: URL)?
+        let coordinator = eraser(f, first, authorize: {
+            guard let bytes = try? Data(contentsOf: url),
+                  let manifest = try? JSONSerialization.jsonObject(with: bytes) as? [String: Any],
+                  manifest["pendingPantryErasure"] != nil else { return true }
+            if let file = try? FileManager.default.contentsOfDirectory(at: journalDirectory, includingPropertiesForKeys: nil).first,
+               let journal = try? Data(contentsOf: file) { crashImage = (bytes, journal, file) }
+            return false
+        })
+        let review = try await coordinator.prepare(.lot(selected.id, revision: selected.revision))
+        do { _ = try await coordinator.commit(review); XCTFail("Authorization expired before SQL") }
+        catch PantryErasureCoordinator.Failure.unauthorized { }
+        let image = try XCTUnwrap(crashImage)
+        let afterAbort = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+        XCTAssertNil(afterAbort?["pendingPantryErasure"])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: image.file.path))
+
+        // Restore the exact pre-SQL crash image. A new instance must release only
+        // this journal's reservation without performing the abandoned deletion.
+        try image.manifest.write(to: url, options: .atomic)
+        try image.journal.write(to: image.file, options: .atomic)
+        let restarted = eraser(f, second, authorize: { false })
+        let outcome = try await restarted.recoverCleanup(); XCTAssertNil(outcome)
+        let afterRecovery = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+        XCTAssertNil(afterRecovery?["pendingPantryErasure"])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: image.file.path))
+        let stillPresent = try await firstLot(f.store); XCTAssertEqual(stillPresent, selected)
+    }
+
     func testHistoricalPinsRedactOldBodiesAndKeepPersonalDetailsAndIndependentReleasedHistory() async throws {
         let f = try await fixture(), registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json"))
         let repository = PantryRepository(store: f.store, authorize: { true }); f.cleanup.track(repository)

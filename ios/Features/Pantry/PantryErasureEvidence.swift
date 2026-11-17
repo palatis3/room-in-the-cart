@@ -9,7 +9,7 @@ extension PantryErasureCoordinator {
         let ledgerRevision: Int64
         let ledgerDigest: Data?
         let registryGeneration: UUID
-        let copies: [RecoveredPantryCopy]
+        let copies: [(id: UUID, bundleID: UUID)]
         let files: [FileMark]
         let allFiles: [FileMark]
         let blockers: Set<Blocker>
@@ -54,13 +54,21 @@ extension PantryErasureCoordinator {
                 if lstat(folder.path, &info) == 0 || errno != ENOENT { blockers.insert(.recoveredRecords) }
             } catch { blockers.insert(.recoveredRecords) }
         }
-        var copies: [RecoveredPantryCopy] = []
+        var copies: [(id: UUID, bundleID: UUID)] = []
         for copy in basis.pantry {
             let handle = try await worker.open(reference: .init(bundleID: copy.reference.bundleID, manifestDigest: copy.reference.manifestDigest))
             try access()
             guard handle.descriptor.originID == copy.reference.originID, handle.descriptor.inventoryRevision == copy.reference.inventoryRevision else { throw Failure.invalid }
             do { try await rules.check(handle, worker: worker) }
-            catch PantryArchivePrivacyValidator.Failure.retired { copies.append(copy) }
+            catch PantryArchivePrivacyValidator.Failure.retired { copies.append((copy.id, copy.reference.bundleID)) }
+            catch PantryArchivePrivacyValidator.Failure.unverifiable { blockers.insert(.unknownContent) }
+            try access()
+        }
+        for bundleID in basis.deletedBundleIDs.sorted(by: { $0.uuidString < $1.uuidString }) {
+            guard let handle = try await worker.openDeletedBundleIfPresent(bundleID) else { continue }
+            try access()
+            do { try await rules.check(handle, worker: worker) }
+            catch PantryArchivePrivacyValidator.Failure.retired { copies.append((bundleID, bundleID)) }
             catch PantryArchivePrivacyValidator.Failure.unverifiable { blockers.insert(.unknownContent) }
             try access()
         }

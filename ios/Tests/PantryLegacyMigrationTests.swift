@@ -185,12 +185,6 @@ import RecordArchive
         XCTAssertEqual(blocked.remainingScopes, [.externalCopiesNotScanned])
         XCTAssertEqual(blocked.retainedReservations, [pin])
 
-        // After a reviewed whole-origin retirement, even a foreign pickup or
-        // ledger wrapper cannot make the old pack proof independent.
-        _ = try await store.eraseInventoryOrigin(expectedRevision: updated.state.revision, sourceToken: updatedContext.sourceToken,
-            operationID: UUID(), at: now)
-        let replacement = try ComparisonStore(url: f.directory.appendingPathComponent("replacement.sqlite"), inventoryEnabled: true)
-        f.cleanup.track(replacement)
         let foreignPickupOrigin = "pickups/" + UUID().uuidString
         func archive(_ bytes: Data, origin: String, kind: ArchiveRecordKind) -> ArchiveRecord {
             .init(id: shop.id.uuidString, origin: origin, revision: ArchiveCodec.digest(bytes), kind: kind,
@@ -202,6 +196,34 @@ import RecordArchive
         let ordinaryPickup = archive(try RecordsNativeCodec.canonical(old), origin: foreignPickupOrigin, kind: .pickup)
         let ledgerOrigin = "ledger/" + paired.workspaceID.uuidString
         let ordinaryLedger = archive(try RecordsNativeCodec.canonical(LedgerDocument(workspace: ledgerWithProof)), origin: ledgerOrigin, kind: .ledger)
+        let independent = archive(try RecordsNativeCodec.canonical(LedgerDocument(workspace: f.ledger.workspace)), origin: ledgerOrigin, kind: .ledger)
+
+        // The other registry's deleted ordinary pickup holds a real v3 stock
+        // proof under a foreign archive origin. Its active gross ledger is independent.
+        let registryURL = f.directory.appendingPathComponent("registry.json")
+        let undoOwner = try RecoveryRegistry(url: registryURL)
+        func envelope(_ record: ArchiveRecord) throws -> ArchiveEnvelope {
+            try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: record.origin, revision: record.revision)
+        }
+        let deletedEnvelope = try envelope(ordinaryPickup), keptEnvelope = try envelope(independent)
+        let savedPickup = try await undoOwner.apply(undoOwner.review(deletedEnvelope))
+        let deletedID = try XCTUnwrap(savedPickup.records.first?.id)
+        let undo = try await undoOwner.delete(.copy(deletedID))
+        let savedLedger = try await undoOwner.apply(undoOwner.review(keptEnvelope))
+        let eraser = PantryErasureCoordinator(inventory: store, ledger: paired, gate: PantryMutationGate(),
+            pendingDirectory: f.directory.appendingPathComponent("pending"), registry: try RecoveryRegistry(url: registryURL),
+            worker: try PantryArchiveWorker(root: f.directory.appendingPathComponent("archives")),
+            journalDirectory: f.directory.appendingPathComponent("privacy"), recoveredDirectory: f.directory.appendingPathComponent("Recoveries"),
+            cleanup: { _, _ in }, authorize: { true }, clock: { self.now })
+        let erasure = try await eraser.prepare(.wholeOrigin)
+        XCTAssertTrue(erasure.canCommit)
+        let outcome = try await eraser.commit(erasure); XCTAssertEqual(outcome, .deleted)
+        do { try await undoOwner.undoDelete(undo); XCTFail("Restored historical v3 evidence after pantry erasure") }
+        catch { XCTAssertEqual(error as? ArchiveError, .unavailable) }
+        let survivors = try await undoOwner.refreshList()
+        XCTAssertEqual(survivors, savedLedger.records)
+        let replacement = try ComparisonStore(url: f.directory.appendingPathComponent("replacement.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(replacement)
         for record in [ordinaryPickup, ordinaryLedger] {
             try RecordsNativeCodec.validate(record)
             do {
@@ -210,7 +232,6 @@ import RecordArchive
                 XCTFail("Ordinary backup contained the retired origin's v3 pack proof")
             } catch PantryArchivePrivacyValidator.Failure.retired { }
         }
-        let independent = archive(try RecordsNativeCodec.canonical(LedgerDocument(workspace: f.ledger.workspace)), origin: ledgerOrigin, kind: .ledger)
         try await PantryArchivePrivacyValidator.validate(independent, inventory: replacement, ledger: paired, gate: PantryMutationGate(),
             retiredOrigins: [origin], authorize: { true })
 

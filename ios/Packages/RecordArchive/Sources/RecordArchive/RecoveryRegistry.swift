@@ -158,6 +158,10 @@ public actor RecoveryRegistry {
         // Local source erasure is irreversible even while another registry
         // instance retains an ordinary recovered-copy deletion Undo token.
         var retiredPantryBundles: [UUID]?
+        var pendingPantryErasure: UUID?
+        // Ordered local receipt IDs make retries idempotent across other erasures.
+        // The last ID is the epoch under which new in-memory Undo grants are valid.
+        var completedPantryErasures: [UUID]?
         var pantryBackups: [PantryBackupMark]?
     }
     private let url: URL
@@ -191,15 +195,20 @@ public actor RecoveryRegistry {
     }
     /// Includes recoverable undo bodies. Erasure review must not overlook a copy
     /// just because the independent recovery UI can currently undo its removal.
-    public func pantryErasureBasis() throws -> (generation: UUID, pantry: [RecoveredPantryCopy], records: [RecoveredRecord]) {
+    public func pantryErasureBasis() throws -> (generation: UUID, pantry: [RecoveredPantryCopy], records: [RecoveredRecord], deletedBundleIDs: Set<UUID>) {
         let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
         var pantry = Dictionary(uniqueKeysWithValues: (manifest.pantryCopies ?? []).map { ($0.id, $0) })
         var records = Dictionary(uniqueKeysWithValues: manifest.records.map { ($0.id, $0) })
         for copy in pantryUndo.values.joined() where pantry[copy.id] == nil { pantry[copy.id] = copy }
         for copy in undo.values.joined() where records[copy.id] == nil { records[copy.id] = copy }
+        // A soft-deleted package can still occupy its fixed directory after another
+        // instance's Undo, or the entire app session, disappears. Its local UUID
+        // remains in the manifest even when no copy metadata survives.
+        let deleted = Set(manifest.erasedPantryBundles ?? []).subtracting(manifest.retiredPantryBundles ?? [])
+            .subtracting(pantry.values.map { $0.reference.bundleID })
         return (manifest.generation, pantry.values.sorted { $0.id.uuidString < $1.id.uuidString },
-                records.values.sorted { $0.id < $1.id })
+                records.values.sorted { $0.id < $1.id }, deleted)
     }
 
     public func listPantry() throws -> [RecoveredPantryCopy] {
@@ -226,6 +235,7 @@ public actor RecoveryRegistry {
                            installVerifiedFiles: @Sendable () throws -> Void = {}) throws -> RecoveredPantryCopy {
         let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
+        guard manifest.pendingPantryErasure == nil else { throw ArchiveError.staleReview }
         let checked = try pantryReview(reviewed.reference)
         guard checked.canApply else { throw ArchiveError.conflict }
         if checked.disposition == .identical, let existing = checked.existingCopy {
@@ -252,6 +262,7 @@ public actor RecoveryRegistry {
                                             install: @Sendable () throws -> Void) throws {
         let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
+        guard manifest.pendingPantryErasure == nil else { throw ArchiveError.staleReview }
         guard (manifest.pantryCopies ?? []).contains(where: { $0.reference == reference }) else { return }
         try install()
     }
@@ -316,20 +327,57 @@ public actor RecoveryRegistry {
         next.retiredPantryBundles = Array(Set(next.retiredPantryBundles ?? []).union(removed))
         try persist(&next)
     }
-    /// Local erasure reconciliation names verified affected packages. Imported
-    /// tombstones are inert; the app must derive this set from local authority.
-    public func registerErasedPantryBundles(_ bundles: Set<UUID>) throws {
+    /// The app writes its receipt-recovery journal before claiming the reviewed
+    /// generation. This closes the interval between the last registry check and
+    /// the SQLite commit, including mutations made by another registry instance.
+    public func beginPantryErasure(operationID: UUID, expectedGeneration: UUID,
+                                  writeJournal: @Sendable () throws -> Void) throws {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        guard manifest.generation == expectedGeneration else { throw ArchiveError.staleReview }
+        if let pending = manifest.pendingPantryErasure {
+            guard pending == operationID else { throw ArchiveError.staleReview }
+            return
+        }
+        var next = manifest
+        next.pendingPantryErasure = operationID
+        try writeJournal()
+        try persist(&next, recoveryChanged: false)
+    }
+    /// Used only after the matching SQL operation is absent or cancelled.
+    public func cancelPantryErasure(operationID: UUID) throws {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        guard manifest.pendingPantryErasure == operationID else { return }
+        var next = manifest
+        next.pendingPantryErasure = nil
+        try persist(&next, recoveryChanged: false, erasure: operationID)
+    }
+    /// Only the local SQLite receipt authorizes advancing the Undo fence, even
+    /// when none of the registered bundles matches the erased source graph.
+    public func registerErasedPantryBundles(_ bundles: Set<UUID>, operationID: UUID? = nil) throws {
         let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
         let known = Set(manifest.erasedPantryBundles ?? [])
         let retired = Set(manifest.retiredPantryBundles ?? [])
+        var next = manifest
+        if let operationID {
+            if let pending = manifest.pendingPantryErasure, pending != operationID { throw ArchiveError.staleReview }
+            next.pendingPantryErasure = nil
+            if !(manifest.completedPantryErasures ?? []).contains(operationID) {
+                next.completedPantryErasures = (manifest.completedPantryErasures ?? []) + [operationID]
+            }
+        }
+        if next.completedPantryErasures?.last != manifest.completedPantryErasures?.last ||
+            next.pendingPantryErasure != manifest.pendingPantryErasure ||
+            !bundles.isSubset(of: known) || !bundles.isSubset(of: retired) {
+            next.erasedPantryBundles = Array(known.union(bundles))
+            next.retiredPantryBundles = Array(retired.union(bundles))
+            next.pantryCopies?.removeAll { bundles.contains($0.reference.bundleID) }
+            try persist(&next, erasure: operationID)
+        }
         let invalidUndo = pantryUndo.filter { $0.value.contains { bundles.contains($0.reference.bundleID) } }.map(\.key)
         for id in invalidUndo { pantryUndo[id] = nil; undo[id] = nil }
-        guard !bundles.isSubset(of: known) || !bundles.isSubset(of: retired) else { return }
-        var next = manifest; next.erasedPantryBundles = Array(known.union(bundles))
-        next.retiredPantryBundles = Array(retired.union(bundles))
-        next.pantryCopies?.removeAll { bundles.contains($0.reference.bundleID) }
-        try persist(&next)
     }
     public func list() -> [RecoveredRecord] { manifest.records.sorted { $0.recoveredAtMilliseconds > $1.recoveredAtMilliseconds } }
     public func load(id: String) -> RecoveredRecord? { manifest.records.first { $0.id == id } }
@@ -614,6 +662,7 @@ public actor RecoveryRegistry {
     public func undoDelete(_ token: RecoveryUndoToken) throws {
         let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
+        guard manifest.pendingPantryErasure == nil else { throw ArchiveError.staleReview }
         let records = undo[token.id] ?? [], pantry = pantryUndo[token.id] ?? []
         guard !records.isEmpty || !pantry.isEmpty else { throw ArchiveError.unavailable }
         guard !records.contains(where: { (manifest.erasedOrigins ?? []).contains($0.record.origin) || (manifest.erasedSources ?? []).contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) }),
@@ -737,10 +786,16 @@ public actor RecoveryRegistry {
         guard FileManager.default.fileExists(atPath: url.path) else {
             // A previously committed store disappearing is not a fresh installation.
             // Never recreate cached text or bypass erasure markers after external deletion.
-            guard manifest.generation == Self.emptyGeneration, manifest.encryptedBackups == nil else { throw ArchiveError.unavailable }
+            guard manifest.generation == Self.emptyGeneration, manifest.encryptedBackups == nil, manifest.pendingPantryErasure == nil else { throw ArchiveError.unavailable }
             return
         }
-        manifest = try Self.readManifest(url)
+        adopt(try Self.readManifest(url))
+    }
+    private func adopt(_ next: Manifest) {
+        // An Undo body can embed pantry evidence inside an unrelated archive origin.
+        // A grant from before a completed erasure must never restore that body.
+        if next.completedPantryErasures?.last != manifest.completedPantryErasures?.last { discardUndo() }
+        manifest = next
     }
     private static func readManifest(_ url: URL) throws -> Manifest {
         let bytes = try boundedRead(url, maximum: maximumRegistryBytes)
@@ -751,7 +806,8 @@ public actor RecoveryRegistry {
         var identities = Set<ArchiveIdentity>(), copies = Set<String>()
         let pantry = current.pantryCopies ?? [], erasedBundles = current.erasedPantryBundles ?? []
         let retiredBundles = current.retiredPantryBundles ?? []
-        guard pantry.count <= 10_000, Set(pantry.map(\.id)).count == pantry.count,
+        let completedErasures = current.completedPantryErasures ?? []
+        guard Set(completedErasures).count == completedErasures.count, pantry.count <= 10_000, Set(pantry.map(\.id)).count == pantry.count,
               Set(pantry.map { $0.reference.bundleID }).count == pantry.count,
               Set(erasedBundles).count == erasedBundles.count,
               Set(retiredBundles).count == retiredBundles.count,
@@ -841,7 +897,8 @@ public actor RecoveryRegistry {
         }
         return current
     }
-    private func persist(_ next: inout Manifest, recoveryChanged: Bool = true) throws {
+    private func persist(_ next: inout Manifest, recoveryChanged: Bool = true, erasure operationID: UUID? = nil) throws {
+        if let pending = manifest.pendingPantryErasure, pending != operationID { throw ArchiveError.staleReview }
         next.pantryBackups = next.pantryBackups?.filter { Self.pantryBackupAvailable($0, in: next) }
         if recoveryChanged { next.generation = UUID() }
         let bytes = try ArchiveCodec.canonical(next)
@@ -853,7 +910,7 @@ public actor RecoveryRegistry {
             try bytes.write(to: url, options: .atomic)
             #endif
         } catch { throw ArchiveError.unavailable }
-        manifest = next
+        adopt(next)
     }
     public static func boundedRead(_ url: URL, maximum: Int = ArchiveCodec.maximumFileBytes) throws -> Data {
         guard url.isFileURL, maximum >= 0, maximum < Int.max else { throw ArchiveError.unavailable }

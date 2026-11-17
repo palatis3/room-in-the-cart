@@ -531,6 +531,7 @@ private struct RecordsRecoveredPantryView: View {
     }
 
     func drainPantryPresentation(origin: UUID) async throws {
+        await registry?.discardUndo()
         try await closePantrySessions()
         try await pantryTools?.invalidateAndDrain()
     }
