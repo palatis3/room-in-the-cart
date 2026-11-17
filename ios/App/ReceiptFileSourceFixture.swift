@@ -7,7 +7,7 @@ struct ReceiptFileSourceFixture: View {
     @State private var exporting = false
     @State private var saved = false
     @State private var pdfURL: URL?
-    @State private var photoURL: URL?
+    @State private var photo: UIImage?
     static let name = "Room Market Fixture Receipt"
 
     var body: some View {
@@ -16,7 +16,12 @@ struct ReceiptFileSourceFixture: View {
                 ShareLink(item: pdfURL) { Text(verbatim: "Share sample receipt PDF") }
                 Button { exporting = true } label: { Text(verbatim: "Export sample receipt PDF") }
             }
-            if let photoURL { ShareLink(item: photoURL) { Text(verbatim: "Share sample receipt photo") } }
+            if let photo {
+                let image = Image(uiImage: photo)
+                ShareLink(item: image, preview: SharePreview("Sample receipt", image: image)) {
+                    Text(verbatim: "Share sample receipt photo")
+                }
+            }
             if saved { Text(verbatim: "Sample receipt exported").accessibilityIdentifier("fixture.receipt.exported") }
         }
         .task {
@@ -32,10 +37,8 @@ struct ReceiptFileSourceFixture: View {
             let pdf = root.appendingPathComponent(Self.name + ".pdf")
             let data = UIGraphicsPDFRenderer(bounds: bounds).pdfData { context in context.beginPage(); draw() }
             try? data.write(to: pdf, options: .atomic)
-            let photo = root.appendingPathComponent(Self.name + ".jpg")
             let image = UIGraphicsImageRenderer(bounds: bounds).image { _ in draw() }
-            try? image.jpegData(compressionQuality: 0.9)?.write(to: photo, options: .atomic)
-            pdfURL = pdf; photoURL = photo
+            pdfURL = pdf; photo = image
         }
         .fileExporter(isPresented: $exporting, document: pdfURL.flatMap { try? Data(contentsOf: $0) }.map(SamplePDF.init),
                       contentType: .pdf, defaultFilename: Self.name) { result in

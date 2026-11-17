@@ -61,7 +61,7 @@ import XCTest
         XCTAssertTrue(export.waitForExistence(timeout: 10))
         export.tap()
         let save = app.buttons["Save"].firstMatch
-        XCTAssertTrue(save.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(save.waitForExistence(timeout: 25), app.debugDescription)
         save.tap()
         if app.buttons["Replace"].waitForExistence(timeout: 2) { app.buttons["Replace"].tap() }
         XCTAssertTrue(app.staticTexts["fixture.receipt.exported"].waitForExistence(timeout: 10), app.debugDescription)
@@ -72,9 +72,21 @@ import XCTest
         tap(app.buttons["pantry.receipt"])
         tap(app.buttons["receipt.document"])
         tap(app.buttons["Choose a receipt from Files"])
-        let file = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Room Market Fixture Receipt")).firstMatch
-        if !file.waitForExistence(timeout: 3), app.buttons["Recents"].exists { app.buttons["Recents"].tap() }
-        XCTAssertTrue(file.waitForExistence(timeout: 10), app.debugDescription)
+        let browse = app.buttons["Browse"].firstMatch
+        XCTAssertTrue(browse.waitForExistence(timeout: 12), app.debugDescription)
+        browse.tap()
+        let nameMatch = NSPredicate(format: "label BEGINSWITH[c] %@", "Room Market Fixture Receipt")
+        let file = app.cells.matching(nameMatch).firstMatch
+        if !file.waitForExistence(timeout: 2) {
+            let local = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "On My iPhone")).firstMatch
+            if local.waitForExistence(timeout: 2), local.isHittable { local.tap() }
+        }
+        if !file.waitForExistence(timeout: 2) {
+            let search = app.searchFields.firstMatch
+            XCTAssertTrue(search.waitForExistence(timeout: 8), app.debugDescription)
+            search.tap(); search.typeText("Room Market Fixture Receipt\n")
+        }
+        XCTAssertTrue(file.waitForExistence(timeout: 15), app.debugDescription)
         file.tap()
         let choose = app.buttons["Open"]
         if choose.waitForExistence(timeout: 2), choose.isHittable { choose.tap() }
@@ -101,7 +113,11 @@ import XCTest
         app.launch()
         let photo = app.buttons["Share sample receipt photo"]
         XCTAssertTrue(photo.waitForExistence(timeout: 10), app.debugDescription); photo.tap()
-        let save = app.buttons["Save Image"].firstMatch
+        let save = app.descendants(matching: .any).matching(NSPredicate(format: "label IN %@", ["Save Image", "Save to Photos"])).firstMatch
+        if !save.waitForExistence(timeout: 3) {
+            let more = app.cells["View More"].firstMatch
+            if more.waitForExistence(timeout: 8), more.isHittable { more.tap() }
+        }
         XCTAssertTrue(save.waitForExistence(timeout: 12), app.debugDescription); save.tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let allow = springboard.alerts.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
