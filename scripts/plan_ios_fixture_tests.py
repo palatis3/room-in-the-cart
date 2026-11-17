@@ -174,6 +174,9 @@ def matrix(inventory=None, *, github_mac_only=False):
         "contributor-balanced-04": 5,
         "contributor-balanced-02": 6,
         "contributor-balanced-05": 7,
+        # GitHub lost the Spanish saved-change runner. M2 slot 0 had spare tail
+        # capacity in both recent combined runs; preserve its GitHub fallback below.
+        "SharedOperationUndoUITests-testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives": 5,
         # English skipped-dinner Undo was the last fixture after a 31-minute GitHub wait.
         # M2 lane 5 and its GitHub fallback both use slot 0.
         "SharedOperationUndoUITests-testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple": 5,
@@ -216,6 +219,7 @@ def matrix(inventory=None, *, github_mac_only=False):
     # On the GitHub-only fallback, slot 2 also runs billing and UI07.
     # Use the capacity observed on slots 3 and 4 in run 43596663919.
     outage_slots = {
+        "SharedOperationUndoUITests-testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives": 1,
         "contributor-balanced-05": 4,
         "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 3,
         "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": 3,

@@ -42,6 +42,7 @@ class MacSlotMetadataTests(unittest.TestCase):
         changes = {b['shard']: (a['macos_slot'], b['macos_slot'])
                    for a, b in zip(normal, outage) if a['macos_slot'] != b['macos_slot']}
         self.assertEqual(changes, {
+            'SharedOperationUndoUITests-testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives': (0, 1),
             'contributor-balanced-05': (2, 4),
             'SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave': (2, 3),
             'SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable': (2, 3),
@@ -56,14 +57,14 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual([r['shard'] for r in plan['include']], ['models', *[f'ui-{i:02d}' for i in range(1, 11)]])
         self.assertCountEqual([c for s in plan['shards'].values() for c in s['test_identifiers']], [MODEL, *methods])
         fixtures = fixture_matrix()['include']
-        self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise', 'bitrise-m4'})
+        self.assertEqual({row['provider'] for row in fixtures}, {'bitrise', 'bitrise-m4'})
         # Lock the provider and concurrency group for each planned fixture.
         self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
             ('bitrise', 1), ('bitrise-m4', 2), ('bitrise-m4', 3), ('bitrise-m4', 0),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 2), ('bitrise-m4', 2),
             ('bitrise-m4', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('bitrise', 0), ('github', 1), ('bitrise-m4', 2), ('bitrise-m4', 3),
+            ('bitrise', 0), ('bitrise', 0), ('bitrise-m4', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise-m4', 0), ('bitrise', 2), ('bitrise', 2),
             ('bitrise-m4', 0), ('bitrise-m4', 1),
         ])

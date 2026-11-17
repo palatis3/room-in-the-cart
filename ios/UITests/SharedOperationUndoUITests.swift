@@ -212,11 +212,35 @@ import XCTest
     private func fill(_ value: String, id: String, initialSearchDirection: SearchDirection = .towardEnd) {
         let field = app.textFields[id]
         tap(field, initialSearchDirection: initialSearchDirection)
+        dismissBilingualKeyboardCardIfPresent()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         if let old = field.value as? String, old != field.placeholderValue, !old.isEmpty {
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
         }
-        field.typeText(value); XCTAssertEqual(field.value as? String, value)
+        field.typeText(value)
+        dismissBilingualKeyboardCardIfPresent()
+        XCTAssertEqual(field.value as? String, value)
+    }
+    private func dismissBilingualKeyboardCardIfPresent() {
+        let title = app.staticTexts["Type español e inglés"]
+        // Spanish keyboard setup can present the bilingual card asynchronously.
+        // The English journey only needs to handle the card when it is visible.
+        let present = app.launchArguments.contains("es_US") ? title.waitForExistence(timeout: 2) : title.exists
+        guard present else {
+            XCTContext.runActivity(named: "Bilingual keyboard onboarding absent") { _ in }
+            return
+        }
+        // This is the observed iOS keyboard onboarding card, not an arbitrary
+        // Continue button or a product consent dialog.
+        XCTAssertTrue(app.staticTexts["Type both languages on the same keyboard. Customize in Settings."].exists)
+        let next = app.buttons["Continue"]
+        XCTAssertTrue(next.exists && next.isHittable)
+        XCTContext.runActivity(named: "Dismiss the identified bilingual keyboard onboarding card") { _ in
+            capture("Bilingual-keyboard-card-before-dismissal")
+            next.tap()
+            XCTAssertTrue(title.waitForNonExistence(timeout: 5), "The identified keyboard onboarding card must dismiss")
+            capture("Bilingual-keyboard-card-dismissed")
+        }
     }
     private func setSwitch(_ id: String, on: Bool) {
         let toggle = app.switches[id]; reveal(toggle)

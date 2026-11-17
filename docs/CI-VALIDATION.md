@@ -404,7 +404,7 @@ core and fixture producers. With the variable unset or any other value, these
 self-hosted builds invoke the reviewed Xcode executable directly with
 `COMPILATION_CACHE_ENABLE_CACHING=NO`. GitHub's existing compiler cache is
 unchanged. Re-enable Bitrise caching only after its recovery has been verified;
-cache activation alone does not establish successful cache reuse.
+cache activation alone does not establish successful cache reuse. Recovery is now verified: on November 17 the live variable was `true`, GitHub-only routing was `false`, and the 46e Release/core producers reported complete cache reuse. Keep that recovered setting enabled.
 
 If Bitrise is unavailable, set the repository Actions variable
 `RITC_GITHUB_MAC_ONLY` to `true` before starting a candidate. The same tests,
@@ -484,10 +484,29 @@ with zero runtime warnings. The unchanged group now uses M4 slot 5 for trusted
 runs; selectors, assertions and GitHub-only fallback stay intact. Slot 5 retired
 at 04:26:44 UTC on `f787d310` and 05:23:43 UTC on `08c20509`; slot 2 retired
 5m37s later in the first run and only 54s earlier in the second. The local run's
-641-second elapsed time is planning evidence, not an M4 timing prediction. This provider
-assignment still needs hosted qualification. Do not repeat the unchanged
-GitHub failure or loosen its runtime checks.
+641-second elapsed time was planning evidence, not an M4 timing prediction.
+Candidate `46e79a4e` now qualifies this assignment: all 13 cases passed on
+27.0/24A434 with zero runtime warnings, 18m32s queued and 12m05s on M4.
+Do not repeat the unchanged GitHub failure or loosen its runtime checks.
 [Original attempt and targeted retry](https://github.com/palatis3/room-in-the-cart/actions/runs/44018744620)
+
+On `46e79a4e`, the remaining GitHub Spanish SavedChange fixture lost communication
+with GitHub after its runtime preflight; no native result or result artifact was
+produced. Its unchanged selector now uses M2 slot 0. That slot finished 13m31s
+before the final native job in this batch and 9m35s earlier in the preceding
+batch. The English equivalent took 5m09s on M2. Spanish M2 duration still needs
+qualification; neither an app failure nor a timing guarantee is inferred from
+the host loss. The normal matrix changes only this row, and the complete
+GitHub-only fallback matrix is unchanged. The failed stock test and TSan fixture
+race have separate corrections; this routing change does not turn them green.
+
+When replaying a gated UI fixture locally, derive compilation conditions from
+`plan_ios_fixture_tests.py conditions <profile>` and confirm the selected case
+in compiled enumeration before running. Ordinary DEBUG excludes contributor
+fixture cases; a zero-case native success is invalid and must remain rejected
+by the strict result verifier. Reuse the correct compiled products for subsequent
+checks when their source inputs are unchanged.
+
 
 The English expired-quote editor journey took 13m00s and 17m59s in its last two successful GitHub jobs. Its Spanish counterpart took 7m16s and 5m50s on Bitrise M4. M4 slot 4 finished its final job at least 27 minutes before the core gate in both batches. The English journey now uses that slot on trusted runs, reducing GitHub queue pressure for the wire test and Records fixture. Its selectors and assertions are unchanged. Compare the next English run's elapsed time and the other slot 4 jobs to measure the effect. [English GitHub job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240228) · [Spanish M4 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240529).
 
