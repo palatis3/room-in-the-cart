@@ -70,6 +70,13 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         phase = .accessDenied; notice = nil; busy = false; requiresFreshReview = false; pendingWasCommitted = false
     }
 
+    /// Reappearing below the edit sheet keeps the reviewed command. An explicit refresh still reloads it.
+    func loadOnAppearance(accessAllowed: Bool) async {
+        guard accessAllowed, (try? repository.requireAccess()) != nil else { accessLost(); return }
+        if phase == .ready, snapshot != nil, pending == nil, review != nil { return }
+        await load()
+    }
+
     func load() async {
         guard !busy else { return }
         let token = generation

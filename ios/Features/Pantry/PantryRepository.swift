@@ -346,7 +346,7 @@ final class PantryRepository {
         }
     }
 
-    private func requireAccess() throws {
+    func requireAccess() throws {
         guard authorize() else { throw Failure.unauthorized }
         guard (1...ReadLimits.standard.payloadBytes).contains(limits.payloadBytes),
               (1...ReadLimits.standard.observations).contains(limits.observations) else {
