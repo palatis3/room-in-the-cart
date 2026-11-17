@@ -131,8 +131,11 @@ import XCTest
         let useSoon = board.staticTexts["Use soon"].firstMatch
         for _ in 0..<5 where !useSoon.isHittable { board.swipeLeft() }
         XCTAssertTrue(useSoon.isHittable, board.debugDescription)
-        XCTAssertTrue(addButton.isHittable, board.debugDescription)
-        addButton.tap()
+        // SpringBoard keeps the Home Screen add button mounted behind the gallery.
+        let galleryAdd = board.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Add Widget"))
+            .allElementsBoundByIndex.first(where: \.isHittable)
+        XCTAssertNotNil(galleryAdd, board.debugDescription)
+        galleryAdd?.tap()
         let done = board.buttons["Done"]
         if done.waitForExistence(timeout: 8) { done.tap() }
         let entry = board.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@",
