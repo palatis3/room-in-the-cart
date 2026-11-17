@@ -1,0 +1,302 @@
+# Room in the Cart — feature expansion implementation plan
+
+Audited implementation plan, November 17, 2026. **All three independent judges approved v2 after corrections. Implementation begins with slice A; later slices remain planned.**
+
+## Scope and baseline
+
+This plan covers all 28 requested entries: 1–21, 23–26, 28–30. There are no entries 22 or 27 in the attachment. The original Foundation 2.1 requirements remain in force. Read APP-BASELINE first, then Foundation 2.1 and MASTER-GENERATION; the new request adds capabilities without removing Free manual work, explicit review, offline work, narrow child/helper permissions, exact money, English/Spanish, accessibility, recovery or erasure.
+
+Inspected source: `e06bde5cf463fd299deefed456f94f0cefcaeb73`, PR #10; its production app is unchanged from main `f17948ebea0653f4d800df6db15f5e48d08c9175`. PR #10 adds accessibility failure attribution, not an app fix. Final baseline: PR #10 merged normally as `3b767679ef97f77b53e31e6ae400c22fce6eddd6`, tree `f8669d2e701d9dd0408a120ff9944d718c9d5381`, exactly matching the reviewed/qualified PR head. Main postmerge checks run separately; see current handoff. Attachment SHA256: `5b81f024dfcc73bcc435c4354e189bb0af2b9b7174c09b4e2273161ec61e6a99`. The original inventories/manifests remain in `.build/FeatureExpansionNov17/`. [Audit disposition](FEATURE-EXPANSION-AUDIT.md), three judge reports and [official-source notes](feature-expansion-audit/sources.md) accompany this plan. Proposed names below are implementation targets, not existing APIs.
+
+The existing app already has substantial list, receipt evidence, allocation, planning, exact package-cost, shared command, recovery and capture infrastructure. Extend those paths; do not replace them with a new app or use an AI service to decide quantities, eligibility or prices. Build complete usable slices, with the relevant domain, persistence, UI and tests together. Merge each independently qualified PR into main. Use the 12 workstreams below, with explicit H/J sub-slices and further splits only at real independently usable boundaries; neither one giant branch nor 28 unrelated PRs is desirable.
+
+## Architecture decisions that precede dependent features
+
+### 1. One authority for physical food
+
+Private stock authority will be normalized tables in the **existing `pickup.sqlite` database**, owned by `LocalStore/ComparisonStore` through a new inventory persistence API. It will not be another copy inside every `PickupJourney`, a new database, or unbounded history in `LedgerWorkspace` (currently a 4 MB whole-workspace payload). Keep existing comparison snapshot APIs and bytes intact. Introduce `InventoryLot`, `InventoryObservation`, `InventoryEvent`, `InventoryReservation` and `InventoryOperationReceipt` in CoreDomain and a composition adapter in `ios/Features/Pantry`. LocalStore remains independent of CoreDomain: its new bounded record/batch types carry identity, version, expected heads, canonical payload and digest; domain validation occurs in the repository adapter, structural checks and all head/uniqueness checks also occur inside the SQLite transaction.
+
+The first inventory migration (schema 3 if no intervening change) adds normalized lot heads, immutable observations/events, source links, reservations, cutover metadata and operation receipts. Later acquisition/price additions receive their own monotonically increasing schema versions; never ship different table sets under one version. Stage additions with their first consumer instead of speculative unused tables. ComparisonStore also opens ordinary package-comparison databases: test that path and preserve its independent workspace identity and snapshots. Only the composition root opening pickup.sqlite activates inventory ownership; no inventory discovery/import from arbitrary comparison databases. `ComparisonStore.commitInventory` checks all touched heads, operation identity and erasure state, writes the reviewed facts and resulting heads, and returns only after COMMIT. Exact operation/body/scope/base replay returns its original receipt; reuse with different content fails. Bound records and per-operation item counts; page history rather than repeatedly loading it into one snapshot. Preserve existing file protection, integrity checks, strict schema validation and safe refusal of future/corrupt databases.
+
+Physical lot ID is independent of a measurement revision. A manual lot retains its original stable ID across purchases carried into later journeys; a delivered source maps from existing `ReceiptKey` (event/order line/branch/segment), not the latest usable-observation ID. Persist explicit legacy-to-canonical source mappings and observation supersession. A second partial delivery has a separate fragment identity. A corrected count changes the head, not the physical lot. Move to freezer changes metadata, not quantity. Barcode denotes product identity, not a physical package. A receipt image is evidence, not automatically a new acquisition.
+
+Migrate private existing sources by deterministic source identity, preserving original snapshots and chronology. Repeated copies of a carried source become one lot. If legacy records cannot be reconciled without guessing, preserve them as unresolved source candidates and block their numeric availability until reviewed; never sum or discard them silently. Existing shopping/meal projections move to the repository adapter in the same usable pantry slice. No period in which old journey stock and new canonical stock both count. Legacy journals still explain prior decisions; corrected stock is not backdated into history.
+
+Migration includes **live claims and pending workflows**, not just food. Inventory all journey needs, portion bindings, exact pins and awayCarryovers in prepared/reserved/completed/cancelled phases. Map legacy need/observation references to canonical lot and claim IDs; preserve original deterministic occurrence/link and operation receipts. A migration journal records source snapshot heads and ledger origin/revision; canonical activation and its cutover marker commit in pickup.sqlite only after source heads still match. Restart resumes by stable migration ID. Reserved/completed claims remain held once; pending prepared intents that cannot be safely reconciled remain explicit conservative holds awaiting review, never advertised as free food. Cancelled claims are not revived. Keep original snapshot bytes.
+
+After activation, every legacy stock/reservation/carryover write path must use the adapter or fail with a recoverable review state. Resume migrated intents through the new reconciliation port, never the old snapshot-only writer. Gate affected features while cutover is pending; a partial migration cannot expose free-stock projections. Independent restored pickup/ledger copies remain separate origins until explicit reviewed adoption. Missing/newer companion ledger, conflicting lineage or erased sources preserve unresolved holds and never silently reattach authority. Acceptance includes all four carryover phases, corrected receipt observation, carried manual lot, A/B pin fixture, crashes before/after activation, old pending workflow after upgrade and independently restored/missing/erased companion evidence.
+
+Remaining quantity is the latest explicit count plus later accepted consumption/waste/correction events in compatible reviewed units. A later physical count is a new baseline; it does not add its amount to the preceding balance. Unknown, confirmed zero and qualitative “Some left/Have enough” are distinct. A new qualitative current-quantity observation supersedes previous numeric availability with unknown while retaining the earlier count as history. Existing reservations remain unresolved/shortfall-backed; they are not released. Have enough can separately suppress a staple prompt but cannot credit a number. Opened/storage-move metadata alone preserves the last quantity. Qualitative states do not supply numeric meal coverage until a fresh count is confirmed. Allocation computes remaining, reserved, unresolved and free from the same revisioned view; pinned needs and hidden cross-shop commitments subtract once. Reservation shortfall stays a shortfall after a lower/unknown count, not newly free supply.
+
+Household authority remains **PostgreSQL**, extending `service/src/pantry-lots.ts`, `delivery-coverage.ts`, `physical-quantity.ts`, existing command receipts and the household-wide joint allocator. Lock/check the common household pantry revision and all affected lot/reservation heads in one transaction. Arrival facts remain immutable; new balance events, observation baselines, reservation changes and actual cooked outputs commit together. Never introduce independent per-shop counters. The iPhone holds authorized projections and durable pending commands, not an authoritative replacement for shared stock.
+
+Concrete non-shop service contract: extend existing ritc.operation with a discriminated authority_scope (legacy shop by default; household_pantry for new commands), nullable shop_id only for household scope, and pantry response scope. Keep the existing UNIQUE(household_id, actor_id, client_key), device/replay-window FK, digest and receipt retention, so reusing a key across command kinds/scopes still conflicts. A dedicated household pantry endpoint validates a bounded command envelope, not a fabricated shop. Add versioned adult pantry grants with monotonically increasing grant_epoch; bind body, scope and epoch into command/receipt. Check active membership, device, replay window and current exact grant epoch before new write or old receipt disclosure. Revoke/regrant advances epoch, never renews an old queued operation. Pantry-only retry is independent of shopper transfer; a compound shop action still checks the relevant shopper epoch.
+
+Alter pantry_lot origin_shop_id and pantry_event shop_id to optional provenance only for explicit standalone physical-stock kinds, with discriminated constraints retaining mandatory shop/delivery/meal FKs for linked kinds. Preserve legacy rows unchanged. Batch creation replaces the one-lot-per-operation/manual-lot-ID-equals-operation restriction with stable source-line/lot identity and operation provenance; legacy identities still map one-to-one. Introduce one pantry batch header per household revision/operation and event IDs or row ordinals under it, replacing the current one-event-per-operation/revision uniqueness with uniqueness at the batch header plus unique event identity. All rows commit atomically. No placeholder shop or parallel stock source. Update jointInputs and old endpoint reducers to consume the same canonical balance and cross-shop holds. Extend RLS, erasure and response projections for each new kind; a pantry editor sees food and aggregate held/available state, not hidden shop/meal identifiers or prices.
+
+General physical count/storage/use authority does not authorize editing named meal reservations or completion. A compound meal action requires both pantry write and the current applicable shop/meal authority, and any existing budget grant if money is exposed. Otherwise record only the authorized physical fact with affected promises left unresolved and a separate scoped proposal for the current shopper to confirm; no silent reservation release or meal completion. New generic leftover portions may be counted physically without exposing another shop's meal details. Acceptance: zero-shop household CRUD; nonshopper editor restricted to stock; revoke/regrant rejects old queue; shopper transfer does not invalidate unrelated pantry-only scope; legacy shop writes conserve all claims.
+
+### 2. Cross-store recovery is explicit
+
+Private dinner plans remain in `ledger.sqlite`; pickup history remains in comparison snapshots. There is no cross-database atomic transaction. Reuse the prepared/reserved/completed intent pattern from `PickupAwayCarryover.complete`.
+
+For a reviewed action that changes stock plus a plan, capture source IDs, all expected heads and a stable operation ID; save the bounded prepared intent in pickup.sqlite with the inventory journal. Commit inventory facts/reservations plus the pending projection record in that transaction. Add `LedgerModel.applyPreparedProjection` with stable operation identity and a durable ledger-side application receipt, then mark inventory projection complete. Existing `change(key:)` is **not** restart-durable idempotency: it creates a new UUID per invocation; existing AwayCarryover succeeds through specific stable occurrence/link checks.
+
+Implement a stable operation port using LedgerStore's atomic save/operation receipt, plus an explicit projection identity/result binding (inventory origin/workspace + operation ID + projection kind + target + canonical digest) in ledger.sqlite, committed in the same transaction as the exact ledger payload. Put indexed bounded metadata in a normalized receipt table via its own migration, not an unbounded array in the 4 MB workspace. Retain prepared canonical payload/base and receipt identity. On restart, reauthorize and look up the receipt **before deciding an old base is stale**: exact stored application means already applied even if the target was later edited/deleted; a different body/scope conflicts. Reload the current ledger head, never restore an old returned snapshot over later work. Erased/replaced ledger origins cannot be reattached; respect tombstones. Preserve existing domain-specific stable-link checks as additional invariants.
+
+Serialise app-owned mutations per workspace and reconcile pending intents on launch before conflicting writes. If no application receipt exists and ledger/role has changed, preserve the committed stock fact and show “Food saved; plan needs review”; do not silently rebase or claim both sides succeeded. Recover the exact projection or offer dependency-checked compensation only after establishing whether it actually applied. Test process death after ledger COMMIT/before inventory completion, unchanged/touched/unrelated later edits, changed-body replay and ledger erasure/replacement: one effect, no duplicate or false compensation. No stock duplication or phantom success after a crash between steps.
+
+Receipt stock plus confirmed price evidence share the inventory/acquisition transaction. Photos are optional sidecars with stable links and cleanup; photo failure cannot cause stock to be recommitted. Recording a receipt price never posts a payment. Existing `SettlementLedger` remains a separate, explicitly confirmed financial action, with its own retry identity and pending state if a UI offers it afterward. This separation applies to actual paid prices, shelf observations, quoted prices and bank/retailer settlement.
+
+Undo is a new compensating operation tied to exactly the original changed facts. Check descendants, current heads, reservations and outputs. Unrelated changes survive. If cooked leftovers have since been used or reserved, require a new review rather than restoring stale food or removing another person's claim. No whole-week snapshot rollback over newer edits.
+
+### 3. Capabilities and privacy
+
+| Actor/surface | New pantry and preferences | Shopping/plan effects |
+| --- | --- | --- |
+| Private adult workspace | Local/offline read/write; existing protected-workspace gate after shared use | Existing private authority; no account requirement |
+| Verified active adult organizer (the existing organizer flag, not a new owner role) | General pantry read/write and explicit adult grants; structured shared preference administration | Existing shopper assignment still controls basket |
+| Explicitly granted adult pantry editor | General pantry read/write; grant independently revocable and checked on every command/replay | Pantry permission alone grants no basket, budget or plan mutation |
+| Existing assigned shopper | Existing shop-scoped access remains; general pantry requires the new explicit grant, except organizer | Existing shop epoch, revision, preview and budget-grant checks |
+| Other adult/contributor/child | No general stock, price or preference profile. Own requests/outcomes remain scoped | Request/proposal only; no inference can confer authority |
+| Cook/helper | Only dated granted instructions/quantities; completion can be a proposal awaiting authorized confirmation | No broad inventory, budget or automatic consumption authority |
+| Widget/Shortcut/notification | Minimal opted-in adult projection or generic entry; no contributor/child stock cache | Open authorized review; no background mutation |
+
+“Owner” in product wording maps to the existing verified active adult organizer; do not create a parallel ownership role. This is an additive household pantry capability, not a subscription seat. Explicit granting UI and revocation belong in the shared pantry slice. Preference read grants are distinct from pantry editing, and preference write remains organizer-only in the initial slice; pantry write does not imply either preference right. Preference details are shared only with explicitly granted adults; relevant meal constraints can appear in an already-authorized cook projection without disclosing the whole profile. Keep child-consent and actor/persona checks in every existing command, retry, read and deep link. Never return an old receipt to a revoked actor. Erasure removes dependent new events, aliases, media, feedback, drafts, replay payloads and caches without resurrecting older quantities. Payload-free tombstones remain where required.
+
+### 4. Compatibility and deployment
+
+Increment the actual affected SQLite schema/payload/DTO/archive versions; do not assume one version covers all stores. Optional new fields decode old recipe and planning payloads, with legacy notes preserved. Validate source IDs, units, bounds and currency in Swift, service and archive boundaries. Preserve original historical bytes/digests when generating recovery evidence. Update RecordsComposition, RecordsRecoveryCapture, archive media, independent restore, export and erasure alongside each new stored kind. Recovered copies have new local origins, explicit source lineage and no automatically restored household grants or shared stock adoption.
+
+Remote migrations are additive and allocated at implementation from the current latest migration (staging currently 049). Keep old shop endpoints/projections readable. Negotiate general-pantry capability and version new endpoints; an old client must not receive an unrecognized `fridge` enum through its strict old decoder. Legacy writes must pass the new conservation layer; unsupported actions require an app update, not an ambiguous downgrade. Private old binaries safely refuse future schema rather than reset it. Test old-client compatibility and current client/service rollout order.
+
+Each staging package needs its concrete backup/restore/rollback evidence and existing review/approval process. Merging source is not a staging deployment or App Store release. No live migration, remote provider activation, new paid service or public release is authorized by this plan alone.
+
+## Feature implementation and acceptance
+
+### Navigation and tier contract
+
+Keep the three existing tabs. Shop owns direct Add a list/Compare packs and My Pantry; My Pantry opens receipts, lot actions, Use soon and Tonight. Dinners owns Tonight, recipe library/import, week actions, cooking and completion feedback. Household/account settings owns adult pantry grants and shared preferences; private preferences live with Dinners settings. Records owns acquisition/price history, source evidence, export and recovery. Surface routes reauthorize and fall back to the owning tab with an explanation if their target is gone; they do not create a shop just to navigate.
+
+Core manual/offline capture, pantry actions, date entry/use-soon list, personal saved price evidence, manual recipe/cooking/timers/completion, explicit feedback and recoverable first tasks are Free. This expansion adds no new paywall to those outcomes. Existing paid rotation/staple-recall/automated assistance and shared entitlements remain exactly as Foundation defines; explain them only where chosen and provide the existing manual alternative. Initial deterministic Tonight matching, reference-derived estimates and reminders do not introduce a new subscription rule. Forecast/learned ranking may use an existing explicitly applicable assistance entitlement only if its Foundation mapping is documented; otherwise keep it Free for this expansion rather than invent a gate.
+
+### #1 Receipt photo to reviewed pantry
+
+Reuse `ScanModel`, `OnDeviceTextCapture`, `ScanReviewView` and `CaptureMediaStore`; current receipt scans are evidence only. Add a standalone import entry from My Pantry/Records and link the existing pickup receipt route. `ReceiptImportDraft` retains original line IDs/text and uncertainty, merchant/date, food/nonfood classification, count/weight, unit versus extended price, tax/deposit/discount/promotion and unresolved values. Purchase date must be reviewed; capture time is not purchase time. Batch review allows food with unknown price, skipped/unreadable lines and edited cupboard/fridge/freezer defaults. Match existing arrival fragments before creating a new physical acquisition. Confirm received/usable quantities explicitly; imported orders alone add none. Commit selected stock and price facts once through the acquisition operation, with optional retained media.
+
+Acceptance: bilingual weighted produce, discounts/deposits, unreadable amounts, missing/damaged food, airplane mode and partial approval; cancel has no effect. Exact retry after crash produces one acquisition. Duplicate evidence attaches to the existing receipt. Changed persona or stale lot requires review. Dependent Undo cannot fabricate stock or paid spending.
+
+### #2 My Pantry
+
+Add `PantryHomeView`, lot detail and recent-purchase starter in the adult navigation, available before any pickup. Build on canonical lots rather than aggregate all journey snapshots. Show cupboard, fridge, freezer; confirmed amount or qualitative status; reserved/free portions and last confirmation. Actions Have enough, Some left, Opened, Move to freezer and Used up are explicit commands. Used up is a zero observation with affected-reservation review; opening/moving records dates and preserves identity. Expose typed/manual entry offline. Shared UI uses new capability and current-server/pending distinction.
+
+Acceptance: fresh private workspace, recent purchases without whole-kitchen setup, one lot carried across two shops, corrected arrival with stable identity, storage moves preserving quantity, partial counts and held lunches. Eight wraps/two held → Some left gives unknown availability and unresolved backing, not eight free or zero; Have enough suppresses prompting without numeric credit; recount three gives two held/one free. Exact retry is one event. Reopen/export/restore/erase preserve the correct state. Old migrated snapshots remain recoverable.
+
+### #3 Storage estimates and use soon
+
+Add distinct `PackageDateEvidence` (date and printed meaning), `StorageEstimate` (range, reference/version/match assumptions) and manual use-soon status. Optional package-date photo goes through local OCR and explicit review. Estimates use a reviewed bundled FoodKeeper subset matched to food, location, purchase/opened/frozen state; do not invent dates, reset freshness on freezing, or claim safety. Unknown thaw/refreeze history stays unresolved. Use household civil dates/time zone. One opt-in notification digest links current eligible foods and #4 meal ideas; denial leaves the same in-app list. Replace/cancel prior reminders on correction, consumption, scope change and erasure.
+
+Acceptance: known reference provenance, no estimate for unsupported food/state, recorded date distinct from estimate, opening/moving/date correction, DST/time-zone and denied alerts. Official dataset metadata is verified but JSON download returned 403: retrieving and reviewing actual reference contents is a delivery gate for estimates. Manual dates/use-soon may work first, but do not mark #3 complete without verified guidance. No need to wait on this dependency for other slices.
+
+### #4 Tonight from available food
+
+Extend `DinnerIdeasView`/`DinnerIdeaSupplyReview` with `PantryMealMatcher` over saved, reviewed recipes and the canonical allocation snapshot. Add Shop → My Pantry → Tonight and Dinners → Tonight using a read-only private-workspace/authorized-household recipe-and-stock context independent of the currently shop-bound DinnerFeatureModel. No pickup is fabricated for browsing. Empty library/no eligible matches offers save/import/manual reviewed recipe actions and explains missing ingredients/constraints; no invented matches. Adding a reviewed recipe enables matching offline. Choosing explicitly selects or creates the destination plan/shop if the existing planning engine needs it; only that confirmed action creates one occurrence. Filter hard constraints first; rank eligible recipes by useful use-soon food, confirmed coverage, effort and optional feedback. Show a few results with missing ingredients, added whole-pack/known-checkout cash or explicitly incomplete estimate, preparation time and evidence date. Unknown quantities/time/prices are not proof a recipe is feasible or affordable. Choosing opens the existing plan preview; it revalidates stock, preference, recipe, price and authority revisions.
+
+Acceptance: confirmed pantry/no shop/no recipes → useful empty state → add reviewed recipe → Tonight works offline; browse/cancel creates no shop, explicit destination creates exactly one occurrence, and a use-soon link opens this same refreshed context. Reserved food excluded, unknown food not credited, use-soon prioritization, excluded ingredient filtered even for a favorite, new stock/price changes invalidate preview, no groceries or consumption before Choose/confirmation.
+
+### #5 Actual cost of enough food
+
+Reuse `PackComparison`, `DinnerScenarioEngine`, `CheckoutEngine`, `Money` and rational quantity arithmetic. Extend their input adapters to canonical free stock and explicitly included household essentials; do not introduce floating-point or model-generated totals. Present ingredient-use/per-serving evidence separately from whole packages to buy and complete/partial checkout cash. Preserve source currency, unit/conversion, eligibility, charge inclusion, known/unknown and checked rounding.
+
+Acceptance: ten needed wraps after stock credit still require two eight-packs; essentials/fees included once, partial quote cannot claim fit, price/quantity overflow and incompatible units reject, reserved stock never discounted twice. Native/service common fixtures for changed shared math.
+
+### #6 Dependable family lists
+
+Extend actual list/request rows and detail screens with requested-by, authorized purchased-by/outcome, server as-of and saved-on-device/queued/synced/conflict labels. Reuse actor client keys, authority epoch, preview fingerprints and `SharedTrackingOutbox` transport leases; no new sync engine. Preserve offline command body and origin, do not silently overwrite a newer shopper decision. Conflict review offers current versus proposed change and explicitly refreshed intent with a new key. Contributor sees only permitted own outcomes; purchase status is not arrival/usable proof.
+
+Acceptance: two devices change the same request, lost reply, restart before response, shopper transfer, child/actor revoked before replay, and late cleanup after account switch. One accepted effect, a clear recoverable conflict when needed, no leaked other-family attribution or false global freshness.
+
+### #7 Recipe links/photos/screenshots/share
+
+Unify existing RecipeCaptureAdapter and RecordArchive/RecipeImport reviews with `RecipeURLImporter`. Explicit HTTPS page fetch on device, no cookies/login/scripts/subresources/external JSON-LD contexts; cap redirect count, response bytes/time and accepted content types. Reject nonpublic destinations and unsafe redirects; if a server proxy is ever added, require DNS/rebinding protections there before use. Parse bounded Recipe object/array/@graph and HowToSection/HowToStep; let the user choose among multiple recipes. Unsupported/paywalled/invalid sites offer paste/photo/manual. Preserve source URL, ingredients, authored serving text and ordered instruction steps. Add optional versioned `RecipeStep` with reviewed ingredient bindings/timer suggestions; legacy notes remain intact. Accepting a recipe is separate from choosing it for a plan.
+
+Acceptance: multiple recipes, nested steps, missing/ranged servings, Spanish screenshot, offline pending review, malformed/oversized/redirecting content; save/edit/reopen retains order and source, retry creates one candidate, no new demand on import alone.
+
+### #8 Repeat last week
+
+Compose existing `DinnerRotationsView`, rotation preview, `priorStaples` and saved settings into one previous-civil-week proposal. Mint new occurrence/contribution/operation IDs with source references; never copy receipts/reservations as new food. Review only changed dates/people/away/lunches, needed versus handled staples, current stock and stale/missing prices. Preserve earlier week and original templates. Manual reuse remains Free; existing paid rotation/recall assistance retains its clearly explained entitlement boundary.
+
+Acceptance: edited Wednesday leaves prior week untouched; bought coffee, reserved tortillas, a holiday and a stale quote appear in the changes review. Exact retry does not clone twice; new stock/plan revision requires refresh.
+
+### #9 Household preferences
+
+Add versioned `MealPreferenceProfile`: explicit exclusions and required appliances as hard constraints; dislikes/brands/effort as soft by default, with a reviewed strict option where meaningful. Keep private versus household ownership/capability explicit. Apply one `MealEligibilityPolicy` to ideas, pairings, swaps, source/pack matching and cooking substitutions; carry preference revision through preview. Unknown ingredient/appliance data is unresolved, not safe/compliant. Historical family notes can be promoted only by review.
+
+Acceptance: high feedback never defeats an exclusion; a nonpreferred compatible brand can be selected; missing appliance details are visible; editing/revoking/removing preferences changes future proposals without rewriting past evidence. No medical safety claim.
+
+### #10 Swap one dinner
+
+Add a discoverable one-slot Swap action using `DinnerLibraryPairings.replacement` and `DinnerPlanningEngine.preview/apply`. Diff only the affected contribution IDs, quantities, packs and permitted budget, showing purchased food retained for reuse. A placed shop creates recovery/top-up intent without rewriting sealed checkout. Add exact local inverse receipts; reuse supported shared operation Undo.
+
+Acceptance: swap tacos without changing Thursday or lunch; pack-threshold change and purchased wraps visible. Unrelated later edits survive Undo; touched newer facts require review; repeated Undo applies once.
+
+### #11 Natural multi-item speech
+
+Reuse on-device speech/audio lifecycle. Add `NaturalListSegmenter` before StructuredCaptureParser only for speech/explicit natural-list mode; preserve original transcript ranges. Handle unambiguous commas/conjunctions while protecting phrases such as “mac and cheese,” exclusions and Spanish quantities. Separate proposed timing from purpose text; resolve current-list versus next-shop once. Review all proposed rows; only unclear amounts/products/destination prompt clarification. Keep existing contributor single-request contract unless a separate grouped request API is deliberately introduced; no silent authority widening.
+
+Acceptance: “Two milks, bread and cereal for next week,” Spanish units, ambiguous product conjunction, denied permission, interruption, invalid destination and exact import replay. Editable results and typed fallback always available; raw audio not retained.
+
+### #12 Duplicate family requests
+
+Extend `RequestDuplicateGroups`/comparison review with shopper-authorized candidates from open requests, existing purchased outcomes and planned-meal needs. Use stable reviewed product identity plus conservative aliases, preserving brand/exclusion/unit variants. Offer Same item (explicit linkage to a matching need/outcome) versus Additional quantity. Keep each author's request ID and obligation/outcome; fuzzy wording alone cannot merge or sum. Recheck candidates and quantities in the authoritative preview/commit; exact purchased match remains tied to placed revision.
+
+Acceptance: milk already requested, purchased or meal-linked; lactose-free versus ordinary and preferred-brand differences; independent children/contributors see only own outcomes. Race with shopper action or quantity change refreshes review, never duplicates purchase or leaks candidates.
+
+### #13 Digital receipts/orders
+
+Extend text-only Share extension with a typed bounded `SharedCaptureEnvelope` for supported PDF/image/receipt text/recipe URL, retaining the current list path. Extension stages protected data quickly; containing app does parsing/OCR/network and review. Initial limits: 10 MB input, 20 PDF pages, 25 megapixels decoded per image/page, 100,000 extracted characters and 30 seconds active extraction per batch, plus existing per-record/media quotas; reject or let the user select a smaller subset before saving. These are engineering resource bounds with visible recovery, not hidden truncation. Use PDF text layer first, bounded raster OCR for scanned pages, retain page/line provenance; support cancellation, partial review, encrypted-PDF/manual fallback. Separate ordered, final invoiced, received and usable states; share never commits stock.
+
+Acceptance: real Files/Photos/Mail sharing, image/text/scanned PDF, password/oversize/unsupported input, app killed during handoff, persona change and partial delivery. Source limit adjustments need measured memory evidence; do not bypass existing 200-line/sidecar quotas. No inbox access integration.
+
+### #14 Batch barcodes/product photos
+
+Turn current multi-code detection/single-reference picker into a bounded session of reviewed product candidates. Repeated frames of one barcode do not add quantities; intentional multiple equal packages require explicit count. Reuse local Vision/manual photo text. Optional Open Food Facts lookup supplies source-dated proposed names/package sizes only, cached/rate-limited with identifying User-Agent and required attribution/license treatment. No household data upload; no inference of expiry, allergens or suitability. Unknown/network-failed products remain quickly editable manually. Apply the reviewed batch through the same pantry acquisition boundary when received status is confirmed.
+
+Acceptance: multiple distinct and repeated codes, unknown product, wrong catalog pack, offline fallback, intentional two identical packages, changed review/partial cancel. Manual path remains complete if catalog integration is unavailable.
+
+### #15 Receipt aliases and duplicates
+
+Introduce opt-in private `ReceiptAlias` scoped to workspace/persona, store/branch namespace and language; learn only explicitly confirmed product matches, with inspect/delete/reset. Do not learn quantity, price or safety restrictions automatically. Distinguish operation replay, verified transaction identity and likely duplicate evidence. Stable verified merchant transaction/order reference plus segment links can enforce uniqueness; file digest establishes repeated evidence; date/total/line similarity only proposes a match. Offer Open original, Link evidence, or Confirm separate purchase. Corrections/refunds/final invoices and split arrivals extend existing lineage rather than add the original quantity again.
+
+Acceptance: same file, crop/rescan, order email plus invoice, two real same-day equal purchases, partial fulfillment, refunds and concurrent commits. Stock/price facts are each posted once; optional financial posting remains separate. Deleting alias memory never changes historical receipt wording.
+
+### #16 Running-low staples
+
+Add an opt-in conservative `StaplePrompt` lifecycle over confirmed purchase/depletion history and existing staple recall. Start interval prompts only after at least three distinct comparable confirmed purchases (two intervals); use median interval, suppress when confirmed plenty or equivalent demand already exists, and retain explicit unknown. Present “Need milk this week?” with Still have it, dismiss and snooze; persistence follows private/authorized shared scope. No predicted remaining count or auto-add. Cold start offers manual recall. User corrections outrank an interval suggestion.
+
+Acceptance: replayed receipt is not a new purchase; sparse history produces no prediction; snooze/dismiss survive relaunch and authorized sync; open milk request suppresses redundant demand; changed household does not inherit another scope's history.
+
+### #17 Cooked consumption and leftovers
+
+Add `CookCompletionDraft` from the exact meal occurrence/recipe/stock revisions: actual ingredient lot splits, reviewed units/conversions/substitutions, adjusted servings and independently confirmed leftover portions/location. Commit deductions, fulfilled reservations and output lot(s) under one authoritative inventory operation. Raw ingredient mass is not interchangeable with cooked portions; record the reviewed transformation evidence, not a fabricated conversion. Empty/zero-used rows are explicit. Cancel/timer/starting cooking never deducts. Update the meal completion projection via the cross-store protocol or same Postgres transaction as appropriate. Give an exact compensating Undo with descendant checks.
+
+Support a reviewed “Used, quantity/source not tracked” row distinct from Not used. Meal completion and independently counted leftovers may succeed while inventory reconciliation is explicitly incomplete. Deduct only supported reviewed known amounts; keep untracked salt/oil as unresolved use, not fabricated stock, zero use or a purchase. Unquantified use of an identifiable lot supersedes its numeric availability with unknown and preserves unresolved holds. Insufficient count offers an explicit physical recount/impact review or unresolved use; never negative balance. Give each unresolved row a stable event ID. Later resolution supersedes that row within the same consumption lineage and checks whether a newer physical count already includes it, so it cannot deduct again or rewrite history. Separate completed cooking, inventory updated and inventory-needs-review status. All known deductions, unresolved events and confirmed output counts still commit as one operation; dependent Undo covers each part.
+
+Acceptance: three versus four servings, A/B lots and substitution, two confirmed leftover portions/one lunch reservation, crash/retry, stale count, unavailable supply and lower observations. Undo restores only unchanged affected facts; later consumed/reserved output requires review. Cook-only grant submits a proposal, not a stock mutation. Tracked tortillas + untracked salt + unknown oil can complete with two counted leftovers: tortillas deducted once, salt/oil unresolved, real leftovers reservable, no invented acquisition or negative quantity; later resolution/restart/Undo cannot rededuct.
+
+### #18 Leftovers/lunch reservations
+
+Correct the proven `DinnerLibraryPairings.unreservedLots` pin omission first using canonical `journey.carryoverAllocation(at:)` semantics, with a real app-model regression. Scratch evidence proves wrong projected lot identity, not a completed duplicate consumption; inspect final Apply separately. Do not blindly replace the different fallback allocator.
+
+Then expose counted remaining/reserved/free portions and reserve/release through canonical pantry and existing protected-need bindings. The same promise seen from a meal and pantry has one reservation identity. Planned future leftovers remain prospective until confirmed after cooking. Cross-shop reservations check the same source balance.
+
+Acceptance: A4/B4 with need4 pinned B yields free A4/B0; four cooked portions with two lunches yields two free everywhere. Release happens once, another shop cannot reserve them again, lower/unknown count shows held shortfall, not available food. Stale preview and final Apply recheck exact source identity.
+
+### #19 Finish a package
+
+Extend `DinnerLibraryPairings` using #4's matcher and canonical available balances. Keep physical remainder separate from hypothetical future pack remainder. Evaluate recipe quantities, added packages/fees, preparation timing and constraints; rank useful consumption only when the evidence supports it. Show all missing ingredients/additional cash and compare equivalent outcomes before saying a suggestion saves money.
+
+Acceptance: half cabbage/two unreserved tortillas yields a suitable option with sauce purchase visible. Reserved lunches remain protected; hypothetical eight-pack remainder never appears in pantry. Unknown/new delivery fees prevent a definitive saving claim.
+
+### #20 Shelf/checkout image prices
+
+Add shelf-label and checkout-screenshot source-purpose adapters after local OCR. Review pack versus unit/multibuy price, store/branch/date, currency, promotion/member conditions and uncertainty. Shelf observations go to confirmed price evidence; checkout proposals go to `LedgerRetailerPreview`, preserving subtotal/discount/tax/tip/fee/inclusive scope. Neither creates posted payment or inventory. Private offline observations use the new price tables; household publication follows authorized history commands.
+
+Acceptance: members-only 2-for-$5, uncertain pack denominator, subtotal/total charge inclusion and stale store selection. Unknown conditions remain unknown; explicit review is needed before calculation, and duplicate upload creates no duplicated evidence.
+
+### #21 Personal price history
+
+Extend `HistoryPriceObservation`/History views with a private offline projection and immutable acquisition-line/source revision. Distinguish actual reviewed paid line, observed shelf price and current quote. Record package basis, currency, branch/mode, date and eligibility; apply checked comparable-unit math. Corrections supersede, refunds/credits link explicitly, and unclear discount/tax allocation stays unallocated rather than guessed. Free saved evidence remains accessible; existing paid aggregation can enhance it without taking records away.
+
+Acceptance: weighted substitute/discount/partial refund keeps original provenance and correct linked adjustment; different currency/unit/variant does not falsely compare; duplicate receipt has one observation; historical price never claims today's availability/cost. Offline export/recovery and erasure include new facts.
+
+### #23 Full two-option cost
+
+Extend `TwoStoreQuoteEngine`, DinnerQuotesView and shared store quote contracts with per-commitment equivalent usable supply and explicit purchase minimum (distinct from fee-waiver threshold). Compare packages, essentials, fees, known eligibility and separate trip money/time. Preserve reviewed inclusive-total mode for terms the app cannot safely model. Unknown price/availability/minimum basis prevents a definitive winner. Adoption uses current authorized revision and never rewrites a placed order.
+
+Acceptance: lower shelf total loses after trip cost; purchase minimum disqualifies a cheap basket; nine needed wraps with differing pack sizes shows excess; missing terms/source validity are visible; native/service parity and budget-revocation/stale-adoption checks.
+
+### #24 Store department order
+
+Extend `LedgerListLayout`/existing accessible reorder with stable branch identity and personal product-to-department memory. Back-compatible text branch aliases require explicit matching, not silent merging. Separate This row, Remember at this store and Store department order. Persist personal layout outside shared basket authority; a layout change never changes quantities or another person's plan. Preserve unassigned items, entered/manual modes and historical lists. Use the same ordering in list/search/large print.
+
+Acceptance: one product differs between two branches; later list recalls the right mapping; unknown remains unassigned; accessible up/down reorder, restore, branch rename and explicit alias correction; no checkout side effects. No guessed aisle numbers.
+
+### #25 Schedule changes
+
+Wrap existing DinnerWeekEditors, DinnerGuestImpact and away carryover in short guests/away/skipped/lunch actions. Preview only affected dates/groups/portions and groceries; retain protected bindings, purchased stock and reuse opportunities. Draft changes go through plan preview, placed changes through recovery/top-up rules. A skipped/moved meal is not cooked food and creates no leftovers. Keep civil-day/time-zone identity.
+
+Acceptance: eighth-to-ninth guest crosses an eight-pack boundary; lunch protected; an away night exposes bought food for reuse; cancel/stale change/DST and unrelated meals preserved. No optional calendar integration is necessary.
+
+### #26 Practical cooking screen
+
+Build a `CookingSessionView` over #7's ordered steps, reviewed ingredient references and existing `CookReadbackModel`/audio authorization. Put relevant amounts beside each step; if bindings are unknown show original instruction plus full ingredient list rather than invent amounts. Support large text and optional read-aloud with VoiceOver coordination. Persist local timer ID/deadline/remaining state, multiple timers and cancellation; optional local notification alerts, no guarantee the app executes in the background. Restore and reconcile deadlines on launch. Timers never mutate food. Completion enters #17 actual-use/substitution review.
+
+Acceptance: two timers across background/relaunch, denied alerts, canceled session, scope revoked, edited servings and substitution, old notes-only recipe, EN/ES and largest text. VoiceOver and read-aloud do not compete or disclose unauthorized private notes.
+
+### #28 Useful widgets and Shortcuts
+
+Deliberately extend the current generic-only policy: distinct Open list/Add item intents, plus **actual opt-in adult Home Screen summaries** for Tonight and Use soon. Add `AdultFoodSummaryProjection` in a separate minimal protected app-group payload with short reviewed title/count, generation/scope/time, freshness limit and opaque route. No budget, member, exclusion or raw receipt data; no broad ledger access. Apply complete data protection and privacy-sensitive redaction; restrict summary families to supported Home Screen presentations, keep lock-screen/generic entry context-free. Clear on sign-out/persona/grant change, invalidate timelines on committed updates and day/date changes. OS-retained snapshots cannot be recalled instantly: use protected locked behavior and explicit opt-in disclosure, verify physical lock/account-switch behavior. Do not ship a leaking summary; generic fallback remains, but #28 is incomplete until real summaries pass these checks.
+
+Capture intent opens an authenticated editable draft (text prefill only); list/tonight/use-soon routes reauthorize current target, expiry and workspace. iOS 17 compatibility uses existing guarded AppIntents approach. No food strings in URLs or public intent results. No background stock/list writes.
+
+Acceptance: real widget content and cold-start routes, wrong persona/locked device/deleted target, stale cache/midnight/DST, revoked grant, denied protected data, supported device families and minimum OS. Never substitute generic open-app buttons as completion of the requested summary feature.
+
+### #29 First useful task, Free and recoverable
+
+Add direct typed Add a list beside Compare packs on the first Shop screen, with optional photo/voice. Use a bounded protected private draft keyed to actor/workspace/base, stored by atomic replacement with explicit expiry/discard/erasure; no raw audio or automatic photo retention. Only create a real pickup when the user confirms save/import, not opening/canceling a draft. Keep existing saved comparison, ledger Undo, Records exports/recovery and StoreKit Restore behavior. Explain paid assistance at the chosen feature, not in a blocking onboarding funnel. Distinguish saved draft, committed list, pending shared sync, restored data and restored billing.
+
+Acceptance: fresh install airplane mode/no account/permissions completes comparison and typed list, reopen/Undo/export work, cancel creates no phantom pickup, interrupted draft resumes or can be discarded. Free after subscription lapse; restore account/seat differences do not restore authority/data. EN/ES, Dynamic Type and VoiceOver first-task review.
+
+### #30 Meal feedback
+
+Add explicit optional editable/removable reactions per recipe/occurrence: Make again, Too much effort, Children liked it, Too many leftovers. Private by default; authorized adult may opt into household signal, without collecting child identities. Keep feedback distinct from cooked consumption. Rank after hard exclusions, reservations and feasibility, using conservative decayed signals with cold-start diversity. Too many leftovers proposes a future serving adjustment; never changes recipe or stock automatically. No cloud model required.
+
+Acceptance: excluded favorite still blocked; deleting feedback changes future ranking only; new meals remain possible; private feedback does not leak across households; one reaction is not a permanent ban; declined feedback creates no consumption or phantom history.
+
+## Delivery sequence and ownership
+
+| PR slice | Concrete usable outcome | Feature numbers | Dependencies |
+| --- | --- | --- | --- |
+| A | Correct pinned-lot availability and verify stale/final apply protection | 18 prerequisite | PR10 merged |
+| B | Private My Pantry, stable migrated sources, quantity/reservation views and Records support | 2,18 | A |
+| C | Household pantry capabilities/conservation and dependable request/duplicate views | 2,6,12,18 | B; additive service/wire migration |
+| D | Reviewed receipt acquisition, duplicate identity, aliases and private price history | 1,15,21 | B; shared commit adapter after C |
+| E | PDF/image/order handoff plus shelf/checkout capture and batch products | 13,14,20 | D; typed handoff contract |
+| F | Recipe URL/photo/share import with ordered steps | 7 | Typed handoff; may develop parser alongside D |
+| G | Household preference policy and whole-purchase/two-option costing | 5,9,23 | B/C and D price facts |
+| H1 | Tonight/package use and explicit manual/date-based use-soon | 4,19; manual portion of 3 | B,D,F,G; no FoodKeeper dependency |
+| H2 | Reference-derived storage estimates and digest refinement | Complete 3 | H1; verified guidance snapshot and mapping |
+| I | Repeat/swap/schedule changes with scoped Undo | 8,10,25 | B/C,F,G |
+| J1 | Confirmed/unresolved actual cooking, deductions and leftovers | 17 | B/C,F,G,I integration |
+| J2 | Ordered cooking UI, timers/read-aloud and J1 completion | 26 | F,J1 |
+| J3 | Explicit meal feedback and constrained ranking | 30 | G,J1/H1 |
+| J4 | Correctable running-low staple prompts | 16 | D; confirmed history and B/C stock suppression |
+| K | Natural capture, remembered departments and recoverable Free entry | 11,24,29 | Typed draft/source identities; may develop independently after B |
+| L | Actual food summary widgets and distinct shortcuts | 28 | H1/J2/K and verified protected projection; H2 not needed for manual use-soon |
+
+These are coherent workstreams with explicit independently usable sub-slices, not twelve mandatory PRs or equally sized tasks. C can separate pantry authority/conservation from request attribution/duplicate views. Native/private and compatible shared counterparts can split at a named versioned interface where needed; each PR description must name what is usable and what remains. No feature marked complete from a scaffold. Shared changes include necessary companion web UI when that role currently performs the action there; helper-only web remains within its grant, and private iPhone-only features do not require new web copies.
+
+Root owns architecture, shared composition/integration, final evidence and merge. At most a few concurrent implementation agents with disjoint file ownership: domain/persistence, capture/import, and isolated UI/fixtures; Astra high for integrity-heavy slices, Sol 6.1 extra high for bounded implementation or monitoring. One monitor owns CI observations, root dispatches/merges. Do not let agents concurrently edit DinnerWeekEditors, app navigation, DTO/schema or the same workflow. Agents hand back tested commits or explicit diff/scope; integration reviews shared boundaries. Three plan judges remain independent from authors and implementation until their audit completes.
+
+## Validation and efficient CI
+
+Per slice: inspect current source first; use focused pure domain and real SQLite/Postgres checks for changed identity/math/transactions, one or two actual native journeys for changed entry/apply paths, and affected web/browser checks where used. Tests must prove behavior (replay/crash/authorization/unknown/dependent Undo) rather than mirror code. Run affected local builds first on this Mac with one simulator workload at a time; preserve preview devices and logs. Old archive/schema and iOS 17 paths get explicit coverage when touched. No rerunning unrelated broad suites after every small edit.
+
+Push one combined revision after local checks. Existing GitHub core/security and applicable fixture jobs remain the merge gate; targeted provider dispatches must use the exact commit/products. Keep Bitrise cache enabled with six M4 and three M2 lanes when available, plus five standard GitHub macOS jobs. Schedule useful distinct work, not duplicates to fill 14 slots. Existing lane timing showed head-of-line waiting, amplified by one UI08 hang: use normal-duration evidence before rebalancing. No new generic scheduler or CircleCI spend. Preserve failures and exact counts; one justified infrastructure retry is not a fixed app bug. Do not weaken timeouts/assertions/metrics to achieve green.
+
+Before final expansion merge/release candidate, freeze one revision and run full applicable core/fixtures/deep/native-wire/security plus the remaining release qualification. Reuse successful unchanged results only where the qualification contract permits; never combine different product revisions into an all-green claim. CodeQL/dependency review and branch protection remain. Automated Codex GitHub review quota is separate; manual agent review and these CI checks continue.
+
+Each feature acceptance record states implemented source, targeted evidence, actual device/human evidence and remaining limitations separately. Compact summaries link original retained artifacts/hashes; do not commit huge routine evidence directories. No new performance baseline until required measurements exist. Existing intermittent accessibility/UI08 issues remain tracked as unresolved cause even if a later attempt passes.
+
+## External sources and release boundaries
+
+Prefer installed Apple Vision, PDFKit, on-device speech, WidgetKit and AppIntents; maintain iOS 17 floor with availability guards. Schema.org Recipe is a data format, not a provider subscription. FoodKeeper requires a verified reviewed source snapshot before shipping derived estimates. Open Food Facts is optional suggestions with attribution, cache/rate limits and manual fallback; verify license requirements against the concrete fields/assets used. No cloud AI or retailer/inbox/calendar integration is required to deliver the 28 outcomes. If later evidence justifies remote extraction, propose a separate consent/data-retention/provider/cost design and review; extraction remains untrusted suggestions.
+
+Official sources already inspected: Apple Vision text recognition; Schema.org Recipe; FoodSafety.gov FoodKeeper and Data.gov FSIS FoodKeeper catalog; Open Food Facts API/license documentation; Apple WidgetKit, AppIntents and UserNotifications. See [source notes](feature-expansion-audit/sources.md) for URLs, verified limits and the unresolved dataset fetch. These references are implementation inputs, not completed runtime verification.
+
+After feature CI/merge there are still original launch gates: physical camera/audio/share/Files/widget/AirPrint/notification checks; human English/Spanish accessibility; authenticated mixed-device/offline/revoked-grant tests; approved hosted performance profile; SMTP and actual child verification/provider erasure activation; independent hosted restore and alert response; support/policy checks; paid Apple team, signing, StoreKit/TestFlight metadata/screenshots and explicit public-release approval. Owner-deferred setup does not block local feature engineering, but prevents claiming App Store readiness. No deadline or percentage of completion is implied by this plan.
+
+## Independent review disposition
+
+V1 received three independent change-required reviews. V2 corrects durable projection receipts (integrity/delivery), explicit non-shop shared schema/grant epochs and compound authority (integrity), live-claim/pending-workflow cutover (integrity), standalone Tonight/qualitative counts/untracked cooking (product), and FoodKeeper-independent delivery (delivery). It also adds navigation/tier/preference rights and smaller cooking sub-slices. All three independently rechecked immutable v2 and approved the plan, with no remaining material findings. Only leading patch-marker cleanup and factual baseline/status/link updates separate this published document from that revision. [Audit disposition](FEATURE-EXPANSION-AUDIT.md) preserves the reviewed hash and correction record. Preflight checklists were not counted as approval. The audited plan is presented before implementation; the user’s direct instruction authorizes implementation afterward. These approvals concern the plan, not unimplemented features or release readiness.

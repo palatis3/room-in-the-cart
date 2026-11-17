@@ -6,6 +6,13 @@ is [the build contract](product/foundation-gen2.1/08-build.md) and the requireme
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
 is one checkpoint, not release authorization. Updated November 17, 2026.
 
+The user has added a 28-feature expansion before signing/distribution. Its
+[audited implementation plan](FEATURE-EXPANSION-PLAN.md) and
+[three-judge disposition](FEATURE-EXPANSION-AUDIT.md) now define the additional
+work. PR #10 merged as `3b767679`; plan approval and passing PR CI do not close
+original release obligations or certify unimplemented features. Current work
+begins with pinned-lot availability, then proceeds through usable feature slices.
+
 The November 15 staging update rehearsal preserved the original saved comparison
 byte-for-byte, then saved and reopened a second revision after changing the
 confirmed stock. The iOS 17 simulator also reached the staging service and
