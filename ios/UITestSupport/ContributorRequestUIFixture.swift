@@ -64,11 +64,26 @@ import HouseholdClient
     @Published var requestPosts = 0
     @Published var persistedRequests = 0
     @Published var setupFailure = false
+    @Published var reportPosts = 0
+    @Published var reportText = ""
+    @Published var unexpectedReportWrites = 0
+    @Published var reportReadOnly = false
+    var cookingReportFixture: Bool { server.cookingReport }
+    func makeReportReadOnly() async {
+        server.makeReportReadOnly()
+        await household?.lifecycle?.loadHelper()
+        reportReadOnly = true
+    }
     private let server = ContributorRequestUIFixtureServer()
     func start() async {
         guard household == nil, ProcessInfo.processInfo.arguments.contains("--ui-testing") else { return }
         do {
             server.changed = { [weak self] posts, records in Task { @MainActor in self?.requestPosts = posts; self?.persistedRequests = records } }
+            server.reportChanged = { [weak self] posts, text, unexpected in
+                Task { @MainActor in
+                    self?.reportPosts = posts; self?.reportText = text; self?.unexpectedReportWrites = unexpected
+                }
+            }
             ContributorRequestUIFixtureProtocol.handler = server.respond
             let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ContributorRequestUIFixtureProtocol.self]
             let transport = HTTPTransport(session: URLSession(configuration: config))
@@ -90,6 +105,7 @@ import HouseholdClient
                 lifecycle.invitationCode = server.grant + "." + String(repeating: "a", count: 43)
                 await lifecycle.redeemInvitation()
                 guard lifecycle.isHelper else { setupFailure = true; return }
+                if server.cookingReport { lifecycle.correction = "Keep the original correction draft" }
                 household = model
                 return
             }
@@ -117,6 +133,14 @@ struct ContributorRequestUIFixtureRoot: View {
         VStack(spacing: 0) {
             Text("Fixture request POSTs: \(fixture.requestPosts)").accessibilityIdentifier("fixture.requestPosts")
             Text("Fixture saved requests: \(fixture.persistedRequests)").accessibilityIdentifier("fixture.requestRows")
+            if fixture.cookingReportFixture {
+                Text("Report POSTs: \(fixture.reportPosts)").accessibilityIdentifier("fixture.reportPosts")
+                Text("Other writes: \(fixture.unexpectedReportWrites)").accessibilityIdentifier("fixture.reportOtherWrites")
+                Text(fixture.reportText).lineLimit(1).accessibilityLabel(fixture.reportText).accessibilityIdentifier("fixture.reportText")
+                Button(fixture.reportReadOnly ? "Fixture grant is read-only" : "Fixture make grant read-only") {
+                    Task { await fixture.makeReportReadOnly() }
+                }.disabled(fixture.reportReadOnly).accessibilityIdentifier("fixture.reportReadOnly")
+            }
             if let household = fixture.household {
                 NavigationStack {
                     if household.guardianChildOnly { GuardianChildRequestsView(household: household) }
@@ -134,7 +158,16 @@ private final class ContributorRequestUIFixtureVault: RefreshTokenVault, @unchec
 private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
     let rejectedCorrection = ProcessInfo.processInfo.arguments.contains("--rejected-correction-fixture")
-    let helperReadback = ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture")
+    let cookingReport = ProcessInfo.processInfo.arguments.contains("--cook-report-fixture")
+    var helperReadback: Bool { cookingReport || ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture") }
+    private let reportLock = NSLock()
+    private var readOnlyReport = false
+    private var reportReceipts: [String: [String: Any]] = [:]
+    private var reportPosts = 0
+    private var reportText = ""
+    private var reportUnexpectedWrites = 0
+    var reportChanged: ((Int, String, Int) -> Void)?
+    func makeReportReadOnly() { reportLock.withLock { readOnlyReport = true } }
     let grant = UUID().uuidString.lowercased()
     let childPickups = ProcessInfo.processInfo.arguments.contains("--guardian-request-pickups-fixture")
     private let nextOnlyPickup = "22222222-2222-4222-8222-222222222222"
@@ -184,18 +217,49 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         if path == "/v1/me/workspaces" { return try response(["workspaces": helperReadback ? [] : [["householdId":household,"label":"Fixture home","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try response(["deviceId":"fixture-device","deviceToken":"fixture-token"],201) }
         if helperReadback {
-            if path == "/v1/invites/redeem" { return try response(["householdId": household, "memberId": member, "role": "helper", "grantId": grant]) }
+            if path == "/v1/invites/redeem" { return try response(["householdId": household, "memberId": member, "role": cookingReport ? "editor" : "helper", "grantId": grant]) }
             if path.hasSuffix("/bootstrap") {
                 return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member,
-                    "role": "helper", "grantId": grant, "shopId": shop, "enrolled": true, "queueConsent": false, "capabilities": ["helper_view"]])
+                    "role": cookingReport ? "editor" : "helper", "grantId": grant, "shopId": shop, "enrolled": true, "queueConsent": false,
+                    "capabilities": cookingReport ? ["helper_view", "helper_propose"] : ["helper_view"]])
             }
             if path == "/v1/views/" + grant + "/current" {
                 helperReads += 1
-                let first = helperReads == 1
-                return try response(["grantId": grant, "shopId": shop, "shopLabel": "Tuesday", "mode": "read", "canPropose": false,
+                let first = cookingReport || helperReads == 1
+                let editable = cookingReport && reportLock.withLock { !readOnlyReport }
+                return try response(["grantId": grant, "shopId": shop, "shopLabel": "Tuesday", "mode": editable ? "edit" : "read", "canPropose": editable,
                     "revision": first ? 12 : 13, "asOf": first ? "2026-11-03T12:00:00Z" : "2026-11-05T12:00:00Z",
                     "expiresAt": "2099-01-01T00:00:00Z", "language": "en", "items": [["label": "Wraps", "action": first ? "Save two" : "Save three"]]])
             }
+        }
+        if cookingReport {
+            if path == "/v1/views/" + grant + "/proposals", request.httpMethod == "POST" {
+                return try reportLock.withLock {
+                    guard !readOnlyReport, request.value(forHTTPHeaderField: "X-View-Grant-ID") == grant,
+                          let key = json["clientKey"] as? String, UUID(uuidString: key) != nil,
+                          json["baseRevision"] as? Int == 12,
+                          let correction = json["correction"] as? String, !correction.isEmpty, correction.utf16.count <= 1000
+                    else { throw URLError(.badServerResponse) }
+                    reportPosts += 1
+                    if let receipt = reportReceipts[key] {
+                        reportChanged?(reportPosts, reportText, reportUnexpectedWrites)
+                        return try response(receipt)
+                    }
+                    reportText = correction
+                    let receipt: [String: Any] = ["proposalId": UUID().uuidString.lowercased(), "grantId": grant,
+                                                  "baseRevision": 12, "status": "pending"]
+                    reportReceipts[key] = receipt
+                    reportChanged?(reportPosts, reportText, reportUnexpectedWrites)
+                    return try response(receipt, 201)
+                }
+            }
+            if request.httpMethod != "GET" {
+                reportLock.withLock {
+                    reportUnexpectedWrites += 1
+                    reportChanged?(reportPosts, reportText, reportUnexpectedWrites)
+                }
+            }
+            throw URLError(.unsupportedURL)
         }
         if path.hasSuffix("/bootstrap") { return try response(["household":["id":household,"label":"Fixture home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]) }
         if path.hasSuffix("/requests/mine"), ProcessInfo.processInfo.arguments.contains("--own-purchases-fixture") {

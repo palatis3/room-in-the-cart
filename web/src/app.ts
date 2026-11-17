@@ -3,6 +3,15 @@ import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
 import {browserSignOutPending,resumeBrowserSignOut,setBrowserSignOutPending} from './browser-sign-out.js';
 
+interface CookingReportDraft {
+  grantId: string;
+  revision: number;
+  servings: string;
+  ingredients: string;
+  leftovers: string;
+  review: string | null;
+}
+
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
@@ -60,6 +69,7 @@ export class WebApp {
   private suggestionsCursor:string|null=null;
   private suggestionsState:'unchecked'|'ready'|'unavailable'='unchecked';
   private correction = '';
+  private cookingReport: CookingReportDraft | null = null;
   private withdrawn:OwnRequest|null = null;
   private withdrawalCommand:Command|null = null;
   constructor(private readonly root:HTMLElement, private readonly api = new API(), private readonly outbox = new Outbox(), private invitation:string|null = null) {
@@ -114,7 +124,7 @@ export class WebApp {
   private clearPrivate():void {
     this.clearInvitationDraft();this.browserAuth=null;
     this.session=null;this.reviewedScope=null;this.pickups=[];this.chosenPickupId=null;this.requests=[];this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
-    this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
+    this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';this.cookingReport=null;
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
   }
@@ -196,6 +206,7 @@ export class WebApp {
     }
     this.session=fresh;
     if(!fresh){
+      this.cookingReport=null;
       this.requests=[];
       this.view=null;
       this.pending=[];
@@ -224,6 +235,13 @@ export class WebApp {
       const generation=this.proposalGeneration;
       await this.outbox.clear().catch(()=>{});const view=await this.api.view(fresh);
       if(generation!==this.proposalGeneration)return;
+      if(this.cookingReport){
+        if(!view.canPropose || view.grantId!==this.cookingReport.grantId)this.cookingReport=null;
+        else if(view.revision!==this.cookingReport.revision){
+          this.cookingReport.revision=view.revision;
+          this.cookingReport.review=null;
+        }
+      }
       this.view=view;
       if(Date.parse(view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
       const proposal=await this.readReceivedSuggestions(fresh,null);
@@ -788,11 +806,11 @@ export class WebApp {
   private resetProposal():void {
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;
   }
-  private async sendProposal(view:CookView):Promise<void> {
+  private async sendProposal(view:CookView, wording=this.correction):Promise<void> {
     const generation=this.proposalGeneration;
     const fresh=await this.reauthenticate(undefined,this.proposalIntent?.grantId??view.grantId);
     if(generation!==this.proposalGeneration)return;
-    this.proposalIntent??=prepareProposal(fresh,view,this.correction,crypto.randomUUID());
+    this.proposalIntent??=prepareProposal(fresh,view,wording,crypto.randomUUID());
     const intent=this.proposalIntent;
     try {
       const receipt=await this.api.sendProposal(fresh,intent);
@@ -871,17 +889,80 @@ export class WebApp {
       if(this.proposalReceipt){
         card.append(this.el('p',this.t(this.proposalStatus?.status==='reviewed'?'Suggestion reviewed':this.proposalStatus?.status==='dismissed'?'Suggestion dismissed':'Suggestion received for shopper review')),
           this.button('Check suggestion status',()=>void this.run(()=>this.checkProposal())),
-          this.button('Write another suggestion',()=>{this.resetProposal();this.correction='';this.render();}));
+          this.button('Write another suggestion', () => {
+            this.resetProposal();
+            if (!this.cookingReport) this.correction = '';
+            this.cookingReport = null;
+            this.render();
+          }));
       }else if(this.proposalConflict){
         card.append(this.el('p',this.t('The original suggestion was not accepted because its reviewed instructions changed. Review the current instructions before starting a new suggestion.')),
-          this.button('Review current instructions',()=>void this.run(async()=>{await this.load();if(this.proposalIntent===intent){this.resetProposal();this.correction=intent.correction;this.notice='Review the current instructions before sending again.';}})));
+          this.button('Review current instructions', () => void this.run(async () => {
+            await this.load();
+            if (this.proposalIntent !== intent) return;
+            this.resetProposal();
+            if (this.cookingReport) this.cookingReport.review = null;
+            else this.correction = intent.correction;
+            this.notice = 'Review the current instructions before sending again.';
+          })));
       }else card.append(this.el('p',this.t('Receipt unconfirmed; the shopper may already have received this suggestion.')),
         this.button('Retry original suggestion',()=>void this.run(()=>this.sendProposal(view))));
       main.append(card);return;
     }
     if(this.suggestionsState!=='ready')return;
+    if(this.cookingReport){
+      this.renderCookingReport(main,view);
+      return;
+    }
+    main.append(this.button('Report what you cooked',()=>{
+      this.cookingReport={grantId:view.grantId,revision:view.revision,servings:'',ingredients:'',leftovers:'',review:null};
+      this.render();
+    }));
     const form=this.el('form');form.append(this.el('h2',this.t('Propose a correction')));this.field(form,'Correction for the shopper to review','correction',this.correction,v=>{this.correction=v;},true);
     form.append(this.el('p',this.t('This draft is only kept on this page. After reloading, only suggestions already received by the service can be recovered.')));
     const send=this.button('Send proposal',()=>{},true);send.type='submit';form.append(send);form.addEventListener('submit',e=>{e.preventDefault();if(!this.correction.trim())return;void this.run(()=>this.sendProposal(view));});main.append(form);
+  }
+  private renderCookingReport(main:HTMLElement,view:CookView):void {
+    const draft=this.cookingReport;
+    if(!draft || draft.grantId!==view.grantId || draft.revision!==view.revision || !view.canPropose)return;
+    const form=this.el('form');
+    form.append(this.el('h2',this.t('Report what you cooked')),
+      this.el('p',this.t('The shopper reviews this report before deciding whether to update the pantry.')));
+    if(draft.review!==null){
+      const reviewed=draft.review;
+      const summary=this.el('p',reviewed);summary.style.whiteSpace='pre-wrap';
+      form.append(summary,this.button('Edit report',()=>{draft.review=null;this.render();}),
+        this.button('Send report to shopper',()=>void this.run(()=>this.sendProposal(view,reviewed)),true));
+    }else{
+      this.field(form,'Servings made (optional)','cook-servings',draft.servings,value=>{draft.servings=value;});
+      this.field(form,'Ingredients used and substitutions','cook-ingredients',draft.ingredients,value=>{draft.ingredients=value;},true);
+      this.field(form,'Leftovers and storage location','cook-leftovers',draft.leftovers,value=>{draft.leftovers=value;},true);
+      form.append(this.el('p',this.t('Include quantities you know. Enter none or unknown where appropriate.')));
+      const error = this.el('p');
+      error.setAttribute('role', 'status');
+      const preview = this.button('Review cooking report', () => {}, true);
+      preview.type = 'submit';
+      form.append(error, preview);
+      form.addEventListener('submit',event=>{
+        event.preventDefault();
+        if(!draft.ingredients.trim() || !draft.leftovers.trim()){
+          error.textContent = this.t('Describe ingredient use and leftovers before reviewing.');
+          return;
+        }
+        const sections=[this.t('Cooking report')];
+        if(draft.servings.trim())sections.push(this.t('Servings made')+'\n'+draft.servings.trim());
+        sections.push(this.t('Ingredients used and substitutions')+'\n'+draft.ingredients.trim(),
+          this.t('Leftovers and storage location')+'\n'+draft.leftovers.trim());
+        const report=sections.join('\n\n');
+        if (report.length > 1000) {
+          error.textContent = this.t('Shorten the report to 1,000 characters including its headings.');
+          return;
+        }
+        draft.review=report;
+        this.render();
+      });
+    }
+    form.append(this.button('Cancel report',()=>{this.cookingReport=null;this.render();}));
+    main.append(form);
   }
 }

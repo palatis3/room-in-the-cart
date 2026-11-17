@@ -207,3 +207,28 @@ test('real full browser recreation recovers a lost received suggestion with read
  assert.equal((await call(other.helper,other.recipient+'/proposals/'+own.receipt.proposalId,'GET',undefined,other.headers)).status,403);
  assert.equal(posts,1);assert.equal(requests.filter(r=>r.method==='POST'&&r.path.endsWith('/proposals')).length,1);dom.window.close();
 });
+
+test('a cook report reaches the shopper once and leaves stock, reservations, basket and instructions intact',async()=>{
+ const f=await fixture();
+ const before=ok(await call(f.owner,f.managed));
+ async function stock(){
+  const result=await admin.query(`SELECT
+    (SELECT count(*) FROM ritc.pantry_lot WHERE household_id=$1) AS lots,
+    (SELECT count(*) FROM ritc.pantry_event WHERE household_id=$1) AS events,
+    (SELECT count(*) FROM ritc.delivery_reservation WHERE household_id=$1) AS holds,
+    (SELECT revision FROM ritc.shop WHERE household_id=$1 AND shop_id=$2) AS shop_revision,
+    (SELECT count(*) FROM ritc.basket_line WHERE household_id=$1) AS basket_lines`,[f.h,f.shopId]);
+  return result.rows[0];
+ }
+ const original=await stock();
+ const input={clientKey:randomUUID(),baseRevision:before.revision,correction:'Informe de cocina\n\nPorciones preparadas\n3\n\nIngredientes utilizados y sustituciones\nDos tortillas. No sé cuánto aceite usé.\n\nSobras y lugar donde se guardaron\nDos porciones en el refrigerador.'};
+ const submit=()=>call(f.helper,f.recipient+'/proposals','POST',input,f.headers);
+ const receipt=ok(await submit());
+ assert.deepEqual(ok(await submit()),receipt);
+ const pending=ok(await call(f.owner,f.managed+'/proposals/'+receipt.proposalId));
+ assert.equal(pending.correction,input.correction);assert.equal(pending.status,'pending');
+ const proposals=await admin.query('SELECT count(*)::int AS count FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2',[f.h,f.grantId]);
+ assert.equal(proposals.rows[0].count,1);
+ assert.deepEqual(await stock(),original);
+ assert.deepEqual(ok(await call(f.owner,f.managed)),before);
+});

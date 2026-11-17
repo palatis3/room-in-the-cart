@@ -212,8 +212,13 @@ struct HouseholdHelperView: View {
                             Button(ht("Review and clear this suggestion retry")) { clearProposal = true }
                         }
                     } else if view.canPropose {
+                        Section {
+                            HouseholdCookingReport(model: model, view: view)
+                                .id([view.grantId, String(view.revision), model.scope?.memberId ?? ""].joined(separator: "/"))
+                        }
                         Section(ht("Suggest a correction")) {
                             TextField(ht("Suggestion"), text: $model.correction, axis: .vertical).lineLimit(3...7)
+                                .accessibilityIdentifier("helper.correction")
                             Text(ht("Suggestions wait for shopper review. They do not change the basket or instructions automatically."))
                             Button(ht("Send suggestion for review")) { Task { await model.sendProposal() } }
                         }
@@ -230,6 +235,66 @@ struct HouseholdHelperView: View {
         .confirmationDialog(ht("Clear this suggestion retry?"), isPresented: $clearProposal, titleVisibility: .visible) {
             Button(ht("Refresh instructions and clear retry"), role: .destructive) { Task { await model.clearPendingProposalAfterReview() } }
         } message: { Text(ht("Clearing a local retry does not remove a suggestion already received by the shopper.")) }
+    }
+}
+
+private struct HouseholdCookingReport: View {
+    @ObservedObject var model: HouseholdLifecycleModel
+    let view: HelperView
+    @State private var servings = ""
+    @State private var ingredients = ""
+    @State private var leftovers = ""
+    @State private var reviewedText: String?
+    @State private var expanded = false
+    private enum Field: Hashable { case servings, ingredients, leftovers }
+    @FocusState private var editing: Field?
+
+    private var wording: String {
+        var sections = [ht("Cooking report")]
+        let given = servings.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !given.isEmpty { sections.append(ht("Servings made") + "\n" + given) }
+        sections.append(ht("Ingredients used and substitutions") + "\n" + ingredients.trimmingCharacters(in: .whitespacesAndNewlines))
+        sections.append(ht("Leftovers and storage location") + "\n" + leftovers.trimmingCharacters(in: .whitespacesAndNewlines))
+        return sections.joined(separator: "\n\n")
+    }
+    var body: some View {
+        DisclosureGroup(ht("Report what you cooked"), isExpanded: $expanded) {
+            Text(ht("The shopper reviews this report before deciding whether to update the pantry."))
+            if let reviewedText {
+                Text(verbatim: reviewedText).accessibilityIdentifier("helper.cookingReport.preview")
+                Button(ht("Edit report")) { self.reviewedText = nil }
+                Button(ht("Send report to shopper")) {
+                    Task {
+                        let previous = model.proposalReceipt?.proposalId
+                        await model.sendProposal(reviewedText, reviewed: view)
+                        if model.proposalReceipt.map({ $0.proposalId != previous }) == true || model.pendingProposal != nil {
+                            self.reviewedText = nil; servings = ""; ingredients = ""; leftovers = ""; expanded = false
+                        }
+                    }
+                }.accessibilityIdentifier("helper.cookingReport.send")
+            } else {
+                TextField(ht("Servings made (optional)"), text: $servings)
+                    .focused($editing, equals: .servings).accessibilityIdentifier("helper.cookingReport.servings")
+                TextField(ht("Ingredients used and substitutions"), text: $ingredients, axis: .vertical)
+                    .focused($editing, equals: .ingredients).accessibilityIdentifier("helper.cookingReport.ingredients")
+                TextField(ht("Leftovers and storage location"), text: $leftovers, axis: .vertical)
+                    .focused($editing, equals: .leftovers).accessibilityIdentifier("helper.cookingReport.leftovers")
+                Text(ht("Include quantities you know. Enter none or unknown where appropriate."))
+                if wording.utf16.count > 1000 { Text(ht("Shorten the report to 1,000 characters including its headings.")) }
+                Button(ht("Review cooking report")) { editing = nil; reviewedText = wording }
+                    .accessibilityIdentifier("helper.cookingReport.review")
+                    .disabled(ingredients.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                              leftovers.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || wording.utf16.count > 1000)
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                if editing != nil {
+                    Spacer()
+                    Button(ht("Done")) { editing = nil }.accessibilityIdentifier("helper.cookingReport.done")
+                }
+            }
+        }
     }
 }
 

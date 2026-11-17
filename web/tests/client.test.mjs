@@ -1425,3 +1425,34 @@ test('a carried request keeps its own source and later trip legible without disc
  const malformed=new API(async()=>Response.json({requests:[{...source,ownActionAllowed:true}],nextCursor:null}));
  await assert.rejects(()=>malformed.requests(session()),ApiError);
 });
+
+test('cook reviews actual portions, substitutions and unknown quantities before sending one proposal',async()=>{
+ const intents=[];let revision=7;
+ const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(revision),
+   sendProposal:async(_,intent)=>{intents.push(intent);if(intents.length===1)throw new ApiError('network',0);return suggestionReceipt(intent);},
+   command:async()=>assert.fail('A cook report cannot write shopper stock')}));
+ type(dom,'correction','Existing instruction correction');
+ click(root,'Report what you cooked');
+ type(dom,'cook-servings','3');type(dom,'cook-ingredients','Corn wraps instead of flour; oil amount unknown.');
+ type(dom,'cook-leftovers','2 portions in the fridge');submit(root,dom);
+ assert.equal(intents.length,0);assert.match(root.textContent,/2 portions in the fridge/);
+ revision++;click(root,'Refresh');await waitForIdle(root);
+ assert.equal([...root.querySelectorAll('button')].some(b=>b.textContent==='Send report to shopper'),false);
+ assert.match(root.querySelector('#cook-ingredients').value,/oil amount unknown/);
+ submit(root,dom);click(root,'Send report to shopper');await waitForIdle(root);
+ click(root,'Retry original suggestion');await waitForIdle(root);
+ assert.equal(intents.length,2);assert.equal(intents[0].body,intents[1].body);
+ assert.equal(intents[1].baseRevision,8);assert.equal(intents[1].grantId,'grant-a');
+ assert.match(intents[1].correction,/Cooking report\s+Servings made\s+3/);
+ assert.match(intents[1].correction,/oil amount unknown/);assert.match(intents[1].correction,/2 portions in the fridge/);
+ click(root,'Write another suggestion');assert.equal(root.querySelector('#correction').value,'Existing instruction correction');
+});
+
+test('Spanish cooking report is scoped to the current editor and never shown to a read-only cook',async()=>{
+ let current=editorSession();
+ const {app,root,dom}=await setup(fakeAPI({session:async()=>current,view:async()=>({...cookView(),canPropose:current.role==='editor'})}),'es');
+ click(root,'Informar lo que cocinaste');type(dom,'cook-ingredients','Usé frijoles');type(dom,'cook-leftovers','Ninguna');
+ submit(root,dom);assert.match(root.textContent,/Informe de cocina/);
+ current={...current,memberId:'different',role:'helper'};await app.start();
+ assert.doesNotMatch(root.textContent,/Usé frijoles|Informar lo que cocinaste|Enviar informe/);
+});

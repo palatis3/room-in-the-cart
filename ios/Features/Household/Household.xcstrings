@@ -1,6 +1,198 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Report what you cooked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report what you cooked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informar lo que cocinaste"
+          }
+        }
+      }
+    },
+    "Cooking report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooking report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informe de cocina"
+          }
+        }
+      }
+    },
+    "Servings made": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings made"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones preparadas"
+          }
+        }
+      }
+    },
+    "Servings made (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings made (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones preparadas (opcional)"
+          }
+        }
+      }
+    },
+    "Ingredients used and substitutions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredients used and substitutions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes utilizados y sustituciones"
+          }
+        }
+      }
+    },
+    "Leftovers and storage location": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leftovers and storage location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobras y lugar donde se guardaron"
+          }
+        }
+      }
+    },
+    "The shopper reviews this report before deciding whether to update the pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shopper reviews this report before deciding whether to update the pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quien hace la compra revisa este informe antes de decidir si actualiza la despensa."
+          }
+        }
+      }
+    },
+    "Send report to shopper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send report to shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar informe a quien hace la compra"
+          }
+        }
+      }
+    },
+    "Edit report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar informe"
+          }
+        }
+      }
+    },
+    "Include quantities you know. Enter none or unknown where appropriate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include quantities you know. Enter none or unknown where appropriate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye las cantidades que conozcas. Escribe «ninguno» o «no sé» cuando corresponda."
+          }
+        }
+      }
+    },
+    "Review cooking report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review cooking report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar informe de cocina"
+          }
+        }
+      }
+    },
+    "Shorten the report to 1,000 characters including its headings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten the report to 1,000 characters including its headings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el informe a 1,000 caracteres, incluidos los encabezados."
+          }
+        }
+      }
+    },
     "Replace your current draft with the saved correction?": {
       "localizations": {
         "en": {
