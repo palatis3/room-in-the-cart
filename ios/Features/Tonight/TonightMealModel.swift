@@ -162,10 +162,23 @@ import RecordArchive
             inventoryRevision: live.basis.inventoryRevision,
             sourceHeads: live.basis.sourceHeads.map { .init(journeyID: $0.journeyID, revision: $0.storeRevision) })
         let grouped = Dictionary(grouping: live.lots, by: { $0.current.foodID })
-        let foods = grouped.map { id, rows in
-            Food(id: id, name: rows.map(\.current.name).sorted().joined(separator: " / "),
-                 detail: rows.map { pantryCount($0.current.count) + " · " + $0.current.confirmedAt.formatted(date: .abbreviated, time: .shortened) }.joined(separator: "\n"))
-        }.sorted { $0.name == $1.name ? $0.id.uuidString < $1.id.uuidString : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        var foods: [Food] = []
+        for (foodID, rows) in grouped {
+            var names: [String] = []
+            var details: [String] = []
+            for row in rows {
+                names.append(row.current.name)
+                let count: String = pantryCount(row.current.count)
+                let date: String = row.current.confirmedAt.formatted(date: .abbreviated, time: .shortened)
+                details.append(count + " · " + date)
+            }
+            let name = names.sorted().joined(separator: " / ")
+            foods.append(Food(id: foodID, name: name, detail: details.joined(separator: "\n")))
+        }
+        foods.sort { left, right in
+            if left.name == right.name { return left.id.uuidString < right.id.uuidString }
+            return left.name.localizedStandardCompare(right.name) == .orderedAscending
+        }
         let resolved = Set(live.lots.filter { $0.free != nil }.map(\.current.foodID))
         let unresolved = Set(live.lots.filter { $0.free == nil }.map(\.current.foodID)).subtracting(resolved)
             .union(context.snapshot.reservations.filter { $0.state == .unresolved }.map(\.foodID))
