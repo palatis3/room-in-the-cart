@@ -687,7 +687,12 @@ test('a browser switches between cook and contributor invitations for the same h
   const mine=await browser(base+'/requests/mine');assert.equal(mine.status,200);
   assert.deepEqual((await mine.json()).requests.map(row=>row.originalItem),['My rice']);
   assert.equal((await browser(base+'/shops/'+f.shopId+'/inbox')).status,404);
+  const previousScopeToken=csrf;
   assert.equal((await activate({householdId:f.h})).role,'contributor','refresh keeps the chosen scope');
+  const staleRead=await fetch(origin+base+'/requests/mine',{headers:{Cookie:cookie,'X-CSRF-Token':previousScopeToken}});
+  assert.equal(staleRead.status,403);
+  assert.equal((await staleRead.json()).requests,undefined);
+  assert.equal((await browser(base+'/requests/mine')).status,200);
   assert.equal((await browser('/v1/session',{...contributed,grantId})).status,422);
   const other=await activate({householdId:person.h});
   assert.equal(other.role,'contributor','a cookie stays scoped in the household where this person is the shopper and organizer');
@@ -895,6 +900,29 @@ test('S24 reviewed pack source persists in private exact preview and atomic appl
   const own=await f.http('Sam','GET','/requests/mine');assert.equal(own.data.requests[0].status,'added');assert.equal(JSON.stringify(own.data).includes('quoteSource'),false);assert.equal(JSON.stringify(own.data).includes('Private reviewed shelf source'),false);
 });
 
+test('request page clocks come from the scoped read and leave exact command replay immutable',async()=>{
+  const f=await fixture();
+  const before=(await admin.query('SELECT clock_timestamp() AS t')).rows[0].t;
+  const empty=await f.http('Sam','GET','/requests/mine');
+  const sent=await f.send('Sam',{authoredAt:'2025-01-01T00:00:00Z'});
+  const own=await f.http('Sam','GET','/requests/mine');
+  const inbox=await f.http('Mia','GET','/shops/'+f.shopId+'/inbox');
+  const after=(await admin.query('SELECT clock_timestamp() AS t')).rows[0].t;
+  for(const response of [empty,own,inbox]){
+    assert.equal(response.status,200);
+    const asOf=Date.parse(response.data.asOf);
+    assert.ok(asOf>=before.getTime() && asOf<=after.getTime());
+  }
+  assert.deepEqual(empty.data.requests,[]);
+  assert.equal(own.data.requests[0].authorAlias,undefined);
+  assert.equal(inbox.data.requests[0].authorAlias,'Sam');
+  assert.equal((await f.http('Jo','GET','/requests/mine?cursor='+sent.request.requestId)).status,404);
+  const replay=await f.http('Sam','POST','/commands',sent.envelope);
+  assert.deepEqual(replay.data.request,sent.request);
+  assert.equal(replay.data.operationId,sent.operationId);
+  assert.equal(replay.data.asOf,undefined);
+});
+
 test('two contributor web sessions see only their own purchase receipt through shopper corrections',
   {skip:process.env.RITC_TEST_WEB_WIRE!=='1'}, async t=>{
   const [{JSDOM},{IDBFactory},{WebApp},{API},{Outbox}]=await Promise.all([
@@ -956,6 +984,8 @@ test('two contributor web sessions see only their own purchase receipt through s
     assert.equal(Object.hasOwn(own,'unitPriceMinor'),false);
     assert.ok([...alex.root.querySelectorAll('p')].some(p=>p.textContent===label));
     assert.deepEqual(observer.rows(),[]);
+    assert.match(alex.root.textContent,/Consultada en el servidor/);
+    assert.match(observer.root.textContent,/Checked on server/);
     assert.doesNotMatch(observer.root.textContent,/Fictional cereal|Shopper confirmed|Purchase not confirmed/);
   }
 });

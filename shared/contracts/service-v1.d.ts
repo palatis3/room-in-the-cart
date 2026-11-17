@@ -7,6 +7,8 @@ export interface OwnRequest {
   purchaseOutcome?: 'bought' | 'notBought';
   ownActionAllowed: boolean; clarification: string | null; followupTo: string | null;
 }
+/** asOf describes only the rows in this page, including an empty page. */
+export interface RequestPage<T extends OwnRequest = OwnRequest> {requests:T[];nextCursor:string|null;asOf?:string}
 export type RequestPurchaseOutcome=NonNullable<OwnRequest['purchaseOutcome']>|'unknown';
 export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string}
 export interface DeferredRequest {

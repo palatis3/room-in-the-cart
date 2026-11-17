@@ -51,6 +51,7 @@ final class NativeServiceWireTests: XCTestCase {
                 XCTAssertEqual(scope.role, "contributor")
                 XCTAssertFalse(scope.capabilities.contains("request_purchase_confirmation"))
                 let mine = try await service.ownRequests()
+                XCTAssertNotNil(mine.asOf)
                 XCTAssertEqual(mine.requests.map(\.id), [request])
                 let own = try XCTUnwrap(mine.requests.first)
                 XCTAssertEqual(own.originalItem, "Fictional cereal")

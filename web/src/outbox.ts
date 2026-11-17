@@ -63,7 +63,12 @@ export class Outbox {
       tx.oncomplete=()=>resolve(matched);tx.onabort=()=>reject(tx.error);tx.onerror=()=>reject(tx.error);
     }); } finally {db.close();}
   }
-  async remove(id: string): Promise<void> { await this.mutate(store => store.delete(id)); }
+  async remove(id: string, scope: string): Promise<void> {
+    await this.mutate(store => {
+      const read=store.get(id);
+      read.onsuccess=()=>{ if(read.result?.scope===scope)store.delete(id); };
+    });
+  }
   async clear(): Promise<void> { await this.mutate(store => store.clear()); }
   private async mutate(action:(store:IDBObjectStore)=>unknown): Promise<void> {
     const db = await this.open();

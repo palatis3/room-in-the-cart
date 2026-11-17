@@ -37,7 +37,15 @@ public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public private(set) var purchaseOutcome: ConfirmedRequestPurchase? = nil
     public private(set) var linkedLineId: UUID? = nil
 }
-public struct OwnRequestsPage: Codable, Equatable, Sendable { public let requests: [OwnRequest]; public let nextCursor: String? }
+public struct OwnRequestsPage: Codable, Equatable, Sendable {
+    public let requests: [OwnRequest]
+    public let nextCursor: String?
+    public private(set) var asOf: String? = nil
+
+    func validateReadTime() throws {
+        if let asOf, HistoryValidation.date(asOf) == nil { throw ClientError.invalidResponse }
+    }
+}
 /// Contributor destinations deliberately omit shopper identity, basket contents and financial details.
 public struct RequestPickup: Decodable, Equatable, Identifiable, Sendable {
     public let shopId: UUID

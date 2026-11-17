@@ -76,6 +76,8 @@ Proposal receipts are durable and idempotent for the authenticated member/key/bo
 
 `GET /v1/households/{h}/shops/{s}/inbox` now adds `authorAlias:string` to each existing own-request-shaped row, for the assigned shopper only. `/requests/mine` and own command receipts continue to omit this field and every other author's information.
 
+Both request-list endpoints return a page-level `asOf` timestamp from the authorized database read, including for empty pages. A client can show this time on the rows from that page. Paginating, saving a local edit or replaying a command leaves the timestamps of earlier rows unchanged. Earlier servers omit `asOf`. A web client can bind each `/requests/mine` page to its verified session by including that session's `X-CSRF-Token` header.
+
 ## Native helper context and management lists
 
 Bearer clients may send `X-View-Grant-ID: UUID` together with their enrolled device token. The service validates the exact live grant and recipient, then restricts the context to that helper view. An assigned shopper selecting a helper grant loses shopper, household-admin, contribution and billing routes in that context. Invalid UUIDs fail validation; a missing, expired or wrong-recipient grant ends access. The header is not a membership or invitation credential.
