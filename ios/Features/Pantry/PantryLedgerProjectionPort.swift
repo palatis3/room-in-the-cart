@@ -34,7 +34,7 @@ import LocalStore
     enum Reconciliation {
         case applied(Result), needsReview(Current), sourceRetired(Current), ledgerRetired
     }
-    private struct ReviewDisposition: Codable {
+    struct ReviewDisposition: Codable, Equatable {
         let version: Int
         let sourceIntentID: UUID
         let bindingDigest: Data
@@ -74,6 +74,31 @@ import LocalStore
         let bytes = try encoder.encode(value)
         guard bytes.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.invalidBinding }
         return InventoryRecord(key: .init(.intent, id), revision: 1, payloadVersion: 1, payload: bytes)
+    }
+
+    /// Typed archival evidence only. Neither reader recognizes a committed operation or grants replay authority.
+    static func archiveBinding(_ record: InventoryRecord) throws -> IntentBinding {
+        guard record.key.kind == .intent, record.revision == 1, record.payloadVersion == 1,
+              record.lotID == nil, record.source == nil, record.payload.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.invalidBinding }
+        let value = try JSONDecoder().decode(IntentBinding.self, from: record.payload)
+        try validate(value)
+        let kind = Array(value.binding.kind.utf8)
+        guard (1...64).contains(kind.count), let first = kind.first,
+              (65...90).contains(first) || (97...122).contains(first),
+              kind.allSatisfy({ (65...90).contains($0) || (97...122).contains($0) || (48...57).contains($0) || [45,46,58,95].contains($0) }) else { throw Failure.invalidBinding }
+        return value
+    }
+    static func archiveDisposition(_ record: InventoryRecord, bindingRecord: InventoryRecord) throws -> ReviewDisposition {
+        let intent = try archiveBinding(bindingRecord)
+        let source = Source(inventoryWorkspaceID: intent.binding.inventoryWorkspaceID,
+            inventoryOperationID: intent.binding.inventoryOperationID, inventoryRequest: Data(), sourceIntentID: bindingRecord.key.id)
+        guard record.key == InventoryRecordKey(.intent, dispositionID(source)), record.revision == 1,
+              record.payloadVersion == 1, record.lotID == nil, record.source == nil,
+              record.payload.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.invalidBinding }
+        let value = try JSONDecoder().decode(ReviewDisposition.self, from: record.payload)
+        guard value.version == 1, value.sourceIntentID == bindingRecord.key.id,
+              value.bindingDigest == (try bindingDigest(intent)), value.decision == "needsReview", value.ledgerRevision >= 0 else { throw Failure.invalidBinding }
+        return value
     }
 
     /// Read-only validation occurs before a model latches an attempted source as durable work.

@@ -175,6 +175,10 @@ import LocalStore
         try url.setResourceValues(resources)
     }
     private func validate(_ entry: Entry) throws {
+        try Self.validateArchiveEntry(entry, inventoryWorkspaceID: inventoryWorkspaceID, ledgerWorkspaceID: ledgerWorkspaceID)
+    }
+    /// Pure evidence validation. This does not authorize or persist a recovered action.
+    static func validateArchiveEntry(_ entry: Entry, inventoryWorkspaceID: UUID, ledgerWorkspaceID: UUID) throws {
         let submission = entry.submission, request = submission.request
         guard request.originID == inventoryWorkspaceID, request.ledgerOriginID == ledgerWorkspaceID else { throw Failure.foreignOrigin }
         guard submission.version == 1, request.version == 1, request.inventoryRevision >= 0,

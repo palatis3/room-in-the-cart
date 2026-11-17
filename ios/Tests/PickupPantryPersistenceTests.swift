@@ -79,7 +79,8 @@ import SQLite3
     }
     @discardableResult private func canonical(_ change: InventoryChange, in store: ComparisonStore) async throws -> PantryRepository.Snapshot {
         let repository = PantryRepository(store: store, authorize: { true })
-        let current = try await repository.load(at: now), lot = try XCTUnwrap(current.lots.first)
+        let current = try await repository.load(at: now)
+        let lot = try XCTUnwrap(current.lots.first { $0.name == "Freezer wraps" })
         return try await repository.apply(.init(id: UUID(), originID: store.workspaceID, lotID: lot.id, eventID: UUID(),
             expectedRevision: lot.revision, occurredAt: now, change: change), reviewedInventoryRevision: current.state.revision, at: now).current
     }
@@ -114,6 +115,10 @@ import SQLite3
         XCTAssertEqual(model.pantrySnapshot?.lots, before.lots)
         XCTAssertEqual(model.pantrySnapshot?.reservations, before.reservations)
         XCTAssertEqual(model.journey?.notes.last?.text, "Warm gently")
+        let coverage = try XCTUnwrap(model.allocation?.demands.first)
+        XCTAssertNil(coverage.allocated, "A qualitative pantry count must not reuse the old eight-wrap snapshot.")
+        XCTAssertFalse(coverage.issues.isEmpty)
+        XCTAssertFalse(model.allocation?.confirmedCoverageComplete ?? true)
         XCTAssertFalse(model.hasPendingSave); XCTAssertNil(try f.pendingStore.read())
         let fresh = try await PantryRepository(store: f.inventory, authorize: { true }).load(at: now)
         XCTAssertEqual(fresh.lots, before.lots)
@@ -149,7 +154,9 @@ import SQLite3
         let retried = await restored.retrySave(); XCTAssertTrue(retried, restored.error ?? "")
         XCTAssertFalse(restored.hasPendingSave); XCTAssertNil(try journal.read())
         XCTAssertEqual(restored.pantrySnapshot?.state, latest.current.state)
-        XCTAssertEqual(restored.pantrySnapshot?.lots.first?.count.quantity, try q(3))
+        XCTAssertEqual(restored.pantrySnapshot?.lots.first(where: { $0.name == "Freezer wraps" })?.count.quantity, try q(3))
+        XCTAssertEqual(restored.allocation?.demands.first?.allocated, try Rational(3))
+        XCTAssertEqual(restored.allocation?.demands.first?.shortfall, try Rational(3))
         XCTAssertEqual(restored.journey?.notes.map(\.id), [firstNote, laterNote])
         let after = try await reopened.inventoryRecords(kind: .observation)
         XCTAssertEqual(after, observations)

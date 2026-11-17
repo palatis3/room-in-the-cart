@@ -363,6 +363,7 @@ struct PickupPersistenceLocation {
     private let launchArguments: [String]
     private let mutationGate: PantryMutationGate?
     private let pantryConfiguration: PantryConfiguration?
+    private var pantryReaderMapping: PantryLegacyMigration.Plan?
     private var pendingPantry: PantryPickupPendingStore.Entry?
     private var validatingRecoveryOperationID: UUID?
     var hasPendingPantrySave: Bool { pendingPantry != nil }
@@ -440,7 +441,15 @@ struct PickupPersistenceLocation {
     }
     var allocation: StockAllocationResult? {
         guard let value = journey else { return nil }
+        if pantrySnapshot != nil {
+            return try? liveStockProjection(for: value.id)?.legacyAllocation()
+        }
         return try? value.carryoverAllocation(at: clock())
+    }
+    func liveStockProjection(for journeyID: UUID) throws -> PantryLiveStockProjection? {
+        guard let snapshot = pantrySnapshot else { return nil }
+        guard pantryConfiguration?.authorize() == true, let mapping = pantryReaderMapping else { throw PickupModelError.missing }
+        return try PantryLiveStockProjection.build(snapshot: snapshot, mapping: mapping, journeyID: journeyID, at: clock())
     }
     var stockAllocation: StockAllocationResult? { allocation }
     var stockReviewDate: Date { clock() }
@@ -482,6 +491,11 @@ struct PickupPersistenceLocation {
                 guard configuration.authorize() else { throw PickupModelError.missing }
                 if state.active {
                     let current = try await pantryPort(configuration: configuration, store: store).loadCurrent()
+                    // This map supplies only stable source/need aliases. Live
+                    // quantity, pins and claim status come from canonical state;
+                    // unavailable ledger context cannot invent plan authority.
+                    pantryReaderMapping = try PantryLegacyMigration.map(originID: current.inventory.state.workspaceID,
+                        heads: current.sources, ledger: .unavailable, at: clock())
                     pantrySnapshot = current.inventory
                     decoded = try current.sources.map { head in
                         let value = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
@@ -502,7 +516,7 @@ struct PickupPersistenceLocation {
             ready = true
             error = pendingPantry == nil ? nil : pantryText("A saved change is waiting for recovery. Retry it or review its saved status.")
         } catch {
-            if pantryConfiguration != nil { journeys = []; pantrySnapshot = nil; storeRevisions = [:] }
+            if pantryConfiguration != nil { journeys = []; pantrySnapshot = nil; pantryReaderMapping = nil; storeRevisions = [:] }
             self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
         }
     }
@@ -1265,7 +1279,7 @@ extension PickupModel {
             return true
         } catch {
             if !configuration.authorize() {
-                journeys = []; storeRevisions = [:]; pantrySnapshot = nil; pending = nil; pendingPantry = nil
+                journeys = []; storeRevisions = [:]; pantrySnapshot = nil; pantryReaderMapping = nil; pending = nil; pendingPantry = nil
                 hasPendingSave = false; ready = false
             }
             self.error = pantryText(pendingPantry?.acknowledgment != nil
@@ -1308,8 +1322,11 @@ extension PickupModel {
             guard value.id == head.id, value.savedAt == head.savedAt else { throw PickupModelError.invalid }
             return value
         }
+        let mapping = try PantryLegacyMigration.map(originID: result.current.state.workspaceID,
+            heads: result.sources, ledger: .unavailable, at: clock())
         journeys = decoded.sorted { $0.savedAt == $1.savedAt ? $0.id.uuidString < $1.id.uuidString : $0.savedAt > $1.savedAt }
         storeRevisions = Dictionary(uniqueKeysWithValues: result.sources.map { ($0.id, $0.revision) })
+        pantryReaderMapping = mapping
         pantrySnapshot = result.current
         if case .select(let id) = entry.selection, journeys.contains(where: { $0.id == id }) { selectedID = id }
         if !journeys.contains(where: { $0.id == selectedID }) { selectedID = journeys.first?.id }
