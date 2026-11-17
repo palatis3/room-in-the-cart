@@ -30,7 +30,10 @@ import XCTest
         let rule = NSPredicate(format: "label CONTAINS %@", "peanut")
         XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
         let grant = app.switches["Alex"]
-        tap(grant)
+        reveal(grant, fullyVisible: true)
+        grant.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        let granted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: grant)
+        XCTAssertEqual(XCTWaiter.wait(for: [granted], timeout: 8), .completed)
         tap(app.navigationBars.buttons.firstMatch)
         open()
         XCTAssertTrue(grant.waitForExistence(timeout: 10))
