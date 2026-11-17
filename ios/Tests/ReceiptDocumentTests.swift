@@ -62,7 +62,7 @@ import XCTest
             catch { XCTAssertEqual(error as? ReceiptDocumentFailure, failure) }
         }
         let original = try XCTUnwrap(PDFDocument(data: pdf(pages: 1)))
-        let locked = try XCTUnwrap(original.dataRepresentation(options: [.userPasswordOption: "read-secret", .ownerPasswordOption: "owner-secret"]))
+        let locked = try XCTUnwrap(original.dataRepresentation(options: [PDFDocumentWriteOption.userPasswordOption: "read-secret", PDFDocumentWriteOption.ownerPasswordOption: "owner-secret"]))
         do { _ = try await reader.extract(.init(data: locked, kind: .pdf)); XCTFail("Locked source must not be consumed") }
         catch { XCTAssertEqual(error as? ReceiptDocumentFailure, .locked) }
         let task = Task { try await reader.extract(.init(data: pdf(pages: 10), kind: .pdf)) }
