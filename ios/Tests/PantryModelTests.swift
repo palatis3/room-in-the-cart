@@ -250,17 +250,18 @@ extension PantryModelTests {
         let spy = DigestSchedulerSpy(), folder = dir.appendingPathComponent("digest")
         let digest = PantryDigestStore(folder: folder, scheduler: spy, now: { self.now })
         try await digest.saveDay(scope, lot: first, day: day, authorized: { true })
-        try await digest.saveDay(scope, lot: second, day: day, authorized: { true })
+        let travelDay = try MealDay(year: day.year, month: day.month, day: day.day, timeZoneIdentifier: "Europe/Madrid")
+        try await digest.saveDay(scope, lot: second, day: travelDay, authorized: { true })
         XCTAssertEqual(spy.requests, 0)
         XCTAssertTrue(spy.deliveries.isEmpty)
         do {
-            try await digest.setAlerts(scope, enabled: true, minute: 570, authorized: { true })
+            try await digest.setAlerts(scope, enabled: true, minute: 570, timeZone: try XCTUnwrap(TimeZone(identifier: day.timeZoneIdentifier)), authorized: { true })
             XCTFail("Denied permission enabled this digest")
         } catch PantryDigestFailure.denied {}
         XCTAssertFalse(try digest.document(scope).enabled)
         XCTAssertEqual(try digest.document(scope).rules.count, 2)
         spy.granted = true
-        try await digest.setAlerts(scope, enabled: true, minute: 570, authorized: { true })
+        try await digest.setAlerts(scope, enabled: true, minute: 570, timeZone: try XCTUnwrap(TimeZone(identifier: day.timeZoneIdentifier)), authorized: { true })
         XCTAssertEqual(spy.deliveries.count, 1)
         let fire = try XCTUnwrap(spy.deliveries.first)
         var cal = Calendar(identifier: .gregorian); cal.timeZone = try XCTUnwrap(TimeZone(identifier: day.timeZoneIdentifier))

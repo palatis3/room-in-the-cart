@@ -2738,22 +2738,6 @@
         }
       }
     },
-    "Dates use the time zone shown for each batch. If the clock skips the chosen time, the digest arrives at the next valid time.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dates use the time zone shown for each batch. If the clock skips the chosen time, the digest arrives at the next valid time."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cada lote usa la zona horaria indicada. Si el reloj omite la hora elegida, el aviso llegará a la siguiente hora válida."
-          }
-        }
-      }
-    },
     "This device can keep check dates for 32 batches. Remove a date before adding another.": {
       "localizations": {
         "en": {
@@ -2766,6 +2750,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este dispositivo puede guardar fechas de revisión para 32 lotes. Elimina una fecha antes de añadir otra."
+          }
+        }
+      }
+    },
+    "Saved digest time zone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved digest time zone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zona horaria guardada para el aviso"
+          }
+        }
+      }
+    },
+    "Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al guardar la hora se usa %@. Las fechas de revisión mantienen su día si viajas. Si el reloj omite la hora elegida, el aviso llegará a la siguiente hora válida."
           }
         }
       }

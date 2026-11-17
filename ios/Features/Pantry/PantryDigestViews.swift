@@ -72,9 +72,9 @@ extension EnvironmentValues {
         doc.reconcile(snapshot.lots)
         let now = Date()
         guard doc.rules.contains(where: { rule in
-            guard rule.handle == token, let day = rule.day.date, let zone = TimeZone(identifier: rule.day.timeZoneIdentifier) else { return false }
-            var calendar = Calendar(identifier: .gregorian); calendar.timeZone = zone
-            return calendar.isDate(day, inSameDayAs: now)
+            guard rule.handle == token, let zone = TimeZone(identifier: doc.digestZone),
+                  let day = try? MealDay(date: now, timeZoneIdentifier: zone.identifier) else { return false }
+            return day.hasSameCivilDate(as: rule.day)
         }), let model = pickup.makePantryModel() else { return }
         openScope = access.scope; shownModel = model
     }
@@ -110,7 +110,8 @@ struct PantryDigestList: View {
                     DatePicker(pantryText("Digest time"), selection: $time, displayedComponents: .hourAndMinute)
                         .accessibilityIdentifier("pantry.digest.time")
                     Text(pantryText("One private notification groups foods checked on the same day. Your food names stay in My Pantry."))
-                    Text(pantryText("Dates use the time zone shown for each batch. If the clock skips the chosen time, the digest arrives at the next valid time."))
+                    LabeledContent(pantryText("Saved digest time zone"), value: doc.digestZone)
+                    Text(pantryFormat("Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time.", TimeZone.current.identifier))
                     Button(pantryText(doc.enabled ? "Save digest time" : "Turn on daily notifications")) {
                         update(enabled: true)
                     }.accessibilityIdentifier("pantry.digest.enable")

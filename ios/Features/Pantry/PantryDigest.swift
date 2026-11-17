@@ -37,15 +37,16 @@ struct PantryDigestDocument: Codable, Equatable {
     let owner: String
     var enabled = false
     var minute = 540
+    var digestZone = TimeZone.current.identifier
     var rules: [PantryDigestRule] = []
 
     init(_ scope: PantryDigestScope) { version = 1; origin = scope.origin; owner = scope.owner }
 
     func validate() throws {
-        guard version == 1, owner.count == 64, owner.allSatisfy(\.isHexDigit), (0..<1440).contains(minute),
+        guard version == 1, TimeZone(identifier: digestZone) != nil, owner.count == 64, owner.allSatisfy(\.isHexDigit), (0..<1440).contains(minute),
               rules.count <= 32, Set(rules.map(\.lotID)).count == rules.count,
               rules.allSatisfy({ $0.revision > 0 }) else { throw PantryDigestFailure.invalid }
-        let days = Dictionary(grouping: rules, by: \.day)
+        let days = Dictionary(grouping: rules, by: \.day.iso8601)
         guard days.values.allSatisfy({ Set($0.map(\.handle)).count == 1 }),
               Set(rules.map(\.handle)).count == days.count else { throw PantryDigestFailure.invalid }
         for rule in rules { try rule.day.validate() }
@@ -57,7 +58,7 @@ struct PantryDigestDocument: Codable, Equatable {
         if let day {
             guard rules.count < 32 else { throw PantryDigestFailure.capacity }
             try day.validate()
-            let existing = rules.first { $0.day == day }
+            let existing = rules.first { $0.day.hasSameCivilDate(as: day) }
             rules.append(.init(lotID: lot.id, revision: lot.revision, day: day, handle: existing?.handle ?? UUID()))
         }
         try validate()
@@ -72,11 +73,12 @@ struct PantryDigestDocument: Codable, Equatable {
     }
 
     func deliveries(now: Date) -> [PantryDigestDelivery] {
-        guard enabled else { return [] }
-        var seen = Set<MealDay>()
+        guard enabled, let zone = TimeZone(identifier: digestZone) else { return [] }
+        var seen = Set<String>()
         return rules.compactMap { rule in
-            guard seen.insert(rule.day).inserted, let zone = TimeZone(identifier: rule.day.timeZoneIdentifier),
-                  let noon = rule.day.date else { return nil }
+            guard seen.insert(rule.day.iso8601).inserted,
+                  let zonedDay = try? MealDay(year: rule.day.year, month: rule.day.month, day: rule.day.day,
+                                             timeZoneIdentifier: digestZone), let noon = zonedDay.date else { return nil }
             var calendar = Calendar(identifier: .gregorian)
             calendar.timeZone = zone
             guard let date = calendar.date(bySettingHour: minute / 60, minute: minute % 60, second: 0, of: noon,
@@ -219,7 +221,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         guard authorized() else { throw PantryDigestFailure.changed }
         try await change(scope) { try $0.set(lot: lot, day: day) }
     }
-    func setAlerts(_ scope: PantryDigestScope, enabled: Bool, minute: Int, authorized: () -> Bool) async throws {
+    func setAlerts(_ scope: PantryDigestScope, enabled: Bool, minute: Int, timeZone: TimeZone = .current, authorized: () -> Bool) async throws {
         guard authorized(), (0..<1440).contains(minute) else { throw PantryDigestFailure.changed }
         if enabled {
             let request = try !document(scope).enabled
@@ -229,6 +231,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         try await change(scope) { doc in
             doc.enabled = enabled
             doc.minute = minute
+            doc.digestZone = timeZone.identifier
         }
         if enabled && notificationsUnavailable { throw PantryDigestFailure.denied }
     }
