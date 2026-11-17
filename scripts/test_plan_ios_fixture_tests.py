@@ -110,6 +110,8 @@ class PlanIOSFixtureTests(unittest.TestCase):
         civil_shard = plans["contributor"]["shards"]["contributor-balanced-04"]["test_identifiers"]
         recipe_link = f"{UI_TARGET}/RecipeLibraryAcceptanceUITests/testRecipeLinkAllowsMissingYieldCorrectionBeforeSaving"
         self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(recipe_link), 1)
+        timers = f"{UI_TARGET}/RecipeLibraryAcceptanceUITests/testCookingTimersRestoreInSpanishAtLargestTextAndEndOnRequest"
+        self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(timers), 1)
         for language in ("English", "Spanish"):
             optional_night = f"{UI_TARGET}/SharedMealCivilDateUITests/test{language}UnscheduledMealCanBeScheduledWithoutReplacingItsNeeds"
             self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(optional_night), 1)
