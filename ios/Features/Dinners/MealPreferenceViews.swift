@@ -124,6 +124,7 @@ struct PrivateMealPreferencesEntry: View {
 struct MealPreferenceEditor: View {
     let save: (MealPreferenceSettings, UUID?) async -> Bool
     private let initial: MealPreferenceProfile?
+    private let canSetTimeLimit: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var draft: MealPreferenceSettings
     @State private var minutes: String
@@ -131,8 +132,9 @@ struct MealPreferenceEditor: View {
     @State private var busy = false
     @FocusState private var textFocus: String?
     @State private var failed = false
-    init(profile: MealPreferenceProfile?, save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
+    init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
         self.save = save
+        self.canSetTimeLimit = canSetTimeLimit
         initial = profile
         _draft = State(initialValue: profile?.settings ?? .init())
         _base = State(initialValue: profile?.revision)
@@ -151,16 +153,18 @@ struct MealPreferenceEditor: View {
                 if !draft.dislikes.isEmpty { Toggle(dinnerText("Require meals without these dislikes"), isOn: $draft.strictDislikes) }
                 PreferenceTermsField(dinnerText("Preferred brands, one per line"), terms: $draft.preferredBrands)
                 if !draft.preferredBrands.isEmpty { Toggle(dinnerText("Require preferred brands"), isOn: $draft.strictBrands) }
-                TextField(dinnerText("Available cooking time in minutes, if limited"), text: $minutes)
-                    .keyboardType(.numberPad).focused($textFocus, equals: "availableMinutes")
-                    .accessibilityIdentifier("preferences.availableMinutes")
-                if !minutes.isEmpty {
-                    Toggle(dinnerText("Require meals within this time"), isOn: Binding(
-                        get: { draft.timeLimit?.strict == true },
-                        set: { required in
-                            if let value = Int(minutes) { draft.timeLimit = .init(maximumMinutes: value, strict: required) }
-                        }
-                    )).accessibilityIdentifier("preferences.requireMinutes")
+                if canSetTimeLimit {
+                    TextField(dinnerText("Available cooking time in minutes, if limited"), text: $minutes)
+                        .keyboardType(.numberPad).focused($textFocus, equals: "availableMinutes")
+                        .accessibilityIdentifier("preferences.availableMinutes")
+                    if !minutes.isEmpty {
+                        Toggle(dinnerText("Require meals within this time"), isOn: Binding(
+                            get: { draft.timeLimit?.strict == true },
+                            set: { required in
+                                if let value = Int(minutes) { draft.timeLimit = .init(maximumMinutes: value, strict: required) }
+                            }
+                        )).accessibilityIdentifier("preferences.requireMinutes")
+                    }
                 }
                 MealEffortPicker(title: dinnerText("Preferred maximum effort"), effort: $draft.maximumEffort)
                 if draft.maximumEffort != nil { Toggle(dinnerText("Require this effort limit"), isOn: $draft.strictEffort) }
