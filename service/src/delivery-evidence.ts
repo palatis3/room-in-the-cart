@@ -38,7 +38,12 @@ const mealFields='m.occurrence_id AS "occurrenceId",m.revision,m.meal';
 const sealedMeals=`SELECT ${mealFields} ${sealedJoin} WHERE ss.household_id=$1 AND ss.shop_id=$2 AND ss.revision=$3`;
 
 // Physical observations and reviewed ingredient identity have independent heads.
-const sourceHeads = `SELECT s.*,matches.current AS matches,pins.current AS reservations,a.body AS arrival,a.recorded_at AS arrival_recorded,u.body AS usable,u.recorded_at AS usable_recorded
+const physicalFields='a.body AS arrival,a.recorded_at AS arrival_recorded,u.body AS usable,u.recorded_at AS usable_recorded';
+const physicalJoins=`  LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
+    AND shop_id=s.shop_id AND source_id=s.source_id AND kind='arrival' ORDER BY supply_revision DESC LIMIT 1) a ON true
+  LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
+    AND shop_id=s.shop_id AND source_id=s.source_id AND kind='usable' ORDER BY supply_revision DESC LIMIT 1) u ON true`;
+const sourceHeads = `SELECT s.*,matches.current AS matches,pins.current AS reservations,${physicalFields}
   FROM ritc.delivery_source s
   LEFT JOIN LATERAL (SELECT COALESCE(jsonb_agg(jsonb_build_object('occurrenceId',r.occurrence_id,
     'mealRevision',r.meal_revision,'ingredientId',r.ingredient_id) ORDER BY r.occurrence_id,r.ingredient_id)
@@ -52,13 +57,11 @@ const sourceHeads = `SELECT s.*,matches.current AS matches,pins.current AS reser
     (SELECT DISTINCT ON (occurrence_id,meal_revision,ingredient_id,group_id) * FROM ritc.delivery_reservation
       WHERE household_id=s.household_id AND shop_id=s.shop_id AND source_id=s.source_id
       ORDER BY occurrence_id,meal_revision,ingredient_id,group_id,supply_revision DESC) r) pins ON true
-  LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
-    AND shop_id=s.shop_id AND source_id=s.source_id AND kind='arrival' ORDER BY supply_revision DESC LIMIT 1) a ON true
-  LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
-    AND shop_id=s.shop_id AND source_id=s.source_id AND kind='usable' ORDER BY supply_revision DESC LIMIT 1) u ON true`;
+  ${physicalJoins}`;
 const heads=sourceHeads+' WHERE s.household_id=$1 AND s.shop_id=$2';
 
-function sourceEvidence(row:SourceRow, asOf:string) {
+type PhysicalRow=Omit<SourceRow,'matches'|'reservations'>;
+function physicalEvidence(row:PhysicalRow, asOf:string) {
   // Each newly reviewed physical identity is distinct until deliberately mapped.
   const source = {id:row.source_id, foodId:row.source_id, identityRevision:1};
   const a=row.arrival, u=row.usable;
@@ -66,13 +69,18 @@ function sourceEvidence(row:SourceRow, asOf:string) {
     a && row.arrival_recorded ? {...a,id:a.observationId,identityRevision:1,recordedAt:row.arrival_recorded.toISOString()} : undefined,
     u && row.usable_recorded ? {...u,id:u.observationId,identityRevision:1,recordedAt:row.usable_recorded.toISOString()} : undefined, asOf);
   return {sourceId:source.id, foodId:source.foodId, lineId:row.line_id, segmentKey:row.segment_key, foodName:row.food_name,
-    exclusionTags:row.exclusion_tags, matches:row.matches, reservations:row.reservations, arrival:a, usable:u, confirmed:lot??null};
+    exclusionTags:row.exclusion_tags, arrival:a, usable:u, confirmed:lot??null};
+}
+function sourceEvidence(row:SourceRow,asOf:string) {
+  return {...physicalEvidence(row,asOf),matches:row.matches,reservations:row.reservations};
 }
 
 export async function storedDeliveryEvidence(ctx:Context,ids:string[],shopId:string|null=null) {
   if(!ids.length) return [];
-  const result=await ctx.db.query<SourceRow>(sourceHeads+' WHERE s.household_id=$1 AND s.source_id=ANY($2::uuid[]) AND ($3::uuid IS NULL OR s.shop_id=$3)',[ctx.householdId,ids,shopId]);
-  return result.rows.map(row=>sourceEvidence(row,ctx.now.toISOString()));
+  const result=await ctx.db.query<PhysicalRow>(`SELECT s.source_id,s.shop_id,s.line_id,s.segment_key,s.food_name,s.exclusion_tags,${physicalFields}
+    FROM ritc.delivery_source s ${physicalJoins} WHERE s.household_id=$1 AND s.source_id=ANY($2::uuid[])
+    AND ($3::uuid IS NULL OR s.shop_id=$3)`,[ctx.householdId,ids,shopId]);
+  return result.rows.map(row=>physicalEvidence(row,ctx.now.toISOString()));
 }
 
 // Resolve the connected shops in two queries; unrelated delivery lines are not
