@@ -96,6 +96,32 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
+    func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let photo = app.buttons["Share sample receipt photo"]
+        XCTAssertTrue(photo.waitForExistence(timeout: 10), app.debugDescription); photo.tap()
+        let save = app.buttons["Save Image"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 12), app.debugDescription); save.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.alerts.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
+        if allow.waitForExistence(timeout: 3) { allow.tap() }
+        XCTAssertTrue(save.waitForNonExistence(timeout: 12), app.debugDescription)
+        app.terminate()
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
+        tap(app.buttons["Choose a receipt from Photos"])
+        let photoCell = app.collectionViews.cells.firstMatch
+        XCTAssertTrue(photoCell.waitForExistence(timeout: 12), app.debugDescription)
+        photoCell.tap()
+        let oats = app.switches["receipt.document.line.1.1"]
+        XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
+        XCTAssertTrue(oats.label.uppercased().contains("OATS"))
+        XCTAssertEqual(oats.value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+    }
+
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         func receiptTap(_ control: XCUIElement) {
             for _ in 0..<4 {
