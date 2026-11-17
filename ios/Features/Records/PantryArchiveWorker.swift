@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Darwin
 import CoreDomain
 import LocalStore
 import RecordArchive
@@ -292,6 +293,19 @@ actor PantryArchiveWorker {
     /// validating its complete graph. External references never mint handles.
     func open(reference: PantryArchiveStorage.Reference) throws -> PantryArchiveHandle {
         try verify(directory: root.appendingPathComponent(reference.bundleID.uuidString, isDirectory: true), expected: reference)
+    }
+    /// A generic recovered-copy deletion keeps its bundle ID in the local
+    /// manifest. Reconcile any remaining bytes even after its Undo owner exits.
+    func openDeletedBundleIfPresent(_ bundleID: UUID) throws -> PantryArchiveHandle? {
+        let directory = root.appendingPathComponent(bundleID.uuidString, isDirectory: true)
+        var info = stat()
+        guard lstat(directory.path, &info) == 0 else {
+            if errno == ENOENT { return nil }
+            throw Failure.io
+        }
+        let handle = try verify(directory: directory)
+        guard handle.reference.bundleID == bundleID else { throw Failure.invalid }
+        return handle
     }
     func verify(directory: URL, expected: PantryArchiveStorage.Reference? = nil) throws -> PantryArchiveHandle {
         try PantryArchiveFiles.directory(directory, create: false)

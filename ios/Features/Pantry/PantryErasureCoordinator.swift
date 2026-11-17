@@ -165,7 +165,7 @@ import RecordArchive
         let inspection = try await external(rules: impact.rules, links: impact.links, expectedLedgers: impact.ledgerOrigins, at: date)
         let blockers = impact.blockers.union(inspection.blockers)
         let cleanup = Cleanup(originID: inventory.workspaceID, wholeOrigin: whole, pickupIDs: impact.pickups.map(\.id),
-            copyIDs: inspection.copies.map(\.id), bundleIDs: inspection.copies.map { $0.reference.bundleID }, files: inspection.files)
+            copyIDs: inspection.copies.map(\.id), bundleIDs: inspection.copies.map(\.bundleID), files: inspection.files)
         let basis = Basis(revision: impact.revision, token: impact.token, ledgerOrigin: ledger.workspaceID,
             ledgerRevision: inspection.ledgerRevision, ledgerDigest: inspection.ledgerDigest, registryGeneration: inspection.registryGeneration,
             pending: inspection.allFiles)
@@ -323,7 +323,11 @@ import RecordArchive
         let journal = Journal(version: 1, nonce: review.id,
             reviewDigest: try Self.reviewDigest(selection: review.selection, basis: review.basis), manifest: review.manifest, cleanup: review.cleanup)
         try PantryArchiveFiles.directory(journalDirectory, create: true)
-        try PantryArchiveFiles.write(try ArchiveCodec.canonical(journal), to: marker)
+        let journalBytes = try ArchiveCodec.canonical(journal), journalURL = marker
+        try access()
+        try await registry.beginPantryErasure(operationID: review.manifest.operationID, expectedGeneration: review.basis.registryGeneration) {
+            try PantryArchiveFiles.write(journalBytes, to: journalURL)
+        }
         let receipt: InventoryErasureReceipt
         do {
             try access()
@@ -363,6 +367,7 @@ import RecordArchive
             if let receipt = progress.receipt { return await finish(journal, receipt) }
             if progress.status == .staging { _ = try await inventory.cancelInventoryErasure(id: journal.manifest.operationID) }
         }
+        try await registry.cancelPantryErasure(operationID: journal.manifest.operationID)
         try FileManager.default.removeItem(at: marker)
         return nil
     }
@@ -372,7 +377,7 @@ import RecordArchive
             guard receipt.scope == journal.manifest.scope, receipt.workspaceID == cleanup.originID,
                   receipt.operationID == journal.manifest.operationID, receipt.erasedRevision == journal.manifest.expectedRevision else { throw Failure.invalid }
             try await gate.invalidateForErasure(origin: cleanup.originID, initiator: initiatingPresentation)
-            try await registry.registerErasedPantryBundles(Set(cleanup.bundleIDs))
+            try await registry.registerErasedPantryBundles(Set(cleanup.bundleIDs), operationID: receipt.operationID)
             let pickupOrigin = "pickups/" + cleanup.originID.uuidString
             if cleanup.wholeOrigin { try await registry.registerErasedOrigins([cleanup.originID.uuidString, pickupOrigin]) }
             else {
