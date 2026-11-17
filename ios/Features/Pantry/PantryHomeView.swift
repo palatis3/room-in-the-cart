@@ -184,7 +184,8 @@ private struct PantryEntryPresentation: ViewModifier {
     func body(content: Content) -> some View {
         content
         .task(id: accessAllowed) {
-            if accessAllowed { await model.load() } else { sheet = nil; model.accessLost() }
+            if !accessAllowed { sheet = nil }
+            await model.loadOnAppearance(accessAllowed: accessAllowed)
         }
         .onChange(of: accessAllowed) { _, allowed in
             if !allowed { sheet = nil; model.accessLost() }
@@ -198,14 +199,21 @@ private struct PantryEntryPresentation: ViewModifier {
         .onChange(of: model.phase) { _, phase in
             if phase == .accessDenied { sheet = nil }
         }
-        .sheet(item: Binding(get: { accessAllowed && model.phase != .accessDenied ? sheet : nil }, set: { sheet = $0 })) { value in
+        .sheet(isPresented: Binding(get: { accessAllowed && model.phase != .accessDenied && sheet != nil }, set: { shown in
+            if !shown {
+                if case .review = sheet, model.pending == nil { model.cancelReview() }
+                sheet = nil
+            }
+        })) {
             NavigationStack {
-                switch value {
-                case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
-                case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
-                case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
-                case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,
-                                                     availabilityNeedsReview: availabilityNeedsReview)
+                if let value = sheet {
+                    switch value {
+                    case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
+                    case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
+                    case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
+                    case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,
+                                                   availabilityNeedsReview: availabilityNeedsReview)
+                    }
                 }
             }
         }
@@ -475,7 +483,6 @@ private struct PantryReviewView: View {
             }
         }
         .interactiveDismissDisabled(model.busy || model.pending != nil)
-        .onDisappear { if model.pending == nil { model.cancelReview() } }
         .privacySensitive()
     }
 }
