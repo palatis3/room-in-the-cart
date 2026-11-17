@@ -3,6 +3,8 @@
 import argparse
 import os
 import plistlib
+import re
+import subprocess
 from pathlib import Path
 
 from app_configuration import compiled_metadata, load_configuration, require_release_metadata
@@ -46,6 +48,15 @@ def verify_iphone_bundle(bundle, executable_name):
     return info
 
 
+def verify_privacy_manifest(bundle, source_folder):
+    path = bundle / "PrivacyInfo.xcprivacy"
+    require(path.is_file(), f"Missing privacy manifest in {bundle.name}")
+    privacy = read_plist(path)
+    require(privacy == read_plist(source_folder / path.name),
+            f"Compiled privacy manifest differs from the reviewed source in {bundle.name}")
+    require(privacy.get("NSPrivacyTracking") is False, f"Unexpected tracking declaration in {bundle.name}")
+
+
 def verify_built_app(app, configuration, *, require_production_metadata=False):
     suffix = ENVIRONMENT_SUFFIXES[configuration]
     bundle_id = "dev.roominthecart.app" + suffix
@@ -79,12 +90,7 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
     icon = info.get("CFBundleIcons", {}).get("CFBundlePrimaryIcon", {}).get("CFBundleIconName")
     require(icon == "AppIcon", "Missing app icon")
     require(nonempty_file(app / "Assets.car"), "Missing compiled asset catalog")
-    privacy_file = app / "PrivacyInfo.xcprivacy"
-    require(privacy_file.is_file(), "Missing privacy manifest")
-    privacy = read_plist(privacy_file)
-    expected_privacy = read_plist(ROOT / "ios/Resources/PrivacyInfo.xcprivacy")
-    require(privacy == expected_privacy, "Compiled privacy manifest differs from the reviewed source")
-    require(privacy.get("NSPrivacyTracking") is False, "Unexpected tracking declaration")
+    verify_privacy_manifest(app, ROOT / "ios/Resources")
     permission_keys = ["NSFaceIDUsageDescription"]
     if (ROOT / "ios/Features/Capture/OnDeviceSpeechCapture.swift").is_file():
         permission_keys += ["NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription"]
@@ -113,6 +119,7 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
         extension = app / "PlugIns" / (name + ".appex")
         require(extension.is_dir(), f"Missing embedded {folder} extension")
         extension_info = verify_iphone_bundle(extension, name)
+        verify_privacy_manifest(extension, ROOT / "ios/Extensions" / folder)
         require(extension_info.get("CFBundleSupportedPlatforms") == info["CFBundleSupportedPlatforms"],
                 f"{folder} extension and app platform mismatch")
         require(nonempty_string(extension_info.get("CFBundleDisplayName")), f"Missing {folder} extension display name")
@@ -133,19 +140,45 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
                     "Share extension must activate for text only")
 
 
+def dwarf_uuids(path):
+    require(nonempty_file(path), f"Missing or empty file: {path}")
+    result = subprocess.run(["xcrun", "dwarfdump", "--uuid", str(path)], capture_output=True, text=True)
+    matches = re.findall(r"^UUID: ([0-9A-Fa-f-]{36}) \(([^)]+)\) ", result.stdout, re.MULTILINE)
+    require(result.returncode == 0 and matches, f"Could not read Mach-O UUIDs from {path}")
+    return {(identifier.lower(), architecture) for identifier, architecture in matches}
+
+
+def verify_archive_symbols(archive, app):
+    require(read_plist(app / "Info.plist").get("CFBundleSupportedPlatforms") == ["iPhoneOS"],
+            "Expected a device archive")
+    for product in [app, *sorted((app / "PlugIns").glob("*.appex"))]:
+        executable = read_plist(product / "Info.plist")["CFBundleExecutable"]
+        symbols = archive / "dSYMs" / (product.name + ".dSYM") / "Contents/Resources/DWARF" / executable
+        binary_ids = dwarf_uuids(product / executable)
+        require(any(architecture == "arm64" for _, architecture in binary_ids),
+                f"Missing arm64 in {product.name}")
+        require(dwarf_uuids(symbols) == binary_ids, f"Crash symbols do not match {product.name}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("app", type=Path)
+    parser.add_argument("product", type=Path, help="compiled .app or device .xcarchive")
     parser.add_argument("--configuration", choices=ENVIRONMENT_SUFFIXES, required=True)
     parser.add_argument("--require-release-metadata", action="store_true",
-                        help="require owner-supplied production support/privacy/terms URLs and the Apple product ID; this does not verify release readiness")
+                        help="require production household service and identity settings, public support and policy URLs, and the Apple product ID")
     args = parser.parse_args()
     if args.require_release_metadata and args.configuration != "Release":
         parser.error("--require-release-metadata requires --configuration Release")
     try:
-        verify_built_app(args.app, args.configuration, require_production_metadata=args.require_release_metadata)
+        archive = args.product.suffix == ".xcarchive"
+        app = args.product / "Products/Applications/RoomInTheCart.app" if archive else args.product
+        verify_built_app(app, args.configuration, require_production_metadata=args.require_release_metadata)
+        if archive:
+            verify_archive_symbols(args.product, app)
     except (OSError, ValueError) as error:
         parser.exit(1, f"Built app verification failed: {error}\n")
+    if archive:
+        print("Archived iPhone app and extension binaries matched their crash symbols.")
     print(f"Compiled {args.configuration} iPhone app verified: executable, assets, privacy, environment, and embedded extensions.")
 
 

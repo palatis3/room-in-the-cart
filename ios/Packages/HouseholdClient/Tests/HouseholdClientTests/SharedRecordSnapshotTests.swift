@@ -68,7 +68,7 @@ extension HouseholdClientTests {
         let bytes = try JSONSerialization.data(withJSONObject: object), page = try SharedRecordWire.snapshot(from: bytes)
         let auth = try auth(), service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var reads = 0
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, Data(#"{"deviceId":"device","deviceToken":"test"}"#.utf8)) }
@@ -81,6 +81,6 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         _ = try await service.enroll(householdID: household)
         let result = try await service.sharedRecordSnapshot(shopID: page.record.origin.shopId.uuid)
-        XCTAssertEqual(result.record, page.record); XCTAssertEqual(reads, 1)
+        XCTAssertEqual(result.record, page.record); XCTAssertEqual(stateLock.withLock { reads }, 1)
     }
 }

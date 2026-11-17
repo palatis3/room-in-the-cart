@@ -62,10 +62,13 @@ def main():
             'ui-02': 4, 'ui-03': 0, 'ui-06': 1,
             'ui-07': 3, 'ui-08': 3, 'ui-09': 5, 'ui-10': 2,
         }
+        github_slots = {'ui-04': 1, 'ui-09': 3}
         # The full UI01 group finished last on two combined builds. Its shorter
         # manual Dinner diagnostic retains its original GitHub runner.
         if scope == 'full':
             m4_slots['ui-01'] = 0
+            # During the outage, slot 4 finished while UI01 still waited behind UI04.
+            github_slots['ui-01'] = 4
         # M4 slot 3 finished at least 16 minutes before UI07 on three full runs.
         # External PRs still use the GitHub slot assigned by the core plan.
         consumers = []
@@ -74,13 +77,23 @@ def main():
             if shard == 'models':
                 continue
             row = dict(planned)
-            row['macos_slot'] = {'ui-04': 1, 'ui-09': 3}.get(shard, row['macos_slot'])
+            row['macos_slot'] = github_slots.get(shard, row['macos_slot'])
             if shard in m4_slots:
                 row.update(provider='bitrise-m4', m4_slot=m4_slots[shard])
             else:
                 # UI04 and UI08 formerly queued behind each other on M4 slot 3.
                 row['provider'] = 'bitrise' if shard in ('ui-04', 'ui-05') else 'github'
             consumers.append(row)
+        provider = os.environ.get('IOS_PROVIDER', 'github')
+        if provider == 'circleci':
+            delegated = {'ui-01', 'ui-02', 'ui-03'}
+            expected = {f'ui-{i:02}' for i in range(1, 11)}
+            if scope != 'full' or {row['shard'] for row in consumers} != expected:
+                raise ValueError('CircleCI requires the ordinary full ten-shard plan')
+            consumers = [row for row in consumers if row['shard'] not in delegated]
+            print('CircleCI runs ' + ', '.join(sorted(delegated)) + ' from the same full plan.')
+        elif provider != 'github':
+            raise ValueError(f'Unknown iOS test provider: {provider}')
         model_count = len(selected['shards']['models']['test_identifiers'])
         with args.github_output.open('a', encoding='utf-8') as output:
             print('matrix=' + json.dumps({'include': consumers}), file=output)

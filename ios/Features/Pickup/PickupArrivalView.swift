@@ -26,6 +26,8 @@ private struct ArrivalLineEntry {
 }
 
 struct PickupArrivalView: View {
+    private enum Field: Hashable { case item, received, usable, evidence, segment }
+    @FocusState private var focused: Field?
     @ObservedObject var model: PickupModel
     @State private var entry = ArrivalLineEntry()
     @State private var eventID = UUID().uuidString
@@ -56,12 +58,15 @@ struct PickupArrivalView: View {
                     Text(pTr("Late arrival")).tag(ReceiptDisposition.late)
                 }
                 TextField(pTr("Actual item name"), text: $entry.item)
-                TextField(pTr("Physical amount received"), text: $entry.received).keyboardType(.numbersAndPunctuation)
-                TextField(pTr("Confirmed usable amount (optional)"), text: $entry.usable).keyboardType(.numbersAndPunctuation)
+                    .focused($focused, equals: .item)
+                quantityField(pTr("Physical amount received"), text: $entry.received, field: .received)
+                quantityField(pTr("Confirmed usable amount (optional)"), text: $entry.usable, field: .usable)
                 Picker(pTr("Unit"), selection: $entry.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
                 Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $entry.matched)
                 TextField(pTr("Delivery or receipt evidence ID"), text: receiptField($eventID))
+                    .focused($focused, equals: .evidence)
                 TextField(pTr("Segment ID (distinct for each split delivery)"), text: receiptField($segment))
+                    .focused($focused, equals: .segment)
                 DatePicker(pTr("Actual arrival"), selection: $occurred, in: ...model.stockReviewDate)
                 Button(pTr("Save observed arrival")) { save() }.buttonStyle(.borderedProminent)
                 if let formError { Text(formError).foregroundStyle(.red) }
@@ -95,9 +100,26 @@ struct PickupArrivalView: View {
                 }
             }
             NavigationLink(pTr("Review protected portions and repair meals")) { PickupRepairView(model: model) }
-        }.navigationTitle(pTr("What came home"))
-            .disabled(model.saving)
+        }
+        .keyboardDoneAction(visible: focused != nil, title: pTr("Done"), identifier: "arrival.keyboardDone") { focused = nil }
+        .navigationTitle(pTr("What came home"))
+        .disabled(model.saving)
     }
+
+    private func quantityField(_ title: String, text: Binding<String>, field: Field) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: title)
+                .font(.subheadline)
+                .accessibilityHidden(true)
+            TextField(title, text: text, prompt: Text(verbatim: ""))
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.numbersAndPunctuation)
+                .accessibilityLabel(Text(verbatim: title))
+                .focused($focused, equals: field)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
     private func receiptKey(for line: PickupOrderLine) -> ReceiptKey {
         ReceiptKey(sourceEventID: eventID, orderLineID: line.id, branchID: line.branchID, segmentID: segment)
     }

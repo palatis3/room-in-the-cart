@@ -246,7 +246,9 @@ enum SurfaceImportDestinationConflict: Error {
     private func validate(_ receipt: LedgerImportBatch, draft: SurfaceImportDraft) throws {
         let recognized = (receipt.preview == draft.preview && receipt.decisions == draft.decisions)
             || draft.confirmedAttempts.contains(where: { $0.preview == receipt.preview && $0.decisions == receipt.decisions })
-        guard receipt.id == draft.id, recognized else { throw SurfaceError.changedReplay }
+        // Older receipts only retained the reviewed wording.
+        guard receipt.originalSelection == nil || receipt.originalSelection == draft.originalText,
+              receipt.id == draft.id, recognized else { throw SurfaceError.changedReplay }
         // An explicitly undone receipt still proves this operation happened. Never recreate it.
     }
 }

@@ -4,7 +4,7 @@ import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
-from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_MATRIX_GROUP, FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX, parse_workflow
+from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, POLICY, bitrise_group, parse_workflow
 
 
 class FixtureDependencyTests(unittest.TestCase):
@@ -13,18 +13,20 @@ class FixtureDependencyTests(unittest.TestCase):
                                        ".github/workflows/ios-fixtures.yml")
         jobs = workflow["jobs"]
         for profile in ("contributor", "dinner"):
+            build_identity = ("ios-fixtures.yml", f"build-{profile}")
+            test_identity = ("ios-fixtures.yml", f"{profile}-tests")
             job = jobs[f"{profile}-tests"]
             self.assertEqual(job["runs-on"], FIXTURE_CONSUMER_RUNNER)
             self.assertEqual(jobs[f"build-{profile}"]["runs-on"], FIXTURE_RUNNER)
             self.assertEqual(jobs[f"build-{profile}"]["concurrency"]["group"],
-                             FIXTURE_SLOT_PREFIX + str(("contributor", "dinner").index(profile)))
+                             bitrise_group(build_identity, POLICY[build_identity]))
             self.assertEqual(job["needs"], ["fixture-plan", f"build-{profile}"])
             self.assertEqual(job["if"], f"needs.fixture-plan.outputs.build_{profile} == 'true'")
             self.assertEqual(job["strategy"]["matrix"],
                              "${{ fromJSON(needs.fixture-plan.outputs." + profile + "_matrix) }}")
             self.assertEqual(job["env"]["TEST_PRODUCTS_ARTIFACT"],
                              "${{ needs.build-" + profile + ".outputs.artifact }}")
-            self.assertEqual(job["concurrency"], {"group": FIXTURE_MATRIX_GROUP,
+            self.assertEqual(job["concurrency"], {"group": bitrise_group(test_identity, POLICY[test_identity]),
                                                   "queue": "max", "cancel-in-progress": False})
             self.assertFalse(job["strategy"]["fail-fast"])
             self.assertTrue(any("bash scripts/run_ios_test_shard.sh" in step.get("run", "")
@@ -68,6 +70,25 @@ class FixtureDependencyTests(unittest.TestCase):
                         self.assertEqual((root / ".build/records-test-report.md").read_text(), "safe result\n")
                         self.assertNotIn(private, result.stdout + result.stderr)
                         self.assertEqual((root / "records-fixture.log").read_text().count(private), 3)
+
+    def test_runtime_evidence_upload_precedes_large_results_after_owned_cleanup(self):
+        workflow, _, _ = parse_workflow(Path(__file__).resolve().parents[1] /
+                                       ".github/workflows/ios-fixtures.yml")
+        for job in ("contributor-tests", "dinner-tests"):
+            with self.subTest(job=job):
+                steps = workflow["jobs"][job]["steps"]
+                diagnostics = next(s for s in steps if s.get("name") == "Retain GitHub runtime diagnostics")
+                cleanup = next(s for s in steps if "--cleanup-owned" in s.get("run", ""))
+                runtime, = [s for s in steps if s.get("name") == "Upload GitHub runtime evidence"]
+                results = next(s for s in steps if s.get("id") == "fixture_results_upload")
+                self.assertLess(steps.index(diagnostics), steps.index(cleanup))
+                self.assertLess(steps.index(cleanup), steps.index(runtime))
+                self.assertLess(steps.index(runtime), steps.index(results))
+                self.assertEqual(runtime["if"], "always() && steps.imported-runtime.outcome != 'skipped' && "
+                                 "matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests'")
+                self.assertIs(runtime["continue-on-error"], True)
+                self.assertEqual(runtime["with"]["path"].splitlines(),
+                                 [".build/github-ios-runtime", ".build/test-simulator-ownership.json"])
 
     def test_failed_result_upload_retries_only_the_same_non_media_files(self):
         workflow, _, _ = parse_workflow(Path(__file__).resolve().parents[1] /

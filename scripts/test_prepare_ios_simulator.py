@@ -72,7 +72,7 @@ exit 72
             with self.subTest(workflow=workflow, job=job):
                 steps = parse_workflow(ROOT / ".github/workflows" / workflow)[0]["jobs"][job]["steps"]
                 index = lambda predicate: next(i for i, step in enumerate(steps) if predicate(step))
-                select = index(lambda s: "Select isolated iPhone" in s.get("name", ""))
+                select = index(lambda s: "--create-owned .build/test-simulator-ownership.json" in s.get("run", ""))
                 start = index(lambda s: s.get("run") == "bash scripts/prepare_ios_simulator.sh start")
                 download = index(lambda s: s.get("uses", "").startswith("actions/download-artifact@"))
                 restore = index(lambda s: "compression_tool -decode" in s.get("run", ""))

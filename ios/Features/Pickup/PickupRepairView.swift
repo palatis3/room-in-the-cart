@@ -314,6 +314,7 @@ struct PickupCookView: View {
                     sharing = copy
                 }
                 .id(noteID)
+                HandoffPrintButton(copy: copy, allowed: access.unlocked && text == copy.fullText && model.isCurrent(copy))
                 PickupRecipientSection(model: model, channel: .cook, versionID: noteID, language: language)
                     .id(noteID)
             }

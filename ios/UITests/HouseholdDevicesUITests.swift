@@ -23,10 +23,10 @@ import XCTest
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func launch(spanish: Bool = false) {
         // iOS 17 XCTest snapshot logging crashed in its log-quarantine callback
-        // in the retained unmuted FinalDevices baseline. This applies only to
-        // the fixture app process; runner actions/assertions and crash reports
-        // remain available. This run cannot establish absence of runtime warnings.
-        app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        // in the retained unmuted FinalDevices baseline. Only iOS 17 fixture
+        // app logging is suppressed; those runs cannot establish absence of
+        // runtime warnings. Current-iOS app logging stays enabled.
+        if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launchArguments = ["--ui-testing", "--household-devices-fixture", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if spanish { app.launchArguments.append("--device-fixture-largest-text") }
         app.launch()

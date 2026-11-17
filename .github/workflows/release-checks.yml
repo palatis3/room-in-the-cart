@@ -116,10 +116,6 @@ jobs:
   staging-iphone:
     needs: source-preflight
     name: Installed iPhone app against staging
-    concurrency:
-      group: ritc-macos-slot-2
-      queue: max
-      cancel-in-progress: false
     runs-on: xcode-27
     timeout-minutes: 30
     env:
@@ -141,7 +137,7 @@ jobs:
           python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Staging \
             -destination "platform=iOS Simulator,id=$SIMULATOR_ID,arch=arm64" \
-            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/StagingDerivedData \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/StagingDerivedData ARCHS=arm64 \
             CODE_SIGN_IDENTITY=- -resultBundlePath .build/staging-results/staging.xcresult \
             test 2>&1 | tee .build/staging-results/test.log
       - name: Require all three staging checks and inspect runtime warnings

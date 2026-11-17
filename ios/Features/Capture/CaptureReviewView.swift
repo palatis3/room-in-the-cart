@@ -47,26 +47,49 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
 
     var body: some View {
         ScrollViewReader { scroll in
-            captureForm
-                .task(id: reviewingFields) {
-                    guard reviewingFields else { return }
+            VStack(spacing: 0) {
+                captureForm(scroll)
+                if sourceTextFocused || structuredFieldFocus != nil {
+                    keyboardDoneBar
+                }
+            }
+            .task(id: reviewingFields) {
+                guard reviewingFields else { return }
+                await Task.yield()
+                guard !Task.isCancelled, reviewingFields, authorize() else { return }
+                scroll.scrollTo(StructuredCaptureReviewView.originalAnchor, anchor: .top)
+            }
+            .onChange(of: model.candidate != nil && !model.busy) { _, ready in
+                guard ready else { return }
+                Task { @MainActor in
                     await Task.yield()
-                    guard !Task.isCancelled, reviewingFields, authorize() else { return }
-                    scroll.scrollTo(StructuredCaptureReviewView.originalAnchor, anchor: .top)
+                    guard authorize(), model.candidate != nil, !model.busy, !reviewingFields else { return }
+                    scroll.scrollTo("capture.useText", anchor: .center)
+                    capturedTextFocused = true
                 }
-                .onChange(of: model.candidate != nil && !model.busy) { _, ready in
-                    guard ready else { return }
-                    Task { @MainActor in
-                        await Task.yield()
-                        guard authorize(), model.candidate != nil, !model.busy, !reviewingFields else { return }
-                        scroll.scrollTo("capture.useText", anchor: .center)
-                        capturedTextFocused = true
-                    }
-                }
+            }
         }
     }
 
-    private var captureForm: some View {
+    private var keyboardDoneBar: some View {
+        Button {
+            sourceTextFocused = false
+            structuredFieldFocus = nil
+        } label: {
+            Text(captureText("Done"))
+                .font(.body.weight(.semibold))
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Theme.action)
+        .accessibilityIdentifier(sourceTextFocused ? "capture.sourceDone" : "capture.itemNameDone")
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.horizontal)
+        .background(Theme.canvas, ignoresSafeAreaEdges: [])
+    }
+
+    private func captureForm(_ scroll: ScrollViewProxy) -> some View {
         Form {
             if reviewingFields {
                 StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, correctionScope: correctionScope,
@@ -101,6 +124,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 TextEditor(text: $model.text).frame(minHeight: 180)
                     .focused($sourceTextFocused)
                     .accessibilityLabel(captureText(requestMode ? "Request text to review" : "List text to review"))
+                    .id("capture.editor")
                     .accessibilityIdentifier("capture.editor")
                     .accessibilityFocused($reviewFocused)
                     .disabled(model.busy || loadingPhoto || model.closed)
@@ -139,7 +163,16 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                     .font(.footnote)
             }
             if let failure = model.failure {
-                Section { Text(failureText(failure)).accessibilityIdentifier("capture.error") }
+                Section {
+                    Text(failureText(failure)).accessibilityIdentifier("capture.error")
+                    if failure == .permissionDenied || failure == .onDeviceUnavailable || failure == .audioUnavailable || failure == .notConfigured {
+                        Button(captureText("Type item")) {
+                            scroll.scrollTo("capture.editor", anchor: .center)
+                            sourceTextFocused = true
+                            reviewFocused = true
+                        }.accessibilityIdentifier("capture.typeItem")
+                    }
+                }
             }
             Section {
                 Toggle(captureText("I checked the wording, amounts, units and exclusions."), isOn: $model.confirmed)
@@ -158,11 +191,6 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         }
         .navigationTitle(captureText(requestMode ? "Capture a request" : "Capture a list"))
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: sourceTextFocused || structuredFieldFocus != nil, title: captureText("Done"),
-                            identifier: sourceTextFocused ? "capture.sourceDone" : "capture.itemNameDone") {
-            sourceTextFocused = false
-            structuredFieldFocus = nil
-        }
         .toolbar { ToolbarItem(placement: .cancellationAction) {
             Button(captureText("Cancel")) { close(); dismiss() }
         } }
@@ -192,16 +220,23 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     }
     private func load(_ item: PhotosPickerItem?) {
         photoTask?.cancel()
-        guard let item, !model.closed else { return }
+        guard let item, !model.closed else { loadingPhoto = false; return }
         loadingPhoto = true
         photoTask = Task { @MainActor in
-            defer { if photo == item { loadingPhoto = false } }
+            defer {
+                if photo == item {
+                    loadingPhoto = false
+                    // Let the shopper choose this asset again after reviewing or retrying it.
+                    photo = nil
+                }
+            }
             do {
-                guard let data = try await item.loadTransferable(type: Data.self) else { throw CaptureFailure.imageUnavailable }
-                guard !Task.isCancelled, photo == item, !model.closed else { return }
-                model.stageImage(data)
+                guard let selected = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw CaptureFailure.imageUnavailable }
+                guard !Task.isCancelled, photo == item, !model.closed, authorize() else { return }
+                model.stageImage(try selected.data)
             } catch {
-                if !Task.isCancelled, !model.closed { model.photoLoadFailed() }
+                guard !Task.isCancelled, photo == item, !model.closed, authorize() else { return }
+                model.photoLoadFailed(error as? ScanFailure == .tooLarge ? .inputTooLarge : .imageUnavailable)
             }
         }
     }

@@ -53,6 +53,12 @@ private struct LocalDecisionList: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         List {
+            Text(fd("Saved pickup decisions on this iPhone"))
+                .font(.title2.bold())
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             if evidence.isEmpty { Text(fd("Saved store preferences and reviewed meal repairs will appear here.")) }
             ForEach(evidence) { item in
                 Section {
@@ -74,7 +80,9 @@ private struct LocalDecisionList: View {
                     }
                 }
             }
-        }.navigationTitle(fd("Saved pickup decisions on this iPhone"))
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

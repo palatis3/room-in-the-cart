@@ -9,8 +9,17 @@ final class StagingHelpUITests: XCTestCase {
         continueAfterFailure = false
         app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US"]
         app.launch()
+        let shop = app.tabBars.buttons[language == "es" ? "Compras" : "Shop"]
+        XCTAssertTrue(shop.waitForExistence(timeout: 20))
+        shop.tap()
         let settings = app.buttons["settings"]
-        XCTAssertTrue(settings.waitForExistence(timeout: 20))
+        for _ in 0..<4 {
+            if settings.exists { break }
+            let back = app.navigationBars.buttons.firstMatch
+            XCTAssertTrue(back.waitForExistence(timeout: 5))
+            back.tap()
+        }
+        XCTAssertTrue(settings.waitForExistence(timeout: 5))
         settings.tap()
     }
 

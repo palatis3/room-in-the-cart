@@ -73,7 +73,7 @@ extension HouseholdClientTests {
         let actor = try auth()
         let service = HouseholdService(configuration:try .init(baseURL:URL(string:"https://service.test")!),auth:actor,deviceVault:MemoryVault(),transport:transport())
         var allowed=true, wrongShop=false, reads=0
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let reply=self.authResponse(request) { return reply }
             let url=try XCTUnwrap(request.url)
             func response(_ body:[String:Any]) throws -> (Int,Data) { (200,try JSONSerialization.data(withJSONObject:body)) }
@@ -90,12 +90,12 @@ extension HouseholdClientTests {
         _ = try await actor.verifyEmailCode(email:"adult@example.test",code:"123456")
         _ = try await service.enroll(householdID:household)
         let page=try await service.confirmedOrder(shopID:confirmedShop)
-        XCTAssertEqual(page.current.lines.first?.packs,2);XCTAssertEqual(reads,1)
-        allowed=false
+        XCTAssertEqual(page.current.lines.first?.packs,2);XCTAssertEqual(stateLock.withLock { reads },1)
+        stateLock.withLock { allowed=false }
         do { _ = try await service.confirmedOrder(shopID:confirmedShop);XCTFail("Capability was revoked") }
         catch { XCTAssertEqual(error as? ClientError,.accessEnded) }
-        XCTAssertEqual(reads,1)
-        allowed=true;wrongShop=true
+        XCTAssertEqual(stateLock.withLock { reads },1)
+        stateLock.withLock { allowed=true;wrongShop=true }
         do { _ = try await service.confirmedOrder(shopID:confirmedShop);XCTFail("Wrong shop response") }
         catch { XCTAssertEqual(error as? ClientError,.invalidResponse) }
     }

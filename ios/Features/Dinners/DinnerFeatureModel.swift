@@ -236,7 +236,9 @@ import CoreDomain
             access: access(for: shop.id), at: clock(), extraTripAccepted: extraTripAccepted, ledger: shop)
     }
     func compare(_ pair: TwoStoreQuotePair) throws -> TwoStoreQuoteResult {
-        try TwoStoreQuoteEngine.compare(pair, access: access(for: pair.shopID), at: clock())
+        let result = try TwoStoreQuoteEngine.compare(pair, access: access(for: pair.shopID), at: clock())
+        clearErrorAfterSuccessfulReview()
+        return result
     }
     @discardableResult func saveQuotePair(_ pair: TwoStoreQuotePair) async -> Bool {
         await mutate(key: "dinner-quotes-\(pair.id)", shopID: pair.shopID) { workspace, index, access, now in
@@ -276,7 +278,7 @@ import CoreDomain
     func clearErrorAfterSuccessfulReview() { error = nil }
     private func fail(_ failure: Error) {
         switch failure {
-        case DinnerDraftValidationError.totalServings: error = dinnerText("Total servings: enter a number greater than zero.")
+        case let validation as DinnerDraftValidationError: error = validation.errorDescription
         case DinnerPlanningError.forbidden: error = dinnerText("Planning access changed or expired. Reconnect and review again.")
         case DinnerPlanningError.paidAccessRequired: error = dinnerText("This assisted tool requires paid access. Manual dinner editing remains available.")
         case DinnerPlanningError.stalePreview: error = dinnerText("The pickup or dinner plan changed. Make a new preview before applying.")

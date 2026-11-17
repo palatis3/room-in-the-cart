@@ -114,6 +114,15 @@ final class NavigationSnapshotStore {
     func setPath(_ path: [RestorableDestination], for tab: AdultTab) {
         snapshot[tab] = Array(path.prefix(4)); reconcile(); store.save(snapshot)
     }
+    /// Follow a committed picker action only while its originating list is still open.
+    func replaceShoppingList(_ source: RestorableDestination, with shopID: UUID) {
+        guard !suspended, selection == .shop, access?.unlocked == true,
+              shopPath.last == source, snapshot.shop == shopPath,
+              case let .shoppingList(actor, workspace, _) = source else { return }
+        let replacement = RestorableDestination.shoppingList(actorID: actor, workspaceID: workspace, shopID: shopID)
+        guard validation(replacement, lostLiveScope: false) == .allowed else { return }
+        setPath(Array(shopPath.dropLast()) + [replacement], for: .shop)
+    }
     /// Called before the privacy curtain and household lock clear live models.
     func suspend() { suspended = true; resumingHousehold = true; store.save(snapshot) }
     func resume() { suspended = false; reconcile() }

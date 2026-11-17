@@ -3,6 +3,25 @@ import {createHash,timingSafeEqual} from 'node:crypto';
 import {createServer,type IncomingMessage,type ServerResponse} from 'node:http';
 import {createOperationsRuntime,OPERATIONS_DEADLINE_MS} from './operations-runtime.js';
 
+async function reportScheduledHeartbeat(request: IncomingMessage, environment: NodeJS.ProcessEnv, healthy: boolean) {
+ if (request.headers['user-agent'] !== 'vercel-cron/1.0') return;
+ const destination = healthy ? environment.OPERATIONS_HEARTBEAT_URL : environment.OPERATIONS_HEARTBEAT_FAILURE_URL;
+ if (destination === undefined) return;
+ try {
+  const url = new URL(destination);
+  if (url.protocol !== 'https:' || url.username || url.password || url.hash) throw new Error('Invalid heartbeat URL');
+  const successDestination = environment.OPERATIONS_HEARTBEAT_URL;
+  if (!healthy && successDestination && URL.canParse(successDestination) && url.href === new URL(successDestination).href) {
+   throw new Error('Failure heartbeat needs a separate destination');
+  }
+  const response = await fetch(url, {method: 'POST', redirect: 'error', signal: AbortSignal.timeout(2500)});
+  await response.body?.cancel();
+  if (!response.ok) throw new Error('Heartbeat rejected');
+ } catch {
+  console.warn(JSON.stringify({event: 'operations_heartbeat_unconfirmed'}));
+ }
+}
+
 /** Authentication precedes pool construction, so public probes cannot open DB connections. */
 export function createOperationsHandler(environment:NodeJS.ProcessEnv=process.env){
  if(serviceAvailability(environment).mode==='maintenance'){
@@ -28,10 +47,16 @@ export function createOperationsHandler(environment:NodeJS.ProcessEnv=process.en
   try{
    runtime??=createOperationsRuntime(environment);
    const result=await runtime.run('run',signal);
-   console.info(JSON.stringify(result));respond(response,200,result);
+   const event=JSON.stringify(result);
+   if(result.attentionRequired)console.warn(event);
+   else console.info(event);
+   await reportScheduledHeartbeat(request,environment,!result.attentionRequired);
+   respond(response,200,result);
   }catch{
    const error=signal.aborted?'operations_deadline':'operations_unavailable';
-   console.error(JSON.stringify({event:'operations_failed',error}));respond(response,503,{error});
+   console.error(JSON.stringify({event:'operations_failed',error}));
+   await reportScheduledHeartbeat(request,environment,false);
+   respond(response,503,{error});
   }
  }
  return{handler,async close(){await runtime?.close();}};

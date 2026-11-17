@@ -124,9 +124,9 @@ import XCTest
     private func counts(previews: Int, posts: Int, writes: Int, retries: Int) {
         let value = "Previews: \(previews); POSTs: \(posts); Writes: \(writes); Exact retries: \(retries)"
         let predicate = NSPredicate(format: "exists == true AND label == %@", value)
-        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: element("fixture.operationUndo.counts"))], timeout: 15), .completed)
-        XCTAssertFalse(element("fixture.operationUndo.rejected").exists, app.debugDescription)
-        XCTAssertFalse(element("fixture.failure").exists, app.debugDescription)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: app.staticTexts["fixture.operationUndo.counts"])], timeout: 15), .completed)
+        XCTAssertFalse(app.staticTexts["fixture.operationUndo.rejected"].exists, app.debugDescription)
+        XCTAssertFalse(app.staticTexts["fixture.failure"].exists, app.debugDescription)
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private enum SearchDirection { case towardStart, towardEnd }
@@ -151,11 +151,25 @@ import XCTest
     }
     private func setSwitch(_ id: String, on: Bool) {
         let toggle = app.switches[id]; reveal(toggle)
-        if toggle.value as? String != (on ? "1" : "0") {
-            // SwiftUI includes the label in this frame; operate the trailing switch.
-            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        let expected = on ? "1" : "0"
+        if toggle.value as? String != expected {
+            // Use the native thumb inside the labeled SwiftUI row.
+            XCTAssertEqual(toggle.switches.count, 1, id)
+            let control = toggle.switches.firstMatch
+            XCTAssertTrue(control.isEnabled && control.isHittable, id)
+            XCTAssertEqual(control.value as? String, on ? "0" : "1", id)
+            let left = control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+            if on {
+                left.tap()
+            } else {
+                let right = control.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+                right.press(forDuration: 0.1, thenDragTo: left)
+            }
+            let changed = app.switches.matching(identifier: id)
+                .matching(NSPredicate(format: "value == %@", expected)).firstMatch
+            XCTAssertTrue(changed.waitForExistence(timeout: 5), id)
         }
-        XCTAssertEqual(toggle.value as? String, on ? "1" : "0", id)
+        XCTAssertEqual(toggle.value as? String, expected, id)
     }
     private func reveal(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
         let startsBySwipingUp = initialSearchDirection == .towardEnd

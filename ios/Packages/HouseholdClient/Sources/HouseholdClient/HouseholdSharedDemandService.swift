@@ -35,11 +35,17 @@ extension HouseholdService {
     public func prepareSharedDemandApply(_ review: SharedDemandReview) async throws -> PendingOperation {
         try review.validate()
         let start = generation
-        guard try sharedDemandContext(shopID: review.shopID) == review.context,
-              let expiry = demandTime(review.preview.expiresAt), expiry > Date() else { throw ClientError.accessEnded }
+        guard try sharedDemandContext(shopID: review.shopID) == review.context else { throw ClientError.accessEnded }
+        func requireCurrentPreview() throws {
+            guard let expiry = demandTime(review.preview.expiresAt), expiry > Date() else {
+                throw ClientError.service(status: 409, code: "food_preview_expired", correlationID: nil, retryAfter: nil)
+            }
+        }
+        try requireCurrentPreview()
         try await authorizeShopper(shopID: review.shopID.uuidString.lowercased())
         let window = try await replayWindow()
         guard generation == start, try sharedDemandContext(shopID: review.shopID) == review.context else { throw ClientError.cancelled }
+        try requireCurrentPreview()
         let binding = SharedDemandOperationBinding(context: review.context, shopID: .init(review.shopID), reservedOperationID: review.preview.receipt.operationId,
             previewID: review.preview.previewId, previewDigest: review.preview.previewDigest, action: review.request.action,
             base: review.commandBase, graphRevision: review.preview.after.revision)

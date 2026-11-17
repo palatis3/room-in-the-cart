@@ -116,8 +116,17 @@ struct PickupEvidenceField: View {
     let title: String
     @Binding var amount: String
     var body: some View {
-        TextField(pTr(title), text: $amount).keyboardType(.decimalPad)
-            .accessibilityHint(pTr("US dollars. Leave blank when unknown; enter zero only if confirmed."))
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: title)
+                .font(.subheadline)
+                .accessibilityHidden(true)
+            TextField(title, text: $amount, prompt: Text(verbatim: ""))
+                .textFieldStyle(.roundedBorder)
+                .controlSize(.large)
+                .keyboardType(.decimalPad)
+                .accessibilityLabel(Text(verbatim: title))
+                .accessibilityHint(pTr("US dollars. Leave blank when unknown; enter zero only if confirmed."))
+        }
     }
 }
 @MainActor func pickupEvidence(_ text: String) throws -> CostEvidence {
@@ -129,6 +138,10 @@ func pickupResultText(_ result: CheckoutResult) -> String {
     if let upper = result.total.upperBound { return "\(pMoney(result.total.lowerBound)) – \(pMoney(upper))" }
     return "\(pTr("At least")) \(pMoney(result.total.lowerBound)) · \(pTr("total unresolved"))"
 }
+private func pickupLinePriceTitle(_ name: String) -> String {
+    String(format: pTr("Price for %@"), name)
+}
+
 private func pickupComponentName(_ component: String) -> String {
     if component.hasPrefix("line:") { return pTr("Item price") }
     if component.hasPrefix("fee:") { return pTr("Retailer fee") }
@@ -143,6 +156,20 @@ private func pickupComponentName(_ component: String) -> String {
 }
 struct PickupResultView: View {
     let result: CheckoutResult
+    var pricing: CheckoutPricing? = nil
+
+    private var uncertaintyDescriptions: [String] {
+        guard !result.uncertainties.isEmpty else { return [] }
+        var lineNames: [String: String] = [:]
+        if case let .components(lines, _, _, _, _, _)? = pricing {
+            for line in lines { lineNames["line:\(line.id.uuidString)"] = line.name }
+        }
+        return result.uncertainties.map { issue in
+            let label = lineNames[issue.component].map(pickupLinePriceTitle) ?? pickupComponentName(issue.component)
+            return "\(label): \(pTr(issue.reason))"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(pickupResultText(result)).font(.title2.bold())
@@ -153,8 +180,8 @@ struct PickupResultView: View {
             case let .within(_, headroom): Text("\(pTr("Within this scope’s cap · room remaining")) \(pMoney(headroom))")
             case let .over(_, overage): Text("\(pTr("Over this scope’s cap by")) \(pMoney(overage))")
             }
-            ForEach(Array(result.uncertainties.enumerated()), id: \.offset) { _, issue in
-                Text("\(pickupComponentName(issue.component)): \(pTr(issue.reason))").font(.caption)
+            ForEach(Array(uncertaintyDescriptions.enumerated()), id: \.offset) { _, description in
+                Text(verbatim: description).font(.caption)
             }
         }
     }
@@ -177,7 +204,7 @@ struct PickupCheckoutView: View {
     @State private var reviewingReplacement = false
     @State private var reopeningCurrent = false
     @State private var selected: Set<UUID> = []
-    @State private var preview: (BasketProposal, CheckoutComparison)?
+    @State private var preview: PickupDeferralReview?
     @State private var formError: String?
     @State private var comparingHold = false
     @State private var hold = ""
@@ -190,6 +217,31 @@ struct PickupCheckoutView: View {
         return model.journey.map { !draft.matchesSource($0, workspaceID: model.sourceWorkspaceID) } ?? true
     }
     var body: some View {
+        if let journey = model.journey, journey.basket?.phase == .frozen, let snapshot = model.frozenSnapshot {
+            Form {
+                PickupSaveStatus(model: model)
+                Section(pTr("Frozen · placement unconfirmed")) {
+                    if let quote = journey.frozenQuotes[snapshot.id] {
+                        let cap = journey.frozenCaps?[snapshot.id.uuidString]
+                        PickupQuoteTermsView(quote: quote, cap: cap)
+                        PickupSavedCheckoutPricingView(pricing: quote.pricing)
+                        if let result = try? CheckoutEngine.evaluate(quote, cap: cap) {
+                            PickupResultView(result: result, pricing: quote.pricing)
+                        }
+                    }
+                    Button(pTr("Reopen draft and recheck prices")) {
+                        Task { _ = await model.reopenDraft(reviewing: snapshot) }
+                    }
+                    .disabled(model.saving || model.hasPendingSave)
+                }
+            }
+            .navigationTitle(pTr("Whole checkout"))
+        } else {
+            checkoutEditor
+        }
+    }
+
+    private var checkoutEditor: some View {
         Form {
             if !draftIsStale { PickupSaveStatus(model: model) }
             if draftIsStale {
@@ -221,7 +273,7 @@ struct PickupCheckoutView: View {
                     Text(pTr("Dinners only")).tag(CheckoutScope.dinner)
                     Text(pTr("Selected items only")).tag(CheckoutScope.item)
                 }
-                PickupEvidenceField(title: "Spending cap", amount: $draft.cap).focused($field, equals: .cap)
+                PickupEvidenceField(title: pTr("Spending cap"), amount: $draft.cap).focused($field, equals: .cap)
                 Picker(pTr("Spending cap scope"), selection: $draft.capScope) {
                     Text(pTr("Whole checkout")).tag(CheckoutScope.wholeCheckout)
                     Text(pTr("Dinners only")).tag(CheckoutScope.dinner)
@@ -246,18 +298,18 @@ struct PickupCheckoutView: View {
                 } else {
                     Toggle(pTr("Retailer total already includes all charges"), isOn: $draft.inclusive)
                     Text(pTr("Blank means unknown. Enter 0 only for a confirmed zero charge."))
-                    if draft.inclusive { PickupEvidenceField(title: "Inclusive total", amount: $draft.total).focused($field, equals: .total) }
+                    if draft.inclusive { PickupEvidenceField(title: pTr("Inclusive total"), amount: $draft.total).focused($field, equals: .total) }
                     else {
                         ForEach(draft.displayLines) { line in
-                            PickupEvidenceField(title: line.name, amount: Binding(get: { draft.prices[line.id] ?? "" }, set: { draft.prices[line.id] = $0 }))
+                            PickupEvidenceField(title: pickupLinePriceTitle(line.name), amount: Binding(get: { draft.prices[line.id] ?? "" }, set: { draft.prices[line.id] = $0 }))
                                 .focused($field, equals: .line(line.id))
                         }
                         Toggle(pTr("All original items are represented"), isOn: $draft.complete)
-                        PickupEvidenceField(title: "Fee below threshold or fixed fee", amount: $draft.fee).focused($field, equals: .fee)
-                        PickupEvidenceField(title: "Fee waived at subtotal (optional)", amount: $draft.threshold).focused($field, equals: .threshold)
-                        PickupEvidenceField(title: "Eligible discount", amount: $draft.discount).focused($field, equals: .discount)
-                        PickupEvidenceField(title: "Tax", amount: $draft.tax).focused($field, equals: .tax)
-                        PickupEvidenceField(title: "Deposits and other charges", amount: $draft.deposits).focused($field, equals: .deposits)
+                        PickupEvidenceField(title: pTr("Fee below threshold or fixed fee"), amount: $draft.fee).focused($field, equals: .fee)
+                        PickupEvidenceField(title: pTr("Fee waived at subtotal (optional)"), amount: $draft.threshold).focused($field, equals: .threshold)
+                        PickupEvidenceField(title: pTr("Eligible discount"), amount: $draft.discount).focused($field, equals: .discount)
+                        PickupEvidenceField(title: pTr("Tax"), amount: $draft.tax).focused($field, equals: .tax)
+                        PickupEvidenceField(title: pTr("Deposits and other charges"), amount: $draft.deposits).focused($field, equals: .deposits)
                     }
                 }
                 Button(pTr("Save and evaluate checkout")) { saveQuote() }.buttonStyle(.borderedProminent)
@@ -267,7 +319,7 @@ struct PickupCheckoutView: View {
                     NavigationLink(pTr("Check price by weight")) { PickupWeightReview(model: model, shopID: id) }
                         .accessibilityIdentifier("checkout.weightReview")
                     Text(pTr("Saved checkout result")).font(.headline)
-                    PickupResultView(result: result)
+                    PickupResultView(result: result, pricing: draft.reviewedQuote?.pricing)
                 }
             }.disabled(draftIsStale)
             if !draftIsStale {
@@ -277,7 +329,7 @@ struct PickupCheckoutView: View {
                             PickupQuoteTermsView(quote: record.quote, cap: record.cap)
                             PickupSavedCheckoutPricingView(pricing: record.quote.pricing)
                             if let result = try? CheckoutEngine.evaluate(record.quote, cap: record.cap) {
-                                PickupResultView(result: result)
+                                PickupResultView(result: result, pricing: record.quote.pricing)
                             }
                             Divider()
                         }
@@ -288,8 +340,8 @@ struct PickupCheckoutView: View {
                 Section(pTr("Payment hold · separate from spending")) {
                     Toggle(pTr("Compare an authorization hold"), isOn: $comparingHold)
                     if comparingHold {
-                        PickupEvidenceField(title: "Retailer-displayed hold", amount: $hold).focused($field, equals: .hold)
-                        PickupEvidenceField(title: "Available funds (private, this screen only)", amount: $availableFunds).focused($field, equals: .funds)
+                        PickupEvidenceField(title: pTr("Retailer-displayed hold"), amount: $hold).focused($field, equals: .hold)
+                        PickupEvidenceField(title: pTr("Available funds (private, this screen only)"), amount: $availableFunds).focused($field, equals: .funds)
                         if let held = try? ComparisonModel.money(hold), let funds = try? ComparisonModel.money(availableFunds), let gap = try? held.subtracting(funds) {
                             Text("\(pTr("Hold less available funds")): \(pMoney(gap))")
                         } else { Text(pTr("Hold comparison unresolved")) }
@@ -308,17 +360,21 @@ struct PickupCheckoutView: View {
                             Text("\(need.name): \(pQuantity(need.amount)) · \(pTr(need.priority == .protected ? "Protected" : "Required"))").font(.caption)
                         }
                         if model.journey?.flexible.contains(line.id) == true {
-                            Toggle(pTr("Include in deferral preview"), isOn: Binding(get: { selected.contains(line.id) }, set: { if $0 { selected.insert(line.id) } else { selected.remove(line.id) } }))
+                            Toggle(pTr("Include in deferral preview"), isOn: Binding(get: { selected.contains(line.id) }, set: { included in
+                                preview = nil
+                                if included { selected.insert(line.id) } else { selected.remove(line.id) }
+                            }))
                         }
                     }
                     Button(pTr("Preview deferrals together")) {
                         do { preview = try model.deferralPreview(selected); formError = nil }
                         catch { formError = pTr("Select flexible lines and save a complete component quote first.") }
                     }
+                    .disabled(selected.isEmpty)
                     if let preview {
-                        Text(pTr("Current checkout")); PickupResultView(result: preview.1.before)
-                        Text(pTr("After all selected deferrals")); PickupResultView(result: preview.1.after)
-                        Button(pTr("Apply reviewed deferral")) { Task { if await model.applyDeferral(preview.0) { self.preview = nil; selected = []; populate() } } }
+                        Text(pTr("Current checkout")); PickupResultView(result: preview.comparison.before, pricing: draft.reviewedQuote?.pricing)
+                        Text(pTr("After all selected deferrals")); PickupResultView(result: preview.comparison.after, pricing: draft.reviewedQuote?.pricing)
+                        Button(pTr("Apply reviewed deferral")) { Task { if await model.applyDeferral(preview) { self.preview = nil; selected = []; populate() } } }
                         Button(pTr("Cancel preview")) { self.preview = nil }
                     }
                     ForEach(model.journey?.proposals.filter { !(model.journey?.undoneProposals.contains($0.id) ?? false) } ?? []) { proposal in
@@ -331,6 +387,10 @@ struct PickupCheckoutView: View {
         .keyboardDoneAction(visible: field != nil, title: pTr("Done")) { field = nil }
         .disabled(model.saving)
         .onAppear { populate() }
+        .onChange(of: model.journey?.revision) { _, _ in
+            preview = nil
+            selected.formIntersection(model.journey?.flexible ?? [])
+        }
         .onChange(of: model.journey?.basket?.current.id) { _, _ in populate() }
         .onChange(of: model.selectedID) { _, _ in populate() }
         .onChange(of: model.journey?.quote) { _, _ in populate() }
@@ -349,7 +409,7 @@ struct PickupCheckoutView: View {
                         PickupQuoteTermsView(quote: review.quote, cap: review.cap)
                         PickupSavedCheckoutPricingView(pricing: review.quote.pricing)
                         if let result = try? CheckoutEngine.evaluate(review.quote, cap: review.cap) {
-                            PickupResultView(result: result)
+                            PickupResultView(result: result, pricing: review.quote.pricing)
                         }
                     }
                     if model.journey.map({ review.draft.matchesSource($0, workspaceID: model.sourceWorkspaceID) }) == true {
@@ -629,6 +689,7 @@ struct PickupHandoffView: View {
     @State private var selectedLanguage: String?
     @State private var sharing: RetailerShare?
     @State private var retailerURL = ""
+    @State private var retailerOpenError: String?
 
     private struct RetailerShare: Identifiable {
         let snapshot: HandoffSnapshot
@@ -637,6 +698,13 @@ struct PickupHandoffView: View {
     }
     private var recipientLanguage: String {
         selectedLanguage ?? (locale.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
+    }
+
+    static func retailerWebsite(_ input: String) -> URL? {
+        let address = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: address), url.scheme?.lowercased() == "https",
+              let host = url.host, !host.isEmpty else { return nil }
+        return url
     }
 
     var body: some View {
@@ -658,6 +726,13 @@ struct PickupHandoffView: View {
             PickupActivitySheet(text: share.text) { completed, destination in
                 Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, snapshot: share.snapshot, destination: destination) }
             }
+        }
+        .alert(pTr("Retailer handoff"), isPresented: Binding(
+            get: { retailerOpenError != nil }, set: { if !$0 { retailerOpenError = nil } }
+        )) {
+            Button(pTr("Done"), role: .cancel) {}
+        } message: {
+            Text(retailerOpenError ?? "")
         }
     }
 
@@ -690,15 +765,19 @@ struct PickupHandoffView: View {
                       model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
                 sharing = RetailerShare(snapshot: snapshot, text: copy.fullText)
             } }.disabled(!model.hasCurrentBasketStockBasis)
+            HandoffPrintButton(copy: copy, allowed: access.unlocked && model.isCurrent(copy))
             PickupRecipientSection(model: model, channel: .retailer, versionID: snapshot.id,
                                    language: recipientLanguage)
                 .id(snapshot.id)
             TextField(pTr("Retailer website (https://…)"), text: $retailerURL).keyboardType(.URL).textInputAutocapitalization(.never)
             Button(pTr("Open retailer website")) { Task {
                 guard access.unlocked, model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
-                guard let url = URL(string: retailerURL), url.scheme == "https", url.host != nil else { model.error = pTr("Enter a valid https retailer address."); return }
+                guard let url = Self.retailerWebsite(retailerURL) else {
+                    retailerOpenError = pTr("Enter a valid https retailer address.")
+                    return
+                }
                 if await UIApplication.shared.open(url) { await model.recordHandoff(.retailerOpened, snapshot: snapshot, destination: url.host) }
-                else { model.error = pTr("Could not open the retailer. Placement remains unconfirmed.") }
+                else { retailerOpenError = pTr("Could not open the retailer. Placement remains unconfirmed.") }
             } }.disabled(!model.hasCurrentBasketStockBasis)
             Button(pTr("Still checking out")) { dismiss() }
             Button(pTr("I placed this order")) { Task {
@@ -782,11 +861,8 @@ private struct PickupWeightReview: View {
                 Picker(pTr("Price and increment unit"), selection: $unit) {
                     ForEach([UnitOfMeasure.pound, .ounce, .kilogram, .gram], id: \.self) { Text(pTr($0.rawValue)).tag($0) }
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(pTr("Price per selected weight unit")).font(.caption).accessibilityHidden(true)
-                    PickupEvidenceField(title: "Price per selected weight unit", amount: $rate)
-                        .focused($field, equals: .rate).accessibilityIdentifier("checkout.weightRate")
-                }
+                PickupEvidenceField(title: pTr("Price per selected weight unit"), amount: $rate)
+                    .focused($field, equals: .rate).accessibilityIdentifier("checkout.weightRate")
                 VStack(alignment: .leading, spacing: 4) {
                     Text(pTr("Retailer billing increment")).font(.caption).accessibilityHidden(true)
                     TextField(pTr("Retailer billing increment"), text: $increment)

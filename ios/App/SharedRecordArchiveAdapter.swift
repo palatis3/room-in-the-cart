@@ -110,7 +110,7 @@ extension SharedRecordArchiveAdapter {
             word("Tracked subtotals only; this record does not establish complete food coverage or free unbound supply.", "Solo subtotales registrados; este registro no confirma cobertura completa ni disponibilidad de alimentos sin vincular.")]
         if value.food.status == .reviewRequired { lines.append(word("Source data changed. Previous pack reviews were erased; review is required.", "Los datos de origen cambiaron. Se borraron las revisiones de paquetes anteriores; se necesita una nueva revisión.")) }
         lines.append(word("Basket packages and prices", "Paquetes y precios de la cesta"))
-        for row in value.food.basket { lines.append("\(row.name) · \(row.packs) " + word("packs", "paquetes") + " · " + word("price per pack: ", "precio por paquete: ") + money(row.priceMinor)) }
+        for row in value.food.basket { lines.append("\(row.name) · \(row.packs) " + word(row.packs == 1 ? "pack" : "packs", row.packs == 1 ? "paquete" : "paquetes") + " · " + word("price per pack: ", "precio por paquete: ") + money(row.priceMinor)) }
         lines.append(word("Pack yield review", "Revisión del rendimiento por paquete"))
         for pack in value.food.packReview.values ?? [] {
             let name = value.food.basket.first { $0.id == pack.lineId }?.name ?? pack.lineId.string
@@ -320,7 +320,7 @@ extension SharedHistoryArchiveAdapter {
                 let food = revision.food
                 lines.append(revision.recordedAt + " · " + w("Basket revision: ", "Revisión de la cesta: ") + String(revision.shopRevision))
                 lines += graphLines(food.graph, packs: food.packReviews)
-                for row in food.basket { lines.append(row.name + " · \(row.packs) " + w("packs", "paquetes") + " · " + money(row.priceMinor)) }
+                for row in food.basket { lines.append(row.name + " · \(row.packs) " + w(row.packs == 1 ? "pack" : "packs", row.packs == 1 ? "paquete" : "paquetes") + " · " + money(row.priceMinor)) }
                 for fact in food.catalog {
                     lines.append(fact.sourceLabel + " · " + fact.originalText + " · " + demandQuantity(fact.quantity))
                     if let original = fact.originalQuantityText { lines.append(original) }

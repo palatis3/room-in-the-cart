@@ -67,7 +67,6 @@ import CoreDomain
             lines: [.init(id: line.id, name: line.name, cost: cost)], lineSetComplete: true, fees: [fee], discounts: [], tax: zero, deposits: zero)), cap: nil)
     }
     static func seed(_ draft: inout DinnerScenarioDraft, shop: ShoppingLedger, state: DinnerPlanningState) throws -> DinnerLibraryPairings? {
-        draft.meals = try DinnerLibraryPairings.scheduledMeals(shop: shop,state: state)
         guard let target = draft.meals.first(where: { !$0.protected })?.id else { return nil }
         var library = try DinnerLibraryPairings.prepare(&draft,target: target,shop: shop,state: state)
         var food = DinnerFoodEvidenceDraft(name: "Peppers")

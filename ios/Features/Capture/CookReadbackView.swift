@@ -16,7 +16,9 @@ import AVFoundation
             VStack(alignment: .leading, spacing: 12) {
                 if model.canRead {
                     Text(captureText("Current dated cook instruction")).font(.headline)
-                    Text(model.instruction.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    Text(model.instruction.createdAt.formatted(Date.FormatStyle(
+                        date: .abbreviated, time: .shortened, locale: Locale(identifier: model.instruction.localeIdentifier)
+                    )))
                     Text(model.instruction.text).textSelection(.enabled)
                     if model.voiceOverActive {
                         Text(captureText("VoiceOver can read this instruction. Separate playback is stopped."))

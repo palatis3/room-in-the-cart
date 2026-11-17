@@ -8,7 +8,7 @@ extension HouseholdClientTests {
         var service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport())
         var ignoreSelection = false
         var bootstrapHeaders: [String?] = []
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             if request.url!.path.hasSuffix("/devices") { return (201, Data(#"{"deviceId":"device","deviceToken":"test"}"#.utf8)) }
             let selected = request.value(forHTTPHeaderField: "X-Shop-ID")
@@ -39,8 +39,8 @@ extension HouseholdClientTests {
         XCTAssertEqual(restored.shopId, selected.shopId)
         let overview = try await service.selectShop(nil)
         XCTAssertNil(overview.shopId)
-        XCTAssertEqual(bootstrapHeaders,[nil,selected.shopId,selected.shopId,nil])
-        ignoreSelection = true
+        XCTAssertEqual(stateLock.withLock { bootstrapHeaders },[nil,selected.shopId,selected.shopId,nil])
+        stateLock.withLock { ignoreSelection = true }
         do { _ = try await service.selectShop(shopID); XCTFail("Ignored shop selection must fail closed") }
         catch { XCTAssertEqual(error as? ClientError,.accessEnded) }
     }
@@ -59,7 +59,7 @@ extension HouseholdClientTests {
     func testSharedShopCreationRetriesExactBytesAfterBecomingShopperAndDeniesContributor() async throws {
         let auth = try auth(); let shop = UUID().uuidString.lowercased(); var created = false; var contributor = false; var commands: [Data] = []
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             if request.url!.path.hasSuffix("/devices") { return (201, Data(#"{"deviceId":"device","deviceToken":"token"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") {
@@ -79,10 +79,10 @@ extension HouseholdClientTests {
         let candidate = try ShopperShopCandidate(quote: quote, lines: [])
         let operation = try await service.prepare(envelope: .init(replayWindow: UUID().uuidString, shopId: shop, kind: "shop.create", base: .init(shopRevision: 0, authorityEpoch: 0), body: candidate.commandBody()), bootstrap: scope)
         let first = try await service.executeSharedShop(operation); let second = try await service.executeSharedShop(operation)
-        XCTAssertEqual(first, second); XCTAssertEqual(commands, [operation.bytes, operation.bytes])
-        contributor = true
+        XCTAssertEqual(first, second); XCTAssertEqual(stateLock.withLock { commands }, [operation.bytes, operation.bytes])
+        stateLock.withLock { contributor = true }
         do { _ = try await service.executeSharedShop(operation); XCTFail("Contributor used organizer capability") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(commands.count, 2)
+        XCTAssertEqual(stateLock.withLock { commands.count }, 2)
     }
     func testNewQuoteRetainsSubsecondOrderingOnTheWire() throws {
         let second = Date(timeIntervalSince1970: 1_800_000_000)

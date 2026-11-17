@@ -133,6 +133,22 @@ class ExecutionLogTests(unittest.TestCase):
         ]
         self.assertEqual(execution_log_failures(iter(line + "\r\n" for line in log), expected), [])
 
+    def test_storekit_record_can_interrupt_the_process_name_pid_or_thread_id(self):
+        timestamp = "2026-11-14 12:00:00.000000+0000 "
+        header = "RoomInTheCart[123:456]"
+        payload = " [Default] Fixture message"
+        # bc22a846's English job split the header immediately before the colon.
+        for boundary in range(1, len(header)):
+            with self.subTest(boundary=boundary):
+                log = [self.start, timestamp + header[:boundary] + self.done,
+                       header[boundary:] + payload, self.success]
+                self.assertEqual(execution_log_failures(log, [self.selector]), [])
+
+        for following in ("456]" + payload, ":thread]" + payload, ":456] extra" + payload, ":456]"):
+            with self.subTest(following=following):
+                log = [self.start, timestamp + "RoomInTheCart[123" + self.done, following, self.success]
+                self.assertTrue(execution_log_failures(log, [self.selector]))
+
     def test_split_process_recovery_preserves_lifecycle_gates(self):
         def split(record):
             return [self.split_prefix + record, self.split_suffix]
@@ -152,6 +168,19 @@ class ExecutionLogTests(unittest.TestCase):
         ):
             with self.subTest(log=log):
                 self.assertTrue(any(reason in error for error in execution_log_failures(log, [self.selector])))
+
+    def test_vm_compiler_message_without_newline_preserves_the_actual_xctest_event(self):
+        diagnostic = ("2026-11-15 09:06:49.647198+0000 RoomInTheCart[28013:80627] [e5rt] "
+                      "E5RT encountered an STL exception. msg = On-device compilation within a VM only supports CPU currently")
+        def failures(line):
+            return execution_log_failures([self.start, line, self.success], [self.selector])
+
+        self.assertEqual(failures(diagnostic + self.done), [])
+        for invalid in (diagnostic + ' quoted: ' + self.done, diagnostic.replace('[e5rt]', '[Default]') + self.done,
+                        diagnostic + self.case + 'failed (0.002 seconds).', diagnostic + self.done + ' extra'):
+            with self.subTest(line=invalid):
+                self.assertTrue(failures(invalid))
+        self.assertTrue(execution_log_failures([self.start, self.done, diagnostic + self.done, self.success], [self.selector]))
 
     def test_embedded_or_unproven_records_cannot_supply_missing_completion(self):
         for fragment in (
@@ -291,6 +320,18 @@ class ActivityRetentionTests(unittest.TestCase):
              patch('check_ios_test_results.MAX_ACTIVITY_DIAGNOSTIC_BYTES', cap or 8 * 1024 * 1024):
             append_runtime_warning_report(args, {}, [], [], report, failures)
         return report, failures, exporter
+
+    def test_export_timeout_is_unavailable_evidence_and_a_failed_gate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, failures, _ = self.run_report(
+                root, [], subprocess.TimeoutExpired('xcrun xcresulttool', 300))
+            evidence = json.loads((root / 'test-runtime-warnings.json').read_text())
+            self.assertEqual(evidence['status'], 'unavailable')
+            self.assertNotIn('runtimeWarningCount', evidence)
+            self.assertEqual(len(failures), 1)
+            self.assertIn('timed out after 300 seconds', failures[0])
+            self.assertTrue((root / 'test-runtime-warning-activities.json').is_file())
 
     def test_missing_attachment_retains_exact_per_case_stdout_without_logging_payload(self):
         raw = (b'{\r\n "activities": [{"title": "Fixture private text", "isAssociatedWithFailure": false},'

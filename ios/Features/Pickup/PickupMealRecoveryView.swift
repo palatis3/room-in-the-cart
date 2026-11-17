@@ -230,13 +230,19 @@ private struct PickupMealRecoveryEditor: View {
         }
         .navigationTitle(recoveryText("Replace a whole dinner"))
         .environment(\.timeZone, TimeZone(identifier: original.meal.timeZoneID) ?? .current)
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboard(.immediately)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if draft.identityReviewed && focused == nil && !applied && review == nil && liveAuthority() != nil {
                 previewButton.padding(.horizontal, 16).padding(.vertical, 8).background(Theme.canvas)
             }
         }
-        .keyboardDoneAction(visible: focused != nil, title: tr("Done")) { focused = nil }
+        .toolbar {
+            if focused != nil {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(tr("Done")) { focused = nil }
+                }
+            }
+        }
         .disabled(model.saving)
         .onChange(of: model.journey?.revision) { _, _ in
             guard liveAuthority() != nil, let review, let history = model.journey?.mealRecovery,
@@ -285,6 +291,9 @@ private struct PickupMealRecoveryEditor: View {
                 if draft.confirmsDeadline { DatePicker(recoveryText("Needed by"), selection: $draft.deadline) }
             }
             Toggle(recoveryText("I reviewed every food identity, usable unit and inherited exclusion"), isOn: $draft.identityReviewed)
+                .onChange(of: draft.identityReviewed) { _, reviewed in
+                    if reviewed { focused = nil }
+                }
             Toggle(recoveryText("This replacement proposes an extra trip"), isOn: $draft.proposesTrip)
             Text(recoveryText("Agreeing to a trip does not add stock or confirm a delivery."))
             if !draft.identityReviewed { previewButton }

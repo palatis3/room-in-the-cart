@@ -80,7 +80,9 @@ private struct SharedMealIdeaEditor: View {
                 }
             }
             Section(ht("Editable household idea")) {
-                TextField(ht("Meal name"), text: $draft.title).focused($inputFocus, equals: "title")
+                TextField(ht("Meal name"), text: $draft.title)
+                    .autocorrectionDisabled()
+                    .focused($inputFocus, equals: "title")
                 Text(draft.source == "app_template" ? ht("Source: app-owned editable template") : ht("Source: household manual entry"))
                 Stepper(value: $draft.servings, in: 1...1000) { LabeledContent(ht("Suggested servings"), value: draft.servings.formatted()) }
                 number(ht("Preparation minutes, if known"), value: $draft.minutes).focused($inputFocus, equals: "minutes")

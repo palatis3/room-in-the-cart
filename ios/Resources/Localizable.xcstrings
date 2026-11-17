@@ -401,6 +401,54 @@
         }
       }
     },
+    "Shorten the item name, then compare again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten the item name, then compare again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el nombre del artículo y vuelve a comparar."
+          }
+        }
+      }
+    },
+    "Shorten the name for Pack A, then compare again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten the name for Pack A, then compare again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el nombre del paquete A y vuelve a comparar."
+          }
+        }
+      }
+    },
+    "Shorten the name for Pack B, then compare again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten the name for Pack B, then compare again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el nombre del paquete B y vuelve a comparar."
+          }
+        }
+      }
+    },
     "This saved comparison changed. Reopen it to review the latest prices before saving your edits.": {
       "localizations": {
         "en": {
@@ -1848,6 +1896,23 @@
         }
       }
     },
+    "US cup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US cup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taza estadounidense"
+          }
+        }
+      }
+    },
     "US cups": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
@@ -1862,6 +1927,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "tazas estadounidenses"
+          }
+        }
+      }
+    },
+    "US fluid ounce": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US fluid ounce"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onza líquida estadounidense"
           }
         }
       }
@@ -2133,6 +2215,23 @@
         }
       }
     },
+    "item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unidad"
+          }
+        }
+      }
+    },
     "items": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
@@ -2201,6 +2300,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "mililitros"
+          }
+        }
+      }
+    },
+    "ounce (weight)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ounce (weight)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onza (peso)"
           }
         }
       }

@@ -34,7 +34,7 @@ import XCTest
         assertText("This raw record does not calculate a remaining balance")
         XCTAssertFalse(app.buttons["Edit this period plan"].exists)
         XCTAssertFalse(element("history.applyReviewed").exists)
-        counter("writes",0)
+        assertNoWrites()
         capture("E09-granted-raw-plan-has-no-write-action")
         pricesTab()
         let reference = app.textFields["Saved observation reference"]
@@ -43,12 +43,16 @@ import XCTest
         XCTAssertTrue(app.buttons["Check access again"].waitForExistence(timeout:12))
         XCTAssertFalse(app.staticTexts["Grant-only oats"].exists)
         XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
-        counter("writes",0)
+        assertNoWrites()
         capture("E09-foreign-reference-clears-protected-disclosure")
     }
     func testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource() {
         openGrantedHistory(); openAllowedObservation(); assertText("Grant-only oats")
         periodTab(); openRawPlan(); assertText("Permitted saved November plan")
+        tap(element("history.loadPeriods"))
+        XCTAssertTrue(element("history.openRawPeriod").waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
+        openRawPlan(); assertText("Permitted saved November plan")
         tap(element("fixture.h09.revoke"))
         tap(element("history.openRawPeriod")); atLeast("denied",1)
         XCTAssertTrue(app.buttons["Check access again"].waitForExistence(timeout:12))
@@ -58,8 +62,71 @@ import XCTest
         tap(app.buttons["Check access again"])
         XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
         XCTAssertFalse(app.staticTexts["$100.00"].exists)
-        counter("writes",0)
+        assertNoWrites()
         capture("E09-revocation-clears-raw-envelope-and-saved-source")
+    }
+    func testRefreshingHistoryAfterAnUnavailableRecordClearsBothDateFilters() throws {
+        openGrantedHistory()
+        let start = app.switches["Filter from an evidence date"]
+        let end = app.switches["Filter through an evidence date"]
+        func setFilter(_ row: XCUIElement, enabled: Bool) {
+            reveal(row)
+            let thumb = row.switches.firstMatch
+            (thumb.exists ? thumb : row).tap()
+            XCTAssertEqual(row.value as? String, enabled ? "1" : "0")
+        }
+        setFilter(start, enabled: true)
+        let date = app.datePickers.buttons.matching(NSPredicate(format: "label MATCHES %@", ".*[0-9]{4}$")).firstMatch
+        reveal(date)
+        let initial = date.label
+        let bar = app.navigationBars["Prices and period budgets"].frame
+        let origin = app.frame.origin
+        let title = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: bar.midX - origin.x, dy: bar.midY - origin.y))
+        date.tap()
+        let days = app.datePickers.collectionViews.buttons
+        let day = days.matching(NSPredicate(format: "enabled == true AND selected == false")).firstMatch
+        XCTAssertTrue(day.waitForExistence(timeout: 5))
+        day.tap()
+        func containsCalendar(_ node: any XCUIElementSnapshot, inPicker: Bool = false) -> Bool {
+            if inPicker && node.elementType == .collectionView { return true }
+            return node.children.contains { containsCalendar($0, inPicker: inPicker || node.elementType == .datePicker) }
+        }
+        if containsCalendar(try app.snapshot()) {
+            title.tap()
+        }
+        reveal(date)
+        let chosen = date.label
+        XCTAssertNotEqual(chosen, initial)
+        setFilter(start, enabled: false)
+        XCTAssertFalse(app.staticTexts["Observed on or after"].exists)
+        setFilter(start, enabled: true)
+        XCTAssertEqual(date.label, chosen)
+        setFilter(end, enabled: true)
+        // On an iPhone SE the picker starts below its switch in the scrolling form.
+        let endPickerLabel = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Observed on or before")).firstMatch
+        reveal(endPickerLabel)
+        XCTAssertTrue(endPickerLabel.isHittable)
+        setFilter(end, enabled: false)
+        XCTAssertEqual(start.value as? String, "1")
+        setFilter(end, enabled: true)
+
+        let reference = app.textFields["Saved observation reference"]
+        fill(foreign, field: reference)
+        tap(element("history.openSavedObservation"))
+        atLeast("denied", 1)
+        let refresh = app.buttons["Check access again"]
+        XCTAssertTrue(refresh.waitForExistence(timeout: 12))
+        tap(refresh)
+        XCTAssertTrue(element("history.newObservation").waitForExistence(timeout: 12))
+        reveal(start)
+        XCTAssertEqual(start.value as? String, "0", "Reloading history clears its lower date bound")
+        reveal(end)
+        XCTAssertEqual(end.value as? String, "0", "Reloading history clears its upper date bound")
+        XCTAssertFalse(app.staticTexts["Observed on or after"].exists)
+        XCTAssertFalse(app.staticTexts["Observed on or before"].exists)
+        setFilter(start, enabled: true)
+        XCTAssertNotEqual(date.label, chosen, "A refreshed history session starts with a new date selection")
     }
     private func openGrantedHistory() {
         app.launch()
@@ -75,7 +142,7 @@ import XCTest
         if app.buttons["Check access again"].waitForExistence(timeout:3) { tap(app.buttons["Check access again"]) }
         XCTAssertTrue(element("history.newObservation").waitForExistence(timeout:15))
         XCTAssertFalse(element("history.newObservation").isEnabled)
-        counter("writes",0)
+        assertNoWrites()
         capture("E09-grant-only-shop-discovered-independently-of-owned-shops")
     }
     private func openAllowedObservation() {
@@ -88,7 +155,7 @@ import XCTest
         let control = app.segmentedControls.buttons[label]
         // Like tapWeekRow, require a visible action center: a clipped segment can
         // report hittable while XCTest's activation point lies under the header.
-        for attempt in 0..<24 {
+        for _ in 0..<24 {
             let area = historyContentArea().insetBy(dx: 0, dy: 8)
             guard area.width > 0, area.height > 44 else {
                 XCTFail("No unobscured content area for records tab"); return
@@ -105,7 +172,10 @@ import XCTest
                 }
             }
             let frame = exists ? control.frame : .zero
-            let upward = !frame.isEmpty ? frame.midY > area.midY : attempt < 12
+            // The section picker precedes the records in this form. When a lazy
+            // row has left the accessibility tree, return toward the top instead
+            // of spending twelve gestures searching farther down the records.
+            let upward = !frame.isEmpty ? frame.midY > area.midY : false
             let bounds = app.frame, high = area.minY + area.height * 0.18, low = area.minY + area.height * 0.82
             let origin = app.coordinate(withNormalizedOffset: .zero)
             origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
@@ -136,10 +206,10 @@ import XCTest
     private func tap(_ value: XCUIElement) { reveal(value); XCTAssertTrue(value.isHittable,value.debugDescription); value.tap() }
     private func fill(_ text: String, field: XCUIElement) { tap(field); app.typeText(text); let done = app.buttons.matching(identifier:"Done").firstMatch; if done.exists && done.isHittable { done.tap() } else { app.swipeDown() } }
     private func assertText(_ text: String) { let value = app.staticTexts.containing(NSPredicate(format:"label CONTAINS %@",text)).firstMatch; reveal(value); XCTAssertTrue(value.isHittable,text) }
-    private func counter(_ id: String, _ count: Int) {
-        let label = id == "writes" ? "Writes":id == "paid" ? "Paid denied":id == "denied" ? "Denied":"Reads"
-        let e = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","\(label): \(count)"),object:element("fixture.h09."+id))
-        XCTAssertEqual(XCTWaiter.wait(for:[e],timeout:10),.completed)
+    private func assertNoWrites(file: StaticString = #filePath, line: UInt = #line) {
+        // The fixture header is always mounted, and its write count only increases.
+        let counter = app.staticTexts["fixture.h09.writes"]
+        XCTAssertEqual(try counter.snapshot().label, "Writes: 0", file: file, line: line)
     }
     private func atLeast(_ id: String, _ minimum: Int) {
         let value = element("fixture.h09."+id)

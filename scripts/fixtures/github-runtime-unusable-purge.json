@@ -1,0 +1,37 @@
+{
+  "sourceRun": 43866108805,
+  "sourceJob": 133294965821,
+  "before": {
+    "95A5DC8D-4FEC-4C17-A83F-830F127E84AF": {
+      "identifier": "95A5DC8D-4FEC-4C17-A83F-830F127E84AF",
+      "deletable": true,
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "platformIdentifier": "com.apple.platform.iphonesimulator",
+      "build": "24A434",
+      "version": "27.0",
+      "kind": "Patchable Cryptex Disk Image",
+      "state": "Unusable",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/3e800c38767f9f2c5fc86acdad7adf44565e051a.asset/AssetData",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/3e800c38767f9f2c5fc86acdad7adf44565e051a.asset/AssetData",
+      "unusableSubstate": "Cryptex Mount Preferred",
+      "unusableErrorMessage": "Cryptex Mount Preferred",
+      "unusableErrorDetail": "Error Domain=SimDiskImageErrorDomain Code=7 \"Cryptex Mount Preferred\" UserInfo={NSLocalizedDescription=Cryptex Mount Preferred, unusableErrorDetail=}"
+    },
+    "29A6B57E-5F68-4501-8511-8FE75E493BD0": {
+      "identifier": "29A6B57E-5F68-4501-8511-8FE75E493BD0",
+      "deletable": true,
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.xrOS-27-0",
+      "platformIdentifier": "com.apple.platform.xrsimulator",
+      "build": "24M362",
+      "version": "27.0",
+      "kind": "Patchable Cryptex Disk Image",
+      "state": "Unusable",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_xrOSSimulatorRuntime/870e651c5b56773428623ecc15e770d0886a390b.asset/AssetData",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_xrOSSimulatorRuntime/870e651c5b56773428623ecc15e770d0886a390b.asset/AssetData",
+      "unusableSubstate": "Cryptex Mount Preferred",
+      "unusableErrorMessage": "Cryptex Mount Preferred",
+      "unusableErrorDetail": "Error Domain=SimDiskImageErrorDomain Code=7 \"Cryptex Mount Preferred\" UserInfo={NSLocalizedDescription=Cryptex Mount Preferred, unusableErrorDetail=}"
+    }
+  },
+  "detail": "Error deleting P: 95A5DC8D-4FEC-4C17-A83F-830F127E84AF iOS (27.0 - 24A434) (Unusable - Cryptex Mount Preferred: Error Domain=SimDiskImageErrorDomain Code=7 \"Cryptex Mount Preferred\" UserInfo={NSLocalizedDescription=Cryptex Mount Preferred, unusableErrorDetail=}): Removed the runtime, but did not reclaim its MobileAsset: /System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/3e800c38767f9f2c5fc86acdad7adf44565e051a.asset/AssetData/\nError deleting P: 29A6B57E-5F68-4501-8511-8FE75E493BD0 xrOS (27.0 - 24M362) (Unusable - Cryptex Mount Preferred: Error Domain=SimDiskImageErrorDomain Code=7 \"Cryptex Mount Preferred\" UserInfo={NSLocalizedDescription=Cryptex Mount Preferred, unusableErrorDetail=}): Removed the runtime, but did not reclaim its MobileAsset: /System/Library/AssetsV2/com_apple_MobileAsset_xrOSSimulatorRuntime/870e651c5b56773428623ecc15e770d0886a390b.asset/AssetData/\n"
+}

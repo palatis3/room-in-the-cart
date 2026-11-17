@@ -18,7 +18,8 @@ import XCTest
     private func journey(spanish: Bool) {
         func text(_ en: String, _ es: String) -> String { spanish ? es : en }
         let language = spanish ? "ES" : "EN"
-        app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        // Keep the XCTest runtime-logging crash workaround limited to iOS 17.
+        if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launchArguments = ["--ui-testing", "--shared-records-fixture", "--reset-shared-records-fixture",
             "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         app.launch()
@@ -181,29 +182,24 @@ import XCTest
         XCTAssertEqual(value.switches.count, 1, "Expected one native switch inside the Records row")
         let nativeSwitch = value.switches.firstMatch
         reveal(nativeSwitch, requiresFullFrame: true)
-        if nativeSwitch.value as? String == "0" {
-            // A tap on the visible off thumb can leave the Records switch off.
-            // Move the thumb across the native track in one gesture.
-            XCTAssertTrue(nativeSwitch.isEnabled && nativeSwitch.isHittable)
-            let off = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
-            let on = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
-            off.press(forDuration: 0.1, thenDragTo: on)
-        }
-        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            nativeSwitch.value as? String == "1" && value.value as? String == "1"
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 12), .completed)
-        XCTAssertEqual(value.value as? String, "1")
+        enableVisibleRecordsSwitch(nativeSwitch, in: value)
     }
     private func reveal(_ value: XCUIElement, upward: Bool = false, requiresHitTarget: Bool = true, requiresFullFrame: Bool = false) {
-        let deadline = ProcessInfo.processInfo.systemUptime + 20
-        for attempt in 0..<32 {
+        // Choose file can take four full drags from the save confirmation. XCTest
+        // can spend several seconds resolving each gesture on a busy simulator.
+        let gesturesPerDirection = 16
+        for attempt in 0...(2 * gesturesPerDirection) {
             let viewport = touchableArea()
-            if value.exists && (!requiresHitTarget || value.isHittable),
-               requiresFullFrame ? viewport.insetBy(dx: 0, dy: 8).contains(value.frame) : viewport.contains(CGPoint(x: value.frame.midX, y: value.frame.midY)) { return }
-            if ProcessInfo.processInfo.systemUptime >= deadline { break }
-            let contentUp = value.exists && !value.frame.isEmpty ? value.frame.midY > viewport.midY : attempt < 16 ? !upward : upward
-            scrollContent(upward: contentUp)
+            let frame = value.exists ? value.frame : .zero
+            if !frame.isEmpty {
+                let visible = requiresFullFrame ? viewport.insetBy(dx: 0, dy: 8).contains(frame)
+                    : viewport.contains(CGPoint(x: frame.midX, y: frame.midY))
+                if visible && (!requiresHitTarget || value.isHittable) { return }
+            }
+            guard attempt < 2 * gesturesPerDirection else { break }
+            let contentUp = frame.isEmpty ? (attempt < gesturesPerDirection ? !upward : upward)
+                : frame.midY > viewport.midY
+            scrollContent(upward: contentUp, viewport: viewport)
         }
         XCTFail("Could not reveal scoped Records element within bounded search: " + value.debugDescription)
     }
@@ -213,8 +209,8 @@ import XCTest
         let keyboard = app.keyboards.firstMatch, bottom = keyboard.exists ? keyboard.frame.minY : bounds.maxY
         return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bottom - top - 8))
     }
-    private func scrollContent(upward: Bool, distanceFraction: CGFloat = 0.6) {
-        let drag = touchableArea().insetBy(dx: 24, dy: 16), bounds = app.frame
+    private func scrollContent(upward: Bool, distanceFraction: CGFloat = 0.6, viewport: CGRect? = nil) {
+        let drag = (viewport ?? touchableArea()).insetBy(dx: 24, dy: 16), bounds = app.frame
         let distance = drag.height * distanceFraction / 2, high = drag.midY - distance, low = drag.midY + distance
         let origin = app.coordinate(withNormalizedOffset: .zero)
         origin.withOffset(CGVector(dx: drag.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY)).press(forDuration: 0.05,
@@ -224,5 +220,23 @@ import XCTest
         let image = XCTAttachment(screenshot: app.screenshot()); image.name = name; image.lifetime = .keepAlways; add(image)
         let tree = XCTAttachment(string: app.debugDescription); tree.name = name + " accessibility"; tree.lifetime = .keepAlways; add(tree)
     }
+}
+
+/// Records rows expose both a SwiftUI accessibility value and their native switch.
+@MainActor func enableVisibleRecordsSwitch(_ nativeSwitch: XCUIElement, in value: XCUIElement,
+                                         file: StaticString = #filePath, line: UInt = #line) {
+    if nativeSwitch.value as? String == "0" {
+        // A tap on the visible off thumb can leave the Records switch off.
+        // Move the thumb across the native track in one gesture.
+        XCTAssertTrue(nativeSwitch.isEnabled && nativeSwitch.isHittable, file: file, line: line)
+        let off = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+        let on = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+        off.press(forDuration: 0.1, thenDragTo: on)
+    }
+    let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+        nativeSwitch.value as? String == "1" && value.value as? String == "1"
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 12), .completed, file: file, line: line)
+    XCTAssertEqual(value.value as? String, "1", file: file, line: line)
 }
 #endif

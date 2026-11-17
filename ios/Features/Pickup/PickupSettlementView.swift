@@ -1,6 +1,12 @@
 import SwiftUI
 import CoreDomain
 
+func settlementFact(_ label: String, value: String) -> some View {
+    LabeledContent(label) {
+        Text(verbatim: value).foregroundStyle(Theme.ink)
+    }
+}
+
 struct PickupSettlementView: View {
     @ObservedObject var model: PickupModel
     @State private var kind: SettlementKind = .postedCharge
@@ -13,6 +19,7 @@ struct PickupSettlementView: View {
     @FocusState private var field: Field?
     @State private var date = Date()
     @State private var entryID = UUID()
+    @State private var saveError: String?
     private var isCredit: Bool { [.pendingCredit, .postedCredit, .includedCredit].contains(kind) }
     private var pendingCredits: [SettlementEntry] {
         let entries = model.journey?.settlement.entries ?? []
@@ -35,10 +42,10 @@ struct PickupSettlementView: View {
             PickupSaveStatus(model: model)
             if let summary = try? model.journey?.settlement.summary(asOf: model.stockReviewDate) {
                 Section(pTr("Actual money · separate from food")) {
-                    LabeledContent(pTr("Paid so far"), value: pMoney(summary.paidSoFar))
-                    LabeledContent(pTr("Pending credits · not deducted"), value: pMoney(summary.pendingCredits))
-                    LabeledContent(pTr("Credits already included in charges"), value: pMoney(summary.includedCredits))
-                    LabeledContent(pTr("Payment holds · not spending"), value: pMoney(summary.paymentHolds))
+                    settlementFact(pTr("Paid so far"), value: pMoney(summary.paidSoFar))
+                    settlementFact(pTr("Pending credits · not deducted"), value: pMoney(summary.pendingCredits))
+                    settlementFact(pTr("Credits already included in charges"), value: pMoney(summary.includedCredits))
+                    settlementFact(pTr("Payment holds · not spending"), value: pMoney(summary.paymentHolds))
                     Text(pTr("A credit does not add food or repair a meal. A credit already included in a net charge is not subtracted again."))
                 }
             }
@@ -69,9 +76,9 @@ struct PickupSettlementView: View {
                             Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey)
                         }
                     }
-                    if let selectedHold { LabeledContent(pTr("Amount"), value: pMoney(selectedHold.amount)) }
+                    if let selectedHold { settlementFact(pTr("Amount"), value: pMoney(selectedHold.amount)) }
                 } else {
-                    PickupEvidenceField(title: "Amount", amount: $amount).focused($field, equals: .amount)
+                    PickupEvidenceField(title: pTr("Amount"), amount: $amount).focused($field, equals: .amount)
                 }
                 TextField(pTr("Unique receipt or transaction evidence ID"), text: $evidence)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .evidence)
@@ -112,12 +119,12 @@ struct PickupSettlementView: View {
                             Text(pTr("This entry is dated later and is excluded from these totals."))
                         }
                         if let id = entry.creditID {
-                            LabeledContent(pTr("Credit ID"), value: id)
+                            settlementFact(pTr("Credit ID"), value: id)
                         }
                         if let original = entry.chargeEvidenceKey {
-                            LabeledContent(pTr("Original posted charge"), value: original)
+                            settlementFact(pTr("Original posted charge"), value: original)
                         } else if let hold = entry.holdEvidenceKey {
-                            LabeledContent(pTr("Original payment hold"), value: hold)
+                            settlementFact(pTr("Original payment hold"), value: hold)
                         }
                     }
                 }
@@ -138,6 +145,13 @@ struct PickupSettlementView: View {
             if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
         }.navigationTitle(pTr("Close the pickup"))
         .keyboardDoneAction(visible: field != nil, title: pTr("Done"), identifier: "pickup.settlement.doneTyping") { field = nil }
+        .alert(pTr("Evidence not saved"), isPresented: Binding(
+            get: { saveError != nil }, set: { if !$0 { saveError = nil } }
+        )) {
+            Button(pTr("Done"), role: .cancel) {}
+        } message: {
+            Text(saveError ?? "")
+        }
         .onChange(of: kind) { _, _ in
             holdKey = ""
             charge = ""
@@ -164,9 +178,13 @@ struct PickupSettlementView: View {
                     charge = ""
                     creditID = ""
                     field = nil
+                } else {
+                    saveError = model.error
                 }
             }
-        } catch { model.error = pTr("Enter a valid amount and evidence ID. Credits must link to an original posted charge.") }
+        } catch {
+            saveError = pTr("Enter a valid amount and evidence ID. Credits must link to an original posted charge.")
+        }
     }
 }
 

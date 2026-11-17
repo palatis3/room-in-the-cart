@@ -1,3 +1,5 @@
+import UniformTypeIdentifiers
+import ImageIO
 import XCTest
 import CoreDomain
 import LocalStore
@@ -22,7 +24,7 @@ import UIKit
         let bytes = try RecordsNativeCodec.canonical(LedgerDocument(workspace: workspace))
         let source = SourceMediaRecord(id: UUID(), target: .init(workspaceID: workspaceID, containerID: shop.id,
             objectID: shop.lines[0].id, revision: Int64(shop.revision), kind: .packageReference),
-            originalText: "Private package wording", reviewedLabel: "Rice reference", imageJPEG: nil,
+            originalText: "Private package wording", reviewedText: "Corrected private wording", reviewedLabel: "Rice reference", imageJPEG: nil,
             barcode: CapturedBarcode(symbology: "manual", value: "12345"), receiptLines: [], capturedAt: Date(timeIntervalSince1970: 100))
         let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/" + workspaceID.uuidString,
             revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title, savedAtMilliseconds: 100_000,
@@ -89,6 +91,41 @@ import UIKit
         XCTAssertNil(tools.status)
         await tools.finishFileSave(pendingSave, result: .success(()))
         XCTAssertNil(tools.status)
+    }
+
+    func testRefreshingRecoverySelectionRequiresDisclosureOfChangedEvidence() async throws {
+        let (original, source) = try package()
+        let (unchanged, _) = try package()
+        let registry = try RecoveryRegistry(url: location().appendingPathComponent("registry.json"))
+        var records = [original, unchanged]
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init(records: records) },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await tools.refresh()
+        tools.selectAll()
+        tools.generateRecoveryKey()
+        let originalID = RecordsToolsModel.mediaSelectionID(try XCTUnwrap(original.media?.first), record: original)
+        let unchangedID = RecordsToolsModel.mediaSelectionID(try XCTUnwrap(unchanged.media?.first), record: unchanged)
+        tools.selectedMediaIDs = [originalID, unchangedID]
+
+        tools.selectedIDs.remove(RecordsToolsModel.selectionID(original))
+        tools.selectAll()
+        XCTAssertEqual(tools.selectedMediaIDs, [unchangedID])
+        tools.selectedMediaIDs.insert(originalID)
+
+        var correction = source
+        correction.reviewedText = "New private package wording"
+        records[0].media = [try RecordsMediaCodec.attachment(correction)]
+        await tools.refresh()
+        XCTAssertEqual(tools.selectedMediaIDs, [unchangedID])
+        await tools.prepareExport(.encryptedRecovery)
+        let file = try EncryptedArchive.open(XCTUnwrap(tools.preparedDocument).data, key: tools.recoveryKey)
+        XCTAssertNil(try XCTUnwrap(file.payload.records.first { $0.id == original.id }).media)
+        XCTAssertEqual(try XCTUnwrap(file.payload.records.first { $0.id == unchanged.id }).media, unchanged.media)
+
+        tools.selectedMediaIDs.insert(originalID)
+        await tools.prepareExport(.encryptedRecovery)
+        let reviewed = try EncryptedArchive.open(XCTUnwrap(tools.preparedDocument).data, key: tools.recoveryKey)
+        XCTAssertEqual(try XCTUnwrap(reviewed.payload.records.first { $0.id == original.id }).media, records[0].media)
     }
 
     func testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer() async throws {
@@ -259,16 +296,32 @@ import UIKit
         let before = try Data(contentsOf: registryURL)
         var object = try JSONSerialization.jsonObject(with: record.media![0].data) as! [String: Any]
         var sourceObject = object["source"] as! [String: Any]
-        sourceObject["imageJPEG"] = Data("invalid image".utf8).base64EncodedString(); object["source"] = sourceObject
-        record.media = [.init(id: photoSource.id.uuidString, kind: .packageReference,
-            data: try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes]))]
+        let tagged = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(tagged, UTType.jpeg.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, try XCTUnwrap(rendered.cgImage), [
+            kCGImagePropertyGPSDictionary: [kCGImagePropertyGPSLatitude: 12.3, kCGImagePropertyGPSLatitudeRef: "N",
+                                            kCGImagePropertyGPSLongitude: 45.6, kCGImagePropertyGPSLongitudeRef: "E"]
+        ] as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        let taggedSource = try XCTUnwrap(CGImageSourceCreateWithData(tagged, nil))
+        let properties = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(taggedSource, 0, nil) as? [CFString: Any])
+        XCTAssertNotNil(properties[kCGImagePropertyGPSDictionary])
         var (unrelated, _) = try package(); unrelated.media = nil
-        let corrupt = try ArchiveCodec.make(records: [record, unrelated], kind: .personalRecovery, origin: "file", revision: "corrupt")
-        let file = root.appendingPathComponent("corrupt.json"); try ArchiveCodec.encode(corrupt).write(to: file)
-        let importer = model(base, registry: registry)
-        await importer.importFile(file, recipes: false)
-        XCTAssertNil(importer.review); XCTAssertEqual(importer.error, .integrity)
-        XCTAssertEqual(try Data(contentsOf: registryURL), before)
+        for (reason, data) in [("invalid", Data("invalid image".utf8)), ("truncated", Data(jpeg.dropLast(2))),
+                               ("location", tagged as Data)] {
+            sourceObject["imageJPEG"] = data.base64EncodedString()
+            object["source"] = sourceObject
+            record.media = [.init(id: photoSource.id.uuidString, kind: .packageReference,
+                data: try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes]))]
+            let archive = try ArchiveCodec.make(records: [record, unrelated], kind: .personalRecovery, origin: "file", revision: reason)
+            let file = root.appendingPathComponent(reason + ".json")
+            try ArchiveCodec.encode(archive).write(to: file)
+            let importer = model(base, registry: registry)
+            await importer.importFile(file, recipes: false)
+            XCTAssertNil(importer.review, reason)
+            XCTAssertEqual(importer.error, .integrity, reason)
+            XCTAssertEqual(try Data(contentsOf: registryURL), before, reason)
+        }
     }
     func testRecoveredEditProjectionFiltersMediaForRemovedTargetsNewShopsAndMealLibrary() async throws {
         let (original, _) = try package(), root = try location()

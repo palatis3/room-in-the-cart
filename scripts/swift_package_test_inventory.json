@@ -207,6 +207,7 @@
       "CoreDomainTests.PickupTests/testPaymentHoldAndItsReleaseNeverEnterPaidCash",
       "CoreDomainTests.PickupTests/testPendingCreditDoesNotReducePostedCashUntilPosted",
       "CoreDomainTests.PickupTests/testReceiptRetryAddsNothingButSecondGenuineSegmentCounts",
+      "CoreDomainTests.PickupTests/testReviewedReceiptAndCreditIdentifiersSurvivePasteAndLegacySpacing",
       "CoreDomainTests.PickupTests/testSettlementOverflowIsAtomic",
       "CoreDomainTests.PickupTests/testSixUsableWrapsProtectTwoLunchesBeforeDinners",
       "CoreDomainTests.PickupTests/testUnknownUsableAmountDoesNotBecomeReceivedAmountOrZeroFact",

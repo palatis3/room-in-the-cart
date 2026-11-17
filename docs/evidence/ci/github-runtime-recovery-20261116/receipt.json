@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-11-16T08:56:05.020835+00:00",
+  "run": 43832196302,
+  "job": 133179954221,
+  "diagnosticCommit": "c02be15866e8e906ded17b3ca0da4f892c614643",
+  "sourceCommit": "a746ff60d13cfae205a743a481ed9248ef559d54",
+  "originalProductsArtifact": 14196353082,
+  "resultArtifact": 14210321714,
+  "resultArtifactSHA256": "003695965e99c7914ebd03bb6aa2c9eb4c916ba9324a9372603ee621b239ae06",
+  "outcome": "success",
+  "native": {
+    "selected": 1,
+    "passed": 1,
+    "skipped": 0,
+    "seconds": 393.932,
+    "runtimeWarnings": 0,
+    "restarts": 0
+  },
+  "runtime": {
+    "identifier": "42DC8ECC-C356-4047-AA04-984F797DB933",
+    "build": "24A434",
+    "kind": "Disk Image",
+    "stable": true,
+    "parent": null,
+    "cleanupMutations": 3,
+    "absenceObservations": 13,
+    "ownedDeviceDeleted": true
+  },
+  "adoptionPatchSHA256": "d0c93759a0e8f0ff70fb6c1d9ee5f37974ce8a68d138e9b1de04fc1d8744e9f6",
+  "scope": "Qualifies runtime preparation and bounded result readers for combined CI; does not qualify the whole app or performance baselines."
+}

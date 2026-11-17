@@ -35,6 +35,7 @@ class LocalDiagnosticsTests(unittest.TestCase):
                               'printf "%s\\n" "${NATIVE_MESSAGE:-}"\nexit "${NATIVE_EXIT:-0}"',
                 'xcrun': 'printf "%s\\n" "$@" >> "$TRACE"\necho "{}"',
                 'python3': 'printf "%s\\n" "$@" >> "$TRACE"\n'
+                           'if [[ "$1" = scripts/export_ios_test_results.py ]]; then exit "${EXPORT_EXIT:-0}"; fi\n'
                            'if [[ "$1" = scripts/report_ios_test_timing.py ]]; then exit "${TIMING_EXIT:-0}"; fi\n'
                            'if [[ "$1" = scripts/check_ios_test_results.py ]]; then exit "${STRICT_EXIT:-0}"; fi',
             }.items():
@@ -42,7 +43,7 @@ class LocalDiagnosticsTests(unittest.TestCase):
                 path.write_text('#!/bin/bash\n' + body + '\n')
                 path.chmod(0o755)
             env = {key: value for key, value in os.environ.items()
-                   if key not in ('CI', 'GITHUB_ACTIONS', 'LOCAL_TEST_DIAGNOSTICS')}
+                   if key not in ('CI', 'GITHUB_ACTIONS', 'CIRCLECI', 'LOCAL_TEST_DIAGNOSTICS')}
             env.update(PATH=str(binaries) + os.pathsep + env['PATH'], TRACE=str(root / 'trace'),
                        SIMULATOR_ID='owned-test-device', TEST_SHARD='sample', EXPECTED_TEST_COUNT='1')
             env.update(overrides)
@@ -69,6 +70,14 @@ class LocalDiagnosticsTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(args[args.index('-collect-test-diagnostics') + 1], 'on-failure')
 
+    def test_circleci_retains_failed_result_without_waiting_for_sysdiagnose(self):
+        status, args = self.run_shard(CI='true', CIRCLECI='true', NATIVE_EXIT='65')
+        self.assertNotEqual(status, 0)
+        self.assertEqual(args[args.index('-collect-test-diagnostics') + 1], 'never')
+        self.assertEqual(args[args.index('-resultBundlePath') + 1], '.build/Tests.xcresult')
+        self.assertEqual(args.count('test-without-building'), 1)
+        self.assertIn('scripts/check_ios_test_results.py', args)
+
     def test_ci_cannot_disable_diagnostics_and_invalid_values_fail_before_native_work(self):
         for values in ({'CI': 'true'}, {'GITHUB_ACTIONS': 'true'}, {'CI': 'false'}):
             with self.subTest(values=values):
@@ -90,6 +99,13 @@ class LocalDiagnosticsTests(unittest.TestCase):
             self.assertEqual(status, expected)
             self.assertIn('scripts/check_ios_test_results.py', args)
             self.assertEqual(args.count('test-without-building'), 1)
+
+    def test_export_timeout_fails_without_native_retry_or_false_validation(self):
+        status, args = self.run_shard(EXPORT_EXIT='124')
+        self.assertEqual(status, 124)
+        self.assertEqual(args.count('test-without-building'), 1)
+        self.assertEqual(args.count('scripts/export_ios_test_results.py'), 1)
+        self.assertNotIn('scripts/check_ios_test_results.py', args)
 
     def test_infrastructure_retry_retains_distinct_timing_for_both_attempts(self):
         status, args = self.run_shard(

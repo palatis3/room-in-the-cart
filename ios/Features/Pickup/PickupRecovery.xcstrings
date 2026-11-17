@@ -1156,6 +1156,23 @@
           }
         }
       }
+    },
+    "Your access or selection changed. Discard this pending recovery and review it again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your access or selection changed. Discard this pending recovery and review it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió tu acceso o tu selección. Descarta el cambio pendiente y vuelve a revisarlo."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa los montos en dólares sin separadores de miles y con un máximo de dos decimales, por ejemplo, 1000,50."
+          }
+        }
+      }
+    },
     "Protected servings: %@": {
       "extractionState": "manual",
       "localizations": {
@@ -1885,6 +1902,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cena guardada. Elígela por separado para agregar sus necesidades de compra."
+          }
+        }
+      }
+    },
+    "Idea draft saved. You can edit it again in Dinner ideas.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea draft saved. You can edit it again in Dinner ideas."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador guardado. Puedes volver a editarlo en Ideas para cenar."
           }
         }
       }
@@ -5389,6 +5422,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "La alternativa preferida requiere un viaje adicional. Revisa esa decisión de forma explícita."
+          }
+        }
+      }
+    },
+    "The remaining dinners have protected portions that do not fit this meal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The remaining dinners have protected portions that do not fit this meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cenas restantes tienen porciones protegidas que no se ajustan a esta comida."
           }
         }
       }

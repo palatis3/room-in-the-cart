@@ -57,6 +57,8 @@ def config_list(key, base, is_project=False):
             settings["RITC_SURFACE_URL_SCHEME"] = "roominthecart" + ("-" + name.lower() if name != "Release" else "")
         if is_project:
             settings.update(ONLY_ACTIVE_ARCH="YES" if name != "Release" else "NO", SWIFT_OPTIMIZATION_LEVEL="-Onone" if name != "Release" else "-O", DEBUG_INFORMATION_FORMAT="dwarf" if name != "Release" else "dwarf-with-dsym", ENABLE_TESTABILITY="YES" if name != "Release" else "NO", SWIFT_ACTIVE_COMPILATION_CONDITIONS="$(inherited) " + {"Debug": "DEBUG", "Staging": "STAGING", "Release": "RELEASE"}[name])
+            if name == "Staging":
+                settings["DEBUG_INFORMATION_FORMAT[sdk=iphoneos*]"] = "dwarf-with-dsym"
         elif name == "Staging" and key in STAGING_SUITES:
             # The staging scheme runs its live service and Safari smoke suites.
             # Debug-only package fixtures require modules compiled for testing.
@@ -172,7 +174,8 @@ def outputs():
             continue
         if "DeviceSurfaces" not in package_names or not (directory / "Info.plist").exists():
             raise ValueError(f"{name} needs DeviceSurfaces and its explicit Info.plist")
-        targets.append(target(key, name, sources, "com.apple.product-type.app-extension", "dev.roominthecart.app." + key, packages=("DeviceSurfaces",), extension_folder=directory))
+        extension_packages = ("DeviceSurfaces", "CoreDomain") if key == "share" else ("DeviceSurfaces",)
+        targets.append(target(key, name, sources, "com.apple.product-type.app-extension", "dev.roominthecart.app." + key, packages=extension_packages, extension_folder=directory))
         proxy = obj(key + ":embedProxy", "PBXContainerItemProxy", containerPortal=ident("project"), proxyType="1", remoteGlobalIDString=ident("target:" + key), remoteInfo=name)
         extension_dependencies.append(obj(key + ":embedDependency", "PBXTargetDependency", target=ident("target:" + key), targetProxy=proxy))
         extension_embeds.append(obj(key + ":embedFile", "PBXBuildFile", fileRef=ident(key + ":output"), settings={"ATTRIBUTES": ["RemoveHeadersOnCopy"]}))
@@ -214,9 +217,10 @@ def main():
     args = parser.parse_args()
     stale = []
     for path, content in outputs().items():
+        if path.exists() and path.read_text() == content:
+            continue
         if args.check:
-            if not path.exists() or path.read_text() != content:
-                stale.append(str(path.relative_to(ROOT)))
+            stale.append(str(path.relative_to(ROOT)))
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)

@@ -162,7 +162,9 @@ import XCTest
         ]
         // These are consecutive fields on one form. Finish editing once after entering the evidence source.
         for (label, value) in fields {
-            let field = editableElement(label)
+            // Pack entry uses native single-line fields. Avoid resolving every
+            // descendant type when the visible field already has a known type.
+            let field = app.textFields[label]
             reveal(field, keyboardDone: app.buttons["Done"])
             field.tap()
             field.typeText(value)

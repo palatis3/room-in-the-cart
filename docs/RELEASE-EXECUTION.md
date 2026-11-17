@@ -4,7 +4,45 @@ This checklist orders the remaining work; it does not replace Foundation 2.1's
 52 requirements, 27 screen contracts or B11 acceptance. The authoritative scope
 is [the build contract](product/foundation-gen2.1/08-build.md) and the requirement
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
-is one checkpoint, not release authorization. Updated November 13, 2026.
+is one checkpoint, not release authorization. Updated November 17, 2026.
+
+The November 15 staging update rehearsal preserved the original saved comparison
+byte-for-byte, then saved and reopened a second revision after changing the
+confirmed stock. The iOS 17 simulator also reached the staging service and
+opened Spanish Help and English Support in Safari. The staging UI helper now
+returns to the Shop root when launch restores a saved comparison. The Mac's
+staging preview was updated after verification, preserving its seven durable
+files at installation. See `.build/StagingUpgrade6c60Nov15/qualification.json`.
+Signed distribution and physical-device update checks remain open.
+
+The B05 unreadable-recipe-photo walkthrough used the system photo picker and
+the Release app on an iPhone SE simulator running iOS 17.0. Before the fix,
+the unreadable result was below the visible capture controls. The revised
+screen brought the explanation into view, including the full Spanish sentence
+at maximum Dynamic Type. Keeping the typed draft, cancelling and relaunching
+preserved the saved wrap dinner. All rows of the three shopping databases
+matched the original fixture, including both meal occurrences. Selecting a
+real QR image showed its identifier and the manual-match message. See
+`.build/UnreadableRecipePhotoNov15/{final-spanish,detected-code}/strict.log`
+and `final-spanish-stores.json` in the same evidence directory.
+
+On November 15, the Release app on the iPhone SE simulator running iOS 17.0
+read a bilingual package photo through the system photo picker. The shopper’s
+typed “2 Wraps” stayed in place until they explicitly used the OCR text. Cancel
+preserved the original list. A separate regression reproduced a provider file
+being replaced by a link to a different file of the same size. The corrected
+reader rejected that link and preserved the size-limit error for oversized
+photos. See `.build/PhotoSelectionNov15/{before.log,strict.log,picker/strict.log}`.
+
+At `61a2631e`, the Debug app on an iPhone SE simulator running iOS 17.0 saved
+an encrypted shopping list through the Files picker. Canceling the save kept
+the file ready. Canceling import left the records alone, and opening the same
+backup twice produced one recovered copy. After uninstalling the app, a fresh
+installation rejected the file without its key and recovered it with the key.
+After relaunch, the separate list showed two pears and one unit of rolled oats.
+The current shopping workspace still had zero revisions. The four UI runs and
+the database verification are under `.build/RecordsSystemFilesNov15`. The
+physical-iPhone check remains open.
 
 On November 12, the `099d6bf6` native Records adapters and real local service
 exported the shopper’s current shop and history. The named planner received 404
@@ -15,6 +53,57 @@ erasure check blocked reimport after reopening. Retiring history through the
 service left the current record readable. The local run used real email codes
 and a billing fixture for the planner seat. The deployed lifecycle and signed
 iPhone walkthrough remain open. See `.build/RealRecords099Nov12/qualification.json`.
+
+At `239d979e`, the Release app on an iOS 27 simulator exported an encrypted
+comparison and recovered one copy from Files. Deleting the source removed both
+records. Importing the same file again showed a conflict, and neither record
+returned after relaunch. On an iPhone SE simulator running iOS 17, the English
+and Spanish deletion warnings could be read through the final line at maximum
+Dynamic Type in dark appearance. Both actions were reachable, and cancelling
+preserved the comparison. The local results are in
+`.build/ErasedBackupNov13/qualification.json` and
+`.build/AccessibleRecordsDeletionNov14/qualification.json`.
+
+At `3dc272c3`, all 47 Records adapter and recovery tests passed on the iPhone SE
+simulator running iOS 17.0, with zero skips or reported runtime warnings. The
+app rejected a symbolic link selected for import and preserved the valid recipe
+when another recipe in the same file had an oversized ingredient. The saved batch
+reopened successfully. The XCTest result and selector check are in
+`.build/RecordsMinimum3dc2Nov14/`.
+
+On the iPhone SE simulator running iOS 17.0, someone entering a recipe at the
+largest accessibility text size could read the Spanish source-address error
+through its last word, dismiss it with Listo, correct the address, save, and
+reopen the recipe with the corrected address. The first attempt showed clipped
+text in a fixed banner. The updated editor uses a scrollable system alert at
+accessibility sizes. See `.build/ManualRecipeSECorrectionNov14/read-to-end-strict.log`
+and the rendered `before-error.png`, `after-error.png` and `end-error.png` there.
+
+The Share extension now checks the type and size of the file it actually opens.
+A regression test reproduced a replaced file returning another file’s contents
+through a symbolic link. After the fix all 39 DeviceSurfaces tests passed.
+On iOS 17.0, the system share sheet opened both a UTF-8 file provider and a
+plain-text file URL in the Release extension. Cancel followed by Save for
+review left exactly one pending entry with its original two lines. See
+`.build/SelectedTextDescriptorNov14/selection-strict.log` and `inbox-check.json`
+in the same directory.
+
+On iOS 17.0, the Spanish Release app at `60d28bbc` saved a recipe from
+Files. After installing the `8f793e1f` Release build over it, the editor
+reported one saved duplicate, one new recipe and one skipped row in a mixed
+file. Saving, undoing that import and relaunching preserved the earlier recipe.
+The on-disk recovered record, receipt and payload matched the pre-update
+values. See `.build/RecipeUpdate8f79Nov14/updated-strict.log` and
+`registry-verified.txt` in the same directory.
+
+On iOS 17.0 and 26.2, the reviewed request stayed open while a fictional service
+held its receipt. The sheet showed the waiting status, blocked Cancel and resisted
+a downward drag. Each run recorded one request. The child pickup journey also
+cancelled a withdrawal, checked the original request, then explicitly withdrew it.
+Both cases passed on each simulator with zero runtime warnings. On iOS 17,
+finishing text entry before opening review resolved a warning from disabling an
+active text field. See `.build/ContributorSendReceiptNov14/alert-17/ui-strict.log`
+and `.build/ContributorSendReceiptNov14/alert-26/ui-strict.log`.
 
 ## Candidate identity and evidence
 
@@ -36,14 +125,14 @@ in their approved private location; commit only redacted receipts and hashes.
 
 | Gate | Next action and environment | Completion evidence | Current state / dependency |
 | --- | --- | --- | --- |
-| Targeted regression | Finish product paths and fix observed defects using affected checks. Defer optional hosted diagnostic experiments; revisit minimum-iOS and required performance gaps for candidate/release qualification. Root coordinates one investigation per cause. | Original selectors/assertions and strict validation pass on the preserved candidate; complete measurements before performance baseline approval. | In progress; focused core success does not cover the combined candidate. |
+| Targeted regression | Finish product paths and fix observed defects using affected checks. Defer optional hosted diagnostic experiments; revisit minimum-iOS and required performance gaps for candidate/release qualification. Root coordinates one investigation per cause. | Original selectors/assertions and strict validation pass on the preserved candidate; complete measurements before performance baseline approval. | PR #1 passed its full combined checks. The English Free pickup walkthrough on `1875321f` verified the partial delivery, protected lunch, cook repair, settlement and next shop after relaunch. The Spanish iOS 17 settlement check reproduced a duplicate receipt conflict, retained the original $2 charge and accepted a distinct $7 charge after the shopper corrected the ID. See `.build/FreePickup1875321fNov14/qualification.json` and `.build/SpanishReceiptB6Nov14/fixed/qualification.json`. The Release app at `d4204478` reached its first responsive frame in a median 1.084 s across five cold launches on an iPhone SE (3rd generation) simulator running iOS 17.0. See `.build/MinimumLaunchD420Nov14/launch/calibration.json`. The release timing budget still needs physical-device measurements. |
 | Shared-food integration | Validate original-unit editing, planner proposals, shopper Apply and whole Undo across the iPhone screens and shared service. | Exact sources, quantities, authority, Cancel and durable retry. | On `3977750b` the Swift client and real local service passed a two-adult original-unit edit from four to five dinner portions while preserving the protected lunch. Cancel preserved both meals. Apply and whole Undo survived lost responses, recovered their saved receipts and restored the original food facts and basket. See `.build/RealFoodUndo397Nov12/qualification.json`. Two separately signed-in adults also completed the original-unit proposal, shopper approval and whole Undo on the ordinary Release iPhone simulator build. The protected half-cup lunch, original dinner, basket order and quote survived revisions 3, 4 and 5. See `.build/RealFoodIPhone397Nov12/qualification.json`. The signed distribution walkthrough remains open. |
-| Combined integration | Collect the existing frozen-candidate batch; fix observed failures with affected checks and batch any successor once. | Full gate and required security/dependency checks for that commit; no focused-scope substitution or skipped required cases. | In progress. [CURRENT-HANDOFF](CURRENT-HANDOFF.md#current-checkpoint) is the single current queue for the published SHA, live job IDs, qualified local fixes and unresolved failures. Read the actual GitHub runs before dispatching or replacing a batch. The bilingual StoreKit CI job passed on `a807ecf9`. The final combined regression, Release performance qualification and signed distribution billing checks remain open. Keep this release checklist focused on completion criteria rather than duplicating rapidly changing job status. |
-| Merge | Recheck current branch protection, base freshness and resolved conversations against the qualified PR head. | GitHub required checks and merge state for the exact head. | Pending combined qualification. |
-| Staging parity | Exercise authenticated Records and cook flows on the current staging build. | Deployment identity, migration checksums, public and protected smoke checks, and a verified recovery path. | Staging serves the cook-access fix from `eff3444b` on deployment `dpl_2n4ZtMtjDuNG49pz6HMq8QrroiwZ`. The package changed one web source file and retained schema 048. The protected deployment and public alias each passed 20 service and web checks. All 27 public contract checks passed. Four browser cases using synthetic sessions on the deployed site confirmed that a helper or editor who loses enrollment or pickup access sees the instructions removed on refresh. The installed staging app on the iPhone 17 simulator reached the live service and opened Help and Support in Safari. Hosted email and authenticated mixed-phone acceptance remain open. The rollback deployment is `dpl_WHBL4VFUy2JWkC378gaZJxt7xYXM`. The maintenance deployment is `dpl_72cBW5Biz5YKYjvPyqn4dNYEX4EH`. See `.build/CompanionGrantEff3444Nov13/deployment-receipt.json`. |
+| Combined integration | Finish the reviewed fixture synchronization/transition/keyboard changes and one Spanish runner move, then qualify one combined successor. | Full core, fixture, deep, wire and security results for the exact commit; no focused-scope substitution or skipped required cases. | The 46e batch is terminal: 1,046 models, 74 ordinary UI, both StoreKit locales, native wire and exact-merge security passed. Fixtures show 92 observed passes, one transition failure and one unavailable result after a GitHub runner disconnected. TSan found a test-owned state race. The race, transition and exact system-keyboard-card corrections pass their affected local checks, including both English and Spanish shared-helper paths. No production change is required by these fixes. See the [current handoff](CURRENT-HANDOFF.md#active-work-and-ownership), `.build/Bal01M4Nov17/terminal-timing.json` and the successor `.build/CombinedFixtureFixesNov17/STATUS.md` for exact identity and outcomes. |
+| Merge | Recheck current branch protection, base freshness and resolved conversations against the qualified PR head. | GitHub required checks and merge state for the exact head. | PR #1 merged at `a5d9c773`. PR #7 remains open. Check the [current PR head and required results](https://github.com/palatis3/room-in-the-cart/pull/7/checks) before merging. |
+| Staging parity | Exercise authenticated Records and cook flows on the current staging build. | Deployment identity, migration checksums, public and protected smoke checks, and a verified recovery path. | The contributor retry fix from `7c2085dc` is live at `dpl_CAz2NdsL33JHrTT6Gh8z3pAMNJM3` on schema 049. The protected candidate and public alias each passed nine API and 13 web checks. All 27 public contract checks and English/Spanish invitation navigation passed. Rollback is available at `dpl_CBjEXutNyvvYJbfNA8GoeJh5HBfM`. Authenticated mixed-phone acceptance and hosted email remain open. See `.build/OnlineRequestReceiptNov14/deployment-receipt.json`. |
 | Authenticated household | Execute shopper, second planner, cook and contributor scenarios across the native iPhone app and companion mobile web; exercise stale edits, reconnects and revoked grants. | Actual authenticated mixed-device task records with role/privacy outcomes and exact service/build identity. | A Release iPhone simulator organizer signed in with a real local Supabase email code, created a household and issued an adult invitation. A separate Chrome user joined it in Spanish, reopened the same contributor membership after reload and signed out. PostgreSQL recorded one member named “Miembro del hogar.” The service denied the contributor the household roster. The local receipt is `.build/LocalProviderNov12/mixed-device-qualification.json`. On Mobile Safari the cook read and proposed a correction, the organizer published it, and revocation concealed the instructions after Back and a fresh visit. See `.build/MobileCook397Nov12/qualification.json`. The planner and organizer also completed the proposal and approval in the Release iPhone app on iOS 27 with separate local email sign-ins and a billing fixture. Six protected portions and the saved basket survived, and revocation denied further reads and proposals. Hosted email and deployed physical-device qualification remain open. See `.build/RealCookA807Nov12/qualification.json` and `.build/RealPlanner397Nov12/qualification.json`. |
 | Child/provider lifecycle | Configure actual guardian verification/notice and verify consent, withdrawal, scoped access and provider erasure with approved test identities. | Provider-backed records, denied unauthorized access and verified removal/reconciliation. | Real KWS activation/configuration remains separate; prepared integration and accepted terms are not activation evidence. |
-| Recovery and alerts | Execute independent hosted restore and alert-delivery cases with approved private backup/key custody; verify operating-owner response. | Recovery target, data invariants, delivery and reconciliation receipts, and retrieval of the retained proof. | Earlier local/hosted rehearsals remain scoped; remaining operational scenarios require explicit evidence. |
+| Recovery and alerts | Execute independent hosted restore and alert-delivery cases with approved private backup/key custody; verify operating-owner response. | Recovery target, data invariants, delivery and reconciliation receipts, and retrieval of the retained proof. | The November 16 scheduled GET at 08:21:00 UTC returned HTTP 200 on the expected staging deployment. Its matching runtime result at 08:21:02 reported all five auth/privacy counters at zero and attentionRequired=false. The request ID and vercel-cron/1.0 agent correlate the two records; no manual maintenance invocation was used. See the [content-free receipt](evidence/b11/scheduled-maintenance-20261116/receipt.json). An optional HTTPS heartbeat passed local transport checks for success, failure, redirects and a stalled monitor; see `service/OPERATIONS.md`. Neither staging heartbeat destination is configured. Alert delivery to the operating owner and the independent hosted restore still need verification. |
 | Physical iPhone | Use the signed candidate for camera/OCR, microphone/readback and audio routes, share/import, widgets, print and reminders; include denied permissions and interruptions. | Device/build-specific results for each promised path and typed/manual fallback. | Incomplete; simulator and mocked-provider checks are insufficient. |
 | Accessibility and languages | Human US-English/US-Spanish walkthrough; VoiceOver, Switch Control, Dynamic Type and Reduce Motion across complete applicable routes. Attribute automated findings to visible elements before closure. | Tester/device/build/locale records; resolved findings or a documented product decision consistent with requirements. | Incomplete; sampled screenshots and catalog checks do not prove all routes. |
 | Policies and support | Review final operator/privacy/retention/terms copy and verify support delivery and operating ownership. | Approved policy versions and actual contact/delivery evidence for hello@roominthecart.com, Venture House Group LLC. | On November 12 the public domain returned five mail-forwarding MX records. Delivery to `hello@roominthecart.com` and the operator’s receipt still need verification. Transactional SMTP setup is owner deferred. |

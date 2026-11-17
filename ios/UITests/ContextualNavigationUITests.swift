@@ -19,16 +19,27 @@ import UIKit
         tap(element("ledgerImport"))
         let english = "1 1/2 cups of arroz"
         let spanish = "1 1/2 tazas de arroz"
-        fill(english, into: "ledgerImportText")
-        tap(element("ledgerReviewImport"))
+        func review(_ original: String) {
+            let editor = app.textViews["ledgerImportText"]
+            revealContent(editor)
+            editor.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            editor.typeText(original)
+            XCTAssertEqual(editor.value as? String, original)
+            // Review list ends editing and stages the wording in one action.
+            let review = app.buttons["ledgerReviewImport"]
+            revealContent(review, above: app.buttons["Done"])
+            review.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        }
+        review(english)
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect arroz"]
         reveal(food)
         let lineID = food.identifier
         XCTAssertTrue(lineID.hasPrefix("ledgerInspect-"))
         tap(element("ledgerImport"))
-        fill(spanish, into: "ledgerImportText")
-        tap(element("ledgerReviewImport"))
+        review(spanish)
         let apply = element("ledgerCommitImport")
         XCTAssertFalse(apply.isEnabled)
         let decision = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "How to add this line")).firstMatch
@@ -112,7 +123,7 @@ import UIKit
         tap(element("openPickupList"))
         tap(element("ledgerImport"))
         let source = "2 packs of 6 to 8 wraps"
-        fill(source, into: "ledgerImportText")
+        fill(source, into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport"))
         assertText("Packs on the original label: 2")
         let unresolved = "Amount per pack on the original label: Quantity unresolved"
@@ -121,8 +132,23 @@ import UIKit
         reveal(amount)
         let value = amount.value as? String
         XCTAssertTrue(value == "" || (value != nil && value == amount.placeholderValue))
-        fill("14", into: "ledgerImportAmount-1")
-        tap(element("ledgerCommitImport"))
+        // Validate and correct the same amount without ending its input session.
+        revealContent(amount, above: app.buttons["Done"])
+        amount.tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        app.typeText("1/0")
+        XCTAssertEqual(amount.value as? String, "1/0")
+        XCTAssertFalse(element("ledgerCommitImport").isEnabled)
+        XCTAssertTrue(element("ledgerImportAmountError-1").exists)
+        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3))
+        app.typeText("14")
+        XCTAssertEqual(amount.value as? String, "14")
+        let commit = app.buttons["ledgerCommitImport"]
+        revealContent(commit, above: app.buttons["Done"])
+        XCTAssertTrue(commit.isEnabled)
+        commit.tap()
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
         let food = app.buttons["Inspect wraps"]
         reveal(food)
         let id = food.identifier
@@ -139,7 +165,7 @@ import UIKit
         tap(element("openPickupList"))
         tap(element("ledgerImport"))
         let original = "2x15 oz pinto beans"
-        fill(original, into: "ledgerImportText")
+        fill(original, into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport"))
         assertText("Packs on the original label: 2")
         assertText("Amount per pack on the original label: 15 ounces (weight)")
@@ -165,7 +191,7 @@ import UIKit
         tap(element("openPickupList"))
         tap(element("ledgerImport"))
         let label = "2 cans of seltzer, 12 fl. oz. each"
-        fill(label, into: "ledgerImportText")
+        fill(label, into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport"))
         assertText("Amount per pack on the original label: 12 US fluid ounces")
         XCTAssertEqual(element("ledgerImportAmount-1").value as? String, "24")
@@ -291,11 +317,11 @@ import UIKit
         let done = app.buttons["Done"]
         XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
         done.tap()
-        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5), "Done must dismiss the editor keyboard")
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 5), "Done must dismiss the editor keyboard")
         XCTAssertTrue(editor.value as? String == fixture, "Editing and Done must preserve the original paste after undoing the edit")
         capture("S02-500-line-native-paste-at-largest-text")
 
-        let review = element("ledgerReviewImport")
+        let review = app.buttons["ledgerReviewImport"]
         let form = app.collectionViews.firstMatch
         func visibleReviewPoint() -> CGPoint? {
             guard review.exists && review.isHittable && review.isEnabled else { return nil }
@@ -425,7 +451,7 @@ import UIKit
     func testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap() {
         launch(reset: true)
         shopRoot(); tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         let apply = app.buttons["Apply reviewed checkout copy"]
@@ -462,6 +488,9 @@ import UIKit
         assertText("Hold comparison unresolved")
         fill("45", into: holdLabel)
         assertText("Hold less available funds: $5.00")
+        XCTAssertEqual(hold.value as? String, "45")
+        XCTAssertEqual(funds.value as? String, "40")
+        capture("S05-reviewed-hold-and-available-funds")
         assertText(capResult)
 
         reveal(compareHold)
@@ -485,22 +514,32 @@ import UIKit
     func testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote() {
         launchRetailerHistoryWalk()
         shopRoot(); tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
-        fill("Market", into: "Store", replacing: true)
-        fill("West branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        replaceRetailerField("Source of these prices", with: "West checkout")
-        enableSwitch("Retailer total already includes all charges")
-        fill("37.20", into: "Inclusive total")
-        tap(app.buttons["Save and evaluate checkout"])
+        let done = app.buttons["Done"]
+        enterCheckoutTerms([("Store", "Market"), ("Branch", "West branch"),
+                            ("Pickup or delivery slot", "Tuesday 5 PM")], above: done)
+        replaceRetailerField("Source of these prices", with: "West checkout", above: done)
+        let save = app.buttons["Save and evaluate checkout"]
+        func saveInclusiveTotal(_ total: String) {
+            enableSwitch("Retailer total already includes all charges")
+            let amount = app.textFields["Inclusive total"]
+            revealContent(amount)
+            XCTAssertEqual(amount.value as? String, amount.placeholderValue)
+            amount.tap()
+            amount.typeText(total)
+            XCTAssertEqual(amount.value as? String, total)
+            // Submit directly from the amount field, with Save clear of the keyboard.
+            revealContent(save, above: done)
+            save.tap()
+        }
+        saveInclusiveTotal("37.20")
         assertText("Saved checkout result")
 
         for _ in 0..<4 where !app.textFields["Branch"].isHittable { scrollContent(upward: false) }
         replaceRetailerField("Branch", with: "East")
-        let save = app.buttons["Save and evaluate checkout"]
         revealContent(save)
         XCTAssertFalse(save.isEnabled)
         tap(app.buttons["Replace pricing after review"])
@@ -510,15 +549,7 @@ import UIKit
         revealContent(source)
         XCTAssertEqual(source.value as? String, source.placeholderValue)
         fill("East checkout", into: "Source of these prices")
-        enableSwitch("Retailer total already includes all charges")
-        let amount = app.textFields["Inclusive total"]
-        revealContent(amount)
-        XCTAssertEqual(amount.value as? String, amount.placeholderValue)
-        amount.tap()
-        amount.typeText("39.05")
-        XCTAssertEqual(amount.value as? String, "39.05")
-        app.buttons["Done"].tap()
-        tap(save)
+        saveInclusiveTotal("39.05")
         XCTAssertTrue(app.navigationBars["Review checkout changes"].waitForExistence(timeout: 5))
         assertText("Market · West branch"); assertText("West checkout"); assertText("$37.20")
         assertText("Market · East"); assertText("East checkout"); assertText("$39.05")
@@ -547,7 +578,7 @@ import UIKit
     private func enterWeighedPickup(knownTax: Bool) {
         launch(reset: true)
         shopRoot(); tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("1 apples\n1 rice", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("1 apples\n1 rice", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
@@ -555,7 +586,7 @@ import UIKit
         let terms = [("Store", "Family market"), ("Branch", "Main branch"),
                      ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer quote"),
                      ("Spending cap", "38")]
-        let charges: [(String, String?)] = [("rice", "34"), ("Fee below threshold or fixed fee", "0"),
+        let charges: [(String, String?)] = [("Price for rice", "34"), ("Fee below threshold or fixed fee", "0"),
                                             ("Eligible discount", "0"), ("Tax", knownTax ? "0" : nil),
                                             ("Deposits and other charges", "0")]
         // Move focus between checkout fields in Form order, then dismiss once.
@@ -577,6 +608,8 @@ import UIKit
         done.tap()
         XCTAssertTrue(done.waitForNonExistence(timeout: 5))
         tap(app.buttons["Save and evaluate checkout"])
+        let unknownApples = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Price for apples:")).firstMatch
+        reveal(unknownApples)
         tap(element("checkout.weightReview"))
         tap(element("checkout.weightLine")); tap(app.buttons["apples"])
         func enterWeightTerms(rate: String, increment: String, replacing: Bool = false) {
@@ -634,8 +667,13 @@ import UIKit
         }
         tap(app.navigationBars["Check price by weight"].buttons["Whole checkout"])
         XCTAssertTrue(app.navigationBars["Whole checkout"].waitForExistence(timeout: 5))
-        let price = app.textFields["apples"]
-        reveal(price)
+        let price = app.textFields["Price for apples"]
+        // The basket's price fields are above the weight-review link we just left.
+        for _ in 0..<8 {
+            if price.exists && price.isHittable { break }
+            scrollContent(upward: false)
+        }
+        XCTAssertTrue(price.exists && price.isHittable)
         XCTAssertTrue(price.value as? String == price.placeholderValue || price.value as? String == "", price.debugDescription)
     }
 
@@ -646,7 +684,7 @@ import UIKit
         XCTAssertFalse(element("records.managedViews").exists)
         shopRoot()
         tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
@@ -713,7 +751,7 @@ import UIKit
             XCTAssertEqual(branch.label, "Current pickup branch: East branch")
         }
         tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
@@ -727,7 +765,7 @@ import UIKit
                 (prefix + "source", "Customer entered quote"), (prefix + "itemSubtotal", items),
                 (prefix + "eligibilityTerms", terms), (prefix + "total", total)
             ])
-            enableSwitch(prefix + "allChargesIncluded", nativeThumb: slot == "second")
+            enableSwitch(prefix + "allChargesIncluded", nativeThumb: true)
             enableSwitch(prefix + "quantitiesMatched")
             enableSwitch(prefix + "singleStore")
             tap(element(prefix + "availability")); tap(app.buttons["Reviewed available"])
@@ -770,9 +808,10 @@ import UIKit
         tapQuoteRow("Save reviewed comparison")
         tapQuoteRow("Preview using Market B")
         assertText("East branch")
-        let adoptedSlot = element("quoteAdoptionSlot")
+        let adoptedSlot = app.staticTexts["quoteAdoptionSlot"]
         reveal(adoptedSlot)
-        XCTAssertTrue(adoptedSlot.label.hasPrefix("Store slot: ") && reviewedSecondStore.contains(adoptedSlot.label),adoptedSlot.label)
+        let adoptedSlotLabel = adoptedSlot.label
+        XCTAssertTrue(adoptedSlotLabel.hasPrefix("Store slot: ") && reviewedSecondStore.contains(adoptedSlotLabel), adoptedSlotLabel)
         tap(app.buttons["dinnerCancelPreview"])
         XCTAssertFalse(app.staticTexts["Current pickup branch: East branch"].exists)
         tapQuoteRow("Preview using Market B"); tap(app.buttons["dinnerApply"])
@@ -896,24 +935,28 @@ import UIKit
         } else {
             revealContent(control)
         }
-        if label == "quote.first.allChargesIncluded" { captureQuoteSwitchBoundary(control, phase: "before-tap") }
+        if label == "quote.first.allChargesIncluded" {
+            captureQuoteSwitchBoundary(control, native: native, offset: offThumb, phase: "before-tap")
+        }
         if nativeThumb {
             XCTAssertEqual(control.switches.count, 1, "Expected one native switch inside the quote row")
             let coordinate = native.coordinate(withNormalizedOffset: offThumb)
             XCTAssertTrue(control.isEnabled && control.isHittable && native.isEnabled && native.isHittable)
             XCTAssertTrue(scrollableArea().contains(coordinate.screenPoint), "The native thumb must be inside visible content")
             if native.value as? String == "0" { coordinate.tap() }
-            XCTAssertEqual(native.value as? String, "1", label)
         } else if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
-        if label == "quote.first.allChargesIncluded" { captureQuoteSwitchBoundary(control, phase: "after-tap-before-assertion") }
+        if label == "quote.first.allChargesIncluded" {
+            captureQuoteSwitchBoundary(control, native: native, offset: offThumb, phase: "after-tap-before-assertion")
+        }
+        if nativeThumb { XCTAssertEqual(native.value as? String, "1", label) }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     /// Bounded read-only observation for the original synthetic S27 journey.
     /// The recorded point is the frame-derived intended point, not proof of delivered touch coordinates.
-    private func captureQuoteSwitchBoundary(_ control: XCUIElement, phase: String) {
+    private func captureQuoteSwitchBoundary(_ control: XCUIElement, native: XCUIElement, offset: CGVector, phase: String) {
         let started = ProcessInfo.processInfo.systemUptime
         func rect(_ value: CGRect) -> [Double] {
             [Double(value.minX), Double(value.minY), Double(value.width), Double(value.height)]
@@ -923,15 +966,16 @@ import UIKit
             return ["exists": true, "frame": rect(element.frame), "enabled": element.isEnabled,
                     "hittable": element.isHittable, "value": element.value as? String ?? "<non-string>"]
         }
-        let controlFrame = control.exists ? control.frame : .zero
+        let nativeFrame = native.frame
         var record: [String: Any] = [
-            "schema": 1, "phase": phase, "wallTime": Date().timeIntervalSince1970,
+            "schema": 2, "phase": phase, "wallTime": Date().timeIntervalSince1970,
             "startUptime": started,
-            "control": state(control), "applicationFrame": rect(app.frame),
+            "control": state(control), "nativeFrame": rect(nativeFrame), "applicationFrame": rect(app.frame),
             "navigation": state(app.navigationBars.firstMatch), "tabs": state(app.tabBars.firstMatch),
             "keyboard": state(app.keyboards.firstMatch), "done": state(app.buttons["quoteKeyboardDone"]),
-            "intendedNormalizedPoint": [0.92, 0.5],
-            "intendedFrameDerivedPoint": [Double(controlFrame.minX + controlFrame.width * 0.92), Double(controlFrame.midY)]
+            "intendedNormalizedPoint": [Double(offset.dx), Double(offset.dy)],
+            "intendedFrameDerivedPoint": [Double(nativeFrame.minX + nativeFrame.width * offset.dx),
+                                          Double(nativeFrame.minY + nativeFrame.height * offset.dy)]
         ]
         record["endUptime"] = ProcessInfo.processInfo.systemUptime
         let json = (try? JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]))
@@ -962,9 +1006,9 @@ import UIKit
         XCTAssertEqual(header.value as? String, "Expanded")
     }
 
-    private func replaceRetailerField(_ id: String, with text: String) {
+    private func replaceRetailerField(_ id: String, with text: String, above inputBar: XCUIElement? = nil) {
         let field = element(id)
-        revealContent(field)
+        revealContent(field, above: inputBar)
         field.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         // These short, single-line test values leave trailing whitespace. Position
@@ -982,8 +1026,8 @@ import UIKit
         let done = app.buttons["Done"]
         if done.isHittable { done.tap() }
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id)
+    private func fill(_ text: String, into id: String, replacing: Bool = false, fieldType: XCUIElement.ElementType = .textField) {
+        let field = app.descendants(matching: fieldType).matching(identifier: id).firstMatch
         revealContent(field)
         field.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "The field must have keyboard focus: \(id)")

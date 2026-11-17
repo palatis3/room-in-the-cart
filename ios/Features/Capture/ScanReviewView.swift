@@ -33,6 +33,7 @@ import CoreDomain
     @State private var reviewingIngredients = false
     @State private var error: String?
     @FocusState private var focusedField: InputField?
+    @AccessibilityFocusState private var capturedWordingFocused: Bool
     @FocusState private var structuredFieldFocus: StructuredCaptureField?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -44,6 +45,19 @@ import CoreDomain
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
     }
     var body: some View {
+        ScrollViewReader { scroll in
+            scanForm(scroll)
+                .task(id: model.candidate != nil && !model.busy) {
+                    guard model.candidate != nil, !model.busy else { return }
+                    await Task.yield()
+                    guard !Task.isCancelled, authorize(), model.candidate != nil else { return }
+                    scroll.scrollTo("scan.capturedWording", anchor: .top)
+                    capturedWordingFocused = true
+                }
+        }
+    }
+
+    private func scanForm(_ scroll: ScrollViewProxy) -> some View {
         Form {
             if reviewingIngredients {
                 StructuredCaptureReviewView(lines: $ingredients, corrections: corrections, correctionScope: correctionScope,
@@ -55,18 +69,35 @@ import CoreDomain
                 recipeFields
             } else {
                 captureControls
+                if let failure = model.failure {
+                    Section {
+                        Text(failureText(failure))
+                        if failure == .permissionDenied || failure == .unavailable {
+                            Button(captureText("Type item")) {
+                                scroll.scrollTo("scan.sourceEditor", anchor: .center)
+                                focusedField = .sourceText
+                            }.accessibilityIdentifier("scan.typeItem")
+                        }
+                    }
+                }
                 if let candidate = model.candidate {
                     Section(captureText("Captured source — review before using")) {
                         sourceImage(candidate.originalImageData)
-                        Text(candidate.originalText.isEmpty ? captureText("No readable text. You can type it below.") : candidate.originalText).textSelection(.enabled)
-                        Text(captureText("A readable barcode is only a code. Match the product yourself."))
-                        ForEach(candidate.barcodes) { code in Text(code.value).textSelection(.enabled) }
+                        Text(candidate.originalText.isEmpty ? captureText("No readable text. You can type it below.") : candidate.originalText)
+                            .textSelection(.enabled)
+                            .id("scan.capturedWording")
+                            .accessibilityFocused($capturedWordingFocused)
+                        if !candidate.barcodes.isEmpty {
+                            Text(captureText("A readable barcode is only a code. Match the product yourself."))
+                            ForEach(candidate.barcodes) { code in Text(code.value).textSelection(.enabled) }
+                        }
                         Button(captureText("Use this source for review")) { model.acceptCandidate(); resetDerived() }
                         Button(captureText("Keep my current draft")) { model.discardCandidate() }
                     }
                 }
                 Section(captureText("Editable source text")) {
                     TextEditor(text: $model.text).frame(minHeight: 150).accessibilityLabel(captureText("Editable source text"))
+                        .id("scan.sourceEditor")
                         .accessibilityIdentifier("scan.sourceEditor")
                         .focused($focusedField, equals: .sourceText)
                         .disabled(model.busy || loadingPhoto)
@@ -90,7 +121,9 @@ import CoreDomain
                 }
             }
             if let error { Section { Text(error).accessibilityIdentifier("scan.error") } }
-            if let failure = model.failure { Section { Text(failureText(failure)) } }
+            if (reviewingIngredients || recipe != nil), let failure = model.failure {
+                Section { Text(failureText(failure)) }
+            }
         }
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focusedField != nil || structuredFieldFocus != nil, title: captureText("Done"), identifier: "scan.sourceDone") {
@@ -304,11 +337,17 @@ import CoreDomain
     private func loadPhoto(_ item: PhotosPickerItem?) {
         photoTask?.cancel(); guard localPhotoConsent, let item, !model.closed else { return }; loadingPhoto = true
         photoTask = Task { @MainActor in
-            defer { if photo == item { loadingPhoto = false } }
+            defer {
+                if photo == item {
+                    loadingPhoto = false
+                    // Let the shopper choose this asset again after reviewing or retrying it.
+                    photo = nil
+                }
+            }
             do {
                 guard let selected = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw ScanFailure.invalidImage }
                 guard localPhotoConsent, !Task.isCancelled, photo == item, authorize(), !model.closed else { return }
-                model.stage(selected.data)
+                model.stage(try selected.data)
             } catch { if !Task.isCancelled, !model.closed { model.inputFailed(error as? ScanFailure ?? .invalidImage) } }
         }
     }

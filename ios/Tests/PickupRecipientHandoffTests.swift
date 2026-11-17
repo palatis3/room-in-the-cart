@@ -8,6 +8,14 @@ final class PickupRecipientHandoffTests: XCTestCase {
         HandoffCopy(shopID: shop ?? shopID, channel: channel, versionID: UUID(), revision: 2, language: language,
                     fullText: "Entire reviewed instruction", pieces: pieces, needsPrivateReview: privateText)
     }
+    func testRetailerWebsiteAcceptsPastedHTTPSAndPreservesTheCartPath() {
+        let address = "HtTpS://shop.example/Cart/Order?line=A%2FB#Pickup"
+        XCTAssertEqual(PickupHandoffView.retailerWebsite("  " + address + "\n")?.absoluteString, address)
+        for invalid in ["", "https:///cart", "http://shop.example/cart", "shop.example/cart", "file:///cart"] {
+            XCTAssertNil(PickupHandoffView.retailerWebsite(invalid), invalid)
+        }
+    }
+
     func testTypedChangesKeepSameNameQuantitiesAndUnresolvedNeedsSeparate() {
         let old = copy([.init(key: "a",text: "Anne: 2 wraps",unresolved: nil), .init(key: "b",text: "Ben: 2 wraps",unresolved: nil),
                         .init(key: "c",text: "Milk",unresolved: nil)])

@@ -265,13 +265,31 @@ public enum CheckoutEngine {
     }
 }
 
+/// Only the pack facts needed to find the product. Capture text, conversion notes and prices stay private.
+public struct BasketPackage: Codable, Equatable, Sendable {
+    public let count: Int64
+    public let amountPerPack: Rational
+    public let unit: UnitOfMeasure
+    public init(count: Int64, amountPerPack: Rational, unit: UnitOfMeasure) {
+        self.count = count
+        self.amountPerPack = amountPerPack
+        self.unit = unit
+    }
+}
+
 public struct BasketLine: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
     public let name: String
     public let quantity: Quantity
     public let expectedCost: CostEvidence
-    public init(id: UUID, name: String, quantity: Quantity, expectedCost: CostEvidence) {
+    // Earlier saved revisions omit this field. Keep their encoded shape on re-export.
+    public let itemExclusions: [String]?
+    public let packages: [BasketPackage]?
+    public init(id: UUID, name: String, quantity: Quantity, expectedCost: CostEvidence, itemExclusions: [String] = [],
+                packages: [BasketPackage] = []) {
         self.id = id; self.name = name; self.quantity = quantity; self.expectedCost = expectedCost
+        self.itemExclusions = itemExclusions.isEmpty ? nil : itemExclusions
+        self.packages = packages.isEmpty ? nil : packages
     }
 }
 public enum BasketChange: Codable, Equatable, Sendable {
@@ -540,6 +558,9 @@ public struct BasketPlan: Codable, Equatable, Sendable, Identifiable {
         for line in lines {
             guard !line.name.isEmpty, line.name.utf8.count <= 2_048 else { throw CheckoutError.invalidEvidence }
             try line.quantity.validate()
+            for pack in line.packages ?? [] {
+                guard pack.count > 0, pack.amountPerPack > .zero else { throw CheckoutError.invalidEvidence }
+            }
             switch line.expectedCost {
             case let .exact(amount): guard amount.minorUnits >= 0 else { throw CheckoutError.invalidEvidence }
             case let .bounded(lower, upper, reason): guard lower.minorUnits >= 0, upper >= lower, !reason.isEmpty else { throw CheckoutError.invalidEvidence }

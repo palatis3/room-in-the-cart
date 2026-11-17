@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import CoreDomain
 
 struct HandoffPiece: Codable, Equatable {
@@ -30,6 +31,12 @@ struct RecipientSend: Codable, Equatable {
     }
 }
 
+extension BasketPackage {
+    func localizedDescription(language: String) -> String {
+        "\(count) × " + pQuantity(amountPerPack, unit: unit, language: language)
+    }
+}
+
 struct HandoffCopy: Equatable, Identifiable {
     let shopID: UUID
     let channel: HandoffChannel
@@ -44,7 +51,13 @@ struct HandoffCopy: Equatable, Identifiable {
 
     static func retailer(_ snapshot: HandoffSnapshot, language: String) -> Self {
         let pieces = snapshot.revision.lines.map { line in
-            let text = "\(line.name) — \(pQuantity(line.quantity, language: language))"
+            var text = "\(line.name) — \(pQuantity(line.quantity, language: language))"
+            if let packages = line.packages {
+                text += " · " + packages.map { $0.localizedDescription(language: language) }.joined(separator: " + ")
+            }
+            if let exclusions = line.itemExclusions {
+                text += " · " + pCook("Keep these exclusions", language: language) + ": " + exclusions.joined(separator: ", ")
+            }
             let unresolved: String?
             switch line.expectedCost {
             case .exact: unresolved = nil
@@ -182,12 +195,14 @@ struct PickupRecipientSection: View {
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var recipient = ""
+    @FocusState private var recipientFocused: Bool
     @State private var destinationConfirmed = false
     @State private var privateWordingConfirmed = false
     @State private var reviewRevision: Int64?
     @State private var copied = false
 
     private var name: String { recipient.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var canCompareVersions: Bool { membership.model?.hasPaidAccess == true }
     private var allowed: Bool {
         access.unlocked && !household.locked && scenePhase == .active &&
             (household.projection.map { ["organizer","shopper"].contains($0.role) } ?? true)
@@ -195,7 +210,7 @@ struct PickupRecipientSection: View {
     private func correction(_ copy: HandoffCopy) -> HandoffCorrection? {
         guard allowed else { return nil }
         return model.reviewedCorrection(copy, recipient: name, destinationConfirmed: destinationConfirmed,
-                                        privateWordingConfirmed: privateWordingConfirmed, paid: membership.model?.hasPaidAccess == true,
+                                        privateWordingConfirmed: privateWordingConfirmed, paid: canCompareVersions,
                                         reviewedRevision: reviewRevision)
     }
     var body: some View {
@@ -203,6 +218,8 @@ struct PickupRecipientSection: View {
             Section(pTr("Recipient and version")) {
                 TextField(pTr("Recipient (for explicit sent history)"), text: $recipient)
                     .accessibilityIdentifier("handoffRecipient")
+                    .focused($recipientFocused)
+                    .onSubmit { recipientFocused = false }
                     .textInputAutocapitalization(.words).autocorrectionDisabled().submitLabel(.done)
                 let savedRecipients = Set((journey.recipientSends ?? []).filter { $0.channel == channel }.map(\.recipient)).sorted()
                 if !savedRecipients.isEmpty {
@@ -224,18 +241,22 @@ struct PickupRecipientSection: View {
                     else {
                         Text(pTr("Acknowledgment unknown"))
                         Button(pTr("The recipient acknowledged this version")) {
+                            recipientFocused = false
                             Task { if allowed { await model.markRecipient(copy, recipient: name, acknowledge: true, reviewedRevision: journey.revision) } }
                         }
                     }
                 } else if current {
                     Button(pTr("I sent this version to this recipient")) {
+                        recipientFocused = false
                         Task { if allowed { await model.markRecipient(copy, recipient: name, acknowledge: false, reviewedRevision: journey.revision) } }
                     }.disabled(name.isEmpty || name.utf8.count > 160)
                 }
                 Text(pTr("A sent version does not prove receipt or acknowledgment. Cancelling share does not mark it sent."))
                 if current {
-                    Toggle(pTr("I know the previous copy went to this recipient"), isOn: $destinationConfirmed)
-                        .disabled(name.isEmpty || last == nil)
+                    if canCompareVersions {
+                        Toggle(pTr("I know the previous copy went to this recipient"), isOn: $destinationConfirmed)
+                            .disabled(name.isEmpty || last == nil)
+                    }
                     if copy.needsPrivateReview {
                         Toggle(pTr("Include the saved custom or private wording in this correction"), isOn: $privateWordingConfirmed)
                     }
@@ -260,6 +281,11 @@ struct PickupRecipientSection: View {
                     if copied { Text(pTr("Copied. Mark the version sent only after sending it.")) }
                 } else { Text(pTr("The source changed. Prepare and review the current instruction.")) }
             }
+            .onChange(of: canCompareVersions) { _, _ in
+                destinationConfirmed = false
+                privateWordingConfirmed = false
+                resetReview()
+            }
             .onChange(of: language) { _, _ in destinationConfirmed = false; resetReview() }
             .onChange(of: recipient) { _, _ in destinationConfirmed = false; privateWordingConfirmed = false; resetReview() }
             .onChange(of: destinationConfirmed) { _, _ in resetReview() }
@@ -269,4 +295,73 @@ struct PickupRecipientSection: View {
         }
     }
     private func resetReview() { reviewRevision = nil; copied = false }
+}
+
+struct HandoffPrintButton: View {
+    let copy: HandoffCopy
+    let allowed: Bool
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var reviewingPrivateText = false
+    @State private var printError = false
+    @State private var activeRenderer: PickupPrintPageRenderer?
+
+    var body: some View {
+        let title = pTr(copy.channel == .cook ? "Print saved cook instruction" : "Print dated list")
+        Button(title) {
+            if copy.needsPrivateReview {
+                reviewingPrivateText = true
+            } else {
+                presentPrint()
+            }
+        }
+        .disabled(!allowed || activeRenderer != nil)
+        .alert(pTr("Include the saved private or edited wording in this printout?"), isPresented: $reviewingPrivateText) {
+            Button(pTr("Print this private copy")) { presentPrint() }
+            Button(pTr("Cancel"), role: .cancel) {}
+        }
+        .alert(ledgerText("Printing is unavailable"), isPresented: $printError) {
+            Button(ledgerText("Done")) {}
+        }
+        .onChange(of: allowed) { _, allowed in if !allowed { dismissPrint() } }
+        .onChange(of: copy) { _, _ in dismissPrint() }
+        .onChange(of: scenePhase) { _, phase in if phase == .background { dismissPrint() } }
+        .onDisappear { dismissPrint() }
+    }
+
+    private func presentPrint() {
+        guard allowed, scenePhase == .active, activeRenderer == nil else { return }
+        guard UIPrintInteractionController.isPrintingAvailable else { printError = true; return }
+        let text = NSAttributedString(string: copy.fullText, attributes: [
+            .font: UIFont.systemFont(ofSize: 20), .foregroundColor: UIColor.black
+        ])
+        let renderer = PickupPrintPageRenderer(text: text)
+        let controller = UIPrintInteractionController.shared
+        let info = UIPrintInfo(dictionary: nil)
+        info.jobName = "Room in the Cart"
+        info.outputType = .grayscale
+        controller.printInfo = info
+        controller.printPageRenderer = renderer
+        activeRenderer = renderer
+        if !controller.present(animated: true, completionHandler: { controller, _, error in
+            if controller.printPageRenderer === renderer { controller.printPageRenderer = nil }
+            guard activeRenderer === renderer else { return }
+            activeRenderer = nil
+            printError = error != nil
+        }) {
+            if controller.printPageRenderer === renderer { controller.printPageRenderer = nil }
+            activeRenderer = nil
+            printError = true
+        }
+    }
+
+    private func dismissPrint() {
+        reviewingPrivateText = false
+        guard let renderer = activeRenderer else { return }
+        activeRenderer = nil
+        let controller = UIPrintInteractionController.shared
+        if controller.printPageRenderer === renderer {
+            controller.dismiss(animated: false)
+            controller.printPageRenderer = nil
+        }
+    }
 }

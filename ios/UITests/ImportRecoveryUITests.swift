@@ -124,6 +124,13 @@ import XCTest
         XCTAssertTrue(editor.waitForExistence(timeout: 5))
         reveal(editor); editor.tap(); editor.typeText(text)
         XCTAssertEqual(editor.value as? String, text)
+        // Finish text entry before scrolling to Review. During keyboard movement,
+        // a drag based on its transient frame can land in the keyboard instead.
+        let done = app.buttons["Done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
+        XCTAssertEqual(editor.value as? String, text)
         let review = importForm().buttons["ledgerReviewImport"]
         reveal(review); XCTAssertTrue(review.isEnabled && review.isHittable); review.tap()
         let commit = app.buttons["ledgerCommitImport"]

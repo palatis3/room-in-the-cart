@@ -41,8 +41,8 @@ import XCTest
     private func reviewFoodAmounts() {
         enableSwitch("I reviewed the changed meal and all retained food commitments")
         enableSwitch("I accept unresolved quantities or restrictions for this item")
-        tap(element("sharedFood.preview"))
-        reveal(element("sharedFood.apply")); XCTAssertFalse(element("sharedFood.apply").isEnabled)
+        tap(app.buttons["sharedFood.preview"])
+        reveal(app.buttons["sharedFood.apply"]); XCTAssertFalse(app.buttons["sharedFood.apply"].isEnabled)
     }
     private func approveSharedDraft() {
         assertText("Entered soup packs")
@@ -52,17 +52,16 @@ import XCTest
         assertText("Entered soup packs")
         assertText("Unresolved quantities or restrictions accepted for this item")
         capture("S17-actual-shared-pack-and-checkout-review")
-        enableSwitch("I reviewed these sources, relationships, unknowns and whole packs")
-        tap(element("sharedFood.apply"))
+        acknowledgeFoodReview()
+        tap(app.buttons["sharedFood.apply"])
         let confirmed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: element("fixture.s17.applications"))
         XCTAssertEqual(XCTWaiter.wait(for: [confirmed], timeout: 10), .completed)
-        XCTAssertTrue(element("sharedFood.apply").waitForNonExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["sharedFood.apply"].waitForNonExistence(timeout: 10))
         capture("S17-actual-shared-apply-confirmed-once")
     }
     func testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce() {
         launch(); chooseOccurrence()
-        fill("Two guests; reviewed local ingredients", into: "meal-change-reason", replacing: true)
-        tap(element("meal-change-prepare"))
+        enterReasonAndPrepare("Two guests; reviewed local ingredients")
         assertText("Fixture guest soup")
         capture("S17-planner-original-and-proposed-review")
         tap(app.buttons["Cancel proposal review"])
@@ -93,11 +92,10 @@ import XCTest
     }
     func testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite() {
         launch(ingredientRemoval: true); chooseOccurrence()
-        fill("Remove only the tomato side; keep the protected lunch", into: "meal-change-reason", replacing: true)
         tap(app.buttons["Tomato side"])
         tap(app.buttons["Remove proposed ingredient"])
         XCTAssertFalse(app.buttons["Tomato side"].exists)
-        tap(app.buttons["meal-change-prepare"])
+        enterReasonAndPrepare("Remove only the tomato side; keep the protected lunch")
         reveal(app.buttons["meal-change-send"])
         XCTAssertTrue(app.buttons["meal-change-send"].isEnabled)
         capture("S17-bound-side-removed-review-keeps-other-allocations")
@@ -133,12 +131,12 @@ import XCTest
         reviewFoodAmounts()
         assertDeadline(contains: "America/New_York (UTC−04:00)")
         assertDeadline(contains: "America/New_York (UTC−05:00)")
-        enableSwitch("I reviewed these sources, relationships, unknowns and whole packs")
-        tap(element("sharedFood.apply"))
+        acknowledgeFoodReview()
+        tap(app.buttons["sharedFood.apply"])
         let count = element("fixture.s17.applications")
         let published = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: count)
         XCTAssertEqual(XCTWaiter.wait(for: [published], timeout: 10), .completed)
-        XCTAssertTrue(element("sharedFood.apply").waitForNonExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["sharedFood.apply"].waitForNonExistence(timeout: 10))
 
         tap(app.buttons["Edit shared items and quote"])
         tap(app.buttons["Edit this meal"])
@@ -175,11 +173,16 @@ import XCTest
     }
 
     private func assertDeadline(contains expected: String) {
-        // Both original and proposed SharedMealFacts use the current fact ID.
-        // Match the distinct reviewed value rather than obsolete legacy IDs.
-        let row = app.staticTexts.matching(identifier: "sharedMeal.deadlineFact")
+        // The editor behind the sheet also exposes deadline facts. Limit the
+        // lookup to the form containing this review's Before and After values.
+        // Reviewing packs ends at the bottom; the lazy section header must be
+        // visible again before it can identify the review's collection.
+        reveal(app.staticTexts["Reviewed meal change"], fullyVisible: true, searchTowardEndFirst: false)
+        let forms = app.collectionViews.containing(.staticText, identifier: "Reviewed meal change")
+        XCTAssertEqual(forms.count, 1, "The active meal review must have one form")
+        let row = forms.firstMatch.staticTexts.matching(identifier: "sharedMeal.deadlineFact")
             .matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", expected, expected)).firstMatch
-        reveal(row, fullyVisible: true)
+        reveal(row, fullyVisible: true, searchTowardEndFirst: false)
         XCTAssertTrue((row.label + " " + (row.value as? String ?? "")).contains(expected), row.debugDescription)
     }
 
@@ -194,14 +197,40 @@ import XCTest
         }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
-        app.typeText(text)
-        let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
-        if done.exists && done.isHittable { done.tap() }
+    private func acknowledgeFoodReview() {
+        let id = "sharedFood.acknowledged"
+        let control = app.switches[id]
+        reveal(control, fullyVisible: true)
+        XCTAssertEqual(control.value as? String, "0")
+        control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        // The hosted failure's hierarchy already showed value 1 while XCTest
+        // repeatedly stalled resolving the live switch after the tap. Read
+        // its stable identifier from a fresh tree, keeping the state assertion.
+        func value() -> String? {
+            guard let snapshot = try? app.snapshot() else { return nil }
+            var nodes = [snapshot]
+            while let node = nodes.popLast() {
+                if node.elementType == .switch && node.identifier == id {
+                    return node.value as? String
+                }
+                nodes.append(contentsOf: node.children)
+            }
+            return nil
+        }
+        let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in value() == "1" }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
+        XCTAssertEqual(value(), "1", "The reviewed switch must be on")
     }
-    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
+    private func enterReasonAndPrepare(_ reason: String) {
+        let field = element("meal-change-reason")
+        tap(field)
+        field.typeText(reason)
+        XCTAssertEqual(field.value as? String, reason)
+        let review = app.buttons["meal-change-prepare"]
+        reveal(review, fullyVisible: true)
+        review.tap()
+    }
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<24 {
             let area = scrollableArea()
             if target.exists && target.isHittable,
@@ -209,7 +238,7 @@ import XCTest
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
-            } else { upward = attempt < 16 }
+            } else { upward = attempt < 16 ? searchTowardEndFirst : !searchTowardEndFirst }
             scrollContent(upward: upward)
         }
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")

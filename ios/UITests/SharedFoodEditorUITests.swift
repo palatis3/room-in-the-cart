@@ -5,6 +5,7 @@ import XCTest
 /// interaction/outbox evidence; real-service conservation is qualified separately.
 @MainActor final class SharedFoodEditorUITests: XCTestCase {
     private var app: XCUIApplication!
+    private var keyboardMayBeVisible = false
     private let line = "66666666-6666-4666-8666-666666666666"
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -100,6 +101,7 @@ import XCTest
     private func openFoodReview(spanish: Bool) {
         tap(app.buttons["sharedShop.reviewEditor"])
         XCTAssertTrue(app.navigationBars[spanish ? "Cantidades y orígenes" : "Amounts and sources"].waitForExistence(timeout: 15), app.debugDescription)
+        if keyboardMayBeVisible { waitForKeyboardDismissal() }
         assertText("Twelve wraps — no salt")
         assertText("Extra wraps — amount unknown")
     }
@@ -119,7 +121,7 @@ import XCTest
         let done = app.buttons["sharedFood.done"]
         XCTAssertTrue(done.waitForExistence(timeout: 5))
         tap(done)
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        waitForKeyboardDismissal()
         setSwitch("sharedFood.line." + line + ".acceptUnresolved", on: true)
     }
     private func assertReviewedFacts(spanish: Bool) {
@@ -217,8 +219,9 @@ import XCTest
     }
     private func counts(previews: Int, posts: Int, writes: Int, retries: Int) {
         let value = "Previews: \(previews); POSTs: \(posts); Writes: \(writes); Exact retries: \(retries)"
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", value), object: app.staticTexts["fixture.foodEditor.counts"])
-        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 12), .completed)
+        let counts = app.staticTexts.matching(identifier: "fixture.foodEditor.counts")
+            .matching(NSPredicate(format: "label == %@", value)).firstMatch
+        XCTAssertTrue(counts.waitForExistence(timeout: 12), "Expected food editor counts: \(value)")
         XCTAssertFalse(app.staticTexts["fixture.foodEditor.rejected"].exists, app.debugDescription)
         XCTAssertFalse(app.staticTexts["fixture.failure"].exists, app.debugDescription)
     }
@@ -226,13 +229,12 @@ import XCTest
     private func tap(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
         reveal(target, initialSearchDirection: initialSearchDirection)
         XCTAssertTrue(target.isHittable,
-                      "Cannot tap \(target.identifier): frame \(target.frame), keyboard \(app.keyboards.firstMatch.frame), content \(scrollableArea())")
+                      "Cannot tap \(target.identifier): frame \(target.frame), keyboard \(app.keyboards.firstMatch.frame), content \(contentViewport().area)")
         target.tap()
     }
     private func assertText(_ text: String, initialSearchDirection: SearchDirection = .towardEnd) {
-        let target = app.staticTexts.matching(identifier: text).firstMatch
-        reveal(target, initialSearchDirection: initialSearchDirection)
-        XCTAssertTrue(target.isHittable, text)
+        let target = app.staticTexts.matching(NSPredicate(format: "label == %@", text)).firstMatch
+        reveal(target, initialSearchDirection: initialSearchDirection, textLabel: text)
     }
     private func assertField(_ id: String, value: String, initialSearchDirection: SearchDirection = .towardEnd) {
         let field = app.textFields[id]
@@ -243,36 +245,71 @@ import XCTest
         let field = app.textFields[id]
         tap(field, initialSearchDirection: initialSearchDirection)
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        keyboardMayBeVisible = true
         if let old = field.value as? String, old != field.placeholderValue, !old.isEmpty {
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
         }
         field.typeText(value); XCTAssertEqual(field.value as? String, value)
     }
+    private func waitForKeyboardDismissal() {
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        keyboardMayBeVisible = false
+    }
     private func setSwitch(_ id: String, on: Bool) {
         let toggle = app.switches[id]; reveal(toggle)
-        if toggle.value as? String != (on ? "1" : "0") {
-            // SwiftUI includes the label in this frame; operate the trailing switch.
-            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        let expected = on ? "1" : "0"
+        if toggle.value as? String != expected {
+            XCTAssertEqual(toggle.switches.count, 1, id)
+            let control = toggle.switches.firstMatch
+            XCTAssertTrue(control.isEnabled && control.isHittable, id)
+            XCTAssertEqual(control.value as? String, on ? "0" : "1", id)
+            let left = control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+            if on {
+                left.tap()
+            } else {
+                // Move the on-position thumb directly inside the native control.
+                control.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+                    .press(forDuration: 0.1, thenDragTo: left)
+            }
+            // Expanding the quantity fields can replace the row.
+            // The switch can already be on while a live value-filtered query stalls.
+            // Read the identified row from one fresh tree for each state check.
+            let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let snapshot = try? self.app.snapshot() else { return false }
+                var nodes = [snapshot]
+                while let node = nodes.popLast() {
+                    if node.elementType == .switch && node.identifier == id {
+                        return node.value as? String == expected
+                    }
+                    nodes.append(contentsOf: node.children)
+                }
+                return false
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed, id)
         }
-        XCTAssertEqual(toggle.value as? String, on ? "1" : "0", id)
+        XCTAssertEqual(toggle.value as? String, expected, id)
     }
-    private func reveal(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
+    private func reveal(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd, textLabel: String? = nil) {
         let startsBySwipingUp = initialSearchDirection == .towardEnd
         for attempt in 0..<30 {
-            var area = scrollableArea()
-            let exists = target.exists
-            var frame = exists ? target.frame : .zero
-            if exists && target.isHittable && !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY {
+            // The source rows and viewport can be read in one snapshot. Resolving a
+            // second live frame for an already visible label timed out after Cancel.
+            let viewport = contentViewport(textLabel: textLabel)
+            var area = viewport.area
+            var frame = viewport.textFrame
+            if textLabel == nil && target.exists { frame = target.frame }
+            if !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY && target.isHittable {
+                if !keyboardMayBeVisible { return }
                 // Keyboard presentation can change the viewport while XCTest
                 // resolves the field. Confirm both against the updated layout.
-                area = scrollableArea(); frame = target.frame
+                area = contentViewport().area; frame = target.frame
                 if target.isHittable && !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             }
             // Toolbars lie outside the content viewport, but their complete
             // button frame still has to fit the app and be directly actionable.
-            if exists && target.isHittable && app.frame.contains(frame) && target.elementType == .button && target.identifier == "sharedFood.done" { return }
+            if keyboardMayBeVisible && !frame.isEmpty && target.elementType == .button && target.identifier == "sharedFood.done" && app.frame.contains(frame) && target.isHittable { return }
             let fallbackUpward = (attempt / 6) % 2 == 0 ? startsBySwipingUp : !startsBySwipingUp
-            let upward = exists && !frame.isEmpty ? frame.midY > area.midY : fallbackUpward
+            let upward = !frame.isEmpty ? frame.midY > area.midY : fallbackUpward
             let origin = app.coordinate(withNormalizedOffset: .zero), bounds = app.frame
             let high = area.minY + area.height * 0.18, low = area.minY + area.height * 0.82
             origin.withOffset(CGVector(dx: area.minX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
@@ -281,17 +318,23 @@ import XCTest
         }
         XCTFail("Missing fully visible control: " + target.debugDescription)
     }
-    private func scrollableArea() -> CGRect {
+    private func contentViewport(textLabel: String? = nil) -> (area: CGRect, textFrame: CGRect) {
         let snapshot = try? app.snapshot(), bounds = snapshot?.frame ?? app.frame
         // Use actual obstructions. A fixed bottom inset hides a fully visible
         // final Form row on home-button iPhones, where it cannot scroll higher.
         var bottom = bounds.maxY, top = bounds.minY + 95, nodes = snapshot.map { [$0] } ?? []
+        var textFrame = CGRect.zero
         // A root snapshot can omit the keyboard's separate accessibility
-        // window. Query it directly before treating a field as unobscured.
-        let keyboard = app.keyboards.firstMatch
-        if keyboard.exists { bottom = min(bottom, keyboard.frame.minY - 12) }
+        // window. Check that window from text entry until dismissal is observed.
+        if keyboardMayBeVisible {
+            let keyboard = app.keyboards.firstMatch
+            if keyboard.exists { bottom = min(bottom, keyboard.frame.minY - 12) }
+        }
         while let node = nodes.popLast() {
             if !node.frame.isEmpty && node.frame.intersects(bounds) {
+                if let textLabel, node.elementType == .staticText && node.label == textLabel {
+                    textFrame = node.frame
+                }
                 if node.elementType == .navigationBar { top = max(top, node.frame.maxY + 8) }
                 if node.elementType == .keyboard { bottom = min(bottom, node.frame.minY - 12) }
                 if node.identifier == "sharedFood.done" { bottom = min(bottom, node.frame.minY - 8) }
@@ -301,7 +344,8 @@ import XCTest
             }
             nodes.append(contentsOf: node.children)
         }
-        return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+        let area = CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+        return (area, textFrame)
     }
     private func capture(_ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot()); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)

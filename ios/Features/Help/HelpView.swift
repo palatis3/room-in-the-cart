@@ -136,6 +136,9 @@ struct HelpPrivacyView: View {
 }
 
 struct HelpSupportView: View {
+    @Environment(\.openURL) private var openURL
+    @State private var emailUnavailable = false
+    @State private var copiedAddress = false
     private let configuration = HelpConfiguration.fromBundle()
     private let diagnostics = SupportDiagnostics(systemVersion: UIDevice.current.systemVersion,
         language: Bundle.main.preferredLocalizations.first ?? "unknown")
@@ -144,13 +147,30 @@ struct HelpSupportView: View {
             Section(helpText("Get help")) {
                 Text(helpText("Describe the steps, what you expected and what happened. Leave out grocery details, budgets, names, receipts, sign-in codes and invitation links."))
                 if let url = configuration.supportEmailURL, let address = configuration.supportEmailAddress {
-                    Link(destination: url) {
+                    Button {
+                        openURL(url) { opened in
+                            emailUnavailable = !opened
+                            copiedAddress = false
+                        }
+                    } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(helpText("Email support"))
                             Text(address)
                         }.frame(minHeight: 44)
                     }.accessibilityIdentifier("help.support.email")
-                    Text(helpText("Choose your email app and review the message before sending. No message is sent automatically."))
+                    if emailUnavailable {
+                        Text(helpText("Couldn’t open an email app. Copy the address to use in another app."))
+                        Button {
+                            UIPasteboard.general.string = address
+                            copiedAddress = true
+                        } label: {
+                            Label(helpText(copiedAddress ? "Email address copied" : "Copy email address"),
+                                  systemImage: copiedAddress ? "checkmark" : "doc.on.doc")
+                                .frame(minHeight: 44)
+                        }.accessibilityIdentifier("help.support.copyEmail")
+                    } else {
+                        Text(helpText("Choose your email app and review the message before sending. No message is sent automatically."))
+                    }
                 }
                 if let url = configuration.supportURL { Link(helpText("Open support"), destination: url).accessibilityIdentifier("help.support.open") }
                 else if configuration.supportEmailURL == nil { Text(helpText("An online support destination is unavailable in this build. Offline help and the support summary are still available.")) }

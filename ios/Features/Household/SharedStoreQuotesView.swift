@@ -27,17 +27,18 @@ struct SharedStoreQuotesView: View {
         model = next; await next.load()
     }
 }
+private struct SharedStoreQuoteDraft {
+    var store = DinnerStoreDraft()
+    var cap = ""
+    var capScope = "wholeCheckout"
+    var eligibilityReviewed = false
+}
+
 private struct SharedStoreQuotesContent: View {
     @ObservedObject var model: SharedStoreQuotesModel
     @ObservedObject var household: HouseholdModel
-    @State private var first = DinnerStoreDraft()
-    @State private var second = DinnerStoreDraft()
-    @State private var firstCap = ""
-    @State private var secondCap = ""
-    @State private var firstCapScope = "wholeCheckout"
-    @State private var secondCapScope = "wholeCheckout"
-    @State private var firstEligibility = false
-    @State private var secondEligibility = false
+    @State private var first = SharedStoreQuoteDraft()
+    @State private var second = SharedStoreQuoteDraft()
     @State private var entering = false
     @State private var acknowledgedReviewID: UUID?
     @State private var clearing = false
@@ -45,6 +46,7 @@ private struct SharedStoreQuotesContent: View {
     @FocusState private var inputFocus: String?
     @AccessibilityFocusState private var reviewFocused: Bool
     @AccessibilityFocusState private var resultFocused: Bool
+    private var displayedNotice: String? { (entering ? entryNotice : nil) ?? model.notice }
     var body: some View {
         ScrollViewReader { proxy in
         Form {
@@ -157,7 +159,7 @@ private struct SharedStoreQuotesContent: View {
                     Button(StoreQuoteCopy.text("Refresh and clear local retry"), role: .destructive) { clearing = true }
                 }.id("store-quote-pending")
             }
-            if let notice = model.notice ?? entryNotice {
+            if let notice = displayedNotice {
                 Text(notice).accessibilityIdentifier("sharedQuotes.notice").accessibilityFocused($resultFocused).id("store-quote-result")
             }
             if model.busy { ProgressView(ht("Checking service…")) }
@@ -185,12 +187,12 @@ private struct SharedStoreQuotesContent: View {
                 proxy.scrollTo("store-quote-pending", anchor: .top)
             }
         }
-        .onChange(of: model.notice ?? entryNotice) { _, notice in
+        .onChange(of: displayedNotice) { _, notice in
             resultFocused = false
             guard notice != nil else { return }
             Task { @MainActor in
                 await Task.yield()
-                guard (model.notice ?? entryNotice) == notice else { return }
+                guard displayedNotice == notice else { return }
                 proxy.scrollTo("store-quote-result", anchor: .center)
                 resultFocused = true
             }
@@ -202,17 +204,19 @@ private struct SharedStoreQuotesContent: View {
         }
     }
     @ViewBuilder private func editor(_ page: StoreQuotePage) -> some View {
-        DinnerStoreFields(title: dinnerText("First store"), prefix: "sharedQuotes.first.", draft: $first, focus: $inputFocus)
+        DinnerStoreFields(title: dinnerText("First store"), prefix: "sharedQuotes.first.", draft: $first.store, focus: $inputFocus)
         termsAndCap(first: true)
-        DinnerStoreFields(title: dinnerText("Second store"), prefix: "sharedQuotes.second.", draft: $second, focus: $inputFocus)
+        DinnerStoreFields(title: dinnerText("Second store"), prefix: "sharedQuotes.second.", draft: $second.store, focus: $inputFocus)
         termsAndCap(first: false)
         Section {
             Button(StoreQuoteCopy.text("Review private comparison save")) {
                 do {
-                    let options = EnteredStoreQuoteOptions(first: try entered(first, cap: firstCap, capScope: firstCapScope, eligibility: firstEligibility), second: try entered(second, cap: secondCap, capScope: secondCapScope, eligibility: secondEligibility))
+                    let options = EnteredStoreQuoteOptions(first: try entered(first), second: try entered(second))
                     _ = try SharedStoreQuoteMath.compare(options, commitments: page.commitments, shopID: page.shopId)
                     acknowledgedReviewID = nil; entryNotice = nil
                     Task { await model.prepareSave(options) }
+                } catch let validation as DinnerDraftValidationError {
+                    entryNotice = validation.errorDescription
                 } catch { entryNotice = StoreQuoteCopy.text("Enter both stores, branches, sources, dates and valid amounts. Blank costs and unreviewed availability remain unknown.") }
             }.buttonStyle(PrimaryAction()).accessibilityIdentifier("sharedQuotes.reviewSave")
             Button(dinnerText("Cancel")) { entering = false }
@@ -220,24 +224,25 @@ private struct SharedStoreQuotesContent: View {
     }
     private func termsAndCap(first isFirst: Bool) -> some View {
         Section(isFirst ? StoreQuoteCopy.text("First store conditions and cap") : StoreQuoteCopy.text("Second store conditions and cap")) {
-            Toggle(StoreQuoteCopy.text("Eligibility and price conditions reviewed"), isOn: isFirst ? $firstEligibility : $secondEligibility)
+            Toggle(StoreQuoteCopy.text("Eligibility and price conditions reviewed"), isOn: isFirst ? $first.eligibilityReviewed : $second.eligibilityReviewed)
                 .accessibilityIdentifier(isFirst ? "sharedQuotes.first.eligibility" : "sharedQuotes.second.eligibility")
-            EnteredQuoteValueField(title: StoreQuoteCopy.text("Applicable cap in USD, optional"), value: isFirst ? $firstCap : $secondCap,
+            EnteredQuoteValueField(title: StoreQuoteCopy.text("Applicable cap in USD, optional"), value: isFirst ? $first.cap : $second.cap,
                 identifier: isFirst ? "sharedQuotes.first.cap" : "sharedQuotes.second.cap", focus: $inputFocus)
-            Picker(StoreQuoteCopy.text("Cap scope"), selection: isFirst ? $firstCapScope : $secondCapScope) {
+            Picker(StoreQuoteCopy.text("Cap scope"), selection: isFirst ? $first.capScope : $second.capScope) {
                 Text(dinnerText("Whole pickup")).tag("wholeCheckout")
                 Text(StoreQuoteCopy.text("Items before fees and discounts only")).tag("itemsOnly")
             }
         }
     }
-    private func entered(_ draft: DinnerStoreDraft, cap: String, capScope: String, eligibility: Bool) throws -> EnteredStoreQuote {
+    private func entered(_ entry: SharedStoreQuoteDraft) throws -> EnteredStoreQuote {
+        let draft = entry.store
         func cents(_ text: String) throws -> Int? { try DinnerEntry.money(text).map { Int($0.minorUnits) } }
-        let value = EnteredStoreQuote(label: draft.label, store: draft.storeID, branch: draft.branch, mode: draft.mode.rawValue,
+        let value = EnteredStoreQuote(label: draft.reviewedLabel, store: draft.storeID, branch: draft.branch, mode: draft.mode.rawValue,
             slot: ISO8601DateFormatter().string(from: draft.slot), observedAt: ISO8601DateFormatter().string(from: draft.observedAt), source: draft.source,
             terms: draft.eligibilityTerms, itemsMinor: try cents(draft.itemSubtotal), checkoutMinor: try cents(draft.total), allChargesIncluded: draft.allChargesIncluded,
             available: draft.availability == 0 ? nil : draft.availability == 1, quantitiesMatched: draft.quantitiesMatched, singleStore: draft.singleStore,
             tripAlreadyPlanned: draft.alreadyPlanned, tripMinor: try cents(draft.tripCash), extraMinutes: try DinnerEntry.minutes(draft.extraMinutes),
-            capMinor: try cents(cap), capScope: capScope, eligibilityConfirmed: eligibility)
+            capMinor: try cents(entry.cap), capScope: entry.capScope, eligibilityConfirmed: entry.eligibilityReviewed)
         try value.validate(); return value
     }
     @ViewBuilder private func reviewFacts(_ review: StoreQuoteIntent, page: StoreQuotePage) -> some View {

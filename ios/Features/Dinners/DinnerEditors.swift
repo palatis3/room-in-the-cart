@@ -32,7 +32,7 @@ enum DinnerEditorPurpose { case manual, reusable, idea }
 struct DinnerTemplateEditor: View {
     @ObservedObject var model: DinnerFeatureModel
     let purpose: DinnerEditorPurpose
-    let originalIdea: DinnerIdeaDraft?
+    @State private var originalIdea: DinnerIdeaDraft?
     @State private var draft: DinnerTemplateDraft
     @State private var scheduled = false
     @State private var date = Date()
@@ -47,10 +47,13 @@ struct DinnerTemplateEditor: View {
     @State private var acceptedID = UUID()
     @State private var showPreview = false
     @State private var completed = false
+    @State private var savedAsDraft = false
+    @State private var accepting = false
     @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
     init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil, servingsUnknown: Bool = false) {
-        self.model = model; self.purpose = purpose; originalIdea = idea
+        self.model = model; self.purpose = purpose
+        _originalIdea = State(initialValue: idea)
         _originalIdentity = State(initialValue: model.editorIdentity)
         _supplyEvidence = State(initialValue: idea?.supplyEvidence ?? [])
         var draft = DinnerTemplateDraft(idea?.template ?? initial)
@@ -69,34 +72,35 @@ struct DinnerTemplateEditor: View {
         }
     }
     private var editor: some View {
-        Group {
-            if purpose == .idea {
-                VStack(spacing: 0) {
-                    if inputFocus != nil { DinnerFocusedDoneBar { inputFocus = nil } }
-                    editorForm
+        VStack(spacing: 0) {
+            if inputFocus != nil {
+                DinnerFocusedDoneBar(identifier: purpose == .idea ? "dinnerFocusedKeyboardDone" : dinnerText("Done")) {
+                    inputFocus = nil
                 }
-            } else {
-                editorForm
             }
+            editorForm
         }
         .navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner"))
         .toolbar {
             if purpose == .idea, reviewed != nil, reviewedIdea != nil, !completed, inputFocus == nil {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(dinnerText("Edit"), action: continueEditing)
-                        .accessibilityIdentifier("dinnerReviewEdit")
+                        .disabled(accepting).accessibilityIdentifier("dinnerReviewEdit")
                 }
             }
         }
         .dinnerAccess(model)
-        .keyboardDoneAction(visible: purpose != .idea && inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
         .dinnerApplyPresentation(model, presented: $showPreview)
     }
     private var editorForm: some View {
         WorkingForm {
             if completed {
                 Section {
-                    Text(dinnerText("Dinner saved. Choose it separately to add grocery needs."))
+                    if savedAsDraft {
+                        Text(dinnerText("Idea draft saved. You can edit it again in Dinner ideas."))
+                    } else {
+                        Text(dinnerText("Dinner saved. Choose it separately to add grocery needs."))
+                    }
                     Button(dinnerText("Done")) { dismiss() }.buttonStyle(PrimaryAction())
                 }
             } else if let reviewed {
@@ -120,21 +124,41 @@ struct DinnerTemplateEditor: View {
                             if let value { supplyEvidence.append(value) }
                             reviewedIdea?.supplyEvidence = supplyEvidence
                         }
+                        .disabled(accepting)
                         Button(dinnerText("Accept idea")) {
-                            Task { completed = await model.acceptIdea(idea, acceptedID: acceptedID) }
+                            accepting = true
+                            Task {
+                                completed = await model.acceptIdea(idea, acceptedID: acceptedID)
+                                accepting = false
+                            }
                         }
                         .buttonStyle(DinnerIdeaAcceptanceButtonStyle())
                         .listRowInsets(EdgeInsets())
                         .disabled(!review.canAccept || !model.editable)
                         .accessibilityIdentifier("dinnerAcceptIdea")
-                        Button(dinnerText("Save editable draft")) { Task { completed = await model.saveIdea(idea) } }
+                        Button(dinnerText("Save editable draft")) {
+                            Task {
+                                guard await model.saveIdea(idea) else { return }
+                                originalIdea = idea
+                                if reviewedIdea == idea {
+                                    savedAsDraft = true
+                                    completed = true
+                                }
+                            }
+                        }
                             .foregroundStyle(Theme.action).disabled(!model.editable)
                     } else {
-                        Button(dinnerText("Save accepted dinner")) { Task { completed = await model.accept(reviewed, id: acceptedID, fallback: fallback) } }
+                        Button(dinnerText("Save accepted dinner")) {
+                            accepting = true
+                            Task {
+                                completed = await model.accept(reviewed, id: acceptedID, fallback: fallback)
+                                accepting = false
+                            }
+                        }
                             .buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("ledgerSaveDinner")
                     }
                     Button(dinnerText("Continue editing"), action: continueEditing)
-                        .foregroundStyle(Theme.action)
+                        .foregroundStyle(Theme.action).disabled(accepting)
                 }
             } else {
                 DinnerTemplateFields(draft: $draft, focus: $inputFocus)
@@ -393,6 +417,7 @@ struct DinnerIdeasView: View {
 
 /// A form sibling gives Done its own rectangular target, clear of navigation and keyboard chrome.
 struct DinnerFocusedDoneBar: View {
+    var identifier = "dinnerFocusedKeyboardDone"
     let dismissKeyboard: () -> Void
 
     var body: some View {
@@ -406,7 +431,7 @@ struct DinnerFocusedDoneBar: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(Theme.action)
-            .accessibilityIdentifier("dinnerFocusedKeyboardDone")
+            .accessibilityIdentifier(identifier)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

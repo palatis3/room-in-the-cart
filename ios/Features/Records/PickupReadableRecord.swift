@@ -35,7 +35,12 @@ struct PickupReadableRecord {
     }
     private func field(_ key: String, _ value: String) -> String { pickupLabel(key) + ": " + value }
     private func line(_ value: BasketLine) -> String {
-        [value.name, quantity(value.quantity), price(value.expectedCost)].joined(separator: " · ")
+        var facts = [value.name, quantity(value.quantity), price(value.expectedCost)]
+        if let packages = value.packages { facts.append(packages.map { $0.localizedDescription(language: language) }.joined(separator: " + ")) }
+        if let exclusions = value.itemExclusions {
+            facts.append(field("Keep these exclusions", exclusions.joined(separator: ", ")))
+        }
+        return facts.joined(separator: " · ")
     }
     private func scope(_ value: CheckoutScope) -> String {
         switch value {
@@ -136,7 +141,9 @@ struct PickupReadableRecord {
                 var rows = [field("Revision", String(snapshot.revision.number))]
                 if let frozen = j.frozenQuotes[snapshot.id] {
                     rows.append(field("Checkout evidence recorded at", date(frozen.context.observedAt)))
-                    if frozen != j.quote { rows += try quote(frozen, cap: nil) }
+                    if let cap = j.frozenCaps?[snapshot.id.uuidString] {
+                        rows += try quote(frozen, cap: cap)
+                    } else if frozen != j.quote { rows += try quote(frozen, cap: nil) }
                     else { rows.append(pickupLabel("No spending cap recorded with this frozen copy")) }
                 }
                 event(snapshot.createdAt, pickupLabel("Frozen · placement unconfirmed"), rows)

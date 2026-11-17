@@ -55,12 +55,22 @@ import XCTest
         counter("adoptions",0)
         capture("S27-assigned-shopper-explicit-adoption-review")
         confirm(); counter("adoptions",1)
-        assertText("Prices from the former store are invalid")
-        assertText("Earlier revision or shopper assignment")
+        // Confirmation scrolls to the result at the bottom. The price warning belongs to the first section.
+        let priceWarning = app.staticTexts["Prices from the former store are invalid. Review a fresh checkout quote before freezing."]
+        reveal(priceWarning, searchTowardEndFirst: false)
+        XCTAssertTrue(priceWarning.exists && priceWarning.isHittable)
+        // Resolve the known warning directly; a partial-label predicate repeatedly
+        // retried this lazy row during the hosted journey after adoption.
+        let earlierRevision = app.staticTexts["Earlier revision or shopper assignment. Keep this proof; enter a fresh comparison for the current draft."]
+        reveal(earlierRevision)
+        XCTAssertTrue(earlierRevision.exists && earlierRevision.isHittable)
         capture("S27-adopted-draft-requires-fresh-checkout-prices")
         fixture("Freeze shared shop")
         tap(element("sharedQuotes.refresh"))
-        assertText("Saved proof is read-only")
+        // Refresh is below the saved proof; the frozen notice is in the first section.
+        let frozenProof = app.staticTexts["This shop is frozen or placed. Saved proof is read-only; it cannot change the order."]
+        reveal(frozenProof, searchTowardEndFirst: false)
+        XCTAssertTrue(frozenProof.exists && frozenProof.isHittable)
         XCTAssertFalse(element("sharedQuotes.enter").exists)
         counter("adoptions",1)
         capture("S27-frozen-proof-cannot-adopt")
@@ -132,6 +142,15 @@ import XCTest
         inputMeaning("18", id:"sharedQuotes.first.extraMinutes", title:"Extra minutes, optional")
         inputMeaning("40.00", id:"sharedQuotes.first.cap", title:"Applicable cap in USD, optional")
         capture("S27-filled-trip-time-cap-persistent-labels")
+        enableSwitch("sharedQuotes.first.eligibility")
+        tap(element("sharedQuotes.refresh"))
+        tap(element("sharedQuotes.enter"))
+        let cap = app.textFields["sharedQuotes.first.cap"]
+        reveal(cap)
+        assertFieldValue(cap, text: "")
+        let eligibility = app.switches["sharedQuotes.first.eligibility"].firstMatch
+        reveal(eligibility)
+        XCTAssertEqual(eligibility.value as? String, "0", "Fresh quotes need their own eligibility review")
         counter("saves",0); counter("proposals",0); counter("adoptions",0)
         tap(element("fixture.s27.switch")); openComparison()
         let named = element("sharedQuotes.grant.33333333-3333-4333-8333-333333333333")
@@ -148,9 +167,9 @@ import XCTest
     }
     private func openAdult() { app.launch(); openComparison() }
     private func openComparison() {
-        let link = element("sharedShop.storeQuotes")
-        if !link.waitForExistence(timeout:8) { reveal(link) }
-        tap(link)
+        let link = app.buttons["sharedShop.storeQuotes"]
+        reveal(link, fullyVisible: true)
+        link.tap()
         let ready = app.descendants(matching:.any).matching(NSPredicate(format:"identifier IN %@",["sharedQuotes.scope","sharedQuotes.retry"])).firstMatch
         XCTAssertTrue(ready.waitForExistence(timeout:15))
     }
@@ -169,31 +188,33 @@ import XCTest
         enterValue(label+" branch",into:prefix+"branch")
         enterValue("Entered retailer checkout",into:prefix+"source")
         enterValue(checkout,into:prefix+"itemSubtotal")
-        enterValue(checkout,into:prefix+"total")
-        enterValue(trip,into:prefix+"tripCash")
-        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
-
-        let total = app.textFields.matching(identifier:prefix+"total").firstMatch
-        reveal(total, fullyVisible:true)
-        assertFieldValue(total,text:checkout)
+        // Read the checkout value after Done while its row is still on screen.
+        // The assumptions follow it in the form, before the separate trip inputs.
+        fill(checkout,into:prefix+"total",requireDone:true)
         enableSwitch(prefix+"allChargesIncluded")
         enableSwitch(prefix+"quantitiesMatched")
         enableSwitch(prefix+"singleStore")
         tap(element(prefix+"availability")); tap(app.buttons["Reviewed available"])
+        enterValue(trip,into:prefix+"tripCash")
+        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
     }
     private func confirm() {
-        let acknowledgment = app.buttons["sharedQuotes.acknowledged"]
-        let confirm = app.buttons["sharedQuotes.confirm"]
-        // The unknown-trip explanation can push the confirmation row outside the lazy Form.
-        reveal(confirm)
-        XCTAssertFalse(confirm.isEnabled)
-        reveal(acknowledgment)
+        let confirmID = "sharedQuotes.confirm"
+        let acknowledgmentID = "sharedQuotes.acknowledged"
+        guard let initial = visibleQuoteRow(confirmID) else { return }
+        XCTAssertFalse(initial.isEnabled)
+        guard let acknowledgment = visibleQuoteRow(acknowledgmentID) else { return }
         XCTAssertFalse(acknowledgment.isSelected)
-        tap(acknowledgment)
-        XCTAssertTrue(acknowledgment.isSelected)
-        reveal(confirm)
-        XCTAssertTrue(confirm.isEnabled)
-        tap(confirm)
+        let acknowledgmentButton = app.buttons[acknowledgmentID]
+        XCTAssertTrue(acknowledgmentButton.isHittable)
+        acknowledgmentButton.tap()
+        guard let selected = visibleQuoteRow(acknowledgmentID) else { return }
+        XCTAssertTrue(selected.isSelected)
+        guard let reviewed = visibleQuoteRow(confirmID) else { return }
+        XCTAssertTrue(reviewed.isEnabled)
+        let confirmButton = app.buttons[confirmID]
+        XCTAssertTrue(confirmButton.isHittable)
+        confirmButton.tap()
     }
     private func fixture(_ label: String) { tap(element("fixture.s27.showControls")); tap(app.buttons[label]) }
     private func counter(_ id: String, _ n: Int) {
@@ -258,8 +279,12 @@ import XCTest
     }
     private func enterValue(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields.matching(identifier:id).firstMatch
-        reveal(field, fullyVisible: true)
-        tap(field)
+        // Adjacent-field focus can reposition the keyboard and Form. Locate the
+        // complete field and its unobscured viewport in the same snapshot.
+        guard let row = visibleQuoteRow(id) else { return }
+        XCTAssertEqual(row.elementType, .textField)
+        XCTAssertTrue(field.isHittable, "The visible quote field must be hittable: " + id)
+        field.tap()
         dismissBilingualKeyboardCardIfPresent()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:5), "Show the keyboard for \(id)")
         // Targeted typing requires this field to have keyboard focus.
@@ -294,7 +319,10 @@ import XCTest
     }
     private func dismissBilingualKeyboardCardIfPresent() {
         let title = app.staticTexts["Type español e inglés"]
-        guard title.waitForExistence(timeout: 2) else {
+        // Spanish keyboard setup can present the bilingual card asynchronously.
+        // The English journey only needs to handle the card when it is visible.
+        let present = app.launchArguments.contains("es_US") ? title.waitForExistence(timeout: 2) : title.exists
+        guard present else {
             XCTContext.runActivity(named: "Bilingual keyboard onboarding absent") { _ in }
             return
         }
@@ -313,12 +341,12 @@ import XCTest
         }
     }
     // Lazy form rows can disappear between exists/isHittable/frame queries. Locate this
-    // short result in one tree, scroll it fully into view, then assert its real text.
-    private func assertVisibleLabel(_ id: String, contains text: String) {
+    // row and its viewport in the same snapshot before reading its state.
+    private func visibleQuoteRow(_ id: String) -> XCUIElementSnapshot? {
         for attempt in 0..<30 {
             let snapshot: XCUIElementSnapshot
             do { snapshot = try app.snapshot() }
-            catch { XCTFail("Unable to inspect the current quote review: \(error)"); return }
+            catch { XCTFail("Unable to inspect the current quote review: \(error)"); return nil }
             let area = scrollableArea(snapshot: snapshot)
             var pending = snapshot.children
             var matches: [XCUIElementSnapshot] = []
@@ -326,28 +354,32 @@ import XCTest
                 if node.identifier == id { matches.append(node) }
                 pending.append(contentsOf: node.children)
             }
-            guard matches.count <= 1 else { XCTFail("Ambiguous quote result: " + id); return }
+            guard matches.count <= 1 else { XCTFail("Ambiguous quote result: " + id); return nil }
             let target = matches.first
             if let target, !target.frame.isEmpty,
                target.frame.minY >= area.minY, target.frame.maxY <= area.maxY,
                target.frame.minX >= snapshot.frame.minX, target.frame.maxX <= snapshot.frame.maxX {
-                XCTAssertTrue(target.label.contains(text), target.label)
-                XCTAssertTrue(element(id).isHittable, "Quote result must be visible and hittable: " + id)
-                return
+                return target
             }
             let up: Bool
             if let target, !target.frame.isEmpty { up = target.frame.midY > area.midY }
             else { up = (attempt / 6) % 2 == 0 }
             scrollContent(upward: up, area: area)
         }
-        XCTFail("Could not display the complete quote result: " + id)
+        XCTFail("Could not display the complete quote row: " + id)
+        return nil
+    }
+    private func assertVisibleLabel(_ id: String, contains text: String) {
+        guard let row = visibleQuoteRow(id) else { return }
+        XCTAssertTrue(row.label.contains(text), row.label)
+        XCTAssertTrue(element(id).isHittable, "Quote result must be visible and hittable: " + id)
     }
     private func assertLabel(_ id: String, contains text: String) { let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text),target.label) }
     private func assertText(_ text: String) {
         let target = app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@",text)).firstMatch
         reveal(target); XCTAssertTrue(target.exists && target.isHittable,"Missing visible text: "+text)
     }
-    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<30 {
             let exists = target.exists
             let hittable = exists && target.isHittable
@@ -357,7 +389,7 @@ import XCTest
             if hittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             let up: Bool
             if exists && !frame.isEmpty { up = frame.midY > area.midY }
-            else { up = (attempt / 6) % 2 == 0 }
+            else { up = (attempt / 6).isMultiple(of: 2) ? searchTowardEndFirst : !searchTowardEndFirst }
             // A large drag can dismiss the keyboard and carry a nearby field
             // out of the lazy Form, triggering a long search in both directions.
             let overflow = up ? frame.maxY - area.maxY : area.minY - frame.minY

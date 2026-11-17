@@ -20,7 +20,7 @@ extension HouseholdClientTests {
     func testMembershipCreationRetriesExactIntentAndRejectsWrongAccount() async throws {
         let auth = try auth(); var bodies: [Data] = []
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let result = self.authResponse(request) { return result }
             XCTAssertEqual(request.url!.path, "/v1/households"); XCTAssertNil(request.value(forHTTPHeaderField: "X-Device-Token"))
             bodies.append(self.lifecycleBytes(request))
@@ -29,13 +29,13 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         let intent = try MembershipIntent.create(subject: "account", label: "Our home", alias: "Mia", adultAttestation: true)
         let first = try await service.executeMembership(intent); let second = try await service.executeMembership(intent)
-        XCTAssertEqual(first, second); XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
-        let value = try XCTUnwrap(JSONSerialization.jsonObject(with: bodies[0]) as? [String: Any])
+        XCTAssertEqual(first, second); XCTAssertEqual(stateLock.withLock { bodies }, [intent.bytes, intent.bytes])
+        let value = try XCTUnwrap(JSONSerialization.jsonObject(with: stateLock.withLock { bodies[0] }) as? [String: Any])
         XCTAssertEqual(Set(value.keys), Set(["clientKey", "label", "alias", "adultAttestation"]))
         XCTAssertEqual(value["adultAttestation"] as? Bool, true)
         let other = try MembershipIntent.create(subject: "other-account", label: "Other", alias: "Other", adultAttestation: true)
         do { _ = try await service.executeMembership(other); XCTFail("Wrong account replay") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(bodies.count, 2)
+        XCTAssertEqual(stateLock.withLock { bodies.count }, 2)
     }
     func testInvitationRedemptionSendsTokenOnlyInBodyAndRequiresAdultDeclaration() async throws {
         let token = household + "." + String(repeating: "a", count: 43)
@@ -79,7 +79,7 @@ extension HouseholdClientTests {
     func testNativeHelperBindingSurvivesResumeAndNeverFetchesBroadRoutes() async throws {
         let auth = try auth(); let vault = MemoryVault(); var registrations = 0; var broadCalls = 0
         let config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { registrations += 1; return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             XCTAssertEqual(request.value(forHTTPHeaderField: "X-View-Grant-ID"), self.lifecycleGrant)
@@ -97,7 +97,7 @@ extension HouseholdClientTests {
         do { _ = try await service.currentHelperView(grantID: UUID().uuidString); XCTFail("Helper switched grant") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         let recreated = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport())
         let scope = try await recreated.enroll(householdID: household)
-        XCTAssertEqual(scope.grantId, lifecycleGrant); XCTAssertEqual(registrations, 1); XCTAssertEqual(broadCalls, 0)
+        XCTAssertEqual(scope.grantId, lifecycleGrant); XCTAssertEqual(stateLock.withLock { registrations }, 1); XCTAssertEqual(stateLock.withLock { broadCalls }, 0)
     }
     func testHelperRejectsServerIgnoringSelectedGrant() async throws {
         let auth = try auth(); let vault = MemoryVault()
@@ -179,7 +179,7 @@ extension HouseholdClientTests {
         var revision = 2, receiptRevision: Int?
         let proposalID = UUID().uuidString
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") { return (200, self.helperBootstrap()) }
@@ -196,22 +196,22 @@ extension HouseholdClientTests {
         _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
         let intent = try await service.prepareHelperProposal(grantID: lifecycleGrant, baseRevision: 2, correction: "Keep three wraps for lunch.")
         for _ in 0..<2 { do { _ = try await service.executeHelperProposal(intent); XCTFail("Expected lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) } }
-        XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
-        revision = 3
+        XCTAssertEqual(stateLock.withLock { bodies }, [intent.bytes, intent.bytes])
+        stateLock.withLock { revision = 3 }
         let current = try await service.currentHelperView(grantID: lifecycleGrant)
         XCTAssertEqual(current.revision, 3)
         let restored = try JSONDecoder().decode(HelperProposalIntent.self, from: encoded(intent))
         XCTAssertEqual(restored.reviewedRevision, 2)
-        receiptRevision = 3
+        stateLock.withLock { receiptRevision = 3 }
         do { _ = try await service.executeHelperProposal(restored); XCTFail("Acknowledged a different instruction revision") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        receiptRevision = 2
+        stateLock.withLock { receiptRevision = 2 }
         let receipt = try await service.executeHelperProposal(restored)
         XCTAssertEqual(receipt.baseRevision, 2)
-        XCTAssertEqual(bodies, Array(repeating: intent.bytes, count: 4))
-        revoked = true
+        XCTAssertEqual(stateLock.withLock { bodies }, Array(repeating: intent.bytes, count: 4))
+        stateLock.withLock { revoked = true }
         do { _ = try await service.executeHelperProposal(intent); XCTFail("Revoked suggestion replay") } catch {}
-        XCTAssertEqual(bodies.count, 4)
+        XCTAssertEqual(stateLock.withLock { bodies.count }, 4)
     }
     func testNullableWireFieldsAreExplicitAndHelperProjectionHasNoPrivateKeys() throws {
         let projection = try HelperProjection(shopLabel: "Pickup", language: "es", items: [.init(label: "Tortillas", amount: nil, unit: nil, action: "Guardar dos.")])
@@ -244,7 +244,7 @@ extension HouseholdClientTests {
             auth: auth, deviceVault: MemoryVault(), transport: transport())
         let cursor = UUID().uuidString
         var wrongGrant = false
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let result = self.authResponse(request) { return result }
             let url = try XCTUnwrap(request.url)
             if url.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"token"}"#.utf8)) }
@@ -263,7 +263,7 @@ extension HouseholdClientTests {
         _ = try await service.enroll(householdID:household)
         let page = try await service.helperProposals(grantID:lifecycleGrant,cursor:cursor)
         XCTAssertEqual(page.proposals.first?.status,"dismissed"); XCTAssertNil(page.nextCursor)
-        wrongGrant = true
+        stateLock.withLock { wrongGrant = true }
         do { _ = try await service.helperProposals(grantID:lifecycleGrant,cursor:cursor); XCTFail("Accepted another grant") }
         catch { XCTAssertEqual(error as? ClientError,.invalidResponse) }
     }

@@ -70,11 +70,13 @@ DELIVERY_SHARDS = {
 # Move devices to02 and civil dates to04, retaining the same five groups.
 # Current evidence and remaining timing uncertainty: docs/CI-VALIDATION.md.
 BALANCED_SUITES = {
-    "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
+    # The nine guardian cases took 7–10 minutes in recent GitHub runs.
+    # Group 01 finished in 14 minutes while group 05 approached its 40-minute limit.
+    "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "GuardianEnrollmentUITests", "RequestDuplicateComparisonUITests"),
     "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests", "HouseholdDevicesUITests"),
     "contributor-balanced-03": ("HouseholdRequestPackUITests",),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests", "SharedMealCivilDateUITests"),
-    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests", "StapleRecallUITests"),
+    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "SharedMealChangeUITests", "StapleRecallUITests"),
 }
 LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"
 MICROPHONE_PROBE = f"{UI_TARGET}/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable"
@@ -158,7 +160,7 @@ def shard_members(profile, inventory):
     return groups
 
 
-def matrix(inventory=None):
+def matrix(inventory=None, *, github_mac_only=False):
     inventory = source_inventory(UI_SOURCES) if inventory is None else inventory
     rows = [{"profile": profile, "shard": shard}
             for profile in PROFILES for shard in shard_members(profile, inventory)]
@@ -172,6 +174,9 @@ def matrix(inventory=None):
         "contributor-balanced-04": 5,
         "contributor-balanced-02": 6,
         "contributor-balanced-05": 7,
+        # GitHub lost the Spanish saved-change runner. M2 slot 0 had spare tail
+        # capacity in both recent combined runs; preserve its GitHub fallback below.
+        "SharedOperationUndoUITests-testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives": 5,
         # English skipped-dinner Undo was the last fixture after a 31-minute GitHub wait.
         # M2 lane 5 and its GitHub fallback both use slot 0.
         "SharedOperationUndoUITests-testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple": 5,
@@ -186,6 +191,18 @@ def matrix(inventory=None):
         "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 7,
     }
     m4_slots = {
+        # Both the original job and one scoped retry failed before XCTest on
+        # GitHub's runtime retirement guard. Keep its whole 13-case group.
+        "contributor-balanced-01": 5,
+        # Dinner hit the same GitHub runtime retirement failure. Shared Records'
+        # runtime queries and owned cleanup also timed out on GitHub. Lanes 3
+        # and 4 finished early while required fixture groups were still running.
+        "DinnerDecisionSheetUITests": 3,
+        "SharedRecordsUITests": 4,
+        # Both groups hit the GitHub watchOS runtime retirement guard before tests.
+        # These M4 lanes freed first in that batch and use the pinned fixture runtime.
+        "SharedCreatedMealUndoUITests-testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple": 0,
+        "SharedDeliveryUITests-stock-and-purchase": 2,
         # This fixture shared M2 slot 0 with the last-finishing core UI05 job.
         "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 0,
         "contributor-balanced-03": 2,
@@ -199,12 +216,25 @@ def matrix(inventory=None):
         "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": 4,
         "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": 5,
     }
+    # On the GitHub-only fallback, slot 2 also runs billing and UI07.
+    # Use the capacity observed on slots 3 and 4 in run 43596663919.
+    outage_slots = {
+        "SharedOperationUndoUITests-testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives": 1,
+        "contributor-balanced-05": 4,
+        "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 3,
+        "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": 3,
+        "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 4,
+        # In run 43770727863, slot 3 finished while UI07 still held slot 2
+        # ahead of DinnerDecision and the Spanish StoreKit infrastructure retry.
+        "DinnerDecisionSheetUITests": 3,
+    }
     for index, row in enumerate(rows):
         lane = lane_overrides.get(row["shard"], index % 8)
         row.update(provider="github" if lane < 5 else "bitrise",
                    macos_slot=lane if lane < 5 else lane - 5)
-        # Keep the original GitHub slot for untrusted/noncanonical events.
-        if row["shard"] in m4_slots:
+        if github_mac_only:
+            row.update(provider="github", macos_slot=outage_slots.get(row["shard"], row["macos_slot"]))
+        elif row["shard"] in m4_slots:
             row.update(provider="bitrise-m4", m4_slot=m4_slots[row["shard"]])
     return {"include": rows}
 

@@ -95,16 +95,26 @@ struct LedgerIngredientView: View {
                             if let pack = contribution.originalPack { LedgerPackLabelFacts(pack: pack) }
                             if !contribution.notes.isEmpty { Text(ledgerContributionNote(contribution.notes)) }
                             if !contribution.exclusions.isEmpty {
-                                Text(ledgerFormat("Exclusions: %@", contribution.exclusions.joined(separator: ", ")))
+                                Text(ledgerFormat("Exclusions: %@", ledgerExclusionsText(contribution.exclusions)))
                             }
                             ForEach(shop.allocations.filter { $0.demandContributionID == contribution.id }, id: \.id) { link in
                                 Text(ledgerFormat("Linked within existing quantity: %@", ledgerQuantity(link.quantity)))
                                     .font(.footnote)
                             }
-                            Button(ledgerText("Edit this contribution")) { sheet = .contribution(contribution.id) }
-                                .accessibilityLabel(ledgerFormat("Edit contribution: %@", ledgerSourceLabel(contribution, shop: shop)))
+                            Button { sheet = .contribution(contribution.id) } label: {
+                                Text(ledgerText("Edit this contribution"))
+                                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel(ledgerFormat("Edit contribution: %@", ledgerSourceLabel(contribution, shop: shop)))
                             if contribution.source.isMeal || contribution.source.isProtected {
-                                Button(ledgerText("Link within an existing amount")) { sheet = .link(contribution.id) }
+                                Button { sheet = .link(contribution.id) } label: {
+                                    Text(ledgerText("Link within an existing amount"))
+                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.borderless)
                             }
                         }.padding(.vertical, 6).disabled(model.saving || model.hasPendingSave)
                     }

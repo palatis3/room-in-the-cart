@@ -98,8 +98,8 @@ public enum PackComparison {
     }
 
     private static func validate(_ request: ComparisonRequest) throws {
-        guard request.itemName.utf8.count <= 512,
-              request.offerA.id != request.offerB.id,
+        guard request.itemName.utf8.count <= 512 else { throw DomainError.invalidInput("itemNameTooLong") }
+        guard request.offerA.id != request.offerB.id,
               request.itemCap.map({ $0.minorUnits >= 0 }) ?? true else {
             throw DomainError.invalidInput("comparison")
         }
@@ -107,7 +107,10 @@ public enum PackComparison {
             try quantity?.validate()
         }
         for offer in [request.offerA, request.offerB] {
-            guard !offer.id.isEmpty, offer.id.utf8.count <= 128, offer.label.utf8.count <= 512,
+            guard offer.label.utf8.count <= 512 else {
+                throw DomainError.invalidInput(offer.id == request.offerA.id ? "offerANameTooLong" : "offerBNameTooLong")
+            }
+            guard !offer.id.isEmpty, offer.id.utf8.count <= 128,
                   offer.price.map({ $0.minorUnits >= 0 }) ?? true else {
                 throw DomainError.invalidInput("offer")
             }

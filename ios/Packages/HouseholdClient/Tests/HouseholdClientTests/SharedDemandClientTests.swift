@@ -132,7 +132,7 @@ extension HouseholdClientTests {
         let receipt: [String:Any] = ["schemaVersion":1,"operationId":operationID.string,"householdId":household,"shopId":shop.uuidString.lowercased(),"baseRevision":0,"resultRevision":1,
             "lines":[["id":line.string,"before":NSNull(),"after":try demandObject(graphLine)]],"contributions":[["id":source.string,"before":NSNull(),"after":try demandObject(contribution)]],"edges":[]]
         var commands = [Data](), deny = false, wrongReceipt = false
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let value = self.authResponse(request) { return value }
             let path = try XCTUnwrap(request.url?.path)
             if path.hasSuffix("/devices") { return (201, try demandData(["deviceId":"device","deviceToken":"test"])) }
@@ -150,7 +150,7 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email:"adult@example.test",code:"123456"); _ = try await service.enroll(householdID:household)
         let legacy = try await service.sharedDemand(shopID:shop); XCTAssertEqual(legacy.status, .legacy)
         let review = try await service.previewSharedDemand(shopID:shop,request:input)
-        XCTAssertTrue(commands.isEmpty, "Cancel means no queued or sent Apply")
+        XCTAssertTrue(stateLock.withLock { commands.isEmpty }, "Cancel means no queued or sent Apply")
         let operation = try await service.prepareSharedDemandApply(review)
         XCTAssertEqual(operation.sharedDemandBinding?.shopID.uuid,shop)
         let legacyEnvelope = CommandEnvelope(replayWindow:UUID().uuidString.lowercased(),shopId:shop.uuidString.lowercased(),kind:"shop.freeze",base:.init(shopRevision:1,authorityEpoch:1),body:[:])
@@ -163,7 +163,7 @@ extension HouseholdClientTests {
         corrupted["bytes"] = try demandData(wrongEnvelope).base64EncodedString()
         let changedOperation = try JSONDecoder().decode(PendingOperation.self,from:demandData(corrupted))
         do { _ = try await service.executeSharedDemand(changedOperation); XCTFail("Changed persisted base reached network") } catch { XCTAssertEqual(error as? ClientError,.invalidResponse) }
-        XCTAssertTrue(commands.isEmpty)
+        XCTAssertTrue(stateLock.withLock { commands.isEmpty })
         wrongEnvelope = try XCTUnwrap(JSONSerialization.jsonObject(with:operation.bytes) as? [String:Any]); wrongEnvelope["shopId"] = UUID().uuidString.lowercased()
         corrupted["bytes"] = try demandData(wrongEnvelope).base64EncodedString()
         let wrongShop = try JSONDecoder().decode(PendingOperation.self,from:demandData(corrupted))
@@ -174,12 +174,12 @@ extension HouseholdClientTests {
         service = HouseholdService(configuration:config,auth:auth,deviceVault:vault,transport:transport()); _ = try await service.enroll(householdID:household)
         let restored = try await OperationOutbox(url:directory.appendingPathComponent("outbox.json")).operations()
         XCTAssertEqual(restored,[operation]); let acknowledged = try await service.executeSharedDemand(try XCTUnwrap(restored.first))
-        XCTAssertEqual(acknowledged.operationId,operationID.string); XCTAssertEqual(commands,[operation.bytes,operation.bytes])
+        XCTAssertEqual(acknowledged.operationId,operationID.string); XCTAssertEqual(stateLock.withLock { commands },[operation.bytes,operation.bytes])
         let page = try await service.sharedDemand(shopID:shop); XCTAssertEqual(page.graph,after); XCTAssertEqual(page.totals.first?.quantity,try SharedDemandAmount(numerator:12))
-        wrongReceipt = true
+        stateLock.withLock { wrongReceipt = true }
         do { _ = try await service.executeSharedDemand(operation); XCTFail("wrong reserved operation acknowledged") } catch { XCTAssertEqual(error as? ClientError,.invalidResponse) }
-        deny = true; let count = commands.count
+        let count = stateLock.withLock { deny = true; return commands.count }
         do { _ = try await service.executeSharedDemand(operation); XCTFail("revoked shopper sent command") } catch {}
-        XCTAssertEqual(commands.count,count)
+        XCTAssertEqual(stateLock.withLock { commands.count },count)
     }
 }

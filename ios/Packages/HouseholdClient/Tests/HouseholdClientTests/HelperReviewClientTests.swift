@@ -76,7 +76,7 @@ extension HouseholdClientTests {
     func testReviewRetryReconcilesOriginalBytesAfterRevisionAdvancesAndStopsAfterAuthorityLoss() async throws {
         let auth = try auth(); var bodies: [Data] = []; var currentRevision = 1; var role = "shopper"
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
@@ -95,10 +95,10 @@ extension HouseholdClientTests {
         let intent = try await service.prepareHelperReview(current: current, decision: .replace, projection: current.projection)
         do { _ = try await service.executeHelperReview(intent); XCTFail("Expected lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) }
         let receipt = try await service.reconcileHelperReview(intent)
-        XCTAssertEqual(receipt.revision, 2); XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
-        role = "contributor"
+        XCTAssertEqual(receipt.revision, 2); XCTAssertEqual(stateLock.withLock { bodies }, [intent.bytes, intent.bytes])
+        stateLock.withLock { role = "contributor" }
         do { _ = try await service.executeHelperReview(intent); XCTFail("Former shopper retried") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(bodies.count, 2)
+        XCTAssertEqual(stateLock.withLock { bodies.count }, 2)
     }
     func testReviewTamperedStoredBytesAndWrongIdentityNeverSend() async throws {
         let original = try reviewIntent()
@@ -108,9 +108,9 @@ extension HouseholdClientTests {
         XCTAssertThrowsError(try changed.validate())
         let auth = try auth(); var networkCalls = 0
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        MockURLProtocol.handler = { _ in networkCalls += 1; throw URLError(.badURL) }
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { _ in networkCalls += 1; throw URLError(.badURL) }
         do { _ = try await service.executeHelperReview(original); XCTFail("Unenrolled replay") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(networkCalls, 0)
+        XCTAssertEqual(stateLock.withLock { networkCalls }, 0)
     }
 }
 
@@ -141,7 +141,7 @@ extension HouseholdClientTests {
     func testResolutionRouteUsesProposalRevisionAndRejectsMismatchedReceipt() async throws {
         let auth = try auth(); var sent: [Data] = []; var wrongReceipt = false
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
@@ -159,10 +159,10 @@ extension HouseholdClientTests {
         let intent = try await service.prepareHelperReview(current: current, proposal: proposal, decision: .dismiss)
         let receipt = try await service.executeHelperReview(intent)
         XCTAssertEqual(receipt.resolution, "dismissed"); XCTAssertEqual(receipt.revision, 1)
-        wrongReceipt = true
+        stateLock.withLock { wrongReceipt = true }
         do { _ = try await service.executeHelperReview(intent); XCTFail("Accepted wrong proposal revision") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        XCTAssertEqual(sent, [intent.bytes, intent.bytes])
+        XCTAssertEqual(stateLock.withLock { sent }, [intent.bytes, intent.bytes])
     }
 }
 

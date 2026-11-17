@@ -1,0 +1,138 @@
+version: 2.1
+
+executors:
+  xcode:
+    macos:
+      xcode: "27.1.0"
+    resource_class: m4pro.medium
+    working_directory: ~/project
+
+commands:
+  verify-checkout:
+    steps:
+      - checkout
+      - run:
+          name: Verify the candidate and Xcode
+          command: |
+            test "$(git rev-parse HEAD)" = "$CIRCLE_SHA1"
+            test "$(uname -m)" = arm64
+            xcodebuild -version
+            test "$(xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+
+jobs:
+  swift-packages:
+    executor: xcode
+    steps:
+      - verify-checkout
+      - run:
+          name: Run the Swift package tests with coverage
+          command: |
+            set -euo pipefail
+            mkdir -p .build/package-results
+            for manifest in ios/Packages/*/Package.swift; do
+              package=$(dirname "$manifest")
+              name=$(basename "$package")
+              swift test --package-path "$package" --enable-code-coverage 2>&1 | tee ".build/package-results/$name.log"
+              swift test --package-path "$package" list --skip-build > ".build/package-results/$name.inventory.txt"
+            done
+            python3 scripts/check_swift_package_results.py --results .build/package-results
+      - store_artifacts:
+          path: .build/package-results
+          destination: package-results
+
+  ios-core-build:
+    executor: xcode
+    steps:
+      - verify-checkout
+      - restore_cache:
+          keys:
+            - ritc-ios-cas-v1-m4-27A9275-24A434-{{ .Revision }}
+            - ritc-ios-cas-v1-m4-27A9275-24A434-
+      - run:
+          name: Build once and discover the candidate's tests
+          command: bash scripts/circle_ios_build.sh
+      - save_cache:
+          key: ritc-ios-cas-v1-m4-27A9275-24A434-{{ .Revision }}
+          paths:
+            - .build/circle-xcode-cas
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .build/circle-ios/products.tar.lzfse
+      - store_artifacts:
+          path: .build/circle-evidence
+          destination: build-diagnostics
+      - store_artifacts:
+          path: .build/test-plan
+          destination: test-plan
+
+  ios-core-tests:
+    executor: xcode
+    parameters:
+      nodes:
+        type: integer
+        default: 3
+      scope:
+        type: enum
+        enum: [full, smoke]
+        default: full
+    parallelism: << parameters.nodes >>
+    steps:
+      - verify-checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run assigned tests and verify results
+          command: |
+            if [ "<< parameters.scope >>" = smoke ]; then
+              bash scripts/circle_ios_test.sh smoke
+            else
+              bash scripts/circle_ios_test.sh
+            fi
+      - store_artifacts:
+          path: .build/circle-evidence
+          destination: xcresults
+
+# Share one allocation across the opt-in branches, including overlapping pushes.
+job-groups:
+  package-only:
+    jobs:
+      - swift-packages
+  smoke:
+    jobs:
+      - ios-core-build:
+          name: ios-core-canary-build
+      - ios-core-tests:
+          name: ios-core-canary
+          nodes: 1
+          scope: smoke
+          requires: [ios-core-canary-build]
+  assisted:
+    jobs:
+      - swift-packages:
+          name: ios-core-packages
+      - ios-core-build
+      - ios-core-tests:
+          requires: [ios-core-build, ios-core-packages]
+
+workflows:
+  bitrise-fallback:
+    when:
+      equal: [codex/circleci-fallback, << pipeline.git.branch >>]
+    jobs:
+      - package-only:
+          serial-group: ritc-circle-macs
+
+  simulator-canary:
+    when:
+      equal: [codex/circleci-canary, << pipeline.git.branch >>]
+    jobs:
+      - smoke:
+          serial-group: ritc-circle-macs
+
+  bitrise-fallback-core:
+    when:
+      equal: [codex/circleci-performance, << pipeline.git.branch >>]
+    jobs:
+      - assisted:
+          serial-group: ritc-circle-macs

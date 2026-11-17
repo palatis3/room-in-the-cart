@@ -95,7 +95,17 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         tap(app.buttons["dinnerScenarioReview"])
         tap(app.buttons["dinnerComparePairings"])
         let replace = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerReplacement-'")).firstMatch
-        tap(replace)
+        // Resolve the named replacement once. Tapping the dynamic query again can
+        // spend minutes looking up the same row as the preview starts to open.
+        reveal(replace)
+        guard let row = try? replace.snapshot(), row.isEnabled, row.label.contains("Tacos") else {
+            return XCTFail("Expected an enabled preview for the Tacos replacement")
+        }
+        let bounds = app.frame
+        let visible = bounds.intersection(row.frame)
+        guard !visible.isEmpty else { return XCTFail("Replacement button is outside the screen") }
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: visible.midX - bounds.minX, dy: visible.midY - bounds.minY)).tap()
         let lunch = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerPreviewMeal-' AND label CONTAINS 'Almuerzo'")).firstMatch
         reveal(lunch)
         XCTAssertTrue(lunch.label.contains(language == "es" ? "Porciones: 1" : "Servings: 1"),lunch.label)
@@ -104,6 +114,14 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         capture("S15-S17-" + language)
         tap(app.buttons["dinnerApply"])
         XCTAssertTrue(origin.waitForExistence(timeout: 8))
+        tap(origin)
+        let noNewPair = app.staticTexts["dinnerPairingEmpty"]
+        reveal(noNewPair)
+        XCTAssertEqual(noNewPair.label, language == "es"
+                       ? "No hay una combinación nueva; estas cenas ya están seleccionadas."
+                       : "No new pairing; these dinners are already selected.")
+        XCTAssertFalse(app.buttons["dinnerScenarioReview"].exists)
+        tap(cancel)
         openChosenDinners(language)
         let tacos = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS 'Tacos'")).firstMatch
         tap(tacos)

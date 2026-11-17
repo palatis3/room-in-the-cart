@@ -290,7 +290,7 @@ extension HouseholdClientTests {
         record["origin"] = origin; object["record"] = record
         let foreignBytes = try JSONSerialization.data(withJSONObject: object)
         var reads = 0
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, Data(#"{"deviceId":"device","deviceToken":"test"}"#.utf8)) }
@@ -307,6 +307,6 @@ extension HouseholdClientTests {
         XCTAssertEqual(result.record, page.record)
         do { _ = try await service.sharedRecordHistory(shopID: page.record.origin.shopId.uuid); XCTFail("Foreign origin accepted") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        XCTAssertEqual(reads, 2)
+        XCTAssertEqual(stateLock.withLock { reads }, 2)
     }
 }

@@ -50,7 +50,12 @@ import XCTest
         for (name, value) in checkoutFacts {
             let field = app.textFields[name]
             reveal(field)
-            let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: field)
+            // Read the retained value from a captured field instead of asking
+            // XCTest to resolve a second query filtered by a changing value.
+            let entered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let snapshot = try? field.snapshot() else { return false }
+                return snapshot.value as? String == value
+            }, object: nil)
             XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
                            "The single typed value should finish appearing in \(name)")
             XCTAssertEqual(field.value as? String, value, name)
@@ -85,13 +90,36 @@ import XCTest
         let usable = "Confirmed usable amount (optional)", match = "I checked the identity, units and meal constraints"
         let segment = "Segment ID (distinct for each split delivery)", event = "Delivery or receipt evidence ID"
         let save = app.buttons["Save observed arrival"]
-        func returnToLinePicker() {
-            let picker = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Original order line")).firstMatch
-            for _ in 0..<12 {
-                if picker.exists && picker.isHittable { return }
-                scrollContent(upward: false)
+        func enterArrivalValue(_ value: String, into label: String, replacing: Bool = false) {
+            let field = app.textFields[label]
+            reveal(field, requireVisibleCenter: true, initiallyUpward: !replacing, reserveKeyboardSpace: false)
+            field.tap()
+            if replacing {
+                let previous = field.value as? String ?? ""
+                if !previous.isEmpty && previous != field.placeholderValue {
+                    field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
+                }
             }
-            XCTAssertTrue(picker.exists && picker.isHittable)
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value)
+            let done = app.buttons["arrival.keyboardDone"]
+            XCTAssertTrue(done.isHittable)
+            done.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "arrival.keyboardDone"))
+        }
+        func arrivalPicker(_ label: String) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", label)).firstMatch
+        }
+        func returnToLinePicker() {
+            reveal(arrivalPicker("Original order line"), requireVisibleCenter: true, initiallyUpward: false)
+        }
+        func chooseArrival(_ label: String, value: String) {
+            let picker = arrivalPicker(label)
+            reveal(picker, requireVisibleCenter: true, initiallyUpward: label == "Unit")
+            picker.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            let option = app.buttons[value]
+            XCTAssertTrue(option.waitForExistence(timeout: 5), "Open the \(label) picker to select \(value)")
+            option.tap()
         }
         func requireEmpty(_ fieldName: String) {
             let field = app.textFields[fieldName]
@@ -105,46 +133,50 @@ import XCTest
             XCTAssertFalse(app.staticTexts["pickup-save-error"].exists)
         }
 
-        choose("Original order line", value: "wraps")
-        choose("What happened", value: "Wrong item")
-        fill("1", into: received)
-        fill("1", into: usable)
-        fill("first bag", into: segment)
+        chooseArrival("Original order line", value: "wraps")
+        chooseArrival("What happened", value: "Wrong item")
+        enterArrivalValue("1", into: received)
+        enterArrivalValue("1", into: usable)
+        enterArrivalValue("first bag", into: segment)
         let deliveryID = try XCTUnwrap(app.textFields[event].value as? String)
         enableSwitch(match)
 
-        choose("Original order line", value: "apples")
+        chooseArrival("Original order line", value: "apples")
         requireEmpty(received)
         requireEmpty(usable)
         XCTAssertEqual(app.textFields[name].value as? String, "apples")
         XCTAssertEqual(app.switches[match].value as? String, "0")
         XCTAssertEqual(app.textFields[event].value as? String, deliveryID)
         XCTAssertEqual(app.textFields[segment].value as? String, "first bag")
-        fill("4", into: received)
-        fill("3", into: usable)
+        enterArrivalValue("4", into: received)
+        enterArrivalValue("3", into: usable)
+        XCTAssertEqual(app.textFields[received].value as? String, "4")
+        XCTAssertEqual(app.textFields[usable].value as? String, "3")
+        let quantities = XCTAttachment(screenshot: app.screenshot())
+        quantities.name = "Physical and confirmed usable amounts before saving"
+        quantities.lifetime = .keepAlways
+        add(quantities)
         enableSwitch(match)
         tap(save)
         checkSavedRows(1)
         tap(save)
         checkSavedRows(1)
 
-        returnToLinePicker()
-        choose("Original order line", value: "wraps")
-        fill("2", into: received)
-        fill("1", into: usable)
+        chooseArrival("Original order line", value: "wraps")
+        enterArrivalValue("2", into: received)
+        enterArrivalValue("1", into: usable)
         enableSwitch(match)
         tap(save)
         checkSavedRows(2)
 
-        returnToLinePicker()
-        choose("What happened", value: "Wrong item")
+        chooseArrival("What happened", value: "Wrong item")
         XCTAssertEqual(app.switches[match].value as? String, "0")
-        fill("other food", into: name, replacing: true)
+        enterArrivalValue("other food", into: name, replacing: true)
         enableSwitch(match)
-        fill("different food", into: name, replacing: true)
+        enterArrivalValue("different food", into: name, replacing: true)
         XCTAssertEqual(app.switches[match].value as? String, "0")
         enableSwitch(match)
-        choose("Unit", value: "gram")
+        chooseArrival("Unit", value: "gram")
         XCTAssertEqual(app.switches[match].value as? String, "0")
         tap(app.buttons["Start another actual delivery segment"])
         returnToLinePicker()
@@ -156,13 +188,13 @@ import XCTest
         XCTAssertEqual(app.switches[match].value as? String, "0")
         requireEmpty(segment)
         XCTAssertNotEqual(app.textFields[event].value as? String, deliveryID)
-        fill("second bag", into: segment)
-        fill("1", into: received)
-        fill("1", into: usable)
+        enterArrivalValue("second bag", into: segment)
+        enterArrivalValue("1", into: received)
+        enterArrivalValue("1", into: usable)
         enableSwitch(match)
         tap(save)
         checkSavedRows(3)
-        fill("different bag", into: segment, replacing: true)
+        enterArrivalValue("different bag", into: segment, replacing: true)
         returnToLinePicker()
         requireEmpty(received)
         requireEmpty(usable)
@@ -230,7 +262,12 @@ import XCTest
         XCTAssertTrue(start.waitForExistence(timeout: 8), "A placed receipt needs an entry for independent retailer confirmation")
         tap(start)
         tap(app.buttons["Edit wraps"])
-        fill("5", into: "pickup.amendment.amount", replacing: true)
+        let amount = app.textFields["pickup.amendment.amount"]
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "2")
+        amount.tap()
+        app.typeText(XCUIKeyboardKey.delete.rawValue + "5")
+        tap(app.buttons["Done"])
         tap(app.buttons["pickup.amendment.keepLine"])
         fill("Market confirmation ABC-51", into: "pickup.amendment.reference")
         tap(app.buttons["pickup.amendment.preview"])
@@ -415,7 +452,8 @@ import XCTest
         reveal(target, requireVisibleCenter: true)
         target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
-    private func reveal(_ target: XCUIElement, requireVisibleCenter: Bool = false) {
+    private func reveal(_ target: XCUIElement, requireVisibleCenter: Bool = false, initiallyUpward: Bool = true,
+                        reserveKeyboardSpace: Bool = true) {
         for attempt in 0...64 {
             // A lazy Form may not expose an offscreen row yet. Asking for
             // isHittable first makes XCTest retry a missing element before
@@ -426,18 +464,19 @@ import XCTest
             if requireVisibleCenter {
                 // XCTest briefly hides the software keyboard during typeText. It can
                 // rise over a lower field between a successful query and the tap.
-                area.size.height = min(area.height, app.frame.midY - area.minY)
+                if reserveKeyboardSpace { area.size.height = min(area.height, app.frame.midY - area.minY) }
                 if exists && target.isHittable {
                     let frame = target.frame
                     if area.contains(CGPoint(x: frame.midX, y: frame.midY)) { return }
                 }
             }
             if attempt == 64 { break }
+            let searchUpward = attempt < 32 ? initiallyUpward : !initiallyUpward
             let upward: Bool
             if exists {
                 let frame = target.frame
-                upward = frame.isEmpty ? attempt < 32 : frame.midY > area.midY
-            } else { upward = attempt < 32 }
+                upward = frame.isEmpty ? searchUpward : frame.midY > area.midY
+            } else { upward = searchUpward }
             scrollContent(upward: upward, area: area)
         }
         XCTFail("Missing actionable UI element: \(target.debugDescription)")

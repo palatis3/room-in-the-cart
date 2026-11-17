@@ -145,7 +145,7 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
         Group { if ProcessInfo.processInfo.arguments.contains("--guardian-fixture-root") { GuardianRootTransitionFixtureRoot() }
         else if childMode { GuardianChildFixtureRoot() }
         else { NavigationStack {
-            GuardianEnrollmentView(model:model) {
+            GuardianEnrollmentView(model:model, serviceURL: URL(string: "https://fixture.invalid")) {
                 Text("Fictional guardian fixture · no real emails or accounts")
                 Text(String(verificationCount)).accessibilityIdentifier("guardian.fixture.verificationRequests")
                 if model.selected?.state == .verificationPending {

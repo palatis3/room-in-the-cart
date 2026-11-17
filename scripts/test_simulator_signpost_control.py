@@ -270,11 +270,10 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn('if: ${{ !inputs.simulator_signpost_control }}',build)
         self.assertIn('!inputs.capture_preflight_only && !inputs.simulator_signpost_control',consumer)
         self.assertIn('needs: performance-build',consumer)
-    def test_one_slot_no_app_commands(self):
+    def test_standard_runner_admission_and_no_app_commands(self):
         job=self.text.split('  simulator-signpost-control:',1)[1]
         self.assertIn("github.event_name == 'workflow_dispatch' && inputs.simulator_signpost_control",job)
-        self.assertIn('group: ritc-macos-slot-2',job);self.assertIn('queue: max',job)
-        self.assertIn('cancel-in-progress: false',job);self.assertIn('runs-on: xcode-27',job)
+        self.assertNotIn('    concurrency:',job);self.assertIn('runs-on: xcode-27',job)
         for banned in ('xcodebuild','xctest','run_ios_test_shard','check_ios_performance.py','build-for-testing'):
             self.assertNotIn(banned,job)
     def test_archive_precedes_delete_and_no_duplicate_tree_upload(self):

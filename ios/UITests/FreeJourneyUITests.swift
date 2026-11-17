@@ -89,6 +89,36 @@ import XCTest
         receipt.name = "F02-source-removal-persistence-binding"; receipt.lifetime = .keepAlways; add(receipt)
     }
 
+    func testIngredientContributionActionsHaveSeparateAccessibleTargets() {
+        launch(reset: true, sourceRemoval: true)
+        openShoppingList()
+        tap(app.buttons["Inspect Wraps"])
+        let edit = app.buttons["Edit contribution: Wednesday quesadillas"]
+        reveal(edit)
+        let geometry = XCTAttachment(string: "Edit target: \(edit.frame)")
+        geometry.name = "ingredient-contribution-action-geometry"
+        geometry.lifetime = .keepAlways
+        add(geometry)
+        capture("ingredient-contribution-actions")
+        // CoreGraphics subtraction can report 43.99999999999994 for a 44-point frame.
+        let coordinateTolerance: CGFloat = 1e-9
+        XCTAssertGreaterThanOrEqual(edit.frame.height + coordinateTolerance, 44, "A contribution action needs a 44-point tap target")
+        edit.tap()
+        XCTAssertTrue(app.navigationBars["Edit contribution"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Link existing quantity"].exists)
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 5))
+        let row = app.cells.containing(.button, identifier: "Edit contribution: Wednesday quesadillas").firstMatch
+        let link = row.buttons["Link within an existing amount"]
+        reveal(link)
+        XCTAssertGreaterThanOrEqual(link.frame.height + coordinateTolerance, 44, "Linking needs its own 44-point tap target")
+        link.tap()
+        XCTAssertTrue(app.navigationBars["Link existing quantity"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Edit contribution"].exists)
+        tap(app.buttons["Cancel"])
+        capture("ingredient-contribution-actions-after-cancelling")
+    }
+
     func testReceiptUsableCorrectionShowsProtectedMealEffectsBeforeSaving() {
         launch(reset: true, privateRecovery: true)
         func arrivals() {
@@ -134,14 +164,16 @@ import XCTest
         let mealID = String(replace.identifier.dropFirst("mealRecovery.target.".count))
         tap(replace)
         let title = app.textFields["mealRecovery.title"]
-        let notes = app.textFields["mealRecovery.notes"]
+        let notes = editableElement("mealRecovery.notes")
         tapVisibleFormRow(title)
         title.typeText("Wednesday bean bowls" + XCUIKeyboardKey.return.rawValue)
         notes.typeText("Heat the beans for dinner")
         XCTAssertEqual(notes.value as? String, "Heat the beans for dinner")
-        let done = app.buttons["Done"]
+        let done = app.navigationBars["Replace a whole dinner"].buttons["Done"]
         XCTAssertTrue(done.isHittable)
         done.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+
         let name = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "mealRecovery.", ".name")).firstMatch
         reveal(name)
         if replaceDraftIngredient {
@@ -157,8 +189,13 @@ import XCTest
         let nameID = ingredientID + ".name", amountID = ingredientID + ".amount"
         fill("Beans", into: nameID, useVisibleCenter: true, control: app.textFields[nameID])
         choose("Reviewed matching food", value: "Beans")
-        fill("4", into: amountID, useVisibleCenter: true, control: app.textFields[amountID])
+        let amount = app.textFields[amountID]
+        tapVisibleFormRow(amount)
+        amount.typeText("4")
+        XCTAssertEqual(amount.value as? String, "4")
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
         enableSwitch("I reviewed every food identity, usable unit and inherited exclusion")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         let preview = element("mealRecovery.preview")
         XCTAssertTrue(preview.waitForExistence(timeout: 5) && preview.isHittable && preview.isEnabled)
         XCTAssertLessThanOrEqual(preview.frame.maxY, app.tabBars.buttons["Shop"].frame.minY,
@@ -270,6 +307,18 @@ import XCTest
         let spanish = try XCTUnwrap(reopenedInstruction.value as? String)
         XCTAssertTrue(spanish.hasPrefix("Instrucciones para cocinar"), spanish)
         XCTAssertTrue(spanish.contains("Wednesday bean bowls"))
+        // The recipient's preview and its readback timestamp must agree even with an English interface.
+        let datedLine = try XCTUnwrap(spanish.components(separatedBy: "\n\n").dropFirst().first)
+        let sourceDate = try XCTUnwrap(datedLine.components(separatedBy: " · ").first)
+        let recipientLocale = Locale(identifier: "es-US")
+        let dateParser = DateFormatter()
+        dateParser.locale = recipientLocale
+        dateParser.dateStyle = .full
+        dateParser.timeStyle = .short
+        let preparedAt = try XCTUnwrap(dateParser.date(from: sourceDate), sourceDate)
+        let readbackDate = preparedAt.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: recipientLocale))
+        reveal(app.staticTexts["Current dated cook instruction"])
+        XCTAssertTrue(app.staticTexts[readbackDate].waitForExistence(timeout: 5), "Expected Spanish readback date: \(readbackDate)")
         tap(app.buttons["Review this saved copy"])
         reveal(reopenedInstruction, initiallyUpward: false)
         XCTAssertEqual(reopenedInstruction.value as? String, copy)
@@ -336,8 +385,10 @@ import XCTest
         XCTAssertTrue(failure.label.contains("permission was not granted"), failure.label)
         XCTAssertFalse(element("capture.stopSpeech").exists)
         XCTAssertFalse(element("capture.useText").exists)
-        reveal(editor)
+        tap(element("capture.typeItem"))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         XCTAssertEqual(editor.value as? String, "2 Wraps")
+        tap(element("capture.sourceDone"))
         capture("B09-microphone-refusal-preserves-typed-draft")
 
         enableSwitch("I checked the wording, amounts, units and exclusions.")
@@ -348,8 +399,11 @@ import XCTest
         reveal(amount)
         XCTAssertEqual(amount.value as? String, "2")
         fill("3", into: "Total amount, unknown if blank", replacing: true)
-        if app.keyboards.firstMatch.exists { scrollContent(upward: false) }
-        enableSwitch("I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns.")
+        let reviewed = app.switches["I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns."]
+        revealScrollableContent(reviewed, entireRow: true)
+        let nativeSwitch = reviewed.switches.firstMatch
+        (nativeSwitch.exists ? nativeSwitch : reviewed).tap()
+        XCTAssertEqual(reviewed.value as? String, "1")
         tap(element("capture.continue"))
         XCTAssertTrue(captureSheet.waitForNonExistence(timeout: 10))
         tap(element("ledgerCommitImport"))
@@ -360,6 +414,36 @@ import XCTest
         capture("B09-typed-amount-reopened-after-microphone-refusal")
     }
 
+    func testCameraRefusalReturnsToTypedDraft() throws {
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerImport"))
+        fill("2 Wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        tap(element("ledgerCommitImport"))
+        openShoppingList()
+        tap(app.buttons["Inspect Wraps"])
+        tap(element("ledger.scanReferences"))
+        tap(app.buttons["Scan a code and match it manually"])
+        fill("Wraps", into: "scan.sourceEditor", requireDone: true)
+        let consent = app.switches["scan.localConsent"]
+        revealScrollableContent(consent, initiallyUpward: false, entireRow: true)
+        enableSwitch("scan.localConsent")
+        tap(element("scan.camera"))
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let prompt = springboard.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'camera'")).firstMatch
+        XCTAssertTrue(prompt.waitForExistence(timeout: 8))
+        let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+        XCTAssertTrue(deny.exists && deny.isHittable)
+        deny.tap()
+        let failure = app.staticTexts["Camera permission was not granted. Type, paste or choose a photo instead."]
+        XCTAssertTrue(failure.waitForExistence(timeout: 8))
+        tap(element("scan.typeItem"))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textViews["scan.sourceEditor"].value as? String, "Wraps")
+        app.typeText(" pack")
+        XCTAssertEqual(app.textViews["scan.sourceEditor"].value as? String, "Wraps pack")
+    }
 #endif
 
     func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() throws {
@@ -367,13 +451,23 @@ import XCTest
 
         let picker = app.buttons["pickup.retailerRecipientLanguage"]
         let preview = app.staticTexts["pickup.datedRetailerPreview"]
-        reveal(picker, initiallyUpward: false)
+        func chooseRecipientLanguage(_ language: String) {
+            revealScrollableContent(picker, initiallyUpward: false, entireRow: true)
+            // The menu's current value is the trailing control in this Form row.
+            picker.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            let option = app.buttons[language]
+            XCTAssertTrue(option.waitForExistence(timeout: 5), "The recipient language menu must offer \(language)")
+            option.tap()
+        }
+        reveal(preview, initiallyUpward: false)
         let english = preview.label
-        picker.tap()
-        app.buttons["Español (EE. UU.)"].tap()
+        chooseRecipientLanguage("Español (EE. UU.)")
         XCTAssertTrue(preview.label.hasPrefix("Compra revisada"))
         XCTAssertTrue(preview.label.contains("Wraps — 2 unidades"))
         let spanish = preview.label
+        tap(app.buttons["Print dated list"])
+        dismissSystemPrintSheet()
+        XCTAssertEqual(preview.label, spanish)
         tap(app.buttons["Copy dated list"])
         capture("Retailer-English-interface-Spanish-copy")
 
@@ -384,8 +478,7 @@ import XCTest
         tap(app.collectionViews.buttons["Preparar envío a la tienda"])
         reveal(preview)
         XCTAssertEqual(preview.label, spanish)
-        tap(picker)
-        app.buttons["Inglés (EE. UU.)"].tap()
+        chooseRecipientLanguage("Inglés (EE. UU.)")
         XCTAssertEqual(preview.label, english)
         tap(app.buttons["Copiar lista con fecha"])
         capture("Retailer-Spanish-interface-English-copy")
@@ -562,32 +655,57 @@ import XCTest
                                                                "dinnerOccurrence-", "Wrap dinner")).firstMatch
             reveal(occurrence)
         }
-        func fillReviewedFields(_ fields: [(String, String)]) {
-            // These controls are TextFields. Reveal their visible center once;
-            // repeating the broad lookup and reveal adds work to every entry.
+        func reviewedField(named name: String, in screen: any XCUIElementSnapshot) -> (any XCUIElementSnapshot)? {
+            var pending = [screen]
+            while let node = pending.popLast() {
+                if node.elementType == .textField,
+                   node.identifier == name || node.label == name || node.placeholderValue == name {
+                    return node
+                }
+                pending.append(contentsOf: node.children.reversed())
+            }
+            return nil
+        }
+        func focusReviewedField(_ name: String) throws -> (identity: String, snapshot: any XCUIElementSnapshot)? {
+            for attempt in 0...24 {
+                let screen = try app.snapshot()
+                let field = reviewedField(named: name, in: screen)
+                let area = scrollableArea(from: screen)
+                let frame = field?.frame ?? .zero
+                let center = CGPoint(x: frame.midX, y: frame.midY)
+                if let field, !frame.isEmpty, area.insetBy(dx: 0, dy: 12).contains(center) {
+                    let identity = field.identifier.isEmpty ? name : field.identifier
+                    if app.textFields.matching(identifier: identity).firstMatch.isHittable {
+                        // Resolve the native field once. Element-relative taps and typing
+                        // each resolve it again while the keyboard changes the form.
+                        let origin = app.coordinate(withNormalizedOffset: .zero)
+                        origin.withOffset(CGVector(dx: center.x - screen.frame.minX, dy: center.y - screen.frame.minY)).tap()
+                        return (identity, field)
+                    }
+                }
+                if attempt < 24 {
+                    scrollContent(upward: frame.isEmpty ? attempt < 12 : center.y > area.midY,
+                                  area: area, bounds: screen.frame)
+                }
+            }
+            XCTFail("No visible center for reviewed field: \(name)")
+            return nil
+        }
+        func fillReviewedFields(_ fields: [(String, String)], doneIdentifier: String = "Done") throws {
             for (name, value) in fields {
-                let field = app.textFields.matching(identifier: name).firstMatch
-                tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
-                // Ingredient labels repeat across lazy rows. Keep the concrete
-                // identity and native type from entry for the post-Done readback.
-                let ingredient = ["Ingredient name", "Amount, optional", "Ingredient exclusions, one per line"].contains(name)
-                let readback: XCUIElement
-                if ingredient {
-                    let identifier = field.identifier
-                    XCTAssertTrue(identifier.hasPrefix("ingredient."), "Retain the concrete ingredient field")
-                    readback = app.textFields.matching(identifier: identifier).firstMatch
-                } else { readback = field }
-                field.typeText(value)
-                let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
-                XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(name)")
+                guard let focused = try focusReviewedField(name) else { return }
+                let identity = focused.identity
+                if ["Ingredient name", "Amount, optional", "Ingredient exclusions, one per line"].contains(name) {
+                    XCTAssertTrue(identity.hasPrefix("ingredient."), "Retain the concrete ingredient field")
+                }
+                app.typeText(value)
+                let done = app.buttons.matching(identifier: doneIdentifier).firstMatch
+                XCTAssertTrue((done.exists || done.waitForExistence(timeout: 5)) && done.isHittable, "Done must be reachable from \(name)")
                 done.tap()
-                // Hosted app resolution and snapshot acquisition exceeded five
-                // seconds even after UIKit had dismissed the keyboard.
-                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10))
-                // Input and keyboard dismissal have finished. Read the field once
-                // so a slow snapshot cannot exhaust a separate predicate timer.
-                XCTAssertEqual(try readback.snapshot().value as? String, value,
-                               "Exact entered value must survive Done for \(name)")
+                let ready = app.waitForKeyboardDismissal(doneIdentifier: doneIdentifier, timeout: 10) { screen in
+                    reviewedField(named: identity, in: screen)?.value as? String == value
+                }
+                XCTAssertTrue(ready, "Done must dismiss the keyboard and preserve the exact value '\(value)' for \(name)")
             }
         }
 
@@ -603,13 +721,13 @@ import XCTest
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinnerLibrary"])
         tap(app.buttons["ledgerNewTemplate"])
-        fillReviewedFields([
+        try fillReviewedFields([
             ("ledgerDinnerTitle", "Wrap dinner"), ("ledgerDinnerServings", "6"),
             ("Ingredient name", "Wraps"), ("Amount, optional", "6"),
             ("Ingredient exclusions, one per line", "No sesame"),
         ])
         tap(app.buttons["Add serving group"])
-        fillReviewedFields([("Group name", "Lunch"), ("Group servings", "2")])
+        try fillReviewedFields([("Group name", "Lunch"), ("Group servings", "2")])
         enableSwitch("Protected group")
         tap(app.buttons["ledgerReviewDinner"])
         assertText("Lunch")
@@ -628,7 +746,7 @@ import XCTest
         openShoppingList()
         tap(app.buttons["Inspect Wraps"])
         tap(app.buttons["ledgerPackChoice"])
-        fillReviewedFields([
+        try fillReviewedFields([
             ("First pack label", "Four wraps"), ("First pack usable amount", "4"),
             ("First pack price, USD", "2"), ("Second pack label", "Three wraps"),
             ("Second pack usable amount", "3"), ("Second pack price, USD", "1.50"),
@@ -651,17 +769,21 @@ import XCTest
         // the new terms before reviewing and replacing their pricing evidence.
         for (name, value) in [("Store", "Family market"), ("Branch", "Main branch"),
                               ("Pickup or delivery slot", "Tuesday 5 PM")] {
-            let field = app.textFields[name]
-            tap(field)
-            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "Show the keyboard for \(name)")
-            if let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
-                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            // The hosted failure spent 54 seconds entering these three fields,
+            // including repeated lookups across keyboard changes. Retain the field's
+            // identity and prior value, then type into that verified focus.
+            guard let focused = try focusReviewedField(name) else { return }
+            let keyboard = app.keyboards.firstMatch
+            XCTAssertTrue(keyboard.exists || keyboard.waitForExistence(timeout: 5), "Show the keyboard for \(name)")
+            if let old = focused.snapshot.value as? String, !old.isEmpty, old != focused.snapshot.placeholderValue {
+                app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
             }
-            field.typeText(value)
-            XCTAssertEqual(field.value as? String, value, name)
+            app.typeText(value)
+            XCTAssertEqual(reviewedField(named: focused.identity, in: try app.snapshot())?.value as? String, value, name)
         }
         tap(app.buttons["Done"])
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 5),
+                      "Done must leave the checkout unobscured and remove its input bar")
         assertText("Pricing details to preserve")
         assertText("Wraps")
         assertText("$3.00")
@@ -674,17 +796,36 @@ import XCTest
         let source = app.textFields["Source of these prices"]
         reveal(source, initiallyUpward: false)
         XCTAssertEqual(source.value as? String, source.placeholderValue, "Replacement pricing starts with a blank source")
-        source.tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "Show the keyboard for Source of these prices")
-        source.typeText("Retailer preview reviewed by shopper")
-        XCTAssertEqual(source.value as? String, "Retailer preview reviewed by shopper", "Source of these prices")
+        guard let focusedSource = try focusReviewedField("Source of these prices") else { return }
+        let sourceKeyboard = app.keyboards.firstMatch
+        XCTAssertTrue(sourceKeyboard.exists || sourceKeyboard.waitForExistence(timeout: 5), "Show the keyboard for Source of these prices")
+        app.typeText("Retailer preview reviewed by shopper")
+        XCTAssertEqual(reviewedField(named: focusedSource.identity, in: try app.snapshot())?.value as? String,
+                       "Retailer preview reviewed by shopper", "Source of these prices")
         tap(app.buttons["Done"])
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"),
                       "Done must leave the checkout unobscured and remove its input bar")
         XCTAssertEqual(source.value as? String, "Retailer preview reviewed by shopper")
         enableSwitch("Retailer total already includes all charges")
-        fill("3.00", into: "Inclusive total")
-        tap(app.buttons["Save and evaluate checkout"])
+        let total = app.textFields["Inclusive total"]
+        try fillReviewedFields([("Inclusive total", "3.00")])
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10))
+        XCTAssertEqual(try total.snapshot().value as? String, "3.00")
+        func tapCheckoutAction(_ button: XCUIElement) throws {
+            reveal(button)
+            let snapshot = try button.snapshot()
+            let bounds = app.frame
+            let frame = snapshot.frame
+            let center = CGPoint(x: frame.midX, y: frame.midY)
+            XCTAssertTrue(snapshot.isEnabled && button.isHittable)
+            guard scrollableArea().contains(center) else {
+                tapVisibleFormRow(button, marker: "CHECKOUT_REVIEW_TAP")
+                return
+            }
+            // Tap the verified screen position so XCTest need not resolve the form button again across the sheet transition.
+            app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: center.x - bounds.minX, dy: center.y - bounds.minY)).tap()
+        }
+        try tapCheckoutAction(saveCheckout)
         let checkoutReview = app.navigationBars["Review checkout changes"]
         XCTAssertTrue(checkoutReview.waitForExistence(timeout: 5))
         assertText("Proposed checkout quote")
@@ -693,12 +834,11 @@ import XCTest
         assertText("Retailer preview reviewed by shopper")
         assertText("$3.00")
         let saveReviewed = app.buttons["Save reviewed checkout"]
-        reveal(saveReviewed)
-        XCTAssertTrue(saveReviewed.isEnabled, "The reviewed replacement must be eligible to save")
-        saveReviewed.tap()
+        try tapCheckoutAction(saveReviewed)
         XCTAssertTrue(checkoutReview.waitForNonExistence(timeout: 8))
-        assertText("Saved checkout result")
-        assertText("3.00")
+        // These are the checkout heading and the exact total shown after the sheet closes.
+        reveal(app.staticTexts.matching(identifier: "Saved checkout result").firstMatch)
+        reveal(app.staticTexts.matching(identifier: "$3.00").firstMatch)
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"])
@@ -735,11 +875,12 @@ import XCTest
         tap(app.buttons["Record what came home"])
         choose("Original order line", value: "Wraps")
         choose("What happened", value: "Partial fill")
-        fill("4", into: "Physical amount received")
-        fill("4", into: "Confirmed usable amount (optional)")
+        try fillReviewedFields([
+            ("Physical amount received", "4"), ("Confirmed usable amount (optional)", "4"),
+        ], doneIdentifier: "arrival.keyboardDone")
         enableSwitch("I checked the identity, units and meal constraints")
-        fill("segment-1", into: "Segment ID (distinct for each split delivery)",
-             control: app.textFields["Segment ID (distinct for each split delivery)"])
+        try fillReviewedFields([("Segment ID (distinct for each split delivery)", "segment-1")],
+                               doneIdentifier: "arrival.keyboardDone")
         tap(app.buttons["Save observed arrival"])
         assertText("segment-1")
         capture("Free-observed-short-fill")
@@ -747,8 +888,9 @@ import XCTest
         assertText("Lunch")
         assertText("Still short")
         choose("Reviewed matching food need", value: "Wraps")
-        fill("Two checked freezer wraps", into: "Actual food or freezer batch")
-        fill("2", into: "Confirmed usable amount")
+        try fillReviewedFields([
+            ("Actual food or freezer batch", "Two checked freezer wraps"), ("Confirmed usable amount", "2"),
+        ])
         enableSwitch("I reviewed identity, exclusions and usable quantity")
         tap(app.buttons["Confirm this separate stock lot"])
         choose("Affected meal need", value: "Wrap dinner")
@@ -769,8 +911,14 @@ import XCTest
         assertText("Set aside two lunch wraps first")
         back(to: "Close the pickup")
         tap(app.buttons["Close the pickup"])
-        fill("2.00", into: "Amount")
-        fill("net-receipt-2", into: "Unique receipt or transaction evidence ID")
+        try fillReviewedFields([("Amount", "2.00")], doneIdentifier: "pickup.settlement.doneTyping")
+        tap(app.buttons["Save financial evidence"])
+        let missingReceipt = app.alerts["Evidence not saved"]
+        XCTAssertTrue(missingReceipt.waitForExistence(timeout: 5))
+        XCTAssertTrue(missingReceipt.staticTexts["Enter a valid amount and evidence ID. Credits must link to an original posted charge."].exists)
+        missingReceipt.buttons["Done"].tap()
+        try fillReviewedFields([("Unique receipt or transaction evidence ID", "net-receipt-2")],
+                               doneIdentifier: "pickup.settlement.doneTyping")
         tap(app.buttons["Save financial evidence"])
         assertText("2.00")
         XCTAssertFalse(app.buttons["Record how this pickup turned out"].exists)
@@ -866,13 +1014,24 @@ import XCTest
             if done.exists && done.isHittable {
                 // Synthesized typing briefly hides the keyboard. Its Return key can
                 // occupy the former position of Done as the keyboard slides back.
-                let keyboard = app.keyboards.firstMatch
                 let aboveKeyboard = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                    guard keyboard.exists, done.exists else { return false }
-                    let pad = keyboard.frame, bar = done.frame
-                    return !pad.isEmpty && self.app.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
+                    // Read both frames during the same keyboard animation frame.
+                    guard let screen = try? self.app.snapshot() else { return false }
+                    var elements = screen.children
+                    var pad = CGRect.null
+                    var bar = CGRect.null
+                    while let element = elements.popLast() {
+                        if element.elementType == .keyboard { pad = element.frame }
+                        else if element.elementType == .button, element.identifier == "Done" { bar = element.frame }
+                        if !pad.isEmpty && !bar.isEmpty { break }
+                        elements.append(contentsOf: element.children)
+                    }
+                    return !pad.isEmpty && screen.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
                 }, object: nil)
-                XCTAssertEqual(XCTWaiter.wait(for: [aboveKeyboard], timeout: 5), .completed)
+                guard XCTWaiter.wait(for: [aboveKeyboard], timeout: 5) == .completed else {
+                    XCTFail("The dinner editor’s Done button did not settle above the visible keyboard.")
+                    return
+                }
                 done.tap()
             }
             assertField(name, value)
@@ -1036,11 +1195,8 @@ import XCTest
     func testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable() {
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
-        fill("Peppers", into: "Food that is short")
-        fill("Wednesday rice", into: "Meal or purpose")
-        fill("4", into: "Required amount")
-        fill("1", into: "Usable amount available now")
-        enableSwitch("I checked this food’s identity and usable amount")
+        enterNeed(food: "Peppers", meal: "Wednesday rice", required: "4", available: "1")
+        enableSwitch("I checked this food’s identity and usable amount", diagnosticName: "free-repair-confirmation")
         tap(app.buttons["Save need and repair meal"])
         tap(app.buttons["Recover with an accepted dinner"])
         assertText("This assisted tool requires paid access.")
@@ -1070,10 +1226,7 @@ import XCTest
     func testFreeCookCorrectionAndExplicitRecipientAcknowledgment() {
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
-        fill("Beans", into: "Food that is short")
-        fill("Soup", into: "Meal or purpose")
-        fill("4", into: "Required amount")
-        fill("1", into: "Usable amount available now")
+        enterNeed(food: "Beans", meal: "Soup", required: "4", available: "1")
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
         tap(app.buttons["Preview a dated cook instruction"])
@@ -1082,6 +1235,19 @@ import XCTest
         tap(app.buttons["Save dated copy"])
         let share = app.buttons["Share saved dated copy"]
         reveal(share)
+        XCTAssertFalse(share.isEnabled)
+        let printCopy = app.buttons["Print saved cook instruction"]
+        tap(printCopy)
+        let privatePrint = app.buttons["Print this private copy"]
+        XCTAssertTrue(privatePrint.waitForExistence(timeout: 5))
+        app.buttons["Cancel"].firstMatch.tap()
+        XCTAssertTrue(privatePrint.waitForNonExistence(timeout: 5))
+        tap(printCopy)
+        tap(privatePrint)
+        dismissSystemPrintSheet()
+        tap(printCopy)
+        XCTAssertTrue(privatePrint.waitForExistence(timeout: 5))
+        app.buttons["Cancel"].firstMatch.tap()
         XCTAssertFalse(share.isEnabled)
         let confirmCorrection = "Include the saved custom or private wording in this correction"
         enableSwitch(confirmCorrection)
@@ -1093,11 +1259,13 @@ import XCTest
         reveal(confirmation, initiallyUpward: false)
         XCTAssertEqual(confirmation.value as? String, "0")
         XCTAssertFalse(app.buttons["Review correction"].isEnabled)
-        fill("Ana", into: "handoffRecipient")
+        fill("Ana", into: "handoffRecipient", useVisibleCenter: true)
         tap(app.buttons["I sent this version to this recipient"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "Recording a sent copy must finish recipient entry")
         assertText("Acknowledgment unknown")
         tap(app.buttons["The recipient acknowledged this version"])
         assertText("Recipient acknowledgment reported")
+        XCTAssertFalse(app.keyboards.firstMatch.exists, "Keep the recorded acknowledgment unobscured")
         capture("P06-Free-cook-acknowledged-version")
     }
 
@@ -1252,6 +1420,7 @@ import XCTest
         restart()
         openShoppingList()
         reveal(element(id))
+        XCTAssertEqual(element(id).value as? String, "2 items")
         tap(element("ledgerImport"))
         fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport"))
@@ -1464,13 +1633,7 @@ import XCTest
         assertText("Milk"); assertText("Apples")
         capture("Large-print-shopping-list")
         tap(element("printShoppingList"))
-        // The native print sheet can expose its dismiss action as Close or Cancel.
-        let printOptions = app.navigationBars.matching(NSPredicate(format: "identifier IN %@", ["Options", "Printer Options"])).firstMatch
-        let dismissPrint = printOptions.buttons.matching(NSPredicate(format: "label IN %@", ["Close", "Cancel"])).firstMatch
-        let dismissReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: dismissPrint)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissReady], timeout: 12), .completed, app.debugDescription)
-        dismissPrint.tap()
-        XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
+        dismissSystemPrintSheet()
         let largePrint = app.navigationBars["Large-print list"]
         tap(largePrint.buttons["Done"])
         XCTAssertTrue(largePrint.waitForNonExistence(timeout: 8), app.debugDescription)
@@ -1483,7 +1646,8 @@ import XCTest
 
     func testMealWeekReservationDraftCannotFollowAnotherPickup() {
         launch(reset: true)
-        tap(app.tabBars.buttons["Dinners"]); tap(element("dinnerStartPickup"))
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons.matching(NSPredicate(format: "identifier == %@", "dinnerStartPickup")).firstMatch)
         fill("Original reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         openMealWeek(); tapVisibleFormRow(app.buttons["Protect a lunch or side"])
         fill("Fictional original lunch", into: "Food name", requireDone: true, control: app.textFields["Food name"])
@@ -1588,7 +1752,9 @@ import XCTest
             enableSwitch(assignDate)
             chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
         }
-        tap(element("ledgerReviewDinner")); applyFrom(copy("Manual dinner", "Cena manual"))
+        // Review is a native button below the lazy form. A typed lookup lets
+        // reveal keep scrolling while that row is still outside the viewport.
+        tap(app.buttons["ledgerReviewDinner"]); applyFrom(copy("Manual dinner", "Cena manual"))
         openMealWeek(title: weekTitle)
         chooseMealWeekDate(originalDay, from: Date(), in: weekPicker, formatter: dateFormatter)
         if moveAcrossWeek {
@@ -1768,10 +1934,11 @@ import XCTest
         englishCalendar.locale = Locale(identifier: "en_US")
         let englishMonth = englishCalendar.monthSymbols[monthIndex]
         let dayNumber = calendar.component(.day, from: date)
-        let day = app.datePickers.collectionViews.buttons.matching(NSPredicate(
+        let dayMatch = NSPredicate(
             format: "(label CONTAINS[cd] %@ OR label CONTAINS[cd] %@) AND label MATCHES %@",
             monthName, englishMonth, ".*\\b\(dayNumber)\\b.*"
-        )).firstMatch
+        )
+        let day = app.datePickers.collectionViews.buttons.matching(dayMatch).firstMatch
         let previous = offset < 0
         let monthButton = app.buttons.matching(NSPredicate(
             format: "label IN[c] %@ OR identifier CONTAINS[c] %@",
@@ -1787,9 +1954,28 @@ import XCTest
         let visible = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true AND enabled == true"), object: day)
         XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 8), .completed, formatter.string(from: date))
         day.tap()
-        if day.exists {
+        // Resolve the calendar and its day in one snapshot. A live day query
+        // can spend minutes resolving ancestors that disappeared on dismissal.
+        func calendarShowsDay() -> Bool? {
+            guard let screen = try? app.snapshot(), !screen.children.isEmpty else { return nil }
+            func containsDay(_ node: any XCUIElementSnapshot, inPicker: Bool, inGrid: Bool) -> Bool {
+                if inGrid && node.elementType == .button && dayMatch.evaluate(with: node) { return true }
+                let picker = inPicker || node.elementType == .datePicker
+                let grid = inGrid || (inPicker && node.elementType == .collectionView)
+                return node.children.contains { containsDay($0, inPicker: picker, inGrid: grid) }
+            }
+            return containsDay(screen, inPicker: false, inGrid: false)
+        }
+        guard let showingDay = calendarShowsDay() else {
+            XCTFail("Could not inspect the calendar after selecting " + formatter.string(from: date))
+            return
+        }
+        if showingDay {
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.07)).tap()
-            XCTAssertTrue(day.waitForNonExistence(timeout: 5))
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                calendarShowsDay() == false
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed, formatter.string(from: date))
         }
     }
 
@@ -1921,7 +2107,7 @@ import XCTest
         tap(app.buttons[copy("Prepare editable idea", "Preparar idea editable")])
         tap(app.buttons[copy("Review prepared idea", "Revisar idea preparada")])
         let amountLabel = copy("Amount, optional", "Cantidad, opcional")
-        let amount = editableElement(amountLabel)
+        let amount = app.textFields.matching(NSPredicate(format: "label == %@", amountLabel)).firstMatch
         reveal(amount)
         // Lazy ingredient rows share a localized Amount label. Retain the same
         // ingredient identity across scrolling and the review/edit transition.
@@ -2184,6 +2370,16 @@ import XCTest
         let trim = luminance.count / 100
         let contrast = (luminance[luminance.count - 1 - trim] + 0.05) / (luminance[trim] + 0.05)
         XCTAssertGreaterThanOrEqual(contrast, 4.5, button.label)
+    }
+
+    private func dismissSystemPrintSheet() {
+        // The native print sheet can expose its dismiss action as Close or Cancel.
+        let printOptions = app.navigationBars.matching(NSPredicate(format: "identifier IN %@", ["Options", "Printer Options"])).firstMatch
+        let dismissPrint = printOptions.buttons.matching(NSPredicate(format: "label IN %@", ["Close", "Cancel"])).firstMatch
+        let dismissReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: dismissPrint)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissReady], timeout: 12), .completed, app.debugDescription)
+        dismissPrint.tap()
+        XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
     }
 
     private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false) {

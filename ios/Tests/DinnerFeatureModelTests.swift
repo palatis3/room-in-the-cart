@@ -386,6 +386,33 @@ import CoreDomain
         draft.allChargesIncluded = true
         let reviewed = try draft.option(commitments: commitments, basis: ShopBasis())
         XCTAssertEqual(try CheckoutEngine.evaluate(reviewed.quote).total.exact, Money(minorUnits: 1250))
+
+        // A pasted thousands separator must not turn a $1,000 quote into $1.
+        let (store, model) = fixture()
+        for ambiguous in ["1,000", "1.250"] {
+            draft.total = ambiguous
+            XCTAssertThrowsError(try draft.option(commitments: commitments, basis: ShopBasis())) { error in
+                XCTAssertEqual(error as? DinnerDraftValidationError, .currencyPrecision)
+                model.report(error)
+            }
+            XCTAssertEqual(draft.total, ambiguous)
+            XCTAssertEqual(model.error, DinnerDraftValidationError.currencyPrecision.errorDescription)
+        }
+        for (literal, cents) in [("1000", 100_000), ("1000,50", 100_050), ("1000.50", 100_050)] {
+            draft.total = literal
+            let corrected = try draft.option(commitments: commitments, basis: ShopBasis())
+            XCTAssertEqual(try CheckoutEngine.evaluate(corrected.quote).total.exact, Money(minorUnits: Int64(cents)))
+        }
+        let shop = try XCTUnwrap(model.shop)
+        var second = draft
+        second.id = UUID()
+        second.storeID = "other"
+        let pair = try TwoStoreQuotePair(shopID: shop.id, baseRevisionID: shop.revisionID, basisRevision: shop.basisRevision,
+            first: draft.option(commitments: commitments, basis: shop.basis),
+            second: second.option(commitments: commitments, basis: shop.basis))
+        _ = try model.compare(pair)
+        XCTAssertNil(model.error)
+        XCTAssertEqual(store.commits, 0)
     }
     func testEditorBaseChangeRejectsRatherThanOverwritingCurrentAmounts() throws {
         let (store, model) = fixture(); let base = model.shop!.revisionID
@@ -458,7 +485,7 @@ import CoreDomain
         let itemized = CheckoutPricing.components(lines: [.init(id: UUID(), name: "Beans", cost: range)], lineSetComplete: false,
             fees: [.init(id: "pickup", rule: .fixed(.unknown(reason: "Weekend fee")))], discounts: [], tax: .exact(.zero), deposits: .exact(.zero))
         func option(_ set: DinnerCommitmentSet, pricing: CheckoutPricing, slot: String) -> StoreQuoteOption {
-            StoreQuoteOption(label: "Quoted", commitments: set, quote: .init(scope: .dinner,
+            StoreQuoteOption(label: " Quoted ", commitments: set, quote: .init(scope: .dinner,
                 context: .init(storeID: "North", branchID: "Market", mode: .delivery, slot: slot, commitmentsID: set.id,
                                observedAt: now, source: "Printed quote"), pricing: pricing), available: nil, quantitiesMatched: false, singleStore: false,
                 trip: .init(incrementalCash: range, extraMinutes: nil, tripAlreadyPlanned: false), eligibilityTerms: "Card required")
@@ -469,7 +496,7 @@ import CoreDomain
         let persisted = try JSONDecoder().decode(TwoStoreQuotePair.self, from: JSONEncoder().encode(saved))
         var draft = DinnerQuoteEditDraft(persisted)
         XCTAssertTrue(draft.hasSeparateCommitments)
-        draft.first.label = "Correct retailer"; draft.second.eligibilityTerms = "Member weekends"
+        draft.first.label = " Correct retailer "; draft.second.eligibilityTerms = "Member weekends"
         let revised = try draft.pair(for: shop)
         try revised.validate()
         XCTAssertNotEqual(revised.id, saved.id); XCTAssertEqual(revised.baseRevisionID, shop.revisionID)
@@ -479,6 +506,7 @@ import CoreDomain
         XCTAssertEqual(revised.first.trip, saved.first.trip); XCTAssertEqual(revised.second.trip, saved.second.trip)
         XCTAssertNil(revised.first.available); XCTAssertNil(revised.first.adoptionBasis)
         XCTAssertEqual(revised.first.cap?.amount, shop.basis.cap)
+        XCTAssertEqual(revised.second.label, " Quoted ")
         XCTAssertEqual(revised.first.label, "Correct retailer"); XCTAssertEqual(revised.second.eligibilityTerms, "Member weekends")
         XCTAssertEqual(saved.second.eligibilityTerms, "Card required")
         XCTAssertThrowsError(try draft.pair(for: ShoppingLedger(title: "Other pickup")))

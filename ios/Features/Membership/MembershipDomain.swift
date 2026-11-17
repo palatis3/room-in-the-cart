@@ -7,7 +7,7 @@ struct MembershipContext: Equatable, Sendable {
     let householdID: String
     let householdName: String
     /// Nil for an authenticated non-purchaser reading a shared named seat.
-    let appAccountToken: UUID?
+    var appAccountToken: UUID?
 }
 
 struct MembershipSeat: Codable, Equatable, Identifiable, Sendable {
@@ -67,6 +67,7 @@ enum MembershipFailure: Error, Equatable {
 /// Implementations must verify with Apple on the server and commit before returning durable=true.
 /// The service must authenticate the caller and recheck household membership and seat authority.
 @MainActor protocol MembershipEntitlementService {
+    func purchaseContext(householdID: String) async throws -> UUID
     func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt
     func fetch(context: MembershipContext) async throws -> MembershipSnapshot
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat]
@@ -74,6 +75,7 @@ enum MembershipFailure: Error, Equatable {
 }
 
 struct UnavailableMembershipService: MembershipEntitlementService {
+    func purchaseContext(householdID: String) async throws -> UUID { throw MembershipFailure.notConfigured }
     func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt { throw MembershipFailure.notConfigured }
     func fetch(context: MembershipContext) async throws -> MembershipSnapshot { throw MembershipFailure.notConfigured }
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { throw MembershipFailure.notConfigured }
@@ -83,6 +85,7 @@ struct UnavailableMembershipService: MembershipEntitlementService {
 /// No local-data repository is accepted here: billing cannot delete Free work or restore consent.
 struct MembershipState: Equatable {
     private(set) var snapshot: MembershipSnapshot?
+    private var lastRemovedSeatRevision: Int?
     private(set) var issue: MembershipFailure?
     var freeRecordsAndExportAvailable: Bool { true }
     var freeManualPlanningAvailable: Bool { true }
@@ -97,6 +100,23 @@ struct MembershipState: Equatable {
               incoming.validUntil >= incoming.verifiedAt,
               incoming.seats.count <= 2, incoming.seats.allSatisfy({ $0.isAdult && !$0.userID.isEmpty && !$0.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }),
               Set(incoming.seats.map(\.userID)).count == incoming.seats.count else { throw MembershipFailure.invalidSnapshot }
+        // An unseated adult receives a private Free snapshot with revision zero.
+        // Keep the old revision alone so an in-flight paid response cannot restore its roster.
+        if context.appAccountToken == nil {
+            if incoming.revision == 0 && incoming.status == .free && incoming.purchaserID == context.purchaserID
+                && incoming.seats.isEmpty && incoming.expiresAt == nil && incoming.graceExpiresAt == nil {
+                if let current = snapshot {
+                    guard incoming.verifiedAt >= current.verifiedAt else { return }
+                    if current.revision > 0 { lastRemovedSeatRevision = current.revision }
+                }
+                snapshot = incoming
+                issue = nil
+                return
+            }
+            if let lastRemovedSeatRevision, incoming.revision <= lastRemovedSeatRevision { return }
+            if let current = snapshot, current.revision == 0, current.status == .free,
+               incoming.verifiedAt < current.verifiedAt { return }
+        }
         // A refund/revocation may have an earlier expiry than an old active receipt.
         if let current = snapshot {
             guard incoming.revision >= current.revision else { return }
@@ -116,7 +136,7 @@ struct MembershipState: Equatable {
         if error == .signInRequired || error == .membershipInactive { snapshot = nil }
         issue = error
     }
-    mutating func clear() { snapshot = nil; issue = nil }
+    mutating func clear() { snapshot = nil; lastRemovedSeatRevision = nil; issue = nil }
     func hasPaidAccess(context: MembershipContext?, now: Date) -> Bool {
         guard let context, let snapshot, snapshot.householdID == context.householdID else { return false }
         return snapshot.hasPaidAccess(for: context.purchaserID, now: now)

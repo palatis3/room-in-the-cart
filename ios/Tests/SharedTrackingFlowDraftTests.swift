@@ -140,9 +140,13 @@ final class SharedTrackingFlowDraftTests: XCTestCase {
         XCTAssertEqual(draft.manual.name, ""); XCTAssertEqual(draft.manual.original, "")
         draft.facts[0].productConfirmed = true; draft.manual.enabled = true
         XCTAssertThrowsError(try draft.intent(page: page, shop: shop))
-        draft.manual.name = "Authored apples"; draft.manual.original = "Family's independent words"; draft.manual.productConfirmed = true
+        draft.manual.name = "  Authored apples "
+        draft.manual.original = "Family's independent words "
+        draft.manual.productConfirmed = true
         guard case .adopt(_, let change, _) = try draft.intent(page: page, shop: shop), let manual = change.contributions.first(where: { $0.source == .manual }) else { return XCTFail() }
-        XCTAssertEqual(manual.originalText, "Family's independent words"); XCTAssertNil(manual.quantity)
+        XCTAssertEqual(manual.productName, "Authored apples")
+        XCTAssertEqual(manual.originalText, "Family's independent words ")
+        XCTAssertNil(manual.quantity)
         XCTAssertEqual(manual.id, draft.manual.id)
     }
     func testRebindRequiresTransferProofAndPreservesExistingBasketAndHistoricalLine() throws {

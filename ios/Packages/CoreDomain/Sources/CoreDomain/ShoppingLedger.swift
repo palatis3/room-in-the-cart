@@ -335,9 +335,15 @@ public struct StagedListImport: Codable, Equatable, Sendable, Identifiable {
     public static let maximumLines = 1_000
     public static let maximumOriginalLineBytes = 8_192
 
+    /// Validate shared text while the sender can still edit it in the share sheet.
+    public static func validateSourceText(_ text: String, maximumLines: Int) throws {
+        _ = try sourceLines(text, maximum: maximumLines)
+    }
+
     /// Count nonblank ledger rows before assigning identities or expanding duplicate candidates.
     /// The original slices keep whitespace and spelling, including combining marks.
     fileprivate static func sourceLines(_ text: String, maximum: Int) throws -> [Substring] {
+        guard maximum > 0, maximum <= maximumLines else { throw LedgerError.invalid("importSize") }
         guard text.utf8.count <= maximumTextBytes else { throw ImportTextLimit.totalBytes }
         var rows: [Substring] = []
         let scalars = text.unicodeScalars
@@ -375,7 +381,9 @@ public struct LedgerImportBatch: Codable, Equatable, Sendable, Identifiable {
     public let contributionIDs: [UUID]
     public let createdAt: Date
     public var undoneAt: Date?
-    public var originalText: String { preview.originalText }
+    /// The exact selection before an edit in the share extension, when available.
+    public let originalSelection: String?
+    public var originalText: String { originalSelection ?? preview.originalText }
     public var source: ImportSource { preview.source }
 }
 
@@ -474,6 +482,49 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         self.id = id; self.title = title; self.basis = basis; basisRevision = 0; revision = 0
         revisionID = UUID(); revisions = []; quoteReference = nil
         lines = []; contributions = []; allocations = []; mealOccurrences = []; importBatches = []
+    }
+
+    /// Shopping restrictions stay in source order and keep the shopper's wording.
+    public var itemExclusions: [UUID: [String]] {
+        var seen: [UUID: Set<String>] = [:]
+        var values: [UUID: [String]] = [:]
+        for source in contributions where source.removedAt == nil {
+            for exclusion in source.exclusions where seen[source.lineID, default: []].insert(exclusion).inserted {
+                values[source.lineID, default: []].append(exclusion)
+            }
+        }
+        return values
+    }
+
+    /// A duplicate import describes the same purchase. Separate additive sources each describe their own packs.
+    public var itemPackages: [UUID: [BasketPackage]] {
+        let supplies = contributions.filter { $0.removedAt == nil && $0.source.canSupplyExistingQuantity }
+        let roots = duplicateRoots(for: supplies)
+        var byRoot: [UUID: BasketPackage] = [:]
+        var conflicts = Set<UUID>()
+        for source in supplies {
+            let count = source.originalPack?.count ?? source.capture?.packCount
+            let size = source.originalPack?.amountPerPack ?? source.capture?.amountPerPack
+            guard let count, let size else { continue }
+            let root = roots[source.id] ?? source.id
+            guard count > 0, size.amount > .zero, let quantity = source.quantity,
+                  let converted = try? size.converted(to: quantity.unit),
+                  let total = try? converted.multiplied(by: Rational(Int64(count))), total == quantity.amount else {
+                conflicts.insert(root)
+                continue
+            }
+            let pack = BasketPackage(count: Int64(count), amountPerPack: size.amount, unit: size.unit)
+            if let previous = byRoot[root], previous != pack { conflicts.insert(root) }
+            byRoot[root] = pack
+        }
+        var result: [UUID: [BasketPackage]] = [:]
+        for source in supplies {
+            let root = roots[source.id] ?? source.id
+            if let pack = byRoot.removeValue(forKey: root), !conflicts.contains(root) {
+                result[source.lineID, default: []].append(pack)
+            }
+        }
+        return result
     }
 
     public func contributions(forLineID lineID: UUID) -> [LedgerContribution] {
@@ -594,7 +645,6 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// deliberately not equivalent to replaying an already committed preview.
     public func stageImport(text: String, source: ImportSource = .typed, importID: UUID = UUID(),
                             maximumLines: Int = StagedListImport.maximumLines) throws -> StagedListImport {
-        guard maximumLines > 0, maximumLines <= StagedListImport.maximumLines else { throw LedgerError.invalid("importSize") }
         let originals = try StagedListImport.sourceLines(text, maximum: maximumLines)
         var staged: [StagedImportLine] = []
         var candidatesByName = importCandidatesByName()
@@ -685,9 +735,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
     @discardableResult
     public mutating func commitImport(_ preview: StagedListImport, decisions: [UUID: ImportResolution] = [:],
-                                       at: Date = Date()) throws -> UUID {
+                                       originalSelection: String? = nil, at: Date = Date()) throws -> UUID {
         if let receipt = importBatches.first(where: { $0.id == preview.id }) {
-            guard receipt.preview == preview, receipt.decisions == decisions else { throw LedgerError.invalid("importReplay") }
+            guard receipt.preview == preview, receipt.decisions == decisions, receipt.originalSelection == originalSelection else { throw LedgerError.invalid("importReplay") }
             guard receipt.undoneAt == nil else { throw LedgerError.alreadyUndone }
             return receipt.id
         }
@@ -730,7 +780,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 contributionIDs.append(entry.id)
             }
             next.importBatches.append(LedgerImportBatch(id: preview.id, preview: preview, decisions: decisions,
-                contributionIDs: contributionIDs, createdAt: at, undoneAt: nil))
+                contributionIDs: contributionIDs, createdAt: at, undoneAt: nil, originalSelection: originalSelection))
             return preview.id
         }
     }
@@ -1026,6 +1076,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
         for batch in importBatches {
             try validatePreview(batch.preview); try ledgerDate(batch.createdAt); try ledgerDate(batch.undoneAt)
+            if let original = batch.originalSelection {
+                guard batch.source == .selectedText else { throw LedgerError.invalid("importSource") }
+                try ledgerText(original, nonempty: true, maximum: StagedListImport.maximumTextBytes)
+            }
             let previewIDs = Set(batch.preview.lines.map(\.id))
             guard batch.id == batch.preview.id, batch.preview.shopID == id,
                   batch.preview.baseRevision < revision,
@@ -1387,7 +1441,11 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 }
 
 private func normalizedProduct(_ value: String) -> String {
-    value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+    // Printable ASCII only needs case folding and space normalization.
+    if value.utf8.allSatisfy({ (0x20...0x7e).contains($0) }) {
+        return value.lowercased().split(separator: " ").joined(separator: " ")
+    }
+    return value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
         .split(whereSeparator: \.isWhitespace).joined(separator: " ")
 }
 private func ledgerText(_ value: String, nonempty: Bool = false, maximum: Int = 8192) throws {

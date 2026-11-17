@@ -4,7 +4,6 @@ import LocalStore
 
 struct ComparisonView: View {
     @EnvironmentObject private var app: AppModel
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var model: ComparisonModel
     @State private var reviewing: Bool
     private enum ResultFocus: Hashable { case summary, saved, error }
@@ -20,8 +19,8 @@ struct ComparisonView: View {
 
     var body: some View {
         Group {
-            if reviewing, let result = model.result {
-                results(result)
+            if reviewing, let comparison = model.comparison {
+                results(comparison.result, inputs: comparison.inputs)
             } else {
                 editor
             }
@@ -31,44 +30,18 @@ struct ComparisonView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.canvas, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar {
-            if reviewing && !dynamicTypeSize.isAccessibilitySize {
-                if #available(iOS 26.0, *) {
-                    editToolbar.sharedBackgroundVisibility(.hidden)
-                } else {
-                    editToolbar
-                }
-            }
-        }
         .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
                             identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
     }
 
-    private var editToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button(action: editComparison) {
-                Text(tr("Edit")).font(.body.weight(.semibold))
-                    .fixedSize(horizontal: true, vertical: false)
-                    .foregroundStyle(Theme.ink).padding(.horizontal, 16)
-                    .frame(minHeight: 44).background(Theme.surface, in: Capsule())
-                    .overlay(Capsule().stroke(Color("control_edge"), lineWidth: 1.5))
-            }.buttonStyle(.plain).accessibilityIdentifier("editComparison")
-                .disabled(model.saving).tint(Theme.ink)
-        }
-    }
-
-    private func editComparison() { reviewing = false; model.savedAt = nil }
-
-    /// Accessibility text sizes need a content row whose height can grow with the label.
-    /// The navigation bar's compact toolbar host is retained only for standard text sizes.
-    private var accessibleEditRow: some View {
-        Button(action: editComparison) {
+    private var editRow: some View {
+        Button { reviewing = false } label: {
             Text(tr("Edit")).font(.headline)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         }.buttonStyle(.plain).foregroundStyle(Theme.ink)
-            .accessibilityIdentifier("editComparison").disabled(model.saving)
+            .accessibilityIdentifier("editComparison")
     }
 
     private var editor: some View {
@@ -140,10 +113,10 @@ struct ComparisonView: View {
         }
     }
 
-    private func results(_ result: CoreDomain.ComparisonResult) -> some View {
+    private func results(_ result: CoreDomain.ComparisonResult, inputs: ComparisonRequest) -> some View {
         GeometryReader { viewport in
             VStack(spacing: 0) {
-                resultList(result)
+                resultList(result, inputs: inputs)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .clipped()
                 // Reserve a real layout boundary above the floating tab bar.
@@ -157,19 +130,19 @@ struct ComparisonView: View {
         }
     }
 
-    private func resultList(_ result: CoreDomain.ComparisonResult) -> some View {
+    private func resultList(_ result: CoreDomain.ComparisonResult, inputs: ComparisonRequest) -> some View {
         List {
-            if dynamicTypeSize.isAccessibilitySize { accessibleEditRow }
+            editRow
             Section {
                 Text(model.draft.item.isEmpty ? tr("One item") : model.draft.item).font(.title.bold())
                     .accessibilityAddTraits(.isHeader).accessibilityFocused($resultFocused, equals: .summary)
                 Text(tr("Item-only comparison")).font(.headline)
                 Text(tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."))
                     .foregroundStyle(Theme.secondary)
-                if !model.draft.needed.isEmpty {
-                    ComparisonMetric(message("Total need: %@ %@", model.draft.needed, model.draft.unit.displayName))
+                if let need = inputs.needed {
+                    ComparisonMetric(message("Total need: %@ %@", need.originalLiteral, need.unit.comparisonLabel(for: need.amount)))
                 }
-                let stock = model.confirmedStock
+                let stock = inputs.confirmedAtHome
                 let stockText = stock.map { pQuantity($0.originalLiteral, unit: $0.unit, singular: $0.amount == .one, language: nil) }
                 ComparisonMetric(ledgerFormat("Confirmed at home for this need: %@", stockText ?? recordsText("Not entered")),
                                  id: "comparisonConfirmedStock")
@@ -177,15 +150,17 @@ struct ComparisonView: View {
                     ComparisonMetric(message("Needed after confirmed stock: %@", remainingQuantity(remaining)),
                                      id: "comparisonNeedAfterStock")
                 }
-                if !model.draft.protected.isEmpty {
-                    ComparisonMetric(message("Protected within that total: %@ %@", model.draft.protected, model.draft.unit.displayName))
+                if let protected = inputs.protectedAmount {
+                    ComparisonMetric(message("Protected within that total: %@ %@", protected.originalLiteral, protected.unit.comparisonLabel(for: protected.amount)))
                 }
                 if let summary = result.purchaseSummary {
                     ComparisonMetric(summary, style: .headline, id: "comparisonPurchaseSummary")
                 }
             }
-            resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, conversion: model.draft.aConversion, preferred: result.preferredOfferID == "a")
-            resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, conversion: model.draft.bConversion, preferred: result.preferredOfferID == "b")
+            resultSection(result.offerA, offer: inputs.offerA, fallbackName: tr("Pack A"),
+                          conversion: model.draft.aConversion, preferred: result.preferredOfferID == "a")
+            resultSection(result.offerB, offer: inputs.offerB, fallbackName: tr("Pack B"),
+                          conversion: model.draft.bConversion, preferred: result.preferredOfferID == "b")
             Section {
                 ComparisonMetric(tr("Source: prices and usable amounts you entered. Estimates for this item only."), id: "comparisonSourceNote")
                 if let date = model.savedAt {
@@ -201,7 +176,9 @@ struct ComparisonView: View {
                         Task {
                             await model.save(in: app.store)
                             await app.refresh()
-                            resultFocused = model.savedAt != nil ? .saved : .error
+                            guard reviewing else { return }
+                            if model.savedAt != nil { resultFocused = .saved }
+                            else if model.error != nil { resultFocused = .error }
                         }
                     }
                 }
@@ -224,9 +201,10 @@ struct ComparisonView: View {
         return pQuantity(text, unit: model.draft.unit, singular: amount == .one, language: nil)
     }
 
-    private func resultSection(_ result: OfferResult, name: String, conversion: ComparisonConversion?, preferred: Bool) -> some View {
+    private func resultSection(_ result: OfferResult, offer: PackOffer, fallbackName: String,
+                               conversion: ComparisonConversion?, preferred: Bool) -> some View {
         Section {
-            ComparisonMetric(name, style: .headline, id: result.offerID + "Header", heading: true)
+            ComparisonMetric(offer.label.isEmpty ? fallbackName : offer.label, style: .headline, id: result.offerID + "Header", heading: true)
             if let cost = result.totalCost {
                 Text(moneyText(cost)).font(.largeTitle.bold()).monospacedDigit()
                     .fixedSize(horizontal: false, vertical: true)
@@ -234,6 +212,11 @@ struct ComparisonView: View {
                     .accessibilityIdentifier(result.offerID + "Total")
             } else { Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.title2.bold()) }
             if preferred { ComparisonMetric(tr("Lower cost to buy enough for this item"), style: .headline) }
+            let amount = offer.usableQuantity.map { "\($0.originalLiteral) \($0.unit.comparisonLabel(for: $0.amount))" }
+            ComparisonMetric(tr("Usable amount in one pack") + ": " + (amount ?? recordsText("Not entered")),
+                             id: result.offerID + "PackQuantity")
+            ComparisonMetric(tr("Price for one pack (USD)") + ": " + (offer.price.map(moneyText) ?? recordsText("Not entered")),
+                             id: result.offerID + "PackPrice")
             if let conversion {
                 ComparisonMetric(conversion.readableText(), id: result.offerID + "ConversionBasis")
             }

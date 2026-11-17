@@ -42,7 +42,25 @@ final class ScanParsingTests: XCTestCase {
         try FileManager.default.createSymbolicLink(at: link, withDestinationURL: file)
         XCTAssertThrowsError(try SelectedPhotoTransfer.boundedData(link))
         try Data(repeating: 0, count: CaptureLimits.imageBytes + 1).write(to: file)
-        XCTAssertThrowsError(try SelectedPhotoTransfer.boundedData(file))
+        XCTAssertThrowsError(try SelectedPhotoTransfer.boundedData(file)) {
+            XCTAssertEqual($0 as? ScanFailure, .tooLarge)
+        }
+    }
+    func testSelectedPhotoReplacedByLinkRejectsUnselectedBytes() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let selected = root.appendingPathComponent("selected.jpg")
+        let other = root.appendingPathComponent("other.jpg")
+        try Data("first".utf8).write(to: selected)
+        try Data("other".utf8).write(to: other)
+        let cached = try selected.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        XCTAssertEqual(cached.isRegularFile, true)
+        try FileManager.default.removeItem(at: selected)
+        try FileManager.default.createSymbolicLink(at: selected, withDestinationURL: other)
+        XCTAssertThrowsError(try SelectedPhotoTransfer.boundedData(selected)) {
+            XCTAssertEqual($0 as? ScanFailure, .invalidImage)
+        }
     }
     func testRealVisionFindsCodeWithoutInventingAProduct() async throws {
         let filter = try XCTUnwrap(CIFilter(name: "CIQRCodeGenerator"))
@@ -226,6 +244,10 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 0, kind: .packageReference)
         let record = try model.reviewed(target: target, label: "Rice", barcode: nil)
         XCTAssertEqual(record.originalText, "rize"); XCTAssertEqual(model.source, .paste)
+        let attachment = try RecordsMediaCodec.attachment(record)
+        let reopened = try RecordsMediaCodec.decode(attachment)
+        XCTAssertEqual(reopened.reviewedText, "rice")
+        XCTAssertEqual(reopened.originalText, "rize")
     }
     func testRejectedPastePreservesCurrentReviewAndValidPasteClearsTheFailure() {
         let model = ScanModel(text: "Receipt from Tuesday")

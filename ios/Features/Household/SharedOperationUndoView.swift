@@ -14,6 +14,8 @@ struct SharedOperationUndoView: View {
     @State private var entryError = false
     @State private var submitted = false
     @FocusState private var editing: String?
+    @State private var keyboardVisible = false
+    @State private var previewAfterTyping = false
     init(shopModel: HouseholdShopModel) {
         self.shopModel = shopModel
         _model = StateObject(wrappedValue: SharedOperationUndoModel(access: shopModel))
@@ -62,6 +64,16 @@ struct SharedOperationUndoView: View {
         .navigationTitle(u(model.candidate == nil ? "Saved changes" : "Review undo"))
         .keyboardDoneAction(visible: editing != nil, title: SharedDemandCopy.text("Done"), identifier: "sharedUndo.done") { editing = nil }
         .scrollDismissesKeyboard(.interactively)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in keyboardVisible = true }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
+            keyboardVisible = false
+            guard previewAfterTyping else { return }
+            previewAfterTyping = false
+            if editing == nil, let candidate = model.candidate { preview(candidate) }
+        }
+        .onChange(of: editing) { _, field in
+            if field != nil { previewAfterTyping = false }
+        }
         .toolbar { ToolbarItem(placement: .cancellationAction) {
             Button(u("Cancel")) { model.cancel(); clearEntries(); dismiss() }
                 .disabled(model.isApplying).accessibilityIdentifier("sharedUndo.cancel")
@@ -78,7 +90,13 @@ struct SharedOperationUndoView: View {
         }
     }
     private func u(_ key: String) -> String { SharedOperationUndoCopy.text(key) }
-    private func clearEntries() { entries = [:]; entryGeneration = UUID(); entryError = false; editing = nil }
+    private func clearEntries() {
+        previewAfterTyping = false
+        editing = nil
+        entries = [:]
+        entryGeneration = UUID()
+        entryError = false
+    }
     private func clearIfDiscarded() { if model.candidate == nil { clearEntries() } }
     private func entry(_ id: SharedDemandID, unit: SharedDemandUnit) -> Binding<UndoPackEntry> {
         var empty = UndoPackEntry(); empty.amount.unit = unit
@@ -158,7 +176,17 @@ struct SharedOperationUndoView: View {
                     Toggle(u("I accept unresolved quantities or restrictions for this item"), isOn: value.acceptUnresolved).accessibilityIdentifier(prefix + ".acceptUnknown")
                 }
             }.disabled(model.busy || shopModel.busy)
-            Section { Button(u("Review final result")) { preview(candidate) }.disabled(model.busy || shopModel.busy).accessibilityIdentifier("sharedUndo.preview") }
+            Section {
+                Button(u("Review final result")) {
+                    if keyboardVisible, editing != nil {
+                        // The review replaces these rows. Finish the keyboard transition while its field is still mounted.
+                        previewAfterTyping = true
+                        editing = nil
+                    } else { preview(candidate) }
+                }
+                .disabled(previewAfterTyping || model.busy || shopModel.busy)
+                .accessibilityIdentifier("sharedUndo.preview")
+            }
         }
     }
     private func preview(_ candidate: SharedOperationUndoCandidate) {

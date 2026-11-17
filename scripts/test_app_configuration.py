@@ -56,8 +56,8 @@ class AppConfigurationTests(unittest.TestCase):
             self.assertEqual(load_configuration(root, "Release"), release)
             self.assertEqual(load_configuration(root, "Staging"), staging)
             for key, aliases in {
-                "supabaseURL": (staging["supabaseURL"], "https://STAGING-AUTH.grocery-app.com.:443/subpath"),
-                "serviceURL": (staging["serviceURL"], "https://Staging-Service.grocery-app.com:443/another-path"),
+                "supabaseURL": (staging["supabaseURL"], staging["serviceURL"], "https://STAGING-AUTH.grocery-app.com.:443/subpath"),
+                "serviceURL": (staging["serviceURL"], staging["supabaseURL"], "https://Staging-Service.grocery-app.com:443/another-path"),
                 "publishableKey": (staging["publishableKey"],),
             }.items():
                 for value in aliases:
@@ -172,14 +172,45 @@ class AppConfigurationTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         load_configuration(root, "Release")
 
+    def test_local_storekit_fixture_can_be_selected_in_debug_configuration(self):
+        fixture = Path(__file__).resolve().parents[1] / "ios/Features/Membership/HouseholdLocalTesting.storekit"
+        product = json.loads(fixture.read_text())["subscriptionGroups"][0]["subscriptions"][0]["productID"]
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "config").mkdir()
+            (root / "config/staging.json").write_text(json.dumps({"householdSubscriptionProductID": product}))
+            info = compiled_metadata(load_configuration(root, "Debug"), "Debug")
+            self.assertEqual(info["HouseholdSubscriptionProductID"], "local.testing.household.annual")
+
     def test_explicit_release_file_and_metadata_gate(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / "config").mkdir()
             config = {"environment": "production", "householdSubscriptionProductID": "com.grocery-app.household.annual", "privacyPolicyURL": "https://grocery-app.com/privacy", "termsOfUseURL": "https://grocery-app.com/terms", "supportURL": "https://grocery-app.com/support"}
+            config.update(emailOTPEnabled=True, supabaseURL="https://identity.grocery-app.com", publishableKey="sb_publishable_release",
+                          serviceURL="https://api.grocery-app.com")
             (root / "config/release.json").write_text(json.dumps(config))
             info = compiled_metadata(load_configuration(root, "Release"), "Release")
             require_release_metadata(info)
+            for key in ("SupabaseProjectURL", "SupabasePublishableKey", "HouseholdServiceURL"):
+                with self.subTest(missing=key), self.assertRaisesRegex(ValueError, key):
+                    require_release_metadata(dict(info, **{key: ""}))
+            for key in ("SupabaseProjectURL", "HouseholdServiceURL"):
+                with self.subTest(nonpublic=key), self.assertRaisesRegex(ValueError, key):
+                    require_release_metadata(dict(info, **{key: "https://127.0.0.1"}))
+            for identifier in ("A.1_-", "X" * 100):
+                with self.subTest(identifier=identifier):
+                    (root / "config/release.json").write_text(json.dumps(dict(config, householdSubscriptionProductID=identifier)))
+                    compiled = compiled_metadata(load_configuration(root, "Release"), "Release")
+                    self.assertEqual(compiled["HouseholdSubscriptionProductID"], identifier)
+                    require_release_metadata(compiled)
+            for identifier in ("local.testing.household.annual", "annual/household", "X" * 101, "annual\x01"):
+                with self.subTest(identifier=identifier):
+                    (root / "config/release.json").write_text(json.dumps(dict(config, householdSubscriptionProductID=identifier)))
+                    with self.assertRaisesRegex(ValueError, "householdSubscriptionProductID"):
+                        load_configuration(root, "Release")
+                    with self.assertRaisesRegex(ValueError, "HouseholdSubscriptionProductID"):
+                        require_release_metadata(dict(info, HouseholdSubscriptionProductID=identifier))
             info["SupportURL"] = ""
             with self.assertRaisesRegex(ValueError, "SupportURL"):
                 require_release_metadata(info)
@@ -245,6 +276,10 @@ class BuiltAppVerificationTests(unittest.TestCase):
             (bundle / "Info.plist").write_bytes(plistlib.dumps({
                 **common, **metadata, "CFBundleExecutable": bundle.stem,
             }))
+        for folder in ("Widget", "Share"):
+            extension = app / "PlugIns" / f"RoomInTheCart{folder}.appex"
+            shutil.copyfile(self.root / "ios/Extensions" / folder / "PrivacyInfo.xcprivacy",
+                            extension / "PrivacyInfo.xcprivacy")
         (app / "Assets.car").write_bytes(b"fixture asset catalog")
         shutil.copyfile(self.root / "ios/Resources/PrivacyInfo.xcprivacy", app / "PrivacyInfo.xcprivacy")
         for language in ("en", "es"):
@@ -270,6 +305,19 @@ class BuiltAppVerificationTests(unittest.TestCase):
         debug = self.make_app("Debug", "dev.roominthecart.app.debug", "roominthecart-debug", "iPhoneSimulator")
         (debug / "PlugIns/RoomInTheCartTests.xctest").mkdir()
         verify_built_app(debug, "Debug")
+
+    def test_checks_each_extension_privacy_manifest(self):
+        for extension in (self.widget, self.share):
+            with self.subTest(bundle=extension.name):
+                manifest = extension / "PrivacyInfo.xcprivacy"
+                original = manifest.read_bytes()
+                manifest.unlink()
+                with self.assertRaisesRegex(ValueError, f"Missing privacy manifest in {extension.name}"):
+                    verify_built_app(self.app, "Release")
+                shutil.copyfile(self.app / manifest.name, manifest)
+                with self.assertRaisesRegex(ValueError, "differs from the reviewed source"):
+                    verify_built_app(self.app, "Release")
+                manifest.write_bytes(original)
 
     def test_rejects_loose_shopper_and_local_purchase_fixtures_in_distributed_bundles(self):
         staging = self.make_app("Staging", "dev.roominthecart.app.staging", "roominthecart-staging", "iPhoneOS")

@@ -38,6 +38,8 @@ class OwnedSimulatorTests(unittest.TestCase):
                           'bundlePath': '/Runtime/iOS26.2.simruntime', 'isAvailable': True}]
         self.calls = []
         self.created_id = CREATED
+        self.runtime = RUNTIME
+        self.creation_argument = RUNTIME
         self.create_error = None
         self.after_create = lambda device: None
         self.mock = patch('select_ci_iphone.subprocess.run', side_effect=self.run_simctl)
@@ -53,16 +55,16 @@ class OwnedSimulatorTests(unittest.TestCase):
             result = json.dumps({'devices': self.inventory})
         elif args[0] == 'create':
             if self.create_error: raise self.create_error
-            self.assertEqual(args[2:], [TYPE, RUNTIME])
+            self.assertEqual(args[2:], [TYPE, self.creation_argument])
             if self.created_id != SOURCE:
                 device = {'name': args[1], 'udid': self.created_id, 'isAvailable': True,
                           'deviceTypeIdentifier': TYPE, 'state': 'Shutdown'}
-                self.inventory[RUNTIME].append(device); self.after_create(device)
+                self.inventory[self.runtime].append(device); self.after_create(device)
             result = self.created_id + '\n'
         elif args[0] in ('shutdown', 'delete'):
             self.assertEqual(args[1:], [CREATED], 'Only the created UUID may be mutated')
-            if args[0] == 'shutdown': self.inventory[RUNTIME][1]['state'] = 'Shutdown'
-            else: self.inventory[RUNTIME] = [d for d in self.inventory[RUNTIME] if d['udid'] != CREATED]
+            if args[0] == 'shutdown': self.inventory[self.runtime][1]['state'] = 'Shutdown'
+            else: self.inventory[self.runtime] = [d for d in self.inventory[self.runtime] if d['udid'] != CREATED]
             result = ''
         else:
             self.fail(f'Unexpected simulator command: {args}')
@@ -70,6 +72,53 @@ class OwnedSimulatorTests(unittest.TestCase):
 
     def create(self):
         return provision(copy.deepcopy(self.original), self.receipt)
+
+    def configure_ios27(self, provider):
+        self.runtime = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
+        self.original = {self.runtime: copy.deepcopy(self.original[RUNTIME])}
+        self.inventory = copy.deepcopy(self.original)
+        bundle = self.root / 'iOS27.simruntime'
+        (bundle / 'Contents/Resources/RuntimeRoot').mkdir(parents=True)
+        self.runtimes = [{'identifier': self.runtime, 'version': '27.0', 'buildversion': '24A434',
+                          'bundlePath': str(bundle), 'isAvailable': True}]
+        self.creation_argument = str(bundle) if provider == 'github-hosted' else self.runtime
+        os.environ['RUNNER_ENVIRONMENT'] = provider
+        return bundle
+
+    def test_github27_owned_device_uses_exact_existing_bundle_and_retains_cleanup_ownership(self):
+        bundle = self.configure_ios27('github-hosted')
+        receipt = self.create()
+        self.assertEqual(receipt['creationRuntimeArgument'], str(bundle))
+        self.assertTrue(receipt['runtimeFilesystem']['runtimeRootExists'])
+        self.assertEqual(receipt['runtime']['buildversion'], '24A434')
+        cleanup(self.receipt)
+        self.assertEqual(self.inventory, self.original)
+        self.assertEqual([c for c in self.calls if c[0] in ('shutdown', 'delete')], [['delete', CREATED]])
+
+    def test_bitrise27_owned_device_keeps_runtime_identifier_argument(self):
+        self.configure_ios27('self-hosted')
+        receipt = self.create()
+        self.assertNotIn('creationRuntimeArgument', receipt)
+        self.assertEqual(next(c[-1] for c in self.calls if c[0] == 'create'), self.runtime)
+
+    def test_github26_owned_device_keeps_existing_identifier_path(self):
+        os.environ['RUNNER_ENVIRONMENT'] = 'github-hosted'
+        receipt = self.create()
+        self.assertNotIn('creationRuntimeArgument', receipt)
+        self.assertEqual(next(c[-1] for c in self.calls if c[0] == 'create'), RUNTIME)
+
+    def test_missing_github27_runtime_root_records_failure_without_creation_or_fallback(self):
+        bundle = self.configure_ios27('github-hosted')
+        (bundle / 'Contents/Resources/RuntimeRoot').rmdir()
+        with self.assertRaisesRegex(ValueError, 'bundle/root unavailable'):
+            self.create()
+        receipt = json.loads(self.receipt.read_text())
+        self.assertEqual(receipt['creationStatus'], 'failed')
+        self.assertFalse(receipt['runtimeFilesystem']['runtimeRootExists'])
+        self.assertIsNone(receipt['createdUDID'])
+        self.assertFalse(any(c[0] == 'create' for c in self.calls))
+        cleanup(self.receipt)
+        self.assertFalse(any(c[0] in ('shutdown', 'delete') for c in self.calls))
 
     def test_legacy_selection_and_environment_output_make_no_simctl_calls(self):
         older = 'com.apple.CoreSimulator.SimRuntime.iOS-18-5'
@@ -135,10 +184,13 @@ class OwnedSimulatorTests(unittest.TestCase):
                 self.assertFalse(any(c[0] == 'create' for c in self.calls))
 
     def test_creation_failure_or_returned_image_uuid_never_falls_back(self):
-        self.create_error = subprocess.CalledProcessError(1, ['xcrun', 'simctl', 'create'])
+        self.create_error = subprocess.CalledProcessError(1, ['xcrun', 'simctl', 'create'],
+                                                        stderr='Simulator creation failed: exact cause')
         with self.assertRaises(subprocess.CalledProcessError): self.create()
         self.assertFalse(self.env_file.exists())
         self.assertIsNone(json.loads(self.receipt.read_text())['createdUDID'])
+        self.assertEqual(json.loads(self.receipt.read_text())['creationStderr'],
+                         'Simulator creation failed: exact cause')
         cleanup(self.receipt)
         self.assertFalse(any(c[0] in ('shutdown', 'delete') for c in self.calls))
         self.receipt.unlink(); self.create_error = None; self.created_id = SOURCE
@@ -218,11 +270,17 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
         isolated = [('ci.yml', 'ios-tests', ('ui-01', 'ui-05')),
-                    ('ios-fixtures.yml', 'contributor-tests', ('contributor-balanced-01', 'SharedFallbackUITests'))]
-        with tempfile.TemporaryDirectory() as directory:
+                    ('ios-fixtures.yml', 'contributor-tests', ('contributor-balanced-01', 'SharedFallbackUITests')),
+                    ('ci.yml', 'ios-build', ()),
+                    ('ios-fixtures.yml', 'build-contributor', ()),
+                    ('ios-fixtures.yml', 'build-dinner', ())]
+        # Reproduce hosted source-check inheritance even when this module runs locally.
+        with patch.dict(os.environ, RUNNER_ENVIRONMENT='github-hosted', GITHUB_ACTIONS='true'), \
+             tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
             # Run the actual workflow shell with inert CLI replacements only.
             for name, source in {
+                'swift': '#!/bin/sh\nexit 0\n',
                 'xcrun': '#!/bin/sh\nprintf \'{"devices":{}}\\n\'\n',
                 'python3': '#!/bin/sh\ncat >/dev/null\nprintf "%s\\n" "$@" >> "$CAPTURE"\nexit "${SELECTOR_EXIT:-0}"\n',
             }.items():
@@ -231,32 +289,42 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
             for workflow_name, job, owned_shards in isolated:
                 workflow, _, _ = parse_workflow(root / '.github/workflows' / workflow_name)
                 shell = next(s['run'] for s in workflow['jobs'][job]['steps'] if '--create-owned' in s.get('run', ''))
-                for shard in ['models', *[f'ui-{i:02d}' for i in range(1, 11)],
-                              *[f'contributor-balanced-{i:02d}' for i in range(1, 11)],
-                              'RecordsMediaUITests', 'SharedDeliveryUITests-recovery-cook-and-closeout',
-                              'SharedFallbackUITests', *[shard + '-extra' for shard in owned_shards], '']:
-                    with self.subTest(workflow=workflow_name, shard=shard):
-                        capture = folder / 'arguments'; capture.write_text('')
-                        env = dict(os.environ, PATH=str(folder) + ':/usr/bin:/bin', CAPTURE=str(capture),
-                                   TEST_SHARD=shard, SELECTOR_EXIT='0')
-                        result = subprocess.run(['/bin/bash', '-eo', 'pipefail', '-c', shell], env=env,
-                                                capture_output=True, text=True, timeout=10)
-                        self.assertEqual(result.returncode, 0, result.stderr)
-                        expected = ['scripts/select_ci_iphone.py']
-                        if shard in owned_shards: expected += ['--create-owned', '.build/test-simulator-ownership.json']
-                        self.assertEqual(capture.read_text().splitlines(), expected)
-                for shard in owned_shards:
-                    capture.write_text(''); env.update(TEST_SHARD=shard, SELECTOR_EXIT='17')
-                    result = subprocess.run(['/bin/bash', '-eo', 'pipefail', '-c', shell], env=env,
-                                            capture_output=True, text=True, timeout=10)
-                    self.assertEqual(result.returncode, 17)
-                    self.assertEqual(capture.read_text().splitlines(),
-                                     ['scripts/select_ci_iphone.py', '--create-owned', '.build/test-simulator-ownership.json'])
+                for provider in (None, 'self-hosted', 'github-hosted'):
+                    for shard in ['models', *[f'ui-{i:02d}' for i in range(1, 11)],
+                                  *[f'contributor-balanced-{i:02d}' for i in range(1, 11)],
+                                  'RecordsMediaUITests', 'SharedDeliveryUITests-recovery-cook-and-closeout',
+                                  'SharedFallbackUITests', *[shard + '-extra' for shard in owned_shards], '']:
+                        with self.subTest(workflow=workflow_name, provider=provider, shard=shard):
+                            capture = folder / 'arguments'; capture.write_text('')
+                            env = dict(os.environ, PATH=str(folder) + ':/usr/bin:/bin', CAPTURE=str(capture),
+                                       TEST_SHARD=shard, SELECTOR_EXIT='0')
+                            if provider is None:
+                                env.pop('RUNNER_ENVIRONMENT', None)
+                            else:
+                                env['RUNNER_ENVIRONMENT'] = provider
+                            result = subprocess.run(['/bin/bash', '-eo', 'pipefail', '-c', shell], env=env,
+                                                    capture_output=True, text=True, timeout=10)
+                            self.assertEqual(result.returncode, 0, result.stderr)
+                            expected = ['scripts/select_ci_iphone.py']
+                            if provider == 'github-hosted' or shard in owned_shards:
+                                expected += ['--create-owned', '.build/test-simulator-ownership.json']
+                            self.assertEqual(capture.read_text().splitlines(), expected)
+                    failure_shards = (*owned_shards, 'models') if provider == 'github-hosted' else owned_shards
+                    for shard in failure_shards:
+                        with self.subTest(workflow=workflow_name, provider=provider, failure=shard):
+                            capture.write_text(''); env.update(TEST_SHARD=shard, SELECTOR_EXIT='17')
+                            result = subprocess.run(['/bin/bash', '-eo', 'pipefail', '-c', shell], env=env,
+                                                    capture_output=True, text=True, timeout=10)
+                            self.assertEqual(result.returncode, 17)
+                            self.assertEqual(capture.read_text().splitlines(),
+                                             ['scripts/select_ci_iphone.py', '--create-owned', '.build/test-simulator-ownership.json'])
 
-    def test_only_execution_shards_opt_in_and_cleanup_precedes_receipt_upload(self):
+    def test_simulator_jobs_opt_in_and_cleanup_precedes_receipt_upload(self):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
-        expected = {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
+        producers = {('ci.yml', 'ios-build'), ('ios-fixtures.yml', 'build-contributor'),
+                     ('ios-fixtures.yml', 'build-dinner')}
+        expected = producers | {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
                     ('ios-fixtures.yml', 'dinner-tests'), ('ios-performance.yml', 'performance-tests')}
         observed = set()
         default_callers = set()
@@ -278,6 +346,16 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                 observed.add(key)
                 self.assertEqual(len(create), 1); self.assertEqual(len(clean), 1)
                 self.assertEqual(steps[create[0]]['timeout-minutes'], 8)
+                if key in producers:
+                    build = next(i for i, s in enumerate(steps) if s.get('id') == 'build')
+                    self.assertLess(create[0], build)
+                    self.assertLess(build, clean[0])
+                    self.assertEqual(steps[clean[0]]['if'], "always() && runner.environment == 'github-hosted'")
+                    self.assertEqual(steps[clean[0]]['timeout-minutes'], 2)
+                    evidence = next(i for i, s in enumerate(steps) if s.get('name') == 'Upload GitHub runtime evidence')
+                    self.assertLess(clean[0], evidence)
+                    self.assertIn('.build/test-simulator-ownership.json', steps[evidence]['with']['path'].splitlines())
+                    continue
                 performance = key == ('ios-performance.yml', 'performance-tests')
                 boot_command = 'scripts/prepare_ios_performance_simulator.py' if performance else 'scripts/prepare_ios_simulator.sh wait'
                 test_command = 'test-without-building' if performance else 'bash scripts/run_ios_test_shard.sh'
@@ -299,8 +377,7 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                         self.assertTrue({'.build/test-simulator-ownership.json', '.build/test-*.json'}.intersection(paths),
                                         f'{key}: upload must include the simulator ownership receipt')
         self.assertEqual(observed, expected)
-        self.assertTrue({('ci.yml', 'ios-build'), ('ios-fixtures.yml', 'build-contributor'),
-                         ('ios-fixtures.yml', 'build-dinner'), ('ios-performance.yml', 'performance-build')}.issubset(default_callers))
+        self.assertIn(('ios-performance.yml', 'performance-build'), default_callers)
 
 
 if __name__ == '__main__':

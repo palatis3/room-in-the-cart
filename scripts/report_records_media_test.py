@@ -204,8 +204,61 @@ def report(evidence, source, runner_status, suite=SUITE, build_source=None):
     return "\n".join(rows), 0 if passed else 1
 
 
+def shared_failure_diagnostics(evidence, runner_status):
+    """Observe incomplete evidence without granting it verification authority."""
+    exit_status = "unavailable"
+    if re.fullmatch(r"[0-9]{1,3}", runner_status) and int(runner_status) <= 255:
+        exit_status = str(int(runner_status))
+    rows = ["", f"Runner verification exit: {exit_status}."]
+    for label, name in (("Original", "Tests.xcresult"), ("Retry", "Tests-retry.xcresult")):
+        rows.append(f"{label} result bundle present: {str((evidence / name).is_dir()).lower()}.")
+    exports = {}
+    for label, name in (("Summary", "test-summary.json"), ("Details", "test-details.json")):
+        try:
+            value = read_json(evidence / name)
+            if not isinstance(value, dict):
+                raise ValueError
+            exports[label] = value
+            state = "parsed"
+        except FileNotFoundError:
+            state = "missing"
+        except (OSError, ValueError, RecursionError):
+            state = "invalid"
+        rows.append(f"{label} export: {state}.")
+    summary = exports.get("Summary", {})
+    for label, key in (("total", "totalTestCount"), ("passed", "passedTests"),
+                       ("failed", "failedTests"), ("skipped", "skippedTests"),
+                       ("expected failures", "expectedFailures")):
+        value = summary.get(key)
+        count = str(value) if type(value) is int and 0 <= value <= 10_000 else "unavailable"
+        rows.append(f"Reported {label}: {count}.")
+    try:
+        nodes = exports["Details"]["testNodes"]
+        if not isinstance(nodes, list):
+            raise ValueError
+        cases = list(test_cases(nodes))
+        if len(cases) > 10_000:
+            raise ValueError
+        rows.append(f"Observed case records: {len(cases)}.")
+        # Print only our constant selector/result names. Duplicate or invalid
+        # records cannot supply a per-case outcome, even when another is valid.
+        for method in SHARED_METHODS:
+            selector = f"RoomInTheCartUITests/{SHARED_SUITE}/{method}"
+            matches = [case for key, case in cases if key == selector]
+            result = "unavailable"
+            if len(matches) == 1:
+                value = matches[0].get("result")
+                if isinstance(value, str) and value in COUNTS:
+                    result = value
+            rows.append(f"Observed `{selector}`: {result}.")
+    except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
+        rows.append("Case observations: unavailable.")
+    return "\n".join(rows)
+
+
 def main():
     label = "Records Media"
+    suite = None
     try:
         _, evidence, runner_status, *option = sys.argv
         suite, = option or [SUITE]
@@ -219,6 +272,11 @@ def main():
     except Exception:
         # Raw result strings and parser errors can contain private fixture data.
         text, status = f"{label} verification failed. Structured evidence was unavailable or invalid.", 1
+        if suite == SHARED_SUITE:
+            try:
+                text += "\n" + shared_failure_diagnostics(Path(evidence), runner_status)
+            except Exception:
+                text += "\nSafe failure observations unavailable."
     print(text)
     return status
 

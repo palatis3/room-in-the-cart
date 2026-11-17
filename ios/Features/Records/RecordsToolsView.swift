@@ -154,12 +154,16 @@ struct RecordsToolsView: View {
                       })
         .sheet(item: manualRecipePresentation) { presentation in
             ManualRecipeEntryView { recipe in
-                let staged = await model.stageManualRecipe(recipe, from: presentation)
-                if staged { return nil }
-                if model.error == .invalidRecipe {
+                do {
+                    try await model.stageManualRecipe(recipe, from: presentation)
+                    return nil
+                } catch ArchiveError.tooLarge {
+                    return recordsText("This recipe is too long to save. Shorten long ingredient lines or remove some recipe text, then try again.")
+                } catch ArchiveError.invalidRecipe {
                     return recordsText("Check the recipe text. The optional source must be an http or https web address without a username or password.")
+                } catch {
+                    return errorMessage(error as? ArchiveError ?? .unavailable)
                 }
-                return errorMessage(model.error ?? .unavailable)
             }
         }
         .alert(deletion?.title ?? "", isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }), presenting: deletion) { deletion in
@@ -169,9 +173,7 @@ struct RecordsToolsView: View {
                 self.deletion = nil
             }
         } message: { deletion in
-            let count = deletion.copyCount.map { String(format: recordsText("Recovered copies selected for deletion: %lld."), Int64($0)) }
-            let detail = recordsText(model.recoveredDeletionAllowsUndo ? "Only the named local source or recovered copies are removed. Other records and copies already shared remain. Recovered-copy deletion can be undone during this app session." : "The named local source or recovered copies and their separate workspaces will be permanently deleted. This cannot be undone. Other records and files already shared remain.")
-            Text(verbatim: [count, detail].compactMap { $0 }.joined(separator: "\n\n"))
+            Text(verbatim: model.deletionMessage(for: deletion))
         }
     }
     private var currentSources: some View {
@@ -553,7 +555,7 @@ struct RecordsToolsView: View {
                         .accessibilityLabel(recordsText("Selected reduced source photo"))
                         .accessibilityIdentifier("records.mediaImage." + attachment.id)
                 }
-                Text(source.originalText).textSelection(.enabled).accessibilityIdentifier("records.mediaWording." + attachment.id)
+                SourceReferenceWording(source: source, originalIdentifier: "records.mediaWording." + attachment.id)
                 if let barcode = source.barcode { Text(barcode.value).textSelection(.enabled) }
                 ForEach(source.receiptLines) { row in
                     VStack(alignment: .leading) {
@@ -614,10 +616,13 @@ private struct RecordsImportFilePicker: View {
 
 private struct ManualRecipeEntryView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let submit: (ImportedRecipe) async -> String?
     @State private var submitting = false
     @State private var submissionError: String?
     @AccessibilityFocusState private var errorFocused: Bool
+    private enum Field { case title, servings, ingredients, steps, source, notes }
+    @FocusState private var editing: Field?
     @State private var title = ""
     @State private var servings = ""
     @State private var ingredients = ""
@@ -628,21 +633,22 @@ private struct ManualRecipeEntryView: View {
         NavigationStack {
             Form {
                 TextField(recordsText("Meal title"), text: $title)
+                    .focused($editing, equals: .title)
                 TextField(recordsText("Servings or yield, in your words"), text: $servings)
+                    .focused($editing, equals: .servings)
                 TextField(recordsText("Ingredients, one per line"), text: $ingredients, axis: .vertical).lineLimit(3...12)
+                    .focused($editing, equals: .ingredients)
                 TextField(recordsText("Steps, one per line"), text: $steps, axis: .vertical).lineLimit(3...12)
+                    .focused($editing, equals: .steps)
                 TextField(recordsText("Source URL (optional)"), text: $source).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .focused($editing, equals: .source)
                 TextField(recordsText("Your notes"), text: $notes, axis: .vertical).lineLimit(3...12)
+                    .focused($editing, equals: .notes)
                 Text(recordsText("Your meal remains editable even if its source website disappears. The URL does not fetch or import a web page."))
                     .font(.footnote)
-                if let submissionError {
-                    Text(submissionError)
-                        .foregroundStyle(.red)
-                        .accessibilityFocused($errorFocused)
-                        .accessibilityIdentifier("records.manualRecipeError")
-                }
                 Button(recordsText("Review recipe")) {
                     guard !submitting else { return }
+                    editing = nil
                     submitting = true
                     let recipe = ImportedRecipe(title: title, yieldText: servings,
                         ingredients: ingredients.components(separatedBy: .newlines).filter { !$0.isEmpty },
@@ -652,9 +658,33 @@ private struct ManualRecipeEntryView: View {
                         submissionError = await submit(recipe)
                         submitting = false
                         if submissionError == nil { dismiss() }
-                        else { errorFocused = true }
+                        else if !dynamicTypeSize.isAccessibilitySize {
+                            await Task.yield()
+                            errorFocused = true
+                        }
                     }
                 }.disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .keyboardDoneAction(visible: editing != nil, title: ledgerText("Done")) { editing = nil }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if let submissionError, !dynamicTypeSize.isAccessibilitySize {
+                    Text(submissionError)
+                        .foregroundStyle(.red)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.bar)
+                        .accessibilityFocused($errorFocused)
+                        .accessibilityIdentifier("records.manualRecipeError")
+                }
+            }
+            .alert(recordsText("Review recipe"), isPresented: Binding(
+                get: { dynamicTypeSize.isAccessibilitySize && submissionError != nil },
+                set: { if !$0 { submissionError = nil } }
+            )) {
+                Button(ledgerText("Done"), role: .cancel) {}
+            } message: {
+                Text(submissionError ?? "")
             }
             .navigationTitle(recordsText("Save a recipe"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(recordsText("Cancel")) { dismiss() }.disabled(submitting) } }

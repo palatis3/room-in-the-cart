@@ -23,24 +23,32 @@ XCTEST_ANIMATION_IDLE = re.compile(
     r"[ \t]*(?:t[ \t]*=[ \t]*(?P<elapsed>[0-9]+(?:\.[0-9]+)?)s[ \t]+)?"
     r"App animations complete notification not received, will attempt to continue\."
 )
-XCTEST_SPLIT_PROCESS_PREFIX = re.compile(
-    r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}[+-][0-9]{4} "
-    r"(?P<process>[A-Za-z]+)(?P<record>Test Case .+)"
+PROCESS_TIMESTAMP = r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}[+-][0-9]{4} "
+# The simulator's E5 compiler can emit this whole diagnostic without a newline.
+XCTEST_VM_COMPILER_PREFIX = re.compile(
+    PROCESS_TIMESTAMP + r"RoomInTheCart\[[0-9]+:[0-9]+\] \[e5rt\] E5RT encountered an STL exception\. "
+    r"msg = On-device compilation within a VM only supports CPU currently(?=Test Case )"
 )
-XCTEST_SPLIT_PROCESS_SUFFIX = re.compile(
-    r"(?P<process>[A-Za-z]+)\[[0-9]+:[0-9]+\] \[[A-Za-z][A-Za-z0-9_.-]*\] .*"
+XCTEST_SPLIT_PROCESS_PREFIX = re.compile(
+    PROCESS_TIMESTAMP +
+    r"(?P<header>[A-Za-z0-9:\[]+)(?P<record>Test Case .+)"
+)
+XCTEST_APP_LOG = re.compile(
+    r"RoomInTheCart\[[0-9]+:[0-9]+\] \[[A-Za-z][A-Za-z0-9_.-]*\] .*"
 )
 
 
 def recover_interleaved_case(line, following_line):
-    """Recover the observed stdout/stderr split inside the app's process name."""
+    """Recover XCTest output joined to a known simulator diagnostic or process header."""
+    compiler = XCTEST_VM_COMPILER_PREFIX.match(line)
+    if compiler:
+        return line[compiler.end():]
     prefix = XCTEST_SPLIT_PROCESS_PREFIX.fullmatch(line)
     if prefix is None:
         return line
-    suffix = XCTEST_SPLIT_PROCESS_SUFFIX.fullmatch(following_line)
     # Require the adjacent fragments to reconstruct the known process header.
     # Never search a logging message's payload for quoted XCTest records.
-    if (suffix is not None and prefix["process"] + suffix["process"] == "RoomInTheCart"
+    if (XCTEST_APP_LOG.fullmatch(prefix["header"] + following_line)
             and XCTEST_CASE_LINE.fullmatch(prefix["record"])):
         return prefix["record"]
     return line
@@ -262,7 +270,7 @@ def export_test_details(bundle, identifier_url):
     result = subprocess.run(
         ["xcrun", "xcresulttool", "get", "test-results", "test-details",
          "--path", str(bundle), "--test-id", identifier_url, "--compact"],
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True, text=True, timeout=300,
     )
     return json.loads(result.stdout)
 
@@ -271,7 +279,7 @@ def export_test_activities(bundle, identifier_url, capture=None):
     result = subprocess.run(
         ["xcrun", "xcresulttool", "get", "test-results", "activities",
          "--path", str(bundle), "--test-id", identifier_url, "--compact"],
-        check=True, capture_output=True,
+        check=True, capture_output=True, timeout=300,
     )
     if capture is not None:
         capture(identifier_url, result.stdout)
@@ -493,7 +501,8 @@ def append_runtime_warning_report(args, summary, nodes, cases, report, failures)
             lambda url: export_test_details(args.result_bundle, url),
             lambda url: export_test_activities(args.result_bundle, url, capture_activities),
         )
-    except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError) as error:
+    except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError,
+            subprocess.TimeoutExpired) as error:
         evidence = {"status": "unavailable", "error": str(error)}
         failures.append(f"XCTest runtime warning evidence is unavailable. {error}")
     args.tests.with_name("test-runtime-warnings.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")

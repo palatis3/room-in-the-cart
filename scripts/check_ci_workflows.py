@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate five GitHub, three M2 and six M4 Bitrise native-job slots and bridge only actionlint 1.7.12's queue-key gap."""
+"""Validate native job admission and bridge only actionlint 1.7.12's queue-key gap."""
 import argparse
 import copy
 import hashlib
@@ -12,59 +12,74 @@ import sys
 import yaml
 from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
-SLOT_PREFIX = 'ritc-macos-slot-'
-MATRIX_GROUP = SLOT_PREFIX + '${{ matrix.macos_slot }}'
+GITHUB_JOB_PREFIX = 'ritc-github-job-'
+# Keep the old namespace reserved so a new job cannot bring back a fixed GitHub queue.
+LEGACY_GITHUB_SLOT_PREFIX = 'ritc-macos-slot-'
+GITHUB_RUNNERS = ('xcode-27', 'macos-15')
 BITRISE_SLOT_PREFIX = 'ritc-bitrise-slot-'
 BITRISE_LABEL = 'bitrise-runner-room in cart'
 M4_SLOT_PREFIX = 'ritc-bitrise-m4-slot-'
 M4_LABEL = 'bitrise-runner-ci 2'
-FIXTURE_JOBS = {('ios-fixtures.yml', name) for name in
-                ('build-contributor', 'build-dinner', 'contributor-tests', 'dinner-tests')}
 CORE_BUILD_JOB = ('ci.yml', 'ios-build')
 RELEASE_BUILD_JOB = ('ci.yml', 'ios-release')
-M4_BUILD_JOBS = {RELEASE_BUILD_JOB}
-ROUTED_NATIVE_JOBS = FIXTURE_JOBS | M4_BUILD_JOBS | {CORE_BUILD_JOB, ('ci.yml', 'ios-tests'), ('ios-deep.yml', 'storekit')}
+STOREKIT_JOB = ('ios-deep.yml', 'storekit')
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
-FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
+FIXTURE_TRUSTED = ("vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && "
                    "(github.event_name == 'push' || github.event_name == 'workflow_dispatch' || "
                    "github.event_name == 'workflow_call' || github.event_name == 'schedule' || "
                    "(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))")
 FIXTURE_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_LABEL + "' || 'xcode-27' }}"
-FIXTURE_SLOT_PREFIX = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_SLOT_PREFIX + "' || '" + SLOT_PREFIX + "' }}"
-# Full queue names preserve the original GitHub fallback, including M4 slot zero.
 M4_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + M4_LABEL + "' || 'xcode-27' }}"
-CORE_BUILD_GROUP = "${{ " + FIXTURE_TRUSTED + " && 'ritc-bitrise-slot-2' || 'ritc-macos-slot-3' }}"
-RELEASE_BUILD_GROUP = "${{ " + FIXTURE_TRUSTED + " && 'ritc-bitrise-m4-slot-1' || 'ritc-macos-slot-1' }}"
 FIXTURE_CONSUMER_RUNNER = ("${{ " + FIXTURE_TRUSTED +
     " && (matrix.provider == 'bitrise-m4' && '" + M4_LABEL +
     "' || matrix.provider == 'bitrise' && '" + BITRISE_LABEL + "') || 'xcode-27' }}")
-FIXTURE_MATRIX_GROUP = ("${{ " + FIXTURE_TRUSTED +
-    " && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot)" +
-    " || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot))" +
-    " || format('ritc-macos-slot-{0}', matrix.macos_slot) }}")
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
+# Integers pin Bitrise producer slots. Matrices retain their reviewed identities
+# and producers. GitHub-only leaves use the platform's five macOS slots directly.
 POLICY = {
-    ('ci.yml', 'swift-packages'): 0,
-    ('ci.yml', 'ios-release'): 1,
-    ('release-checks.yml', 'staging-iphone'): 2,
-    ('ci.yml', 'ios-swift-codeql'): 4,
-    ('ci.yml', 'ios-build'): 3,
+    ('ci.yml', 'swift-packages'): None,
+    RELEASE_BUILD_JOB: 1,
+    ('release-checks.yml', 'staging-iphone'): None,
+    ('ci.yml', 'ios-swift-codeql'): None,
+    CORE_BUILD_JOB: 2,
     ('ci.yml', 'ios-tests'): ('${{ fromJSON(needs.ios-build.outputs.test_matrix) }}', ('shard',)),
     ('ios-fixtures.yml', 'build-contributor'): 0,
     ('ios-fixtures.yml', 'build-dinner'): 1,
     ('ios-fixtures.yml', 'contributor-tests'): ('${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}', ('profile', 'shard')),
     ('ios-fixtures.yml', 'dinner-tests'): ('${{ fromJSON(needs.fixture-plan.outputs.dinner_matrix) }}', ('profile', 'shard')),
-    ('ios-performance.yml', 'performance-build'): 2,
-    ('ios-performance.yml', 'simulator-signpost-control'): 2,
+    ('ios-performance.yml', 'performance-build'): None,
+    ('ios-performance.yml', 'simulator-signpost-control'): None,
     ('ios-performance.yml', 'performance-tests'): ('${{ fromJSON(needs.performance-build.outputs.test_matrix) }}', ('case',)),
     ('ios-deep.yml', 'sanitizers'): ([('thread', 0), ('address', 1)], 'sanitizer'),
-    ('ios-deep.yml', 'storekit-build'): 2,
-    ('ios-deep.yml', 'storekit'): 2,
-    ('ios-native-wire.yml', 'native-wire'): 3,
-    ('ios-toggle-diagnostic.yml', 'control'): 4,
+    ('ios-deep.yml', 'storekit-build'): None,
+    STOREKIT_JOB: 2,
+    ('ios-native-wire.yml', 'native-wire'): None,
+    ('ios-toggle-diagnostic.yml', 'control'): None,
 }
+ROUTED_NATIVE_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB, STOREKIT_JOB, ('ci.yml', 'ios-tests')} | {
+    ('ios-fixtures.yml', name) for name in ('build-contributor', 'build-dinner', 'contributor-tests', 'dinner-tests')}
+
+
+def github_job_group(identity, matrix_fields=()):
+    """A non-shared group for expressions whose Bitrise branch needs a group."""
+    workflow, job = identity
+    arguments = ('github.run_id', 'github.run_attempt', *(f'matrix.{field}' for field in matrix_fields))
+    placeholders = '-'.join('{' + str(index) + '}' for index in range(len(arguments)))
+    return f"format('{GITHUB_JOB_PREFIX}{workflow.removesuffix('.yml')}-{job}-{placeholders}', {', '.join(arguments)})"
+
+
+def bitrise_group(identity, expected):
+    if type(expected) is int:
+        prefix = M4_SLOT_PREFIX if identity == RELEASE_BUILD_JOB else BITRISE_SLOT_PREFIX
+        route = f"'{prefix}{expected}'"
+        fields = ('locale',) if identity == STOREKIT_JOB else ()
+    else:
+        route = ("(matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot)" +
+                 " || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot))")
+        fields = expected[1]
+    return "${{ " + FIXTURE_TRUSTED + " && " + route + " || " + github_job_group(identity, fields) + " }}"
 
 
 def require(condition, message):
@@ -154,12 +169,32 @@ def nonleaf_group_is_disjoint(group):
     if not isinstance(group, str) or not group:
         return False
     folded = group.casefold()
-    if any(prefix in folded for prefix in (SLOT_PREFIX, BITRISE_SLOT_PREFIX, M4_SLOT_PREFIX)):
+    reserved = (LEGACY_GITHUB_SLOT_PREFIX, GITHUB_JOB_PREFIX, BITRISE_SLOT_PREFIX, M4_SLOT_PREFIX)
+    if any(prefix in folded for prefix in reserved):
         return False
     prefix = folded.split('${{', 1)[0]
-    reserved = [pool + str(slot) for pool, count in ((SLOT_PREFIX, 5), (BITRISE_SLOT_PREFIX, 3), (M4_SLOT_PREFIX, 6))
-                for slot in range(count)]
     return bool(prefix) and all(not name.startswith(prefix) for name in reserved)
+
+
+def validate_native_matrix(job, identity, expected):
+    strategy = job.get('strategy', {})
+    if identity == STOREKIT_JOB:
+        require(strategy == {'fail-fast': False, 'matrix': {'locale': ['en', 'es']}},
+                'Both StoreKit locale jobs must retain their reviewed identities')
+    elif isinstance(expected, tuple):
+        matrix = strategy.get('matrix')
+        if isinstance(expected[0], str):
+            require(matrix == expected[0], f'Unreviewed native matrix producer: {identity}')
+        else:
+            require(isinstance(matrix, dict) and set(matrix) == {'include'} and isinstance(matrix['include'], list),
+                    f'Expected explicit native matrix rows: {identity}')
+            rows = matrix['include']
+            require(all(isinstance(row, dict) and type(row.get('macos_slot')) is int and
+                        0 <= row['macos_slot'] < 5 for row in rows), f'Invalid native matrix metadata: {identity}')
+            require([(row.get(expected[1]), row['macos_slot']) for row in rows] == expected[0],
+                    f'Native matrix identity/order changed: {identity}')
+    else:
+        require('matrix' not in strategy, f'Unreviewed native matrix: {identity}')
 
 
 def validate_workflows(paths, policy=POLICY):
@@ -191,8 +226,17 @@ def validate_workflows(paths, policy=POLICY):
                 continue
             actual.add(identity)
             require('uses' not in job and identity in policy, f'Unreviewed native job inventory: {identity}')
+            expected = policy[identity]
+            validate_native_matrix(job, identity, expected)
+            if identity not in ROUTED_NATIVE_JOBS:
+                require(job.get('runs-on') in GITHUB_RUNNERS, f'Expected standard GitHub runner: {identity}')
+                require('concurrency' not in job, f'GitHub native job must use provider admission: {identity}')
+                continue
+            runner = M4_RUNNER if identity == RELEASE_BUILD_JOB else FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
+            require(job.get('runs-on') == runner, f'Unreviewed native provider routing: {identity}')
             require(isinstance(concurrency, dict) and set(concurrency) == {'group', 'queue', 'cancel-in-progress'},
-                    f'Native job needs exactly group, queue and cancel-in-progress: {identity}')
+                    f'Bitrise job needs exactly group, queue and cancel-in-progress: {identity}')
+            require(concurrency['group'] == bitrise_group(identity, expected), f'Unreviewed provider admission group: {identity}')
             base = ('jobs', name, 'concurrency')
             node = nodes[base]
             require(node.start_mark.index >= keys[base].end_mark.index,
@@ -208,44 +252,6 @@ def validate_workflows(paths, policy=POLICY):
                     cancel_node.style is None and cancel_node.value == 'false' and
                     cancel_node.start_mark.index >= keys[base + ('cancel-in-progress',)].end_mark.index,
                     f'Native cancel-in-progress must be literal false: {identity}')
-            expected = policy[identity]
-            routed = identity in ROUTED_NATIVE_JOBS
-            if routed:
-                runner = M4_RUNNER if identity in M4_BUILD_JOBS else FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
-                require(job.get('runs-on') == runner, f'Unreviewed native provider routing: {identity}')
-            else:
-                labels = job.get('runs-on', [])
-                labels = [labels] if isinstance(labels, str) else labels
-                require(job.get('runs-on') not in (FIXTURE_RUNNER, M4_RUNNER, FIXTURE_CONSUMER_RUNNER) and
-                        not any(label.lower().startswith('bitrise-runner-') for label in labels),
-                        f'Bitrise routing is restricted to reviewed native jobs: {identity}')
-            slot_prefix = FIXTURE_SLOT_PREFIX if routed else SLOT_PREFIX
-            matrix_group = FIXTURE_MATRIX_GROUP if routed else MATRIX_GROUP
-            slot_count = 3 if routed else 5
-            if type(expected) is int:
-                if identity == CORE_BUILD_JOB:
-                    require(expected == 3 and concurrency['group'] == CORE_BUILD_GROUP,
-                            f'Wrong main producer dual-provider slots: {identity}')
-                elif identity == RELEASE_BUILD_JOB:
-                    require(expected == 1 and concurrency['group'] == RELEASE_BUILD_GROUP,
-                            f'Wrong Release producer dual-provider slots: {identity}')
-                else:
-                    require(0 <= expected < slot_count and concurrency['group'] == slot_prefix + str(expected), f'Wrong fixed native slot: {identity}')
-                require('strategy' not in job or 'matrix' not in job['strategy'],
-                        f'Static slot policy cannot silently accept a new matrix: {identity}')
-            else:
-                require(concurrency['group'] == matrix_group, f'Wrong global native matrix group: {identity}')
-                matrix = job.get('strategy', {}).get('matrix')
-                if isinstance(expected[0], str):
-                    require(matrix == expected[0], f'Unreviewed native matrix producer: {identity}')
-                else:
-                    require(isinstance(matrix, dict) and set(matrix) == {'include'} and
-                            isinstance(matrix['include'], list), f'Expected explicit native matrix rows: {identity}')
-                    rows = matrix['include']
-                    require(all(isinstance(row, dict) and type(row.get('macos_slot')) is int and
-                                0 <= row['macos_slot'] < slot_count for row in rows), f'Invalid native matrix slot: {identity}')
-                    require([(row.get(expected[1]), row['macos_slot']) for row in rows] == expected[0],
-                            f'Native matrix identity/order/slot changed: {identity}')
             position = (str(path.resolve()), queue_key.start_mark.line + 1, queue_key.start_mark.column + 1)
             require(position not in allowed, 'Queue keys must have distinct physical source positions')
             allowed[position] = {'workflow': path.name, 'job': name, 'line': position[1], 'column': position[2]}

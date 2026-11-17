@@ -158,8 +158,80 @@ class RecordsMediaReportTests(unittest.TestCase):
                 self.write_json(details.name, {"testNodes": nodes})
                 result = self.execute(0, SHARED_SUITE)
                 self.assertEqual(result.returncode, 1)
-                self.assertEqual(result.stdout, "Shared Records verification failed. Structured evidence was unavailable or invalid.\n")
+                self.assertTrue(result.stdout.startswith("Shared Records verification failed. Structured evidence was unavailable or invalid.\n"))
+                self.assertIn("Runner verification exit: 0.", result.stdout)
+                self.assertIn("Details export: parsed.", result.stdout)
         self.assertEqual(self.execute(0, PRIVATE).returncode, 1)
+
+    def test_shared_partial_and_zero_execution_preserve_safe_observations(self):
+        selectors = self.write_shared(("Failed", "Passed"))
+        details = json.loads((self.evidence / "test-details.json").read_text())
+        failed = next(node for node in details["testNodes"] if node["result"] == "Failed")
+        for nodes in ([failed], []):
+            with self.subTest(count=len(nodes)):
+                self.write_json("test-details.json", {"testNodes": nodes, "error": PRIVATE})
+                self.write_json("test-summary.json", {
+                    "result": "Failed", "totalTestCount": len(nodes), "failedTests": len(nodes),
+                    "passedTests": 0, "skippedTests": 0, "expectedFailures": 0, "error": PRIVATE,
+                })
+                result = self.execute(65, SHARED_SUITE)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(f"Reported total: {len(nodes)}.", result.stdout)
+                self.assertIn(f"Observed case records: {len(nodes)}.", result.stdout)
+                outcome = "Failed" if nodes else "unavailable"
+                self.assertIn(f"Observed `{selectors[0]}`: {outcome}.", result.stdout)
+                self.assertIn(f"Observed `{selectors[1]}`: unavailable.", result.stdout)
+                self.assertIn("Runner verification exit: 65.", result.stdout)
+
+    def test_shared_missing_and_malformed_exports_keep_bundle_presence_private(self):
+        self.write_shared()
+        (self.evidence / "Tests.xcresult").mkdir()
+        summary = self.evidence / "test-summary.json"
+        details = self.evidence / "test-details.json"
+        for state, content in (("missing", None), ("invalid", PRIVATE), ("invalid", json.dumps([PRIVATE]))):
+            with self.subTest(state=state, content=content):
+                for path in (summary, details):
+                    if content is None:
+                        path.unlink(missing_ok=True)
+                    else:
+                        path.write_text(content)
+                result = self.execute(1, SHARED_SUITE)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("Original result bundle present: true.", result.stdout)
+                self.assertIn("Retry result bundle present: false.", result.stdout)
+                self.assertIn(f"Summary export: {state}.", result.stdout)
+                self.assertIn(f"Details export: {state}.", result.stdout)
+                self.assertIn("Reported total: unavailable.", result.stdout)
+                self.assertIn("Case observations: unavailable.", result.stdout)
+        (self.evidence / "Tests-retry.xcresult").mkdir()
+        self.assertIn("Retry result bundle present: true.", self.execute(1, SHARED_SUITE).stdout)
+
+    def test_shared_diagnostic_counts_exits_and_results_are_bounded(self):
+        for invalid in (PRIVATE, True, -1, 10_001, 1.5, [PRIVATE], {"error": PRIVATE}):
+            with self.subTest(invalid=invalid):
+                self.write_shared()
+                self.write_json("test-summary.json", {"totalTestCount": invalid})
+                nodes = json.loads((self.evidence / "test-details.json").read_text())["testNodes"]
+                nodes[0]["result"] = invalid
+                nodes.append({"nodeType": "Test Case", "nodeIdentifierURL": PRIVATE, "result": PRIVATE})
+                self.write_json("test-details.json", {"testNodes": nodes})
+                result = self.execute(256, SHARED_SUITE)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("Runner verification exit: unavailable.", result.stdout)
+                self.assertIn("Reported total: unavailable.", result.stdout)
+        for status in (PRIVATE, -1, "1\n" + PRIVATE):
+            self.assertIn("Runner verification exit: unavailable.", self.execute(status, SHARED_SUITE).stdout)
+
+    def test_shared_duplicate_case_cannot_supply_diagnostic_outcome(self):
+        selectors = self.write_shared()
+        nodes = json.loads((self.evidence / "test-details.json").read_text())["testNodes"]
+        nodes.append(nodes[0])
+        self.write_json("test-details.json", {"testNodes": nodes})
+        result = self.execute(1, SHARED_SUITE)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Observed case records: 3.", result.stdout)
+        self.assertIn(f"Observed `{selectors[1]}`: unavailable.", result.stdout)
+        self.assertIn(f"Observed `{selectors[0]}`: Passed.", result.stdout)
 
     def test_modern_location_strict_and_private(self):
         source = (SCRIPT.resolve().parents[1] / SOURCE).resolve()

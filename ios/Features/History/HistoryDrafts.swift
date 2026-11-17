@@ -118,6 +118,7 @@ struct HistoryPeriodDraft: Equatable {
 struct HistoryPriceFilter: Equatable {
     var store = "", branch = "", channel = "", mode = ""
     var from: Date?, through: Date?
+    var lastStartDate: Date?, lastEndDate: Date?
     func matches(_ value: HistoryPriceObservation) -> Bool {
         guard store.isEmpty || value.store.localizedCaseInsensitiveContains(store),
               branch.isEmpty || value.branch.localizedCaseInsensitiveContains(branch),

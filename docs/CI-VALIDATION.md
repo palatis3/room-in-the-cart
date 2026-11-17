@@ -1,13 +1,99 @@
 # Local CI validation
 
+## November 16 GitHub runtime replacement
+
+The `b17cb89b` core producer selected iOS27.0/24A434, then both Xcode and simctl
+reported its preloaded Cryptex bundle as malformed. The destination disappeared
+before compilation (job133193864967, exit70). The producer had not used the new
+preparation. Core and fixture producers now use the same helper before selection,
+keep one owned-device identity through build/discovery/model execution, and require
+runtime verification and cleanup before uploading test products. This preserves
+native commands, model-result handling, existing deadlines and Bitrise behavior.
+The correction still needs hosted producer qualification; original failure evidence
+is retained in `.build/PR7-b17cb89b/ios-build-original/`.
+
+GitHub producers and UI consumers preserve a copy of the preloaded iOS
+27.0/24A434 arm64 DMG before cleanup. The copy must match the qualified
+8,067,000,161-byte payload and SHA256
+`5136453f500b73dc3518f262d8a51e4be0c136e38a550998febf7759de6ba0fd`;
+source and saved-copy identities must remain unchanged before deletion. This
+replaces Xcode’s download/export command, which returned success but installed
+another registration without exporting a bundle in run43855275206. Equivalent
+asset descendants and standalone image files are supported; ambiguous or
+mismatched inputs fail before cleanup. See
+`.build/RuntimePayloadPreserveNov16/verification.json` for the 1,152-test local
+preflight and the [current handoff](CURRENT-HANDOFF.md#active-work-and-ownership) for
+hosted qualification. The helper removes preloaded simulator runtimes on the
+disposable hosted runner, verifies sustained
+physical and registry absence, and imports the exact standalone DMG. All devices
+must be shut down. The bounded cleanup recognizes only the observed deletion and
+asset-purge errors; unknown identities or remaining assets fail preparation.
+One current-user simulator-service refresh runs before creating an owned iPhone.
+Bitrise keeps its existing preparation and routing.
+
+Strict runtime inventory captures keep partial stdout/stderr and fail on any
+command timeout, nonzero exit or incomplete JSON. After timeout they kill only
+the retained direct child and wait at most five seconds to reap it; they do not
+use `check_output`'s unbounded post-kill wait. This preserves the failed gate
+while allowing subsequent diagnostics to run. The correction passed all 1,158
+offline checks; it does not establish why the focused producer stalled at package
+resolution after its runtime preparation passed.
+
+The first normal batch also exposed one retained tvOS registration marked
+`Cryptex Mount Preferred`, beside a new Ready registration for the same asset
+(job133201539104). Cleanup now permits at most one such exact pair after a
+successful first deletion, revalidates both identities, and uses the existing
+second deletion. It adds no mutation or time allowance. Both registrations must
+then retire and pass the full absence checks. Any unresolved identity, including
+the observed watchOS row, still fails preparation. This correction has local
+regression coverage; hosted recovery remains unproven.
+
+Further normal-batch evidence showed an already-deleting original registration
+becoming preferred-Unusable, and deleted original images remaining attached or
+mounted after the final scan. Recognized original registrations now wait for
+actual retirement within the existing 210-second bound. After the confirmation
+scan, known original attachments and mounts have a bounded 210-second settle
+phase inside the same 600-second total cleanup budget. The registry must remain
+empty; unknown identities and payloads fail. Only then does the unchanged
+60-second continuous absence check begin. Reappearance during that minute fails
+without restarting its clock. No forced detach or additional mutation is added.
+Originals establish the pending states; hosted recovery is still unverified.
+
+Fixture consumers upload their existing runtime evidence immediately after
+diagnostics and owned-device cleanup, before the larger XCTest result bundle.
+This prevents a slow result transfer from delaying runtime evidence publication.
+The artifact contents, privacy exclusions, retries and job count are unchanged.
+
+[Diagnostic 43832196302](https://github.com/palatis3/room-in-the-cart/actions/runs/43832196302)
+passed the unchanged original produce journey in 393.932 seconds, with no recorded
+runtime warnings or native restarts. It exercised the exact asset-recovery path,
+verified 13 absence observations, retained the same standalone runtime through
+native execution, and deleted only its owned simulator. The original result
+artifact and hash are recorded in [the receipt](evidence/ci/github-runtime-recovery-20261116/receipt.json).
+This supports the combined candidate; the full regression remains required.
+
+The shared XCTest readers now bound each JSON export at 300 seconds. An export
+timeout fails qualification without retry and retains the original bundle. The
+passing diagnostic completed all export and validation phases. Native assertions,
+case deadlines, runtime postchecks and restricted Records reporting are unchanged.
+The diagnostic-only performance contract admits the reviewed checker hash; its
+metric requirements, baselines and release status are unchanged.
+
+GitHub compatibility StoreKit jobs import the exact iOS 26.2/23C54 standalone DMG.
+Diagnostic 43809785943 passed all 15 English scenarios with stable runtime identity,
+zero warnings/restarts and genuine asset-purge recovery. Prior Spanish coverage is
+retained in its original run. Combined qualification must cover both locales.
+
 ## November 13 meal Undo scheduling and sanitizer feedback
 
 The English created-dinner Undo fixture took 6m29s, 6m37s and 6m41s on
 Bitrise M2 slot 1 ahead of core UI04. It now uses M2 slot 2. External pull
-requests use GitHub slot 2 for the same selector. Replaying the two completed
+requests use the GitHub pool for the same selector. Replaying the two completed
 batches projects 3m33s and 1m30s earlier completion of the last check after
-allowing two minutes for an additional runner pickup. Compare the next hosted
-batch with those estimates. [Fixture job](https://github.com/palatis3/room-in-the-cart/actions/runs/43480838515/job/132078208068)
+allowing two minutes for an additional runner pickup. In the first hosted batch with the change, UI04 ran from 19:37:32 to
+19:52:26 UTC while the Undo fixture ran from 19:42:09 to 19:48:37. All
+6m28s of the fixture overlapped UI04. End-to-end savings cannot be isolated
+from this one run. [UI04](https://github.com/palatis3/room-in-the-cart/actions/runs/43489271240/job/132109415364) · [Undo fixture](https://github.com/palatis3/room-in-the-cart/actions/runs/43489271120/job/132108132135) [Fixture job](https://github.com/palatis3/room-in-the-cart/actions/runs/43480838515/job/132078208068)
 · [Core UI04](https://github.com/palatis3/room-in-the-cart/actions/runs/43472025183/job/132050046503)
 
 Three Thread Sanitizer reports identified state shared by async HouseholdClient
@@ -62,7 +148,7 @@ The contributor build finished at 06:12:05 UTC. Group 02 started at 06:34:32
 and finished last at 07:00:36. The store-quote lost-reply test occupied M2 slot
 1 for 6m40s while group 02 waited. M2 slot 2 finished its final job at 06:37:15.
 The quote test now uses slot 2 on the same M2 pool. External forks run that
-test on GitHub slot 2. Compare the wait after the contributor build and the
+test on GitHub. Compare the wait after the contributor build and the
 time to the last required check on the next full run. In the two preceding
 batches the quote test took 6m59s and 6m49s, and slot 2 finished before slot 1
 in both. Queue order affects how much of that time can be recovered.
@@ -275,37 +361,154 @@ release requirements and known failures remain visible.
 
 On the 24 GB development Mac, let a failing PR journey take the next free simulator slot. During the November 12 run, several simultaneous simulator sessions coincided with memory pressure warnings, 17 GB of swap use and a current-runtime calibration that spent minutes in XCTest startup. When that happens, run the optional calibration after a repair finishes. Backend checks and hosted jobs can continue.
 
+### CircleCI during a Bitrise outage
+
+Run the next full candidate on GitHub. The last three-worker CircleCI run used
+9,895 credits. CircleCI still lists a 2% automatic refill threshold during
+the paid plan’s cancellation period. The minimum refill costs $15.
+
+Before pushing to a CircleCI branch, check the current balance and active jobs
+in the organization’s Plan dashboard. Use the existing credits for a smaller job
+only if the balance can cover its full timeout at the executor’s credit rate,
+any other active jobs, and accrued storage or network usage while staying above
+the refill threshold. If the available margin is unclear, use GitHub.
+
+Push the candidate to `codex/circleci-canary` for one simulator build and one UI
+group. Push to `codex/circleci-performance` for the five Swift packages, one
+simulator build, and up to three M4 Pro Medium test workers. These workers run
+UI groups 01 through 03 from the ordinary ten-group plan. The assisted GitHub
+run handles the models and groups 04 through 10. Each worker verifies every
+assigned test against its results. To start the paired GitHub workflow on the
+performance branch, run `gh workflow run ci.yml --ref codex/circleci-performance -f ios_scope=full -f ios_provider=circleci`.
+For a same-repository pull request, set the repository variable
+`RITC_CIRCLECI_PR_HEAD_SHA` to the reviewed head commit before updating the PR.
+After GitHub creates the PR merge commit, fetch `refs/pull/<number>/merge`,
+verify its parents match the current base and selected head, and push that merge
+commit to `codex/circleci-performance`. The PR workflow starts automatically.
+Its final gate checks the CircleCI results on the exact GitHub merge commit.
+Other PR heads use the full GitHub route.
+The existing `codex/circleci-fallback` branch requests only the Swift packages.
+
+The producer restores Xcode's compilation cache for the pinned Xcode/runtime
+and saves updated compiler outputs. Within a workflow, all workers download
+the test products and selection from that workflow's build. Each worker checks
+the source revision, Xcode build, and simulator runtime before running tests.
+Ordinary branch pushes do not request these CircleCI Mac jobs. Once Bitrise
+recovers, stop pushing candidates to the CircleCI branches.
+
 ### GitHub and Bitrise capacity
 
+Bitrise compilation caching is off by default. Only repository variable
+`RITC_BITRISE_CACHE_ENABLED=true` activates the pinned cache helper for Release,
+core and fixture producers. With the variable unset or any other value, these
+self-hosted builds invoke the reviewed Xcode executable directly with
+`COMPILATION_CACHE_ENABLE_CACHING=NO`. GitHub's existing compiler cache is
+unchanged. Re-enable Bitrise caching only after its recovery has been verified;
+cache activation alone does not establish successful cache reuse. Recovery is now verified: on November 17 the live variable was `true`, GitHub-only routing was `false`, and the 46e Release/core producers reported complete cache reuse. Keep that recovered setting enabled.
+
+If Bitrise is unavailable, set the repository Actions variable
+`RITC_GITHUB_MAC_ONLY` to `true` before starting a candidate. The same tests,
+toolchain and artifact checks run on standard GitHub macOS runners. Already
+assigned jobs keep their runner labels. Clear the variable to restore the usual
+routing for subsequent runs.
+
+[GitHub limits](https://docs.github.com/en/actions/reference/limits#job-concurrency-limits-for-github-hosted-runners)
+allow five concurrent GitHub-hosted macOS jobs on Free and Pro. Both
+`xcode-27` and `macos-15` are
+[standard runners](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#standard-github-hosted-runners-for-public-repositories)
+and are free in this public repository. GitHub admits jobs from its shared pool.
+For dual-provider jobs, the GitHub fallback group includes the run, attempt,
+job and any matrix identity so it does not serialize independent work.
+Workflow-level cancellation of superseded runs still applies.
+
+Fixed GitHub lanes left runners idle during the November 17 UTC candidate.
+[Native wire](https://github.com/palatis3/room-in-the-cart/actions/runs/44002671130)
+waited 34m02s, then ran in 9m03s. It started five seconds after the old job on
+its lane stopped, although other lanes were idle. Compare creation-to-start
+and the final required result on the next candidate; local checks do not
+measure hosted savings. Before dispatching a diagnostic, check existing runs
+for the same source and selectors and use the smallest missing group.
+
 The reviewed capacity is five GitHub jobs, three M2 Pro Bitrise jobs and six
-M4 Large Bitrise jobs: up to **14 simultaneous native jobs** when work is ready.
-The existing M2 pool is `bitrise-runner-room in cart`; the new M4 pool is
-`bitrise-runner-ci 2`. Its space is part of the exact label. Safari inspection
-verified both pools connect to `palatis3/room-in-the-cart`, with the M4 pool on
-`osx-tahoe-27`, six machines at 5 vCPU/14 GB each and GitHub Actions caching enabled.
-The workspace has 36 M2 Pro vCPUs and 30 M4 vCPUs. The unused `tessss` and
-`more ci` pools share that same M4 allowance: they do not add capacity on top
-of the six smaller machines. Configuration evidence and its qualification limit
-are recorded in `.build/BitriseM4Nov11/capacity-review.json`.
+M4 Large Bitrise jobs: up to **14 simultaneous native jobs** when work is ready
+and providers have capacity. The M2 pool is `bitrise-runner-room in cart`; the
+M4 pool is `bitrise-runner-ci 2`. Its space is part of the label. The Bitrise
+queues remain `ritc-bitrise-slot-0..2` and `ritc-bitrise-m4-slot-0..5`. Keep
+compilation caching enabled in both pools. The workspace has 36 M2 Pro vCPUs
+and 30 M4 vCPUs; the unused M4 pools share the same allowance.
+Configuration evidence is in `.build/BitriseM4Nov11/capacity-review.json`.
 
-The native queues stay independent: `ritc-macos-slot-0..4`,
-`ritc-bitrise-slot-0..2` and `ritc-bitrise-m4-slot-0..5`. The main app/model
-producer uses the larger M2 slot 2 with its original GitHub 3 fallback. Both
-fixture producers remain on M2 slots 0/1, and UI05 remains on M2 slot 0.
-The native Swift HTTPS/PostgreSQL job uses GitHub slot 3. On `a5607f91`, it occupied slot 4 for 6m38s, overlapping the first 6m05s after source checks passed. Swift CodeQL also needed slot 4 and finished last after 49 minutes of work. The first slot 3 fixture started 43s before the wire job finished. On `9e9b42cc`, CodeQL started four seconds after the wire job finished, while the first slot 3 fixture overlapped only its final 1m17s. Compare the interval from source-check completion to CodeQL start, and the time to the last required result, on the next full PR run. [Completed core run](https://github.com/palatis3/room-in-the-cart/actions/runs/43275490695) · [Native wire run](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488957) · [Fixture timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968).
+The app/model producer uses M2 slot 2. The contributor and Dinner producers
+use M2 slots 0 and 1 respectively; core UI04 uses M2 slot 1 and UI05 uses M2
+slot 0. The following jobs share the six M4 slots.
 
-The following jobs share the six M4 slots.
+| Job or group | M4 slot |
+| --- | --- |
+| Full core UI01, UI03, known-trip quote adoption and Spanish created-meal Undo | 0 |
+| Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 |
+| Contributor balanced-03, core UI10 and delivery stock/purchase | 2 |
+| Delivery recovery/cook/closeout, core UI07 and UI08, and Dinner Decision Sheet | 3 |
+| Core UI02, English expired quote, filled financial fields, Spanish skipped-dinner Undo, and Shared Records | 4 |
+| Core UI09, stale quote save and contributor balanced-01 and balanced-05 | 5 |
 
-| Job or group | M4 slot | Original GitHub fallback |
-| --- | --- | --- |
-| Full core UI01, UI03 and known-trip quote adoption | 0 | 1, 3 and 0 |
-| Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 | 1, 1, 4 and 0 |
-| Contributor balanced-03, core UI07 and core UI10 | 2 | 4, 2 and 0 |
-| Delivery recovery/cook/closeout, core UI04 and core UI08 | 3 | 1, 1 and 3 |
-| Core UI02, English expired quote, filled financial fields and Spanish skipped-dinner Undo | 4 | 2, 3, 4 and 2 |
-| Core UI09, stale quote save and contributor balanced-05 | 5 | 3, 0 and 2 |
+On the November 17 UTC candidate, Spanish created-meal Undo and delivery
+stock/purchase stopped before XCTest because the GitHub runner's existing
+watchOS runtime would not retire. Their unchanged fixture groups now use M4
+slots 0 and 2 on trusted runs. Those lanes freed at 03:02:21 and 03:03:49 UTC,
+while required GitHub fixture jobs were still waiting. A related delivery
+group on M4 passed 7/7 in 12m39s on the required iOS 27.0/24A434 runtime.
+The next candidate qualified all five moved cases on that runtime with zero
+XCTest runtime warnings.
+[Prior fixtures](https://github.com/palatis3/room-in-the-cart/actions/runs/44002671109) ·
+[Successor fixtures](https://github.com/palatis3/room-in-the-cart/actions/runs/44011632756)
 
-The English expired-quote editor journey took 13m00s and 17m59s in its last two successful GitHub jobs. Its Spanish counterpart took 7m16s and 5m50s on Bitrise M4. M4 slot 4 finished its final job at least 27 minutes before the core gate in both batches. The English journey now uses that slot on trusted runs, freeing GitHub slot 3 for the wire test and Records fixture. Its selectors, assertions and GitHub fallback are unchanged. Compare the next English run's elapsed time and the other slot 4 jobs to measure the effect. [English GitHub job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240228) · [Spanish M4 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240529).
+On `f787d310`, Dinner and Shared Records each got a GitHub runner in three
+seconds. Dinner again stopped before XCTest when the watchOS registration did
+not retire. Shared Records passed import, product restore and boot, but XCTest
+results were unavailable; CoreSimulator did not answer the runtime-list
+postcheck and simulator cleanup timed out. Both Records cases passed locally
+using the exact hosted products on iOS 27.0/24A434, with zero runtime warnings.
+The unchanged groups now use M4 lanes 3 and 4 respectively on trusted runs.
+Those lanes finished at 04:25:50 and 04:26:44 UTC while required M2 fixture work
+continued. GitHub-only fallback and privacy-safe Records reporting remain
+unchanged. Candidate `08c20509` qualified both groups on M4: Dinner passed all
+five cases in a 5m12s job after 14m30s queued, and Shared Records passed both
+cases in a 7m19s job after 5m53s queued. Both recorded zero runtime warnings
+on iOS 27.0/24A434. These are observed job timings, not a controlled comparison.
+
+On that candidate, contributor balanced-01 failed before XCTest on GitHub,
+and one scoped retry failed for the same persistent watchOS runtime retirement.
+The 25 other fixture groups passed all 81 cases. The exact contributor artifact
+passed all 13 balanced-01 cases locally without rebuilding on iOS 27.0/24A434,
+with zero runtime warnings. The unchanged group now uses M4 slot 5 for trusted
+runs; selectors, assertions and GitHub-only fallback stay intact. Slot 5 retired
+at 04:26:44 UTC on `f787d310` and 05:23:43 UTC on `08c20509`; slot 2 retired
+5m37s later in the first run and only 54s earlier in the second. The local run's
+641-second elapsed time was planning evidence, not an M4 timing prediction.
+Candidate `46e79a4e` now qualifies this assignment: all 13 cases passed on
+27.0/24A434 with zero runtime warnings, 18m32s queued and 12m05s on M4.
+Do not repeat the unchanged GitHub failure or loosen its runtime checks.
+[Original attempt and targeted retry](https://github.com/palatis3/room-in-the-cart/actions/runs/44018744620)
+
+On `46e79a4e`, the remaining GitHub Spanish SavedChange fixture lost communication
+with GitHub after its runtime preflight; no native result or result artifact was
+produced. Its unchanged selector now uses M2 slot 0. That slot finished 13m31s
+before the final native job in this batch and 9m35s earlier in the preceding
+batch. The English equivalent took 5m09s on M2. Spanish M2 duration still needs
+qualification; neither an app failure nor a timing guarantee is inferred from
+the host loss. The normal matrix changes only this row, and the complete
+GitHub-only fallback matrix is unchanged. The failed stock test and TSan fixture
+race have separate corrections; this routing change does not turn them green.
+
+When replaying a gated UI fixture locally, derive compilation conditions from
+`plan_ios_fixture_tests.py conditions <profile>` and confirm the selected case
+in compiled enumeration before running. Ordinary DEBUG excludes contributor
+fixture cases; a zero-case native success is invalid and must remain rejected
+by the strict result verifier. Reuse the correct compiled products for subsequent
+checks when their source inputs are unchanged.
+
+
+The English expired-quote editor journey took 13m00s and 17m59s in its last two successful GitHub jobs. Its Spanish counterpart took 7m16s and 5m50s on Bitrise M4. M4 slot 4 finished its final job at least 27 minutes before the core gate in both batches. The English journey now uses that slot on trusted runs, reducing GitHub queue pressure for the wire test and Records fixture. Its selectors and assertions are unchanged. Compare the next English run's elapsed time and the other slot 4 jobs to measure the effect. [English GitHub job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240228) · [Spanish M4 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240529).
 
 UI01 finished last in two consecutive full builds. It waited 21m25s after the producer on `3977750b` and 26m09s on `099d6bf6`. M4 slot 0 took its first UI group after 51s and 53s on those builds. Full UI01 now shares slot 0 with UI03. UI10 moves to slot 2, whose last job finished 28m58s before UI01 in the latest run. The manual two-test Dinner dispatch continues on GitHub. Measure the next full build from producer completion to UI01 start and from workflow creation to the last required gate. The prior complete batches took 58m19s and 67m04s. [Previous UI01](https://github.com/palatis3/room-in-the-cart/actions/runs/43246467096/job/131285759950) · [Latest UI01](https://github.com/palatis3/room-in-the-cart/actions/runs/43259414250/job/131330863485)
 
@@ -329,8 +532,8 @@ job times for expired quote, filled financial fields and stale save were 5m34s,
 and 16m36s. These times cover each job individually. The full batch also
 depends on other suites. [GitHub fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43191347210) · [M4 fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43203604221)
 
-Each consumer keeps its original `macos_slot` for GitHub fallback and adds a
-separate `m4_slot` only when assigned to M4. Canonical trusted events select
+Bitrise consumer rows use `macos_slot` for M2 or a separate `m4_slot` for M4.
+GitHub admission does not depend on either field. Canonical trusted events select
 the exact pool label and queue; external forks, other repositories and unsupported
 events remain on GitHub. The complete source/compiled inventories, row ordering,
 selectors, model-result gate, artifacts, timeouts and toolchain/runtime checks
@@ -380,9 +583,9 @@ changes to the candidate PR when ready for combined integration; its core and
 fixture workflows still run complete coverage. Do not push status-only edits
 while a useful candidate batch is running.
 
-The large core and contributor matrices use their assigned global native-job
-slot queues as their execution cap, without a second matrix `max-parallel` window.
-On November 11 the five admitted contributor rows included three waiting on busy
+The large core and contributor matrices use GitHub pool admission or the assigned
+Bitrise queues, without a second matrix `max-parallel` window. Under the previous
+fixed GitHub lane scheme, on November 11 the five admitted contributor rows included three waiting on busy
 slots3/4 and only two executing on slots0/3, while core UI09 occupied slot4.
 The next quote rows for available slots1/2 had not been admitted. Removing that
 redundant window let all rows reach their existing slot queues without changing
@@ -398,8 +601,10 @@ queues, with five native jobs executing. Admission behavior is now verified;
 an elapsed-time or overall-utilization improvement has not yet been measured.
 
 The next grouped candidate removes two repeated simulator setups. Core models
-run on the existing build producer after enumeration and product upload; the
-consumer matrix retains all ten UI rows and their original slots. The complete
+run on the existing build producer after enumeration and product packaging.
+As of the November 16 producer correction, upload follows model execution,
+runtime verification and owned-device cleanup. The consumer matrix retains
+all ten UI rows and their original slots. The complete
 compiled plan and model selectors remain unchanged. A failed model step allows
 UI consumers to proceed, but the required CI gate checks its raw outcome and
 rejects failed, skipped, cancelled or missing model results. The producer's outer
@@ -531,8 +736,9 @@ without an independent task or measured capacity benefit.
 Before publishing the next grouped candidate, review the pending diff, finish the
 affected checks and confirm the current hosted batch has yielded its useful results.
 Run the existing cheap source-validation step once on that combined revision,
-including the complete Python suite (`.build/ci-yaml/bin/python -m unittest
-discover -s scripts -p 'test_*.py'` locally), generated-file checks and localization.
+including the complete Python suite (`RUNNER_ENVIRONMENT=github-hosted GITHUB_ACTIONS=true .build/ci-yaml/bin/python -m unittest discover -s scripts -p 'test_*.py'` locally), generated-file checks and localization. Provider-specific
+tests must explicitly choose or remove their runner setting: November16's hosted
+source check caught inherited GitHub settings that the ordinary local run lacked.
 Focused checks did not catch a stale diagnostic hash and removed-trigger expectation
 on November11; the complete Python suite takes seconds locally and catches dependencies
 outside the edited test module. This is a pre-push source check, not another native
@@ -1124,8 +1330,8 @@ A branch-only core dinner diagnostic is available on
 `ios-toggle-diagnostic.yml` path. It builds ordinary core Debug products once,
 validates the complete compiled inventory, then runs exactly one original
 English (`en`) or Spanish (`es`) dinner journey through the unchanged strict
-shard runner. Build and test share one of the five macOS slots, so products do
-not need an upload/download round trip. The distinct diagnostic check is not a
+shard runner. Build and test share one runner, so products do not need an upload/download
+round trip. The distinct diagnostic check is not a
 required PR or release check.
 
 Dispatch requires an explicit language and the full commit SHA of that branch.
@@ -1161,7 +1367,7 @@ remove most of that work. Source compilation, simulator startup, slow UI
 interactions and unnecessary full diagnostic batches are separate optimization
 targets. [Measured timing evidence](evidence/native/ci-workflow-efficiency-20261108/README.md).
 
-The pre-release workflow launches the Staging scheme on an iPhone simulator. It verifies the installed build’s anonymous service and authentication responses and opens Help and Support from native Settings into Safari. The release gate requires all three cases to run and pass its runtime-warning checks. This job uses one of the existing five macOS slots.
+The pre-release workflow launches the Staging scheme on an iPhone simulator. It verifies the installed build’s anonymous service and authentication responses and opens Help and Support from native Settings into Safari. The release gate requires all three cases to run and pass its runtime-warning checks. This job uses a standard GitHub macOS runner.
 
 The Linux source check runs the Foundation 2.1 verifier with Python 3.13. It checks the 52 launch requirements, 27 screen contracts, source checksums, SQLite constraints and reference grocery scenarios. The PostgreSQL job separately executes all twenty grocery inbox scenarios against the service.
 
@@ -1179,7 +1385,7 @@ python3 -m venv .build/ci-yaml
 
 Run `scripts/check_ci_workflows.py` with that environment's Python, `--actionlint` pointing to the pinned 1.7.12 executable and `--report .build/workflow-lint.json`. The workflow contains the verified download and checksum for its Linux binary. Direct actionlint alone reports its known unsupported `queue` key; the paired validator exempts only the exact error at independently validated source positions and retains all other failures.
 
-New macOS jobs must be added to the slot policy and tests. Keep slots on leaf jobs only; reusable-workflow callers and workflow roots must not own a slot while waiting for children. Existing non-native groups require a fixed prefix that is provably disjoint from reserved slot names, including case-insensitive comparisons. Every original test selection and final all-success gate remains required.
+New macOS jobs must be added to the workflow validator and tests. GitHub-only jobs use provider admission. Keep shared Bitrise groups on leaf jobs; reusable-workflow callers and roots must not hold a group while waiting for children. Other groups must remain disjoint from the reserved names, including case-insensitive comparisons. Every original test selection and final all-success gate remains required.
 
 These are static checks. Hosted execution, native results, performance measurements, signed-device/provider acceptance and human review have separate evidence requirements. See [current acceptance](CURRENT-ACCEPTANCE.md).
 
@@ -1475,7 +1681,7 @@ input, default off. It is permitted only with `case=scroll` and explicit
 `enforce_baselines=false`. Linux checks reject other combinations before allocating
 Macs; the wrapper independently rejects them. The run name and workflow cancellation
 group distinguish this diagnostic from ordinary performance qualification. The
-existing five native slots, original test command, assertions, metrics and strict
+standard GitHub runner, original test command, assertions, metrics and strict
 validators remain unchanged.
 
 The wrapper checks the pinned source/toolchain/runtime, then requires a separate

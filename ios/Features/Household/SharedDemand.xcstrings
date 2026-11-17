@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This review expired. Review the food amounts again before applying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review expired. Review the food amounts again before applying."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta revisión venció. Revisa las cantidades de comida de nuevo antes de aplicar los cambios."
+          }
+        }
+      }
+    },
     "Add basket item": {
       "localizations": {
         "en": {

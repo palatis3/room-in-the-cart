@@ -21,7 +21,10 @@ PAGE_KEYS = {"privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL"}
 BACKEND_URL_KEYS = ("supabaseURL", "serviceURL")
 HTTPS_AUTHORITY = re.compile(r"(?:\[[0-9a-fA-F:.]+\]|[^:\[\]]+)(?::[0-9]+)?")
 DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
-RELEASE_METADATA = ("HouseholdSubscriptionProductID", "PrivacyPolicyURL", "TermsOfUseURL", "SupportURL")
+PRODUCT_ID = re.compile(r"[A-Za-z0-9._-]{1,100}")
+LOCAL_STOREKIT_PRODUCT_ID = "local.testing.household.annual"
+RELEASE_URLS = ("PrivacyPolicyURL", "TermsOfUseURL", "SupportURL", "SupabaseProjectURL", "HouseholdServiceURL")
+RELEASE_METADATA = ("HouseholdSubscriptionProductID", "SupabasePublishableKey", *RELEASE_URLS)
 NONPUBLIC_PAGE_DOMAINS = ("alt", "arpa", "example", "example.com", "example.net", "example.org",
                           "internal", "invalid", "local", "localhost", "onion", "test")
 IPV4_PROTOCOL_ADDRESSES = ipaddress.ip_network("192.0.0.0/24")
@@ -152,16 +155,19 @@ def load_configuration(root, name):
                 raise ValueError(f"{key} must be an HTTPS endpoint with an ASCII hostname or IP and no credentials, query or fragment") from None
         if value and key == "publishableKey" and not re.fullmatch(r"sb_publishable_[A-Za-z0-9_-]+", value):
             raise ValueError("publishableKey must be a Supabase sb_publishable_ client key")
-        if key == "householdSubscriptionProductID" and value and any(char.isspace() for char in value):
-            raise ValueError("householdSubscriptionProductID cannot contain whitespace")
+        if key == "householdSubscriptionProductID" and value and not PRODUCT_ID.fullmatch(value):
+            raise ValueError("householdSubscriptionProductID must contain 1–100 letters, digits, periods, underscores or hyphens")
+        if name == "Release" and key == "householdSubscriptionProductID" and value == LOCAL_STOREKIT_PRODUCT_ID:
+            raise ValueError("Release householdSubscriptionProductID must not use the local StoreKit fixture")
         if key == "supportEmail" and value and not valid_support_email(value):
             raise ValueError("supportEmail must be a bare address without headers, query, whitespace or encoded characters")
         if key == "operatorName" and value and not valid_operator_name(value):
             raise ValueError("operatorName must be a bounded literal name without control or format characters")
     if name == "Release" and (origins or config.get("publishableKey")):
         staging = load_configuration(root, "Staging")
+        staging_origins = {backend_origin(staging[key]) for key in BACKEND_URL_KEYS if staging.get(key)}
         for key, origin in origins.items():
-            if staging.get(key) and origin == backend_origin(staging[key]):
+            if origin in staging_origins:
                 raise ValueError(f"release.json {key} must use an origin separate from staging")
         if config.get("publishableKey") and config["publishableKey"] == staging.get("publishableKey"):
             raise ValueError("release.json publishableKey must be separate from staging")
@@ -188,6 +194,11 @@ def require_release_metadata(info):
     missing = [key for key in RELEASE_METADATA if not info.get(key)]
     if missing:
         raise ValueError("Release metadata is incomplete: " + ", ".join(missing))
-    for key in RELEASE_METADATA:
-        if key.endswith("URL") and not valid_page_url(info[key]):
+    if info.get("RITCEmailOTPEnabled") != "YES":
+        raise ValueError("Production email sign-in is disabled. Verify code delivery, then set emailOTPEnabled to true in release.json.")
+    product_id = info["HouseholdSubscriptionProductID"]
+    if not isinstance(product_id, str) or not PRODUCT_ID.fullmatch(product_id) or product_id == LOCAL_STOREKIT_PRODUCT_ID:
+        raise ValueError("Release metadata has an invalid HouseholdSubscriptionProductID")
+    for key in RELEASE_URLS:
+        if not valid_page_url(info[key]):
             raise ValueError(f"Release metadata has an invalid {key}")

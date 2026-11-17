@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import HouseholdClient
 
 struct HouseholdSettingsView: View {
@@ -65,6 +66,10 @@ struct HouseholdSettingsView: View {
                 if let projection = model.projection {
                     Section(ht("Connected household")) {
                         Text(projection.household.label)
+                        if model.membershipSession != nil {
+                            NavigationLink(tr("Household membership")) { MembershipEntryView(household: model) }
+                                .accessibilityIdentifier("household.membership")
+                        }
                         Text(ht("Access is checked by the household service."))
                         if projection.canSelectShop == true || projection.selectionRequired == true {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
@@ -113,9 +118,9 @@ struct HouseholdSettingsView: View {
                                     if request.ownActionAllowed {
                                         HStack {
                                             Button(ht("Edit request")) { model.edit(request) }.buttonStyle(.borderless)
-                                            Button(ht("Withdraw request"), role: .destructive) { Task { await model.withdraw(request) } }.buttonStyle(.borderless)
+                                            ContributorWithdrawalButton(model: model, request: request)
                                         }
-                                    } else {
+                                    } else if request.status != "withdrawn" {
                                         Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
                                     }
                                 }.accessibilityElement(children: .combine)
@@ -128,19 +133,29 @@ struct HouseholdSettingsView: View {
                         }
                     }
                     if projection.capabilities.contains("own_requests"), projection.shopId != nil || model.editing != nil || model.followingUp != nil {
-                        Section(model.editing == nil ? ht("New request") : ht("Edit request")) {
+                        Section(model.contributorDraftTitle) {
                             if model.editing != nil || model.followingUp != nil { Button(ht("Cancel edit")) { model.cancelEdit() } }
                             if model.followingUp != nil { Text(ht("This follow-up leaves the accepted request unchanged.")) }
                             TextField(ht("Item"), text: $model.item)
                             TextField(ht("Quantity, optional"), text: $model.quantity)
-                            if model.editing == nil { Toggle(ht("Ask for next shop"), isOn: $model.forNextShop) }
+                            if model.requestRequiresNextShop {
+                                Text(ht("Request for next shop"))
+                            } else if model.editing == nil {
+                                Toggle(ht("Ask for next shop"), isOn: $model.forNextShop)
+                            }
                             Button(ht("Review request before sending")) {
-                                if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: false) }
+                                openRequestReview(capture: false)
                             }.disabled(!canSend).accessibilityIdentifier("household.request.review")
                             Button(ht("Capture and review a request")) {
-                                if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: true) }
+                                openRequestReview(capture: true)
                             }.disabled(model.contributorRequestScope == nil).accessibilityIdentifier("household.request.capture")
                             delivery
+                        }
+                    } else if projection.capabilities.contains("own_requests") {
+                        switch model.delivery {
+                        case .waiting, .needsReview, .received:
+                            Section(ht("My requests")) { delivery }
+                        default: EmptyView()
                         }
                     }
                 } else {
@@ -194,6 +209,11 @@ struct HouseholdSettingsView: View {
         }
         .onChange(of: scenePhase) { _, value in if value == .background { model.lock() } }
     }
+    private func openRequestReview(capture: Bool) {
+        // Finish the draft field's editing callbacks before presenting its review.
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: capture) }
+    }
     private var canSend: Bool {
         guard !model.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         switch model.delivery { case .waiting, .needsReview, .accessEnded: return false; default: return true }
@@ -206,8 +226,11 @@ struct HouseholdSettingsView: View {
             Button(ht("Retry the same request")) { Task { await model.retry() } }
         case .needsReview:
             Text(ht("Review needed. Check received requests before creating a new request."))
+            if model.canReviewRejectedCorrection {
+                ContributorCorrectionButton(model: model)
+            }
             Button(ht("I checked received requests; clear this retry")) { Task { await model.discardPendingAfterReview() } }
-        case .received: Label(ht("Received by the household"), systemImage: "checkmark.circle")
+        case .received(let receipt): Label(receipt.contributorDeliveryLabel, systemImage: "checkmark.circle")
         case .accessEnded: Text(ht("Household access has ended or needs sign-in."))
         }
     }
@@ -223,5 +246,53 @@ struct HouseholdSettingsView: View {
         case "withdrawn": return ht("Withdrawn")
         default: return ht("Check current status")
         }
+    }
+}
+
+struct ContributorCorrectionButton: View {
+    @ObservedObject var model: HouseholdModel
+    @State private var replacement: HouseholdModel.DraftReplacement?
+
+    var body: some View {
+        Button(ht("Review my correction")) {
+            if let draft = model.correctionReplacingDraft {
+                replacement = draft
+            } else {
+                Task { await model.reviewRejectedCorrection() }
+            }
+        }
+        .confirmationDialog(ht("Replace your current draft with the saved correction?"), isPresented: Binding(
+            get: { replacement != nil }, set: { if !$0 { replacement = nil } }
+        ), titleVisibility: .visible, presenting: replacement) { draft in
+            Button(ht("Replace draft"), role: .destructive) {
+                Task { await model.reviewRejectedCorrection(replacing: draft) }
+            }
+            Button(ht("Cancel"), role: .cancel) {}
+        }
+        .onChange(of: model.correctionReplacingDraft) { _, _ in replacement = nil }
+    }
+}
+
+struct ContributorWithdrawalButton: View {
+    @ObservedObject var model: HouseholdModel
+    let request: OwnRequest
+    @State private var reviewed: OwnRequest?
+
+    var body: some View {
+        Button(ht("Withdraw request"), role: .destructive) { reviewed = request }
+            .accessibilityIdentifier("household.withdrawRequest")
+            .buttonStyle(.borderless)
+            .disabled(model.busy)
+            .alert(ht("Withdraw this request?"), isPresented: Binding(
+                get: { reviewed != nil }, set: { if !$0 { reviewed = nil } }
+            ), presenting: reviewed) { original in
+                Button(ht("Withdraw request"), role: .destructive) {
+                    Task { await model.withdraw(original) }
+                }
+                Button(ht("Cancel"), role: .cancel) {}
+            } message: { original in
+                Text(verbatim: [original.originalItem, original.ownQuantity].compactMap { $0 }.joined(separator: " · "))
+            }
+            .onChange(of: request) { _, _ in reviewed = nil }
     }
 }

@@ -93,7 +93,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 90)
+                             for shard in plan["shards"].values()), 94)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
@@ -124,7 +124,8 @@ class PlanIOSFixtureTests(unittest.TestCase):
         shared_edits = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertIn(deadline, [value.removesuffix("()") for value in shared_edits])
         first_sign_in = f"{UI_TARGET}/GuardianEnrollmentUITests/testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock"
-        self.assertIn(first_sign_in, [value.removesuffix("()") for value in shared_edits])
+        enrollment = plans["contributor"]["shards"]["contributor-balanced-01"]["test_identifiers"]
+        self.assertIn(first_sign_in, [value.removesuffix("()") for value in enrollment])
         fallbacks = plans["contributor"]["shards"]["SharedFallbackUITests"]
         self.assertEqual(fallbacks["suite"], "SharedFallbackUITests")
         self.assertEqual(len(fallbacks["test_identifiers"]), 2)

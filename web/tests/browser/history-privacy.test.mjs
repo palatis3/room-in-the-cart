@@ -6,11 +6,14 @@ import { chromium } from 'playwright-core';
 
 let browser;
 test.before(async () => {
+  const started = performance.now();
+  console.info('[history-privacy] Starting Chrome');
   browser = await chromium.launch({
-    channel: 'chrome', executablePath: process.env.CHROME_BIN, timeout: 30_000,
+    channel: 'chrome', executablePath: process.env.CHROME_BIN, timeout: 60_000,
     // Playwright normally disables the behavior this regression needs to observe.
     ignoreDefaultArgs: ['--disable-back-forward-cache']
   });
+  console.info(`[history-privacy] Chrome ${browser.version()} ready after ${Math.round(performance.now() - started)}ms`);
 });
 test.after(() => browser?.close());
 
@@ -89,6 +92,7 @@ test('history restoration conceals private content until fresh authority succeed
   for (const htmlCache of ['private, max-age=0', 'no-store']) {
     for (const scenario of ['unchanged', 'changed-delayed', 'revoked-delayed', 'revoked-offline', 'expired-identity-same', 'expired-identity-changed']) {
       await t.test(`${htmlCache}: ${scenario}`, async st => {
+        console.info(`[history-privacy] Starting ${htmlCache}: ${scenario}`);
         Object.assign(state, { actor: 'A', offline: false, gate: null, htmlCache, loginActor: scenario.endsWith('-changed') ? 'B' : 'A' });
         writes.length = 0;
         const context = await browser.newContext({ locale: 'en-US', serviceWorkers: 'block' });

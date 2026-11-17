@@ -29,6 +29,7 @@ test('every public page renders both languages, one main, named navigation and a
     const { dom, root, mounted } = setup('/' + key + '?lang=' + language);
     assert.equal(mounted, true);
     assert.equal(dom.window.document.documentElement.lang, language);
+    assert.equal(root.querySelector('.public-footer a').getAttribute('href'), '/requests?lang=' + language);
     assert.equal(root.querySelectorAll('main').length, 1);
     assert.equal(root.querySelectorAll('h1').length, 1);
     assert.equal(root.querySelector('h1').textContent, publicPages[key].title[language]);
@@ -71,6 +72,7 @@ test('language selection updates public links, text and address without losing f
   assert.equal(root.querySelector('h1').textContent, 'Privacy and data');
   assert.equal(dom.window.document.activeElement.id, 'public-language');
   for (const link of root.querySelectorAll('.public-navigation a')) assert.equal(link.search, '?lang=en');
+  assert.equal(root.querySelector('.public-footer a').getAttribute('href'), '/requests?lang=en');
   assert.equal(dom.window.localStorage.length, 0);
 });
 

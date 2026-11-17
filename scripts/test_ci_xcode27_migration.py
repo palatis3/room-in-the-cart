@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, M4_RUNNER, M4_BUILD_JOBS, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
+from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, M4_RUNNER, RELEASE_BUILD_JOB, CORE_BUILD_JOB, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
 from check_ios_performance import compare_baseline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +35,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertEqual(init['with']['build-mode'], 'manual')
                     self.assertEqual(init['with']['languages'], 'swift')
                 else:
-                    runner = M4_RUNNER if key in M4_BUILD_JOBS else (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in ROUTED_NATIVE_JOBS else 'xcode-27'
+                    runner = M4_RUNNER if key == RELEASE_BUILD_JOB else (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in ROUTED_NATIVE_JOBS else 'xcode-27'
                     self.assertEqual(job['runs-on'], runner, key)
                     self.assertEqual(env['DEVELOPER_DIR'], DEVELOPER, key)
                     if key == ('ios-deep.yml', 'storekit'):
@@ -65,13 +65,13 @@ class Xcode27MigrationTests(unittest.TestCase):
             self.assertIn('if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then', command)
             self.assertIn('bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer', command)
             self.assertIn('Build version 27A9275', command)
-            if (workflow, name) in M4_BUILD_JOBS | {('ci.yml', 'ios-build')}:
+            if (workflow, name) in {RELEASE_BUILD_JOB, CORE_BUILD_JOB}:
                 producer = jobs[name]
                 self.assertEqual(producer['timeout-minutes'], 75 if name == 'ios-build' else 45)
                 steps = producer['steps']
                 cache = next(s for s in steps if s.get('id') == 'compilation-cache')
                 self.assertEqual(cache['run'], 'bash scripts/activate_bitrise_xcode_cache.sh')
-                self.assertEqual(cache['if'], "runner.environment == 'self-hosted'")
+                self.assertEqual(cache['if'], "runner.environment == 'self-hosted' && vars.RITC_BITRISE_CACHE_ENABLED == 'true'")
                 self.assertIs(cache['continue-on-error'], True)
                 self.assertEqual(cache['timeout-minutes'], 3)
                 warning = next(s for s in steps if s.get('name') == 'Report unavailable optional compilation cache')
@@ -89,17 +89,18 @@ class Xcode27MigrationTests(unittest.TestCase):
                 else:
                     self.assertEqual(build['shell'], 'bash')  # GitHub's explicit bash shell retains -eo pipefail.
                     self.assertEqual(build['timeout-minutes'], 30)
-                    self.assertIn('CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build', build['run'])
-                    verify = next(s for s in steps if s.get('name') == 'Verify the compiled iPhone app and embedded extensions')
+                    self.assertIn('CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO archive', build['run'])
+                    verify = next(s for s in steps if s.get('name') == 'Verify the archived iPhone app, embedded extensions and crash symbols')
                     self.assertLess(steps.index(build), steps.index(verify))
                     self.assertNotIn('if', verify)
-                    self.assertIn('scripts/check_built_app.py', verify['run'])
+                    self.assertIn('-archivePath .build/RoomInTheCart.xcarchive', build['run'])
+                    self.assertIn('scripts/check_built_app.py .build/RoomInTheCart.xcarchive', verify['run'])
             for diagnostic in ('sw_vers', 'uname -m', '/Applications/Xcode*.app'):
                 self.assertLess(command.index(diagnostic), command.index('bash scripts/check_ci_xcode27.sh'))
             if (workflow, name) == ('ios-deep.yml', 'storekit'):
                 # Billing checks its policy-selected OS after loading the shared products.
                 setup = next(s for s in jobs[name]['steps'] if s.get('id') == 'storekit-runtime')
-                self.assertIn('actual["buildversion"] == build', setup['run'])
+                self.assertIn('exact = [r for r in matches if r["buildversion"] == build]', setup['run'])
                 continue
             code = command.split("python3 - <<'PYCODE'\n", 1)[1].rsplit('\nPYCODE', 1)[0]
             for version, build, passes in [('27.0', '24A434', True), ('27.0', '24A435', False), ('27.1', '24A434', False)]:

@@ -1,5 +1,6 @@
 import XCTest
 import CryptoKit
+import os
 import UniformTypeIdentifiers
 @testable import DeviceSurfaces
 
@@ -34,6 +35,18 @@ final class DeviceSurfacesTests: XCTestCase {
             SelectedTextInbox.loadPlainText(from: provider) { result.resume(returning: $0) }
         }
     }
+    func testSharedTextFileReplacedByLinkCannotExposeAnotherFile() throws {
+        let selected = try file("shopping.txt")
+        let other = selected.deletingLastPathComponent().appendingPathComponent("private.txt")
+        try Data("beans".utf8).write(to: selected)
+        try Data("other".utf8).write(to: other)
+        let cached = try selected.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        XCTAssertEqual(cached.isRegularFile, true)
+        let manager = FileManager.default
+        try manager.removeItem(at: selected)
+        try manager.createSymbolicLink(at: selected, withDestinationURL: other)
+        XCTAssertThrowsError(try SelectedTextInbox.readPlainText(at: selected, type: .plainText))
+    }
     func testSharedPlainTextFilesPreserveOriginalWordingAndLineBreaks() async throws {
         let text = "2 tortillas\r\nFrijoles negros 🍚"
         let utf8 = Data(text.utf8)
@@ -52,13 +65,34 @@ final class DeviceSurfacesTests: XCTestCase {
         }
         XCTAssertEqual(try stringResult.get(), text)
     }
+    func testBlankShareMessageUsesOnlyAnUnambiguousTextAttachment() async throws {
+        let item = NSExtensionItem()
+        let list = "  Café\r\n2 limones 🍋  "
+        let provider = NSItemProvider(object: list as NSString)
+        func load() async -> Result<String, SurfaceError> {
+            await withCheckedContinuation { continuation in
+                SelectedTextInbox.loadSelectedText(from: item) { continuation.resume(returning: $0) }
+            }
+        }
+
+        item.attributedContentText = NSAttributedString(string: " \r\n\t")
+        item.attachments = [provider]
+        let attachment = await load()
+        XCTAssertEqual(try attachment.get(), list)
+        item.attachments = [provider, NSItemProvider(object: "unrelated" as NSString)]
+        let ambiguous = await load()
+        XCTAssertEqual(ambiguous, .failure(.unsupported))
+        item.attributedContentText = NSAttributedString(string: " explicit selection ")
+        let selection = await load()
+        XCTAssertEqual(try selection.get(), " explicit selection ")
+    }
     func testSharedPlainTextFilesRejectOversizedInvalidAndUnrelatedRepresentations() async throws {
         let exact = Data(repeating: 65, count: SelectedTextInbox.maximumEntryBytes)
         let valid = try await loadTextFile(exact)
         XCTAssertEqual(try valid.get().utf8.count, exact.count)
         let oversized = try await loadTextFile(exact + Data([65]))
         XCTAssertEqual(oversized, .failure(.capacity))
-        for bytes in [Data([0xFF]), Data([0x61, 0x00, 0x62]), Data([0xFF, 0xFE, 65, 0, 65]), Data()] {
+        for bytes in [Data([0xFF]), Data([0x61, 0x00, 0x62]), Data([0xFF, 0xFE, 65, 0, 65]), Data(" \t\r\n".utf8), Data()] {
             let invalid = try await loadTextFile(bytes)
             XCTAssertEqual(invalid, .failure(.invalid))
         }
@@ -114,8 +148,36 @@ final class DeviceSurfacesTests: XCTestCase {
             do { _ = try await inbox.stage(operationID: UUID(), originalText: bad, now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .invalid) }
         }
         for _ in 0..<20 { _ = try await inbox.stage(operationID: UUID(), originalText: "item", now: now) }
-        do { _ = try await inbox.stage(operationID: UUID(), originalText: "extra", now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .capacity) }
-        let rows = try await inbox.pending(now: now); XCTAssertEqual(rows.count, 20)
+        let session = SelectedTextSession()
+        do { _ = try await session.save(original: "extra", edited: nil, now: now, inbox: inbox); XCTFail() }
+        catch { XCTAssertEqual(error as? SurfaceError, .capacity) }
+        let rows = try await inbox.pending(now: now)
+        XCTAssertEqual(rows.count, 20)
+        let removed = try XCTUnwrap(rows.first)
+        _ = try await inbox.discard(operationID: removed.id, digest: removed.receipt.digest, now: now)
+        let receipt = try await session.save(original: "extra", edited: nil, now: now, inbox: inbox)
+        let saved = try await inbox.pending(now: now)
+        XCTAssertEqual(Set(saved.map(\.id)), Set(rows.dropFirst().map(\.id)).union([receipt.operationID]))
+        XCTAssertEqual(saved.first { $0.id == receipt.operationID }?.originalText, "extra")
+    }
+    func testDiscardingTheLastAllowedReceiptDoesNotMakeRoomForAnotherReceipt() async throws {
+        let url = try file()
+        let inbox = try SelectedTextInbox(url: url)
+        let db = try SurfaceDatabase(url: url, kind: "selected-text-inbox", schema: "")
+        // Prior terminal receipts retain no source text. Leave one slot for a real share.
+        try db.execute("""
+            WITH RECURSIVE ids(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM ids WHERE n < ?)
+            INSERT INTO inbox SELECT printf('00000000-0000-0000-0000-%012d', n),
+            hex(zeroblob(32)), NULL, NULL, 0, 0, 1, 'discarded' FROM ids
+            """, [.integer(Int64(SelectedTextInbox.maximumReceipts - 1))])
+        let last = try await inbox.stage(operationID: UUID(), originalText: "milk", now: now)
+        _ = try await inbox.discard(operationID: last.operationID, digest: last.digest, now: now)
+        do {
+            _ = try await inbox.stage(operationID: UUID(), originalText: "eggs", now: now)
+            XCTFail("Discarding removes the text but preserves the replay receipt")
+        } catch SelectedTextInbox.ReviewLimit.receiptLimitReached {}
+        let replay = try await inbox.stage(operationID: last.operationID, originalText: "milk", now: now)
+        XCTAssertEqual(replay.disposition, .discarded)
     }
     func testSelectedTextRejectsNewOversizedReviewButResolvesAnExactLegacyReceipt() async throws {
         let url = try file()
@@ -231,12 +293,43 @@ final class DeviceSurfacesTests: XCTestCase {
         let calls = await fake.requestCalls; XCTAssertEqual(calls, 0)
         await fake.setPermission(.denied)
         let denied = try await coordinator.save(value, expectedVersion: first.version, requestPermission: false); XCTAssertEqual(denied.status, .denied)
-        await fake.setPermission(.authorized); await fake.setFailure(true)
+        await fake.setPermission(.authorized); await fake.setRegistrationError(.unavailable)
         let failed = try await coordinator.save(value, expectedVersion: first.version, requestPermission: false); XCTAssertEqual(failed.status, .retryNeeded)
-        await fake.setFailure(false); try await coordinator.reconcileAll()
+        await fake.setRegistrationError(nil); try await coordinator.reconcileAll()
         let saved = try await store.get(value.id); XCTAssertEqual(saved?.status, .scheduled)
         let pending = await fake.pending; XCTAssertEqual(pending.count, 1)
     }
+    func testPermissionGrantedAfterReminderTimeExpiresWithoutRegistering() async throws {
+        let value = try intent()
+        let store = try ReminderStore(url: file())
+        let scheduler = FakeScheduler()
+        let clock = OSAllocatedUnfairLock(initialState: value.fireAt.addingTimeInterval(-1))
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { clock.withLock { $0 } })
+        await scheduler.onPermissionRequest {
+            clock.withLock { $0 = value.fireAt }
+            return true
+        }
+
+        let saved = try await coordinator.save(value, expectedVersion: nil, requestPermission: true)
+        XCTAssertEqual(saved.status, .expired)
+        let requests = await scheduler.requestCalls
+        let pending = await scheduler.pending
+        XCTAssertEqual(requests, 1)
+        XCTAssertTrue(pending.isEmpty)
+    }
+
+    func testNotificationRegistrationReportingExpiredDoesNotOfferRetry() async throws {
+        let value = try intent(), date = now
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler()
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        await scheduler.setPermission(.authorized)
+        await scheduler.setRegistrationError(.expired)
+        let saved = try await coordinator.save(value, expectedVersion: nil, requestPermission: false)
+        XCTAssertEqual(saved.status, .expired)
+        let pending = await scheduler.pending
+        XCTAssertTrue(pending.isEmpty)
+    }
+
     func testTurnOffFromAnOlderEditorCannotCancelTheReplacementOrRemoveItsNotification() async throws {
         let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
         let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
@@ -271,7 +364,7 @@ final class DeviceSurfacesTests: XCTestCase {
             let saved = try await coordinator.save(original, expectedVersion: nil, requestPermission: false)
             if wasDelivered { await scheduler.deliver(identifier) }
             let replacement = try editedReminder(original)
-            await scheduler.setFailure(true)
+            await scheduler.setRegistrationError(.unavailable)
             let failed = try await coordinator.save(replacement, expectedVersion: saved.version, requestPermission: false)
             XCTAssertEqual(failed.status, .retryNeeded)
             let oldPending = await scheduler.pending[identifier], oldDelivered = await scheduler.delivered[identifier]
@@ -279,15 +372,15 @@ final class DeviceSurfacesTests: XCTestCase {
             XCTAssertNil(oldDelivered, "A delivered notice at the previous time must be withdrawn")
             // Older versions could leave the previous OS request beside retryNeeded.
             let reopened = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
-            await scheduler.setFailure(false)
+            await scheduler.setRegistrationError(nil)
             try await scheduler.add(ReminderNotification(original))
             if wasDelivered { await scheduler.deliver(identifier) }
-            await scheduler.setFailure(true)
+            await scheduler.setRegistrationError(.unavailable)
             try await reopened.reconcileAll()
             let legacyPending = await scheduler.pending[identifier], legacyDelivered = await scheduler.delivered[identifier]
             XCTAssertNil(legacyPending)
             XCTAssertNil(legacyDelivered)
-            await scheduler.setFailure(false)
+            await scheduler.setRegistrationError(nil)
             try await reopened.reconcileAll()
             let retried = try await reopened.current(original.id)
             let pending = await scheduler.pending[identifier], delivered = await scheduler.delivered[identifier]
@@ -414,6 +507,22 @@ final class DeviceSurfacesTests: XCTestCase {
         XCTAssertThrowsError(try SelectedTextInbox(url: url))
         XCTAssertEqual(try Data(contentsOf: url), before)
     }
+    func testWidgetReadRejectsReplacedProjectionAndAcceptsNextPublication() throws {
+        let directory = try file().deletingLastPathComponent()
+        let file = try WidgetProjectionFile(directory: directory)
+        let expected = try WidgetProjection(writtenAt: now, routeHandle: .random(), destination: .shoppingList)
+        try file.publishAfterCommit(expected)
+        XCTAssertEqual(try file.read(), expected)
+
+        let other = directory.appendingPathComponent("other.json")
+        try FileManager.default.moveItem(at: file.url, to: other)
+        try FileManager.default.createSymbolicLink(at: file.url, withDestinationURL: other)
+        XCTAssertThrowsError(try file.read())
+        try file.clear(now: now)
+        XCTAssertNil(try file.read().routeHandle)
+        XCTAssertEqual(try WidgetProjection.decode(Data(contentsOf: other)), expected)
+    }
+
     func testWidgetFileRejectsCorruptionAndClearContainsOnlyGenericRoute() throws {
         let projectionFile = try WidgetProjectionFile(directory: file().deletingLastPathComponent())
         try projectionFile.publishAfterCommit(WidgetProjection(writtenAt: now, routeHandle: .random(), destination: .shoppingList))
@@ -486,20 +595,26 @@ actor FakeScheduler: NotificationScheduling {
     var pending: [String: ReminderNotification] = [:]
     var delivered: [String: ReminderNotification] = [:]
     var requestCalls = 0
-    var failure = false
+    var registrationError: SurfaceError?
     var shouldBlock = false
     var entered = false
     var waiter: CheckedContinuation<Void, Never>?
     func permission() -> NotificationPermission { authorization }
-    func requestPermission() -> Bool { requestCalls += 1; return authorization == .authorized }
+    private var permissionResponse: (@Sendable () -> Bool)?
+    func onPermissionRequest(_ response: @escaping @Sendable () -> Bool) { permissionResponse = response }
+    func requestPermission() -> Bool {
+        requestCalls += 1
+        if let permissionResponse { authorization = permissionResponse() ? .authorized : .denied }
+        return authorization == .authorized
+    }
     func setPermission(_ value: NotificationPermission) { authorization = value }
-    func setFailure(_ value: Bool) { failure = value }
+    func setRegistrationError(_ error: SurfaceError?) { registrationError = error }
     func blockNextAdd() { shouldBlock = true }
     func waitUntilAddEntered() async { while !entered { await Task.yield() } }
     func releaseAdd() { waiter?.resume(); waiter = nil }
     func add(_ notification: ReminderNotification) async throws {
         if shouldBlock { shouldBlock = false; entered = true; await withCheckedContinuation { waiter = $0 } }
-        if failure { throw SurfaceError.unavailable }
+        if let registrationError { throw registrationError }
         pending[notification.identifier] = notification
     }
     func deliver(_ id: String) { delivered[id] = pending.removeValue(forKey: id) }

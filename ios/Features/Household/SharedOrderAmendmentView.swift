@@ -224,7 +224,7 @@ private struct SharedAmendmentLineEditor: View {
             }
             .navigationTitle(OrderAmendmentCopy.text("Confirmed order line"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
-            .keyboardDoneAction(visible: focus != nil, title: ht("Done")) { focus = nil }
+            .keyboardDoneAction(visible: focus != nil, title: ht("Done"), identifier: "sharedOrder.lineKeyboardDone") { focus = nil }
         }
     }
 }

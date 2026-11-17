@@ -41,6 +41,60 @@ import XCTest
         }
     }
 
+    func testGuardianChildChoosesPickupAndReviewsNextShopRequest() {
+        app.launchArguments = ["--ui-testing", "--guardian-request-pickups-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["My requests"].waitForExistence(timeout: 30))
+        XCTAssertEqual(app.staticTexts["guardian.childHousehold"].label, "Fixture home")
+        fill("Tortillas", into: "guardian.childRequestItem")
+        let review = app.buttons["guardian.childRequestReview"]
+        let keyboard = app.keyboards.firstMatch
+        if keyboard.exists {
+            let returnKey = keyboard.buttons["Return"]
+            XCTAssertTrue(returnKey.isEnabled)
+            XCTAssertTrue(returnKey.isHittable)
+            returnKey.tap()
+            XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
+        }
+        XCTAssertEqual(app.textFields["guardian.childRequestItem"].value as? String, "Tortillas")
+        XCTAssertTrue(review.exists)
+        XCTAssertFalse(review.isEnabled)
+
+        tap(app.buttons["guardian.childRequestMorePickups"])
+        tap(app.buttons["guardian.childRequestPickup"])
+        let secondPickup = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "22222222")).firstMatch
+        XCTAssertTrue(secondPickup.waitForExistence(timeout: 8), app.debugDescription)
+        secondPickup.tap()
+        tap(app.buttons["guardian.childRequestsRefresh"])
+        tap(review)
+        XCTAssertTrue(app.navigationBars["Review your request"].waitForExistence(timeout: 10))
+        let reviewedPickup = element("guardian.childReviewedPickup")
+        let destination = reviewedPickup.label + (reviewedPickup.value as? String ?? "")
+        XCTAssertTrue(destination.contains("22222222"), destination)
+        XCTAssertTrue(destination.contains("2026"), destination)
+        let route = element("household.request.reviewDestination")
+        XCTAssertTrue((route.label + (route.value as? String ?? "")).contains("Request for next shop"))
+        enableSwitch("I reviewed the original wording, item, quantity, packs, exclusions and destination.")
+        tap(app.buttons["household.request.sendReviewed"])
+        let saved = app.staticTexts["fixture.requestRows"]
+        let received = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture saved requests: 1"), object: saved)
+        XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 12), .completed, app.debugDescription)
+
+        let withdraw = app.buttons["household.withdrawRequest"]
+        tap(withdraw)
+        let dialog = app.alerts["Withdraw this request?"]
+        XCTAssertTrue(dialog.staticTexts["Withdraw this request?"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(dialog.staticTexts["Tortillas"].exists)
+        dialog.buttons["Cancel"].tap()
+        XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 1")
+
+        tap(withdraw)
+        dialog.buttons["Withdraw request"].tap()
+        XCTAssertTrue(app.staticTexts["Withdrawn"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(withdraw.exists)
+        XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 2")
+    }
+
     func testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests() {
         app.launchArguments = ["--ui-testing", "--own-purchases-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
         app.launch()
@@ -76,12 +130,64 @@ import XCTest
         tap(element("capture.reviewFields"))
 
         let atTop = XCTNSPredicateExpectation(predicate: NSPredicate { object, _ in
-            guard let text = object as? XCUIElement, text.exists, text.isHittable else { return false }
-            return text.frame.minY >= captureBar.frame.maxY && text.frame.minY < self.app.frame.midY
-        }, object: element("capture.structured.original"))
+            guard let app = object as? XCUIApplication, let screen = try? app.snapshot() else { return false }
+            // Read the original wording and its viewport together. Separate live
+            // descendant queries can spend the entire deadline resolving one row.
+            var pending = screen.children
+            var wording: (any XCUIElementSnapshot)?
+            var bar: (any XCUIElementSnapshot)?
+            while let node = pending.popLast() {
+                if node.elementType == .staticText && node.identifier == "capture.structured.original" { wording = node }
+                if node.elementType == .navigationBar && (node.identifier == "Capturar una solicitud" || node.label == "Capturar una solicitud") { bar = node }
+                pending.append(contentsOf: node.children)
+            }
+            guard let wording, let bar, wording.label == original, !wording.frame.isEmpty else { return false }
+            return wording.frame.minY >= bar.frame.maxY && wording.frame.minY < screen.frame.midY
+        }, object: app)
         XCTAssertEqual(XCTWaiter.wait(for: [atTop], timeout: 12), .completed)
-        XCTAssertEqual(element("capture.structured.original").label, original)
+        let wording = app.staticTexts["capture.structured.original"]
+        XCTAssertTrue(wording.isHittable)
+        XCTAssertEqual(wording.label, original)
         capture("Spanish-large-text-original-at-top")
+    }
+
+    func testCancellingCorrectionReplacementPreservesDraftUntilConfirmed() {
+        app.launchArguments = ["--ui-testing", "--rejected-correction-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        waitForHousehold(timeout: 20)
+        let item = app.textFields["Item"]
+        let amount = app.textFields["Quantity, optional"]
+        let review = app.buttons["Review my correction"]
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Rice")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "3 bags")
+        tap(review)
+        let dialog = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ AND elementType != %d",
+            "Replace your current draft with the saved correction?", XCUIElement.ElementType.staticText.rawValue)).firstMatch
+        XCTAssertTrue(dialog.buttons["Replace draft"].waitForExistence(timeout: 5))
+        let cancel = app.buttons["Cancel"]
+        if cancel.isHittable {
+            cancel.tap()
+        } else {
+            let dismiss = app.otherElements["PopoverDismissRegion"]
+            XCTAssertTrue(dismiss.exists)
+            dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        }
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Rice")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "3 bags")
+
+        tap(review)
+        dialog.buttons["Replace draft"].tap()
+        XCTAssertTrue(review.waitForNonExistence(timeout: 10))
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Cereal")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "2 boxes")
+        XCTAssertEqual(element("fixture.requestPosts").label, "Fixture request POSTs: 2")
+        XCTAssertEqual(element("fixture.requestRows").label, "Fixture saved requests: 1")
     }
 
     func testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest() throws {
@@ -153,13 +259,17 @@ import XCTest
             }
             XCTAssertGreaterThanOrEqual(area.height, 80, "Need visible form content before acknowledging \(label)")
             if control.exists && !control.frame.isEmpty {
-                // The accessibility row includes a multiline label. Its actual
-                // trailing switch can be visible while part of that label is not.
-                let coordinate = control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+                // The row includes a multiline label. Target its native off thumb.
+                XCTAssertEqual(control.switches.count, 1, label)
+                let native = control.switches.firstMatch
+                let coordinate = native.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
                 let point = coordinate.screenPoint
-                if control.isEnabled && control.isHittable && area.contains(point) {
+                if control.isEnabled && control.isHittable && native.isEnabled && native.isHittable && area.contains(point) {
                     print("CONTRIBUTOR_SWITCH_TAP label=\(label) point=\(point) area=\(area)")
-                    if control.value as? String == "0" { coordinate.tap() }
+                    if control.value as? String == "0" {
+                        XCTAssertEqual(native.value as? String, "0", label)
+                        coordinate.tap()
+                    }
                     XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
                     return
                 }
@@ -215,8 +325,7 @@ import XCTest
         XCTAssertTrue(done.waitForExistence(timeout: 5), "The source editor must offer Done")
         XCTAssertTrue(done.isHittable)
         done.tap()
-        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5), "Done must dismiss the capture keyboard")
     }
     private func dismissBilingualKeyboardCardIfPresent() {
         let title = app.staticTexts["Type español e inglés"]
@@ -232,8 +341,7 @@ import XCTest
         XCTContext.runActivity(named: "Dismiss the identified bilingual keyboard onboarding card") { _ in
             capture("Bilingual-keyboard-card-before-dismissal")
             next.tap()
-            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: title)
-            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            XCTAssertTrue(title.waitForNonExistence(timeout: 5), "The identified keyboard onboarding card must dismiss")
             capture("Bilingual-keyboard-card-dismissed")
         }
     }
