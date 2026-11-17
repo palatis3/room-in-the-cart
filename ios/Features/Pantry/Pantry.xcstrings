@@ -2401,6 +2401,390 @@
           }
         }
       }
+    },
+    "Open My Pantry to review the foods you chose to check.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open My Pantry to review the foods you chose to check."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Mi despensa para revisar los alimentos que elegiste comprobar."
+          }
+        }
+      }
+    },
+    "Use soon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use soon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar pronto"
+          }
+        }
+      }
+    },
+    "Foods to check": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foods to check"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos para revisar"
+          }
+        }
+      }
+    },
+    "Choose a batch in My Pantry and set a check date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a batch in My Pantry and set a check date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un lote en Mi despensa y fija una fecha para revisarlo."
+          }
+        }
+      }
+    },
+    "Daily notification": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily notification"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificación diaria"
+          }
+        }
+      }
+    },
+    "Digest time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digest time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora del aviso"
+          }
+        }
+      }
+    },
+    "One private notification groups foods checked on the same day. Your food names stay in My Pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One private notification groups foods checked on the same day. Your food names stay in My Pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un aviso privado agrupa los alimentos que revisarás el mismo día. Los nombres se quedan en Mi despensa."
+          }
+        }
+      }
+    },
+    "Turn on daily notifications": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on daily notifications"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar las notificaciones diarias"
+          }
+        }
+      }
+    },
+    "Turn off daily notifications": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off daily notifications"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar las notificaciones diarias"
+          }
+        }
+      }
+    },
+    "Save digest time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save digest time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la hora del aviso"
+          }
+        }
+      }
+    },
+    "Notifications are unavailable. Your check dates are still here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are unavailable. Your check dates are still here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notificaciones no están disponibles. Tus fechas de revisión siguen aquí."
+          }
+        }
+      }
+    },
+    "Daily notifications are on.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily notifications are on."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notificaciones diarias están activadas."
+          }
+        }
+      }
+    },
+    "Daily notifications are off.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily notifications are off."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notificaciones diarias están desactivadas."
+          }
+        }
+      }
+    },
+    "Could not update the digest. Review and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not update the digest. Review and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar el aviso. Revisa los datos y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Batch check date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batch check date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de revisión del lote"
+          }
+        }
+      }
+    },
+    "Check this food on": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check this food on"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar este alimento el"
+          }
+        }
+      }
+    },
+    "Choose a day to check the batch. A check date does not indicate food safety.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a day to check the batch. A check date does not indicate food safety."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un día para revisar el lote. Esa fecha no indica si el alimento es seguro."
+          }
+        }
+      }
+    },
+    "Save check date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save check date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar fecha de revisión"
+          }
+        }
+      }
+    },
+    "Remove check date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove check date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar fecha de revisión"
+          }
+        }
+      }
+    },
+    "Check date saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check date saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó la fecha de revisión."
+          }
+        }
+      }
+    },
+    "Check date removed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check date removed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó la fecha de revisión."
+          }
+        }
+      }
+    },
+    "This device can keep check dates for 32 batches. Remove a date before adding another.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device can keep check dates for 32 batches. Remove a date before adding another."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo puede guardar fechas de revisión para 32 lotes. Elimina una fecha antes de añadir otra."
+          }
+        }
+      }
+    },
+    "Saved digest time zone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved digest time zone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zona horaria guardada para el aviso"
+          }
+        }
+      }
+    },
+    "Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al guardar la hora se usa %@. Las fechas de revisión mantienen su día si viajas. Si el reloj omite la hora elegida, el aviso llegará a la siguiente hora válida."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

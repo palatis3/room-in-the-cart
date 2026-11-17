@@ -10,6 +10,7 @@ private enum PantrySheet: Identifiable {
 
 /// Composition owns authorization and migration. This surface never activates a database.
 struct PantryHomeView: View {
+    @Environment(\.pantryDigestAccess) private var digestAccess
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
     @State private var sheet: PantrySheet?
@@ -26,6 +27,10 @@ struct PantryHomeView: View {
                         }
                     }
                     if model.phase == .ready, let snapshot = model.snapshot {
+                        if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID {
+                            NavigationLink(pantryText("Use soon")) { PantryDigestList(model: model, access: digestAccess) }
+                                .accessibilityIdentifier("pantry.digest")
+                        }
                         Section {
                             Button(pantryText("Add food")) { sheet = .add }
                                 .frame(minHeight: 44).disabled(!model.canEdit)
@@ -228,6 +233,7 @@ struct PantryLotSummary: View {
 }
 
 private struct PantryLotView: View {
+    @Environment(\.pantryDigestAccess) private var digestAccess
     @ObservedObject var model: PantryModel
     let lotID: UUID
     let accessAllowed: Bool
@@ -245,6 +251,10 @@ private struct PantryLotView: View {
                     if let opened = lot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
+                }
+                if let digestAccess, digestAccess.scope.origin == model.snapshot?.state.workspaceID, lot.count.quantity?.amount != .zero {
+                    NavigationLink(pantryText("Batch check date")) { PantryDigestDayEditor(model: model, access: digestAccess, lot: lot) }
+                        .accessibilityIdentifier("pantry.digest.checkDate")
                 }
                 PantryReservationSection(model: model, lot: lot, availabilityNeedsReview: availabilityNeedsReview)
                     .id(lot.id)
