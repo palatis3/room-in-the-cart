@@ -474,6 +474,10 @@ struct PickupPersistenceLocation {
         await load()
     }
     var sourceWorkspaceID: UUID? { store?.workspaceID }
+
+    func sourceHeads(for journeyIDs: Set<UUID>) -> [UUID: Int64] {
+        storeRevisions.filter { journeyIDs.contains($0.key) }
+    }
     /// Records must be able to complete a durable erasure after ordinary reads
     /// of the retired origin have been fenced by SQLite.
     var pantryErasureStores: (inventory: ComparisonStore, configuration: PantryConfiguration)? {

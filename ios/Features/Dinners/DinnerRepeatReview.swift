@@ -172,10 +172,12 @@ extension DinnerFeatureModel {
         let accessProvider = accessProvider
         let clock = clock
         let usesCanonicalStock = reviewedPantryBasis != nil
+        let legacyHeads = usesCanonicalStock ? [:] : repeatWeekPickup?.sourceHeads(for: requiredShops) ?? [:]
         return { [weak pickup = repeatWeekPickup, weak ledger = store as? LedgerModel] in
             guard let identity, let pickup, let ledger, pickup.recoveryLedger === ledger,
                   ledger.workspace.selectedShopID == identity.shopID, pickup.ready, !pickup.saving, !pickup.hasPendingSave,
-                  pickup.pantryIsActive == usesCanonicalStock, !usesCanonicalStock || pickup.pantryReadIsCurrent
+                  pickup.pantryIsActive == usesCanonicalStock,
+                  usesCanonicalStock ? pickup.pantryReadIsCurrent : pickup.sourceHeads(for: requiredShops) == legacyHeads
             else { return false }
             let now = clock()
             return requiredShops.allSatisfy { id in
