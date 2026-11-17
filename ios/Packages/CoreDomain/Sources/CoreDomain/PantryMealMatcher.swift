@@ -18,6 +18,12 @@ public enum PantryMealMatcher {
         }
     }
 
+    public struct BatchUse: Equatable, Sendable {
+        public let lotID: UUID
+        public let used: Quantity
+        public let remaining: Quantity
+    }
+
     public struct Review: Identifiable, Equatable, Sendable {
         public let recipe: MealTemplate
         public var id: UUID { recipe.id }
@@ -25,6 +31,14 @@ public enum PantryMealMatcher {
         public let eligibility: MealEligibilityPolicy.Result
         public let ingredients: [IngredientReview]
         public let useFirstLotIDs: Set<UUID>
+        public let batchUse: BatchUse?
+        /// Original unreserved lots after this recipe's reviewed allocations. Available
+        /// only for a focused batch with a remainder and reliable ingredient amounts.
+        public fileprivate(set) var stockAfterMeal: [ConfirmedStockLot]?
+        public var canProjectRemainder: Bool {
+            guard let use = batchUse, use.remaining.amount > .zero else { return false }
+            return ingredients.allSatisfy { $0.ingredient.quantity != nil && !$0.hasUnresolvedStock && ($0.coverage?.issues.isEmpty ?? true) }
+        }
         public var hasConfirmedPantryFood: Bool { ingredients.contains(where: \.hasConfirmedStock) }
         public var allIngredientsCovered: Bool {
             eligibility.eligible && !ingredients.isEmpty && ingredients.allSatisfy(\.covered)
@@ -36,12 +50,13 @@ public enum PantryMealMatcher {
     /// each receiving the same remaining stock.
     public static func review(recipe: MealTemplate, reviewedFoods: [UUID: UUID],
                               globallyFreeLots: [ConfirmedStockLot], unresolvedFoods: Set<UUID>,
-                              profile: MealPreferenceProfile?, foodEvidence: [UUID: MealEligibilityEvidence] = [:]) throws -> Review {
+                              profile: MealPreferenceProfile?, foodEvidence: [UUID: MealEligibilityEvidence] = [:],
+                              firstLotID: UUID? = nil, projectRemainder: Bool = false) throws -> Review {
         try recipe.validate()
         try profile?.settings.validate()
         var eligibility = MealEligibilityPolicy.evaluate(profile: profile, template: recipe)
         guard eligibility.eligible else {
-            return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: [], useFirstLotIDs: [])
+            return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: [], useFirstLotIDs: [], batchUse: nil, stockAfterMeal: nil)
         }
         let ingredientIDs = Set(recipe.ingredients.map(\.id))
         guard Set(reviewedFoods.keys).isSubset(of: ingredientIDs) else { throw DinnerPlanningError.stalePreview }
@@ -74,9 +89,9 @@ public enum PantryMealMatcher {
             for issue in food.softDifferences where !eligibility.softDifferences.contains(issue) { eligibility.softDifferences.append(issue) }
         }
         guard eligibility.eligible else {
-            return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: [], useFirstLotIDs: [])
+            return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: [], useFirstLotIDs: [], batchUse: nil, stockAfterMeal: nil)
         }
-        let allocation = try ConfirmedStockAllocator.allocate(lots: lots, needs: needs)
+        let allocation = try ConfirmedStockAllocator.allocate(lots: lots, needs: needs, firstLotID: firstLotID)
         let demandByID = Dictionary(uniqueKeysWithValues: allocation.demands.map { ($0.id, $0) })
         let reviews = recipe.ingredients.map { ingredient in
             let food = reviewedFoods[ingredient.id]
@@ -86,7 +101,37 @@ public enum PantryMealMatcher {
         let useFirst = Set(lots.filter { $0.useFirst == true }.map(\.id))
         let supported = Set(reviews.filter { !$0.hasUnresolvedStock && $0.coverage?.issues.isEmpty == true }.map(\.id))
         let used = Set(allocation.allocations.filter { $0.amount > .zero && supported.contains($0.needID) }.map(\.lotID))
-        return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: reviews, useFirstLotIDs: useFirst.intersection(used))
+        guard let firstLotID, used.contains(firstLotID), let lot = lots.first(where: { $0.id == firstLotID }) else {
+            return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: reviews,
+                          useFirstLotIDs: useFirst.intersection(used), batchUse: nil, stockAfterMeal: nil)
+        }
+        let balances = Dictionary(uniqueKeysWithValues: allocation.remainingLots.map { ($0.lotID, $0) })
+        func residual(_ lot: ConfirmedStockLot) throws -> Quantity? {
+            guard let balance = balances[lot.id], balance.issues.isEmpty else { return nil }
+            let normalized = Quantity(amount: balance.remainingUnallocated, unit: balance.unit,
+                                      originalLiteral: balance.remainingUnallocated.description)
+            guard let amount = try normalized.converted(to: lot.usable.unit, using: lot.usable.confirmedConversion) else { return nil }
+            return Quantity(amount: amount, unit: lot.usable.unit, originalLiteral: amount.description,
+                            confirmedConversion: lot.usable.confirmedConversion)
+        }
+        let batchUse = try residual(lot).map { remaining in
+            let amount = try lot.usable.amount.subtracting(remaining.amount)
+            return BatchUse(lotID: firstLotID,
+                used: Quantity(amount: amount, unit: lot.usable.unit, originalLiteral: amount.description),
+                remaining: remaining)
+        }
+        var result = Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: reviews,
+                            useFirstLotIDs: useFirst.intersection(used), batchUse: batchUse, stockAfterMeal: nil)
+        if projectRemainder && result.canProjectRemainder {
+            result.stockAfterMeal = try globallyFreeLots.compactMap { original in
+                guard used.contains(original.id) else { return original }
+                guard let quantity = try residual(original) else { throw DinnerPlanningError.stalePreview }
+                guard quantity.amount > .zero else { return nil }
+                return ConfirmedStockLot(id: original.id, foodID: original.foodID, name: original.name,
+                    usable: quantity, confirmedAt: original.confirmedAt, source: original.source, useFirst: original.useFirst == true)
+            }
+        }
+        return result
     }
 
     /// Use the library order for ties. Unknown effort sorts after reviewed effort.

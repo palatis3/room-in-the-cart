@@ -12,7 +12,11 @@ struct TonightEntry: View {
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scene
     @Environment(\.guardianChildCoordinator) private var child
-    @StateObject private var model = TonightMealModel()
+    @StateObject private var model: TonightMealModel
+
+    init(batch: TonightMealModel.Batch? = nil) {
+        _model = StateObject(wrappedValue: TonightMealModel(batch: batch))
+    }
     @State private var choosing: MealTemplate?
     @State private var sourceToReview: TonightMealModel.Source?
     @State private var manual = false
@@ -47,6 +51,8 @@ struct TonightEntry: View {
                     Text(tonightText("Set up My Pantry to review recipes against food available at home."))
                     NavigationLink(tonightText("Open My Pantry")) { PantrySetupView(pickup: pickup, ledger: ledger) }
                 }
+            } else if let batch = model.batch, let scope, batch.originID != scope.inventory {
+                Text(tonightText("This batch is no longer in the open pantry."))
             } else {
                 content
             }
@@ -82,6 +88,16 @@ struct TonightEntry: View {
     }
     private var content: some View {
         List {
+            if model.batch != nil, model.input != nil {
+                Section(tonightText("Selected batch")) {
+                    if let lot = model.selectedLot {
+                        LabeledContent(lot.name, value: ledgerQuantity(lot.usable))
+                        Text(tonightText("Available after reservations. Match a recipe ingredient to this food to see how much it can use."))
+                    } else {
+                        Text(tonightText("This batch has no confirmed unreserved quantity. Check its count and reservations in My Pantry."))
+                    }
+                }
+            }
             Section {
                 NavigationLink(tonightText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: ledger) }
                     .accessibilityIdentifier("tonight.preferences")
@@ -201,6 +217,21 @@ struct TonightEntry: View {
                         row?.covered == true ? "Covered by currently free pantry food." : "Missing or unresolved quantity — review before choosing."))
                 }
             }
+            if let use = review.batchUse {
+                LabeledContent(tonightText("Would use from this batch"), value: ledgerQuantity(use.used))
+                LabeledContent(tonightText("Unreserved amount left afterward"), value: ledgerQuantity(use.remaining))
+                if review.canProjectRemainder {
+                    if model.firstRecipeID == review.id {
+                        followingMeals
+                        Button(tonightText("Close second-meal suggestions")) { model.clearPairing() }
+                    } else {
+                        Button(tonightText("Find a second meal for the remainder")) {
+                            do { try model.showFollowingMeals(after: review.id) }
+                            catch { message = tonightText("Refresh before reviewing this match.") }
+                        }.accessibilityIdentifier("tonight.batch.followUp.\(review.id)")
+                    }
+                }
+            }
             if review.eligibility.eligible {
                 Text(tonightText("Similar names are not a match until you review them. Unknown quantities do not count as available."))
                 ForEach(review.ingredients.filter { !$0.covered }) { row in
@@ -209,7 +240,7 @@ struct TonightEntry: View {
                 }
                 Button(tonightText("Choose…")) {
                     choosing = review.recipe; destination = ledger.workspace.selectedShopID; preview = nil; message = nil
-                }.disabled(!TonightMealModel.canChoose(review) || model.busy || applying)
+                }.disabled(!canChoose(review) || model.busy || applying)
                     .accessibilityIdentifier("tonight.choose.\(review.id)")
             }
             if let minutes = review.recipe.leadTimeMinutes { Text(tonightText("Reviewed preparation minutes") + ": \(minutes)") }
@@ -227,9 +258,45 @@ struct TonightEntry: View {
             }
         }
     }
+    @ViewBuilder private var followingMeals: some View {
+        Text(tonightText("If you make the first meal")).font(.headline)
+        Text(tonightText("These estimates use the pantry food left after the first recipe’s reviewed matches. Prices cover the second meal separately."))
+            .font(.caption)
+        if model.followingMeals.isEmpty {
+            Text(tonightText("No other reviewed recipe uses this remainder yet. Check the ingredient matches in your recipe library."))
+        }
+        ForEach(model.followingMeals) { next in
+            VStack(alignment: .leading, spacing: 6) {
+                Text(next.recipe.title).font(.headline)
+                if let use = next.batchUse {
+                    LabeledContent(tonightText("Would use from this batch"), value: ledgerQuantity(use.used))
+                    LabeledContent(tonightText("Unreserved amount left afterward"), value: ledgerQuantity(use.remaining))
+                }
+                if let minutes = next.recipe.leadTimeMinutes {
+                    LabeledContent(tonightText("Reviewed preparation minutes"), value: minutes.formatted())
+                } else {
+                    Text(tonightText("Preparation time has not been reviewed."))
+                }
+                ForEach(Array(next.eligibility.softDifferences.enumerated()), id: \.offset) { _, issue in
+                    Text(tonightIssue(issue))
+                }
+                ForEach(next.ingredients.filter { !$0.covered }) { row in
+                    LabeledContent(row.ingredient.name, value: ledgerQuantity(TonightMealModel.missingQuantity(row)))
+                }
+                if let input = model.input, let workspaceID = ledger.sourceWorkspaceID {
+                    TonightPricesView(estimate: try? TonightPurchaseEstimate.estimate(next, workspace: input.workspace,
+                        workspaceID: workspaceID, shopID: input.workspace.selectedShopID, at: Date()))
+                }
+            }.accessibilityIdentifier("tonight.batch.second.\(next.id)")
+        }
+    }
+    private func canChoose(_ review: PantryMealMatcher.Review) -> Bool {
+        TonightMealModel.canChoose(review) && (model.batch == nil || review.batchUse?.lotID == model.batch?.lotID)
+    }
     private func currentIdentity() -> CapturePrivateIdentity? { scope?.adult }
     @MainActor private func refresh() async {
         guard let original = scope, ledger.ready, !ledger.saving, !ledger.hasPendingSave else { return }
+        guard model.batch == nil || model.batch?.originID == original.inventory else { return }
         let authorized = { scope == original && !Task.isCancelled }
         await model.refresh(authorize: authorized) {
             guard authorized(), await pickup.refreshPantryStock(), authorized(),
@@ -247,7 +314,7 @@ struct TonightEntry: View {
         do {
             guard scope == originalScope else { throw TonightMealModel.Failure.unavailable }
             try model.assertCurrent(original, recipe: recipe, matches: matches)
-            guard let review = model.reviews.first(where: { $0.recipe == recipe }), TonightMealModel.canChoose(review) else { throw TonightMealModel.Failure.stale }
+            guard let review = model.reviews.first(where: { $0.recipe == recipe }), canChoose(review) else { throw TonightMealModel.Failure.stale }
             preview = try TonightPlanChoice.prepare(match: review, pantryBasis: original.basis,
                 destinationShopID: destination, newShopTitle: newTitle, ledger: ledger, pickup: pickup,
                 currentIdentity: currentIdentity)

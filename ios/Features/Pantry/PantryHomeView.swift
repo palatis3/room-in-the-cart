@@ -63,7 +63,7 @@ struct PantryHomeView: View {
                                 if lots.isEmpty { Text(pantryText("No food recorded here.")) }
                                 ForEach(lots) { lot in
                                     NavigationLink {
-                                        PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: accessAllowed)
+                                        PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: accessAllowed, offersTonight: offersTonight)
                                     } label: {
                                         PantryLotSummary(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id })
                                     }.accessibilityIdentifier("pantry.lot.\(lot.id)")
@@ -104,11 +104,12 @@ struct PantryLotEntryView: View {
     @ObservedObject var model: PantryModel
     let lotID: UUID
     let accessAllowed: Bool
+    var offersTonight = false
     var availabilityNeedsReview = false
     @State private var sheet: PantrySheet?
 
     var body: some View {
-        PantryLotView(model: model, lotID: lotID, accessAllowed: accessAllowed,
+        PantryLotView(model: model, lotID: lotID, accessAllowed: accessAllowed, offersTonight: offersTonight,
                       availabilityNeedsReview: availabilityNeedsReview) { sheet = .recount(lotID) }
             .safeAreaInset(edge: .bottom) {
                 if accessAllowed, model.pending != nil {
@@ -236,6 +237,7 @@ private struct PantryLotView: View {
     @ObservedObject var model: PantryModel
     let lotID: UUID
     let accessAllowed: Bool
+    var offersTonight = false
     var availabilityNeedsReview = false
     let recount: () -> Void
     @AccessibilityFocusState private var resultFocused: Bool
@@ -250,6 +252,11 @@ private struct PantryLotView: View {
                     if let opened = lot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
+                }
+                if offersTonight, let originID = model.snapshot?.state.workspaceID {
+                    NavigationLink(tonightText("Find meals that use this batch")) {
+                        TonightEntry(batch: .init(originID: originID, lotID: lot.id))
+                    }.accessibilityIdentifier("pantry.batch.meals")
                 }
                 PantryReservationSection(model: model, lot: lot, availabilityNeedsReview: availabilityNeedsReview)
                     .id(lot.id)
