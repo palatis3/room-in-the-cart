@@ -10,7 +10,7 @@ final class LedgerReadableRecordTests: XCTestCase {
     }
 
     @MainActor func testMealFeedbackPersonalBackupKeepsSelectedAdultAndSourceWhileHelperDropsReactions() throws {
-        let recipe = MealTemplate(title: "Rice", ingredients: [MealIngredient(name: "Rice")])
+        let recipe = MealTemplate(title: "Rice", ingredients: [MealIngredient(name: "Rice", quantity: nil)])
         var shop = ShoppingLedger(title: "Weekend")
         let meal = try shop.chooseMeal(recipe)
         var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)
