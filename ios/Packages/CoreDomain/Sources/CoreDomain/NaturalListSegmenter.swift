@@ -156,7 +156,7 @@ public enum NaturalListSegmenter {
     private static func leadingQuantityEnd(in words: [Token], at index: Int) -> Int {
         // Keep number connectors in the same quantity, e.g. “treinta y dos”
         // and “between two and three”. Only the start of each item is examined.
-        let prefix = words[index...].prefix(20).map(\.text)
+        let prefix = words[index...].prefix(20).map { ListQuantityParser.naturalAmountToken($0.text) }
         var remaining = prefix[...]
         if !ListQuantityParser.takeRange(from: &remaining) {
             guard let amount = try? ListQuantityParser.takeAmount(from: &remaining, allowingWords: true) else { return index - 1 }
@@ -187,7 +187,7 @@ public enum NaturalListSegmenter {
     }
 
     private static func beginsAmount(_ word: String) -> Bool {
-        var tokens = [word][...]
+        var tokens = [ListQuantityParser.naturalAmountToken(word)][...]
         return (try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true)) != nil
     }
 }

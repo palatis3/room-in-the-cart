@@ -126,6 +126,9 @@ enum StructuredCaptureParser {
         var unit = UnitOfMeasure.count, packUnit = UnitOfMeasure.count
         var warnings: [CaptureInterpretationWarning] = []
         let originalTokens = tokens
+        if naturalList, let first = tokens.first {
+            tokens[tokens.startIndex] = ListQuantityParser.naturalAmountToken(first)
+        }
         let ranged = ListQuantityParser.takeRange(from: &tokens)
         let number = ranged ? nil : try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true)
         if ranged || number.map({ $0 > .zero }) == true {

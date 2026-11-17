@@ -20,6 +20,17 @@ public enum ListQuantityParser {
         return tokens
     }
 
+    /// Normalize an unambiguous decimal comma only when examining a natural list's amount.
+    /// Three trailing digits can also be a thousands group and require review.
+    public static func naturalAmountToken(_ token: String) -> String {
+        guard token.contains(",") else { return token }
+        let number = separatingUnit(token)?.amount ?? token
+        let parts = number.split(separator: ",", omittingEmptySubsequences: false)
+        guard parts.count == 2, parts[1].count != 3,
+              parts.allSatisfy({ !$0.isEmpty && $0.utf8.allSatisfy { (48...57).contains($0) } }) else { return token }
+        return token.replacingOccurrences(of: ",", with: ".")
+    }
+
     /// Consume a complete numeric food field without inferring a unit or ignoring trailing text.
     public static func numericAmount(_ text: String) throws -> Rational {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: ".")

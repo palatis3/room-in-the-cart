@@ -45,6 +45,14 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(try StructuredCaptureParser.lines("bread.", destination: destination).first?.name, "bread.")
     }
 
+    func testNaturalDecimalCommaAfterConjunctionKeepsAmountAndEvidence() throws {
+        let list = try StructuredCaptureParser.naturalList("pan y 2,5 litros de leche", destination: destination)
+        XCTAssertEqual(list.lines.map(\.name), ["pan", "leche"])
+        XCTAssertEqual(list.lines.last?.amount, "5/2")
+        XCTAssertEqual(list.lines.last?.unit, .liter)
+        XCTAssertEqual(list.lines.last?.originalText, "2,5 litros de leche")
+    }
+
     func testNaturalCaptureDistinguishesUnspecifiedAmountsFromUnclearSpokenNumbers() throws {
         let list = try StructuredCaptureParser.naturalList("bread, two to three apples, 1,000 tortillas, 0 eggs", destination: destination)
         XCTAssertEqual(list.lines.count, 4)
