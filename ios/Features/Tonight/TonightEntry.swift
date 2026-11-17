@@ -60,9 +60,9 @@ struct TonightEntry: View {
             model.invalidate(); preview = nil; choosing = nil
         }
         .sheet(item: $foodToReview) { food in
-            if let original = model.input {
+            if let original = model.input, let originalScope = scope {
                 NavigationStack {
-                    TonightFoodReview(food: food, authorize: { scope != nil }) { evidence in
+                    TonightFoodReview(food: food, authorize: { scope == originalScope }) { evidence in
                         try model.reviewFood(food, evidence: evidence, original: original)
                     }
                 }
