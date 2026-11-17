@@ -32,7 +32,7 @@ public struct StapleRecallReceipt: Codable, Equatable, Sendable {
     public let quantity: Quantity?
 }
 
-public struct ReviewedStaple: Identifiable, Equatable, Sendable {
+public struct ReviewedStaple: Identifiable, Codable, Equatable, Sendable {
     public var id: StapleSource { source }
     public let source: StapleSource
     public let sourceRevision: UUID
