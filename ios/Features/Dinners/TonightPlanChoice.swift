@@ -7,6 +7,8 @@ import CoreDomain
         fileprivate let identity: CapturePrivateIdentity
         fileprivate let ledgerID: UUID
         fileprivate let pantryGeneration: UUID
+        fileprivate let match: PantryMealMatcher.Review
+        let estimate: TonightPurchaseEstimate?
         let pantryBasis: LedgerCanonicalPackStockEvidence.Basis
         var recipe: MealTemplate { selection.recipe }
         var destinationTitle: String { selection.destinationTitle }
@@ -41,8 +43,10 @@ import CoreDomain
         let context = access(identity, ledgerID: ledgerID, shopID: destination.id, now: now)
         let selection = try TonightDinnerSelection.prepare(match: match, destination: destination, createsPickup: destinationShopID == nil,
             workspace: ledger.workspace, access: context, phase: phase(pickup, shopID: destination.id), now: now)
+        let estimate = try? TonightPurchaseEstimate.estimate(match, workspace: ledger.workspace,
+            workspaceID: ledgerID, shopID: destinationShopID, at: now)
         return Review(selection: selection, identity: identity, ledgerID: ledgerID,
-                      pantryGeneration: pickup.privatePantryGeneration, pantryBasis: basis)
+                      pantryGeneration: pickup.privatePantryGeneration, match: match, estimate: estimate, pantryBasis: basis)
     }
 
     static func apply(_ review: Review, ledger: LedgerModel, pickup: PickupModel,
@@ -55,6 +59,11 @@ import CoreDomain
         guard authorized() else { return false }
         return await ledger.change(key: "tonight-\(proposal.id)", reviewedPantryBasis: review.pantryBasis, authorize: authorized) { workspace in
             let now = Date()
+            if !workspace.dinnerPlanning.applyReceipts.contains(where: { $0.id == proposal.id }) {
+                let estimate = try? TonightPurchaseEstimate.estimate(review.match, workspace: workspace, workspaceID: review.ledgerID,
+                    shopID: review.createsPickup ? nil : proposal.shopID, at: now)
+                guard estimate == review.estimate else { throw DinnerPlanningError.stalePreview }
+            }
             try review.selection.apply(to: &workspace,
                 access: access(review.identity, ledgerID: review.ledgerID, shopID: proposal.shopID, now: now),
                 phase: phase(pickup, shopID: proposal.shopID), now: now)

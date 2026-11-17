@@ -7,6 +7,7 @@ import RecordArchive
 struct TonightRecipeReview: View {
     @ObservedObject var ledger: LedgerModel
     let source: TonightMealModel.Source?
+    var template: MealTemplate? = nil
     let currentIdentity: @MainActor () -> CapturePrivateIdentity?
     @Environment(\.dismiss) private var dismiss
     @State private var identity: CapturePrivateIdentity?
@@ -27,7 +28,7 @@ struct TonightRecipeReview: View {
     @State private var error: String?
     @State private var busy = false
     private struct Ingredient: Identifiable {
-        let id = UUID()
+        var id = UUID()
         var name = ""
         var amount = ""
         var unit: UnitOfMeasure = .count
@@ -43,6 +44,9 @@ struct TonightRecipeReview: View {
                     if let candidate {
                         Section(tonightText("Review recipe facts")) {
                             Text(candidate.title).font(.headline)
+                            if let template, original?.mealTemplates.contains(template) != true {
+                                Text(tonightText("This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts."))
+                            }
                             LabeledContent(ledgerText("Servings"), value: amountText(candidate.servings))
                             ForEach(candidate.ingredients) { ingredient in LabeledContent(ingredient.name, value: ledgerQuantity(ingredient.quantity)) }
                             Text(tonightText(original?.mealTemplates.isEmpty == false ?
@@ -62,11 +66,11 @@ struct TonightRecipeReview: View {
                             }
                         }
                         Section(tonightText("Recipe")) {
-                            TextField(ledgerText("Dinner title"), text: $title)
-                            TextField(ledgerText("Servings"), text: $servings).keyboardType(.numbersAndPunctuation)
+                            TextField(ledgerText("Dinner title"), text: $title).accessibilityIdentifier("tonight.recipe.title")
+                            TextField(ledgerText("Servings"), text: $servings).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("tonight.recipe.servings")
                             TextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes).keyboardType(.numberPad)
                             ForEach($ingredients) { $ingredient in
-                                TextField(tonightText("Ingredient"), text: $ingredient.name)
+                                TextField(tonightText("Ingredient"), text: $ingredient.name).accessibilityIdentifier("tonight.recipe.ingredient")
                                 LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit)
                             }
                             .onDelete { ingredients.remove(atOffsets: $0) }
@@ -97,7 +101,18 @@ struct TonightRecipeReview: View {
             .onAppear {
                 guard identity == nil else { return }
                 identity = currentIdentity(); origin = ledger.sourceWorkspaceID; original = ledger.workspace
-                title = source?.recipe.title ?? ""
+                title = template?.title ?? source?.recipe.title ?? ""
+                if let template {
+                    servings = ledgerAmountInput(template.servings)
+                    minutes = template.leadTimeMinutes.map(String.init) ?? ""
+                    ingredients = template.ingredients.map { Ingredient(id: $0.id, name: $0.name, amount: $0.quantity.map { ledgerAmountInput($0.amount) } ?? "", unit: $0.quantity?.unit ?? .count) }
+                    let facts = template.eligibilityEvidence
+                    detailsReviewed = facts?.reviewedIngredientDetails != nil; details = facts?.reviewedIngredientDetails?.joined(separator: "\n") ?? ""
+                    appliancesReviewed = facts?.requiredAppliances != nil; appliances = facts?.requiredAppliances?.joined(separator: "\n") ?? ""
+                    brandsReviewed = facts?.brands != nil; brands = facts?.brands?.joined(separator: "\n") ?? ""
+                    effort = facts?.effort
+                    return
+                }
                 if let source, source.recipe.ingredients.count > 200 {
                     ingredients = []; error = tonightText("This source exceeds the supported recipe size. Review a smaller recipe in Records before continuing.")
                 } else { ingredients = source?.recipe.ingredients.map { Ingredient(name: $0) } ?? [Ingredient()] }
@@ -111,13 +126,19 @@ struct TonightRecipeReview: View {
             guard amount.isEmpty || Int(amount) != nil else { throw TonightMealModel.Failure.unavailable }
             let rows = try ingredients.map { ingredient -> MealIngredient in
                 guard let quantity = try LedgerEntry.quantity(ingredient.amount, ingredient.unit), quantity.amount > .zero else { throw TonightMealModel.Failure.unavailable }
-                return MealIngredient(id: ingredient.id, name: ingredient.name, quantity: quantity)
+                let prior = template?.ingredients.first { $0.id == ingredient.id }
+                return MealIngredient(id: ingredient.id, name: ingredient.name, quantity: quantity, notes: prior?.notes ?? "", exclusions: prior?.exclusions ?? [])
             }
             guard !rows.isEmpty else { throw TonightMealModel.Failure.unavailable }
-            var result = MealTemplate(id: original?.mealTemplates.first?.id ?? UUID(), title: title, servings: servings,
-                ingredients: rows, notes: source.map { $0.recipe.notes + "\n" + $0.recipe.steps.joined(separator: "\n") } ?? "",
-                sourceURL: source?.recipe.sourceURL, revision: (original?.mealTemplates.first?.revision ?? -1) + 1,
-                leadTimeMinutes: Int(amount))
+            // Editing the current Free recipe preserves its identity. Reviewing
+            // an accepted recipe creates a new Free copy; its original stays in
+            // the accepted library and previous ledger revisions.
+            let editingFree = template.flatMap { selected in original?.mealTemplates.first(where: { $0 == selected }) }
+            var result = MealTemplate(id: editingFree?.id ?? UUID(), title: title, servings: servings,
+                ingredients: rows, notes: template?.notes ?? source.map { $0.recipe.notes + "\n" + $0.recipe.steps.joined(separator: "\n") } ?? "",
+                sourceURL: template?.sourceURL ?? source?.recipe.sourceURL, exclusions: template?.exclusions ?? [],
+                revision: (editingFree?.revision ?? -1) + 1, servingGroups: template?.servingGroups ?? [],
+                leadTimeMinutes: Int(amount), completedSteps: template?.completedSteps ?? [], sourceEvidence: template?.sourceEvidence)
             var evidence = MealEligibilityEvidence()
             evidence.reviewedIngredientDetails = detailsReviewed ? lines(details) : nil
             evidence.requiredAppliances = appliancesReviewed ? lines(appliances) : nil
@@ -137,10 +158,13 @@ struct TonightRecipeReview: View {
                 guard current.contains(source) else { throw TonightMealModel.Failure.recipeChanged }
             }
             guard authorized else { throw TonightMealModel.Failure.unavailable }
+            if let template {
+                guard original.mealTemplates.contains(template) || original.dinnerPlanning.acceptedDinners.contains(where: { $0.template == template }) else { throw TonightMealModel.Failure.recipeChanged }
+            }
             let ok = await ledger.change(key: "tonight-recipe-\(candidate.id)-\(candidate.revision)", reviewedPantryBasis: nil,
                 authorize: { authorized }) { workspace in
                 guard workspace == original else { throw TonightMealModel.Failure.stale }
-                workspace.mealTemplates = [candidate]
+                try TonightMealModel.saveReviewedTemplate(candidate, editing: template, in: &workspace)
             }
             if ok && authorized { dismiss() }
             else { error = tonightText("Recipe was not confirmed. Review changed information or the pending save.") }

@@ -29,7 +29,7 @@ struct TonightFoodReview: View {
                         var evidence = MealEligibilityEvidence()
                         evidence.reviewedIngredientDetails = ingredientsReviewed ? lines(details) : nil
                         evidence.brands = brandsReviewed ? lines(brands) : nil
-                        do { try save(evidence); dismiss() } catch { error = true }
+                        do { try save(evidence); dismiss() } catch { self.error = true }
                     }
                     if error { Text(tonightText("The pantry or review changed. Close this sheet and refresh.")) }
                 }
