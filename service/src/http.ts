@@ -1,3 +1,4 @@
+import {readMealFeedback,updateMealFeedback} from './household-meal-feedback.js';
 import { changeHouseholdStaples, householdStaples } from './household-staples.js';
 import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
@@ -364,6 +365,13 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          const feedback = /^\/cook-feedback\/([^/]+)$/.exec(tail ?? '');
+          if(feedback && (method==='GET' || method==='PUT')){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            const occurrence=uuid.parse(feedback[1]).toLowerCase();
+            return method==='GET' ? readMealFeedback(ctx,shop,occurrence) : updateMealFeedback(ctx,shop,occurrence,payload);
+          }
           if (tail === '/measurement-feedback') {
             if (method === 'GET') return measurement.read(ctx, shopId);
             if (method === 'POST') return measurement.feedback(ctx, shopId, payload);
