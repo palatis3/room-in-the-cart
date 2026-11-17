@@ -33,11 +33,24 @@ import XCTest
         let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Dry lentils")).firstMatch
         XCTAssertTrue(lot.waitForExistence(timeout: 10))
         let lotID = lot.identifier
+        tap(lot)
+        let detail = app.navigationBars["Dry lentils"]
+        XCTAssertTrue(detail.waitForExistence(timeout: 8), "The saved lot must open from the Shop pantry")
+        tap(app.buttons["Some left"])
+        let confirm = app.buttons["pantry.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8), "Changing a lot requires an explicit review")
+        tap(confirm)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        tap(detail.buttons.firstMatch)
+        XCTAssertTrue(app.navigationBars["My Pantry"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons[lotID].label.contains("Some left — amount unknown"))
         app.terminate()
         launch(reset: false)
         XCTAssertTrue(pantry.waitForExistence(timeout: 12), "Pantry entry is missing after relaunch")
         pantry.tap()
         XCTAssertTrue(app.buttons[lotID].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons[lotID].label.contains("Some left — amount unknown"))
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
