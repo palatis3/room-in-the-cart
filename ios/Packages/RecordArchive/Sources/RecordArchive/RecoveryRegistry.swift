@@ -92,6 +92,26 @@ public struct EncryptedBackupStatus: Equatable, Sendable {
     public let revisions: Set<String>
 }
 
+public struct PantryBackupStatus: Equatable, Sendable {
+    public let reference: PantryRecoveryReference
+    public let savedAtMilliseconds: Int64
+}
+
+public struct PantryBackupIntent: Sendable {
+    fileprivate let registryID: String
+    fileprivate let reference: PantryRecoveryReference
+    fileprivate let copyID: UUID?
+    fileprivate let copyLifetime: UUID?
+}
+
+fileprivate struct PantryBackupMark: Codable {
+    let reference: PantryRecoveryReference
+    let savedAtMilliseconds: Int64
+    let copyID: UUID?
+    let copyLifetime: UUID?
+    var key: String { reference.originID.uuidString + "/" + (copyID?.uuidString ?? "live") }
+}
+
 public struct EncryptedBackupIntent: Sendable {
     fileprivate struct Target: Sendable {
         let source: ArchiveSourceIdentity
@@ -138,6 +158,7 @@ public actor RecoveryRegistry {
         // Local source erasure is irreversible even while another registry
         // instance retains an ordinary recovered-copy deletion Undo token.
         var retiredPantryBundles: [UUID]?
+        var pantryBackups: [PantryBackupMark]?
     }
     private let url: URL
     private var manifest: Manifest
@@ -342,6 +363,51 @@ public actor RecoveryRegistry {
         return EncryptedBackupIntent(registryID: registryID, targets: targets)
     }
     private var registryID: String { ArchiveCodec.digest(Data(url.path.utf8)) }
+
+    /// The caller supplies only a fully verified owner package and keeps its
+    /// live authorization through Files completion. Preparing never marks a save.
+    public func preparePantryBackup(_ reference: PantryRecoveryReference,
+                                   recoveredCopy: RecoveredPantryCopy? = nil) throws -> PantryBackupIntent {
+        try reference.validate()
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let mark = PantryBackupMark(reference: reference, savedAtMilliseconds: 1,
+            copyID: recoveredCopy?.id, copyLifetime: recoveredCopy?.lifetime)
+        guard Self.pantryBackupAvailable(mark, in: manifest) else { throw ArchiveError.staleReview }
+        return .init(registryID: registryID, reference: reference, copyID: mark.copyID, copyLifetime: mark.copyLifetime)
+    }
+
+    public func recordSuccessfulPantryBackup(_ intent: PantryBackupIntent, savedAtMilliseconds: Int64) throws {
+        guard intent.registryID == registryID, savedAtMilliseconds > 0 else { throw ArchiveError.invalidIdentity }
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let mark = PantryBackupMark(reference: intent.reference, savedAtMilliseconds: savedAtMilliseconds,
+            copyID: intent.copyID, copyLifetime: intent.copyLifetime)
+        guard Self.pantryBackupAvailable(mark, in: manifest) else { throw ArchiveError.staleReview }
+        guard (manifest.pantryBackups ?? []).first(where: { $0.key == mark.key })?.savedAtMilliseconds ?? 0 < savedAtMilliseconds else { return }
+        var next = manifest
+        next.pantryBackups = (next.pantryBackups ?? []).filter { $0.key != mark.key } + [mark]
+        try persist(&next, recoveryChanged: false)
+    }
+
+    public func lastPantryBackup(originID: UUID, recoveredCopy: RecoveredPantryCopy? = nil) throws -> PantryBackupStatus? {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        guard let mark = manifest.pantryBackups?.first(where: {
+            $0.reference.originID == originID && $0.copyID == recoveredCopy?.id && $0.copyLifetime == recoveredCopy?.lifetime
+        }), Self.pantryBackupAvailable(mark, in: manifest) else { return nil }
+        return .init(reference: mark.reference, savedAtMilliseconds: mark.savedAtMilliseconds)
+    }
+
+    private static func pantryBackupAvailable(_ mark: PantryBackupMark, in value: Manifest) -> Bool {
+        guard !(value.erasedOrigins ?? []).contains(mark.reference.originID.uuidString),
+              !(value.erasedPantryBundles ?? []).contains(mark.reference.bundleID),
+              (mark.copyID == nil) == (mark.copyLifetime == nil) else { return false }
+        guard let id = mark.copyID else { return true }
+        guard let copy = value.pantryCopies?.first(where: { $0.id == id }), copy.lifetime == mark.copyLifetime,
+              case .ready(let origin) = copy.materialization, origin == mark.reference.originID else { return false }
+        return true
+    }
 
     /// Call only for a successful Files save. A retry uses the same completion timestamp.
     /// A later save of an older revision is a real backup; source revision dates never order callbacks.
@@ -649,6 +715,12 @@ public actor RecoveryRegistry {
                 guard origin != copy.reference.originID, materializedOrigins.insert(origin).inserted else { throw ArchiveError.integrity }
             }
         }
+        let pantryBackups = current.pantryBackups ?? []
+        guard Set(pantryBackups.map(\.key)).count == pantryBackups.count else { throw ArchiveError.integrity }
+        for mark in pantryBackups {
+            try mark.reference.validate()
+            guard mark.savedAtMilliseconds > 0, pantryBackupAvailable(mark, in: current) else { throw ArchiveError.integrity }
+        }
         let origins = Set(current.erasedOrigins ?? [])
         guard origins.allSatisfy(ArchiveCodec.identifier) else { throw ArchiveError.integrity }
         let sources = Set(current.erasedSources ?? [])
@@ -719,6 +791,7 @@ public actor RecoveryRegistry {
         return current
     }
     private func persist(_ next: inout Manifest, recoveryChanged: Bool = true) throws {
+        next.pantryBackups = next.pantryBackups?.filter { Self.pantryBackupAvailable($0, in: next) }
         if recoveryChanged { next.generation = UUID() }
         let bytes = try ArchiveCodec.canonical(next)
         guard bytes.count <= Self.maximumRegistryBytes else { throw ArchiveError.tooLarge }

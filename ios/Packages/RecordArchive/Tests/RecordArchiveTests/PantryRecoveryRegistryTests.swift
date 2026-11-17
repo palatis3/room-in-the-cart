@@ -127,4 +127,45 @@ final class PantryRecoveryRegistryTests: XCTestCase {
         catch { XCTAssertEqual(error as? ArchiveError, .integrity) }
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
     }
+
+    func testPantryBackupStatusRequiresSuccessfulSaveAndTracksExactExportedRevision() async throws {
+        let (url, registry) = try fixture(), ref = reference()
+        let intent = try await registry.preparePantryBackup(ref)
+        let before = try await registry.lastPantryBackup(originID: ref.originID)
+        XCTAssertNil(before, "Preparing or cancelling Files does not create a backup receipt")
+        try await registry.recordSuccessfulPantryBackup(intent, savedAtMilliseconds: 100)
+        try await registry.recordSuccessfulPantryBackup(intent, savedAtMilliseconds: 100)
+        let reopened = try RecoveryRegistry(url: url)
+        let status = try await reopened.lastPantryBackup(originID: ref.originID)
+        XCTAssertEqual(status?.reference, ref); XCTAssertEqual(status?.savedAtMilliseconds, 100)
+        try await reopened.registerErasedPantryBundles([ref.bundleID])
+        let erased = try await registry.lastPantryBackup(originID: ref.originID); XCTAssertNil(erased)
+        do { try await registry.recordSuccessfulPantryBackup(intent, savedAtMilliseconds: 200); XCTFail("Retired callback") }
+        catch { XCTAssertEqual(error as? ArchiveError, .staleReview) }
+        let clean = reference(origin: ref.originID)
+        let cleanIntent = try await registry.preparePantryBackup(clean)
+        try await registry.recordSuccessfulPantryBackup(cleanIntent, savedAtMilliseconds: 300)
+        let latest = try await registry.lastPantryBackup(originID: ref.originID)
+        XCTAssertEqual(latest?.reference, clean, "One erased package does not retire a stable live origin")
+    }
+
+    func testRecoveredPantryBackupCallbackCannotOutliveDeletedCopyOrUndoLifetime() async throws {
+        let (_, registry) = try fixture(), original = reference()
+        let copy = try await insert(original, into: registry)
+        let started = try await registry.beginPantryMaterialization(copy), physicalOrigin = UUID()
+        let ready = try await registry.finishPantryMaterialization(started.copy, workspaceID: physicalOrigin)
+        let exported = reference(origin: physicalOrigin), intent = try await registry.preparePantryBackup(exported, recoveredCopy: ready)
+        try await registry.recordSuccessfulPantryBackup(intent, savedAtMilliseconds: 100)
+        let hiddenFromLive = try await registry.lastPantryBackup(originID: physicalOrigin); XCTAssertNil(hiddenFromLive)
+        let token = try await registry.delete(.copy(copy.id.uuidString))
+        try await registry.undoDelete(token)
+        do { try await registry.recordSuccessfulPantryBackup(intent, savedAtMilliseconds: 200); XCTFail("Deleted copy callback") }
+        catch { XCTAssertEqual(error as? ArchiveError, .staleReview) }
+        let copies = try await registry.listPantry(), restored = try XCTUnwrap(copies.first)
+        let cleared = try await registry.lastPantryBackup(originID: physicalOrigin, recoveredCopy: restored); XCTAssertNil(cleared)
+        let fresh = try await registry.preparePantryBackup(exported, recoveredCopy: restored)
+        try await registry.recordSuccessfulPantryBackup(fresh, savedAtMilliseconds: 300)
+        let saved = try await registry.lastPantryBackup(originID: physicalOrigin, recoveredCopy: restored)
+        XCTAssertEqual(saved?.savedAtMilliseconds, 300)
+    }
 }
