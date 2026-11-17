@@ -29,18 +29,11 @@ final class ShareViewController: UIViewController {
             let type: UTType?
             if provider.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) { type = .pdf }
             else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) { type = .image }
+            else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier),
+                    provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) { type = .plainText }
             else { type = nil }
             if let type {
-                provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { [weak self] url, _ in
-                    let result = Result { () throws -> Data in
-                        guard let url else { throw SurfaceError.unavailable }
-                        return try readRegularFile(at: url, maximumBytes: SharedReceiptDescriptor.maximumBytes)
-                    }
-                    Task { @MainActor [weak self] in
-                        guard let self, self.generation == expected else { return }
-                        self.model.acceptReceipt(result, kind: type == .pdf ? .pdf : .image)
-                    }
-                }
+                loadReceipt(provider, type: type, generation: expected)
                 return
             }
         }
@@ -78,12 +71,32 @@ final class ShareViewController: UIViewController {
                 guard let self, self.generation == expected else { return }
                 switch result {
                 case .success(let text): self.model.accept(text)
-                case .failure(.capacity): self.model.rejectSize()
+                case .failure(.capacity):
+                    if let text = item.attributedContentText?.string, text.utf8.count <= SharedReceiptDescriptor.maximumBytes {
+                        self.model.acceptReceipt(.success(Data(text.utf8)), kind: .text)
+                    } else if providers.count == 1, let provider = providers.first,
+                              provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
+                        self.loadReceipt(provider, type: .plainText, generation: expected)
+                    } else { self.model.rejectSize() }
                 case .failure: self.model.reject()
                 }
             }
         }
     }
+    private func loadReceipt(_ provider: NSItemProvider, type: UTType, generation expected: UUID) {
+        let kind: SharedReceiptDescriptor.Kind = type == .pdf ? .pdf : type == .plainText ? .text : .image
+        provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { [weak self] url, _ in
+            let result = Result { () throws -> Data in
+                guard let url else { throw SurfaceError.unavailable }
+                return try readRegularFile(at: url, maximumBytes: SharedReceiptDescriptor.maximumBytes)
+            }
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == expected else { return }
+                self.model.acceptReceipt(result, kind: kind)
+            }
+        }
+    }
+
 }
 
 @MainActor private final class ShareComposerModel: ObservableObject {
@@ -232,7 +245,7 @@ private struct ShareComposerView: View {
                 }
                 if let error = model.error { Text(error).accessibilityAddTraits(.updatesFrequently) }
             }.disabled(model.saving)
-                .alert(model.link == nil ? SurfaceCopy.text("Could not save selected text") : SurfaceCopy.text("Could not save recipe link"), isPresented: Binding(
+                .alert(model.receiptData != nil ? SurfaceCopy.text("Receipt file") : model.link == nil ? SurfaceCopy.text("Could not save selected text") : SurfaceCopy.text("Could not save recipe link"), isPresented: Binding(
                     get: { model.saveError != nil },
                     set: { if !$0 { model.saveError = nil } }
                 ), presenting: model.saveError) { _ in

@@ -27,6 +27,11 @@ public enum IOSSurfaceContainers {
     public static func inbox(bundle: Bundle = .main) throws -> SelectedTextInbox {
         try SelectedTextInbox(url: directory(groupKey: SurfaceInfo.inboxGroupKey, bundle: bundle).appendingPathComponent("selected-text.sqlite"))
     }
+    public static func expireExistingSharedReceipts(bundle: Bundle = .main, now: Date = Date()) async throws {
+        let url = try directory(groupKey: SurfaceInfo.inboxGroupKey, bundle: bundle).appendingPathComponent("shared-captures.sqlite")
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        try await SharedCaptureInbox(url: url).expireReceipts(now: now)
+    }
     public static func sharedCaptures(bundle: Bundle = .main) throws -> SharedCaptureInbox {
         try SharedCaptureInbox(url: directory(groupKey: SurfaceInfo.inboxGroupKey, bundle: bundle).appendingPathComponent("shared-captures.sqlite"))
     }

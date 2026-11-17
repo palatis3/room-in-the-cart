@@ -16,7 +16,8 @@ IPHONE_PLATFORMS = (["iPhoneOS"], ["iPhoneSimulator"])
 
 
 SHARE_ACTIVATION_RULE = (
-    'extensionItems.@count == 1 AND SUBQUERY(extensionItems, $item, ($item.attachments.@count == 1 AND '
+    'extensionItems.@count == 1 AND SUBQUERY(extensionItems, $item, ($item.attachments.@count == 0 AND '
+    '$item.attributedContentText != nil) OR ($item.attachments.@count == 1 AND '
     'SUBQUERY($item.attachments, $p, ANY $p.registeredTypeIdentifiers UTI-CONFORMS-TO "com.adobe.pdf" '
     'OR ANY $p.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" OR ANY '
     '$p.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text" OR (ANY '

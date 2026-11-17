@@ -121,6 +121,9 @@ private struct GroceryWindow: View {
                 pantryRuntime.update(identity)
                 if previous != nil { pickup.suspendPrivatePantry() }
             }
+            .task(id: scenePhase) {
+                if scenePhase == .active { try? await IOSSurfaceContainers.expireExistingSharedReceipts() }
+            }
             .task(id: pantryOpenScope) { await openPrivatePantry(pantryOpenScope) }
             .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
             .onChange(of: guardianChild.presented) { _, childActive in

@@ -39,6 +39,8 @@ public struct SharedReceiptRetirement: Codable, Equatable, Hashable, Sendable {
 }
 
 extension SharedCaptureInbox {
+    public func expireReceipts(now: Date) async throws { try await storage.sweepReceiptExpiry(now) }
+
     public func stageReceipt(_ bytes: Data, kind: SharedReceiptDescriptor.Kind, id: UUID, now: Date) async throws -> InboxReceipt {
         let descriptor = try SharedReceiptDescriptor(id: id, kind: kind, data: bytes)
         return try await storage.stageReceipt(bytes, descriptor: descriptor, now: now)
@@ -61,6 +63,11 @@ extension SharedCaptureInbox {
 }
 
 extension SelectedTextInbox {
+    func sweepReceiptExpiry(_ now: Date) throws {
+        guard validDate(now) else { throw SurfaceError.invalid }
+        try database.transaction { try expire(now) }
+    }
+
     static func installReceiptStorage(_ db: SurfaceDatabase) throws {
         try db.transaction {
             try db.script("""
