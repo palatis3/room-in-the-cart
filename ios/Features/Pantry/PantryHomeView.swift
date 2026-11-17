@@ -7,7 +7,6 @@ private enum PantrySheet: Identifiable {
         switch self { case .add: return "add"; case .recount(let id): return "recount-\(id)"; case .purchase(let row): return "purchase-\(row.id)"; case .review: return "review" }
     }
 }
-private enum PantryDestination: Hashable { case lot(UUID) }
 
 /// Composition owns authorization and migration. This surface never activates a database.
 struct PantryHomeView: View {
@@ -63,7 +62,9 @@ struct PantryHomeView: View {
                                 }
                                 if lots.isEmpty { Text(pantryText("No food recorded here.")) }
                                 ForEach(lots) { lot in
-                                    NavigationLink(value: PantryDestination.lot(lot.id)) {
+                                    NavigationLink {
+                                        PantryLotView(model: model, lotID: lot.id, accessAllowed: accessAllowed) { sheet = .recount(lot.id) }
+                                    } label: {
                                         PantryLotSummary(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id })
                                     }.accessibilityIdentifier("pantry.lot.\(lot.id)")
                                 }
@@ -90,12 +91,6 @@ struct PantryHomeView: View {
         .navigationTitle(pantryText("My Pantry"))
         .privacySensitive()
 
-        .navigationDestination(for: PantryDestination.self) { destination in
-            switch destination {
-            case .lot(let id):
-                PantryLotView(model: model, lotID: id, accessAllowed: accessAllowed) { sheet = .recount(id) }
-            }
-        }
         .modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet) {
             resultFocused = true
         })
