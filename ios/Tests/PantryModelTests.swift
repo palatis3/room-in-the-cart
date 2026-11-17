@@ -221,3 +221,90 @@ final class PantryModelTests: XCTestCase {
         try await store.close()
     }
 }
+
+@MainActor private final class DigestSchedulerSpy: PantryDigestScheduling {
+    var granted = false
+    var requests = 0
+    var deliveries: [PantryDigestDelivery] = []
+    var removed = Set<UUID>()
+    func permission(request: Bool) async throws -> Bool {
+        if request { requests += 1 }
+        return granted
+    }
+    func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws { self.deliveries = deliveries }
+    func remove(_ handles: Set<UUID>) async {
+        removed.formUnion(handles)
+        deliveries.removeAll { handles.contains($0.handle) }
+    }
+}
+
+extension PantryModelTests {
+    func testDigestDenialKeepsManualDatesAndConfirmedDailyGroupSurvivesReopen() async throws {
+        let (dir, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let model = model(db)
+        await model.load()
+        let first = try await add(model), second = try await add(model, name: "Lentils")
+        let scope = PantryDigestScope(origin: db.workspaceID, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let day = try MealDay(year: 2027, month: 3, day: 14, timeZoneIdentifier: "America/New_York")
+        let spy = DigestSchedulerSpy(), folder = dir.appendingPathComponent("digest")
+        let digest = PantryDigestStore(folder: folder, scheduler: spy, now: { self.now })
+        try await digest.saveDay(scope, lot: first, day: day, authorized: { true })
+        try await digest.saveDay(scope, lot: second, day: day, authorized: { true })
+        XCTAssertEqual(spy.requests, 0)
+        XCTAssertTrue(spy.deliveries.isEmpty)
+        do {
+            try await digest.setAlerts(scope, enabled: true, minute: 570, authorized: { true })
+            XCTFail("Denied permission enabled this digest")
+        } catch PantryDigestFailure.denied {}
+        XCTAssertFalse(try digest.document(scope).enabled)
+        XCTAssertEqual(try digest.document(scope).rules.count, 2)
+        spy.granted = true
+        try await digest.setAlerts(scope, enabled: true, minute: 570, authorized: { true })
+        XCTAssertEqual(spy.deliveries.count, 1)
+        let fire = try XCTUnwrap(spy.deliveries.first)
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = try XCTUnwrap(TimeZone(identifier: day.timeZoneIdentifier))
+        XCTAssertEqual(cal.component(.hour, from: fire.date), 9)
+        XCTAssertEqual(cal.component(.minute, from: fire.date), 30)
+        let reopened = PantryDigestStore(folder: folder, scheduler: spy, now: { self.now })
+        try await reopened.reconcile(scope, lots: try XCTUnwrap(model.snapshot).lots)
+        XCTAssertEqual(spy.deliveries, [fire])
+        XCTAssertEqual(spy.requests, 2)
+        await model.prepare(lotID: first.id, action: .usedUp)
+        await model.confirmReview(acknowledgingReservations: true)
+        try await reopened.reconcile(scope, lots: try XCTUnwrap(model.snapshot).lots)
+        XCTAssertEqual(try reopened.document(scope).rules.map(\.lotID), [second.id])
+        XCTAssertEqual(spy.deliveries, [fire])
+        try await reopened.saveDay(scope, lot: second, day: nil, authorized: { true })
+        XCTAssertTrue(spy.deliveries.isEmpty)
+        try await db.close()
+    }
+
+    func testDigestErasureRemovesOnlyAffectedHandlesAndWholeOriginRevokesSavedConsent() async throws {
+        let (dir, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let model = model(db); await model.load()
+        let first = try await add(model), second = try await add(model, name: "Rice")
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: db.workspaceID, identity: owner)
+        let spy = DigestSchedulerSpy(); spy.granted = true
+        let digest = PantryDigestStore(folder: dir.appendingPathComponent("digest"), scheduler: spy, now: { self.now })
+        let day = try MealDay(year: 2027, month: 5, day: 3, timeZoneIdentifier: "America/New_York")
+        let next = try MealDay(year: 2027, month: 5, day: 4, timeZoneIdentifier: "America/New_York")
+        try await digest.saveDay(scope, lot: first, day: day, authorized: { true })
+        try await digest.saveDay(scope, lot: second, day: next, authorized: { true })
+        try await digest.setAlerts(scope, enabled: true, minute: 600, authorized: { true })
+        let handles = try digest.document(scope).rules.map(\.handle)
+        await model.prepare(lotID: first.id, action: .move(.freezer))
+        await model.confirmReview(acknowledgingReservations: true)
+        try await digest.erase(origin: db.workspaceID, whole: false, inventory: db)
+        XCTAssertEqual(spy.removed, [handles[0]])
+        XCTAssertEqual(spy.deliveries.map(\.handle), [handles[1]])
+        XCTAssertEqual(try digest.document(scope).rules.map(\.lotID), [second.id])
+        try await digest.erase(origin: db.workspaceID, whole: true, inventory: db)
+        XCTAssertEqual(spy.removed, Set(handles))
+        XCTAssertFalse(try digest.document(scope).enabled)
+        XCTAssertTrue(try digest.document(scope).rules.isEmpty)
+        try await db.close()
+    }
+}

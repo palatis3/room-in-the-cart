@@ -41,6 +41,91 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
+    func testPantryManualCheckDateRemainsAvailableWhenDigestPermissionIsDenied() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        tap(app.textFields["pantry.foodName"])
+        app.textFields["pantry.foodName"].typeText("Green lentils")
+        tap(app.textFields["pantry.amount"])
+        app.textFields["pantry.amount"].typeText("2")
+        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Green lentils")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.digest.checkDate"])
+        tap(app.buttons["pantry.digest.saveDate"])
+        XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 10))
+        app.terminate()
+        launch(reset: false)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.digest"])
+        let item = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Green lentils")).firstMatch
+        XCTAssertTrue(item.waitForExistence(timeout: 10))
+        tap(app.buttons["pantry.digest.enable"])
+        XCTAssertTrue(app.staticTexts["Notifications are unavailable. Your check dates are still here."].waitForExistence(timeout: 10))
+        XCTAssertTrue(item.exists)
+        capture("Private manual food check retained after notifications denied")
+    }
+
+    #if PANTRY_DIGEST_LIVE_ACCEPTANCE
+    /// Run only on a fresh, dedicated simulator. The ordinary app asks iOS for notification consent.
+    func testSystemDeliversPrivatePantryDigestAndReopensCurrentCheckList() {
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Shop"])
+        tap(app.buttons["shop.myPantry"])
+        let setup = app.buttons["pantry.setup.apply"]
+        if setup.waitForExistence(timeout: 3) { tap(setup) }
+        tap(app.buttons["pantry.add"])
+        tap(app.textFields["pantry.foodName"])
+        app.textFields["pantry.foodName"].typeText("Digest acceptance lentils")
+        tap(app.textFields["pantry.amount"])
+        app.textFields["pantry.amount"].typeText("2")
+        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Digest acceptance lentils")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.digest.checkDate"])
+        tap(app.buttons["pantry.digest.saveDate"])
+        XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 8))
+        for _ in 0..<2 { app.navigationBars.buttons.firstMatch.tap() }
+        tap(app.buttons["pantry.digest"])
+        tap(element("pantry.digest.time"))
+        let picker = app.pickerWheels
+        XCTAssertTrue(picker.firstMatch.waitForExistence(timeout: 6), app.debugDescription)
+        let fire = Date().addingTimeInterval(150)
+        let parts = Calendar.current.dateComponents([.hour,.minute], from: fire)
+        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
+        picker.element(boundBy: 0).adjust(toPickerWheelValue: String(hour % 12 == 0 ? 12 : hour % 12))
+        picker.element(boundBy: 1).adjust(toPickerWheelValue: String(format: "%02d", minute))
+        if picker.count == 3 { picker.element(boundBy: 2).adjust(toPickerWheelValue: hour < 12 ? "AM" : "PM") }
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.16)).tap()
+        tap(app.buttons["pantry.digest.enable"])
+        let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = board.alerts.buttons["Allow"]
+        if allow.waitForExistence(timeout: 5) { allow.tap() }
+        let on = app.staticTexts["Daily notifications are on."]
+        if !on.waitForExistence(timeout: 8) { tap(app.buttons["pantry.digest.enable"]) }
+        XCTAssertTrue(on.waitForExistence(timeout: 8))
+        capture("Pantry digest enabled by explicit OS consent")
+        XCUIDevice.shared.press(.home)
+        let text = "Open My Pantry to review the foods you chose to check."
+        let notification = board.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+        XCTAssertTrue(notification.waitForExistence(timeout: 165), board.debugDescription)
+        XCTAssertFalse(notification.label.contains("lentils"))
+        captureSystemScreen("iOS delivered a redacted Pantry notification")
+        notification.tap()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 12))
+        XCTAssertTrue(app.navigationBars["Use soon"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Digest acceptance lentils")).firstMatch.exists)
+        capture("Notification opens the current authorized food checks")
+    }
+    #endif
+
     /// F02: ordinary Dinners removal, with an independently checked SQLite history.
     func testRemovingOneDinnerPreservesOtherMealManualGroceriesAndProtectedLunchAfterRestart() throws {
         launch(reset: true, sourceRemoval: true)
