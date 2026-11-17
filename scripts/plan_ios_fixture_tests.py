@@ -188,6 +188,10 @@ def matrix(inventory=None, *, github_mac_only=False):
         "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 7,
     }
     m4_slots = {
+        # Both groups hit the GitHub watchOS runtime retirement guard before tests.
+        # These M4 lanes freed first in that batch and use the pinned fixture runtime.
+        "SharedCreatedMealUndoUITests-testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple": 0,
+        "SharedDeliveryUITests-stock-and-purchase": 2,
         # This fixture shared M2 slot 0 with the last-finishing core UI05 job.
         "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 0,
         "contributor-balanced-03": 2,
