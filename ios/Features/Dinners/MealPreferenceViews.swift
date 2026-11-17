@@ -1,26 +1,32 @@
 import SwiftUI
 import CoreDomain
 
+private struct MealPreferenceFocusKey: EnvironmentKey {
+    static let defaultValue: FocusState<String?>.Binding? = nil
+}
+private extension EnvironmentValues {
+    var mealPreferenceFocus: FocusState<String?>.Binding? {
+        get { self[MealPreferenceFocusKey.self] }
+        set { self[MealPreferenceFocusKey.self] = newValue }
+    }
+}
+
 private struct PreferenceTermsField: View {
     let title: String
     @Binding var terms: [String]
     @State private var text: String
-    @FocusState private var focused: Bool
+    @Environment(\.mealPreferenceFocus) private var focus
     init(_ title: String, terms: Binding<[String]>) {
         self.title = title
         _terms = terms
         _text = State(initialValue: terms.wrappedValue.joined(separator: "\n"))
     }
     var body: some View {
-        workingTextField(title, text: $text, axis: .vertical)
-            .focused($focused)
-            .toolbar {
-                if focused {
-                    ToolbarItem(placement: .keyboard) {
-                        Button(dinnerText("Done")) { focused = false }.accessibilityIdentifier("preferences.keyboardDone")
-                    }
-                }
-            }
+        let field = workingTextField(title, text: $text, axis: .vertical)
+        Group {
+            if let focus { field.focused(focus, equals: title) }
+            else { field }
+        }
             .onChange(of: text) { _, next in terms = DinnerEntry.list(next) }
             .onChange(of: terms) { _, next in
                 if DinnerEntry.list(text) != next { text = next.joined(separator: "\n") }
@@ -120,6 +126,7 @@ struct MealPreferenceEditor: View {
     @State private var draft: MealPreferenceSettings
     @State private var reviewing = false
     @State private var busy = false
+    @FocusState private var textFocus: String?
     @State private var failed = false
     init(profile: MealPreferenceProfile?, save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
         self.save = save
@@ -167,6 +174,9 @@ struct MealPreferenceEditor: View {
                 }
             }
         }.disabled(busy)
+        .environment(\.mealPreferenceFocus, $textFocus)
+        .keyboardDoneAction(visible: textFocus != nil, title: dinnerText("Done"),
+                            identifier: "preferences.keyboardDone") { textFocus = nil }
         .onChange(of: draft.dislikes) { _, values in if values.isEmpty { draft.strictDislikes = false } }
         .onChange(of: draft.preferredBrands) { _, values in if values.isEmpty { draft.strictBrands = false } }
         .onChange(of: draft.maximumEffort) { _, value in if value == nil { draft.strictEffort = false } }
