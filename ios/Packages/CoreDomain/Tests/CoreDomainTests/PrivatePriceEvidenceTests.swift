@@ -7,7 +7,7 @@ final class PrivatePriceEvidenceTests: XCTestCase {
     private let date = Date(timeIntervalSince1970: 1_750_000_000)
 
     private func evidence(_ source: PrivatePriceEvidence.Source, amount: Int64 = 500, count: Int64 = 1,
-                          unit: UnitOfMeasure = .gram, variant: String = "Unsalted", currency: String = "USD") throws -> PrivatePriceEvidence {
+                          unit: UnitOfMeasure = .gram, variant: String? = "Unsalted", currency: String = "USD") throws -> PrivatePriceEvidence {
         let pack = PrivatePriceEvidence.Pack(count: count, perPackage: Quantity(amount: try Rational(500), unit: unit, originalLiteral: "500"))
         return PrivatePriceEvidence(id: UUID(), source: source, foodID: food, name: "Cashews", variant: variant,
                                    store: "Market", date: date, currencyCode: currency, amountMinor: amount,
@@ -22,6 +22,7 @@ final class PrivatePriceEvidenceTests: XCTestCase {
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.currentQuote), in: .kilogram))
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.paidManual, currency: "EUR"), in: .kilogram))
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.paidManual, variant: "Salted"), in: .kilogram))
+        XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.paidManual, variant: nil), in: .kilogram))
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.paidManual, unit: .count), in: .kilogram))
         XCTAssertTrue(try paid.comparablePaidPrice(to: evidence(.paidManual), in: .kilogram))
     }

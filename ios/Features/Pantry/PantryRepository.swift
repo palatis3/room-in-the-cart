@@ -414,6 +414,24 @@ final class PantryRepository {
         try requireAccess()
     }
 
+    func recordedPriceRevision(_ current: PrivatePriceEvidence, revision: Int64, expected: InventoryState) async throws -> PrivatePriceEvidence {
+        try requireAccess()
+        guard expected.active, expected.workspaceID == originID, revision > 0, revision <= current.revision else {
+            throw PantryReceiptError.stale
+        }
+        let result: PrivatePriceEvidence
+        if case .paidReceipt(let receipt) = current.source {
+            guard let row = try await store.acquisitionRows(receiptID: receipt.receiptID, lineIDs: [current.id], revision: revision, limit: 1).first else { throw PantryReceiptError.stale }
+            result = try PrivatePriceEvidence(receipt: PantryAcquisitionCodec.record(row))
+        } else {
+            guard let row = try await store.priceRows(id: current.id, revision: revision, latestOnly: false, limit: 1).first else { throw PantryReceiptError.stale }
+            result = try PantryPriceCodec.evidence(row)
+        }
+        guard try await store.inventoryState() == expected else { throw PantryReceiptError.stale }
+        try requireAccess()
+        return result
+    }
+
     func priceAdjustments(for id: UUID, expected: InventoryState) async throws -> [PrivatePriceEvidence] {
         try requireAccess()
         var result: [PrivatePriceEvidence] = []
