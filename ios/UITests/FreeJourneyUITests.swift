@@ -1793,11 +1793,20 @@ import XCTest
         enableSwitch("Assign a date")
         tap(app.buttons["ledgerReviewDinner"])
         tap(element("dinnerApply"))
-        XCTAssertTrue(element("dinnerApply").waitForNonExistence(timeout: 10))
-        dinnerRoot()
-        tap(element("dinner.repeatWeek"))
-        tap(element("repeatWeek.next"))
+        XCTAssertTrue(element("dinnerApply").waitForNonExistence(timeout: 10), app.debugDescription)
+        app.terminate()
+        launch(reset: false)
+        let dinners = app.tabBars.buttons["Dinners"]
+        XCTAssertTrue(dinners.waitForExistence(timeout: 12), app.debugDescription)
+        dinners.tap()
+        let entry = app.buttons["dinner.repeatWeek"]
+        XCTAssertTrue(entry.waitForExistence(timeout: 12), app.debugDescription)
+        tap(entry)
+        let nextWeek = app.buttons["repeatWeek.next"]
+        XCTAssertTrue(nextWeek.waitForExistence(timeout: 10), app.debugDescription)
+        tap(nextWeek)
         let included = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@", "repeatWeek.meal.")).firstMatch
+        XCTAssertTrue(included.waitForExistence(timeout: 10), app.debugDescription)
         reveal(included)
         XCTAssertTrue(included.label.contains("Rice supper"), included.debugDescription)
         XCTAssertEqual(included.value as? String, "1")
@@ -1808,12 +1817,19 @@ import XCTest
         XCTAssertTrue(apply.isEnabled, app.debugDescription)
         tapVisibleFormRow(apply, marker: "REPEAT_WEEK_APPLY")
         XCTAssertTrue(apply.waitForNonExistence(timeout: 10), app.debugDescription)
-        tap(app.buttons["All chosen dinners, including earlier dates"])
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(dinners.waitForExistence(timeout: 12), app.debugDescription)
+        dinners.tap()
+        let allDinners = app.buttons["All chosen dinners, including earlier dates"]
+        reveal(allDinners)
+        XCTAssertTrue(allDinners.isHittable, app.debugDescription)
+        allDinners.tap()
         let meals = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
             "dinnerOccurrence-", "Rice supper"))
         XCTAssertEqual(meals.count, 2, app.debugDescription)
-        XCTAssertNotEqual(meals.element(boundBy: 0).identifier, meals.element(boundBy: 1).identifier)
-        XCTAssertNotEqual(meals.element(boundBy: 0).label, meals.element(boundBy: 1).label)
+        XCTAssertNotEqual(meals.element(boundBy: 0).identifier, meals.element(boundBy: 1).identifier, app.debugDescription)
+        XCTAssertNotEqual(meals.element(boundBy: 0).label, meals.element(boundBy: 1).label, app.debugDescription)
     }
 
     func testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence() { verifyDatedMealWeek(spanish: false, moveAcrossWeek: true) }
