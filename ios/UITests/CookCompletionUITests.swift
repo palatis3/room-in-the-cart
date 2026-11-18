@@ -33,10 +33,24 @@ import XCTest
         // Applied manual editor remains in its navigation path. Return to the
         // actual Dinners tab root before opening the saved occurrence.
         tap(app.tabBars.buttons["Shop"]); tap(app.tabBars.buttons["Dinners"])
-        for _ in 0..<4 where !app.buttons["All chosen dinners, including earlier dates"].exists {
-            if app.navigationBars.firstMatch.buttons.firstMatch.exists { app.navigationBars.firstMatch.buttons.firstMatch.tap() }
+        let dinnersBar = app.navigationBars["Dinners"]
+        for _ in 0..<4 where !dinnersBar.exists {
+            let back = app.navigationBars.firstMatch.buttons.firstMatch
+            if back.exists { back.tap() }
         }
-        tap(app.buttons["All chosen dinners, including earlier dates"])
+        XCTAssertTrue(dinnersBar.waitForExistence(timeout: 4), app.debugDescription)
+        let chosenDinners = app.buttons["All chosen dinners, including earlier dates"]
+        let list = app.collectionViews.firstMatch
+        // Returning from the editor can leave this row above the compact viewport.
+        for attempt in 0..<8 {
+            let exists = chosenDinners.exists
+            if exists && chosenDinners.isHittable { break }
+            let searchAbove = exists ? chosenDinners.frame.midY < list.frame.midY : attempt < 4
+            if searchAbove { list.swipeDown(velocity: .slow) }
+            else { list.swipeUp(velocity: .slow) }
+        }
+        XCTAssertTrue(chosenDinners.exists && chosenDinners.isHittable, app.debugDescription)
+        chosenDinners.tap()
         tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS 'Actual rice dinner'")).firstMatch)
         tap(app.buttons["cooking.openDinner"])
         XCTAssertTrue(app.staticTexts["This recipe has no written instructions."].waitForExistence(timeout: 12), app.debugDescription)
