@@ -1,5 +1,4 @@
 import CoreDomain
-import CryptoKit
 import HouseholdClient
 import PhotosUI
 import SwiftUI
@@ -66,6 +65,7 @@ extension ReceiptImportDraft.Line {
     @State private var pickedPhoto: PhotosPickerItem?
     @State private var cropSource: CGImage?
     @State private var cropEditor = false
+    @State private var cropDigest: Data?
     @State private var crop: ReceiptLineCrop?
     @State private var localWording: String?
     @State private var preparingPhoto = false
@@ -178,9 +178,9 @@ extension ReceiptImportDraft.Line {
         }
         .sheet(isPresented: $cropEditor, onDismiss: { cropSource = nil; pickedPhoto = nil }) {
             if let cropSource, current {
-                ReceiptLineCropEditor(image: cropSource) { value in
+                ReceiptLineCropEditor(image: cropSource) { value, digest in
                     guard current else { return }
-                    crop = value; localWording = nil; resetReview()
+                    crop = value; cropDigest = digest; localWording = nil; resetReview()
                 }
             }
         }
@@ -203,10 +203,10 @@ extension ReceiptImportDraft.Line {
                     if case let .image(_, apply) = destination {
                         do { guard current else { throw PantryReceiptError.stale }; try apply(reviewedWording(localWording, method: .deviceOCR)); dismiss() }
                         catch { feedback = pantryText("The source changed. Open the line again.") }
-                    } else { selected = localWording; self.crop = nil; self.localWording = nil; resetReview() }
+                    } else { selected = localWording; self.crop = nil; cropDigest = nil; self.localWording = nil; resetReview() }
                 }.disabled(sending)
             }
-            Button(pantryText("Remove the crop")) { self.crop = nil; localWording = nil; resetReview() }.disabled(sending)
+            Button(pantryText("Remove the crop")) { self.crop = nil; cropDigest = nil; localWording = nil; resetReview() }.disabled(sending)
         } else {
             if let sourceImage {
                 Button(isReceipt ? pantryText("Crop the reviewed receipt photo") : pantryText("Crop the selected source image")) { openCrop(sourceImage) }.disabled(sending)
@@ -220,11 +220,8 @@ extension ReceiptImportDraft.Line {
         }
     }
     private func reviewedWording(_ text: String, method: ReviewedImageWording.Method) throws -> ReviewedImageWording {
-        guard let crop else { throw PantryReceiptError.stale }
-        var digest = SHA256()
-        digest.update(data: Data("gray8/\(crop.width)/\(crop.height)/".utf8))
-        digest.update(data: crop.pixels)
-        return try ReviewedImageWording(text: text, method: method, cropDigest: Data(digest.finalize()))
+        guard crop != nil, let cropDigest else { throw PantryReceiptError.stale }
+        return try ReviewedImageWording(text: text, method: method, cropDigest: cropDigest)
     }
 
     private func openCrop(_ data: Data) {
@@ -238,7 +235,7 @@ extension ReceiptImportDraft.Line {
 
     private func cancel() {
         operation = UUID(); task?.cancel(); task = nil; sending = false; result = nil; readLine = nil; request = nil
-        crop = nil; cropSource = nil; pickedPhoto = nil; localWording = nil
+        crop = nil; cropDigest = nil; cropSource = nil; pickedPhoto = nil; localWording = nil
     }
     private func send() {
         guard current, available, !sending, attempts < 2, let scope = serviceScope, let service = household.service,

@@ -98,7 +98,8 @@ public struct ReviewedCheckoutImage: Codable, Equatable, Sendable {
     public let charges: [Charge]
     public init(charges: [Charge]) throws { self.charges = charges; try validate() }
     public func validate() throws {
-        guard !charges.isEmpty, charges.count <= Field.allCases.count,
+        let reviewedCrops = charges.compactMap { $0.line.reviewedReading?.cropDigest }
+        guard Set(reviewedCrops).count == reviewedCrops.count, !charges.isEmpty, charges.count <= Field.allCases.count,
               Set(charges.map(\.field)).count == charges.count, Set(charges.map(\.line.ordinal)).count == charges.count,
               Set(charges.map(\.line.digest)).count == 1 else { throw DomainError.invalidInput("checkoutImage") }
         for charge in charges {

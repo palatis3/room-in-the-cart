@@ -37,8 +37,8 @@ struct PriceImageReview: View {
                 }) { index, reading in
                     guard originals.indices.contains(index) else { throw ScanFailure.stale }
                     let item = try PriceImageLine(digest: digest, ordinal: index, wording: originals[index], uncertain: true, reviewedReading: reading)
+                    guard !lines.contains(where: { $0.ordinal != index && $0.reviewedReading?.cropDigest == reading.cropDigest }) else { throw ScanFailure.stale }
                     if index == lines.count {
-                        guard !lines.contains(where: { $0.reviewedReading?.cropDigest == reading.cropDigest }) else { throw ScanFailure.stale }
                         lines.append(item)
                     } else { lines[index] = item }
                     for field in ReviewedCheckoutImage.Field.allCases where selections[field] == index {
@@ -47,11 +47,11 @@ struct PriceImageReview: View {
                     }
                 }
             }
-            if !lines.isEmpty {
+            if authorized(), !lines.isEmpty {
                 if purpose == .shelf {
                     Section(pantryText("Choose the printed price line")) {
                         ForEach(lines, id: \.ordinal) { line in
-                            Button { acceptShelf(line); dismiss() } label: {
+                            Button { guard authorized() else { return }; acceptShelf(line); dismiss() } label: {
                                 VStack(alignment: .leading) {
                                     if !line.wording.isEmpty { Text(verbatim: line.wording) }
                                     if let reading = line.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
@@ -92,6 +92,7 @@ struct PriceImageReview: View {
                     }
                     Button(pantryText("Use reviewed screenshot")) {
                         do {
+                            guard authorized() else { return }
                             let charges = try ReviewedCheckoutImage.Field.allCases.compactMap { field -> ReviewedCheckoutImage.Charge? in
                                 guard let i = selections[field], lines.indices.contains(i) else { return nil }
                                 let raw = (amounts[field] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -109,10 +110,17 @@ struct PriceImageReview: View {
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() } } }
         .keyboardDoneAction(visible: focusedAmount != nil, title: pantryText("Done"), identifier: "priceImage.done") { focusedAmount = nil }
         .privacySensitive()
+        .onChange(of: authorized()) { _, allowed in
+            if !allowed {
+                photo = nil; sourcePreview = nil; sourceDigest = nil; lines = []
+                selections = [:]; amounts = [:]; inclusions = [:]; notice = nil
+                dismiss()
+            }
+        }
         .task(id: photo) {
             sourcePreview = nil; sourceDigest = nil
             lines = []; selections = [:]; amounts = [:]; inclusions = [:]; notice = nil
-            guard let photo else { loading = false; return }
+            guard let photo, authorized() else { loading = false; return }
             loading = true
             defer { if !Task.isCancelled { loading = false } }
             do {
