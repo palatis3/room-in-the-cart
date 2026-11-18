@@ -1,0 +1,36 @@
+{
+  "source": "821fa43c28beda6e6561d12352d2ae0452551d49",
+  "deployment": "dpl_2H4CLFJxoQRfYbVU8NMVJyLzmmEN",
+  "alias": "room-in-the-cart-staging.vercel.app",
+  "publicMaintenanceVerifiedUTC": "2026-11-18T06:55:57.178307+00:00",
+  "publicAliasVerifiedUTC": "2026-11-18T07:01:04.166480+00:00",
+  "schemaBefore": 58,
+  "schemaAfter": 59,
+  "singleTransactionSeconds": 4.13,
+  "originalTables": 164,
+  "originalRows": 142,
+  "authTables": 27,
+  "publicAPIAndAuthorizationChecks": 12,
+  "publicWebChecks": 21,
+  "publicRoleBoundChecks": 4,
+  "workerHealth": {
+    "authDue": 0,
+    "authRetryPending": 0,
+    "authExpiredUnconfirmed": 0,
+    "privacyPending": 0,
+    "privacyDue": 0
+  },
+  "schedulerDeployment": "dpl_2H4CLFJxoQRfYbVU8NMVJyLzmmEN",
+  "nextDailyScheduleUTC": "0 8 * * *",
+  "operatorTriggeredWorker": false,
+  "receiptSHA256": {
+    "release-reopened.json": "b33cbb4eeb4a14ee304041bb06ad413ca5be16a1a47ee4f0a433458f5e4882fd",
+    "reopened-role-bound-http.json": "110c01da665b9f0ac2f2274e220de77fa0efa68f0d1a893aeb24e58fc4b6bd8d",
+    "release-cron-binding.json": "fdfb8a807fef4fd7233e7eeff9a73bc8425656919672b0089a1be5f6e3e779d5",
+    "read-only-worker.json": "23d7aa725548cbbb6ef96ba4dbad742d73bc4e140dc1d4f844fb1f1bc28ad639",
+    "runtime-versions.json": "a94304ab9237ea7b6be39c247203b1d2154cbe3d626834089940d9f26524e5fa",
+    "applied059.json": "754eca529e13b1c8734a9adbb44ce3bd6615e6a96a191528ee6a8c198ba816bb",
+    "fenced-backup.json": "8bc71f5cd95910cd350124458f81b681514736f1d7e151aa11fe79e0ae14bca3",
+    "scoped-postflight.json": "198ceb12d9a6a51a5d4af1651d545efd3f6b5cba8bd2c62a1a433daa58ad5049"
+  }
+}
