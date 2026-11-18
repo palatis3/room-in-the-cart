@@ -53,6 +53,14 @@ import XCTest
         XCTAssertEqual(proposal("PERAS 2 kg a USD 2,50 USD 5,00").amount, "5.00")
         XCTAssertEqual(proposal("EGGS GRADE A $4.00").name, "EGGS GRADE A")
         XCTAssertEqual(proposal("EGGS GRADE A $4.00").amount, "4.00")
+        for unit in ["onzas líquidas", "oz liq.", "fluid ounces", "fl. oz."] {
+            let oil = proposal("ACEITE 8 \(unit) USD 4,00")
+            XCTAssertEqual(oil.unit, .fluidOunce, unit)
+            XCTAssertEqual(oil.quantity, "8", unit)
+            XCTAssertEqual(oil.name, "ACEITE", unit)
+            XCTAssertEqual(oil.amount, "4.00", unit)
+        }
+        XCTAssertEqual(proposal("QUESO 8 onzas USD 4,00").unit, .ounce)
         let returned = proposal("PERAS -2 CT USD 6.50")
         XCTAssertNil(returned.quantity); XCTAssertNil(returned.amount); XCTAssertTrue(returned.uncertain)
         XCTAssertNil(proposal("PERAS 2 CT (6.50)").quantity)

@@ -117,8 +117,7 @@ struct HouseholdReceiptEntry: View {
                 Section(pantryText("Receipt details")) {
                     TextField(pantryText("Store or branch"), text: value.merchant).focused($field, equals: "merchant")
                     TextField(pantryText("Confirmed transaction reference, if printed"), text: value.reference).focused($field, equals: "reference")
-                    DatePicker(pantryText("Purchase date"), selection: value.purchaseDate, in: ...Date(), displayedComponents: .date)
-                    Toggle(pantryText("I checked the purchase date."), isOn: value.dateConfirmed)
+                    ReceiptPurchaseDateFields(draft: value)
                 }
                 Text(pantryText("Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped."))
                 ForEach(displayed.lines) { row in

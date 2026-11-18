@@ -106,13 +106,7 @@ struct PantryReceiptEntry: View {
                     }
                     TextField(pantryText("Confirmed transaction reference, if printed"), text: value.reference).focused($field, equals: "reference")
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
-                    if let printed = displayed.printedDate {
-                        LabeledContent(pantryText("Date wording on the receipt"), value: printed.wording)
-                    } else { Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review.")) }
-                    DatePicker(pantryText("Purchase date"), selection: Binding(get: { value.wrappedValue.purchaseDate }, set: { date in
-                        value.wrappedValue.purchaseDate = date; value.wrappedValue.dateConfirmed = false
-                    }), in: ...Date(), displayedComponents: .date)
-                    Toggle(pantryText("I checked the purchase date."), isOn: value.dateConfirmed)
+                    ReceiptPurchaseDateFields(draft: value)
                 }
                 Text(pantryText("Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped."))
                 ForEach(displayed.lines) { line in
@@ -264,6 +258,20 @@ struct PantryReceiptEntry: View {
             }
             resultFocused = true
         }
+    }
+}
+
+struct ReceiptPurchaseDateFields: View {
+    @Binding var draft: ReceiptImportDraft
+
+    var body: some View {
+        if let printed = draft.printedDate {
+            LabeledContent(pantryText("Date wording on the receipt"), value: printed.wording)
+        } else {
+            Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review."))
+        }
+        DatePicker(pantryText("Purchase date"), selection: $draft.selectedPurchaseDate, in: ...Date(), displayedComponents: .date)
+        Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
     }
 }
 
