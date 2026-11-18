@@ -2026,6 +2026,27 @@ test('shared cooking batches lot splits, fulfills only actual holds, recovers it
  assert.equal((await f.review()).completion.servings,3);
  const stock=(await f.stock()).lots;
  assert.deepEqual([f.sourceId,f.manual,output.lotId].map(id=>stock.find(l=>l.lotId===id).observation.quantity.amount.numerator),[3,3,2]);
+ // A cook balance must not replace the evidence reviewed for a staple purchase.
+ const physical=stock.find(l=>l.lotId===f.sourceId);
+ assert.equal(physical.observation.quantity.amount.numerator,3);
+ assert.notEqual(physical.observation.observationId,f.usable.observationId);
+ assert.equal(physical.purchaseObservation.observationId,f.usable.observationId);
+ assert.equal(physical.purchaseObservation.quantity.amount.numerator,5);
+ assert.equal(stock.find(l=>l.lotId===f.manual).purchaseObservation,null);
+ const staplePath=f.base+'/pantry/staples',zone='America/New_York';
+ const stapleRead=async()=>ok(await call(f.owner,staplePath+'?zone='+zone));
+ const stapleCommand=async action=>{const state=await stapleRead();return {v:1,zone,
+   pantryRevision:state.pantryRevision,grantEpoch:state.grantEpoch,expectedRevision:state.revision,
+   clientKey:randomUUID(),replayWindow:f.owner.window,action};};
+ ok(await call(f.owner,staplePath,'POST',await stapleCommand({kind:'enable',enabled:true})));
+ const purchase={kind:'purchase',groupId:null,name:'Wraps',lotId:f.sourceId,
+   observationId:physical.purchaseObservation.observationId,purchaseDay:'2026-11-01'};
+ assert.equal((await call(f.owner,staplePath,'POST',await stapleCommand({...purchase,observationId:physical.observation.observationId}))).status,409);
+ const purchaseCommand=await stapleCommand(purchase);
+ const purchased=ok(await call(f.owner,staplePath,'POST',purchaseCommand));
+ assert.equal(purchased.groups[0].purchases[0].lotId,f.sourceId);
+ assert.equal((await admin.query('SELECT usable_id FROM ritc.staple_purchase WHERE household_id=$1 AND lot_id=$2',[f.h,f.sourceId])).rows[0].usable_id,f.usable.observationId);
+ assert.deepEqual((await f.stock()).lots,stock,'Reviewing a purchase never changes physical food');
  const history=ok(await call(f.owner,f.base+'/shops/'+f.shopId+'/records/history/v1')).record.stockHistory;
  const savedBatch=history.events.filter(e=>e.pantryRevision===receipt.pantryRevision);
  assert.equal(savedBatch.length,3);assert.equal(new Set(savedBatch.map(e=>e.eventId)).size,3);
@@ -2042,7 +2063,19 @@ test('shared cooking batches lot splits, fulfills only actual holds, recovers it
  const after=(await f.stock()).lots;assert(after.some(l=>l.lotId===unrelated));
  assert.deepEqual([f.sourceId,f.manual].map(id=>after.find(l=>l.lotId===id).observation.quantity.amount.numerator),[5,5]);
  assert.equal((await f.review()).completion,null);
+ assert.deepEqual(after.find(l=>l.lotId===f.sourceId).purchaseObservation,physical.purchaseObservation);
+ assert.deepEqual((await stapleRead()).groups,purchased.groups);
+ assert.deepEqual(ok(await call(f.owner,staplePath,'POST',purchaseCommand)).groups,purchased.groups);
  assert.equal((await f.delivery()).sources.find(s=>s.sourceId===f.sourceId).reservations[0].quantity.amount.numerator,2);
+ // An exhausted batch is still a real purchase, while its current usable amount is zero.
+ const full=await f.body(),[nextDinner,nextLunch]=full.draft.needs;
+ ok(await f.send(f.command('cook.complete',{...full.base,servings:3,outputs:[],uses:[
+   f.known(nextDinner.id,f.need(full.draft,nextDinner.id,f.sourceId),3),
+   f.known(nextLunch.id,f.need(full.draft,nextLunch.id,f.sourceId),2)]})));
+ const exhausted=(await f.stock()).lots.find(l=>l.lotId===f.sourceId);
+ assert.equal(exhausted.observation.quantity.amount.numerator,0);
+ assert.deepEqual(exhausted.purchaseObservation,physical.purchaseObservation);
+ assert.deepEqual((await stapleRead()).groups,purchased.groups);
 });
 
 test('unknown shared cooking use retains history, allows counted leftovers and guards later output promises',async()=>{

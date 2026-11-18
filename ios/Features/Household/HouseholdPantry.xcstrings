@@ -625,6 +625,22 @@
         }
       }
     },
+    "No loaded delivery has reviewed purchase evidence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No loaded delivery has reviewed purchase evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna entrega cargada tiene comprobantes de compra revisados."
+          }
+        }
+      }
+    },
     "No pantry access": {
       "localizations": {
         "en": {
@@ -701,6 +717,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Día de la compra"
+          }
+        }
+      }
+    },
+    "Received usable quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received usable quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable recibida"
           }
         }
       }

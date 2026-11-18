@@ -63,6 +63,7 @@ import XCTest
         tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Oats")).firstMatch)
         fill("Oats", into: "householdStaple.name")
         tap(app.buttons["householdStaple.review"])
+        XCTAssertTrue(app.staticTexts["Received usable quantity"].waitForExistence(timeout: 10))
         tap(app.buttons["householdStaple.confirmPurchase"])
         XCTAssertTrue(app.staticTexts["1 reviewed purchase"].waitForExistence(timeout: 10))
         tap(app.buttons["Done"])

@@ -45,7 +45,7 @@ private struct HouseholdPantryView: View {
                                     SharedFeedbackWithdrawalView(household: household, scope: model.scope, service: service)
                                 }
                             }
-                            Button(pantryText("Staple reminders")) { sheet = .staples }
+                            Button(householdPantryText("Staple reminders")) { sheet = .staples }
                                 .accessibilityIdentifier("householdPantry.staples")
                             if model.scope.managesGrants {
                                 Button(householdPantryText("Manage pantry access")) { sheet = .grants }

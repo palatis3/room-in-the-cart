@@ -75,9 +75,15 @@ export async function physicalPantryPage(ctx:Context,cursor:string|null,shop?:Sh
     ORDER BY lot_id LIMIT 51`,[ctx.householdId,cursor,!shop,epoch!==null,includeRefrigerated]);
   const page=result.rows.slice(0,50),ids=page.map(l=>l.lot_id);
   const heads=await headRows(ctx,ids,shop?.shop_id??null),delivered=await storedDeliveryEvidence(ctx,page.flatMap(l=>l.delivery_source_id?[l.delivery_source_id]:[]));
+  // A staple purchase reviews immutable delivery evidence, never a later cook
+  // balance head. This field is limited to the separately authorized household page.
+  const purchases=shop?[]:await storedDeliveryEvidence(ctx,page.flatMap(l=>l.delivery_source_id?[l.delivery_source_id]:[]),null,true);
   const lots=page.map(l=>{
     const physical=materialize(l,heads,delivered.find(s=>s.sourceId===l.lot_id));
-    return shop?{...physical,...review(heads,l.lot_id,shop.shop_id)}:physical;
+    const purchase=purchases.find(s=>s.sourceId===l.lot_id);
+    const purchaseObservation=purchase?.usable && purchase.confirmed ? {observationId:purchase.usable.observationId,
+      confirmedAt:purchase.usable.confirmedAt,quantity:purchase.confirmed.quantity}:null;
+    return shop?{...physical,...review(heads,l.lot_id,shop.shop_id)}:{...physical,purchaseObservation};
   });
   return {lots,nextCursor:result.rows.length>50?ids.at(-1):null};
 }

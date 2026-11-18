@@ -258,7 +258,6 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                                      "enrolled": true, "queueConsent": false, "capabilities": ["household_pantry", "household_pantry_grants"]])
             }
             if stapleFixture && path.hasSuffix("/pantry/staples") {
-                let today = ISO8601DateFormatter().string(from: Date()).prefix(10)
                 let zone: String
                 if request.httpMethod == "POST" {
                     guard let action = json["action"] as? [String: Any], let kind = action["kind"] as? String,
@@ -276,6 +275,12 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                 } else {
                     zone = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "zone" })?.value ?? "UTC"
                 }
+                let formatter = DateFormatter()
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.calendar = Calendar(identifier: .gregorian)
+                formatter.timeZone = TimeZone(identifier: zone)
+                formatter.dateFormat = "yyyy-MM-dd"
+                let today = formatter.string(from: Date())
                 let purchases = zip(pastSources, ["2026-09-01", "2026-09-08", "2026-09-15"]).map { ["lotId": $0.0, "day": $0.1, "foodName": "Milk"] }
                 let prompt: [String: Any] = ["purchaseDays": 3, "intervalDays": 7, "dueDay": "2026-09-22", "basis": String(repeating: "a", count: 64)]
                 var groups: [[String: Any]] = [["id": stapleGroup, "name": "Milk", "purchases": purchases, "prompt": stapleAnswered ? NSNull() as Any : prompt]]
@@ -287,8 +292,10 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
             if stapleFixture && path.hasSuffix("/pantry") {
                 let amount: [String: Any] = ["unit": "count", "originalLiteral": "2", "amount": ["numerator": 2, "denominator": 1]]
+                let zero: [String: Any] = ["unit": "count", "originalLiteral": "0", "amount": ["numerator": 0, "denominator": 1]]
                 let lot: [String: Any] = ["lotId": pantryLot, "foodName": "Oats", "location": "pantry", "origin": "delivery", "exclusionTags": [],
-                                          "observation": ["confirmedAt": "2026-11-01T12:00:00Z", "observationId": extraHead, "quantity": amount]]
+                    "purchaseObservation": ["observationId": extraHead, "confirmedAt": "2026-11-01T12:00:00Z", "quantity": amount],
+                    "observation": ["confirmedAt": "2026-11-02T12:00:00Z", "observationId": "00000000-0000-0000-0000-000000000099", "quantity": zero]]
                 return try response(["v": 1, "householdId": household, "grantEpoch": 0, "pantryRevision": 0,
                                      "asOf": "2026-11-01T12:00:00Z", "lots": [lot], "nextCursor": NSNull()])
             }

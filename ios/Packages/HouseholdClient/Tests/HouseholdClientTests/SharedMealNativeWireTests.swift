@@ -612,6 +612,23 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(cooked, replayed)
         let afterCook = try await service.sharedCookReview(shopID: delivery.shopId.uuidString.lowercased(), occurrence: occurrence.id)
         XCTAssertEqual(afterCook.completion?.servings, 3)
+        // The household purchase screen must review received food, not this cook balance.
+        let pantryActor = try await service.householdPantrySession(for: scope)
+        let householdStock = try await service.householdPantryPage(for: pantryActor)
+        let physicalDelivery = try XCTUnwrap(householdStock.lots.first { $0.id == source })
+        XCTAssertEqual(physicalDelivery.observation?.quantity?.amount.numerator, 6)
+        let purchaseEvidence = try XCTUnwrap(physicalDelivery.purchaseObservation)
+        XCTAssertEqual(purchaseEvidence.quantity?.amount.numerator, 7)
+        XCTAssertNotEqual(purchaseEvidence.observationId, physicalDelivery.observation?.observationId)
+        let staples = try await service.householdStaples(for: pantryActor, zone: "America/New_York")
+        let enabledStaples = try await service.changeHouseholdStaples(.enable(true), reviewed: staples, session: pantryActor)
+        let purchaseDay = "2020-01-01"
+        let purchasedStaples = try await service.changeHouseholdStaples(.purchase(group: nil, name: "Beans", lot: source,
+            reviewed: purchaseEvidence.observationId, day: purchaseDay), reviewed: enabledStaples, session: pantryActor)
+        XCTAssertEqual(purchasedStaples.groups.first?.purchases.first?.lotId, source)
+        let stockAfterPurchase = try await service.householdPantryPage(for: pantryActor)
+        XCTAssertEqual(stockAfterPurchase.lots, householdStock.lots)
+        XCTAssertEqual(stockAfterPurchase.pantryRevision, householdStock.pantryRevision)
         let cookID = try XCTUnwrap(afterCook.completion?.cookId)
         let feedbackShop = delivery.shopId.uuidString.lowercased()
         let feedback = try await service.sharedMealFeedback(shopID: feedbackShop, occurrence: occurrence.id, cook: cookID)
