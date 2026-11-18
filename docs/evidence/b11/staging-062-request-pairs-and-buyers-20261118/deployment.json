@@ -1,0 +1,49 @@
+{
+  "lastLiveReceiptUTC": "2026-11-18T16:22:36.606350+00:00",
+  "source": "21df15811e2fdb50e869a364fe4caeb744e4bb47",
+  "stagingAlias": "room-in-the-cart-staging.vercel.app",
+  "deploymentId": "dpl_6T5ymYr8wPCLBoMTQqvDXyaQ4rTU",
+  "previousDeployment": "dpl_5zCR9sEy86tqTkweFiJtHrAD6deL",
+  "manifestSHA256": "dd9a149233be5d3a648d753b2cb2c297bdc6b73a9ff2edec4dd1645519adde83",
+  "migrations": [
+    61,
+    62
+  ],
+  "migrationSHA256": {
+    "061_request_pair_review.sql": "37380385a0dceace88c2d2ea81e37bb0bcf07f1ef8d5636ca69d3f009e65b9de",
+    "062_reported_purchaser.sql": "be464dbf3f1fac6f6a87bd4182b895ee2c412043759cf28f62917466a457faba"
+  },
+  "preservedTables": 168,
+  "preservedRows": 144,
+  "authTablesVerifiedAfterCommit": 27,
+  "recoveryImagesDetached": true,
+  "workerAttentionRequired": false,
+  "scheduledMaintenance": [
+    {
+      "path": "/internal/maintenance",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "scheduledDeployment": "dpl_6T5ymYr8wPCLBoMTQqvDXyaQ4rTU",
+  "reopenedVerifiedUTC": "2026-11-18T16:22:29.233906+00:00",
+  "hostedReadOnlyChecks": {
+    "protectedAndPublicEach": {
+      "api": 12,
+      "webRoutesAndAssets": 21,
+      "databaseHTTPWithUnissuedCredentials": 4
+    },
+    "runtimeAndWorkerRoleBoundaries": true,
+    "workerStatus": "read-only",
+    "authenticatedFeatureWritesExercised": false
+  },
+  "localAuthenticatedFeatureQualification": {
+    "revision": "21df15811e2fdb50e869a364fe4caeb744e4bb47",
+    "postgresHTTPTestsPassed": 497,
+    "workerTestsPassed": 17,
+    "populatedCrossVersionErasureTestsPassed": 1,
+    "requestPairUndoAndReportedPurchaserExercised": true
+  },
+  "maintenanceVerifiedUTC": "2026-11-18T16:20:05.912569+00:00",
+  "fullReceiptSHA256": "cc32605b158f2cb0a2c2d60e5c2ac647d05b97a6de881c9d9e699e44c7a8e36f",
+  "recoveryAfterFeatureWrites": "Preserve request comparisons and reported purchasers. Keep affected workflows fenced until a compatible service is available. A coordinated restore must account for intervening writes and erasures."
+}

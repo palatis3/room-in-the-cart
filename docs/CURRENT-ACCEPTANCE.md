@@ -216,4 +216,7 @@ specific evidence and owner-deferred boundaries for each item.
 
 Apple paid membership/signing, SMTP and actual KWS activation remain owner deferred.
 On November 18, Staging reopened on schema 060 with request matching and the staple reminder fix. The migration preserved all 143 prior rows in 167 checked tables. The public API, web routes, maintenance schedule and worker passed verification. After a new match is saved, recovery requires a service that supports Undo for that match or a coordinated restore. [Staging receipt](evidence/b11/staging-060-request-matches-20261118/deployment.json)
+
+Staging reopened on schema 062 at 16:22 UTC on November 18. Shoppers can now compare two open requests, undo the comparison from either request, and record who bought an item separately from who recorded the purchase. The upgrade preserved all 144 existing rows across 168 tables. Authenticated feature writes passed against the local service. Hosted checks verified access, public routes and the scheduled worker. [Schema 062 staging receipt](evidence/b11/staging-062-request-pairs-and-buyers-20261118/deployment.json)
+
 Direct retailer integration (E05) remains deferred. X01–X06 remain product boundaries.
