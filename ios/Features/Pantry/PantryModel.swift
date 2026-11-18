@@ -106,6 +106,14 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         guard token == generation, canEdit else { throw PantryReceiptError.stale }
     }
 
+    func recordedPriceRevision(_ current: PrivatePriceEvidence, revision: Int64, expected: InventoryState) async throws -> PrivatePriceEvidence {
+        let token = generation
+        guard canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        let record = try await repository.recordedPriceRevision(current, revision: revision, expected: expected)
+        guard token == generation, canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        return record
+    }
+
     func priceAdjustments(for id: UUID, expected: InventoryState) async throws -> [PrivatePriceEvidence] {
         let token = generation
         guard canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }

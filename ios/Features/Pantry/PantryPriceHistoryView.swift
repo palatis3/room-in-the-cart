@@ -18,7 +18,7 @@ struct PantryPriceHistoryView: View {
                 Button(pantryText("Record a price")) { editing = true }
                     .disabled(page == nil || !model.canEdit).accessibilityIdentifier("prices.add")
                 Toggle(pantryText("Show paid prices only"), isOn: $onlyPaid).accessibilityIdentifier("prices.onlyPaid")
-                ForEach(rows.filter { !onlyPaid || $0.isPaidPrice }) { row in
+                ForEach(rows.filter { !onlyPaid || ($0.isPaidPrice && $0.amountMinor != nil) }) { row in
                     NavigationLink {
                         if let page { PantryPriceDetail(model: model, row: row, state: page.state, history: rows) }
                     } label: {
@@ -99,6 +99,7 @@ private struct PantryPriceDetail: View {
                     }
                     if let variant = row.variant { Text(verbatim: variant) }
                     Text(verbatim: [row.store, row.branch].compactMap { $0 }.joined(separator: " · "))
+                    if let mode = row.mode { Text(mode.ledgerLabel) }
                     Text(row.date, style: .date)
                     if let pack = row.pack { Text(verbatim: String(pack.count) + " × " + pack.perPackage.originalLiteral) }
                     if let eligibility = row.eligibility { Text(verbatim: eligibility) }
@@ -115,6 +116,11 @@ private struct PantryPriceDetail: View {
                    let scope = household.projection, scope.enrolled, scope.grantId == nil, !household.locked, household.identity != nil {
                     NavigationLink(HistoryCopy.text("Review for a shared shop")) {
                         PrivatePricePublicationView(pantry: model, household: household, price: row, state: state)
+                    }
+                }
+                if row.revision > 1 {
+                    NavigationLink(pantryText("Recorded price revisions")) {
+                        PantryPriceRevisionView(model: model, current: row, state: state)
                     }
                 }
                 if row.isPaidPrice, row.amountMinor != nil {
@@ -145,6 +151,52 @@ private struct PantryPriceDetail: View {
                 NavigationStack {
                     PantryPriceEditor(model: model, expected: state, original: row) { correcting = false; dismiss() }
                 }
+            }
+        }
+    }
+}
+
+private struct PantryPriceRevisionView: View {
+    @ObservedObject var model: PantryModel
+    let current: PrivatePriceEvidence
+    let state: InventoryState
+    @State private var revision: Int64 = 1
+    @State private var record: PrivatePriceEvidence?
+    @State private var failed = false
+
+    var body: some View {
+        List {
+            if model.phase != .accessDenied {
+                Section {
+                    Stepper(value: $revision, in: 1...current.revision) {
+                        LabeledContent(pantryText("Revision"), value: String(revision))
+                    }
+                }
+                if let record, record.revision == revision {
+                    Text(verbatim: record.name)
+                    if let variant = record.variant { Text(verbatim: variant) }
+                    Text(verbatim: priceSource(record) + " · " + priceAmount(record))
+                    Text(verbatim: [record.store, record.branch].compactMap { $0 }.joined(separator: " · "))
+                    if let mode = record.mode { Text(mode.ledgerLabel) }
+                    Text(record.date, style: .date)
+                    if let pack = record.pack { Text(verbatim: String(pack.count) + " × " + pack.perPackage.originalLiteral) }
+                    if let terms = record.eligibility { Text(verbatim: terms) }
+                    Text(verbatim: record.sourceText)
+                } else if failed { Text(pantryText("Prices changed. Reopen the price history.")) }
+                else { ProgressView() }
+            }
+        }
+        .navigationTitle(pantryText("Recorded price revisions")).privacySensitive()
+        .task(id: revision) {
+            failed = false
+            do {
+                let value = try await model.recordedPriceRevision(current, revision: revision, expected: state)
+                guard !Task.isCancelled else { return }
+                record = value
+            } catch {
+                guard !Task.isCancelled else { return }
+                record = nil
+                failed = true
             }
         }
     }
@@ -278,6 +330,7 @@ private struct PantryPriceEditor: View {
     @State private var variant = ""
     @State private var store = ""
     @State private var branch = ""
+    @State private var mode: FulfillmentMode?
     @State private var date = Date()
     @State private var currency = "USD"
     @State private var amount = ""
@@ -304,6 +357,7 @@ private struct PantryPriceEditor: View {
         _variant = State(initialValue: original.variant ?? "")
         _store = State(initialValue: original.store)
         _branch = State(initialValue: original.branch ?? "")
+        _mode = State(initialValue: original.mode)
         _date = State(initialValue: original.date)
         _currency = State(initialValue: original.currencyCode)
         _amount = State(initialValue: original.amountMinor.map { NSDecimalNumber(decimal: Decimal($0) / 100).stringValue } ?? "")
@@ -323,6 +377,7 @@ private struct PantryPriceEditor: View {
                 Text(verbatim: review.name).font(.headline)
                 Text(verbatim: priceSource(review) + " · " + priceAmount(review))
                 Text(verbatim: [review.store, review.branch].compactMap { $0 }.joined(separator: " · "))
+                if let mode = review.mode { Text(mode.ledgerLabel) }
                 Text(review.date, style: .date)
                 if let pack = review.pack { Text(verbatim: String(pack.count) + " × " + pack.perPackage.originalLiteral) }
                 if let eligibility = review.eligibility { Text(verbatim: eligibility) }
@@ -362,6 +417,10 @@ private struct PantryPriceEditor: View {
                 TextField(pantryText("Brand or variant"), text: $variant).accessibilityIdentifier("prices.variant").focused($focused, equals: "variant")
                 TextField(pantryText("Store"), text: $store).accessibilityIdentifier("prices.store").focused($focused, equals: "store")
                 TextField(pantryText("Branch"), text: $branch).focused($focused, equals: "branch")
+                Picker(pantryText("Shopping mode"), selection: $mode) {
+                    Text(pantryText("Not recorded")).tag(nil as FulfillmentMode?)
+                    ForEach(FulfillmentMode.allCases, id: \.self) { value in Text(value.ledgerLabel).tag(Optional(value)) }
+                }
                 DatePicker(pantryText("Price date"), selection: $date, in: ...Date(), displayedComponents: .date)
                 Picker(pantryText("Currency"), selection: $currency) {
                     ForEach(PrivatePriceEvidence.supportedCurrencies, id: \.self) { Text(verbatim: $0).tag($0) }
@@ -425,7 +484,7 @@ private struct PantryPriceEditor: View {
         let image = paid ? nil : printed.map { ReviewedShelfImage(printed: $0, basis: priceBasis) }
         let evidence = try PrivatePriceEvidence(id: image?.printed.shelfID ?? id, revision: (original?.revision ?? 0) + 1, source: paid ? .paidManual : .shelf,
             foodID: original?.foodID, linkedLotID: original?.linkedLotID, name: name,
-            variant: text(variant), store: store, branch: text(branch), date: date, currencyCode: currency,
+            variant: text(variant), store: store, branch: text(branch), mode: mode, date: date, currencyCode: currency,
             amountMinor: text(amount).map { try Money(decimal: decimal($0)).minorUnits }, pack: pack,
             eligibility: text(eligibility), sourceText: text(source) ?? priceSourceWording, shelfImage: image)
         try evidence.validate()

@@ -92,7 +92,7 @@ import RecordArchive
         let unit = Quantity(amount: try Rational(500), unit: .gram, originalLiteral: "500 g")
         func manual(_ revision: Int64, _ minor: Int64) -> PrivatePriceEvidence {
             .init(id: id, revision: revision, source: .paidManual, name: "Rice", variant: "Brown", store: "East market",
-                branch: "South", date: now, currencyCode: "USD", amountMinor: minor, pack: .init(count: 2, perPackage: unit),
+                branch: "South", mode: .inStore, date: now, currencyCode: "USD", amountMinor: minor, pack: .init(count: 2, perPackage: unit),
                 sourceText: "Reviewed at the till")
         }
         let original = manual(1, 500), corrected = manual(2, 460)
@@ -103,6 +103,9 @@ import RecordArchive
         try await repository.savePrice(credit, expected: f.store.inventoryState(), at: now)
         let page = try await repository.pricePage()
         XCTAssertEqual(Set(page.standalone.map(\.id)), [id, credit.id])
+        let firstRecorded = try await repository.recordedPriceRevision(corrected, revision: 1, expected: page.state)
+        XCTAssertEqual(firstRecorded, original)
+        XCTAssertEqual(firstRecorded.mode, .inStore)
         let adjustments = try await repository.priceAdjustments(for: id, expected: page.state)
         XCTAssertEqual(try corrected.unitPrice(in: .kilogram, adjustments: adjustments), try Rational(420))
         let lots = try await f.store.inventoryRecords(kind: .lot)
@@ -188,6 +191,9 @@ import RecordArchive
         XCTAssertEqual(rows.count, 3)
         let corrected = try XCTUnwrap(rows.first(where: { $0.supersedesID == first.id }))
         XCTAssertEqual(corrected.paidLineTotal, paid)
+        let receiptPrice = try PrivatePriceEvidence(receipt: corrected)
+        let originalPrice = try await repository.recordedPriceRevision(receiptPrice, revision: 1, expected: f.store.inventoryState())
+        XCTAssertEqual(originalPrice, try PrivatePriceEvidence(receipt: first))
         try await repository.rememberReceiptAlias(corrected, wording: "RICE", language: "en",
             expected: f.store.inventoryState(), at: now)
         let handle = try await f.capture.captureHandle(worker: f.worker, at: now)
