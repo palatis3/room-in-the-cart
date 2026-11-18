@@ -18,11 +18,34 @@ import CoreDomain
         let id: UUID
         var use: PartUse = .undecided
         var lotID: UUID?
-        var amount = ""
+        var amount = "" {
+            didSet { if !amount.isEmpty { needsNewMeasurement = false } }
+        }
         var unit: UnitOfMeasure = .count
+        private(set) var needsNewMeasurement = false
         var relation: Relation = .undecided
         var substitution = ""
         init(id: UUID = UUID()) { self.id = id }
+
+        @MainActor mutating func selectBatch(_ lot: InventoryLot?) {
+            guard lotID != lot?.id else { return }
+            lotID = lot?.id
+            needsNewMeasurement = false
+            guard let lot, unit != lot.unit else { return }
+            if amount.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                unit = lot.unit
+                return
+            }
+            // Keep the cook's original measurement. The review converts it to the
+            // batch unit using the same confirmed basis that governs the deduction.
+            if unit.dimension == lot.unit.dimension { return }
+            if let basis = lot.count.quantity?.confirmedConversion,
+               let measured = try? LedgerEntry.quantity(amount, unit), measured.amount > .zero,
+               (try? measured.converted(to: lot.unit, using: basis)) != nil { return }
+            amount = ""
+            unit = lot.unit
+            needsNewMeasurement = true
+        }
     }
     struct Ingredient: Identifiable, Equatable {
         let id: UUID
@@ -146,8 +169,7 @@ import CoreDomain
         guard canEdit, let ingredient = ingredients.firstIndex(where: { $0.id == ingredientID }),
               let part = ingredients[ingredient].parts.firstIndex(where: { $0.id == partID }),
               suggestions(for: ingredientID).contains(where: { $0.lot == suggestion.lot && $0.eligible }) else { throw Failure.stale }
-        ingredients[ingredient].parts[part].lotID = suggestion.id
-        ingredients[ingredient].parts[part].unit = suggestion.lot.unit
+        ingredients[ingredient].parts[part].selectBatch(suggestion.lot)
         ingredients[ingredient].parts[part].relation = .substitution
         ingredients[ingredient].parts[part].substitution = suggestion.lot.name
         ingredients[ingredient].parts[part].use = .measured

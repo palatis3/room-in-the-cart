@@ -1293,6 +1293,23 @@
         }
       }
     },
+    "The previous amount could not be converted. Enter how much you used from this batch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous amount could not be converted. Enter how much you used from this batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo convertir la cantidad anterior. Ingresa cuánto usaste de este lote."
+          }
+        }
+      }
+    },
     "The selected batch’s remaining quantity will become unknown. Existing holds are retained for review.": {
       "extractionState": "manual",
       "localizations": {

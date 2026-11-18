@@ -20,7 +20,8 @@ import LocalStore
         let now: Date
     }
     private func quantity(_ n: Int64) throws -> Quantity { .init(amount: try Rational(n), unit: .count, originalLiteral: String(n)) }
-    private func fixture() async throws -> Fixture {
+    private func fixture(firstUnit: UnitOfMeasure = .count, secondUnit: UnitOfMeasure = .count,
+                         firstConversion: UnitBasis? = nil) async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(directory, test: self), now = Date().addingTimeInterval(-60)
@@ -43,9 +44,11 @@ import LocalStore
         let lots = [UUID(), UUID()]
         var writes: [InventoryWrite] = []
         for (index, lot) in lots.enumerated() {
+            let unit = index == 0 ? firstUnit : secondUnit
             let seed = InventoryLotSeed(foodID: UUID(), name: index == 0 ? "Wraps" : "Rice wraps",
                 source: .manual(originID: store.workspaceID, sourceID: lot), location: index == 0 ? .cupboard : .freezer,
-                unit: .count, count: .exact(try quantity(4)))
+                unit: unit, count: .exact(Quantity(amount: try Rational(4), unit: unit, originalLiteral: "4",
+                    confirmedConversion: index == 0 ? firstConversion : nil)))
             let command = InventoryCommand(id: UUID(), originID: store.workspaceID, lotID: lot, eventID: UUID(),
                 expectedRevision: nil, occurredAt: now, change: .create(seed, observationID: UUID()))
             writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: now))
@@ -69,6 +72,62 @@ import LocalStore
     private func explicitNoUse(_ model: CookCompletionEditorModel) {
         for index in model.ingredients.indices { model.ingredients[index].use = .notUsed }
         model.leftoverChoice = .none
+    }
+
+    func testChangingMeasuredBatchPreservesGramsAndDeductsTheExactAmountFromKilograms() async throws {
+        let f = try await fixture(firstUnit: .gram, secondUnit: .kilogram)
+        let editor = f.editor
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        let partID = editor.ingredients[0].parts[0].id
+        let gramBatch = try XCTUnwrap(editor.context?.inventory.lots.first { $0.id == f.lots[0] })
+        let kiloBatch = try XCTUnwrap(editor.context?.inventory.lots.first { $0.id == f.lots[1] })
+        editor.ingredients[0].parts[0].selectBatch(gramBatch)
+        XCTAssertEqual(editor.ingredients[0].parts[0].unit, .gram)
+        editor.ingredients[0].parts[0].amount = "2"
+        editor.ingredients[0].parts[0].selectBatch(kiloBatch)
+        XCTAssertEqual(editor.ingredients[0].parts[0].unit, .gram)
+        editor.ingredients[0].parts[0].selectBatch(gramBatch)
+        let suggestion = try XCTUnwrap(editor.suggestions(for: editor.ingredients[0].id).first { $0.id == kiloBatch.id })
+        try editor.chooseSuggestion(suggestion, ingredientID: editor.ingredients[0].id, partID: partID)
+        XCTAssertEqual(editor.ingredients[0].parts[0].amount, "2")
+        XCTAssertEqual(editor.ingredients[0].parts[0].unit, .gram)
+        await editor.prepareReview()
+        let preview = try XCTUnwrap(editor.review)
+        XCTAssertEqual(preview.draft.parts.first?.use, .lot(id: kiloBatch.id, revision: kiloBatch.revision,
+            amount: Quantity(amount: try Rational(2), unit: .gram, originalLiteral: "2")))
+        await editor.confirm()
+        let saved = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(saved.inventory.lots.first { $0.id == gramBatch.id }?.count, gramBatch.count)
+        XCTAssertEqual(saved.inventory.lots.first { $0.id == kiloBatch.id }?.count.quantity?.amount, try Rational(1999, 500))
+    }
+
+    func testChangingBatchWithIncompatibleUnitsRequiresANewMeasurement() async throws {
+        let basis = UnitBasis(sourceUnit: .count, targetUnit: .gram, targetAmountPerSourceUnit: try Rational(2),
+                              sourceNote: "One portion weighed two grams for this batch")
+        let f = try await fixture(firstUnit: .gram, secondUnit: .kilogram, firstConversion: basis)
+        let editor = f.editor
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        let source = try XCTUnwrap(editor.context?.inventory.lots.first { $0.id == f.lots[0] })
+        let target = try XCTUnwrap(editor.context?.inventory.lots.first { $0.id == f.lots[1] })
+        var part = editor.ingredients[0].parts[0]
+        part.amount = "1/2"; part.use = .measured; part.relation = .ingredient
+        part.selectBatch(source)
+        XCTAssertEqual(part.amount, "1/2", "This batch has a reviewed count-to-mass conversion")
+        XCTAssertEqual(part.unit, .count)
+        part.selectBatch(target)
+        XCTAssertEqual(part.amount, "")
+        XCTAssertEqual(part.unit, .kilogram, "The old batch’s count conversion cannot be used for the new batch")
+        XCTAssertTrue(part.needsNewMeasurement)
+        editor.ingredients[0].parts[0] = part
+        XCTAssertThrowsError(try editor.makeDraft())
+        part.selectBatch(nil)
+        XCTAssertFalse(part.needsNewMeasurement)
+        part.selectBatch(source)
+        XCTAssertFalse(part.needsNewMeasurement)
+        part.amount = "2"
+        XCTAssertFalse(part.needsNewMeasurement)
     }
 
     func testExplicitChoicesSplitBatchesAndLeftoversReviewThenCommitOnce() async throws {
