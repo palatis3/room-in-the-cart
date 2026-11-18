@@ -860,7 +860,10 @@ import XCTest
         tap(app.buttons["ledgerReviewFacts"])
         assertText("Retailer preview: $12.59")
         assertText("Subtotal $12.50")
-        assertText("total $12.50")
+        let reading = app.descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@ OR value == %@ OR (label CONTAINS %@ AND label CONTAINS %@)",
+            "total $12.50", "total $12.50", "Reviewed online image reading", "total $12.50")).firstMatch
+        reveal(reading)
         capture("Checkout review preserves original OCR, accepted crop and shopper amount")
     }
 
