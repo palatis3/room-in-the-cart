@@ -5764,6 +5764,38 @@
         }
       }
     },
+    "Current quantities still cover the meal needs. Review the updated stock before relying on this plan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current quantities still cover the meal needs. Review the updated stock before relying on this plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cantidades actuales aún cubren lo que necesitan estas comidas. Revisa las existencias actualizadas antes de usar este plan."
+          }
+        }
+      }
+    },
+    "Stock coverage is uncertain. Review the available amounts for these meals.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock coverage is uncertain. Review the available amounts for these meals."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se sabe si hay suficiente comida. Revisa las cantidades disponibles para estas comidas."
+          }
+        }
+      }
+    },
     "Food reserved for other needs is excluded. This choice must be reviewed again if the batch or pickup changes.": {
       "localizations": {
         "en": {
