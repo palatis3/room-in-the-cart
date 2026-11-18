@@ -89,7 +89,7 @@ struct DinnerOccurrenceView: View {
                                       case .original(let original) = try model.currentMealDestination(meal.id, pickup: pickup) else {
                                     throw PickupMealRecoveryError.sourceChanged
                                 }
-                                return try DinnerCookingPage(original: original, shop: current)
+                                return try DinnerCookingPage(original: original, shop: current, planning: model.state)
                             }
                         }.accessibilityIdentifier("cooking.openDinner")
                         NavigationLink(dinnerText("Private meal feedback")) {

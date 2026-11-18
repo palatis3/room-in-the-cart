@@ -823,8 +823,11 @@ public enum DinnerPlanningEngine {
             quantities.append(DinnerQuantityEdit(contributionID: sourceID, quantity: Quantity(amount: sum, unit: original.unit,
                 originalLiteral: original.originalLiteral, confirmedConversion: original.confirmedConversion)))
         }
-        // A template's total may include protected groups; explicit bindings are the scaling basis.
-        let total = try groups.reduce(Rational.zero) { try $0.adding($1.servings) }
+        // Named groups may cover only part of the dinner. A guest change leaves
+        // servings outside those groups in the meal.
+        let previouslyGrouped = try meal.servingGroups.reduce(Rational.zero) { try $0.adding($1.servings) }
+        let ungrouped = try meal.servings.subtracting(previouslyGrouped)
+        let total = try groups.reduce(ungrouped) { try $0.adding($1.servings) }
         return try preview(changes: [.adjust(DinnerAdjustment(occurrenceID: occurrenceID, servings: total, groups: groups, quantities: quantities))],
             tool: .guests, ledger: ledger, state: state, access: access, phase: phase, at: now, isolated: isolated)
     }

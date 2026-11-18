@@ -220,12 +220,55 @@ import LocalStore
         XCTAssertEqual(f.model.journey?.mealRecovery?.domain.events.map(\.id), [forward.id])
     }
 
+    func testCookingStepsShowProtectedLunchAndReviewedDinnerQuantities() throws {
+        var shop = ShoppingLedger()
+        let supper = ServingGroup(name: "Supper", servings: .one)
+        let lunch = ServingGroup(name: "Lunch", servings: .one, isProtected: true)
+        let recipe = MealTemplate(title: "Wraps", servings: try Rational(2),
+            ingredients: [.init(name: "Wraps", quantity: q(8)), .init(name: "Beans", quantity: q(2))],
+            servingGroups: [supper, lunch], recipeSteps: [
+                RecipeStep("Warm wraps", ingredientIndices: [0]), RecipeStep("Add beans", ingredientIndices: [1])
+            ])
+        let id = try shop.chooseMeal(recipe)
+        let meal = try XCTUnwrap(shop.mealOccurrences.first { $0.id == id })
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "cook", shopID: shop.id,
+            assignedShopperID: "cook", canPlan: true, canReadBudget: false, hasPaidTools: false, roleRevision: 1,
+            verifiedAt: now, validUntil: now.addingTimeInterval(3600))
+        var state = DinnerPlanningState()
+        let equalShares = try DinnerCookingPage(original: meal, shop: shop, planning: state)
+        XCTAssertEqual(equalShares.ingredients.map { $0.amount?.amount }, [4, 4, 1, 1].map { q($0).amount })
+        let amounts: [[Int64]] = [[6, 2], [2, 0]]
+        let bindings = meal.ingredientContributionIDs.enumerated().flatMap { index, contribution in
+            meal.servingGroups.enumerated().map { position, group in
+                DinnerPortionBinding(occurrenceID: meal.id, contributionID: contribution, groupID: group.id,
+                    quantity: q(amounts[index][position]), servings: group.servings)
+            }
+        }
+        try state.setPortionBindings(bindings, for: meal.id, ledger: shop, access: access, at: now)
+        let reviewed = try DinnerCookingPage(original: meal, shop: shop, planning: state)
+        XCTAssertEqual(reviewed.steps.map(\.ingredientIndices), [[0, 1], [2, 3]])
+        XCTAssertEqual(reviewed.ingredients.map(\.group), ["Supper", "Lunch", "Supper", "Lunch"])
+        XCTAssertEqual(reviewed.ingredients.map(\.protected), [false, true, false, true])
+        XCTAssertEqual(reviewed.ingredients.map { $0.amount?.amount }, amounts.flatMap { $0 }.map { q($0).amount })
+        XCTAssertNotEqual(reviewed, equalShares)
+
+        let partial = meal.ingredientContributionIDs.enumerated().map { index, contribution in
+            DinnerPortionBinding(occurrenceID: meal.id, contributionID: contribution, groupID: supper.id,
+                quantity: q(index == 0 ? 8 : 2), servings: supper.servings)
+        }
+        try state.setPortionBindings(partial, for: meal.id, ledger: shop, access: access, at: now)
+        let unresolved = try DinnerCookingPage(original: meal, shop: shop, planning: state)
+        XCTAssertTrue(unresolved.ingredients.allSatisfy { $0.amount == nil })
+        XCTAssertEqual(unresolved.ingredients.map(\.protected), [false, true, false, true])
+        XCTAssertEqual(unresolved.steps, reviewed.steps)
+    }
+
     func testCookingReplacementConsumesBeansOnceAndUndoRestoresOnlyItsOwnReservation() async throws {
         let f = try await fixture(canonical: true)
         let shop = try XCTUnwrap(f.ledger.shop)
         let session = PantryCookSession(ledger: f.ledger, pickup: f.model, authorize: { true })
         let original = try await session.load(shopID: shop.id, mealID: f.wednesday)
-        let oldPage = try DinnerCookingPage(original: original.meal, shop: shop)
+        let oldPage = try DinnerCookingPage(original: original.meal, shop: shop, planning: f.ledger.workspace.dinnerPlanning)
         XCTAssertTrue(oldPage.steps.isEmpty)
         XCTAssertEqual(oldPage.notes, "Original instructions")
         XCTAssertNil(oldPage.replacement)
