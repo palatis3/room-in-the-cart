@@ -67,35 +67,43 @@ export function householdPantryEpoch(ctx:Context):number|null {
 
 /** The household matcher receives confirmed physical stock and amounts already promised,
  * never the linked shoppers, meal names, receipt totals or other private provenance. */
-export async function tonightStock(ctx:Context,ids:string[]) {
-  if(householdPantryEpoch(ctx)===null)throw unavailable();
-  if(!ids.length)return [];
-  const {rows}=await ctx.db.query<LotRow>(`SELECT l.* FROM ritc.pantry_lot l WHERE l.household_id=$1 AND l.lot_id=ANY($2::uuid[])
-    AND (NOT cook_output OR EXISTS(SELECT FROM ritc.shared_cook c WHERE (c.household_id,c.operation_id)=(l.household_id,l.operation_id) AND c.undone_by IS NULL))
+export async function tonightStock(ctx: Context, ids: string[], commitments:
+  (ctx:Context, input:Inputs, requested:Set<string>)=>Promise<Map<string,{value:Rat}|null>>) {
+  if (householdPantryEpoch(ctx) === null) throw unavailable();
+  if (!ids.length) return [];
+  const {rows} = await ctx.db.query<LotRow>(`
+    SELECT l.* FROM ritc.pantry_lot l WHERE l.household_id=$1 AND l.lot_id=ANY($2::uuid[])
+      AND (NOT cook_output OR EXISTS(SELECT FROM ritc.shared_cook c
+        WHERE (c.household_id,c.operation_id)=(l.household_id,l.operation_id) AND c.undone_by IS NULL))
     ORDER BY use_first_at NULLS LAST,lot_id`,[ctx.householdId,ids]);
-  const heads=await headRows(ctx,ids);
-  const deliveries=new Map((await storedDeliveryEvidence(ctx,rows.flatMap(r=>r.delivery_source_id?[r.delivery_source_id]:[]))).map(d=>[d.sourceId,d]));
-  const connected=new Set([...heads.filter(h=>h.kind==='select'&&h.enabled).map(h=>h.shop_id),...rows.flatMap(r=>r.delivery_source_id&&r.origin_shop_id?[r.origin_shop_id]:[])]);
-  const allocated=new Map<string,Rat>();
-  // Run the existing global allocator once for each connected group of shops. The
-  // other meals and assignments influence the remainder but never leave this computation.
-  for(const shopId of connected) {
-    const input=await jointInputs(ctx,{shop_id:shopId});
-    for(const visited of input.shopIds)connected.delete(visited);
-    for(const need of project(input).needs)if(need.required){
-      for(const a of need.allocations){
-        const unit=amount({...need.required,amount:{numerator:1,denominator:1}});
-        const count={n:BigInt(a.amount.numerator)*unit.n,d:BigInt(a.amount.denominator)*unit.d};
-        allocated.set(a.sourceId,add(allocated.get(a.sourceId)??zero,count));
-      }
-    }
+  const heads = await headRows(ctx,ids);
+  const deliveryIds = rows.flatMap(row => row.delivery_source_id ? [row.delivery_source_id] : []);
+  const deliveries = new Map((await storedDeliveryEvidence(ctx,deliveryIds)).map(source=>[source.sourceId,source]));
+  const connectedShops = new Set([
+    ...heads.filter(head=>head.kind==='select' && head.enabled).map(head=>head.shop_id),
+    ...rows.flatMap(row=>row.delivery_source_id && row.origin_shop_id ? [row.origin_shop_id] : []),
+  ]);
+  const requested = new Set(ids);
+  const held = new Map<string,{value:Rat}|null>();
+  // Each connected component is disjoint. The shared recovery graph accounts for
+  // protected portions, replaced meals, outstanding promises and completed cooking.
+  for (const shopId of connectedShops) {
+    const input = await jointInputs(ctx,{shop_id:shopId},null,true);
+    for (const visited of input.shopIds) connectedShops.delete(visited);
+    for (const [lotId,commitment] of await commitments(ctx,input,requested)) held.set(lotId,commitment);
   }
-  const byLot=new Map<string,Head[]>();
-  for(const h of heads){const list=byLot.get(h.lot_id)??[];list.push(h);byLot.set(h.lot_id,list);}
-  return rows.map(r=>{
-    const lot=materialize(r,byLot.get(r.lot_id)??[],deliveries.get(r.lot_id)),q=lot.observation?.quantity;
-    const free=q?sub(amount(q),allocated.get(r.lot_id)??zero):null;
-    return {id:r.lot_id,name:lot.foodName,tags:lot.exclusionTags,observed:lot.observation,
+  const headsByLot = new Map<string,Head[]>();
+  for (const head of heads) {
+    const previous = headsByLot.get(head.lot_id);
+    if (previous) previous.push(head);
+    else headsByLot.set(head.lot_id,[head]);
+  }
+  return rows.map(row=>{
+    const lot = materialize(row,headsByLot.get(row.lot_id)??[],deliveries.get(row.lot_id));
+    const quantity = lot.observation?.quantity;
+    const commitment = held.get(row.lot_id);
+    const free = quantity && commitment !== null ? sub(amount(quantity),commitment?.value??zero) : null;
+    return {id:row.lot_id,name:lot.foodName,tags:lot.exclusionTags,observed:lot.observation,
       useFirstAt:lot.useFirstAt?.toISOString()??null,free:free?wire(free.n>0n?free:zero):null};
   });
 }

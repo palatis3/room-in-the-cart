@@ -2216,6 +2216,7 @@ test('household Tonight browses without a shop and chooses exactly one occurrenc
  const f=await fixture(false),path=f.base+'/pantry/tonight';
  const browse=async()=>ok(await call(f.owner,path));
  const counts=async()=>Object.fromEntries(await Promise.all(['shop','shared_meal_revision','pantry_event','basket_line','tonight_choice'].map(async t=>[t,(await admin.query('SELECT count(*)::int n FROM ritc.'+t+' WHERE household_id=$1',[f.h])).rows[0].n])));
+ const boot=ok(await call(f.owner,f.base+'/bootstrap'));assert.equal(boot.shopId,null);assert(boot.capabilities.includes('household_tonight'));
  const start=await counts(),empty=await browse();assert.deepEqual(empty.recipes,[]);assert.deepEqual(await counts(),start);
  const q=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
  const add=async(name,n)=>{const p=ok(await call(f.owner,f.base+'/pantry')),time=new Date(Date.now()-1000).toISOString();
@@ -2232,21 +2233,128 @@ test('household Tonight browses without a shop and chooses exactly one occurrenc
  const save=body=>call(f.owner,path+'/recipes','POST',body);
  assert.equal(ok(await save(draft)).recipeRevision,1);assert.deepEqual(ok(await save(draft)),{recipeId:draft.recipeId,recipeRevision:1});
  const first=(await browse()).recipes[0];
- assert.deepEqual(first.ingredients.map(i=>i.status),['covered','missing','unknown','unknown']);
+ assert.deepEqual(first.ingredients.map(i=>i.status),['covered','missing','unknown','missing']);
+ assert.equal(first.reviewToken,null);
  assert.equal(first.ingredients[1].missing.amount.numerator,1);assert(first.ingredients[0].useSoon);assert(first.ingredients[0].evidenceAt);assert.equal(first.checkoutEstimate,'incomplete');
  const before=await counts();assert.equal(before.shop,0);assert.deepEqual((await browse()).recipes,[first]);assert.deepEqual(await counts(),before);
  const outsider=await fixture(false);assert.equal((await call(outsider.owner,path)).status,404);
+ const usable={...draft,recipeId:randomUUID(),clientKey:randomUUID(),recipe:{...draft.recipe,title:'Reviewed dinner',ingredients:draft.recipe.ingredients.slice(0,2)}};
+ ok(await save(usable));
+ const checked=async()=>(await browse()).recipes.find(row=>row.recipeId===usable.recipeId);
+ const initialToken=(await checked()).reviewToken;assert.match(initialToken,/^[a-f0-9]{64}$/);
  const shopId=await f.shop(),command={v:1,kind:'meal.chooseTonight',clientKey:randomUUID(),replayWindow:f.owner.window,shopId,base:{shopRevision:1,authorityEpoch:1},
-    body:{v:1,grantEpoch:empty.grantEpoch,recipeId:draft.recipeId,recipeRevision:1,reviewToken:first.reviewToken,day:null,occurrenceId:randomUUID()}};
+    body:{v:1,grantEpoch:empty.grantEpoch,recipeId:usable.recipeId,recipeRevision:1,reviewToken:initialToken,day:null,occurrenceId:randomUUID()}};
  const send=c=>call(f.owner,f.base+'/commands','POST',c);
  await add('Unrelated food',2);assert.equal((await send(command)).status,409);
- command.body.reviewToken=(await browse()).recipes[0].reviewToken;
+ command.body.reviewToken=(await checked()).reviewToken;
+ const destination=ok(await call(f.owner,f.base+'/shops/'+shopId));
+ ok(await send({...command,kind:'shop.patch',clientKey:randomUUID(),body:{quote:{...destination.quote,taxesMinor:275},lines:destination.lines}}));
+ command.base.shopRevision++;
+ assert.equal((await send(command)).status,409);
+ command.body.reviewToken=(await checked()).reviewToken;
  const basketBefore=(await admin.query('SELECT to_jsonb(b) b FROM ritc.basket_line b WHERE household_id=$1',[f.h])).rows;
- const receipt=ok(await send(command));assert.equal(receipt.disposition,'meal_chosen');assert.equal(receipt.occurrenceId,command.body.occurrenceId);assert.equal(receipt.shopRevision,2);
+ const receipt=ok(await send(command));assert.equal(receipt.disposition,'meal_chosen');assert.equal(receipt.occurrenceId,command.body.occurrenceId);assert.equal(receipt.shopRevision,3);
  assert.deepEqual(ok(await send(command)),receipt);assert.deepEqual((await admin.query('SELECT to_jsonb(b) b FROM ritc.basket_line b WHERE household_id=$1',[f.h])).rows,basketBefore);
  const final=await counts();assert.equal(final.tonight_choice,1);assert.equal(final.shared_meal_revision,1);assert.equal(final.pantry_event,before.pantry_event+1);
  const settings={v:1,clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:0,expectedRevision:null,settings:{exclusions:['lentils'],availableAppliances:[],dislikes:[],preferredBrands:[],strictDislikes:false,strictBrands:false,strictEffort:false}};
- ok(await call(f.owner,f.base+'/meal-preferences','POST',settings));assert.deepEqual((await browse()).recipes,[]);assert.equal((await browse()).excludedCount,1);
+ ok(await call(f.owner,f.base+'/meal-preferences','POST',settings));assert.deepEqual((await browse()).recipes,[]);assert.equal((await browse()).excludedCount,2);
+ assert.equal((await browse()).excludedReviewedRecipes.find(row=>row.recipeId===usable.recipeId).reviewedRecipe.title,'Reviewed dinner');
  await assert.rejects(admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.owner.id]),{code:'P0001'});
- assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.tonight_recipe WHERE household_id=$1 AND recipe IS NOT NULL',[f.h])).rows[0].n,1);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.tonight_recipe WHERE household_id=$1 AND recipe IS NOT NULL',[f.h])).rows[0].n,2);
+});
+
+test('household Tonight serializes competing recipe reviews and isolates independent food facts and adult grants',async()=>{
+ const f=await fixture(false),path=f.base+'/pantry/tonight',h=ok(await call(f.owner,f.base+'/pantry'));
+ const second={...f.owner};await enroll(second,f.h);
+ const q=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
+ const add=async(name,n)=>{const p=ok(await call(f.owner,f.base+'/pantry')),time=new Date(Date.now()-5000).toISOString();
+   return ok(await call(f.owner,f.base+'/pantry/commands','POST',{v:1,kind:'pantry.addLot',clientKey:randomUUID(),replayWindow:f.owner.window,
+     grantEpoch:p.grantEpoch,pantryRevision:p.pantryRevision,body:{foodName:name,location:'pantry',storedAt:time,useFirstAt:null,
+     confirmedAt:time,exclusionTags:[],quantity:q(n)}})).lotId;};
+ const lentils=await add('Lentils',2),zero=await add('Rice',0);
+ const command={v:1,clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:h.grantEpoch,recipeId:randomUUID(),baseRevision:null,reviewed:true,
+   recipe:{title:'Dinner',portions:1,minutes:null,ingredients:[{id:randomUUID(),name:'Rice',quantity:q(1),reviewedLotIds:[zero]}],
+   preferenceEvidence:{reviewedIngredientDetails:['Lentils'],brands:['One brand']}}};
+ const save=(a,c)=>call(a,path+'/recipes','POST',c),browse=async(a=f.owner)=>ok(await call(a,path));
+ ok(await save(f.owner,command));const empty=(await browse()).recipes[0];assert.equal(empty.ingredients[0].status,'missing');assert.equal(empty.reviewToken,null);
+ const edit=actor=>({...command,baseRevision:1,clientKey:randomUUID(),replayWindow:actor.window,recipe:{...command.recipe,ingredients:[{id:randomUUID(),name:'Lentils',quantity:q(1),reviewedLotIds:[lentils]}]}});
+ const actors=[f.owner,second],commands=actors.map(edit);
+ const replies=await Promise.all(actors.map((a,i)=>save(a,commands[i])));assert.deepEqual(replies.map(r=>r.status).sort(),[200,409]);
+ const winner=replies.findIndex(r=>r.status===200);
+ assert.deepEqual(ok(await save(actors[winner],commands[winner])),{recipeId:command.recipeId,recipeRevision:2});
+ assert.equal((await save(f.owner,command)).status,409);
+ assert.equal((await save(actors[1-winner],{...commands[winner],replayWindow:actors[1-winner].window})).status,409);
+ const clear=(await browse()).recipes[0];assert.equal(clear.checkoutEstimate,'noPurchaseNeeded');
+ const reader=await actor(),invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
+ reader.id=ok(await call(reader,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'Second adult'})).memberId;
+ await enroll(reader,f.h);
+ assert.equal((await call(reader,path)).status,404);assert(!ok(await call(reader,f.base+'/bootstrap')).capabilities.includes('household_tonight'));
+ ok(await call(f.owner,f.base+'/pantry/grants','POST',{v:1,memberId:reader.id,expectedGrantEpoch:0,enabled:true}));
+ const read=await browse(reader);assert.equal(read.recipes[0].reviewedRecipe,undefined);assert.equal(read.excludedReviewedRecipes,undefined);
+ assert.equal((await save(reader,{...command,replayWindow:reader.window,grantEpoch:read.grantEpoch})).status,404);
+ const rules={exclusions:['Milk'],dislikes:[],preferredBrands:[],strictDislikes:false,strictBrands:false,strictEffort:false};
+ const prefs=(settings,expectedRevision)=>call(f.owner,f.base+'/meal-preferences','POST',{v:1,replayWindow:f.owner.window,
+  clientKey:randomUUID(),grantEpoch:0,expectedRevision,timeLimitReviewed:true,settings});
+ let revision=ok(await prefs(rules,null)).revision;
+ const checkUnknown=async()=>{const item=(await browse()).recipes[0];assert.equal(item.status,'unresolved');assert.equal(item.reviewToken,null);assert.equal(item.checkoutEstimate,'incomplete');return item;};
+ assert.equal((await checkUnknown()).ingredients[0].status,'unknown');
+ revision=ok(await prefs({...rules,exclusions:[],preferredBrands:['One brand'],strictBrands:true},revision)).revision;
+ assert.equal((await checkUnknown()).ingredients[0].status,'unknown');
+ revision=ok(await prefs({...rules,exclusions:[],timeLimit:{maximumMinutes:20,strict:true}},revision)).revision;
+ assert.equal((await checkUnknown()).ingredients[0].status,'covered');
+ ok(await prefs({...rules,exclusions:['Lentils']},revision));
+ const denied=await browse(reader);assert.deepEqual(denied.recipes,[]);assert.equal(denied.excludedCount,1);assert.equal(denied.excludedReviewedRecipes,undefined);
+ assert.equal((await browse()).excludedReviewedRecipes[0].recipeRevision,2);
+});
+
+test('household Tonight subtracts protected existing meal allocations before matching a stored delivery',async()=>{
+ const f=await reservationFixture(),p=pantryHarness(f),path=f.base+'/pantry/tonight';
+ ok(await f.write('delivery.reserve',{...f.reservation,supplyRevision:4}));
+ const {lotId}=await p.edit('pantry.storeDelivery',{sourceId:f.sourceId,location:'freezer',storedAt:p.time,useFirstAt:null});
+ const current=ok(await call(f.owner,path)),recipeId=randomUUID();
+ ok(await call(f.owner,path+'/recipes','POST',{v:1,recipeId,grantEpoch:current.grantEpoch,baseRevision:null,replayWindow:f.owner.window,
+   clientKey:randomUUID(),reviewed:true,recipe:{title:'Second supper',portions:1,minutes:15,ingredients:[{id:randomUUID(),name:'Wrap',quantity:f.quantity(1),reviewedLotIds:[lotId]}]}}));
+ const row=ok(await call(f.owner,path)).recipes[0];assert.equal(row.ingredients[0].status,'missing');
+ assert.equal(row.ingredients[0].missing.amount.numerator,1);assert.equal(row.status,'unresolved');assert.equal(row.reviewToken,null);
+});
+
+test('household Tonight ranks usable expiring food ahead of feedback and respects source revision and exclusions',async()=>{
+ const f=await fixture(false),path=f.base+'/pantry/tonight',read=async()=>ok(await call(f.owner,path));
+ const quantity={amount:{numerator:1,denominator:1},unit:'count',originalLiteral:'1'};
+ const storedAt=new Date(Date.now()-3600000).toISOString();
+ async function add(name,useFirstAt){
+   const page=ok(await call(f.owner,f.base+'/pantry'));
+   return ok(await call(f.owner,f.base+'/pantry/commands','POST',{v:1,kind:'pantry.addLot',clientKey:randomUUID(),
+    replayWindow:f.owner.window,grantEpoch:page.grantEpoch,pantryRevision:page.pantryRevision,
+    body:{foodName:name,location:'fridge',storedAt,useFirstAt,confirmedAt:storedAt,exclusionTags:[],quantity}})).lotId;
+ }
+ const beans=await add('Beans',null),peas=await add('Peas',storedAt),rank=(await read()).grantEpoch;
+ const ids=Array.from({length:3},()=>randomUUID()).sort();
+ const put=(id,title,name,lot)=>call(f.owner,path+'/recipes','POST',{v:1,recipeId:id,grantEpoch:rank,reviewed:true,baseRevision:null,
+  replayWindow:f.owner.window,clientKey:randomUUID(),recipe:{title,portions:1,minutes:20,
+    ingredients:[{id:randomUUID(),name,quantity,reviewedLotIds:[lot]}]}});
+ ok(await put(ids[0],'Earlier','Beans',beans));ok(await put(ids[1],'Later favorite','Beans',beans));ok(await put(ids[2],'Use peas first','Peas',peas));
+ const order=async()=>(await read()).recipes.map(r=>r.recipeId);
+ assert.deepEqual(await order(),[ids[2],ids[0],ids[1]]);
+ const chosen=(await read()).recipes.find(r=>r.recipeId===ids[1]),shopId=await f.shop(),occurrenceId=randomUUID();
+ let shopRevision=1;
+ const command=async(kind,body)=>ok(await call(f.owner,f.base+'/commands','POST',{v:1,shopId,kind,clientKey:randomUUID(),
+   replayWindow:f.owner.window,base:{shopRevision,authorityEpoch:1},body}));
+ shopRevision=(await command('meal.chooseTonight',{v:1,grantEpoch:rank,recipeId:chosen.recipeId,
+   recipeRevision:1,reviewToken:chosen.reviewToken,occurrenceId,day:null})).shopRevision;
+ shopRevision=(await command('shop.freeze',{})).shopRevision;
+ shopRevision=(await command('shop.reportPlaced',{occurredAt:new Date().toISOString()})).shopRevision;
+ const basePath=f.base+'/shops/'+shopId,cookPage=ok(await call(f.owner,basePath+'/cook-completion?occurrenceId='+occurrenceId));
+ const {shopRevision:sr,authorityEpoch:ae,...base}=cookPage.base;shopRevision=sr;
+ const cook=await command('cook.complete',{...base,servings:1,uses:cookPage.needs.map(n=>({rowId:randomUUID(),needId:n.id,kind:'notUsed'})),outputs:[]});
+ const feedback=basePath+'/cook-feedback/'+occurrenceId,review=ok(await call(f.owner,feedback));
+ ok(await call(f.owner,feedback,'PUT',{v:1,cookId:cook.cookId,grantEpoch:review.grantEpoch,authorityEpoch:review.authorityEpoch,
+   expectedRevision:null,replayWindow:f.owner.window,clientKey:randomUUID(),reactions:['makeAgain']}));
+ assert.deepEqual(await order(),[ids[2],ids[1],ids[0]]);
+ const updated=ok(await call(f.owner,path+'/recipes','POST',{v:1,recipeId:ids[1],baseRevision:1,grantEpoch:rank,reviewed:true,
+   replayWindow:f.owner.window,clientKey:randomUUID(),recipe:{...chosen.reviewedRecipe,title:'Updated source'}}));
+ assert.equal(updated.recipeRevision,2);assert.deepEqual(await order(),[ids[2],ids[0],ids[1]]);
+ ok(await call(f.owner,f.base+'/meal-preferences','POST',{v:1,clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:0,
+   expectedRevision:null,settings:{exclusions:['Beans'],dislikes:[],preferredBrands:[],strictDislikes:false,strictBrands:false,strictEffort:false}}));
+ assert.deepEqual(await order(),[ids[2]]);
 });

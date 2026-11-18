@@ -135,10 +135,10 @@ function effectiveGraph(stock:Stock,meals:ScopedMeal[]){
 }
 const fraction=(f:{numerator:string;denominator:string}):Rat=>({n:BigInt(f.numerator),d:BigInt(f.denominator)});
 type Graph=ReturnType<typeof effectiveGraph>;
-function outsideHolds(shop:Shop,graph:Graph,visible:Set<string>){
+function stockCommitments(graph:Graph,visible:Set<string>,localShopId?:string){
   const held=new Map<string,{unit:Quantity['unit'];value:Rat}|null>();
   for(const row of graph.report.needs){
-    if(row.occurrenceId.startsWith(shop.shop_id+'/')) continue;
+    if(localShopId && row.occurrenceId.startsWith(localShopId+'/')) continue;
     const restricted=graph.needByKey.get(row.ingredientId)!;
     for(const source of graph.sources){
       if(!visible.has(source.sourceId)||held.get(source.sourceId)===null) continue;
@@ -162,7 +162,17 @@ function outsideHolds(shop:Shop,graph:Graph,visible:Set<string>){
       held.set(source.sourceId,{unit,value:add(prior?.value??zero,{n:used.n*scale.n,d:used.d*scale.d})});
     }
   }
-  return [...held].map(([sourceId,h])=>({sourceId,quantity:h?{unit:h.unit,amount:inUnit(h.value,h.unit)}:null}));
+  return held;
+}
+function outsideHolds(shop:Shop,graph:Graph,visible:Set<string>){
+  return [...stockCommitments(graph,visible,shop.shop_id)].map(([sourceId,h])=>({sourceId,quantity:h?{unit:h.unit,amount:inUnit(h.value,h.unit)}:null}));
+}
+
+// A household-wide match has no privileged destination; every shop's commitment
+// is protected. The same graph accounts for accepted changes, cooking and Undo.
+export async function householdStockCommitments(ctx:Context,stock:Stock,visible:Set<string>,load:RecoveryPublicationLoader){
+  const {meals}=await effectiveMeals(ctx,stock,load);
+  return stockCommitments(effectiveGraph(stock,meals),visible);
 }
 
 export async function loadGraph(ctx:Context,shop:Shop,load:RecoveryPublicationLoader,focus:string|null=null){

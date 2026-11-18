@@ -35,6 +35,7 @@ async function seed(db,through){
   await db.query("INSERT INTO ritc.pantry_event(household_id,lot_id,shop_id,operation_id,actor_id,kind,pantry_revision,confirmed_at,quantity) VALUES($1,$2,$3,$4,$5,'observe',$6,'2026-11-01T12:00:00Z',$7)",[h,lot,shop,id,m,revision,{amount:{numerator:count,denominator:1},unit:'count',originalLiteral:String(count)}]);
  }
  if(through>=51){
+  if(through>=54) await db.query('UPDATE ritc.household SET pantry_revision=3 WHERE household_id=$1',[h]);
   const id=randomUUID(),correction=randomUUID();await operation(id,4,true);await operation(correction,5,true);
   await db.query("INSERT INTO ritc.pantry_lot(household_id,lot_id,origin_shop_id,location,food_name,exclusion_tags,actor_id,operation_id) VALUES($1,$2,NULL,'fridge','Limes','{}',$3,$2)",[h,id,m]);
   for(const [event,revision,count,previous] of [[id,4,3,null],[correction,5,0,id]])await db.query("INSERT INTO ritc.pantry_event(household_id,lot_id,shop_id,operation_id,actor_id,kind,pantry_revision,confirmed_at,quantity,predecessor_observation_id) VALUES($1,$2,NULL,$3,$4,'observe',$5,'2026-11-01T13:00:00Z',$6,$7)",[h,id,event,m,revision,{amount:{numerator:count,denominator:1},unit:'count',originalLiteral:String(count)},previous]);
@@ -46,7 +47,7 @@ async function seed(db,through){
 }
 const results=[];
 try{
- for(const history of [{name:'049',through:49},{name:'051',through:51},{name:'051-plus-057',through:51,price:true}]){
+ for(const history of [{name:'049',through:49},{name:'051',through:51},{name:'051-plus-057',through:51,price:true},{name:'058',through:58}]){
   const database='ritc_upgrade_'+randomUUID().replaceAll('-','');const url=new URL(connection);url.pathname='/'+database;
   const scratch=await mkdtemp(join(tmpdir(),'ritc-household-upgrade-'));let db,created=false;
   try{
@@ -72,7 +73,7 @@ try{
    assert.equal((await db.query('SELECT count(*)::int n FROM ritc.pantry_batch')).rows[0].n,history.through>=51?5:3);
    assert.deepEqual((await db.query('SELECT record FROM ritc.price_observation WHERE household_id=$1',[seeded.h])).rows[0].record,seeded.price);
    await assert.rejects(db.query('INSERT INTO ritc.price_observation(household_id,observation_id,shop_id,actor_id,record,observed_at) VALUES($1,$2,$3,$4,$5,now())',[seeded.h,randomUUID(),seeded.shop,seeded.m,seeded.price]),e=>e.code==='23505');
-   for(const table of ['meal_preference_profile','meal_preference_write_key','staple_settings','staple_group','staple_purchase','pantry_batch','shared_cook','household_meal_feedback','receipt_source_key','retired_receipt_line','household_receipt_line','receipt_submission_line','tonight_recipe','tonight_choice']){
+   for(const table of ['meal_preference_profile','meal_preference_write_key','staple_settings','staple_group','staple_purchase','pantry_batch','shared_cook','household_meal_feedback','receipt_source_key','retired_receipt_line','household_receipt_line','receipt_submission_line','tonight_recipe','tonight_recipe_write','tonight_choice']){
     const r=(await db.query('SELECT relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=$1::regclass',['ritc.'+table])).rows[0];assert(r.relrowsecurity&&r.relforcerowsecurity,table);
    }
    const chain=[['privacy_erase_extension','privacy_erase_before_tonight'],['privacy_erase_before_tonight','privacy_erase_before_household_receipts'],['privacy_erase_before_household_receipts','privacy_erase_before_meal_feedback'],['privacy_erase_before_meal_feedback','privacy_erase_before_cook_completion'],['privacy_erase_before_cook_completion','privacy_erase_before_staples'],['privacy_erase_before_staples','privacy_erase_before_meal_preferences']];
