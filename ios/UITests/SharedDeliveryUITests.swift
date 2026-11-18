@@ -295,6 +295,67 @@ import XCTest
         }
     }
 
+    func testShopperReviewsOnlyConfirmedPlacedPurchaseForAnotherRequestAndCanUndo() {
+        let source = "aaaaaaaa-1111-4111-8111-111111111111"
+        let request = "bbbbbbbb-1111-4111-8111-111111111111"
+        let row = app.buttons["household.request." + request]
+        let outcome = app.staticTexts["household.request.outcome." + request]
+        let check = app.buttons["household.duplicates.checkPurchase"]
+        let review = app.buttons["household.duplicates.reviewPurchase." + source]
+        func openRequest(sourceOutcome: String) {
+            app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "--request-purchase-fixture",
+                "--compare-placed-purchase", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+            app.launchEnvironment["PURCHASE_FIXTURE_OUTCOME"] = sourceOutcome
+            app.launch()
+            tap(app.buttons["Review family requests"])
+            tap(row)
+        }
+        func expectReturned(_ status: String) {
+            let cancel = app.buttons["household.decision.cancel"]
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 8), .completed)
+            let refreshed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", status), object: outcome)
+            XCTAssertEqual(XCTWaiter.wait(for: [refreshed], timeout: 8), .completed)
+        }
+
+        for excluded in ["unknown", "notBought"] {
+            openRequest(sourceOutcome: excluded)
+            if excluded == "notBought" {
+                let recorded = app.staticTexts["household.duplicates.purchase." + source]
+                reveal(recorded)
+                XCTAssertEqual(recorded.label, "Shopper confirmed not bought")
+            }
+            reveal(app.buttons["household.decision.review"])
+            XCTAssertFalse(check.exists)
+            XCTAssertFalse(review.exists)
+            app.terminate()
+        }
+        openRequest(sourceOutcome: "bought")
+        tap(check)
+        reveal(review)
+        assertFact("Packs in the placed order", "2")
+        tap(review)
+        let consequence = app.staticTexts["Mark only this request as handled. The meal, purchases and basket quantities stay as reviewed."]
+        reveal(consequence)
+        assertFact("Ordered wraps", "2")
+        capture("Same item preview for Jo using Sam's placed purchase")
+        tap(app.buttons["household.decision.cancel"])
+        expectReturned("Received for next shop")
+
+        tap(row)
+        tap(review)
+        tap(app.buttons["household.decision.apply"])
+        expectReturned("Handled")
+        tap(row)
+        tap(app.buttons["Review undo for this match"])
+        reveal(app.staticTexts["Reopen this request for review"])
+        tap(app.buttons["household.decision.apply"])
+        expectReturned("Received for next shop")
+        tap(row)
+        reveal(review)
+        assertFact("Packs in the placed order", "2")
+    }
+
     func testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview() {
         launch("en", locale: "en_US", recovery: true)
         let wednesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000002"

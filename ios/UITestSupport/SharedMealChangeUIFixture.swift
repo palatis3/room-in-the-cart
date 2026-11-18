@@ -119,7 +119,10 @@ private final class S17FixtureServer: @unchecked Sendable {
             if shopper, confirmedOrder != nil { capabilities.append("confirmed_order") }
             if shopper, let deliveries {
                 capabilities.append("delivery_evidence")
-                if purchases != nil { capabilities.append("request_purchase_confirmation") }
+                if let purchases {
+                    capabilities.append("request_purchase_confirmation")
+                    if purchases.compare { capabilities.append("request_same_item") }
+                }
                 if fallbacks != nil { capabilities.append("accepted_fallbacks") }
                 if deliveries.recovery != nil { capabilities.append("meal_recovery") }
                 if deliveries.pantry != nil { capabilities.append("pantry_lots") }
@@ -190,6 +193,10 @@ private final class S17FixtureServer: @unchecked Sendable {
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
             return try financial.respond(shop: Self.shop, method: request.httpMethod, path: path, body: input, revision: &revision)
         }
+        if let purchases, purchases.compare, path == deliveryPath + "/previews", request.httpMethod == "POST" {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            return try json(purchases.preview(input))
+        }
         let pantryPath = deliveryPath + "/pantry-lots"
         let cookPath = deliveryPath + "/cook-copies"
         let recoveryPath = deliveryPath + "/meal-recovery"
@@ -256,7 +263,8 @@ private final class S17FixtureServer: @unchecked Sendable {
                 }
                 if (input["kind"] as? String)?.hasPrefix("pantry.") == true, deliveries.pantry == nil { return try denied() }
                 if (input["kind"] as? String)?.hasPrefix("cookCopy.") == true, !deliveries.supportsCookCopies { return try denied() }
-                if input["kind"] as? String == "request.confirmPurchase", let purchases {
+                if let purchases, input["kind"] as? String == "request.confirmPurchase" ||
+                    (purchases.compare && input["kind"] as? String == "request.apply") {
                     return try json(purchases.record(shop: Self.shop, command: input, bytes: bytes))
                 }
                 return try json(deliveries.record(shop: Self.shop, command: input))
