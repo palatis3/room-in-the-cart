@@ -10328,6 +10328,22 @@
           }
         }
       }
+    },
+    "Uses in the last 30 days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses in the last 30 days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usos en los últimos 30 días"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

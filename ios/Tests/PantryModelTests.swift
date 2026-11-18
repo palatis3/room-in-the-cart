@@ -47,6 +47,24 @@ final class PantryModelTests: XCTestCase {
         return claim
     }
 
+    func testRecentUsageIncludesTodayAndPrevious29LocalDaysAcrossDaylightSaving() throws {
+        let zone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        let formatter = ISO8601DateFormatter()
+        let now = try XCTUnwrap(formatter.date(from: "2026-11-18T18:00:00Z"))
+        let times = [
+            "2026-10-20T03:59:59Z", // October 19 in New York
+            "2026-10-20T04:00:00Z", // First included local midnight (EDT)
+            "2026-11-18T05:00:00Z", // Today's local midnight (EST)
+            "2026-11-18T18:00:00Z",
+            "2026-11-18T18:00:01Z"
+        ]
+        let entries = try times.map { text in
+            PantryUsageHistoryRow(id: UUID(), occurredAt: try XCTUnwrap(formatter.date(from: text)),
+                                 kind: .some, remainingWording: nil)
+        }
+        XCTAssertEqual(PantryUsageHistoryRow.usesInLast30Days(entries, asOf: now, timeZone: zone), 3)
+    }
+
     func testPhotoExcerptOnlyProposesCompletePackageLinesAndPreservesUnicode() throws {
         func candidate(_ label: String) throws -> PantryProductBatch.Candidate {
             var batch = PantryProductBatch(workspaceID: UUID())

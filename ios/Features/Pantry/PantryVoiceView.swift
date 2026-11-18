@@ -486,6 +486,16 @@ private struct VoicePantryRow {
     }
 }
 
+extension PantryUsageHistoryRow {
+    static func usesInLast30Days(_ entries: [Self], asOf now: Date, timeZone: TimeZone = .current) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let today = calendar.startOfDay(for: now)
+        guard let start = calendar.date(byAdding: .day, value: -29, to: today) else { return 0 }
+        return entries.filter { start <= $0.occurredAt && $0.occurredAt <= now }.count
+    }
+}
+
 /// Reads only explicitly recorded usage, keyed to the live private pantry revision.
 @MainActor struct PantryUsageHistoryView: View {
     @ObservedObject var model: PantryModel
@@ -511,6 +521,11 @@ private struct VoicePantryRow {
                 Section {
                     LabeledContent(pantryText("Recorded uses"), value: entries.count.formatted())
                         .accessibilityIdentifier("pantry.usageCount")
+                    TimelineView(.everyMinute) { context in
+                        let count = PantryUsageHistoryRow.usesInLast30Days(entries, asOf: context.date)
+                        LabeledContent(pantryText("Uses in the last 30 days"), value: count.formatted())
+                            .accessibilityIdentifier("pantry.usageCount30Days")
+                    }
                     if let latest = entries.first {
                         LabeledContent(pantryText("Last used"), value: latest.occurredAt.formatted(date: .abbreviated, time: .shortened))
                     }

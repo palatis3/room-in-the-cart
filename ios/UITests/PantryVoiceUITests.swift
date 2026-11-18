@@ -199,6 +199,8 @@ import XCTest
         let count = element("pantry.usageCount")
         XCTAssertTrue(count.waitForExistence(timeout: 10))
         XCTAssertTrue(count.label.contains("2") || (count.value as? String)?.contains("2") == true, count.debugDescription)
+        let recent = element("pantry.usageCount30Days")
+        XCTAssertTrue(recent.label.contains("2") || (recent.value as? String)?.contains("2") == true, recent.debugDescription)
         XCTAssertTrue(element("pantry.usageEvent.0").exists)
         XCTAssertTrue(element("pantry.usageEvent.1").exists)
         XCTAssertFalse(element("pantry.usageEvent.2").exists)
