@@ -9,9 +9,9 @@ import XCTest
         memberID: S24FixtureServer.member, shopID: S24FixtureServer.shop)
 
     private func basis(actor: UUID, workspace: UUID, selected: UUID, revision: UUID?, source: MealFeedbackSource? = nil) -> MealLanguageBasis {
-        .init(identity: .init(actorID: actor, subject: account.subject, householdID: account.householdID,
-            memberID: account.memberID, role: "shopper"), account: account, workspaceID: workspace, selectedShopID: selected,
-            shopRevisionID: nil, source: source, revision: revision)
+        .init(account: account, destination: .personal(.init(actorID: actor, subject: account.subject,
+            householdID: account.householdID, memberID: account.memberID, role: "shopper"),
+            workspace: workspace, shop: selected, shopRevision: nil, source: source), revision: revision)
     }
 
     func testPrivateEnglishSpanishNotesUseScopedWireAndOnlyModifyReviewedDrafts() async throws {
@@ -82,6 +82,47 @@ import XCTest
             let spanish = es.localizedString(forKey: key, value: "missing", table: "Dinners")
             XCTAssertNotEqual(spanish, key); XCTAssertNotEqual(spanish, "missing")
         }
+    }
+
+    func testHouseholdPreferenceWordingRequiresSameOrganizerDeviceGrantAndReviewedRevision() throws {
+        let house = UUID(), member = UUID(), device = UUID(), profileRevision = UUID(), enrollment = UUID(), generation = UUID()
+        func scope(admin: Bool = true, enrolled: UUID? = nil) -> HouseholdPreferenceScope {
+            .init(generation: generation, enrollment: enrolled ?? enrollment, subject: "adult",
+                  householdID: house.uuidString, memberID: member.uuidString, administer: admin)
+        }
+        func session(_ deviceID: UUID, householdID: UUID? = nil) throws -> HouseholdDeviceSession {
+            try JSONDecoder().decode(HouseholdDeviceSession.self, from: JSONEncoder().encode(
+                ["householdID": householdID ?? house, "memberID": member, "deviceID": deviceID]))
+        }
+        func page(epoch: Int = 4, write: Bool = true, revision: UUID? = nil) throws -> HouseholdPreferencePage<MealPreferenceSettings> {
+            let values: [String: Any] = ["v": 1, "householdId": house.uuidString, "grantEpoch": epoch, "canWrite": write,
+                                         "revision": (revision ?? profileRevision).uuidString, "supportsTimeLimit": true]
+            return try JSONDecoder().decode(HouseholdPreferencePage<MealPreferenceSettings>.self, from: JSONSerialization.data(withJSONObject: values))
+        }
+        let deviceSession = try session(device), original = try page()
+        func marks(_ page: HouseholdPreferencePage<MealPreferenceSettings>, _ session: HouseholdDeviceSession,
+                   _ scope: HouseholdPreferenceScope) -> MealLanguageBasis? {
+            .householdPreferences(scope: scope, session: session, page: page, revision: profileRevision, selectedShop: nil)
+        }
+        let base = try XCTUnwrap(marks(original, deviceSession, scope()))
+        XCTAssertNil(marks(original, deviceSession, scope(admin: false)))
+        XCTAssertNil(try marks(page(write: false), deviceSession, scope()))
+        XCTAssertNil(try marks(page(revision: UUID()), deviceSession, scope()))
+        XCTAssertNil(try marks(original, session(device, householdID: UUID()), scope()))
+
+        var settings = MealPreferenceSettings()
+        settings.exclusions = ["peanut"]
+        let draft = MealLanguageDraft.preferences(settings)
+        let input = try LanguageAssistanceRequest(consentingTo: [.init(id: UUID(), text: "Prefiero marca Nube")], locale: "es")
+        let reply = MealLanguageReply(version: 1, requestID: input.requestID, suggestions: [
+            .init(sourceLineID: input.sourceLines[0].id, kind: .preferredBrand, quote: "Nube")])
+        let review = try XCTUnwrap(reply.review(for: input, basis: base, draft: draft))
+        for changed in [try marks(page(epoch: 5), deviceSession, scope()), try marks(original, session(UUID()), scope()),
+                        marks(original, deviceSession, scope(enrolled: UUID())), nil] {
+            XCTAssertThrowsError(try review.applying(current: changed, draft: draft, text: input.sourceLines[0].text))
+        }
+        settings.preferredBrands = ["Nube"]
+        XCTAssertEqual(try review.applying(current: base, draft: draft, text: input.sourceLines[0].text), .preferences(settings))
     }
 
     func testHardSettingsStaleAdultSelectionRevisionAndEditedWordsRefuseDraftAdoption() throws {

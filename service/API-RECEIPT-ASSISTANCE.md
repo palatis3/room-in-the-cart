@@ -49,7 +49,7 @@ Each purpose shares the natural-list endpoint shape, adult enrollment checks and
 | `request-duplicate` | A proposed basket line opens the ordinary link review. The service checks the assigned shopper, request and visible lines on each side of the provider call. |
 | `foodkeeper-match` | A proposed public catalog ID opens the selected entry for review. Its storage guidance comes from the local catalog. |
 | `meal-explanations` | Suggested reasons must be among those offered for that eligible dinner. The app displays the current stock and cost facts. |
-| `meal-preference` | A soft dislike or preferred brand can be added to the editable private preference draft. |
+| `meal-preference` | A soft dislike or preferred brand can be added to a private preference draft or, by an authorized organizer, to the current household preference draft. OpenAI receives only the typed note and its request metadata. The organizer separately reviews and saves shared changes with the current profile revision and grant. |
 | `meal-feedback` | A proposed reaction can be added to the editable private feedback draft. |
 
 ## Comparing a future model with the local editor

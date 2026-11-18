@@ -42,13 +42,26 @@ enum MealLanguageDraft: Equatable {
 
 /// These identities stay on the device. The provider receives one user-selected line.
 struct MealLanguageBasis: Equatable {
-    let identity: CapturePrivateIdentity
+    enum Destination: Equatable {
+        case personal(CapturePrivateIdentity, workspace: UUID, shop: UUID?, shopRevision: UUID?, source: MealFeedbackSource?)
+        case householdPreferences(HouseholdPreferenceScope, device: HouseholdDeviceSession, grantEpoch: Int)
+    }
+
     let account: ReceiptAssistanceScope
-    let workspaceID: UUID
-    let selectedShopID: UUID?
-    let shopRevisionID: UUID?
-    let source: MealFeedbackSource?
+    let destination: Destination
     let revision: UUID?
+
+    static func householdPreferences(scope: HouseholdPreferenceScope, session: HouseholdDeviceSession,
+                                     page: HouseholdPreferencePage<MealPreferenceSettings>, revision: UUID?,
+                                     selectedShop: String?) -> Self? {
+        guard scope.administer, page.canWrite, page.revision == revision,
+              page.householdId == session.householdID,
+              session.householdID == UUID(uuidString: scope.householdID),
+              session.memberID == UUID(uuidString: scope.memberID) else { return nil }
+        return .init(account: .init(subject: scope.subject, householdID: scope.householdID,
+                                    memberID: scope.memberID, shopID: selectedShop),
+                     destination: .householdPreferences(scope, device: session, grantEpoch: page.grantEpoch), revision: revision)
+    }
 
     @MainActor static func current(ledger: LedgerModel, access: WorkspaceAccess, household: HouseholdModel,
                                    childPresented: Bool, source: MealFeedbackSource?, revision: UUID?, duringSave: Bool = false) -> Self? {
@@ -63,9 +76,9 @@ struct MealLanguageBasis: Equatable {
                   ledger.workspace.feedback(for: source, owner: identity.mealFeedbackOwner)?.revision == revision else { return nil }
             if case let .occurrence(shopID, _) = source, ledger.workspace.selectedShopID != shopID { return nil }
         } else if ledger.workspace.dinnerPlanning.privateMealPreferences?.revision != revision { return nil }
-        return .init(identity: identity, account: .init(subject: subject, householdID: householdID, memberID: memberID,
-            shopID: household.projection?.shopId), workspaceID: workspaceID, selectedShopID: ledger.workspace.selectedShopID,
-            shopRevisionID: ledger.shop?.revisionID, source: source, revision: revision)
+        return .init(account: .init(subject: subject, householdID: householdID, memberID: memberID, shopID: household.projection?.shopId),
+                     destination: .personal(identity, workspace: workspaceID, shop: ledger.workspace.selectedShopID,
+                                            shopRevision: ledger.shop?.revisionID, source: source), revision: revision)
     }
 }
 

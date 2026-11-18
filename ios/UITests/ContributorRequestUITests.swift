@@ -25,10 +25,25 @@ import XCTest
         let done = app.buttons["preferences.keyboardDone"]
         tap(done)
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "preferences.keyboardDone"))
+        func sendNote(_ wording: String) {
+            tap(app.buttons["mealLanguage.open"])
+            let note = app.textFields["mealLanguage.note"]
+            tap(note)
+            note.typeText(wording + XCUIKeyboardKey.return.rawValue)
+            tap(app.buttons["mealLanguage.send"])
+        }
+        sendNote("I dislike peas")
+        let use = app.buttons["mealLanguage.use"]
+        XCTAssertTrue(use.waitForExistence(timeout: 8))
+        tap(app.buttons["Cancel"])
+        sendNote("I dislike peas")
+        XCTAssertTrue(app.staticTexts["Soft preference · disliked ingredient"].waitForExistence(timeout: 8))
+        tap(use)
         tap(element("preferences.review"))
         tap(element("preferences.save"))
         let rule = NSPredicate(format: "label CONTAINS %@", "peanut")
         XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Disliked ingredient: peas"].waitForExistence(timeout: 8))
         let grant = app.switches["Alex"]
         reveal(grant, fullyVisible: true)
         grant.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
@@ -38,6 +53,10 @@ import XCTest
         open()
         XCTAssertTrue(grant.waitForExistence(timeout: 10))
         XCTAssertEqual(grant.value as? String, "1")
+        tap(edit)
+        sendNote("I dislike okra")
+        XCTAssertTrue(app.staticTexts["No usable addition was available. You can enter your choice manually."].waitForExistence(timeout: 8))
+        XCTAssertFalse(use.exists)
         app.terminate()
 
         app.launchArguments = ["--ui-testing", "--household-meal-reader", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
@@ -46,6 +65,7 @@ import XCTest
         XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Exigir que las comidas estén listas dentro de este tiempo"].exists)
         XCTAssertFalse(edit.exists)
+        XCTAssertFalse(app.buttons["mealLanguage.open"].exists)
         XCTAssertFalse(app.switches["Alex"].exists)
     }
 

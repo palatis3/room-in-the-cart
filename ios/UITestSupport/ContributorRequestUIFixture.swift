@@ -253,6 +253,23 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                 return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member, "role": role,
                                      "enrolled": true, "queueConsent": false, "capabilities": caps])
             }
+            if path.hasSuffix("/language-assistance/meal-preference") {
+                guard preferenceOrganizer, request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-sam",
+                      request.value(forHTTPHeaderField: "X-Device-Token") == "fixture-token"
+                else { return try response([:], 403) }
+                if request.httpMethod == "GET" { return try response(["version": 1, "available": true]) }
+                guard Set(json.keys) == ["version", "requestID", "issuedAt", "locale", "consent", "sourceLines"],
+                      json["consent"] as? Bool == true, let requestID = json["requestID"] as? String,
+                      let lines = json["sourceLines"] as? [[String: String]], lines.count == 1,
+                      let line = lines.first, Set(line.keys) == ["id", "text"], let id = line["id"], let note = line["text"],
+                      ["I dislike peas", "I dislike okra"].contains(note) else { return try response([:], 400) }
+                if note == "I dislike okra" {
+                    // Another organizer edits the profile while the language request is in flight.
+                    preferenceRevision = UUID().uuidString
+                }
+                return try response(["version": 1, "requestID": requestID, "suggestions": [
+                    ["sourceLineID": id, "kind": "dislike", "quote": note == "I dislike peas" ? "peas" : "okra"]]])
+            }
             if path.hasSuffix("/meal-preferences") {
                 if preferenceReader && profile == nil {
                     profile = ["exclusions": ["peanut"], "timeLimit": ["maximumMinutes": 20, "strict": true], "preferredBrands": [], "dislikes": [], "strictBrands": false,
@@ -261,6 +278,9 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                 }
                 if request.httpMethod == "POST" {
                     guard preferenceOrganizer else { return try response(["error": ["code": "unavailable"]], 404) }
+                    guard json["grantEpoch"] as? Int == 0, json["expectedRevision"] != nil,
+                          (json["expectedRevision"] as? String)?.lowercased() == preferenceRevision?.lowercased()
+                    else { return try response(["error": ["code": "refresh"]], 409) }
                     profile = json["settings"] as? [String: Any]
                     preferenceRevision = UUID().uuidString
                 }

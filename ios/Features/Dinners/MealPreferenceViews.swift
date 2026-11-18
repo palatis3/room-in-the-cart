@@ -151,6 +151,7 @@ struct MealPreferenceEditor: View {
     @State private var assistedBasis: MealLanguageBasis?
     private let initial: MealPreferenceProfile?
     private let canSetTimeLimit: Bool
+    private let verifyLanguageBasis: ((MealLanguageBasis) async throws -> Void)?
     private let languageBasis: ((UUID?) -> MealLanguageBasis?)?
     @Environment(\.dismiss) private var dismiss
     @State private var draft: MealPreferenceSettings
@@ -160,19 +161,16 @@ struct MealPreferenceEditor: View {
     @FocusState private var textFocus: String?
     @State private var failed = false
     init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, languageBasis: ((UUID?) -> MealLanguageBasis?)?,
+         verifyLanguageBasis: ((MealLanguageBasis) async throws -> Void)? = nil,
          save: @escaping (MealPreferenceSettings, UUID?, MealLanguageBasis?) async -> Bool) {
         self.save = save
         self.canSetTimeLimit = canSetTimeLimit
         self.languageBasis = languageBasis
+        self.verifyLanguageBasis = verifyLanguageBasis
         initial = profile
         _draft = State(initialValue: profile?.settings ?? .init())
         _base = State(initialValue: profile?.revision)
         _minutes = State(initialValue: profile?.settings.timeLimit.map { String($0.maximumMinutes) } ?? "")
-    }
-    init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
-        self.init(profile: profile, canSetTimeLimit: canSetTimeLimit, languageBasis: nil) { settings, revision, _ in
-            await save(settings, revision)
-        }
     }
     @State private var base: UUID?
     var body: some View {
@@ -204,7 +202,7 @@ struct MealPreferenceEditor: View {
                 if draft.maximumEffort != nil { Toggle(dinnerText("Require this effort limit"), isOn: $draft.strictEffort) }
             }.disabled(reviewing)
             if !reviewing, let languageBasis {
-                MealLanguageDraftLink(basis: { languageBasis(base) }, draft: { .preferences(draft) }) { result, basis in
+                MealLanguageDraftLink(basis: { languageBasis(base) }, draft: { .preferences(draft) }, verifyBasis: verifyLanguageBasis) { result, basis in
                     if case .preferences(let settings) = result { draft = settings; assistedBasis = basis }
                 }
             }

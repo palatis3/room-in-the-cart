@@ -30,6 +30,7 @@ private struct HouseholdMealPreferencesView: View {
     let source: FamilyDecisionRecord?
     let sourceAccess: FamilyDecisionAccess?
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var child
     @State private var session: HouseholdDeviceSession?
     @State private var page: HouseholdPreferencePage<MealPreferenceSettings>?
     @State private var grants: HouseholdAdultGrants?
@@ -84,27 +85,48 @@ private struct HouseholdMealPreferencesView: View {
         .sheet(isPresented: $editing) {
             if active, let page, page.canWrite, let session {
                 NavigationStack {
-                    MealPreferenceEditor(profile: page.revision.map { MealPreferenceProfile(revision: $0, settings: page.settings ?? .init()) }, canSetTimeLimit: page.supportsTimeLimit == true) { settings, revision in
-                        guard active, scope.administer, page.revision == revision else { return false }
-                        return await save(settings, reviewed: page, session: session)
-                    }.navigationTitle(dinnerText("Edit household preferences"))
+                    MealPreferenceEditor(profile: page.revision.map { MealPreferenceProfile(revision: $0, settings: page.settings ?? .init()) },
+                        canSetTimeLimit: page.supportsTimeLimit == true, languageBasis: { revision in
+                            languageBasis(revision: revision, reviewed: page, session: session)
+                        }, verifyLanguageBasis: { expected in
+                            guard languageBasis(revision: expected.revision, reviewed: page, session: session) == expected,
+                                  try await service.preferencePage(MealPreferenceSettings.self, session: session) == page,
+                                  languageBasis(revision: expected.revision, reviewed: page, session: session) == expected
+                            else { throw ClientError.accessEnded }
+                        }) { settings, revision, assisted in
+                        guard page.revision == revision else { return false }
+                        return await save(settings, reviewed: page, session: session, assisted: assisted)
+                    }.environmentObject(household)
+                    .navigationTitle(dinnerText("Edit household preferences"))
                 }
             }
         }
     }
+    private func languageBasis(revision: UUID?, reviewed: HouseholdPreferencePage<MealPreferenceSettings>,
+                               session: HouseholdDeviceSession) -> MealLanguageBasis? {
+        guard active, UIApplication.shared.applicationState == .active, UIApplication.shared.isProtectedDataAvailable, child?.presented != true,
+              self.session == session, page == reviewed, let projection = household.projection,
+              ["organizer", "shopper"].contains(projection.role) else { return nil }
+        return .householdPreferences(scope: scope, session: session, page: reviewed, revision: revision, selectedShop: projection.shopId)
+    }
     private func save(_ settings: MealPreferenceSettings, reviewed: HouseholdPreferencePage<MealPreferenceSettings>,
-                      session: HouseholdDeviceSession, source: HouseholdPreferenceSource? = nil) async -> Bool {
+                      session: HouseholdDeviceSession, source: HouseholdPreferenceSource? = nil,
+                      assisted: MealLanguageBasis? = nil) async -> Bool {
         let current = request
-        guard active, scope.administer, reviewed.canWrite, page == reviewed, !busy else { return false }
+        func authorized() -> Bool {
+            active && scope.administer && reviewed.canWrite && page == reviewed && self.session == session &&
+                current == request && (assisted == nil || languageBasis(revision: reviewed.revision, reviewed: reviewed, session: session) == assisted)
+        }
+        guard authorized(), !busy else { return false }
         busy = true
         defer { if current == request { busy = false } }
         do {
             try settings.validate()
             let value = settings == MealPreferenceSettings() ? nil : settings
             let intent = try await service.preparePreferenceWrite(value, reviewed: reviewed, session: session, sourceDecision: source, timeLimitReviewed: true)
-            guard active, request == current else { return false }
+            guard authorized() else { return false }
             let updated = try await service.savePreferences(intent, as: MealPreferenceSettings.self)
-            guard active, request == current else { return false }
+            guard authorized() else { return false }
             try updated.settings?.validate()
             page = updated
             return true

@@ -5,6 +5,7 @@ import HouseholdClient
 struct MealLanguageDraftLink: View {
     let basis: () -> MealLanguageBasis?
     let draft: () -> MealLanguageDraft
+    var verifyBasis: ((MealLanguageBasis) async throws -> Void)? = nil
     let use: (MealLanguageDraft, MealLanguageBasis) -> Void
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scene
@@ -28,7 +29,7 @@ struct MealLanguageDraftLink: View {
             }.accessibilityIdentifier("mealLanguage.open")
             .sheet(item: $opened) { session in
                 MealLanguageDraftReview(basis: session.basis, original: session.draft,
-                    current: { self.current }, draft: draft, use: use)
+                    current: { self.current }, draft: draft, verifyBasis: verifyBasis, use: use)
             }
             .onChange(of: current) { _, next in if opened?.basis != next { opened = nil } }
         }
@@ -40,6 +41,7 @@ private struct MealLanguageDraftReview: View {
     let original: MealLanguageDraft
     let current: () -> MealLanguageBasis?
     let draft: () -> MealLanguageDraft
+    var verifyBasis: ((MealLanguageBasis) async throws -> Void)? = nil
     let use: (MealLanguageDraft, MealLanguageBasis) -> Void
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.dismiss) private var dismiss
@@ -63,7 +65,11 @@ private struct MealLanguageDraftReview: View {
                     if loading { ProgressView() }
                     else if available {
                         Section(dinnerText("Words to share with OpenAI")) {
-                            Text(dinnerText("Type only the words you want to send. Leave out names and personal details. Your saved meal, preferences and feedback stay on this device."))
+                            if case .householdPreferences = basis.destination {
+                                Text(dinnerText("Type only the words you want OpenAI to read. Leave out names and personal details. Review the suggestion before saving it to household preferences."))
+                            } else {
+                                Text(dinnerText("Type only the words you want to send. Leave out names and personal details. Your saved meal, preferences and feedback stay on this device."))
+                            }
                             TextField(dinnerText("My words"), text: $wording).submitLabel(.done)
                                 .accessibilityIdentifier("mealLanguage.note")
                             Button(dinnerText("Send these words for a suggestion")) { send() }
@@ -113,8 +119,11 @@ private struct MealLanguageDraftReview: View {
         attempts += 1; pending = request.requestID; message = nil
         sending = Task { @MainActor in
             do {
+                try await verifyBasis?(basis)
+                guard !Task.isCancelled, pending == request.requestID, active else { return }
                 let reply: MealLanguageReply = try await service.languageSuggestion(purpose: original.purpose,
                     body: JSONEncoder().encode(request), scope: basis.account)
+                try await verifyBasis?(basis)
                 guard !Task.isCancelled, pending == request.requestID, active, text == request.sourceLines.first?.text else { return }
                 review = try reply.review(for: request, basis: basis, draft: original)
                 if review == nil { message = dinnerText("No addition was suggested. You can enter your choice manually.") }
