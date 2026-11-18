@@ -14,6 +14,16 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
     public let subtotal: Money?
     public let complete: Bool
 
+    /// Charges are the shopper-reviewed increase over the shop without this second
+    /// meal. Existing cart fees and threshold waivers are not new cash costs.
+    public func additionalCash(addedCharges: Money?, chargesComplete: Bool) throws -> (known: Money?, complete: Bool) {
+        if complete && packages.isEmpty { return (.zero, true) }
+        guard let addedCharges else { return (subtotal, false) }
+        guard addedCharges >= .zero else { throw CheckoutError.invalidEvidence }
+        let cents = try checkedAdd(subtotal?.minorUnits ?? 0, addedCharges.minorUnits)
+        return (Money(minorUnits: cents), complete && chargesComplete)
+    }
+
     private struct Observation: Equatable {
         let offer: PackOffer
         let source: String

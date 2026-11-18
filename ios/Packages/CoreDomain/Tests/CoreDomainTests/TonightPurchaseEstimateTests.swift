@@ -8,7 +8,8 @@ final class TonightPurchaseEstimateTests: XCTestCase {
     }
 
     func testRepeatedIngredientsShareOnePackageAndSavedPriceStaysWithItsShop() throws {
-        let origin = UUID(), foodID = UUID(), shop = ShoppingLedger(title: "Market")
+        let origin = UUID(), foodID = UUID()
+        let shop = ShoppingLedger(title: "Market", basis: ShopBasis(knownFees: Money(minorUnits: 599)))
         let first = MealIngredient(name: "Wraps", quantity: try quantity(2))
         let second = MealIngredient(name: "Wraps", quantity: try quantity(2))
         let sauce = MealIngredient(name: "Sauce", quantity: try quantity(1))
@@ -39,6 +40,26 @@ final class TonightPurchaseEstimateTests: XCTestCase {
         let completeEstimate = try TonightPurchaseEstimate.estimate(completeMatch, workspace: workspace, workspaceID: origin, shopID: shop.id, at: now)
         XCTAssertTrue(completeEstimate.complete)
         XCTAssertEqual(completeEstimate.subtotal?.minorUnits, 285)
+        // The original pickup already has a fee. Only the $1.25 added for
+        // the second meal is entered here, once even for repeated ingredients.
+        let topUp = Money(minorUnits: 125)
+        let priced = try completeEstimate.additionalCash(addedCharges: topUp, chargesComplete: true)
+        XCTAssertEqual(priced.known?.minorUnits, 410)
+        XCTAssertTrue(priced.complete)
+        let moreFeesUnknown = try completeEstimate.additionalCash(addedCharges: topUp, chargesComplete: false)
+        XCTAssertEqual(moreFeesUnknown.known?.minorUnits, 410)
+        XCTAssertFalse(moreFeesUnknown.complete)
+        let unknownFees = try completeEstimate.additionalCash(addedCharges: nil, chargesComplete: true)
+        XCTAssertEqual(unknownFees.known?.minorUnits, 285)
+        XCTAssertFalse(unknownFees.complete)
+        let noAddedFee = try completeEstimate.additionalCash(addedCharges: .zero, chargesComplete: true)
+        XCTAssertEqual(noAddedFee.known?.minorUnits, 285)
+        XCTAssertTrue(noAddedFee.complete)
+        let missingSauce = try estimate.additionalCash(addedCharges: topUp, chargesComplete: true)
+        XCTAssertEqual(missingSauce.known?.minorUnits, 410)
+        XCTAssertFalse(missingSauce.complete)
+        XCTAssertThrowsError(try completeEstimate.additionalCash(addedCharges: Money(minorUnits: -1), chargesComplete: true))
+        XCTAssertThrowsError(try completeEstimate.additionalCash(addedCharges: Money(minorUnits: .max), chargesComplete: true))
         let sauceOnly = try PantryMealMatcher.review(recipe: recipe, reviewedFoods: [sauce.id: sauce.id],
             globallyFreeLots: [ConfirmedStockLot(id: UUID(), foodID: sauce.id, name: sauce.name,
                 usable: try quantity(1), confirmedAt: now)], unresolvedFoods: [], profile: nil)
@@ -51,6 +72,10 @@ final class TonightPurchaseEstimateTests: XCTestCase {
             let unknown = try TonightPurchaseEstimate.estimate(match, workspace: workspace, workspaceID: workspaceID, shopID: shopID, at: date)
             XCTAssertNil(unknown.subtotal)
             XCTAssertFalse(unknown.complete)
+            let feeOnly = try unknown.additionalCash(addedCharges: topUp, chargesComplete: true)
+            XCTAssertEqual(feeOnly.known, topUp)
+            XCTAssertFalse(feeOnly.complete)
+            XCTAssertNil(try unknown.additionalCash(addedCharges: nil, chargesComplete: false).known)
         }
     }
 
@@ -64,5 +89,8 @@ final class TonightPurchaseEstimateTests: XCTestCase {
         XCTAssertTrue(estimate.complete)
         XCTAssertEqual(estimate.subtotal, .zero)
         XCTAssertTrue(estimate.packages.isEmpty)
+        let cash = try estimate.additionalCash(addedCharges: nil, chargesComplete: false)
+        XCTAssertEqual(cash.known, .zero)
+        XCTAssertTrue(cash.complete)
     }
 }

@@ -347,8 +347,13 @@ struct TonightEntry: View {
                     LabeledContent(row.ingredient.name, value: ledgerQuantity(TonightMealModel.missingQuantity(row)))
                 }
                 if let input = model.input, let workspaceID = ledger.sourceWorkspaceID {
-                    TonightPricesView(estimate: try? TonightPurchaseEstimate.estimate(next, workspace: input.workspace,
-                        workspaceID: workspaceID, shopID: input.workspace.selectedShopID, at: Date()))
+                    let estimate = input.ledgerRevision == ledger.revision ? try? TonightPurchaseEstimate.estimate(next,
+                        workspace: input.workspace, workspaceID: workspaceID, shopID: input.workspace.selectedShopID, at: Date()) : nil
+                    TonightPricesView(estimate: estimate)
+                    if let estimate {
+                        SecondMealCashReview(estimate: estimate)
+                            .id(model.pairingRevision)
+                    }
                 }
             }.accessibilityElement(children: .contain)
                 .accessibilityIdentifier("tonight.batch.second.\(next.id)")

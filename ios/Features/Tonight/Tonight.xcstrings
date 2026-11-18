@@ -2839,6 +2839,176 @@
           }
         }
       }
+    },
+    "Added fees, tax and deposits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added fees, tax and deposits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos, impuestos y depósitos adicionales"
+          }
+        }
+      }
+    },
+    "Estimated additional cash": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated additional cash"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasto adicional estimado"
+          }
+        }
+      }
+    },
+    "Known additional cash so far": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known additional cash so far"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasto adicional conocido hasta ahora"
+          }
+        }
+      }
+    },
+    "Additional charges still need review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional charges still need review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún falta revisar los cargos adicionales."
+          }
+        }
+      }
+    },
+    "Review additional charges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review additional charges"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cargos adicionales"
+          }
+        }
+      }
+    },
+    "Enter only fees, tax and deposits added by buying groceries for this second meal. Exclude charges already due for your shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter only fees, tax and deposits added by buying groceries for this second meal. Exclude charges already due for your shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa solo los cargos, impuestos y depósitos que se añaden al comprar los alimentos para esta segunda comida. Excluye los cargos que ya debías pagar por tu compra."
+          }
+        }
+      }
+    },
+    "Known added charges in USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known added charges in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos adicionales conocidos en USD"
+          }
+        }
+      }
+    },
+    "Enter 0 for no added charges. Leave blank if unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter 0 for no added charges. Leave blank if unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa 0 si no hay cargos adicionales. Deja el campo en blanco si no los conoces."
+          }
+        }
+      }
+    },
+    "All additional charges reviewed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All additional charges reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé todos los cargos adicionales"
+          }
+        }
+      }
+    },
+    "Use in estimate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use in estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar en la estimación"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

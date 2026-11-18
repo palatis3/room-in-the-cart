@@ -46,6 +46,7 @@ import RecordArchive
     @Published private(set) var input: Input?
     @Published private(set) var reviews: [PantryMealMatcher.Review] = []
     @Published private(set) var firstRecipeID: UUID?
+    private(set) var pairingRevision = UUID()
     @Published private(set) var followingMeals: [PantryMealMatcher.Review] = []
     @Published private(set) var matches: [UUID: [UUID: UUID]] = [:]
     @Published private(set) var busy = false
@@ -196,6 +197,7 @@ import RecordArchive
         }
     }
     func clearPairing() {
+        pairingRevision = UUID()
         firstRecipeID = nil
         followingMeals = []
     }
