@@ -1,32 +1,20 @@
 import SwiftUI
 import CoreDomain
 
-private struct MealPreferenceFocusKey: EnvironmentKey {
-    static let defaultValue: FocusState<String?>.Binding? = nil
-}
-private extension EnvironmentValues {
-    var mealPreferenceFocus: FocusState<String?>.Binding? {
-        get { self[MealPreferenceFocusKey.self] }
-        set { self[MealPreferenceFocusKey.self] = newValue }
-    }
-}
-
 private struct PreferenceTermsField: View {
     let title: String
     @Binding var terms: [String]
     @State private var text: String
-    @Environment(\.mealPreferenceFocus) private var focus
-    init(_ title: String, terms: Binding<[String]>) {
+    @FocusState.Binding var focus: String?
+    init(_ title: String, terms: Binding<[String]>, focus: FocusState<String?>.Binding) {
         self.title = title
         _terms = terms
+        _focus = focus
         _text = State(initialValue: terms.wrappedValue.joined(separator: "\n"))
     }
     var body: some View {
-        let field = workingTextField(title, text: $text, axis: .vertical)
-        Group {
-            if let focus { field.focused(focus, equals: title) }
-            else { field }
-        }
+        workingTextField(title, text: $text, axis: .vertical)
+            .focused($focus, equals: title)
             .onChange(of: text) { _, next in terms = DinnerEntry.list(next) }
             .onChange(of: terms) { _, next in
                 if DinnerEntry.list(text) != next { text = next.joined(separator: "\n") }
@@ -38,10 +26,18 @@ private struct ReviewedTermsField: View {
     let title: String
     let field: String
     @Binding var value: [String]?
+    private let focus: FocusState<String?>.Binding?
+    @FocusState private var localFocus: String?
+    init(title: String, field: String, value: Binding<[String]?>, focus: FocusState<String?>.Binding? = nil) {
+        self.title = title
+        self.field = field
+        _value = value
+        self.focus = focus
+    }
     var body: some View {
         Toggle(title, isOn: Binding(get: { value != nil }, set: { value = $0 ? [] : nil }))
         if value != nil {
-            PreferenceTermsField(field, terms: Binding(get: { value ?? [] }, set: { value = $0 }))
+            PreferenceTermsField(field, terms: Binding(get: { value ?? [] }, set: { value = $0 }), focus: focus ?? $localFocus)
         }
     }
 }
@@ -158,14 +154,14 @@ struct MealPreferenceEditor: View {
     var body: some View {
         Form {
             Section(dinnerText("Hard constraints")) {
-                PreferenceTermsField(dinnerText("Excluded ingredients, one per line"), terms: $draft.exclusions)
+                PreferenceTermsField(dinnerText("Excluded ingredients, one per line"), terms: $draft.exclusions, focus: $textFocus)
                     .accessibilityIdentifier("preferences.exclusions")
-                ReviewedTermsField(title: dinnerText("Limit recipes to available appliances"), field: dinnerText("Available appliances, one per line"), value: $draft.availableAppliances)
+                ReviewedTermsField(title: dinnerText("Limit recipes to available appliances"), field: dinnerText("Available appliances, one per line"), value: $draft.availableAppliances, focus: $textFocus)
             }.disabled(reviewing)
             Section(dinnerText("Preferences")) {
-                PreferenceTermsField(dinnerText("Disliked ingredients, one per line"), terms: $draft.dislikes)
+                PreferenceTermsField(dinnerText("Disliked ingredients, one per line"), terms: $draft.dislikes, focus: $textFocus)
                 if !draft.dislikes.isEmpty { Toggle(dinnerText("Require meals without these dislikes"), isOn: $draft.strictDislikes) }
-                PreferenceTermsField(dinnerText("Preferred brands, one per line"), terms: $draft.preferredBrands)
+                PreferenceTermsField(dinnerText("Preferred brands, one per line"), terms: $draft.preferredBrands, focus: $textFocus)
                 if !draft.preferredBrands.isEmpty { Toggle(dinnerText("Require preferred brands"), isOn: $draft.strictBrands) }
                 if canSetTimeLimit {
                     TextField(dinnerText("Available cooking time in minutes, if limited"), text: $minutes)
@@ -217,7 +213,6 @@ struct MealPreferenceEditor: View {
                 }
             }
         }.disabled(busy)
-        .environment(\.mealPreferenceFocus, $textFocus)
         .keyboardDoneAction(visible: textFocus != nil, title: dinnerText("Done"),
                             identifier: "preferences.keyboardDone") { textFocus = nil }
         .onChange(of: minutes) { _, value in
