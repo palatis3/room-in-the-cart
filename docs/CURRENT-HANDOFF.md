@@ -4,7 +4,21 @@ Updated November 17, 2026. Goal: **finish Foundation 2.1: all 52 requirements, 2
 
 Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md), [RELEASE-EXECUTION](RELEASE-EXECUTION.md) and [CI-VALIDATION](CI-VALIDATION.md). Historical statements that the app is unbuilt are superseded by inspected code and results.
 
-## Active work and ownership
+## Expansion integration
+
+The working app is on `codex/dinner-shopping-integration`. PR #60 is stacked on PR #29. Use #60 to qualify interactions across receipts, pantry, pricing, dinners, cooking, household access and Home widgets. Land #29 through the normal checks, then qualify #60 against the updated main branch. [PR #29](https://github.com/palatis3/room-in-the-cart/pull/29) · [PR #60](https://github.com/palatis3/room-in-the-cart/pull/60)
+
+| Journey | Evidence and remaining checks |
+| --- | --- |
+| Review a receipt and recognize a rescan | The iPhone tests covered real Vision text, review before adding food, a second copy linked to the original and the saved quantity after reopening. Signed-credit handling was added afterward. [Receipt prefill](https://buildkite.com/room-in-cart/room-in-the-cart-ios-qualification/builds/96) · [Rescan and retry](https://buildkite.com/room-in-cart/room-in-the-cart-ios-qualification/builds/93) |
+| Review a price image | Vision retained membership and package wording and kept an unknown total unknown. Domain tests cover choosing an explicitly reviewed crop and overriding its proposed amount. The native crop-picker interaction still needs an end-to-end check. [Native price tests](https://buildkite.com/room-in-cart/room-in-the-cart-ios-qualification/builds/95) |
+| Choose a meal and finish a package | Optional wording used eligible meal IDs before reopening the decision for confirmation. The two-meal journey preserved the lunch reservation and Home consent after cancellation and relaunch. [Meal choice](https://buildkite.com/room-in-cart/room-in-the-cart-ios-qualification/builds/92) · [Finish a package](https://buildkite.com/room-in-cart/room-in-the-cart-ios-qualification/builds/98) |
+
+The service candidate includes migrations 050–058, including the shared household receipt commit and protected retry. Staging is at 049. The November 17 encrypted backup was restored twice locally and rehearsed through 058. The 049 service cannot safely read every new pantry record after 058 writes begin. Review the coordinated rollback and hosted update before promotion. Apple distribution, live provider activation, physical-device checks and human accessibility and Spanish review remain open.
+
+The GitHub-hosted jobs run alongside the six A1 M4 and six A2 M2 Pro Build Hub machines. Native Bitrise CI separately runs the cooking and Tonight checks on compact and large iPhones. Its push webhook and both hosted jobs were verified. [Native Bitrise setup](ci/BITRISE-NATIVE.md)
+
+## Earlier integration checkpoints
 
 PR [#10](https://github.com/palatis3/room-in-the-cart/pull/10) merged on November 17 at 12:42 UTC as `3b767679ef97f77b53e31e6ae400c22fce6eddd6`. Its tree `f8669d2e701d9dd0408a120ff9944d718c9d5381` exactly matches qualified head `e06bde5cf463fd299deefed456f94f0cefcaeb73`. It adds screen/category attribution to all five original accessibility audits; no production app change, assertion relaxation or audit skip. Main protections and required checks passed normally, with no unresolved review threads or bypass.
 
