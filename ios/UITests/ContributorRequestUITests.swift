@@ -287,6 +287,17 @@ import XCTest
         tap(app.buttons["householdReceipt.review"])
         let confirm = app.buttons["householdReceipt.confirm"]
         tap(confirm)
+        let notice = app.staticTexts["householdPantry.confirmationNotice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 10), app.debugDescription)
+        reveal(notice)
+        XCTAssertEqual(notice.label, "Your change is still open. Try confirming again when the service is available.")
+        XCTAssertTrue(app.navigationBars["Add receipt to household pantry"].exists)
+        XCTAssertTrue(confirm.isEnabled)
+        for original in ["Oats 3 count USD 4.20", "Beans 5 count USD 6.10"] {
+            let row = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", original)).firstMatch
+            reveal(row)
+        }
+        tap(confirm)
         XCTAssertTrue(confirm.waitForNonExistence(timeout: 10), app.debugDescription)
         back(from: "Household pantry")
         tap(entry)

@@ -8,6 +8,7 @@ private func pantryFixture<T: Decodable>(_ object: Any) throws -> T {
 private actor PantryTestService: HouseholdPantryServing {
     let session: HouseholdPantrySession
     var grantEpoch = 1
+    var preparationError: ClientError?
     var losesResponse = false
     var sent: [HouseholdPantryIntent] = []
     var accessDenied = false
@@ -27,6 +28,7 @@ private actor PantryTestService: HouseholdPantryServing {
     init() throws {
         session = try pantryFixture(["householdID": UUID().uuidString, "memberID": UUID().uuidString, "deviceID": UUID().uuidString])
     }
+    func failPreparation(with error: ClientError?) { preparationError = error }
     func setLoss(_ loss: Bool) { losesResponse = loss }
     func revokeAndRegrant() { grantEpoch += 2 }
     func enablePagination() { paged = true }
@@ -59,6 +61,7 @@ private actor PantryTestService: HouseholdPantryServing {
     }
     func prepareHouseholdPantryChange(_ body: HouseholdPantryChange, reviewed page: HouseholdPantryPage,
                                         session: HouseholdPantrySession) throws -> HouseholdPantryIntent {
+        if let preparationError { throw preparationError }
         let kind: String
         switch body {
         case .addition: kind = "pantry.addLot"
@@ -114,7 +117,7 @@ private actor PantryTestService: HouseholdPantryServing {
 
 @MainActor final class HouseholdPantryAuthorityTests: XCTestCase {
     private func makeModel(service: PantryTestService, store: HouseholdPantryPendingStore, subject: String = "adult",
-                           shop: UUID? = nil, managesGrants: Bool = false, recheck: @escaping () async -> Void = {}) throws -> HouseholdPantryModel {
+                           shop: UUID? = nil, managesGrants: Bool = false, isCurrent: @escaping () -> Bool = { true }, recheck: @escaping () async -> Void = {}) throws -> HouseholdPantryModel {
         let session = service.session
         let runtime = HouseholdPantryRuntime(generation: UUID(), enrollmentRevision: UUID(), subject: subject,
             householdID: session.householdID.uuidString, memberID: session.memberID.uuidString, managesGrants: managesGrants)
@@ -122,7 +125,7 @@ private actor PantryTestService: HouseholdPantryServing {
             "role": "contributor", "enrolled": true, "queueConsent": false, "capabilities": ["household_pantry"]]
         if let shop { data["shopId"] = shop.uuidString }
         let projection: HouseholdBootstrap = try pantryFixture(data)
-        return .init(scope: runtime, service: service, store: store, projection: { projection }, recheckAccess: recheck)
+        return .init(scope: runtime, service: service, store: store, projection: { isCurrent() ? projection : nil }, recheckAccess: recheck)
     }
     private func temporaryURL() -> URL {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -282,7 +285,8 @@ private actor PantryTestService: HouseholdPantryServing {
 
     func testSelectedSharedReceiptSurvivesLostReplyAndRestoresOnlyTheAuthorizedScope() async throws {
         let service = try PantryTestService(), url = temporaryURL()
-        let first = try makeModel(service: service, store: .init(url: url))
+        let store = HouseholdPantryPendingStore(url: url)
+        let first = try makeModel(service: service, store: store)
         await first.load()
         let page = try XCTUnwrap(first.page)
         let doc = try await ReceiptDocumentReader().extract(.init(data: Data("BEANS\nFEE\nPERAS".utf8), kind: .text))
@@ -300,8 +304,18 @@ private actor PantryTestService: HouseholdPantryServing {
         XCTAssertEqual(reviewed.lines.map(\.ordinal), [0, 2])
         XCTAssertEqual(reviewed.lines.map(\.paidUSDMinor), [410, nil])
         XCTAssertEqual(reviewed.lines.map(\.original), ["BEANS", "PERAS"])
+        await service.failPreparation(with: .transport)
+        let offline = await first.confirmChange(.receipt(reviewed), reviewed: page)
+        XCTAssertEqual(offline, .retryPreparation)
+        XCTAssertTrue(first.permitsReceiptReview(page))
+        let beforeSave = try await store.read(), beforeSend = await service.sent
+        XCTAssertTrue(beforeSave.isEmpty)
+        XCTAssertTrue(beforeSend.isEmpty)
+
+        await service.failPreparation(with: nil)
         await service.setLoss(true)
-        await first.confirmChange(.receipt(reviewed), reviewed: page)
+        let ambiguous = await first.confirmChange(.receipt(reviewed), reviewed: page)
+        XCTAssertEqual(ambiguous, .savedForSubmission)
         first.dismiss()
         let unrelated = try makeModel(service: service, store: .init(url: url), subject: "Other profile")
         await unrelated.load()
@@ -315,6 +329,35 @@ private actor PantryTestService: HouseholdPantryServing {
         let sent = await service.sent, acquired = await service.acquired
         XCTAssertEqual(sent, [intent, intent]); XCTAssertEqual(acquired.count, 1)
         XCTAssertNil(resumed.pending)
+    }
+
+    func testPreparationRetryEndsWithTheHouseholdScopeOrAccess() async throws {
+        let service = try PantryTestService(), store = HouseholdPantryPendingStore(url: temporaryURL())
+        var isCurrent = true, rechecked = false
+        let model = try makeModel(service: service, store: store, isCurrent: { isCurrent }, recheck: { rechecked = true })
+        await model.load()
+        let page = try XCTUnwrap(model.page)
+        var draft = HouseholdPantryDraft()
+        draft.name = "Beans"
+        let change = HouseholdPantryChange.addition(try draft.review())
+        await service.failPreparation(with: .service(status: 503, code: "service_unavailable", correlationID: nil, retryAfter: nil))
+        let unavailable = await model.confirmChange(change, reviewed: page)
+        XCTAssertEqual(unavailable, .retryPreparation)
+
+        isCurrent = false
+        XCTAssertFalse(model.permitsReceiptReview(page))
+        let switched = await model.confirmChange(change, reviewed: page)
+        XCTAssertEqual(switched, .unavailable)
+        isCurrent = true
+        await service.failPreparation(with: .accessEnded)
+        let denied = await model.confirmChange(change, reviewed: page)
+        XCTAssertEqual(denied, .unavailable)
+        XCTAssertTrue(rechecked)
+        XCTAssertNil(model.page)
+        XCTAssertFalse(model.permitsReceiptReview(page))
+        let entries = try await store.read(), sent = await service.sent
+        XCTAssertTrue(entries.isEmpty)
+        XCTAssertTrue(sent.isEmpty)
     }
 
     func testExplicitZeroUnknownAndFractionReview() throws {

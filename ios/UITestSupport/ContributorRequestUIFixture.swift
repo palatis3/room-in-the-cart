@@ -206,6 +206,9 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     private let tonightRecipeID = UUID().uuidString
     private let tonightIngredientID = UUID().uuidString
     private let receiptFixture = ProcessInfo.processInfo.arguments.contains("--household-receipt-fixture")
+    private let receiptReplayWindow = UUID()
+    private var receiptWindowAttempts = 0
+    private var receiptCommandAttempts = 0
     private var receiptLots: [[String: Any]] = []
     var pantryCorrection: Bool { tonightFixture || receiptFixture || ProcessInfo.processInfo.arguments.contains("--household-pantry-correction") ||
         ProcessInfo.processInfo.arguments.contains("--household-staple-reminders") }
@@ -271,6 +274,11 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
         }
         if pantryCorrection {
+            if receiptFixture, path.hasSuffix("/replay-windows"), request.httpMethod == "POST" {
+                receiptWindowAttempts += 1
+                if receiptWindowAttempts == 1 { throw URLError(.notConnectedToInternet) }
+                return try response(["id": receiptReplayWindow.uuidString, "expiresAt": "2099-01-01T00:00:00Z"])
+            }
             if receiptFixture || tonightFixture, path.contains("/pantry") {
                 guard path.hasPrefix("/v1/households/" + household + "/pantry"),
                       request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-sam",
@@ -410,6 +418,12 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
             if path.hasSuffix("/pantry/commands"), let kind = json["kind"] as? String, let key = json["clientKey"] as? String,
                let body = json["body"] as? [String: Any] {
+                if receiptFixture {
+                    receiptCommandAttempts += 1
+                    guard receiptWindowAttempts == 2, receiptCommandAttempts == 1,
+                          (json["replayWindow"] as? String)?.lowercased() == receiptReplayWindow.uuidString.lowercased()
+                    else { return try response([:], 409) }
+                }
                 if let existing = pantryReceipts[key] { return try response(existing) }
                 if receiptFixture && kind == "pantry.acquireReceipt" {
                     guard json["pantryRevision"] as? Int == pantryReceipts.count, pantryReceipts.isEmpty,

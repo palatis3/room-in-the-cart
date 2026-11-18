@@ -136,6 +136,34 @@ private struct HouseholdPantryView: View {
     }
 }
 
+struct HouseholdPantryConfirmButton: View {
+    @ObservedObject var model: HouseholdPantryModel
+    let page: HouseholdPantryPage
+    let change: HouseholdPantryChange
+    let title: String
+    let identifier: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var retryPreparation = false
+
+    var body: some View {
+        Button(title) {
+            Task {
+                switch await model.confirmChange(change, reviewed: page) {
+                case .savedForSubmission: dismiss()
+                case .retryPreparation: retryPreparation = true
+                case .unavailable: break
+                }
+            }
+        }
+        .disabled(!model.permitsReceiptReview(page))
+        .accessibilityIdentifier(identifier)
+        if retryPreparation {
+            Text(householdPantryText("Your change is still open. Try confirming again when the service is available."))
+                .accessibilityIdentifier("householdPantry.confirmationNotice")
+        }
+    }
+}
+
 private struct PantryStorageFacts: View {
     let storedAt: String?
     let useFirstAt: String?
@@ -196,9 +224,8 @@ private struct HouseholdPantryEditor: View {
             if let reviewed {
                 Section(householdPantryText("Review pantry addition")) { PantryAdditionFacts(addition: reviewed) }
                 Button(householdPantryText("Edit addition")) { self.reviewed = nil }
-                Button(householdPantryText("Confirm and add food")) {
-                    Task { await model.confirm(reviewed, reviewed: page); dismiss() }
-                }.accessibilityIdentifier("householdPantry.confirm")
+                HouseholdPantryConfirmButton(model: model, page: page, change: .addition(reviewed),
+                    title: householdPantryText("Confirm and add food"), identifier: "householdPantry.confirm")
             } else {
                 Section {
                     TextField(ht("Food name"), text: $draft.name).accessibilityIdentifier("householdPantry.name")
@@ -264,9 +291,8 @@ private struct HouseholdPantryCountEditor: View {
             }
             if let reviewed {
                 Button(householdPantryText("Edit count")) { self.reviewed = nil }
-                Button(householdPantryText("Confirm corrected count")) {
-                    Task { await model.confirmChange(.correction(reviewed), reviewed: page); dismiss() }
-                }.accessibilityIdentifier("householdPantry.confirmCount")
+                HouseholdPantryConfirmButton(model: model, page: page, change: .correction(reviewed),
+                    title: householdPantryText("Confirm corrected count"), identifier: "householdPantry.confirmCount")
             } else {
                 Section {
                     TextField(householdPantryText("Corrected count"), text: $literal).accessibilityIdentifier("householdPantry.correctedQuantity")

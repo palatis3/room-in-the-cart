@@ -108,10 +108,8 @@ struct HouseholdReceiptEntry: View {
                 Section(pantryText("Confirm receipt lines")) {
                     HouseholdReceiptFacts(receipt: reviewed)
                     Text(pantryText("Saving receipt evidence does not post a payment."))
-                    Button(householdPantryText("Confirm receipt for this household")) {
-                        guard model.permitsReceiptReview(page) else { return }
-                        Task { await model.confirmChange(.receipt(reviewed), reviewed: page); dismiss() }
-                    }.accessibilityIdentifier("householdReceipt.confirm")
+                    HouseholdPantryConfirmButton(model: model, page: page, change: .receipt(reviewed),
+                        title: householdPantryText("Confirm receipt for this household"), identifier: "householdReceipt.confirm")
                     Button(pantryText("Edit receipt lines")) { self.reviewed = nil }
                 }
             } else if let displayed = draft {
@@ -144,7 +142,7 @@ struct HouseholdReceiptEntry: View {
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: field != nil, title: pantryText("Done"), identifier: "householdReceipt.keyboardDone") { field = nil }
         .navigationTitle(householdPantryText("Add receipt to household pantry"))
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Close")) { dismiss() } } }
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Close")) { dismiss() }.disabled(model.busy) } }
         .sheet(isPresented: $scan) {
             NavigationStack { ScanReviewView(kind: .receipt, target: target, authorize: { model.permitsReceiptReview(page) }) { result in
                 if case .evidence(let source) = result { accept(source) }
