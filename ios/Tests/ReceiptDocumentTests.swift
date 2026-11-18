@@ -6,6 +6,58 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ReceiptDocumentTests: XCTestCase {
+    func testLocalReceiptPhotoOffersPrintedFieldsWithoutClaimingReceivedUsableOrPaid() async throws {
+        let bounds = CGRect(x: 0, y: 0, width: 1100, height: 280)
+        let format = UIGraphicsImageRendererFormat(); format.scale = 1
+        let image = UIGraphicsImageRenderer(bounds: bounds, format: format).image { _ in
+            UIColor.white.setFill(); UIRectFill(bounds)
+            for (wording,y) in [("Purchase date: 2024-11-17",15),("FROZEN PEAS 2 CT USD 6.50",96),("SERVICE FEE USD 1.20",177)] {
+                (wording as NSString).draw(at: .init(x: 22, y: y), withAttributes: [.font: UIFont.systemFont(ofSize: 52), .foregroundColor: UIColor.black])
+            }
+        }
+        let document = try await ReceiptDocumentReader().extract(.init(data: XCTUnwrap(image.pngData()), kind: .image))
+        let rows = try XCTUnwrap(document.pages.first?.lines)
+        XCTAssertEqual(rows.count, 3)
+        let selected = Set(rows.map { ExtractedReceiptDocument.Selection(page: 1, line: $0.id) })
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = try document.source(target: target, merchant: "Market", stage: .receipt, selection: selected, at: Date())
+        var draft = try ReceiptImportDraft(source: source)
+        XCTAssertNotNil(draft.printedDate); XCTAssertFalse(draft.dateConfirmed)
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+        let index = try XCTUnwrap(draft.lines.firstIndex(where: { $0.name == "FROZEN PEAS" }))
+        XCTAssertEqual(draft.lines[index].printed?.quantity, "2")
+        XCTAssertEqual(draft.lines[index].printed?.amount, "6.50")
+        XCTAssertEqual(draft.lines[index].location, .freezer)
+        XCTAssertEqual(draft.lines[index].documentLine?.method, .imageOCR)
+        XCTAssertTrue(draft.lines[index].original.contains("USD"))
+        XCTAssertTrue(draft.lines[index].paid.isEmpty)
+        draft.lines[index].usePrintedQuantity()
+        XCTAssertEqual(draft.lines[index].received, "2"); XCTAssertTrue(draft.lines[index].usable.isEmpty)
+        XCTAssertEqual(draft.lines.last?.printed?.kind, .adjustment)
+    }
+
+    func testSpanishWeightedReceiptKeepsDateAndPaidAmbiguitiesOutOfStock() throws {
+        func proposal(_ text: String) -> ReceiptPrintedEvidence {
+            .init(.init(originalText: text), knownStorage: ["peras":[.fridge]])
+        }
+        let row = proposal("PERAS 0,75 kg @ USD 4,00/kg USD 3,00")
+        XCTAssertEqual(row.name, "PERAS"); XCTAssertEqual(row.quantity, "0.75"); XCTAssertEqual(row.unit, .kilogram)
+        XCTAssertEqual(row.storage, .fridge); XCTAssertEqual(row.amount, "3.00")
+        XCTAssertNil(proposal("PERAS USD 4.00/lb").amount)
+        XCTAssertNil(proposal("PERAS 1 kg CAD 5.00").amount)
+        XCTAssertNil(proposal("PERAS 2 kg USD 8.00 OFERTA USD 5.00").amount)
+        XCTAssertEqual(proposal("DESCUENTO USD 2,00").kind, .adjustment)
+        var blurry = ScanReceiptLine(originalText: "PERAS 1 kg USD 3.00"); blurry.uncertainOCR = true
+        XCTAssertNil(ReceiptPrintedEvidence(blurry,knownStorage: [:]).quantity)
+        func date(_ text: String) -> ReceiptPrintedDate? { .unique(in: [.init(originalText: text)], now: Date()) }
+        XCTAssertNotNil(date("Fecha de compra: 17/11/2024"))
+        for text in ["Fecha: 03/04/2024","Fecha: 31/02/2024","Best before: 2024-11-17","Fecha: 2099-01-01"] { XCTAssertNil(date(text)) }
+        XCTAssertNil(ReceiptPrintedDate.unique(in: [.init(originalText:"2024-11-01"),.init(originalText:"2024-11-02")],now: Date()))
+        var ordered = ScanReceiptLine(originalText: "2024-11-17")
+        ordered.documentLine = .init(method: .pdfText, stage: .order, page: 1, line: 1)
+        XCTAssertNil(ReceiptPrintedDate.unique(in: [ordered], now: Date()))
+    }
+
     private func pdf(pages: Int, scannedLast: Bool = false) -> Data {
         let bounds = CGRect(x: 0, y: 0, width: 400, height: 500)
         let image = UIGraphicsImageRenderer(bounds: bounds).image { _ in

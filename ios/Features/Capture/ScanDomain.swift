@@ -42,6 +42,7 @@ struct ScannedSource: Equatable, Sendable {
 struct ScanReceiptLine: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let originalText: String
+    var uncertainOCR: Bool?
     var documentLine: ReceiptAcquisition.DocumentLine?
     var reviewedText: String
     var quantityNote: String
@@ -109,9 +110,13 @@ enum ScanLimits {
     static func text(_ value: String) throws {
         guard value.utf8.count <= 20_000, !value.contains("\0"), value.split(whereSeparator: \.isNewline).count <= 200 else { throw ScanFailure.tooLarge }
     }
-    static func receiptLines(_ original: String) throws -> [ScanReceiptLine] {
+    static func receiptLines(_ original: String, uncertain: Set<String> = []) throws -> [ScanReceiptLine] {
         try text(original)
-        return original.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.map { .init(originalText: $0) }
+        return original.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.map { wording in
+            var row = ScanReceiptLine(originalText: wording)
+            if uncertain.contains(wording) { row.uncertainOCR = true }
+            return row
+        }
     }
 }
 protocol LocalScanService: Sendable { func scan(_ data: Data) async throws -> ScannedSource }

@@ -85,6 +85,40 @@ import RecordArchive
         return draft
     }
 
+    func testReviewedLocalWeightedReceiptReopensWithPaidPriceAndActualUsableStockOnlyOnce() async throws {
+        let f = try await fixture()
+        let repo = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
+        f.cleanup.track(repo)
+        let raw = "Fecha de compra: 17/11/2024\nPERAS 0,75 kg @ USD 4,00/kg USD 3,00\nDEPÓSITO USD 1,00"
+        let extracted = try await ReceiptDocumentReader().extract(.init(data: Data(raw.utf8), kind: .text))
+        let target = CaptureTarget(workspaceID: f.store.workspaceID, containerID: UUID(), objectID: UUID(), revision: 0, kind: .receiptEvidence)
+        let source = try extracted.source(target: target, merchant: "Mercado", stage: .receipt, selection: Set((1...3).map { .init(page: 1, line: $0) }), at: now)
+        var draft = try ReceiptImportDraft(source: source, now: now)
+        let state = try await f.store.inventoryState()
+        XCTAssertFalse(draft.dateConfirmed); XCTAssertTrue(draft.selectedLines.isEmpty)
+        draft.dateConfirmed = true
+        draft.lines[1].treatment = .add
+        draft.lines[1].usePrintedQuantity()
+        XCTAssertTrue(draft.lines[1].usable.isEmpty)
+        draft.lines[1].usable = "0.50"; draft.lines[1].location = .fridge
+        draft.lines[1].paid = try XCTUnwrap(draft.lines[1].printed?.amount)
+        let review = try await repo.reviewReceipt(draft, expected: state, at: now)
+        XCTAssertEqual(review.facts.count, 1)
+        try await repo.applyReceipt(review, at: now)
+        let snapshot = try await repo.load(at: now)
+        let saved = try XCTUnwrap(snapshot.lots.first(where: { $0.name == "PERAS" }))
+        XCTAssertEqual(saved.location, .fridge)
+        XCTAssertEqual(saved.count.quantity?.amount, try Rational(1,2))
+        let history = try await repo.acquisitionHistory(receiptID: draft.receiptID)
+        let evidence = try XCTUnwrap(history.first)
+        XCTAssertEqual(evidence.received.amount, try Rational(3,4))
+        XCTAssertEqual(evidence.paidLineTotal?.minorUnits, 300)
+        XCTAssertEqual(evidence.originalLine, draft.lines[1].original)
+        XCTAssertEqual(evidence.documentLine?.line, 2)
+        let replay = try await repo.reviewReceipt(draft, expected: snapshot.state, at: now)
+        XCTAssertNil(replay.batch)
+    }
+
     func testConsentedExcerptSuggestionNeedsExplicitReceiptReviewBeforeAcquisitionAndReplay() async throws {
         let f = try await fixture()
         let repo = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })

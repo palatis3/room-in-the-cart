@@ -7471,6 +7471,210 @@
           }
         }
       }
+    },
+    "Date wording on the receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date wording on the receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la fecha en el recibo"
+          }
+        }
+      }
+    },
+    "Choose the purchase date from your receipt. An unclear date needs your review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the purchase date from your receipt. An unclear date needs your review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la fecha de compra que aparece en tu recibo. Si la fecha no está clara, revísala."
+          }
+        }
+      }
+    },
+    "Charge, credit or receipt summary. This line starts skipped.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charge, credit or receipt summary. This line starts skipped."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo, crédito o resumen del recibo. Esta línea se omite inicialmente."
+          }
+        }
+      }
+    },
+    "Receipt date wording. This line starts skipped.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt date wording. This line starts skipped."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la fecha del recibo. Esta línea se omite inicialmente."
+          }
+        }
+      }
+    },
+    "Unclear printed line. Check the original wording before using it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unclear printed line. Check the original wording before using it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La línea impresa no está clara. Revisa el texto original antes de usarla."
+          }
+        }
+      }
+    },
+    "Some printed fields are unclear. Review them or leave the price unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some printed fields are unclear. Review them or leave the price unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos datos impresos no están claros. Revísalos o deja el precio sin especificar."
+          }
+        }
+      }
+    },
+    "I received the printed quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I received the printed quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibí la cantidad impresa"
+          }
+        }
+      }
+    },
+    "Suggested storage to check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested storage to check"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lugar de almacenamiento sugerido para revisar"
+          }
+        }
+      }
+    },
+    "Choose where you put this food. The initial selection is cupboard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose where you put this food. The initial selection is cupboard."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige dónde guardaste este alimento. La alacena está seleccionada inicialmente."
+          }
+        }
+      }
+    },
+    "Possible printed line total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Possible printed line total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posible total impreso de la línea"
+          }
+        }
+      }
+    },
+    "I paid this line total in USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I paid this line total in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagué este total de línea en dólares estadounidenses"
+          }
+        }
+      }
+    },
+    "Select food lines and the printed purchase date to review. You will confirm received and usable quantities separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select food lines and the printed purchase date to review. You will confirm received and usable quantities separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona las líneas de alimentos y la fecha de compra impresa para revisarlas. Confirmarás por separado las cantidades recibidas y aprovechables."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

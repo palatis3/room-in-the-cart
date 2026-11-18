@@ -484,7 +484,7 @@ import XCTest
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         receiptTap(wording)
-        wording.typeText("Oats")
+        wording.typeText("Oats 3 count USD 4.20")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
         let label = app.textFields["Source reference label"]
         receiptTap(label)
@@ -504,8 +504,9 @@ import XCTest
         receiptTap(app.buttons["receipt.action.0"])
         receiptTap(app.buttons["Add a separate physical batch"])
         let received = app.textFields["receipt.received.0"]
-        receiptTap(received)
-        received.typeText("3")
+        receiptTap(app.buttons["receipt.printedQuantity.0"])
+        XCTAssertEqual(received.value as? String, "3")
+        XCTAssertTrue(app.buttons["receipt.printedPrice.0"].exists)
         let usable = app.textFields["receipt.usable.0"]
         receiptTap(usable)
         usable.typeText("2")

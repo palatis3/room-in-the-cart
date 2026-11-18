@@ -53,7 +53,7 @@ struct PantryReceiptDocuments: View {
                     Picker(pantryText("Document type"), selection: $stage) {
                         ForEach(ReceiptAcquisition.DocumentLine.Stage.allCases, id: \.self) { Text(receiptStage($0)).tag($0) }
                     }
-                    Text(pantryText("Select printed lines to review. You will enter received and usable quantities separately."))
+                    Text(pantryText("Select food lines and the printed purchase date to review. You will confirm received and usable quantities separately."))
                 }
                 ForEach(document.pages) { page in
                     Section(pantryFormat("Page %@", page.id.formatted())) {

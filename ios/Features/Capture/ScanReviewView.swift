@@ -244,7 +244,7 @@ import CoreDomain
                 .focused($focusedField, equals: .sourceLabel)
             if receiptLines == nil {
                 Button(captureText("Review printed lines")) {
-                    do { receiptLines = try ScanLimits.receiptLines(model.text); error = nil }
+                    do { receiptLines = try ScanLimits.receiptLines(model.text, uncertain: Set(model.accepted?.uncertainLines ?? [])); error = nil }
                     catch { self.error = captureText("Shorten the text or type the source again, then review.") }
                 }.disabled(!canReview || model.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             } else {
