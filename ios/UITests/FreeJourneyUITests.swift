@@ -41,7 +41,7 @@ import XCTest
             if done.waitForExistence(timeout: 2), done.isHittable { done.tap() }
             tap(app.buttons["Review reservation"])
             tap(confirm)
-            XCTAssertTrue(confirm.waitForNonExistence(timeout: 8))
+            XCTAssertTrue(confirm.waitForNonExistence(timeout: 8), app.debugDescription)
         }
         enterReservation("2")
         restart()
