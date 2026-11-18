@@ -172,6 +172,10 @@ extension HouseholdService: HouseholdPantryServing {}
         }
     }
 
+    func permitsReceiptReview(_ basis: HouseholdPantryPage) -> Bool {
+        projection() != nil && page == basis && pending == nil && !busy
+    }
+
     func confirm(_ addition: HouseholdPantryAddition, reviewed: HouseholdPantryPage) async {
         await confirmChange(.addition(addition), reviewed: reviewed)
     }
@@ -208,6 +212,7 @@ extension HouseholdService: HouseholdPantryServing {}
             try check(start)
             try await loadFirstPage(start)
             switch record.intent.change {
+            case .receipt: notice = householdPantryText("Reviewed receipt saved to household pantry.")
             case .addition: notice = householdPantryText("Food added to the household pantry.")
             case .correction: notice = householdPantryText("Count corrected.")
             }
@@ -218,6 +223,7 @@ extension HouseholdService: HouseholdPantryServing {}
                 throw error
             default:
                 switch record.intent.change {
+                case .receipt: notice = householdPantryText("Receipt saved. Reload to see the household food.")
                 case .addition: notice = householdPantryText("Food added. Reload to see the updated stock.")
                 case .correction: notice = householdPantryText("Count corrected. Reload to see the updated stock.")
                 }

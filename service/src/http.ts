@@ -62,11 +62,12 @@ async function householdBody(req:IncomingMessage,path:string) {
   if(path.endsWith('/demand/previews')) return body(req,1_800_000);
   if(path.endsWith('/accepted-fallbacks')) return body(req,540_000);
   if(path.endsWith('/meal-recovery/options') || path.endsWith('/meal-recovery/preview')) return body(req,1_800_000);
-  if(path!=='/commands') return body(req);
-  const raw=await rawBody(req,1_800_000);
+  if(path!=='/commands' && path!=='/pantry/commands') return body(req);
+  const raw=await rawBody(req,path==='/pantry/commands'?1_048_576:1_800_000);
   let payload:unknown;
   try {payload=JSON.parse(raw.toString('utf8'));} catch {throw invalid();}
-  if(raw.length>65_536 && !(typeof payload==='object' && payload && 'kind' in payload && payload.kind==='mealRecovery.apply'))
+  const extendedKind=path==='/pantry/commands'?'pantry.acquireReceipt':'mealRecovery.apply';
+  if(raw.length>65_536 && !(typeof payload==='object' && payload && 'kind' in payload && payload.kind===extendedKind))
     throw new ServiceError(413,'body_too_large','Send one bounded command.');
   return payload;
 }

@@ -267,7 +267,7 @@ struct PantryReceiptEntry: View {
     }
 }
 
-private struct PantryReceiptLineEditor: View {
+struct PantryReceiptLineEditor: View {
     @Binding var line: ReceiptImportDraft.Line
     let lots: [InventoryLot]
     let purchases: [PantryRecentPurchase]
@@ -275,7 +275,8 @@ private struct PantryReceiptLineEditor: View {
     let receiptLanguage: String
     let matchesCurrent: @MainActor () -> Bool
     let verifyAlias: @MainActor (InventoryReceiptAlias) async -> Bool
-    let assist: () -> Void
+    var assist: (() -> Void)? = nil
+    var householdDeliveries: [HouseholdPantryPage.Lot] = []
     var field: FocusState<String?>.Binding
 
     private func label(_ lot: InventoryLot) -> String {
@@ -295,8 +296,10 @@ private struct PantryReceiptLineEditor: View {
                     if printed.uncertain { Text(pantryText("Some printed fields are unclear. Review them or leave the price unknown.")).font(.caption) }
                 }
             }
-            Button(pantryText("Help with this line"), action: assist)
-                .accessibilityIdentifier("receipt.assistance.\(line.ordinal)")
+            if let assist {
+                Button(pantryText("Help with this line"), action: assist)
+                    .accessibilityIdentifier("receipt.assistance.\(line.ordinal)")
+            }
             Picker(pantryText("Receipt line action"), selection: $line.treatment) {
                 Text(pantryText("Skip this line")).tag(ReceiptImportDraft.Treatment.skip)
                 Text(pantryText("Add a separate physical batch")).tag(ReceiptImportDraft.Treatment.add)
@@ -305,6 +308,10 @@ private struct PantryReceiptLineEditor: View {
                     return false
                 }) { lot in
                     Text(label(lot))
+                        .tag(ReceiptImportDraft.Treatment.link(lot.id))
+                }
+                ForEach(householdDeliveries) { lot in
+                    Text(pantryFormat("Link delivery: %@ · %@", lot.foodName, String(lot.id.uuidString.suffix(8))))
                         .tag(ReceiptImportDraft.Treatment.link(lot.id))
                 }
             }
