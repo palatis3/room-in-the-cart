@@ -124,7 +124,9 @@ enum DinnerIdeaSupplyReview {
             let valid = foodID.map { !unresolvedFoods.contains($0) } ?? true
             let resolvedBalances = valid && !excludedMatch && balances.allSatisfy { $0.issues.isEmpty } && coverage.allSatisfy { $0.issues.isEmpty }
             let free = try resolvedBalances ? total(balances.map { quantity($0.remainingUnallocated, $0.unit) }, unit: unit) : nil
-            let uncovered = try demand.flatMap { demand in try free.map { quantity(max(.zero, try demand.amount.subtracting($0.amount)), demand.unit) } }
+            let uncovered = try demand.flatMap { demand in
+                try free.map { quantity(try demand.amount.subtractingClampedToZero($0.amount), demand.unit) }
+            }
             var observations = ingredients.compactMap { ingredient -> Observation? in
                 guard let evidence = scoped.first(where: { $0.id == ingredient.id && $0.ingredientName == ingredient.name }),
                       evidence.basisRevision == shop.basisRevision, let pack = evidence.pack,

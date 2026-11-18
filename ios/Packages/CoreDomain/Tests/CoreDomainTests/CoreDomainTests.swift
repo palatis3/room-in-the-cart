@@ -16,6 +16,14 @@ final class CoreDomainTests: XCTestCase {
                           offerB: PackOffer(id: "b", label: "Pack B", usableQuantity: yield, price: price), itemCap: cap)
     }
 
+    func testStockShortfallClampsSurplusWhileOrdinarySubtractionRemainsStrict() throws {
+        let half = try Rational(1, 2)
+        XCTAssertEqual(try half.subtractingClampedToZero(.one), .zero)
+        XCTAssertEqual(try half.subtractingClampedToZero(half), .zero)
+        XCTAssertEqual(try Rational.one.subtractingClampedToZero(half), half)
+        XCTAssertThrowsError(try half.subtracting(.one))
+    }
+
     func testExactDecimalsAndCanonicalRationals() throws {
         XCTAssertEqual(try Rational(decimal: "0.1").adding(Rational(decimal: "0.2")), try Rational(decimal: "0.3"))
         XCTAssertEqual(try Rational(decimal: "0001.5000"), try Rational(3, 2))
