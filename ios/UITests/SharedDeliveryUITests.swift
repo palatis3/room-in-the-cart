@@ -249,14 +249,26 @@ import XCTest
         assertFact("Quantity", "four wraps")
         reveal(app.staticTexts["Ordered wraps"])
         assertFact("Whole packs", "2")
-        tap(app.buttons["purchase.choice.bought"])
+        func choosePurchaseOutcome(_ choice: String, file: StaticString = #filePath, line: UInt = #line) {
+            let button = app.buttons["purchase.choice." + choice]
+            reveal(button, file: file, line: line)
+            let viewport = app.frame.insetBy(dx: 0, dy: 12)
+            // The last choice may be hittable with only its top edge onscreen.
+            if button.frame.maxY > viewport.maxY { app.swipeUp() }
+            guard button.isHittable && viewport.contains(button.frame) else {
+                XCTFail("Purchase choice must be fully visible before tapping: " + choice, file: file, line: line)
+                return
+            }
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
+        choosePurchaseOutcome("bought")
         tap(app.buttons["Cancel"])
         reveal(row)
         XCTAssertTrue(row.label.contains("Purchase unconfirmed"))
         for (choice, expected) in [("bought", "Shopper confirmed bought"),
                                    ("notBought", "Shopper confirmed not bought"), ("unknown", "Purchase unconfirmed")] {
             tap(row)
-            tap(app.buttons["purchase.choice." + choice])
+            choosePurchaseOutcome(choice)
             tap(app.buttons["purchase.save"])
             let saved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label CONTAINS %@", expected), object: row)
             XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 8), .completed)
