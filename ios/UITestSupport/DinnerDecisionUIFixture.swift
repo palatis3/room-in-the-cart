@@ -3,16 +3,12 @@ import SwiftUI
 import CoreDomain
 
 /// The dedicated offline test build seeds reviewed evidence and a named adult seat.
-@MainActor private final class DinnerDecisionFixtureStore: DinnerWorkspaceStore {
-    var workspace: LedgerWorkspace
-    let sourceWorkspaceID: UUID? = UUID()
-    let ready = true, saving = false, hasPendingSave = false
-
-    init() throws {
+@MainActor enum DinnerDecisionUIFixture {
+    static func workspace(id: UUID) throws -> LedgerWorkspace {
         let now = Date(), shopID = UUID()
         var shop = ShoppingLedger(id: shopID, title: "Mercado", basis: .init(branch: "Main"))
         var state = DinnerPlanningState()
-        let auth = DinnerDecisionUIFixture.access(shopID, workspace: sourceWorkspaceID!, now: now)
+        let auth = DinnerDecisionUIFixture.access(shopID, workspace: id, now: now)
         let boundary = ProcessInfo.processInfo.arguments.contains("--ui-testing-guest-boundary")
         let family = ServingGroup(name: "Cena", servings: try Rational(boundary ? 3 : 2))
         let lunch = ServingGroup(name: "Almuerzo", servings: .one, isProtected: true)
@@ -21,30 +17,25 @@ import CoreDomain
         let tacos = MealTemplate(title: "Tacos", servings: family.servings, ingredients: [.init(name: "Peppers",quantity: try quantity(4))])
         for template in [rice,tacos] { try state.accept(.init(id: UUID(), template: template, acceptedAt: now),access: auth,at: now) }
         let meal = try shop.chooseMeal(rice,at: now)
-        let id = shop.mealOccurrences[0].ingredientContributionIDs[0]
+        let contributionID = shop.mealOccurrences[0].ingredientContributionIDs[0]
         try state.setPortionBindings([
-            .init(occurrenceID: meal, contributionID: id, groupID: family.id, quantity: try quantity(boundary ? 3 : 1), servings: family.servings),
-            .init(occurrenceID: meal, contributionID: id, groupID: lunch.id, quantity: try quantity(5), servings: lunch.servings)
+            .init(occurrenceID: meal, contributionID: contributionID, groupID: family.id, quantity: try quantity(boundary ? 3 : 1), servings: family.servings),
+            .init(occurrenceID: meal, contributionID: contributionID, groupID: lunch.id, quantity: try quantity(5), servings: lunch.servings)
         ],for: meal,ledger: shop,access: auth,at: now)
-        workspace = LedgerWorkspace(shops: [shop],selectedShopID: shop.id,dinnerPlanning: state)
+        var workspace = LedgerWorkspace(shops: [shop],selectedShopID: shop.id,dinnerPlanning: state)
         if boundary {
             let lineID = shop.lines[0].id
             let need = try LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: state.portionBindings)
             let offer = PackOffer(id: "eight", label: "8", usableQuantity: try quantity(8), price: Money(minorUnits: 240))
             let other = PackOffer(id: "single", label: "1", usableQuantity: try quantity(1), price: Money(minorUnits: 90))
-            let selection = try LedgerPackSelection(workspaceID: sourceWorkspaceID!, shop: shop, lineID: lineID,
+            let selection = try LedgerPackSelection(workspaceID: id, shop: shop, lineID: lineID,
                 request: .init(itemName: need.name, needed: need.quantity, protectedAmount: need.protectedQuantity, offerA: offer, offerB: other),
                 selectedOfferID: offer.id, at: now, source: "Local fixture", bindings: state.portionBindings)
-            try workspace.recordPackSelection(selection, workspaceID: sourceWorkspaceID!)
+            try workspace.recordPackSelection(selection, workspaceID: id)
         }
+        return workspace
     }
-    func change(key: String, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
-        do { var next = workspace; try edit(&next); try next.validate(); workspace = next; return true }
-        catch { return false }
-    }
-}
 
-@MainActor enum DinnerDecisionUIFixture {
     private static let start = Date().addingTimeInterval(-1)
     static func access(_ shopID: UUID, workspace: UUID, now: Date) -> DinnerAccessContext {
         let until = start.addingTimeInterval(3600)
@@ -83,33 +74,52 @@ import CoreDomain
 }
 
 @main struct DinnerDecisionUIFixtureApp: App {
-    @StateObject private var pickup = PickupModel()
-    @State private var prepared = false
-    let model: DinnerFeatureModel?
+    @StateObject private var ledger: LedgerModel
+    @StateObject private var pickup: PickupModel
+    @StateObject private var household: HouseholdModel
+    @StateObject private var access: WorkspaceAccess
+    @State private var model: DinnerFeatureModel?
+    @State private var setupError: String?
+
     init() {
-        guard ProcessInfo.processInfo.arguments.contains("--ui-testing"), let store = try? DinnerDecisionFixtureStore(),
-              let id = store.sourceWorkspaceID else { model = nil; return }
-        model = DinnerFeatureModel(store: store, access: { DinnerDecisionUIFixture.access($0,workspace: id,now: Date()) },phase: { _ in .draft })
+        let name = "DinnerDecision-" + UUID().uuidString
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+        _ledger = StateObject(wrappedValue: LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite")))
+        _pickup = StateObject(wrappedValue: PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite")))
+        _household = StateObject(wrappedValue: HouseholdModel(outboxURL: directory.appendingPathComponent("outbox.json")))
+        _access = StateObject(wrappedValue: WorkspaceAccess(defaults: UserDefaults(suiteName: name)!))
     }
+
     var body: some Scene {
         WindowGroup {
-            if let model {
-                Group {
-                    if prepared {
-                        NavigationStack { DinnerWorkspaceView(model: model,startPickup: {}) { EmptyView() } }
-                            .environmentObject(pickup)
-                    } else if let error = pickup.error {
-                        Text(error)
-                    } else { ProgressView() }
-                }.task {
-                    guard !prepared else { return }
-                    await pickup.load()
-                    guard pickup.ready else { return }
-                    await DinnerDecisionUIFixture.prepareCheckout(model, pickup: pickup)
-                    prepared = true
-                }
-            }
+            Group {
+                if let model {
+                    NavigationStack { DinnerWorkspaceView(model: model, startPickup: {}) { EmptyView() } }
+                        .environmentObject(ledger)
+                        .environmentObject(pickup)
+                        .environmentObject(household)
+                        .environmentObject(access)
+                } else if let setupError {
+                    Text(verbatim: setupError)
+                } else { ProgressView() }
+            }.task { await prepare() }
         }
+    }
+
+    private func prepare() async {
+        guard ProcessInfo.processInfo.arguments.contains("--ui-testing"), model == nil, setupError == nil else { return }
+        await ledger.open()
+        await pickup.load()
+        guard ledger.ready, pickup.ready, let id = ledger.sourceWorkspaceID,
+              await ledger.change(key: "dinner-decision-fixture", { $0 = try DinnerDecisionUIFixture.workspace(id: id) }) else {
+            setupError = ledger.error ?? pickup.error ?? "Dinner fixture setup failed"
+            return
+        }
+        pickup.bindCookLedger(ledger)
+        let dinner = DinnerFeatureModel(store: ledger, access: { DinnerDecisionUIFixture.access($0, workspace: id, now: Date()) },
+                                        phase: { _ in .draft })
+        await DinnerDecisionUIFixture.prepareCheckout(dinner, pickup: pickup)
+        model = dinner
     }
 }
 #endif
