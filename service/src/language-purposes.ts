@@ -1,3 +1,5 @@
 import {naturalListRoute} from './language-assistance.js';
 
-export const languagePurposes=[naturalListRoute];
+import {mealPreferenceRoute, mealFeedbackRoute} from './meal-language-assistance.js';
+
+export const languagePurposes=[naturalListRoute, mealPreferenceRoute, mealFeedbackRoute];

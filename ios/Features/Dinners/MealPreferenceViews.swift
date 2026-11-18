@@ -108,7 +108,10 @@ struct PrivateMealPreferencesEntry: View {
         Group {
             if let identity, let workspaceID = ledger.sourceWorkspaceID, ledger.ready {
                 let profile = ledger.workspace.dinnerPlanning.privateMealPreferences
-                MealPreferenceEditor(profile: profile) { settings, revision in
+                MealPreferenceEditor(profile: profile, languageBasis: { revision in
+                    MealLanguageBasis.current(ledger: ledger, access: access, household: household,
+                        childPresented: child?.presented == true, source: nil, revision: revision)
+                }) { settings, revision in
                     let access = access, household = household, child = child, ledger = ledger
                     return await ledger.saveMealPreferences(settings, expectedRevision: revision, workspaceID: workspaceID) {
                         child?.presented != true && household.projection?.grantId == nil &&
@@ -125,6 +128,7 @@ struct MealPreferenceEditor: View {
     let save: (MealPreferenceSettings, UUID?) async -> Bool
     private let initial: MealPreferenceProfile?
     private let canSetTimeLimit: Bool
+    private let languageBasis: ((UUID?) -> MealLanguageBasis?)?
     @Environment(\.dismiss) private var dismiss
     @State private var draft: MealPreferenceSettings
     @State private var minutes: String
@@ -132,9 +136,11 @@ struct MealPreferenceEditor: View {
     @State private var busy = false
     @FocusState private var textFocus: String?
     @State private var failed = false
-    init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
+    init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, languageBasis: ((UUID?) -> MealLanguageBasis?)? = nil,
+         save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
         self.save = save
         self.canSetTimeLimit = canSetTimeLimit
+        self.languageBasis = languageBasis
         initial = profile
         _draft = State(initialValue: profile?.settings ?? .init())
         _base = State(initialValue: profile?.revision)
@@ -169,6 +175,11 @@ struct MealPreferenceEditor: View {
                 MealEffortPicker(title: dinnerText("Preferred maximum effort"), effort: $draft.maximumEffort)
                 if draft.maximumEffort != nil { Toggle(dinnerText("Require this effort limit"), isOn: $draft.strictEffort) }
             }.disabled(reviewing)
+            if !reviewing, let languageBasis {
+                MealLanguageDraftLink(basis: { languageBasis(base) }, draft: { .preferences(draft) }) { result in
+                    if case .preferences(let settings) = result { draft = settings }
+                }
+            }
             Section {
                 if failed { Text(dinnerText("Preferences could not be saved. Check the entries or reopen the current version.")) }
                 if reviewing {
