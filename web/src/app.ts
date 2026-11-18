@@ -34,6 +34,9 @@ const proposalNotices:Record<OwnProposal['status'],string> = {
 function reviewScope(session: Session): string {
   return JSON.stringify([session.household.id, session.memberId, session.role, session.shopId, session.grantId ?? null]);
 }
+function isPostingSuspended(error:unknown):boolean {
+  return error instanceof ApiError&&error.status===403&&error.code==='shared_posting_unavailable';
+}
 function isRequestRevisionConflict(error:unknown):boolean {
   return error instanceof ApiError && error.status===409 && (error.code==='followup_required'||error.code==='stale_base');
 }
@@ -402,7 +405,7 @@ export class WebApp {
         }
       }
     }
-    if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
+    if((e.status===403&&!isPostingSuspended(e))||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
       const ended=this.session;
       this.clearPrivate();
       this.render();
@@ -438,6 +441,7 @@ export class WebApp {
     else if(e.code==='login_rate_limited')this.notice='Wait before requesting or checking another code.';
     else if(e.code==='consent_unavailable')this.notice='Child enrollment is not available here yet. Ask a guardian to use the verified setup.';
     else if(e.status===409) this.notice='This information changed. Refresh, review, and try again.';
+    else if(isPostingSuspended(e))this.notice='Shared posting is unavailable for this account. You can still view your household information.';
     else if(e.code==='content_review_required'){
       this.notice='Edit the wording before sharing it with the household.';
     }
@@ -768,7 +772,7 @@ export class WebApp {
     try{received=await this.api.command(s,command,persisted?s.requestQueueGrant:undefined);}catch(error){
       this.uncertainSend=error instanceof ApiError && (error.status===0||error.status>=500);
 
-      if(error instanceof ApiError&&error.code==='content_review_required'){
+      if(isPostingSuspended(error)||(error instanceof ApiError&&error.code==='content_review_required')){
         this.review=false;this.retryCommand=null;
         await this.fail(error,'mutation',persisted?p:undefined);return;
       }
@@ -885,7 +889,7 @@ export class WebApp {
       this.notice=proposalNotices[this.proposalStatus?.status??receipt.status];
     }catch(error){
       if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
-      if(error instanceof ApiError&&error.code==='content_review_required'){
+      if(isPostingSuspended(error)||(error instanceof ApiError&&error.code==='content_review_required')){
         this.resetProposal();
         if(this.cookingReport)this.cookingReport.review=null;else this.correction=wording;
       }

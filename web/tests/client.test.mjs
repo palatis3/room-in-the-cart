@@ -1634,3 +1634,32 @@ test('report controls require a server-identified incoming field as well as a sa
   view:async()=>cookView(),receivedProposals:async()=>({proposals:[],nextCursor:null})}));
  t.after(()=>fixture.dom.window.close());assert.doesNotMatch(fixture.root.textContent,/Report or block/);
 });
+
+test('posting suspension retains contributor drafts, queued requests, and current household access',async t=>{
+ const active={...session(),canSetRequestQueue:true,queueConsent:true},outbox=new Outbox(new IDBFactory());
+ const queued=command(),pending={id:queued.clientKey,scope:scopeFor(active),command:queued,createdAt:new Date().toISOString()};
+ await outbox.put(pending,active,true);
+ let denial='shared_posting_unavailable';
+ const {root,dom}=await setup(fakeAPI({session:async()=>active,requests:async()=>[own()],
+  command:async()=>{throw new ApiError(denial,403);}}),'en',outbox);t.after(()=>dom.window.close());
+ type(dom,'item','Keep this request');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.match(root.querySelector('[role="status"]').textContent,/Shared posting is unavailable/);
+ assert.equal(root.querySelector('#item').value,'Keep this request');
+ assert.match(root.textContent,/No-salt frijoles/);
+ assert.deepEqual((await outbox.list(pending.scope)).map(r=>r.id),[pending.id]);
+ click(root,'Retry');await waitForIdle(root);
+ assert.equal(root.querySelector('#item').value,'Keep this request');
+ assert.deepEqual((await outbox.list(pending.scope)).map(r=>r.id),[pending.id]);
+ denial='access_ended';submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/Access has ended/);assert.doesNotMatch(root.textContent,/No-salt frijoles|Keep this request/);
+ assert.deepEqual(await outbox.list(pending.scope),[]);
+});
+
+test('posting suspension keeps cook instructions and reopens an editable suggestion',async t=>{
+ const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(),
+  sendProposal:async()=>{throw new ApiError('shared_posting_unavailable',403);}}));t.after(()=>dom.window.close());
+ type(dom,'correction','Keep one portion');submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/Current instructions/);assert.match(root.textContent,/Shared posting is unavailable/);
+ assert.equal(root.querySelector('#correction').value,'Keep one portion');
+ assert.doesNotMatch(root.textContent,/Receipt unconfirmed|Access has ended/);
+});

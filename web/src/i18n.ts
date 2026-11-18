@@ -1,5 +1,6 @@
 /** US Spanish draft; human language review remains a release gate. */
 const es: Record<string, string> = {
+  'Shared posting is unavailable for this account. You can still view your household information.':'Esta cuenta no puede publicar mensajes compartidos. Aún puedes consultar la información de tu hogar a la que tienes acceso.',
   "Choose a reason":"Elige un motivo",
   "Edit this request":"Editar esta solicitud",
   "Report or block":"Denunciar o bloquear",
