@@ -824,7 +824,8 @@ async function undoSelectStore(f,{author=f.owner,grantRevision=0,choice='first',
  const before=ok(await call(f.owner,f.path)),path=f.path+'/store-quotes';
  const envelope=(extra={},grant=grantRevision)=>({operationId:randomUUID(),shopRevision:before.shopRevision,authorityEpoch:before.authorityEpoch,grantRevision:grant,...extra});
  if(author!==f.owner&&grantRevision===0){ok(await call(f.owner,path+'/grants','POST',envelope({adultId:author.id,enabled:true,targetRevision:0},0)));grantRevision=1;}
- const option={label:'Reviewed selection',store:'Same store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true};
+ const option={label:'Reviewed selection',store:'Same store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true,
+  orderMinimum:{kind:'noneRequired'}};
  const save=envelope({options:{first:option,second:{...option,branch:'B'}}},grantRevision);ok(await call(author,path+'/pairs','POST',save));
  let proposalId=null;
  if(author!==f.owner){const proposal=envelope({pairId:save.operationId,choice},grantRevision);ok(await call(author,path+'/proposals','POST',proposal));proposalId=proposal.operationId;}

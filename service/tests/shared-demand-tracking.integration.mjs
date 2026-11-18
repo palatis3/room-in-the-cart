@@ -166,7 +166,8 @@ async function legacySelectedStore(f,author){
  const before=ok(await call(f.owner,f.path)),path=f.path+'/store-quotes';
  const envelope=(extra={},grantRevision=0)=>({operationId:randomUUID(),shopRevision:before.shopRevision,authorityEpoch:before.authorityEpoch,grantRevision,...extra});
  ok(await call(f.owner,path+'/grants','POST',envelope({adultId:author.id,enabled:true,targetRevision:0})));
- const option={label:'Reviewed selection',store:'Same store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true};
+ const option={label:'Reviewed selection',store:'Same store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true,
+  orderMinimum:{kind:'noneRequired'}};
  const pair=envelope({options:{first:option,second:{...option,branch:'B'}}},1);ok(await call(author,path+'/pairs','POST',pair));
  const proposal=envelope({pairId:pair.operationId,choice:'first'},1);ok(await call(author,path+'/proposals','POST',proposal));
  const selected=ok(await call(f.owner,path+'/adoptions','POST',envelope({pairId:pair.operationId,choice:'first',proposalId:proposal.operationId})));

@@ -172,7 +172,7 @@ test('matching store review saves unknown or expired draft costs while only a co
 test('unknown fees, unavailable packages, unmatched quantities and missing eligibility never produce a winner',async()=>{
  const f=await fixture();
  for(const patch of [{allChargesIncluded:false},{available:null},{available:false},{quantitiesMatched:false},{singleStore:false},{eligibilityConfirmed:false},
-    {orderMinimum:{kind:"unknown"}},{orderMinimum:{kind:"required",minimumMinor:3500,eligibleSubtotalMinor:3200}}]){
+    {orderMinimum:undefined},{orderMinimum:{kind:"unknown"}},{orderMinimum:{kind:"required",minimumMinor:3500,eligibleSubtotalMinor:3200}}]){
   const options=entered();Object.assign(options.second,patch);const saved=await f.save(f.owner,options),view=ok(await call(f.owner,f.quotes));
   assert.equal(view.pairs.find(p=>p.pairId===saved.pairId).comparison.preferred,null);
   if(patch.allChargesIncluded===false)assert.equal(view.pairs.find(p=>p.pairId===saved.pairId).comparison.secondCheckout,null);
