@@ -76,7 +76,7 @@ class SelectCoreWorkTests(unittest.TestCase):
             outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
             self.assertEqual(outputs['model_count'], '2')
             self.assertEqual(json.loads(outputs['matrix'])['include'], [
-                {'shard': 'ui-01', 'expected_count': 2, 'macos_slot': 1, 'provider': 'github'}])
+                {'shard': 'ui-01', 'expected_count': 2, 'macos_slot': 1, 'provider': 'bitrise-A2', 'pool_slot': 0}])
             again = subprocess.run(command, env=env, capture_output=True, text=True)
             self.assertNotEqual(again.returncode, 0)
             self.assertIn('full plan changed', again.stderr)
@@ -114,16 +114,13 @@ class SelectCoreWorkTests(unittest.TestCase):
             consumers = json.loads(outputs['matrix'])['include']
             original_ui = [row for row in full['include'] if row['shard'] != 'models']
             def test_selection(row):
-                return {k: v for k, v in row.items() if k not in ('provider', 'macos_slot', 'm4_slot')}
+                return {k: v for k, v in row.items() if k not in ('provider', 'macos_slot', 'pool_slot')}
             self.assertEqual([test_selection(row) for row in consumers],
                              [test_selection(row) for row in original_ui])
-            self.assertEqual([(r['shard'], r['provider'], r['macos_slot'], r.get('m4_slot')) for r in consumers], [
-                ('ui-01', 'bitrise-m4', 4, 0), ('ui-02', 'bitrise-m4', 2, 4),
-                ('ui-03', 'bitrise-m4', 3, 0), ('ui-04', 'bitrise', 1, None),
-                ('ui-05', 'bitrise', 0, None), ('ui-06', 'bitrise-m4', 1, 1),
-                ('ui-07', 'bitrise-m4', 2, 3), ('ui-08', 'bitrise-m4', 3, 3),
-                ('ui-09', 'bitrise-m4', 3, 5), ('ui-10', 'bitrise-m4', 0, 2),
-            ])
+            self.assertEqual({r['provider'] for r in consumers}, {'bitrise-A1', 'bitrise-A2'})
+            self.assertEqual(len({(r['provider'], r['pool_slot']) for r in consumers}), 10)
+            self.assertTrue(all(type(r['pool_slot']) is int and 0 <= r['pool_slot'] < 6 for r in consumers))
+            self.assertTrue(all('m4_slot' not in r for r in consumers))
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
             result = subprocess.run([sys.executable, str(ROOT / 'scripts/select_ios_core_work.py'),
                                      '--plan-dir', str(plan_dir), '--github-output', str(output)],

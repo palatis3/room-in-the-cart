@@ -63,12 +63,12 @@ jobs:
   build-contributor:
     if: needs.fixture-plan.outputs.build_contributor == 'true'
     concurrency:
-      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-0' || format('ritc-github-job-ios-fixtures-build-contributor-{0}-{1}', github.run_id, github.run_attempt) }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-a1-slot-0' || format('ritc-github-job-ios-fixtures-build-contributor-{0}-{1}', github.run_id, github.run_attempt) }}
       queue: max
       cancel-in-progress: false
     name: Build contributor, stock and carryover fixtures
     needs: fixture-plan
-    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-A1' || 'xcode-27' }}
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: contributor
@@ -265,12 +265,12 @@ jobs:
   build-dinner:
     if: needs.fixture-plan.outputs.build_dinner == 'true'
     concurrency:
-      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-1' || format('ritc-github-job-ios-fixtures-build-dinner-{0}-{1}', github.run_id, github.run_attempt) }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-a1-slot-1' || format('ritc-github-job-ios-fixtures-build-dinner-{0}-{1}', github.run_id, github.run_attempt) }}
       queue: max
       cancel-in-progress: false
     name: Build dinner decision fixture
     needs: fixture-plan
-    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-A1' || 'xcode-27' }}
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: dinner
@@ -282,12 +282,12 @@ jobs:
   contributor-tests:
     if: needs.fixture-plan.outputs.build_contributor == 'true'
     concurrency:
-      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-github-job-ios-fixtures-contributor-tests-{0}-{1}-{2}-{3}', github.run_id, github.run_attempt, matrix.profile, matrix.shard) }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-A2' && format('ritc-bitrise-a2-slot-{0}', matrix.pool_slot) || matrix.provider == 'bitrise-A1' && format('ritc-bitrise-a1-slot-{0}', matrix.pool_slot)) || format('ritc-github-job-ios-fixtures-contributor-tests-{0}-{1}-{2}-{3}', github.run_id, github.run_attempt, matrix.profile, matrix.shard) }}
       queue: max
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-contributor]
-    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-A2' && 'bitrise-runner-A2' || matrix.provider == 'bitrise-A1' && 'bitrise-runner-A1') || 'xcode-27' }}
     timeout-minutes: 75
     strategy:
       fail-fast: false
@@ -485,12 +485,12 @@ jobs:
   dinner-tests:
     if: needs.fixture-plan.outputs.build_dinner == 'true'
     concurrency:
-      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-github-job-ios-fixtures-dinner-tests-{0}-{1}-{2}-{3}', github.run_id, github.run_attempt, matrix.profile, matrix.shard) }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-A2' && format('ritc-bitrise-a2-slot-{0}', matrix.pool_slot) || matrix.provider == 'bitrise-A1' && format('ritc-bitrise-a1-slot-{0}', matrix.pool_slot)) || format('ritc-github-job-ios-fixtures-dinner-tests-{0}-{1}-{2}-{3}', github.run_id, github.run_attempt, matrix.profile, matrix.shard) }}
       queue: max
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-dinner]
-    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-A2' && 'bitrise-runner-A2' || matrix.provider == 'bitrise-A1' && 'bitrise-runner-A1') || 'xcode-27' }}
     timeout-minutes: 75
     strategy:
       fail-fast: false

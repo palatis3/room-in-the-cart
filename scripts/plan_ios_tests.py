@@ -40,6 +40,27 @@ def read_identifiers(configuration, key, seen):
     return sorted(identifiers)
 
 
+def estimated_test_seconds(identifiers, durations):
+    hosted = durations["hosted_seconds"]
+    local = durations["local_seconds"]
+    multiplier = durations["local_multiplier"]
+    default = durations["default_seconds"]
+    if any(type(seconds) is not int or seconds <= 0
+           for seconds in (multiplier, default, *hosted.values(), *local.values())):
+        raise ValueError("Test durations and the local multiplier must be positive integers")
+    estimates = {}
+    for identifier in identifiers:
+        test_selector = selector(identifier)
+        if test_selector in hosted:
+            estimates[identifier] = hosted[test_selector]
+        elif test_selector in local:
+            estimates[identifier] = local[test_selector] * multiplier
+        else:
+            estimates[identifier] = default
+
+    return estimates
+
+
 def make_plan(enumeration, durations, ui_shards):
     if not isinstance(enumeration, dict) or not isinstance(enumeration.get("errors"), list):
         raise ValueError("Xcode enumeration must include an errors array")
@@ -69,22 +90,7 @@ def make_plan(enumeration, durations, ui_shards):
     if not 1 <= ui_shards <= len(ui_tests):
         raise ValueError(f"Cannot divide {len(ui_tests)} UI tests into {ui_shards} nonempty shards")
 
-    hosted = durations["hosted_seconds"]
-    local = durations["local_seconds"]
-    multiplier = durations["local_multiplier"]
-    default = durations["default_seconds"]
-    if any(type(seconds) is not int or seconds <= 0
-           for seconds in (multiplier, default, *hosted.values(), *local.values())):
-        raise ValueError("Test durations and the local multiplier must be positive integers")
-    estimates = {}
-    for identifier in ui_tests:
-        test_selector = selector(identifier)
-        if test_selector in hosted:
-            estimates[identifier] = hosted[test_selector]
-        elif test_selector in local:
-            estimates[identifier] = local[test_selector] * multiplier
-        else:
-            estimates[identifier] = default
+    estimates = estimated_test_seconds(ui_tests, durations)
 
     # Long cases go first. Break ties by name and shard index for stable plans.
     lanes = [[] for _ in range(ui_shards)]

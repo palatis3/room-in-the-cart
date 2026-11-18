@@ -25,3 +25,37 @@ def with_macos_slots(rows, identity_fields):
         raise ValueError('Assign slots only to original unassigned matrix rows')
     result = [{**row, 'macos_slot': index % SLOT_COUNT} for index, row in enumerate(rows)]
     return validate_macos_slots(result, identity_fields)
+
+
+BITRISE_POOLS = ("A1", "A2")
+BITRISE_SLOTS_PER_POOL = 6
+
+
+def with_bitrise_slots(rows, identity_fields, estimated_seconds, *, first_pool="A1"):
+    """Assign whole jobs longest-first across the twelve reviewed provider lanes.
+
+    Row order, identity and GitHub fallback metadata are preserved. Durations
+    are scheduling estimates, not provider speed or currently available capacity.
+    """
+    if first_pool not in BITRISE_POOLS or not isinstance(rows, list) or not rows:
+        raise ValueError("Expected nonempty jobs and a reviewed Bitrise pool")
+    if len(estimated_seconds) != len(rows) or any(type(n) is not int or n <= 0 for n in estimated_seconds):
+        raise ValueError("Every Bitrise job needs a positive integer duration estimate")
+    identities = []
+    for row in rows:
+        if (not isinstance(row, dict) or any(not isinstance(row.get(k), str) or not row[k] for k in identity_fields)
+                or any(k in row for k in ("provider", "pool_slot", "m4_slot"))):
+            raise ValueError("Assign pools only to original, identified matrix rows")
+        identities.append(tuple(row[k] for k in identity_fields))
+    if len(set(identities)) != len(rows):
+        raise ValueError("Duplicate Bitrise job identity")
+    pools = (first_pool, next(p for p in BITRISE_POOLS if p != first_pool))
+    lanes = [(pool, slot) for slot in range(BITRISE_SLOTS_PER_POOL) for pool in pools]
+    totals = [0] * len(lanes)
+    result = [dict(row) for row in rows]
+    for index in sorted(range(len(rows)), key=lambda i: (-estimated_seconds[i], identities[i])):
+        lane = min(range(len(lanes)), key=totals.__getitem__)
+        pool, slot = lanes[lane]
+        result[index].update(provider="bitrise-" + pool, pool_slot=slot)
+        totals[lane] += estimated_seconds[index]
+    return result
