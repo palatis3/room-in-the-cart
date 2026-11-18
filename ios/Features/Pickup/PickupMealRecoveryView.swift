@@ -155,6 +155,7 @@ private struct PickupRecoveryUndoView: View {
             if let review, currentAuthority() == review.authority {
                 Section(recoveryText("Current dinner")) { Text(review.domain.request.target.title) }
                 Section(recoveryText("Dinner to restore")) {
+                    Text(review.definition.meal.title).font(.headline).accessibilityIdentifier("mealRecovery.restoredTitle")
                     PickupRecoveryMealSummary(definition: review.definition, allocation: review.domain.afterAllocation,
                         carryovers: model.journey?.awayCarryovers ?? [])
                     Text(recoveryText("This saves a new set of dinner instructions. Your original order, receipts and charges keep their recorded values."))

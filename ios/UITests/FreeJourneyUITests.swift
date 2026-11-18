@@ -307,6 +307,42 @@ import XCTest
         capture("Manual-recovery-saved")
     }
 
+    func testPlacedDinnerSwapUndoReviewsOriginalAndRestoresOnlyThatDinnerAfterRelaunch() {
+        createReplacementFromPrivatePickup()
+        func openDinners() {
+            tap(app.tabBars.buttons["Dinners"])
+            dinnerRoot()
+            tap(app.buttons["All chosen dinners, including earlier dates"])
+        }
+        restart()
+        openDinners()
+        let swapped = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS %@", "Wednesday bean bowls")).firstMatch
+        reveal(swapped)
+        let occurrence = swapped.identifier
+        tap(swapped)
+        let undo = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'mealRecovery.undo.'")).firstMatch
+        tap(undo)
+        let restored = element("mealRecovery.restoredTitle")
+        XCTAssertTrue(restored.waitForExistence(timeout: 8))
+        XCTAssertEqual(restored.label, "Wednesday quesadillas")
+        let confirm = element("mealRecovery.confirmUndo")
+        reveal(confirm)
+        XCTAssertFalse(confirm.isEnabled)
+        let repeatLabel = "I agree if this replacement repeats an accepted meal"
+        if app.switches[repeatLabel].exists { enableSwitch(repeatLabel) }
+        enableSwitch("I accept that unresolved food or timing remains open")
+        tap(confirm)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 10))
+        restart()
+        openDinners()
+        let saved = app.buttons[occurrence]
+        reveal(saved)
+        XCTAssertTrue(saved.label.contains("Wednesday quesadillas"), saved.label)
+        let tuesday = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS %@", "Tuesday tacos")).firstMatch
+        reveal(tuesday)
+        XCTAssertTrue(tuesday.exists)
+    }
+
     func testCarryRecoveredDinnerFoodToAnotherNightAndReopenTheDatedTarget() {
         createReplacementFromPrivatePickup()
         tap(app.tabBars.buttons["Dinners"])
