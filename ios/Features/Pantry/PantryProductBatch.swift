@@ -2,7 +2,7 @@ import CoreDomain
 import CryptoKit
 import Foundation
 
-enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited }
+enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery }
 
 struct PantryProductBatch {
     struct Candidate: Identifiable, Equatable {
@@ -17,9 +17,32 @@ struct PantryProductBatch {
         var packages = ""
         var usable = ""
         var location = InventoryLocation.cupboard
+        enum StockAction: Equatable {
+            case separate
+            case link(PantryReceiptDelivery)
+        }
+        var stockAction: StockAction?
+        var linkedDelivery: PantryReceiptDelivery? {
+            guard case .link(let delivery) = stockAction else { return nil }
+            return delivery
+        }
         var included = true
         var catalog: ProductCatalogProposal?
         var appliedCatalog: ProductCatalogProposal?
+
+        func treatment(deliveries: [PantryReceiptDelivery], workspaceID: UUID) throws -> ReceiptImportDraft.Treatment {
+            switch stockAction {
+            case .link(let chosen):
+                guard chosen.state.workspaceID == workspaceID, deliveries.contains(chosen), chosen.lot.unit == unit else {
+                    throw ProductBatchError.changedDelivery
+                }
+                return .link(chosen.id)
+            case .separate: return .add
+            case nil:
+                guard deliveries.isEmpty else { throw ProductBatchError.chooseStockAction }
+                return .add
+            }
+        }
 
         var total: Rational? {
             guard let count = Int64(packages.trimmingCharacters(in: .whitespaces)), (1...10_000).contains(count),
@@ -99,7 +122,7 @@ struct PantryProductBatch {
 
     mutating func revokePhotos() { candidates.removeAll { $0.photoID != nil } }
 
-    func draft(merchant: String, purchaseDate: Date, confirmed: Bool) throws -> ReceiptImportDraft {
+    func draft(merchant: String, purchaseDate: Date, confirmed: Bool, deliveries: [PantryReceiptDelivery] = []) throws -> ReceiptImportDraft {
         let rows = try candidates.filter(\.included).map { candidate -> ReceiptImportDraft.Line in
             guard let total = candidate.total, !candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw ProductBatchError.invalid
@@ -113,8 +136,9 @@ struct PantryProductBatch {
             if let proposal = candidate.appliedCatalog {
                 evidence.append(proposal.attribution)
             }
+            let treatment = try candidate.treatment(deliveries: deliveries, workspaceID: workspaceID)
             return .init(id: candidate.id, ordinal: candidate.ordinal, original: evidence.joined(separator: " · "), name: candidate.name,
-                         treatment: .add, received: total.description, usable: usable, unit: candidate.unit, location: candidate.location)
+                         treatment: treatment, received: total.description, usable: usable, unit: candidate.unit, location: candidate.location)
         }
         guard confirmed, !rows.isEmpty else { throw ProductBatchError.invalid }
         return ReceiptImportDraft(batchID: id, workspaceID: workspaceID, merchant: merchant, purchaseDate: purchaseDate, lines: rows)
@@ -132,5 +156,36 @@ extension ReceiptImportDraft {
         self.purchaseDate = purchaseDate
         dateConfirmed = true
         self.lines = lines
+    }
+}
+
+extension PantryModel {
+    var productDeliveries: [PantryReceiptDelivery] {
+        guard phase == .ready, let snapshot else { return [] }
+        let purchases = Dictionary(uniqueKeysWithValues: recentPurchases.map { ($0.id, $0) })
+        return snapshot.lots.compactMap { lot in
+            guard PantryReceiptDelivery.fragment(of: lot) != nil else { return nil }
+            return PantryReceiptDelivery(lot: lot, state: snapshot.state, purchase: purchases[lot.id])
+        }
+    }
+
+    private func verifyProductActions(_ batch: PantryProductBatch) throws {
+        guard canEdit, batch.workspaceID == snapshot?.state.workspaceID else { throw PantryReceiptError.stale }
+        let deliveries = productDeliveries
+        for row in batch.candidates where row.included {
+            _ = try row.treatment(deliveries: deliveries, workspaceID: batch.workspaceID)
+        }
+    }
+
+    func reviewProducts(_ batch: PantryProductBatch, merchant: String, purchaseDate: Date, confirmed: Bool) async throws -> PantryReceiptReview {
+        let draft = try batch.draft(merchant: merchant, purchaseDate: purchaseDate, confirmed: confirmed, deliveries: productDeliveries)
+        let review = try await reviewReceipt(draft)
+        try verifyProductActions(batch)
+        return review
+    }
+
+    func saveProducts(_ batch: PantryProductBatch, review: PantryReceiptReview) async throws {
+        try verifyProductActions(batch)
+        try await saveReceipt(review)
     }
 }

@@ -199,8 +199,7 @@ import LocalStore
         return (try await activate([XCTUnwrap(pickup.journey)]), keys, observationIDs)
     }
 
-    func testRecentPurchaseOpensOneCanonicalLotAndSavesCountAndLocationInOneRevision() async throws {
-        let (fixture, keys, _) = try await receiptFixture()
+    private func receiptPickup(_ fixture: Fixture) async throws -> PickupModel {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(root, test: self)
@@ -212,6 +211,84 @@ import LocalStore
             gate: PantryMutationGate(), authorize: { true }))
         cleanup.track(ledger, pickup)
         await pickup.load()
+        return pickup
+    }
+
+    func testProductBatchLinksReviewedDeliveryAndAddsOnlySeparateStock() async throws {
+        let (fixture, keys, _) = try await receiptFixture()
+        let pickup = try await receiptPickup(fixture)
+        let editor = try XCTUnwrap(pickup.makePantryModel())
+        await editor.load()
+        let target = try XCTUnwrap(editor.productDeliveries.first { $0.purchase?.receiptKey == keys[1] })
+        let originalLots = try XCTUnwrap(editor.snapshot).lots
+        var batch = PantryProductBatch(workspaceID: fixture.store.workspaceID)
+        XCTAssertTrue(try batch.addManual(name: "Wraps", code: "LOCAL-WRAPS"))
+        XCTAssertTrue(try batch.addManual(name: "Oats", code: "LOCAL-OATS"))
+        batch.candidates[0].perPack = "8"
+        batch.candidates[0].packages = "1"
+        batch.candidates[1].perPack = "1"
+        batch.candidates[1].packages = "2"
+        do {
+            _ = try await editor.reviewProducts(batch, merchant: "Main", purchaseDate: now, confirmed: true)
+            XCTFail("Unreviewed actions must not create new stock when delivery fragments exist")
+        } catch ProductBatchError.chooseStockAction {}
+        batch.candidates[0].stockAction = .link(target)
+        batch.candidates[1].stockAction = .separate
+        let oldReview = try await editor.reviewProducts(batch, merchant: "Main", purchaseDate: now, confirmed: true)
+        XCTAssertEqual(oldReview.facts.first?.stock, .linked(fragment: keys[1]))
+
+        // A count changes after the picker and confirmation review. The entire
+        // mixed batch must remain unapplied, including the otherwise valid oats.
+        _ = try await change(target.id, .count(.exact(q(6)), observationID: UUID()), fixture: fixture)
+        do {
+            try await editor.saveProducts(batch, review: oldReview)
+            XCTFail("A changed pantry must invalidate the pending acquisition")
+        } catch ComparisonStoreError.staleInventory {}
+        _ = await pickup.refreshPantryStock()
+        await editor.load()
+        do {
+            _ = try await editor.reviewProducts(batch, merchant: "Main", purchaseDate: now, confirmed: true)
+            XCTFail("A stale selected delivery must require a new choice")
+        } catch ProductBatchError.changedDelivery {}
+        let historyAfterConflict = try await editor.receiptHistory()
+        XCTAssertTrue(historyAfterConflict.isEmpty)
+        XCTAssertEqual(editor.snapshot?.lots.count, originalLots.count)
+        let current = try XCTUnwrap(editor.productDeliveries.first { $0.id == target.id })
+        XCTAssertEqual(current.purchase?.receiptKey, keys[1])
+        batch.candidates[0].stockAction = .link(current)
+        batch.candidates[0].usable = "6"
+        let fresh = try await editor.reviewProducts(batch, merchant: "Main", purchaseDate: now, confirmed: true)
+        try await editor.saveProducts(batch, review: fresh)
+
+        let reopened = try XCTUnwrap(pickup.makePantryModel())
+        await reopened.load()
+        let after = try XCTUnwrap(reopened.snapshot)
+        XCTAssertEqual(after.lots.count, originalLots.count + 1)
+        XCTAssertEqual(after.lots.first { $0.id == target.id }, current.lot)
+        XCTAssertEqual(after.lots.first { $0.name == "Oats" }?.count, .exact(q(2)))
+        let history = try await reopened.receiptHistory()
+        XCTAssertEqual(history.count, 2)
+        let linked = try XCTUnwrap(history.first { $0.lotID == target.id })
+        XCTAssertEqual(linked.stock, .linked(fragment: keys[1]))
+        XCTAssertEqual(linked.received, q(8))
+        XCTAssertEqual(linked.usable, q(6))
+
+        // The same barcode on a genuinely different purchase remains available.
+        var another = PantryProductBatch(workspaceID: fixture.store.workspaceID)
+        XCTAssertTrue(try another.addManual(name: "Wraps", code: "LOCAL-WRAPS"))
+        another.candidates[0].perPack = "8"
+        another.candidates[0].packages = "1"
+        another.candidates[0].stockAction = .separate
+        let distinct = try await reopened.reviewProducts(another, merchant: "Main", purchaseDate: now, confirmed: true)
+        try await reopened.saveProducts(another, review: distinct)
+        XCTAssertEqual(reopened.snapshot?.lots.count, after.lots.count + 1)
+        XCTAssertEqual(reopened.snapshot?.lots.first { $0.id == target.id }, current.lot)
+    }
+
+    func testRecentPurchaseOpensOneCanonicalLotAndSavesCountAndLocationInOneRevision() async throws {
+        let (fixture, keys, _) = try await receiptFixture()
+        let pickup = try await receiptPickup(fixture)
+        let instant = now
         let editor = try XCTUnwrap(pickup.makePantryModel())
         await editor.load()
         let snapshot = try XCTUnwrap(editor.snapshot)

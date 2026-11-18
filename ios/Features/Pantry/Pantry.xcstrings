@@ -1,6 +1,70 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Stock action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción de inventario"
+          }
+        }
+      }
+    },
+    "Choose a stock action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a stock action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una acción de inventario"
+          }
+        }
+      }
+    },
+    "Open each included product and choose a delivery or a separate physical batch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open each included product and choose a delivery or a separate physical batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre cada producto incluido y elige una entrega o un lote físico separado."
+          }
+        }
+      }
+    },
+    "Review the delivery and package unit again before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the delivery and package unit again before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a revisar la entrega y la unidad del envase antes de guardar."
+          }
+        }
+      }
+    },
     "Confirmed from this batch": {
       "localizations": {
         "en": {

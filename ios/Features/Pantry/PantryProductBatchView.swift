@@ -41,7 +41,16 @@ struct PantryProductBatchView: View {
                             Text(row.originalLine)
                             Text(pantryFormat("Received %@", pantryQuantity(row.received)))
                             Text(pantryFormat("Usable %@", pantryQuantity(row.usable)))
-                            if case .added(let location) = row.stock { Text(pantryLocationName(location)) }
+                            switch row.stock {
+                            case .added(let location):
+                                Text(pantryText("Add a separate physical batch"))
+                                Text(pantryLocationName(location))
+                            case .linked:
+                                Text(pantryText("Link evidence to the delivered batch. Its pantry count stays the same."))
+                                if let delivery = batch.candidates.first(where: { $0.ordinal == row.ordinal })?.linkedDelivery {
+                                    Text(PantryReceiptDelivery.label(for: delivery.lot, purchase: delivery.purchase))
+                                }
+                            }
                         }.accessibilityElement(children: .combine)
                     }
                     Text(review.facts.first?.merchant ?? "")
@@ -76,7 +85,7 @@ struct PantryProductBatchView: View {
                         ForEach(batch.candidates) { row in
                             NavigationLink {
                                 PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
-                                    scope: catalogScope.id, authorized: { authorized })
+                                    deliveries: model.productDeliveries, scope: catalogScope.id, authorized: { authorized })
                             } label: {
                                 VStack(alignment: .leading) {
                                     Text(row.name.isEmpty ? (row.barcode?.value ?? pantryText("Product photo")) : row.name)
@@ -121,11 +130,19 @@ struct PantryProductBatchView: View {
             defer { working = false }
             do {
                 let rows = batch.candidates
-                let draft = try batch.draft(merchant: merchant, purchaseDate: date, confirmed: confirmed)
-                let proposal = try await model.reviewReceipt(draft)
-                guard authorized, confirmed, batch.candidates == rows, merchant == draft.merchant, date == draft.purchaseDate else { return }
+                let store = merchant, purchaseDate = date
+                let proposal = try await model.reviewProducts(batch, merchant: store, purchaseDate: purchaseDate, confirmed: confirmed)
+                guard authorized, confirmed, batch.candidates == rows, merchant == store, date == purchaseDate else { return }
                 review = proposal; result = nil
-            } catch { result = pantryText("Check the name, amount per package and whole package count for every included product.") }
+            } catch ProductBatchError.chooseStockAction {
+                result = pantryText("Open each included product and choose a delivery or a separate physical batch.")
+            } catch ProductBatchError.changedDelivery, PantryReceiptError.stale {
+                await model.load()
+                confirmed = false
+                result = pantryText("Review the delivery and package unit again before saving.")
+            } catch {
+                result = pantryText("Check the name, amount per package and whole package count for every included product.")
+            }
         }
     }
 
@@ -135,7 +152,7 @@ struct PantryProductBatchView: View {
         Task {
             defer { working = false }
             do {
-                try await model.saveReceipt(proposal)
+                try await model.saveProducts(batch, review: proposal)
                 if authorized { saved = true; review = nil; result = nil }
             } catch {
                 await model.load()
@@ -158,12 +175,30 @@ private final class BatchCatalogScope: ObservableObject {
 
 private struct PantryProductCandidateEditor: View {
     @Binding var row: PantryProductBatch.Candidate
+    let deliveries: [PantryReceiptDelivery]
     let scope: UUID
     let authorized: () -> Bool
     @Environment(\.locale) private var locale
     @State private var looking = false
     @State private var message: String?
     @FocusState private var field: String?
+
+    private var stockChoice: Binding<ReceiptImportDraft.Treatment?> {
+        Binding(get: {
+            switch row.stockAction {
+            case .separate: return .add
+            case .link(let saved) where deliveries.contains(saved): return .link(saved.id)
+            default: return nil
+            }
+        }, set: { action in
+            switch action {
+            case .add: row.stockAction = .separate
+            case .link(let id):
+                if let chosen = deliveries.first(where: { $0.id == id }) { row.stockAction = .link(chosen) }
+            default: row.stockAction = nil
+            }
+        })
+    }
 
     var body: some View {
         Form {
@@ -174,6 +209,21 @@ private struct PantryProductCandidateEditor: View {
                     if !row.original.isEmpty { Text(verbatim: row.original) }
                 }
                 if row.included {
+                    if !deliveries.isEmpty || row.stockAction != nil {
+                        Picker(pantryText("Stock action"), selection: stockChoice) {
+                            Text(pantryText("Choose a stock action")).tag(nil as ReceiptImportDraft.Treatment?)
+                            Text(pantryText("Add a separate physical batch")).tag(Optional(ReceiptImportDraft.Treatment.add))
+                            ForEach(deliveries) { delivery in
+                                Text(PantryReceiptDelivery.label(for: delivery.lot, purchase: delivery.purchase))
+                                    .tag(Optional(ReceiptImportDraft.Treatment.link(delivery.id)))
+                            }
+                        }.accessibilityIdentifier("productBatch.stockAction")
+                        if let selected = row.linkedDelivery {
+                            if deliveries.contains(selected), selected.lot.unit == row.unit {
+                                Text(pantryText("Link evidence to the delivered batch. Its pantry count stays the same."))
+                            } else { Text(pantryText("Review the delivery and package unit again before saving.")) }
+                        }
+                    }
                     Section(pantryText("Check the package")) {
                         TextField(pantryText("Food name"), text: $row.name).focused($field, equals: "name")
                             .accessibilityIdentifier("productBatch.productName")
@@ -192,8 +242,10 @@ private struct PantryProductCandidateEditor: View {
                                 Text(pantryUnit(row.unit))
                             }
                         }
-                        Picker(pantryText("Storage location"), selection: $row.location) {
-                            ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
+                        if row.linkedDelivery == nil {
+                            Picker(pantryText("Storage location"), selection: $row.location) {
+                                ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
+                            }
                         }
                     }
                     if let code = row.barcode, code.validGTIN {
