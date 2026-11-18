@@ -1,3 +1,4 @@
+import {householdTonight,saveTonightRecipe} from './household-tonight.js';
 import {readMealPreferences, writeMealPreferences, preferenceGrants, changePreferenceGrant} from './meal-preferences.js';
 import {readMealFeedback,updateMealFeedback,reviewMyFeedbackWithdrawal,withdrawMyFeedback} from './household-meal-feedback.js';
 import {cookReview} from './shared-cook-completion.js';
@@ -357,6 +358,8 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/meal-preferences' && method==='POST')return writeMealPreferences(ctx,payload,decisions);
         if(path==='/meal-preferences/grants' && method==='GET')return preferenceGrants(ctx);
         if(path==='/meal-preferences/grants' && method==='POST')return changePreferenceGrant(ctx,payload);
+        if(path==='/pantry/tonight' && method==='GET')return householdTonight(ctx);
+        if(path==='/pantry/tonight/recipes' && method==='POST')return saveTonightRecipe(ctx,payload);
         if(path==='/pantry' && method==='GET') {
           const cursor=url.searchParams.get('cursor');
           return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));

@@ -17,9 +17,9 @@ async function actor(){const subject=randomUUID(),session=randomUUID();await adm
 async function call(a,path,method='GET',body,headers={}){const r=await fetch(origin+path,{method,headers:{Authorization:'Bearer '+a.token,...(a.device?{'X-Device-Token':a.device}:{}),...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});return{status:r.status,data:await r.json()};}
 function ok(r,status=200){assert.equal(r.status,status,JSON.stringify(r.data));return r.data;}
 async function enroll(a,h){a.device=ok(await call(a,`/v1/households/${h}/devices`,'POST',{}),201).deviceToken;a.window=ok(await call(a,`/v1/households/${h}/replay-windows`,'POST',{})).id;}
-async function fixture(){const owner=await actor(),created=ok(await call(owner,'/v1/households','POST',{clientKey:randomUUID(),label:'History fixture',alias:'Adult',adultAttestation:true}),201),h=created.householdId,base=`/v1/households/${h}`;owner.id=created.memberId;await enroll(owner,h);
+async function fixture(createInitialShop=true){const owner=await actor(),created=ok(await call(owner,'/v1/households','POST',{clientKey:randomUUID(),label:'History fixture',alias:'Adult',adultAttestation:true}),201),h=created.householdId,base=`/v1/households/${h}`;owner.id=created.memberId;await enroll(owner,h);
  const shop=async(price=10000)=>{const id=randomUUID(),quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:100000,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:new Date(Date.now()-60000).toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()};ok(await call(owner,base+'/commands','POST',{v:1,replayWindow:owner.window,clientKey:randomUUID(),shopId:id,kind:'shop.create',base:{shopRevision:0,authorityEpoch:0},body:{quote,lines:[{lineId:randomUUID(),originalItem:'Private basket source',packs:1,unitPriceMinor:price,feeEligible:true}]}}));return id;};
- const shopId=await shop();async function paid(){const token=ok(await call(owner,base+'/billing/purchase-context','POST',{})).appAccountToken,original=String(Date.now())+String(Math.floor(Math.random()*1e6)).padStart(6,'0'),now=Date.now();subscriptions.set(original,{environment:'Sandbox',originalTransactionID:original,transactionID:original,appAccountToken:token,productID:'fixture.household.yearly',purchasedAt:now,signedAt:now,expiresAt:now+3600000,graceExpiresAt:null,status:'active'});ok(await call(owner,'/v1/billing/verify','POST',{householdId:h,signedTransactionInfo:original}));return original;}
+ const shopId=createInitialShop?await shop():null;async function paid(){const token=ok(await call(owner,base+'/billing/purchase-context','POST',{})).appAccountToken,original=String(Date.now())+String(Math.floor(Math.random()*1e6)).padStart(6,'0'),now=Date.now();subscriptions.set(original,{environment:'Sandbox',originalTransactionID:original,transactionID:original,appAccountToken:token,productID:'fixture.household.yearly',purchasedAt:now,signedAt:now,expiresAt:now+3600000,graceExpiresAt:null,status:'active'});ok(await call(owner,'/v1/billing/verify','POST',{householdId:h,signedTransactionInfo:original}));return original;}
  const version=async(id=shopId)=>ok(await call(owner,base+`/shops/${id}/financial-evidence`)).sourceVersion;
  const financial=async(entry,id=shopId)=>{const input={clientKey:randomUUID(),sourceVersion:await version(id),entry};return{input,result:ok(await call(owner,base+`/shops/${id}/financial-evidence`,'POST',input))};};
  return{owner,h,base,shopId,shop,paid,version,financial};}
@@ -2210,4 +2210,43 @@ test('reviewed household receipt can link an arrived delivery without adding its
  assert.deepEqual(ok(await send(receipt)),saved);
  const duplicate={...receipt,clientKey:randomUUID(),pantryRevision:after.pantryRevision,body:{...receipt.body,receiptId:randomUUID()}};
  assert.equal((await send(duplicate)).data.error.code,'receipt_conflict');
+});
+
+test('household Tonight browses without a shop and chooses exactly one occurrence after rechecking stock and rights',async()=>{
+ const f=await fixture(false),path=f.base+'/pantry/tonight';
+ const browse=async()=>ok(await call(f.owner,path));
+ const counts=async()=>Object.fromEntries(await Promise.all(['shop','shared_meal_revision','pantry_event','basket_line','tonight_choice'].map(async t=>[t,(await admin.query('SELECT count(*)::int n FROM ritc.'+t+' WHERE household_id=$1',[f.h])).rows[0].n])));
+ const start=await counts(),empty=await browse();assert.deepEqual(empty.recipes,[]);assert.deepEqual(await counts(),start);
+ const q=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
+ const add=async(name,n)=>{const p=ok(await call(f.owner,f.base+'/pantry')),time=new Date(Date.now()-1000).toISOString();
+   return ok(await call(f.owner,f.base+'/pantry/commands','POST',{v:1,kind:'pantry.addLot',clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:p.grantEpoch,pantryRevision:p.pantryRevision,
+     body:{foodName:name,location:'fridge',storedAt:time,useFirstAt:time,confirmedAt:time,exclusionTags:[],quantity:n===null?null:q(n)}}));};
+ const lot=await add('Lentils',3),unknown=await add('Broth',null);
+ const draft={v:1,clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:empty.grantEpoch,recipeId:randomUUID(),baseRevision:null,reviewed:true,
+   recipe:{title:'Lentil supper',portions:2,minutes:12,ingredients:[
+    {id:randomUUID(),name:'Lentils',quantity:q(2),reviewedLotIds:[lot.lotId]},
+    {id:randomUUID(),name:'Extra lentils',quantity:q(2),reviewedLotIds:[lot.lotId]},
+    {id:randomUUID(),name:'Broth',quantity:q(1),reviewedLotIds:[unknown.lotId]},
+    {id:randomUUID(),name:'Lentils',quantity:q(1)}],
+   preferenceEvidence:{reviewedIngredientDetails:[],requiredAppliances:[]}}};
+ const save=body=>call(f.owner,path+'/recipes','POST',body);
+ assert.equal(ok(await save(draft)).recipeRevision,1);assert.deepEqual(ok(await save(draft)),{recipeId:draft.recipeId,recipeRevision:1});
+ const first=(await browse()).recipes[0];
+ assert.deepEqual(first.ingredients.map(i=>i.status),['covered','missing','unknown','unknown']);
+ assert.equal(first.ingredients[1].missing.amount.numerator,1);assert(first.ingredients[0].useSoon);assert(first.ingredients[0].evidenceAt);assert.equal(first.checkoutEstimate,'incomplete');
+ const before=await counts();assert.equal(before.shop,0);assert.deepEqual((await browse()).recipes,[first]);assert.deepEqual(await counts(),before);
+ const outsider=await fixture(false);assert.equal((await call(outsider.owner,path)).status,404);
+ const shopId=await f.shop(),command={v:1,kind:'meal.chooseTonight',clientKey:randomUUID(),replayWindow:f.owner.window,shopId,base:{shopRevision:1,authorityEpoch:1},
+    body:{v:1,grantEpoch:empty.grantEpoch,recipeId:draft.recipeId,recipeRevision:1,reviewToken:first.reviewToken,day:null,occurrenceId:randomUUID()}};
+ const send=c=>call(f.owner,f.base+'/commands','POST',c);
+ await add('Unrelated food',2);assert.equal((await send(command)).status,409);
+ command.body.reviewToken=(await browse()).recipes[0].reviewToken;
+ const basketBefore=(await admin.query('SELECT to_jsonb(b) b FROM ritc.basket_line b WHERE household_id=$1',[f.h])).rows;
+ const receipt=ok(await send(command));assert.equal(receipt.disposition,'meal_chosen');assert.equal(receipt.occurrenceId,command.body.occurrenceId);assert.equal(receipt.shopRevision,2);
+ assert.deepEqual(ok(await send(command)),receipt);assert.deepEqual((await admin.query('SELECT to_jsonb(b) b FROM ritc.basket_line b WHERE household_id=$1',[f.h])).rows,basketBefore);
+ const final=await counts();assert.equal(final.tonight_choice,1);assert.equal(final.shared_meal_revision,1);assert.equal(final.pantry_event,before.pantry_event+1);
+ const settings={v:1,clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:0,expectedRevision:null,settings:{exclusions:['lentils'],availableAppliances:[],dislikes:[],preferredBrands:[],strictDislikes:false,strictBrands:false,strictEffort:false}};
+ ok(await call(f.owner,f.base+'/meal-preferences','POST',settings));assert.deepEqual((await browse()).recipes,[]);assert.equal((await browse()).excludedCount,1);
+ await assert.rejects(admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.owner.id]),{code:'P0001'});
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.tonight_recipe WHERE household_id=$1 AND recipe IS NOT NULL',[f.h])).rows[0].n,1);
 });

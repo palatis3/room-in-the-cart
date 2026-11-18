@@ -6,7 +6,7 @@ import {ServiceError,invalid,unavailable} from './errors.js';
 import {pantryBodies,pantryObservation,type Quantity} from './recovery-contracts.js';
 import {jointDeliveryInputs,requirePlaced,requireCompatibleMatch,storedDeliveryEvidence,reviewReservation,sameTarget,lower,validateReservation} from './delivery-evidence.js';
 import {deliveryCoverage,type DeliverySource,type ReservationHead,type SealedMeal} from './delivery-coverage.js';
-import {add,amount,cmp,dimension,wire,zero} from './physical-quantity.js';
+import {add,amount,cmp,dimension,sub,wire,zero,type Rat} from './physical-quantity.js';
 
 type Kind=keyof typeof pantryBodies;
 type Location='pantry'|'freezer'|'fridge';
@@ -65,6 +65,40 @@ export function householdPantryEpoch(ctx:Context):number|null {
     (m.organizer || m.pantry_editor) ? m.pantry_grant_epoch??null : null;
 }
 
+/** The household matcher receives confirmed physical stock and amounts already promised,
+ * never the linked shoppers, meal names, receipt totals or other private provenance. */
+export async function tonightStock(ctx:Context,ids:string[]) {
+  if(householdPantryEpoch(ctx)===null)throw unavailable();
+  if(!ids.length)return [];
+  const {rows}=await ctx.db.query<LotRow>(`SELECT l.* FROM ritc.pantry_lot l WHERE l.household_id=$1 AND l.lot_id=ANY($2::uuid[])
+    AND (NOT cook_output OR EXISTS(SELECT FROM ritc.shared_cook c WHERE (c.household_id,c.operation_id)=(l.household_id,l.operation_id) AND c.undone_by IS NULL))
+    ORDER BY use_first_at NULLS LAST,lot_id`,[ctx.householdId,ids]);
+  const heads=await headRows(ctx,ids);
+  const deliveries=new Map((await storedDeliveryEvidence(ctx,rows.flatMap(r=>r.delivery_source_id?[r.delivery_source_id]:[]))).map(d=>[d.sourceId,d]));
+  const connected=new Set([...heads.filter(h=>h.kind==='select'&&h.enabled).map(h=>h.shop_id),...rows.flatMap(r=>r.delivery_source_id&&r.origin_shop_id?[r.origin_shop_id]:[])]);
+  const allocated=new Map<string,Rat>();
+  // Run the existing global allocator once for each connected group of shops. The
+  // other meals and assignments influence the remainder but never leave this computation.
+  for(const shopId of connected) {
+    const input=await jointInputs(ctx,{shop_id:shopId});
+    for(const visited of input.shopIds)connected.delete(visited);
+    for(const need of project(input).needs)if(need.required){
+      for(const a of need.allocations){
+        const unit=amount({...need.required,amount:{numerator:1,denominator:1}});
+        const count={n:BigInt(a.amount.numerator)*unit.n,d:BigInt(a.amount.denominator)*unit.d};
+        allocated.set(a.sourceId,add(allocated.get(a.sourceId)??zero,count));
+      }
+    }
+  }
+  const byLot=new Map<string,Head[]>();
+  for(const h of heads){const list=byLot.get(h.lot_id)??[];list.push(h);byLot.set(h.lot_id,list);}
+  return rows.map(r=>{
+    const lot=materialize(r,byLot.get(r.lot_id)??[],deliveries.get(r.lot_id)),q=lot.observation?.quantity;
+    const free=q?sub(amount(q),allocated.get(r.lot_id)??zero):null;
+    return {id:r.lot_id,name:lot.foodName,tags:lot.exclusionTags,observed:lot.observation,
+      useFirstAt:lot.useFirstAt?.toISOString()??null,free:free?wire(free.n>0n?free:zero):null};
+  });
+}
 export async function physicalPantryPage(ctx:Context,cursor:string|null,shop?:Shop,includeRefrigerated=false) {
   const epoch=householdPantryEpoch(ctx);
   if(!shop && epoch===null) throw unavailable();
@@ -102,7 +136,7 @@ export async function readPantry(ctx:Context,shop:Shop,cursor:string|null,includ
 const scoped=(shopId:string,id:string)=>shopId+'/'+id;
 const unscoped=(id:string)=>id.slice(id.indexOf('/')+1);
 function targetKey(sourceId:string,m:Match){return [sourceId,m.occurrenceId,m.mealRevision,m.ingredientId].join('/');}
-export async function linkedComponent(ctx:Context,shop:Shop,focus:string|null){
+export async function linkedComponent(ctx:Context,shop:Pick<Shop,'shop_id'>,focus:string|null){
   const {rows:edges}=await ctx.db.query<{lot_id:string;shop_id:string}>(`SELECT lot_id,shop_id FROM (
     SELECT DISTINCT ON(lot_id,shop_id) lot_id,shop_id,enabled FROM ritc.pantry_event WHERE household_id=$1 AND kind='select'
     ORDER BY lot_id,shop_id,pantry_revision DESC) current WHERE enabled
@@ -127,10 +161,11 @@ export async function trackCookStockProvenance(ctx:Context,shop:Shop,copyId:stri
       SELECT actor_id FROM ritc.pantry_lot WHERE household_id=$1 AND lot_id=ANY($3::uuid[])
       UNION SELECT actor_id FROM ritc.pantry_event WHERE household_id=$1 AND lot_id=ANY($3::uuid[])
       UNION SELECT actor_id FROM ritc.operation WHERE household_id=$1 AND shop_id=ANY($4::uuid[]) AND kind LIKE 'delivery.%'
+      UNION SELECT actor_id FROM ritc.tonight_meal_author WHERE household_id=$1 AND shop_id=ANY($4::uuid[])
       UNION SELECT actor_id FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=ANY($4::uuid[])
     ) origins`,[ctx.householdId,copyId,[...lots],[...shops]]);
 }
-export async function jointInputs(ctx:Context,shop:Shop,focus:string|null=null,includeInventory=false){
+export async function jointInputs(ctx:Context,shop:Pick<Shop,'shop_id'>,focus:string|null=null,includeInventory=false){
   const {shops,lots}=await linkedComponent(ctx,shop,focus);
   const mealRows:SealedMeal[]=[],sources=new Map<string,DeliverySource>(),kinds=new Map<string,'delivery'|Location>();
   const delivery=await jointDeliveryInputs(ctx,[...shops],[...lots],includeInventory);

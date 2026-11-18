@@ -1,3 +1,4 @@
+import {recordTonight,checkTonightReplay} from './household-tonight.js';
 import {checkDraftDinnerSwap} from './shared-dinner-swap.js';
 import {checkIngredientChange} from './meal-preferences.js';
 import {isCookCommand} from './cook-completion-contracts.js';
@@ -398,6 +399,7 @@ export class HouseholdRepository {
         if(prior.kind==='request.carry')await reauthorizeCarry(ctx,shop,this.carryNotice,prior.operation_id);
         if(prior.kind==='request.confirmPurchase' && (prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
           'SELECT 1 FROM ritc.request_purchase_review WHERE household_id=$1 AND operation_id=$2',[ctx.householdId,prior.operation_id])).rowCount)) throw refresh();
+        if(prior.kind==='meal.chooseTonight'){if(prior.response?.authorityEpoch!==shop.authority_epoch)throw refresh();await checkTonightReplay(ctx,shop,prior.operation_id);}
         if(prior.kind==='mealRecovery.apply') {
           if(prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
             'SELECT 1 FROM ritc.meal_recovery_revision WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3 AND current_meal IS NOT NULL',
@@ -499,6 +501,11 @@ export class HouseholdRepository {
     return{operationId,kind:c.kind,request:ownRequest(await this.request(ctx,id,shop.shop_id,true))};
   }
   private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string,billing?:BillingService,internalPriceOnly=false) {
+    if(c.kind==='meal.chooseTonight'){
+      const occurrenceId=await recordTonight(ctx,shop,c.body,operationId,this);
+      await this.snapshot(ctx,shop.shop_id,operationId,'patch');
+      return {...await this.receipt(ctx,c,operationId,'meal_chosen'),occurrenceId};
+    }
     if(isCookCommand(c.kind)){
       const result=await recordCook(ctx,shop,c.kind,c.body,operationId);
       return {...await this.receipt(ctx,c,operationId,'recorded'),...result};

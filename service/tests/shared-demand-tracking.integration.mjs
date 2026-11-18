@@ -277,3 +277,22 @@ test('privacy extension delegates only unrelated legacy no-op work and still cle
  await privacyCases.erase(f,original,true);assert.equal((await maintenance.run({batchSize:1})).completed,1);
  assert.equal((await origins()).filter(r=>r.member_id===original.id).length,0,'authorized erasure purges target hashes even without any graph/tracking row');
 });
+
+test('household Tonight source erasure removes derived occurrences and retains a different later dinner',async()=>{
+ const f=await fixture(),original=f.owner,other=await invited(f);
+ const page=async actor=>ok(await call(actor,f.base+'/pantry/tonight'));
+ const p=await page(original),recipeId=randomUUID(),occurrenceId=randomUUID();
+ const recipe={title:'Household source to remove',portions:2,minutes:null,ingredients:[{id:randomUUID(),name:'Beans',quantity:null}]};
+ const body={v:1,grantEpoch:p.grantEpoch,clientKey:randomUUID(),replayWindow:original.window,recipeId,baseRevision:null,reviewed:true,recipe};
+ ok(await call(original,f.base+'/pantry/tonight/recipes','POST',body));
+ await call(original,f.base+'/pantry/grants','POST',{v:1,memberId:other.id,expectedGrantEpoch:0,enabled:true}).then(r=>ok(r));
+ ok(await send(f,'shop.transferAuthority',{newShopperId:other.id},1));f.owner=other;
+ const reviewed=await page(other),c=reviewed.recipes[0];
+ const choice=ok(await send(f,'meal.chooseTonight',{v:1,recipeId,recipeRevision:c.recipeRevision,grantEpoch:reviewed.grantEpoch,reviewToken:c.reviewToken,occurrenceId,day:null},2,2));
+ const independent=randomUUID(),untouched={title:'Separate later dinner',kind:'dinner',protected:false,portions:1,day:null};
+ ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:independent,baseMealRevision:null,meal:untouched}},choice.shopRevision,2));
+ await privacyCases.erase(f,original,true);assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const left=await admin.query('SELECT occurrence_id,meal FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId]);
+ assert.deepEqual(left.rows,[{occurrence_id:independent,meal:untouched}]);assert.deepEqual((await page(other)).recipes,[]);
+ assert.equal((await admin.query('SELECT recipe FROM ritc.tonight_recipe WHERE household_id=$1 AND recipe_id=$2',[f.h,recipeId])).rows[0].recipe,null);
+});
