@@ -15,6 +15,12 @@ struct PantryReceiptEntry: View {
     private var aliasScope: AliasScope {
         .init(merchant: draft?.merchant, language: draft?.language, state: model.snapshot?.state)
     }
+    private struct AssistanceReview: Identifiable {
+        let id: UUID
+        let state: InventoryState
+        let line: ReceiptImportDraft.Line
+    }
+    @State private var assistance: AssistanceReview?
     @State private var fileSource = false
     @State private var scan = false
     @State private var draft: ReceiptImportDraft?
@@ -94,6 +100,10 @@ struct PantryReceiptEntry: View {
                 ForEach(displayed.lines) { line in
                     PantryReceiptLineEditor(line: captureDraftBinding(line, in: value.lines), lots: model.snapshot?.lots ?? [], purchases: model.recentPurchases, aliases: aliases.filter {
                         InventoryReceiptAlias.key($0.merchant) == InventoryReceiptAlias.key(displayed.merchant) && $0.language == displayed.language && ReceiptImportDraft.containsWording($0.wording, in: line.original)
+                    }, assist: {
+                        if let state = model.snapshot?.state, model.permitsReceiptSource {
+                            assistance = AssistanceReview(id: displayed.draftID, state: state, line: line)
+                        }
                     }, field: $field)
                 }
                 Button(pantryText("Review selected food")) {
@@ -149,6 +159,14 @@ struct PantryReceiptEntry: View {
             let matches = try? await model.receiptAliases(merchant: merchant, language: language)
             if !Task.isCancelled, scope == aliasScope { aliases = matches ?? [] }
         }
+        .sheet(item: $assistance) { basis in
+            PantryReceiptAssistance(line: basis.line, authorized: { assistanceCurrent(basis) }, checkSource: verifySource) { suggestion, input, received in
+                guard assistanceCurrent(basis), var current = draft,
+                      let index = current.lines.firstIndex(where: { $0.id == basis.line.id }) else { throw PantryReceiptError.stale }
+                try current.lines[index].applyAssisted(suggestion, request: input, reviewedLine: basis.line, useReceived: received)
+                draft = current
+            }
+        }
         .sheet(isPresented: $fileSource) {
             if let state = model.snapshot?.state {
                 NavigationStack {
@@ -171,6 +189,11 @@ struct PantryReceiptEntry: View {
                 }
             }
         }
+    }
+
+    private func assistanceCurrent(_ basis: AssistanceReview) -> Bool {
+        model.permitsReceiptSource && model.snapshot?.state == basis.state && draft?.draftID == basis.id &&
+            draft?.lines.first(where: { $0.id == basis.line.id }) == basis.line
     }
 
     private func accept(_ source: SourceMediaRecord, fromSavedPickup: Bool = false) {
@@ -204,6 +227,7 @@ private struct PantryReceiptLineEditor: View {
     let lots: [InventoryLot]
     let purchases: [PantryRecentPurchase]
     let aliases: [InventoryReceiptAlias]
+    let assist: () -> Void
     var field: FocusState<String?>.Binding
 
     private func label(_ lot: InventoryLot) -> String {
@@ -214,6 +238,8 @@ private struct PantryReceiptLineEditor: View {
     var body: some View {
         Section {
             Text(line.original).font(.headline)
+            Button(pantryText("Help with this line"), action: assist)
+                .accessibilityIdentifier("receipt.assistance.\(line.ordinal)")
             Picker(pantryText("Receipt line action"), selection: $line.treatment) {
                 Text(pantryText("Skip this line")).tag(ReceiptImportDraft.Treatment.skip)
                 Text(pantryText("Add a separate physical batch")).tag(ReceiptImportDraft.Treatment.add)

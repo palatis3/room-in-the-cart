@@ -1,3 +1,4 @@
+import { ReceiptAssistance, receiptAssistanceInput, requireReceiptAdult, reserveReceiptAssistance } from './receipt-assistance.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -38,7 +39,7 @@ import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
-export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -246,6 +247,28 @@ export function createHTTPServer(options:HTTPOptions) {
       if(path==='/devices'&&method==='POST') {
         z.object({}).strict().parse(await body(req));
         send(201,await repository.enroll(householdId,auth.identity));return;
+      }
+      if(path==='/receipt-assistance' && (method==='GET'||method==='POST')) {
+        const assistance=options.receiptAssistance;
+        const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
+        await authorize();
+        if(method==='GET'){send(200,{version:1,available:!!assistance});return;}
+        if(!assistance)throw new ServiceError(503,'receipt_assistance_unavailable','Keep editing this receipt on your device.');
+        const input=receiptAssistanceInput.parse(await body(req,2048));
+        const cancellation=new AbortController();
+        const stop=()=>cancellation.abort();
+        res.once('close',stop);
+        try {
+          if(res.destroyed)throw unavailable();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await reserveReceiptAssistance(ctx,auth.identity,input,assistance.budget);
+          });
+          const result=await assistance.extract(input,cancellation.signal);
+          await authorize();
+          send(200,result);
+        } finally { res.off('close',stop); }
+        return;
       }
       const verificationRoute=/^\/guardian\/enrollments\/([^/]+)\/verification$/.exec(path);
       if(verificationRoute&&method==='POST'){send(200,await guardian.verification(householdId,auth,uuid.parse(verificationRoute[1]),guardianActionSchema.parse(await body(req,4096))));return;}

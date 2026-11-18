@@ -4097,6 +4097,312 @@
           }
         }
       }
+    },
+    "Help with this line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help with this line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda con esta línea"
+          }
+        }
+      }
+    },
+    "Original receipt wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original receipt wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original del recibo"
+          }
+        }
+      }
+    },
+    "For optional online help, open an authorized adult account. You can keep editing the receipt here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For optional online help, open an authorized adult account. You can keep editing the receipt here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para obtener ayuda en línea, abre una cuenta de adulto autorizada. Puedes seguir editando el recibo aquí."
+          }
+        }
+      }
+    },
+    "Online receipt help is unavailable. You can keep editing the receipt on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online receipt help is unavailable. You can keep editing the receipt on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ayuda en línea no está disponible. Puedes seguir editando el recibo en este iPhone."
+          }
+        }
+      }
+    },
+    "Text to share with OpenAI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text to share with OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto que se compartirá con OpenAI"
+          }
+        }
+      }
+    },
+    "Edit or remove personal details. Your chosen text and its page and line numbers go to OpenAI through Room in the Cart.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit or remove personal details. Your chosen text and its page and line numbers go to OpenAI through Room in the Cart."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edita o elimina los datos personales. Room in the Cart enviará a OpenAI el texto elegido y sus números de página y línea."
+          }
+        }
+      }
+    },
+    "Selected receipt wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected receipt wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto seleccionado del recibo"
+          }
+        }
+      }
+    },
+    "Page %lld · line %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %lld · line %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página %lld · línea %lld"
+          }
+        }
+      }
+    },
+    "Send this text for a suggestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this text for a suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar este texto para recibir una sugerencia"
+          }
+        }
+      }
+    },
+    "Reading selected wording…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading selected wording…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo el texto seleccionado…"
+          }
+        }
+      }
+    },
+    "Review the suggestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la sugerencia"
+          }
+        }
+      }
+    },
+    "Suggested food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento sugerido"
+          }
+        }
+      }
+    },
+    "Printed quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad impresa"
+          }
+        }
+      }
+    },
+    "I received this quantity and want to use it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I received this quantity and want to use it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibí esta cantidad y quiero usarla."
+          }
+        }
+      }
+    },
+    "No food or quantity could be identified.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No food or quantity could be identified."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo identificar el alimento ni la cantidad."
+          }
+        }
+      }
+    },
+    "Use in my receipt draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use in my receipt draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar en el borrador del recibo"
+          }
+        }
+      }
+    },
+    "The receipt changed. Reopen the line to review it again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receipt changed. Reopen the line to review it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El recibo ha cambiado. Vuelve a abrir la línea para revisarla."
+          }
+        }
+      }
+    },
+    "No suggestion was received. Your local receipt is ready to edit.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestion was received. Your local receipt is ready to edit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se recibió ninguna sugerencia. Puedes seguir editando el recibo en tu dispositivo."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

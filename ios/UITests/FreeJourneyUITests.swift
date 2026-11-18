@@ -177,6 +177,11 @@ import XCTest
         printed.tap()
         check("I reviewed these lines as source evidence only.")
         receiptTap(app.buttons["scan.receipt.review"])
+        receiptTap(app.buttons["receipt.assistance.0"])
+        let offline = app.staticTexts["For optional online help, open an authorized adult account. You can keep editing the receipt here."]
+        XCTAssertTrue(offline.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["receipt.assistance.send"].exists)
+        receiptTap(app.navigationBars["Help with this line"].buttons["Close"])
         check("I checked the purchase date.")
         receiptTap(app.buttons["receipt.action.0"])
         receiptTap(app.buttons["Add a separate physical batch"])
