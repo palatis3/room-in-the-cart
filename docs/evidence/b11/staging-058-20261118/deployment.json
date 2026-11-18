@@ -31,5 +31,17 @@
     "reopened-role-bound-http.json": "226878e88f6e43c78209f53d609bdc3fd2b35a06c3333a21c9e19d143c26d30c",
     "reopened-bilingual-privacy.json": "1f5d41ef308a7eb8b7964913a87349d89d9383eba92a9c67418330532df8489d",
     "read-only-worker.json": "0f6f2e3fa2902355e412a8cbd719f52f2e7901ffce0c739f8f7d84c66ff57b53"
+  },
+  "installedIPhoneSmoke": {
+    "appRevision": "e5fbc5f931b47428c8b9906c35b8acdaa8edbf08",
+    "device": "iPhone 15 simulator",
+    "runtime": "iOS 17.0 (21A328)",
+    "passed": [
+      "Anonymous health and session access, private workspace requires sign-in",
+      "Spanish Help opens in Mobile Safari",
+      "English Support opens in Mobile Safari"
+    ],
+    "runtimeWarnings": 0,
+    "strictReportSHA256": "cddb1a2defe1188191f381c19b24d47d3e74ad0c6febef5a3650ed50a2803d70"
   }
 }

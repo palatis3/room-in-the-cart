@@ -1,0 +1,21 @@
+{
+  "baseline": "a8edfa170f7cdcde34f3c63cb6a517672537acf9",
+  "candidate": "439dda7d312d6e29ce307eeed47d5b23124d07f4",
+  "baselineBinary": "7035db58e10cc7bbcf26418097bfcbf9e58421be77001e4550472ea2efead680",
+  "candidateBinary": "0041bd592e11b59516705fc873a4fa6d932b0419f20d502be3359026c158a10c",
+  "legacyPickupRevisionCount": 15,
+  "ledgerRevisionCount": 9,
+  "inventoryVersion": 8,
+  "activeReservedUnits": {
+    "Wrap dinner \u00b7 Lunch": 2,
+    "Wrap dinner": 4
+  },
+  "lotUnits": {
+    "Wraps": 4,
+    "Two checked freezer wraps": 2,
+    "Upgrade lentils": 3
+  },
+  "device": "iPhone 17e simulator, iOS 27.0 (24A434)",
+  "qualification": "Unsigned Release installed over a populated Release installation. Original stored revision payloads and workspace identities compared before and after upgrading. New lot reopened after relaunch.",
+  "resultSHA256": "b729282dabefa0ea124cc7e72eb1ed7f62131bf43b97279e83cfc5fc45e72be9"
+}

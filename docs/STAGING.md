@@ -27,7 +27,7 @@ Required server variables: `DATABASE_URL`, `DATABASE_CA_PEM`, `JWT_ISSUER`, `JWT
 
 ## Evidence and open gates
 
-The installed Staging iPhone app reached the live service and opened Help and Support in Mobile Safari. All three simulator tests passed. The Staging scheme also produced an unsigned arm64 device archive. [Native build verification](evidence/b11/staging-040-preparation-20261107/native-iphone.json)
+The installed Staging app at `e5fbc5f9` reached schema 058 on an iPhone 15 simulator running iOS 17.0. Its anonymous session succeeded, the protected workspace required sign-in, and Spanish Help and English Support opened in Mobile Safari. All three tests passed with zero runtime warnings. [Staging 058 evidence](evidence/b11/staging-058-20261118/deployment.json)
 
 The owner deferred Apple Developer membership and email-provider configuration on November 3, 2026. Development continues; signed distribution and live email-code sign-in are pending those setups. The current Supabase default email sends a magic link without a code, and its dashboard requires custom SMTP or a paid plan to edit that template. `emailOTPEnabled` remains false until the configured email includes a token and delivery is verified. Native builds receive an explicit disabled availability setting; service/BFF enablement must follow the same gate.
 
