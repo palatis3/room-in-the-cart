@@ -990,8 +990,20 @@ import XCTest
         XCTAssertTrue(namedDestination.waitForExistence(timeout: 10), app.debugDescription)
         namedDestination.tap()
         let stage = app.buttons["Save receipt file for review"]
-        XCTAssertTrue(stage.waitForExistence(timeout: 15), app.debugDescription); stage.tap()
-        XCTAssertTrue(stage.waitForNonExistence(timeout: 12))
+        // The remote extension publishes its button while the sheet is still sliding into place.
+        var previousFrame: CGRect?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard stage.exists, stage.isEnabled, stage.isHittable,
+                  let frame = try? stage.snapshot().frame, !frame.isEmpty, self.app.frame.contains(frame) else {
+                previousFrame = nil
+                return false
+            }
+            defer { previousFrame = frame }
+            return previousFrame == frame
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 15), .completed, app.debugDescription)
+        stage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(stage.waitForNonExistence(timeout: 12), app.debugDescription)
         app.terminate()
         launch(reset: true, sharedReceiptToken: token)
         tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
