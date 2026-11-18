@@ -85,7 +85,7 @@ struct HouseholdReceiptEntry: View {
     @State private var reviewed: HouseholdReceiptAcquisition?
     @State private var invalid = false
     @FocusState private var field: String?
-    @Environment(\.dismiss) private var dismiss
+    let closeEditor: () -> Void
 
     private var target: CaptureTarget {
         .init(workspaceID: page.householdId, containerID: sourceID, objectID: sourceID,
@@ -109,7 +109,7 @@ struct HouseholdReceiptEntry: View {
                     HouseholdReceiptFacts(receipt: reviewed)
                     Text(pantryText("Saving receipt evidence does not post a payment."))
                     HouseholdPantryConfirmButton(model: model, page: page, change: .receipt(reviewed),
-                        title: householdPantryText("Confirm receipt for this household"), identifier: "householdReceipt.confirm")
+                        title: householdPantryText("Confirm receipt for this household"), identifier: "householdReceipt.confirm", closeEditor: closeEditor)
                     Button(pantryText("Edit receipt lines")) { self.reviewed = nil }
                 }
             } else if let displayed = draft {
@@ -142,7 +142,7 @@ struct HouseholdReceiptEntry: View {
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: field != nil, title: pantryText("Done"), identifier: "householdReceipt.keyboardDone") { field = nil }
         .navigationTitle(householdPantryText("Add receipt to household pantry"))
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Close")) { dismiss() }.disabled(model.busy) } }
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Close"), action: closeEditor).disabled(model.busy) } }
         .sheet(isPresented: $scan) {
             NavigationStack { ScanReviewView(kind: .receipt, target: target, authorize: { model.permitsReceiptReview(page) }) { result in
                 if case .evidence(let source) = result { accept(source) }
