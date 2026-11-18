@@ -12,6 +12,43 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("Contributor-request-failure") }
         app.terminate()
     }
+    func testHouseholdMealPreferencesOrganizerReviewsAndAdultReads() {
+        app.launchArguments = ["--ui-testing", "--household-meal-organizer", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        func open() { tap(app.buttons["household.mealPreferences"]) }
+        open()
+        let edit = app.buttons["household.preferences.edit"]
+        tap(edit)
+        let field = element("preferences.exclusions")
+        tap(field)
+        field.typeText("peanut")
+        let done = app.buttons["preferences.keyboardDone"]
+        tap(done)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "preferences.keyboardDone"))
+        tap(element("preferences.review"))
+        tap(element("preferences.save"))
+        let rule = NSPredicate(format: "label CONTAINS %@", "peanut")
+        XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
+        let grant = app.switches["Alex"]
+        reveal(grant, fullyVisible: true)
+        grant.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        let granted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: grant)
+        XCTAssertEqual(XCTWaiter.wait(for: [granted], timeout: 8), .completed)
+        tap(app.navigationBars.buttons.firstMatch)
+        open()
+        XCTAssertTrue(grant.waitForExistence(timeout: 10))
+        XCTAssertEqual(grant.value as? String, "1")
+        app.terminate()
+
+        app.launchArguments = ["--ui-testing", "--household-meal-reader", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
+        app.launch()
+        open()
+        XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Exigir que las comidas estén listas dentro de este tiempo"].exists)
+        XCTAssertFalse(edit.exists)
+        XCTAssertFalse(app.switches["Alex"].exists)
+    }
+
     func testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen() {
         app.launchArguments = ["--ui-testing", "--household-pantry-correction", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

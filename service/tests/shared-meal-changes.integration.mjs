@@ -1760,3 +1760,30 @@ test('standalone pantry freezer enters the legacy shared allocator once while fr
  const coverage=ok(await call(f.planner,p.path+'/coverage'));
  assert.equal(coverage.needs.flatMap(n=>n.reservations).find(r=>r.reservationId===pin.operationId).backed.numerator,'1');
 });
+
+test('ingredient substitutions enforce the reviewed profile at planner proposal and shopper commit',async()=>{
+  const f=await mealFixture(),path=f.base+'/meal-preferences';
+  const settings={exclusions:['peanut'],availableAppliances:['stove'],dislikes:[],preferredBrands:['Casa'],strictDislikes:false,strictBrands:true,strictEffort:false};
+  const command={v:1,clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:0,expectedRevision:null,settings};
+  const profile=ok(await call(f.owner,path,'POST',command));
+  assert.equal(ok(await call(f.planner,f.changePath)).preferenceRevision,profile.revision);
+  const ingredient={id:randomUUID(),name:'Rice',quantity:null,groupIds:[],exclusions:[]};
+  const meal=structuredClone(f.changed);
+  meal.planning.ingredients.push(ingredient);
+  const propose=(preferenceReview)=>call(f.planner,f.changePath,'POST',{...f.proposal,meal,preferenceReview});
+  const evidence={reviewedIngredientDetails:[],requiredAppliances:['stove'],brands:['Casa']},review={revision:profile.revision,evidence};
+  assert.equal((await propose(undefined)).status,409);
+  assert.equal((await propose({revision:profile.revision})).status,409);
+  assert.equal((await propose({...review,evidence:{...evidence,brands:[]}})).status,409);
+  assert.equal((await propose({...review,evidence:{...evidence,reviewedIngredientDetails:['peanut oil']}})).status,409);
+  ok(await propose(review));
+  ok(await call(f.owner,path,'POST',{...command,clientKey:randomUUID(),expectedRevision:profile.revision,settings:{...settings,exclusions:['rice']}}));
+  const page=ok(await call(f.planner,f.changePath));
+  assert.equal(page.proposals[0].requiresPreferenceReview,true);
+  const apply=(extra)=>call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId:f.proposal.occurrenceId,baseMealRevision:2,meal,...extra}));
+  assert.equal((await apply({changeProposalId:f.proposal.proposalId})).status,409);
+  assert.equal((await apply({preferenceReview:review})).status,409);
+  assert.equal((await apply({})).status,409);
+  assert.deepEqual(ok(await call(f.owner,f.path)).meals[0].meal,f.meal);
+  ok(await call(f.planner,f.changePath,'POST',{...f.proposal,proposalId:randomUUID()}));
+});

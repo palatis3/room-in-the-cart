@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Context, HouseholdRepository } from './repository.js';
 import type { MealMoves } from './meal-moves.js';
+import {checkIngredientChange, ingredientsChanged, mealConstraints, recipeReview} from './meal-preferences.js';
 import { digest } from './database.js';
 import { ServiceError, unavailable } from './errors.js';
 import { requireApprovedSharedIdea } from './shared-meal-ideas.js';
@@ -11,7 +12,7 @@ export const sharedMealChangeSchema = z.object({
   proposalId: z.string().uuid().transform(value => value.toLowerCase()), occurrenceId: z.string().uuid().transform(value => value.toLowerCase()), baseMealRevision: positive.nullable(),
   shopRevision: positive, authorityEpoch: positive, grantRevision: z.number().int().nonnegative(),
   approvedIdeaId: z.string().uuid().transform(value => value.toLowerCase()).optional(), approvedIdeaRevision: positive.optional(),
-  meal: sharedMealSchema, reason: z.string().trim().min(1).max(500),
+  preferenceReview: recipeReview.optional(), meal: sharedMealSchema, reason: z.string().trim().min(1).max(500),
 }).strict().superRefine((v,ctx)=>{if(v.baseMealRevision===null ? (!v.approvedIdeaId||!v.approvedIdeaRevision) : (v.grantRevision<1||v.approvedIdeaId!==undefined||v.approvedIdeaRevision!==undefined))ctx.addIssue({code:'custom',message:'New meals require an exact approved idea; existing edits retain their original revision.'});});
 export const sharedMealDismissSchema = z.object({
   proposalId: z.string().uuid().transform(value => value.toLowerCase()), shopRevision: positive, authorityEpoch: positive, grantRevision: z.number().int().nonnegative(),
@@ -21,13 +22,25 @@ export class SharedMealChanges {
   constructor(private readonly repo: HouseholdRepository, private readonly moves: MealMoves) {}
   async read(ctx: Context, id: string) {
     const { shop, shopper, plannerId, grantRevision } = await this.moves.context(ctx, id, true);
-    const rows = (await ctx.db.query(`SELECT c.proposal_id,c.body,c.original_meal,c.state FROM ritc.shared_meal_change c
+    const rows = (await ctx.db.query(`SELECT c.proposal_id,c.body,c.original_meal,c.state,
+       i.preference_revision AS idea_preference_revision,i.revision AS idea_revision FROM ritc.shared_meal_change c
+      LEFT JOIN ritc.shared_meal_idea i ON i.household_id=c.household_id AND i.shop_id=c.shop_id AND i.idea_id=(c.body->>'approvedIdeaId')::uuid
       JOIN ritc.member a ON a.household_id=c.household_id AND a.member_id=c.actor_id AND a.state='active'
       WHERE c.household_id=$1 AND c.shop_id=$2 AND c.authority_epoch=$3 AND c.grant_revision=$4 AND (c.actor_id=$5 OR (c.base_meal_revision IS NULL AND c.actor_id=$6))
       ORDER BY (c.state='pending') DESC,c.created_at DESC,c.proposal_id LIMIT 100`, [ctx.householdId,id,shop.authority_epoch,grantRevision,plannerId,shopper?ctx.member.member_id:plannerId])).rows;
-    return { shopId:id, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch, grantRevision,
+    const profile = await mealConstraints(ctx);
+    return { ...(profile.revision ? {preferenceRevision:profile.revision}:{}), shopId:id, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch, grantRevision,
       phase:shop.phase, shopper, meals:await this.repo.meals(ctx,id),
-      proposals:rows.map(row => ({ proposalId:row.proposal_id, request:row.body, original:row.original_meal, state:row.state })) };
+      proposals:rows.map(row => {
+        const changed = !row.original_meal || ingredientsChanged(row.original_meal,row.body.meal) ||
+          ((profile.settings?.timeLimit || row.body.preferenceReview) && row.original_meal.planning?.leadTimeMinutes !== row.body.meal.planning?.leadTimeMinutes);
+        const revision = row.original_meal ? row.body.preferenceReview?.revision ?? null : row.idea_preference_revision;
+        const bound = !row.original_meal || row.body.preferenceReview != null || profile.settings != null;
+        const staleReview = bound && row.state === 'pending' && changed &&
+          (revision !== profile.revision || (!row.original_meal && row.idea_revision !== row.body.approvedIdeaRevision));
+        return { proposalId:row.proposal_id, request:row.body, original:row.original_meal, state:row.state,
+          ...(staleReview ? {requiresPreferenceReview:true}:{}) };
+      }) };
   }
   async propose(ctx: Context, id: string, input: z.infer<typeof sharedMealChangeSchema>) {
     const { shop, shopper, grantRevision } = await this.moves.context(ctx,id,true);
@@ -47,7 +60,9 @@ export class SharedMealChanges {
     if(input.baseMealRevision===null) { if(original)throw stale(); }
     else {
       if (!original || original.revision !== input.baseMealRevision || original.meal.day !== input.meal.day || digest(original.meal) === digest(input.meal)) throw stale();
-      preserveProtectedMeal(sharedMealSchema.parse(original.meal),input.meal);
+      const prior = sharedMealSchema.parse(original.meal);
+      preserveProtectedMeal(prior,input.meal);
+      await checkIngredientChange(ctx,prior,input.meal,input.preferenceReview);
     }
     const count = await ctx.db.query("SELECT count(*)::int AS n FROM ritc.shared_meal_change WHERE household_id=$1 AND shop_id=$2 AND grant_revision=$3 AND authority_epoch=$4 AND state='pending'",[ctx.householdId,id,grantRevision,shop.authority_epoch]);
     if (count.rows[0].n >= 100) throw new ServiceError(409,'proposal_limit','Review this planning grant before sending more changes.');
@@ -70,7 +85,7 @@ export class SharedMealChanges {
 /** Read-only authority check, shared by catalog, preview and commit. */
 export async function requireSharedMealChange(ctx: Context, shop: {shop_id:string;revision:number;authority_epoch:number},
   proposalId:string, occurrenceId:string, baseMealRevision:number|null, meal:unknown) {
-  const proposal = (await ctx.db.query(`SELECT c.body,c.actor_id,c.grant_revision FROM ritc.shared_meal_change c
+  const proposal = (await ctx.db.query(`SELECT c.body,c.original_meal,c.actor_id,c.grant_revision FROM ritc.shared_meal_change c
     LEFT JOIN ritc.meal_planner p USING(household_id,shop_id,authority_epoch)
     JOIN ritc.member a ON a.household_id=c.household_id AND a.member_id=c.actor_id AND a.state='active' AND a.kind='adult'
     WHERE c.household_id=$1 AND c.shop_id=$2 AND c.proposal_id=$3 AND c.occurrence_id=$4 AND c.shop_revision=$5
@@ -81,6 +96,7 @@ export async function requireSharedMealChange(ctx: Context, shop: {shop_id:strin
   if (!proposal || digest(proposal.body.meal) !== digest(meal)) throw stale();
   if(baseMealRevision===null) await requireApprovedSharedIdea(ctx,shop.shop_id,shop.authority_epoch,proposal.grant_revision,
     proposal.actor_id,proposal.body.approvedIdeaId,proposal.body.approvedIdeaRevision,meal);
+  else await checkIngredientChange(ctx,sharedMealSchema.parse(proposal.original_meal),proposal.body.meal,proposal.body.preferenceReview);
 }
 /** Consumption remains exclusively inside the successful shop.patch transaction. */
 export async function consumeSharedMealChange(ctx:Context,shop:{shop_id:string;revision:number;authority_epoch:number},

@@ -1,6 +1,8 @@
 import Foundation
 
-public struct HouseholdPantrySession: Codable, Equatable, Sendable {
+public typealias HouseholdPantrySession = HouseholdDeviceSession
+
+public struct HouseholdDeviceSession: Codable, Equatable, Sendable {
     public let householdID: UUID
     public let memberID: UUID
     public let deviceID: UUID
@@ -225,7 +227,9 @@ public struct HouseholdPantryReceipt: Decodable, Equatable, Sendable {
     }
 }
 
-public struct HouseholdPantryGrants: Decodable, Equatable, Sendable {
+public typealias HouseholdPantryGrants = HouseholdAdultGrants
+
+public struct HouseholdAdultGrants: Decodable, Equatable, Sendable {
     public struct Adult: Decodable, Equatable, Identifiable, Sendable {
         public var id: UUID { memberId }
         public let memberId: UUID

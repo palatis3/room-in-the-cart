@@ -95,6 +95,11 @@ import HouseholdClient
             }
             guard let workspace = model.workspaces.first else { setupFailure = true; return }
             model.keepLocalPrivate = true; await model.join(workspace)
+            if server.preferenceOrganizer || server.preferenceReader {
+                guard model.mealPreferenceScope?.administer == server.preferenceOrganizer else { setupFailure = true; return }
+                household = model
+                return
+            }
             if server.pantryCorrection {
                 guard model.householdPantryScope?.managesGrants == true else { setupFailure = true; return }
                 household = model
@@ -142,6 +147,12 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     let helperReadback = ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture")
     let grant = UUID().uuidString.lowercased()
     let pantryCorrection = ProcessInfo.processInfo.arguments.contains("--household-pantry-correction")
+    let preferenceOrganizer = ProcessInfo.processInfo.arguments.contains("--household-meal-organizer")
+    let preferenceReader = ProcessInfo.processInfo.arguments.contains("--household-meal-reader")
+    private var preferenceRevision: String?
+    private var profile: [String: Any]?
+    private let reader = UUID().uuidString.lowercased()
+    private var readerEnabled = false
     private let pantryDevice = UUID().uuidString, pantryLot = UUID().uuidString
     private var pantryRow: [String: Any]?
     private var pantryReceipts: [String: [String: Any]] = [:]
@@ -166,6 +177,35 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         }
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
         func response(_ value: Any, _ status: Int = 200) throws -> (Int, Data) { (status, try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) }
+        if preferenceOrganizer || preferenceReader {
+            let role = preferenceOrganizer ? "organizer" : "contributor"
+            if path == "/v1/me/workspaces" { return try response(["workspaces": [["householdId": household, "label": "Fixture home", "role": role]]]) }
+            if path.hasSuffix("/devices") { return try response(["deviceId": pantryDevice, "deviceToken": "fixture-token"], 201) }
+            if path.hasSuffix("/bootstrap") {
+                let caps = preferenceOrganizer ? ["meal_preferences_read", "meal_preferences_admin"] : ["meal_preferences_read"]
+                return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member, "role": role,
+                                     "enrolled": true, "queueConsent": false, "capabilities": caps])
+            }
+            if path.hasSuffix("/meal-preferences") {
+                if preferenceReader && profile == nil {
+                    profile = ["exclusions": ["peanut"], "timeLimit": ["maximumMinutes": 20, "strict": true], "preferredBrands": [], "dislikes": [], "strictBrands": false,
+                               "strictDislikes": false, "strictEffort": false]
+                    preferenceRevision = UUID().uuidString
+                }
+                if request.httpMethod == "POST" {
+                    guard preferenceOrganizer else { return try response(["error": ["code": "unavailable"]], 404) }
+                    profile = json["settings"] as? [String: Any]
+                    preferenceRevision = UUID().uuidString
+                }
+                return try response(["v": 1, "householdId": household, "grantEpoch": 0, "supportsTimeLimit": true, "canWrite": preferenceOrganizer,
+                                     "settings": profile as Any? ?? NSNull(), "revision": preferenceRevision as Any? ?? NSNull()])
+            }
+            if path.hasSuffix("/meal-preferences/grants") {
+                guard preferenceOrganizer else { return try response(["error": ["code": "unavailable"]], 404) }
+                if request.httpMethod == "POST" { readerEnabled = json["enabled"] as? Bool == true }
+                return try response(["v": 1, "adults": [["memberId": reader, "label": "Alex", "enabled": readerEnabled, "grantEpoch": readerEnabled ? 1 : 0]]])
+            }
+        }
         if pantryCorrection {
             if path == "/v1/me/workspaces" {
                 return try response(["workspaces": [["householdId": household, "label": "Fixture home", "role": "organizer"]]])

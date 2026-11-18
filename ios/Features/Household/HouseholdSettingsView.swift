@@ -67,6 +67,7 @@ struct HouseholdSettingsView: View {
                     Section(ht("Connected household")) {
                         Text(projection.household.label)
                         HouseholdPantryLink(household: model)
+                        HouseholdMealPreferencesLink(household: model)
                         if model.membershipSession != nil {
                             NavigationLink(tr("Household membership")) { MembershipEntryView(household: model) }
                                 .accessibilityIdentifier("household.membership")

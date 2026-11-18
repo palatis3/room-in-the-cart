@@ -1,6 +1,7 @@
 import test, {before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
+import {tokenHash} from '../dist/database.js';
 import pg from 'pg';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
@@ -248,4 +249,47 @@ test('a redeemed helper cannot access decisions; closure preserves history while
   assert.equal((await request(f.owner,path)).status,404);
   assert.equal((await request(f.owner,f.decisions,'POST',p)).status,404);
   assert.equal((await request(f.owner,f.base+'/decisions?shopId='+f.shopId)).status,404);
+});
+
+test('structured promotion binds an explicitly reviewed note version, organizer, shopper and current paid seat',async()=>{
+  const f=await fixture(), other=await fixture(), path=f.base+'/meal-preferences';
+  const author=await f.otherMember();
+  await f.transfer(f.owner,author);
+  const record=ok(await request(author,f.decisions,'POST',preference({product:'Corn',decision:'Prefer the white corn'})));
+  const sourceDecision={shopId:f.shopId,decisionId:record.id,version:record.version,field:'dislikes',term:'yellow corn'};
+  const command={v:1,clientKey:randomUUID(),replayWindow:f.owner.window,grantEpoch:0,expectedRevision:null,sourceDecision,
+    settings:{exclusions:[],dislikes:['yellow corn'],preferredBrands:['Casa'],strictDislikes:false,strictBrands:false,strictEffort:false}};
+  const save=(body)=>request(f.owner,path,'POST',body);
+  assert.equal((await save(command)).status,404);
+  await f.transfer(author,f.owner);
+  code(await save(command),403,'membership_inactive');
+  const paid=await f.paid();
+  assert.equal((await save({...command,sourceDecision:{...sourceDecision,shopId:other.shopId}})).status,404);
+  assert.equal((await save({...command,sourceDecision:{...sourceDecision,version:2}})).status,409);
+  assert.equal((await save({...command,sourceDecision:{...sourceDecision,term:'red corn'}})).status,409);
+  const saved=ok(await save(command));
+  assert.deepEqual(saved.settings,command.settings);
+  assert.deepEqual(ok(await save(command)),saved);
+  assert.deepEqual(ok(await request(f.owner,f.decisions+'/'+record.id)),record);
+  const {rows:[profile]}=await admin.query('SELECT rule_authors FROM ritc.meal_preference_profile WHERE household_id=$1',[f.h]);
+  assert.deepEqual(profile.rule_authors.dislikes['yellow corn'],[f.owner.id,author.id]);
+  assert.deepEqual(profile.rule_authors.preferredBrands.Casa,[f.owner.id]);
+  subscriptions.set(paid,{...subscriptions.get(paid),status:'expired',signedAt:Date.now()+1});
+  code(await save(command),403,'membership_inactive');
+  const client=await admin.connect(),job=randomUUID(),lease=randomUUID();
+  try {
+    await client.query('BEGIN');
+    const {rows:[session]}=await client.query('SELECT user_id FROM auth.sessions WHERE id=$1',[author.session]);
+    const hash=tokenHash(issuer+'\n'+session.user_id);
+    await client.query(`INSERT INTO ritc.privacy_job(job_id,identity_hash,issuer,subject,receipt_hash,payload_digest,state,receipt_retention_days,marker_retention_days,receipt_until,marker_until,lease_id,lease_until)
+      VALUES($1,$2,$3,$4,$5,$5,'processing',1,1,now()+interval '1 day',now()+interval '1 day',$6,now()+interval '1 hour')`,
+      [job,hash,issuer,session.user_id,tokenHash(job),lease]);
+    await client.query("SELECT set_config('app.erasure_job',$1,true),set_config('app.erasure_lease',$2,true)",[job,lease]);
+    await client.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,author.id]);
+    await client.query('COMMIT');
+  } catch(error) { await client.query('ROLLBACK');throw error; } finally { client.release(); }
+  const erased=ok(await request(f.owner,path));
+  assert.notEqual(erased.revision,saved.revision);
+  assert.deepEqual(erased.settings.dislikes,[]);
+  assert.deepEqual(erased.settings.preferredBrands,['Casa']);
 });

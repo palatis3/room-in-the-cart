@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreDomain
 import HouseholdClient
 
 struct SharedMealIdeasView: View {
@@ -85,17 +86,25 @@ private struct SharedMealIdeaEditor: View {
                     .focused($inputFocus, equals: "title")
                 Text(draft.source == "app_template" ? ht("Source: app-owned editable template") : ht("Source: household manual entry"))
                 Stepper(value: $draft.servings, in: 1...1000) { LabeledContent(ht("Suggested servings"), value: draft.servings.formatted()) }
-                number(ht("Preparation minutes, if known"), value: $draft.minutes).focused($inputFocus, equals: "minutes")
+                number(dinnerText("Total elapsed preparation minutes, if known"), value: $draft.minutes).focused($inputFocus, equals: "minutes")
                 multilineField(ht("Assumed extras, one per line"), values: $draft.assumedExtras, focus: "extras")
                 multilineField(ht("Shared household exclusions, one per line"), values: $draft.exclusions, focus: "exclusions")
                 Text(ht("Review exclusions with the household. This does not read private decision history."))
             }.disabled(!own || model.pending != nil)
+            if model.page?.preferenceRevision != nil {
+                Section(dinnerText("Meal preference details")) {
+                    MealEvidenceFields(draft: Binding(get: { MealEligibilityEvidence(shared: draft.preferenceEvidence) },
+                        set: { draft.preferenceEvidence = $0.shared }))
+                }.disabled(!own || model.pending != nil)
+            }
             ForEach(draft.ingredients) { snapshot in
                 let ingredient = dinnerDraftBinding(snapshot, in: $draft.ingredients)
                 let id = snapshot.id
                 let prefix = "ingredient.\(id)."
                 Section {
-                    TextField(ht("Ingredient name"), text: ingredient.name).focused($inputFocus, equals: prefix + "name")
+                    TextField(ht("Ingredient name"), text: Binding(get: { ingredient.wrappedValue.name }, set: { value in
+                        ingredient.wrappedValue.name = value; draft.preferenceEvidence = nil; reviewed = false
+                    })).focused($inputFocus, equals: prefix + "name")
                     Picker(ht("Ingredient unit"), selection: ingredient.unit) {
                         Text(ht("Count")).tag("count"); Text(ht("Grams")).tag("gram"); Text(ht("Kilograms")).tag("kilogram")
                         Text(ht("Ounces")).tag("ounce"); Text(ht("Pounds")).tag("pound")
@@ -126,11 +135,11 @@ private struct SharedMealIdeaEditor: View {
                         .focused($inputFocus, equals: prefix + "evidence")
                         .accessibilityLabel(ht("Household stock and package evidence"))
                         .accessibilityIdentifier("household-idea-evidence")
-                    Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == id } }.disabled(draft.ingredients.count == 1)
+                    Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == id }; draft.preferenceEvidence = nil; reviewed = false }.disabled(draft.ingredients.count == 1)
                 }.disabled(!own || model.pending != nil)
             }
             if own {
-                Button(ht("Add ingredient")) { draft.ingredients.append(.init()) }.disabled(draft.ingredients.count >= 60 || model.pending != nil)
+                Button(ht("Add ingredient")) { draft.ingredients.append(.init()); draft.preferenceEvidence = nil; reviewed = false }.disabled(draft.ingredients.count >= 60 || model.pending != nil)
                 Button(ht("Save household draft for review")) {
                     let reviewedDraft = draft.normalizedForSave(), selectedID = ideaID
                     draft = reviewedDraft
@@ -140,7 +149,20 @@ private struct SharedMealIdeaEditor: View {
             }
             if let saved, saved.draft == draft {
                 SharedMealIdeaPreviewView(idea: saved)
-                if saved.state == "approved" {
+                if let check = saved.preview.preferenceCheck {
+                    if !check.blocked.isEmpty { Text(dinnerText("This idea conflicts with a household meal constraint.")) }
+                    if check.unresolved.contains("ingredient") { Text(dinnerText("Ingredient details still need review.")) }
+                    if check.unresolved.contains("appliance") { Text(dinnerText("Required appliances are unknown.")) }
+                    if check.unresolved.contains("brand") { Text(dinnerText("Brand details are unknown.")) }
+                    if check.unresolved.contains("duration_unknown") || check.soft.contains("duration_unknown") { Text(dinnerText("Total elapsed preparation time is unknown.")) }
+                    if check.blocked.contains("duration_over") || check.soft.contains("duration_over") { Text(dinnerText("Total preparation time exceeds your available time.")) }
+                    if check.unresolved.contains("effort") { Text(dinnerText("Recipe effort is unknown.")) }
+                    if !check.soft.isEmpty { Text(dinnerText("This idea differs from a soft household preference.")) }
+                }
+                if saved.preview.requiresPreferenceReview == true {
+                    Text(dinnerText("Household preferences changed. Review this idea again."))
+                }
+                if saved.state == "approved" && saved.preview.requiresPreferenceReview != true {
                     Text(ht("Approved idea only. It is not scheduled and has changed no shared shopping lines."))
                     Button(ht("Separately propose this approved meal")) { onPropose(saved, model.scope) }
                         .disabled(!own).accessibilityIdentifier("household-idea-propose")
@@ -238,5 +260,23 @@ private struct SharedIdeaAmountField: View {
             .onChange(of: entered) { _, text in value = SharedMealIdeaAmount.parse(text) }
             .onChange(of: value) { _, amount in if focus.wrappedValue != fieldID { entered = amount?.text ?? "" } }
             .accessibilityHint(ht("Enter a whole number or an exact fraction, such as 1/2. Blank means unknown."))
+    }
+}
+
+extension MealEligibilityEvidence {
+    init(shared: SharedMealPreferenceEvidence?) {
+        self.init()
+        reviewedIngredientDetails = shared?.reviewedIngredientDetails
+        requiredAppliances = shared?.requiredAppliances
+        brands = shared?.brands
+        effort = shared?.effort.flatMap(MealEffort.init(rawValue:))
+    }
+    var shared: SharedMealPreferenceEvidence {
+        var result = SharedMealPreferenceEvidence()
+        result.reviewedIngredientDetails = reviewedIngredientDetails
+        result.requiredAppliances = requiredAppliances
+        result.brands = brands
+        result.effort = effort?.rawValue
+        return result
     }
 }
