@@ -295,7 +295,5 @@ func tonightIssue(_ issue: MealEligibilityPolicy.Issue) -> String {
     case .appliancesUnknown: tonightText("Required appliances have not been reviewed.")
     case .brandsUnknown: tonightText("Brand details have not been reviewed.")
     case .effortUnknown: tonightText("Preparation effort has not been reviewed.")
-    case .durationAboveLimit: dinnerText("Total preparation time exceeds your available time.")
-    case .durationUnknown: dinnerText("Total elapsed preparation time is unknown.")
     }
 }
