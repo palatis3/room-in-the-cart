@@ -110,8 +110,7 @@ struct ReceiptImportDraft {
                 stock = .added(location: row.location)
             case .link(let id):
                 guard let lot = snapshot.lots.first(where: { $0.id == id }),
-                      case .receipt(_, let key) = lot.source,
-                      !key.sourceEventID.hasPrefix("receipt-acquisition/"), received.unit == lot.unit else { throw PantryReceiptError.stale }
+                      let key = PantryReceiptDelivery.fragment(of: lot), received.unit == lot.unit else { throw PantryReceiptError.stale }
                 if let alias = row.appliedAlias, alias.foodID != lot.foodID { throw PantryReceiptError.stale }
                 lotID = id; foodID = lot.foodID; stock = .linked(fragment: key)
             }

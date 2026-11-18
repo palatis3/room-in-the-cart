@@ -280,9 +280,7 @@ struct PantryReceiptLineEditor: View {
     var field: FocusState<String?>.Binding
 
     private func label(_ lot: InventoryLot) -> String {
-        let title = pantryFormat("Link delivery: %@ · %@", lot.name, String(lot.id.uuidString.suffix(8)))
-        guard let delivered = purchases.first(where: { $0.id == lot.id }) else { return title }
-        return title + " · " + pantryQuantity(delivered.received) + " · " + delivered.receivedAt.formatted(date: .abbreviated, time: .omitted)
+        PantryReceiptDelivery.label(for: lot, purchase: purchases.first { $0.id == lot.id })
     }
     var body: some View {
         Section {
@@ -303,10 +301,7 @@ struct PantryReceiptLineEditor: View {
             Picker(pantryText("Receipt line action"), selection: $line.treatment) {
                 Text(pantryText("Skip this line")).tag(ReceiptImportDraft.Treatment.skip)
                 Text(pantryText("Add a separate physical batch")).tag(ReceiptImportDraft.Treatment.add)
-                ForEach(lots.filter {
-                    if case .receipt(_, let key) = $0.source { return !key.sourceEventID.hasPrefix("receipt-acquisition/") }
-                    return false
-                }) { lot in
+                ForEach(lots.filter { PantryReceiptDelivery.fragment(of: $0) != nil }) { lot in
                     Text(label(lot))
                         .tag(ReceiptImportDraft.Treatment.link(lot.id))
                 }
