@@ -157,9 +157,10 @@ extension DinnerWorkspaceStore {
     }
 
     func latestUndoableSwap(occurrenceID: UUID) -> DinnerApplyReceipt? {
-        guard let shop, let access = try? access(for: shop.id), case .local = access.scope else { return nil }
+        guard let shop, let access = try? access(for: shop.id), case .local(let workspaceID) = access.scope else { return nil }
+        let namespace = "local:\(workspaceID.uuidString)"
         return state.applyReceipts.last { receipt in
-            receipt.proposal.shopID == shop.id && receipt.appliedBy == access.actorID && receipt.swapUndoRevisionID == nil &&
+            receipt.proposal.namespace == namespace && receipt.proposal.shopID == shop.id && receipt.appliedBy == access.actorID && receipt.swapUndoRevisionID == nil &&
                 (receipt.swapEffect?.original.id == occurrenceID || receipt.swapEffect?.replacementID == occurrenceID)
         }
     }
@@ -200,8 +201,9 @@ extension DinnerWorkspaceStore {
                 let current = workspace.shops[index]
                 let touched = Set(effect.original.ingredientContributionIDs + effect.replacement.ingredientContributionIDs)
                 if let journey = pickup.journeys.first(where: { $0.id == current.id }), let context = try pickup.pantryReviewContext() {
-                    let mealIDs: Set<UUID> = [effect.original.id, effect.replacementID]
-                    let needs = Set(journey.needDetails.filter { $0.sourceOccurrenceID.map(mealIDs.contains) == true }.map(\.id))
+                    // Undo removes the replacement's demand. Existing claims for the
+                    // surviving original groups retain their own need identities.
+                    let needs = Set(journey.needDetails.filter { $0.sourceOccurrenceID == effect.replacementID }.map(\.id))
                     let reservations = Set(context.mapping.claimLinks.filter {
                         $0.journeyIDs.contains(current.id) && needs.contains($0.legacyNeedID)
                     }.map(\.reservationID))

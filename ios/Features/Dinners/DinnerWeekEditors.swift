@@ -22,6 +22,13 @@ struct DinnerOccurrenceView: View {
                 if current.carryover != nil {
                     DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)
                 } else { occurrenceForm }
+            case .failure where draftSwapUndo != nil:
+                Form {
+                    if let receipt = draftSwapUndo {
+                        DinnerSwapUndoSection(model: model, receipt: receipt)
+                    }
+                    DinnerFeedback(model: model)
+                }.navigationTitle(dinnerText("Dinner swap")).dinnerAccess(model)
             case .failure:
                 ContentUnavailableView(currentDinnerText("Current dinner unavailable"), systemImage: "arrow.triangle.2.circlepath",
                     description: Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes.")))
@@ -29,6 +36,12 @@ struct DinnerOccurrenceView: View {
             }
         }
     }
+    private var draftSwapUndo: DinnerApplyReceipt? {
+        guard let shop = model.shop, model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID,
+              pickup.recoveryLedger === ledger, model.phaseProvider(shop.id) == .draft else { return nil }
+        return model.latestUndoableSwap(occurrenceID: occurrenceID)
+    }
+
     private var currentRoute: Result<DinnerMealDestination, Error> {
         Result { try model.currentMealDestination(occurrenceID, pickup: pickup) }
     }
@@ -48,6 +61,23 @@ struct DinnerOccurrenceView: View {
                     }
                 }
                 if model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID, let shop = model.shop {
+                    if model.phaseProvider(shop.id) == .draft {
+                        Section {
+                            DinnerDecisionButton(model: model, title: dinnerText("Swap this dinner"), identifier: "dinner.swap") {
+                                DinnerSwapView(model: model, meal: meal)
+                            }.disabled(!model.editable)
+                        }
+                        if let receipt = draftSwapUndo { DinnerSwapUndoSection(model: model, receipt: receipt) }
+                    } else if model.phaseProvider(shop.id) == .reportedPlaced, pickup.ready,
+                              !pickup.saving, !pickup.hasPendingSave, pickup.recoveryLedger === ledger,
+                              pickup.journey?.id == shop.id, pickup.journey?.closedAt == nil {
+                        Section {
+                            NavigationLink(dinnerText("Swap this dinner")) {
+                                PickupMealRecoveryEntry(model: pickup, ledger: ledger, pickupID: shop.id,
+                                                        occurrenceID: meal.id, carryoverPlanner: model)
+                            }.accessibilityIdentifier("dinner.swap.placed")
+                        }
+                    }
                     Section {
                         if pickup.pantryIsActive {
                             NavigationLink(cookCompletionText("Record cooking and leftovers")) {

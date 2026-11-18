@@ -9928,6 +9928,534 @@
           }
         }
       }
+    },
+    "Portion to replace": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portion to replace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porción que se va a reemplazar"
+          }
+        }
+      }
+    },
+    "Whole dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena completa"
+          }
+        }
+      }
+    },
+    "Protected portion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected portion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porción protegida"
+          }
+        }
+      }
+    },
+    "Replacement dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replacement dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena de reemplazo"
+          }
+        }
+      }
+    },
+    "Review a recipe for the selected servings in the dinner library. You can choose one accepted dinner as your Free reusable dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a recipe for the selected servings in the dinner library. You can choose one accepted dinner as your Free reusable dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa en la biblioteca una receta con las porciones seleccionadas. Puedes elegir una cena aceptada como cena reutilizable del plan Gratis."
+          }
+        }
+      }
+    },
+    "Match replacement ingredients": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match replacement ingredients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular ingredientes de la cena de reemplazo"
+          }
+        }
+      }
+    },
+    "Leave unmatched": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave unmatched"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dejar sin vincular"
+          }
+        }
+      }
+    },
+    "Review this swap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this swap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar este cambio"
+          }
+        }
+      }
+    },
+    "Swap this dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar esta cena"
+          }
+        }
+      }
+    },
+    "Review a recipe with the same serving count as this portion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a recipe with the same serving count as this portion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa una receta con el mismo número de porciones que la parte elegida."
+          }
+        }
+      }
+    },
+    "This portion is protected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This portion is protected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta porción está protegida."
+          }
+        }
+      }
+    },
+    "Choose the serving group to replace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the serving group to replace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el grupo de porciones que quieres reemplazar."
+          }
+        }
+      }
+    },
+    "Review the existing grocery links before changing this dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the existing grocery links before changing this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los vínculos con los artículos de la lista antes de cambiar esta cena."
+          }
+        }
+      }
+    },
+    "Review the saved recipe before using it here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the saved recipe before using it here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la receta guardada antes de usarla aquí."
+          }
+        }
+      }
+    },
+    "Choose this recipe as your Free reusable dinner or use an active planning seat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose this recipe as your Free reusable dinner or use an active planning seat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige esta receta como cena reutilizable del plan Gratis o usa un puesto de planificación activo."
+          }
+        }
+      }
+    },
+    "Dinner swap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner swap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio de cena"
+          }
+        }
+      }
+    },
+    "Current dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena actual"
+          }
+        }
+      }
+    },
+    "Before": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes"
+          }
+        }
+      }
+    },
+    "After": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después"
+          }
+        }
+      }
+    },
+    "Affected food and packages": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affected food and packages"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos y paquetes afectados"
+          }
+        }
+      }
+    },
+    "Packages before and after": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packages before and after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes antes y después"
+          }
+        }
+      }
+    },
+    "%lld to %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld to %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De %lld a %lld"
+          }
+        }
+      }
+    },
+    "Package count needs review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package count needs review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay que revisar la cantidad de paquetes."
+          }
+        }
+      }
+    },
+    "Price per package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio por paquete"
+          }
+        }
+      }
+    },
+    "Item cost before and after": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item cost before and after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo del artículo antes y después"
+          }
+        }
+      }
+    },
+    "%@ to %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De %@ a %@"
+          }
+        }
+      }
+    },
+    "Confirm the current price.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the current price."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma el precio actual."
+          }
+        }
+      }
+    },
+    "Food retained for reuse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food retained for reuse"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos que quedan para volver a usar"
+          }
+        }
+      }
+    },
+    "Purchased food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchased food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento comprado"
+          }
+        }
+      }
+    },
+    "Dinner to restore": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner to restore"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena que se va a restaurar"
+          }
+        }
+      }
+    },
+    "Confirm Undo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar que se deshaga el cambio"
+          }
+        }
+      }
+    },
+    "Keep this swap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this swap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar este cambio"
+          }
+        }
+      }
+    },
+    "Review Undo for this swap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Undo for this swap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cómo deshacer este cambio"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

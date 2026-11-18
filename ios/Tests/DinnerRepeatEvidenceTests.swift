@@ -84,6 +84,10 @@ import LocalStore
         XCTAssertEqual(needs.first?.unresolved, false)
         var edited = selected
         let firstIndex = try XCTUnwrap(mealRows.firstIndex { $0.source.occurrenceID != secondMeal })
+        let covered = try evidence(workspace, canonical: supply).shoppingNeeds(for: [selected[firstIndex]], candidates: mealRows)
+        XCTAssertEqual(covered.first?.needed, [q(2)])
+        XCTAssertEqual(covered.first?.toObtain, [q(0)])
+        XCTAssertEqual(covered.first?.unresolved, false, "Five free wraps cover the selected two-wrap meal without negative arithmetic.")
         edited[firstIndex].servings = try Rational(2)
         let adjusted = try evidence(workspace, canonical: supply).shoppingNeeds(for: edited, candidates: mealRows)
         XCTAssertEqual(adjusted.first?.needed, [q(8)]); XCTAssertEqual(adjusted.first?.toObtain, [q(3)])

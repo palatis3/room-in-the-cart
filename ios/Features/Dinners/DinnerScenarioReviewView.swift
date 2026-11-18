@@ -6,6 +6,7 @@ import CoreDomain
 /// food/ingredient identities, stock, pack offers and the complete unchanged basket.
 struct DinnerScenarioReviewView: View {
     @ObservedObject var model: DinnerFeatureModel
+    @EnvironmentObject private var pickup: PickupModel
     @Environment(\.closeDinnerDecision) private var closeDecision
     let current: DinnerScenario
     let alternatives: [DinnerScenario]
@@ -46,8 +47,15 @@ struct DinnerScenarioReviewView: View {
                             if (try? library.replacement(for: candidate, shop: shop, state: model.state)) != nil {
                                 Button(dinnerText("Preview this exact dinner replacement")) {
                                     do {
-                                        let changes = try library.replacement(for: candidate, shop: shop, state: model.state)
-                                        showReplacement = model.prepare(changes, tool: .pairing, isolated: !model.paid, expectedRevision: library.shopRevision, reviewedPantryBasis: reviewedPantryBasis)
+                                        if model.paid && model.localIdeaWorkspaceID != nil {
+                                            let review = try model.prepareSwap(library: library, scenario: candidate,
+                                                reviewedPantryBasis: reviewedPantryBasis, pickup: pickup)
+                                            showReplacement = model.installSwap(review, pickup: pickup)
+                                        } else {
+                                            let changes = try library.replacement(for: candidate, shop: shop, state: model.state)
+                                            showReplacement = model.prepare(changes, tool: .pairing, isolated: !model.paid,
+                                                expectedRevision: library.shopRevision, reviewedPantryBasis: reviewedPantryBasis)
+                                        }
                                     } catch { model.report(error) }
                                 }
                                 .accessibilityLabel(dinnerFormat("Preview %@ for %@",library.candidates.first(where: { $0.id == candidate.id })?.title ?? dinnerText("Candidate plan"),

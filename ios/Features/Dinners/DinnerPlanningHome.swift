@@ -284,6 +284,9 @@ struct DinnerPreviewView: View {
         List {
             Group {
                 if let preview = model.preview, model.canReviewPreview {
+                    if let detail = model.currentSwapReview {
+                        DinnerSwapEvidenceView(review: detail, showPrices: model.budgetVisible)
+                    }
                     Section {
                         Text(dinnerText("Review before applying")).font(.title2.bold())
                         Text(dinnerText("Only the changes listed here will be applied. Cancel keeps your saved pickup unchanged."))
