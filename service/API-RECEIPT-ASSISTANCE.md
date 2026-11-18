@@ -1,0 +1,25 @@
+# Optional receipt line assistance
+
+The iPhone receipt editor offers local OCR and manual entry first. An enrolled adult organizer or the currently assigned shopper can request a suggestion for one line. Opening the editor checks availability without sharing receipt text. The adult can redact the excerpt before each submission. The provider receives only that excerpt and its page and line numbers. The app keeps the original wording and links an accepted suggestion back to the same editable row.
+
+The authenticated service route is `/v1/households/{id}/receipt-assistance`. A GET returns the version and availability. A POST requires explicit consent, version 1, a request UUID, an issuance timestamp in milliseconds, a page from 1 to 20, a line from 1 to 200 and up to 512 UTF-8 bytes of selected text. Requests expire after five minutes. A retry uses the same UUID. Once the service reserves a request, it allows one submission to the provider, including when the original outcome is uncertain.
+
+The adapter uses a fixed HTTPS Responses endpoint with a strict JSON schema, `store: false`, an empty tool list and a 384-token output limit. It accepts a tentative food name and an explicit printed quantity/unit pair. Unknown fields can be null. The service checks the source coordinates and requires the quantity and unit to appear together in the selected wording. The iPhone separately verifies the submitted request identity and source. A shopper can confirm that quantity as received. The ordinary receipt review still determines usable stock, paid totals and whether to add or link a physical batch. [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs) and [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create).
+
+## Operational configuration
+
+Assistance defaults to unavailable. The server reads `RECEIPT_ASSISTANCE_ENABLED`, `RECEIPT_ASSISTANCE_MODEL`, `RECEIPT_ASSISTANCE_API_KEY`, `RECEIPT_ASSISTANCE_ACCOUNT_DAILY_REQUESTS`, `RECEIPT_ASSISTANCE_DAILY_USD_MICROS` and `RECEIPT_ASSISTANCE_MAX_REQUEST_USD_MICROS` at startup. A missing or invalid setting keeps the adapter unavailable. Setting the enable switch to false and restarting disables new submissions. Manual receipt review and private Free acquisition remain available.
+
+Before live use, the operator must approve a specific model, verify its provider retention terms and set a conservative full-request reservation in millionths of a US dollar at that model’s applicable rates. The service transaction reserves this entire amount before submission. The daily ceiling applies to the reserved amount across accounts and instances. Separate per-account counts and a request identity prevent a retry from creating a second chargeable submission. These reservations use the existing PostgreSQL rate buckets and their cleanup. They contain only opaque keys, timestamps and counts. The application and service keep excerpts and suggestions in transient request state. Provider retention depends on the account and provider terms.
+
+The qualification suite injects a mock transport and uses a disposable local database. No live provider account is needed to run it.
+
+## Optional photo crop
+
+The receipt editor can also show a local grayscale preview of the selected rectangle. The shopper can use Vision’s text instead, remove the crop or explicitly send the preview with the redacted excerpt. A crop contains up to 768 × 240 grayscale pixels. The payload carries the dimensions and exactly one byte per pixel. The service encodes those pixels as a PNG, with no photo metadata, and attaches it to the fixed Responses request. Quantity read from the crop remains a proposal for comparison with the visible image. [OpenAI image inputs](https://developers.openai.com/api/docs/guides/images-vision).
+
+Image assistance requires a separately approved `RECEIPT_ASSISTANCE_MAX_CROP_USD_MICROS` reservation that includes image input cost. Without it the editor offers text only. Both formats share the same per-account and daily budgets.
+
+## Reviewed recipe and price images
+
+The recipe photo, shelf label and checkout screenshot editors can request a reading of one selected crop through `/v1/households/{id}/capture-assistance/{purpose}-line`, where the purpose is `recipe`, `shelf` or `checkout`. These routes use the same account checks, per-request consent and crop budget. They accept the previewed crop and an optional redacted excerpt. The versioned response identifies the source line and provides its literal wording or an explicit unknown. The editor preserves the original OCR and the provenance of a reading the shopper accepts. Recipe fields, shelf-price basis and currency, checkout amounts and charge inclusion each still require ordinary review.

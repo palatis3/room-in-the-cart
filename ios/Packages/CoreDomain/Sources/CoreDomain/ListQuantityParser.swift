@@ -20,6 +20,17 @@ public enum ListQuantityParser {
         return tokens
     }
 
+    /// Normalize an unambiguous decimal comma only when examining a natural list's amount.
+    /// Three trailing digits can also be a thousands group and require review.
+    static func naturalAmountToken(_ token: String) -> String {
+        guard token.contains(",") else { return token }
+        let number = separatingUnit(token)?.amount ?? token
+        let parts = number.split(separator: ",", omittingEmptySubsequences: false)
+        guard parts.count == 2, parts[1].count != 3,
+              parts.allSatisfy({ !$0.isEmpty && $0.utf8.allSatisfy { (48...57).contains($0) } }) else { return token }
+        return token.replacingOccurrences(of: ",", with: ".")
+    }
+
     /// Consume a complete numeric food field without inferring a unit or ignoring trailing text.
     public static func numericAmount(_ text: String) throws -> Rational {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: ".")
@@ -60,8 +71,11 @@ public enum ListQuantityParser {
         return try takeAmount(from: &tokens, allowingWords: packFollows)
     }
 
-    public static func takeAmount(from tokens: inout ArraySlice<String>, allowingWords: Bool = false) throws -> Rational {
+    public static func takeAmount(from tokens: inout ArraySlice<String>, allowingWords: Bool = false, allowingDecimalComma: Bool = false) throws -> Rational {
         var rest = tokens
+        if allowingDecimalComma, let first = rest.first, first.contains(",") {
+            rest[rest.startIndex] = naturalAmountToken(first)
+        }
         let amount = try takeNumberPart(from: &rest, allowingWords: allowingWords)
         // A recognized prefix of a larger number is not an exact purchase quantity.
         if allowingWords, let next = rest.first, scales.contains(next) { throw DomainError.invalidNumber }
@@ -480,7 +494,7 @@ public enum ListQuantityParser {
 
     /// Parse an explicit pack chain, leaving the source product name in tokens.
     /// Inner package counts qualify the contents of one outer pack.
-    public static func takePackLabel(count: Rational?, from tokens: inout ArraySlice<String>, original: String) -> PackLabel? {
+    public static func takePackLabel(count: Rational?, from tokens: inout ArraySlice<String>, original: String, allowingDecimalComma: Bool = false) -> PackLabel? {
         let count = count.flatMap { $0.denominator == 1 ? Int(exactly: $0.numerator) : nil }
         let unresolved = PackLabel(count: count, amountPerPack: nil)
         if !consumePackMarker(from: &tokens) {
@@ -489,7 +503,7 @@ public enum ListQuantityParser {
             let size: Quantity?
             if takeRange(from: &rest) { size = nil }
             else {
-                guard let number = try? takeAmount(from: &rest) else { return nil }
+                guard let number = try? takeAmount(from: &rest, allowingDecimalComma: allowingDecimalComma) else { return nil }
                 let measure = takeMeasure(number, from: &rest)
                 guard let unit = measure.unit else { return nil }
                 size = measure.amount.map { Quantity(amount: $0, unit: unit, originalLiteral: original) }
@@ -499,12 +513,12 @@ public enum ListQuantityParser {
             tokens = rest
             return PackLabel(count: count, amountPerPack: size)
         }
-        if let labelled = trailingSize(in: &tokens, count: count, original: original) { return labelled }
+        if let labelled = trailingSize(in: &tokens, count: count, original: original, allowingDecimalComma: allowingDecimalComma) { return labelled }
         var multiplier: Rational? = .one
         while !tokens.isEmpty {
             let amount: Rational?
             if takeRange(from: &tokens) { amount = nil }
-            else if let exact = try? takeAmount(from: &tokens, allowingWords: true) { amount = exact }
+            else if let exact = try? takeAmount(from: &tokens, allowingWords: true, allowingDecimalComma: allowingDecimalComma) { amount = exact }
             else { return unresolved }
             if consumePackMarker(from: &tokens) {
                 if let amount, amount.denominator == 1 { multiplier = try? multiplier?.multiplied(by: amount) }
@@ -524,7 +538,7 @@ public enum ListQuantityParser {
 
     /// Both "beans, 15 oz each" and "frijoles, 15 onzas cada una" explicitly
     /// identify a per-pack amount. A bare number in the product name does not.
-    private static func trailingSize(in tokens: inout ArraySlice<String>, count: Int?, original: String) -> PackLabel? {
+    private static func trailingSize(in tokens: inout ArraySlice<String>, count: Int?, original: String, allowingDecimalComma: Bool) -> PackLabel? {
         guard let last = tokens.last?.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ")")) else { return nil }
         var body = tokens.dropLast()
         if last == "una" || last == "uno" {
@@ -539,7 +553,7 @@ public enum ListQuantityParser {
             let size: Quantity?
             if takeRange(from: &suffix) { size = nil }
             else {
-                guard let number = try? takeAmount(from: &suffix) else { continue }
+                guard let number = try? takeAmount(from: &suffix, allowingDecimalComma: allowingDecimalComma) else { continue }
                 let measure = takeMeasure(number, from: &suffix)
                 guard let unit = measure.unit else { continue }
                 size = measure.amount.map { Quantity(amount: $0, unit: unit, originalLiteral: original) }

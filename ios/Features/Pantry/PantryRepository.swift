@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import CoreDomain
 import LocalStore
@@ -21,6 +22,7 @@ final class PantryRepository {
         let lots: [InventoryLot]
         let reservations: [InventoryReservation]
         let availability: InventoryProjection
+        var receiptAcquiredLots: Set<UUID> = []
         let loadedPayloadBytes: Int
         fileprivate let observationCount: Int
         fileprivate let lotPayloadBytes: [UUID: Int]
@@ -56,6 +58,7 @@ final class PantryRepository {
 
     /// Nil is supported for component fixtures/read-only adapters only. App-owned
     /// standalone editors must share a configured journal and mutation gate.
+    let aliasPersonaID: UUID?
     let pendingStore: PantryPendingStore?
     private let store: ComparisonStore
     private let authorize: () -> Bool
@@ -65,12 +68,13 @@ final class PantryRepository {
     func observeErasure(_ observer: any PantryErasureObserver) { mutationGate?.observeErasure(observer) }
 
     init(store: ComparisonStore, limits: ReadLimits = .standard, mutationGate: PantryMutationGate? = nil,
-         pendingStore: PantryPendingStore? = nil,
+         pendingStore: PantryPendingStore? = nil, aliasPersonaID: UUID? = nil,
          authorize: @escaping () -> Bool) {
         self.store = store
         self.authorize = authorize
         self.limits = limits
         self.mutationGate = mutationGate
+        self.aliasPersonaID = aliasPersonaID
         self.pendingStore = pendingStore
     }
 
@@ -90,10 +94,13 @@ final class PantryRepository {
         let sourceRows = try await records(.sourceLink, maximum: InventoryProjection.maximumLots, maximumBytes: remainingBytes)
         remainingBytes -= sourceRows.reduce(0) { $0 + $1.payload.count }
         let observationRows = try await records(.observation, maximum: limits.observations, maximumBytes: remainingBytes)
+        let lots = try lotRows.map(PantryPersistenceCodec.lot)
+        remainingBytes -= observationRows.reduce(0) { $0 + $1.payload.count }
+        let acquiredLots = try await confirmedReceiptLots(lots, maximumBytes: remainingBytes)
+        remainingBytes -= acquiredLots.bytes
         let final = try await store.inventoryState()
         try requireAccess()
         guard initial == final else { throw Failure.inconsistentSnapshot }
-        let lots = try lotRows.map(PantryPersistenceCodec.lot)
         let claims = try claimRows.map(PantryPersistenceCodec.reservation)
         let sourceLinks = try sourceRows.map(PantryPersistenceCodec.sourceLink)
         let observations = try observationRows.map(PantryPersistenceCodec.observation)
@@ -118,10 +125,36 @@ final class PantryRepository {
         }
         return Snapshot(state: final, lots: lots, reservations: claims,
             availability: try InventoryProjection.build(originID: final.workspaceID, lots: lots, reservations: claims, at: now),
-            loadedPayloadBytes: limits.payloadBytes - remainingBytes + observationRows.reduce(0) { $0 + $1.payload.count },
+            receiptAcquiredLots: acquiredLots.ids, loadedPayloadBytes: limits.payloadBytes - remainingBytes,
             observationCount: observationRows.count,
             lotPayloadBytes: Dictionary(uniqueKeysWithValues: lotRows.map { ($0.key.id, $0.payload.count) }),
             reservationPayloadBytes: Dictionary(uniqueKeysWithValues: claimRows.map { ($0.key.id, $0.payload.count) }))
+    }
+
+    /// A receipt captured directly in My Pantry has no delivered Pickup
+    /// fragment. Only its verified original acquisition can establish that source.
+    private func confirmedReceiptLots(_ lots: [InventoryLot], maximumBytes: Int) async throws -> (ids: Set<UUID>, bytes: Int) {
+        var candidates: [UUID: InventoryLot] = [:]
+        for lot in lots {
+            guard case .receipt(_, let key) = lot.source,
+                  key.sourceEventID.hasPrefix("receipt-acquisition/") else { continue }
+            guard candidates.updateValue(lot, forKey: key.orderLineID) == nil else { throw Failure.invalidProvenance }
+        }
+        let ids = Array(candidates.keys), limit = InventoryPersistenceLimits.pageItems
+        var confirmed = Set<UUID>(), bytes = 0
+        for start in stride(from: 0, to: ids.count, by: limit) {
+            let page = Array(ids[start..<min(start + limit, ids.count)])
+            let rows = try await store.acquisitionRows(lineIDs: page, firstRevisionOnly: true, limit: page.count)
+            try requireAccess()
+            for row in rows {
+                bytes += row.payload.count
+                guard bytes <= maximumBytes else { throw InventoryError.capacity }
+                let fact = try PantryAcquisitionCodec.record(row)
+                try PantryAcquisitionCodec.validateLot(fact, lot: candidates[fact.lineID])
+                if case .added = fact.stock { confirmed.insert(fact.lotID) }
+            }
+        }
+        return (confirmed, bytes)
     }
 
     func review(_ command: InventoryCommand, at now: Date) async throws -> Review {
@@ -293,11 +326,11 @@ final class PantryRepository {
     /// Shared by single-food edits and atomic shopping deltas. Call after validating
     /// the proposed graph and before committing against this exact global revision.
     /// Observation/source rows are append-only; mutable heads replace their old bytes.
-    func validateCapacity(of writes: [InventoryWrite], replacing snapshot: Snapshot) throws {
+    func validateCapacity(of writes: [InventoryWrite], replacing snapshot: Snapshot, additionalPayloadBytes: Int = 0) throws {
         try requireAccess()
         guard snapshot.state.workspaceID == store.workspaceID else { throw Failure.wrongWorkspace }
         var seen = Set<InventoryRecordKey>()
-        var bytes = snapshot.loadedPayloadBytes
+        var bytes = snapshot.loadedPayloadBytes + additionalPayloadBytes
         var observations = snapshot.observationCount
         var lots = snapshot.lots.count
         var reservations = snapshot.reservations.count
@@ -342,6 +375,282 @@ final class PantryRepository {
             cursor = page.last?.key.id
         }
     }
+
+    func pricePage(after prior: PantryPricePage? = nil) async throws -> PantryPricePage {
+        try requireAccess()
+        let state = try await store.inventoryState()
+        guard state.active, prior.map({ $0.state == state }) ?? true else { throw PantryReceiptError.stale }
+        let limit = 25
+        let prices = prior == nil || prior?.nextStandalone != nil
+            ? try await store.priceRows(after: prior?.nextStandalone, limit: limit + 1) : []
+        try requireAccess()
+        let receipts = prior == nil || prior?.nextReceipt != nil
+            ? try await store.acquisitionRows(currentOnly: true, after: prior?.nextReceipt, limit: limit + 1) : []
+        let current = try await store.inventoryState()
+        try requireAccess()
+        guard current == state else { throw PantryReceiptError.stale }
+        let pricePage = prices.prefix(limit)
+        let receiptPage = receipts.prefix(limit)
+        return try .init(standalone: pricePage.map(PantryPriceCodec.evidence),
+                         receipts: receiptPage.map { try PrivatePriceEvidence(receipt: PantryAcquisitionCodec.record($0)) },
+                         nextStandalone: prices.count > limit ? pricePage.last : nil,
+                         nextReceipt: receipts.count > limit ? receiptPage.last?.id : nil, state: state)
+    }
+
+    func verifyPriceSource(_ value: PrivatePriceEvidence, expected: InventoryState) async throws {
+        try requireAccess()
+        let current: PrivatePriceEvidence
+        if case .paidReceipt = value.source {
+            guard let row = try await store.acquisitionRows(lineIDs: [value.id], latestForLine: true, limit: 1).first else {
+                throw PantryReceiptError.stale
+            }
+            current = try .init(receipt: PantryAcquisitionCodec.record(row))
+        } else {
+            guard let row = try await store.priceRows(id: value.id, limit: 1).first else { throw PantryReceiptError.stale }
+            current = try PantryPriceCodec.evidence(row)
+        }
+        try requireAccess()
+        guard current == value, try await store.inventoryState() == expected else { throw PantryReceiptError.stale }
+        try requireAccess()
+    }
+
+    func recordedPriceRevision(_ current: PrivatePriceEvidence, revision: Int64, expected: InventoryState) async throws -> PrivatePriceEvidence {
+        try requireAccess()
+        guard expected.active, expected.workspaceID == originID, revision > 0, revision <= current.revision else {
+            throw PantryReceiptError.stale
+        }
+        let result: PrivatePriceEvidence
+        if case .paidReceipt(let receipt) = current.source {
+            guard let row = try await store.acquisitionRows(receiptID: receipt.receiptID, lineIDs: [current.id], revision: revision, limit: 1).first else { throw PantryReceiptError.stale }
+            result = try PrivatePriceEvidence(receipt: PantryAcquisitionCodec.record(row))
+        } else {
+            guard let row = try await store.priceRows(id: current.id, revision: revision, latestOnly: false, limit: 1).first else { throw PantryReceiptError.stale }
+            result = try PantryPriceCodec.evidence(row)
+        }
+        guard try await store.inventoryState() == expected else { throw PantryReceiptError.stale }
+        try requireAccess()
+        return result
+    }
+
+    func priceAdjustments(for id: UUID, expected: InventoryState) async throws -> [PrivatePriceEvidence] {
+        try requireAccess()
+        var result: [PrivatePriceEvidence] = []
+        var cursor: InventoryPriceRow?
+        var bytes = 0
+        repeat {
+            let page = try await store.priceRows(adjustmentsFor: id, after: cursor)
+            try requireAccess()
+            for row in page {
+                bytes += row.payload.count
+                guard bytes <= limits.payloadBytes, result.count < limits.observations else { throw InventoryError.capacity }
+                result.append(try PantryPriceCodec.evidence(row))
+            }
+            cursor = page.count == 100 ? page.last : nil
+        } while cursor != nil
+        guard try await store.inventoryState() == expected else { throw PantryReceiptError.stale }
+        try requireAccess()
+        return result
+    }
+
+    func savePrice(_ evidence: PrivatePriceEvidence, expected: InventoryState, at now: Date) async throws {
+        try requireAccess()
+        guard expected.active, expected.workspaceID == originID else { throw PantryReceiptError.stale }
+        let row = try PantryPriceCodec.row(evidence)
+        let existing = try await store.priceRows(id: row.id, limit: 1)
+        try requireAccess()
+        if let image = evidence.shelfImage, evidence.revision == 1, let saved = try existing.first.map(PantryPriceCodec.evidence),
+           saved.shelfImage?.printed.shelfID == image.printed.shelfID { throw PantryPriceError.imageAlreadySaved }
+        if existing.first == row { return }
+        guard (existing.first?.revision ?? 0) < Int64.max, (existing.first?.revision ?? 0) + 1 == row.revision else { throw PantryReceiptError.stale }
+        if let previous = try existing.first.map(PantryPriceCodec.evidence) {
+            guard previous.source == evidence.source, previous.foodID == evidence.foodID,
+                  previous.linkedLotID == evidence.linkedLotID else { throw PantryReceiptError.invalid }
+        }
+        if case .adjustment(let target, _, let kind) = evidence.source {
+            let paid: PrivatePriceEvidence
+            if let standalone = try await store.priceRows(id: target, limit: 1).first {
+                paid = try PantryPriceCodec.evidence(standalone)
+            } else {
+                try requireAccess()
+                guard let receipt = try await store.acquisitionRows(lineIDs: [target], latestForLine: true, limit: 1).first else {
+                    throw PantryReceiptError.stale
+                }
+                paid = try .init(receipt: PantryAcquisitionCodec.record(receipt))
+            }
+            try requireAccess()
+            try evidence.validateAdjustmentTarget(paid)
+            guard let paidAmount = paid.amountMinor else { throw PantryReceiptError.stale }
+            if kind != .unallocatedCredit {
+                let current = try await priceAdjustments(for: target, expected: expected)
+                let net = try paid.netAmount(adjustments: current.filter { $0.id != evidence.id } + [evidence])
+                guard let net, (0...paidAmount).contains(net) else { throw PantryReceiptError.invalid }
+            }
+        }
+        let id = ReceiptAcquisition.identity(["price-evidence", originID.uuidString, row.id.uuidString, String(row.revision)])
+        let batch = InventoryBatch(workspaceID: originID, operationID: id, expectedRevision: expected.revision,
+                                   request: Data(SHA256.hash(data: row.payload)), price: row)
+        try await commitReviewedBatch(batch, workspaceID: expected.workspaceID, revision: expected.revision, at: now)
+    }
+
+    func acquisitionHistory(receiptID: UUID? = nil, after: UUID? = nil, limit: Int = 30) async throws -> [ReceiptAcquisition] {
+        try requireAccess()
+        let rows = try await store.acquisitionRows(receiptID: receiptID, after: after, limit: limit)
+        try requireAccess()
+        return try rows.map(PantryAcquisitionCodec.record)
+    }
+
+    func reviewReceipt(_ draft: ReceiptImportDraft, expected: InventoryState, at now: Date) async throws -> PantryReceiptReview {
+        let before = try await loadForEditing(at: now)
+        guard before.state == expected else { throw PantryReceiptError.stale }
+        var matched = Set<UUID>()
+        for identity in draft.evidenceIdentities {
+            if let id = try await store.acquisitionReceiptID(for: identity) { matched.insert(id) }
+            try requireAccess()
+        }
+        guard matched.count < 2 else { throw PantryReceiptError.changedEvidence }
+        let receiptID = matched.first ?? draft.receiptID
+        if draft.lines.contains(where: { $0.treatment != .skip && $0.appliedAlias != nil }) {
+            let allowed = try await receiptAliases(merchant: draft.merchant, language: draft.language)
+            for line in draft.lines where line.treatment != .skip {
+                guard let alias = line.appliedAlias else { continue }
+                guard allowed.contains(alias), alias.product == line.name,
+                      ReceiptImportDraft.containsWording(alias.wording, in: line.original) else { throw PantryReceiptError.stale }
+            }
+        }
+        let facts = try draft.facts(receiptID: receiptID, snapshot: before, at: now)
+        var prior: [UUID: ReceiptAcquisition] = [:], cursor: UUID?
+        repeat {
+            let page = try await acquisitionHistory(receiptID: receiptID, after: cursor, limit: 200)
+            for value in page where value.revision == 1 {
+                guard value.merchant == facts.first?.merchant, value.purchaseDate == facts.first?.purchaseDate else { throw PantryReceiptError.changedEvidence }
+                if let old = value.transactionReference, let new = facts.first?.transactionReference, old != new { throw PantryReceiptError.changedEvidence }
+                prior[value.lineID] = value
+            }
+            cursor = page.count == 200 ? page.last?.id : nil
+        } while cursor != nil
+        var writes: [InventoryWrite] = [], rows: [InventoryAcquisitionRow] = []
+        var existing = Set<UUID>(), acquisitionBytes = 0
+        for fact in facts {
+            if let old = prior[fact.lineID] {
+                // Another image of the same confirmed transaction can differ.
+                // Never silently replace the original evidence or increase stock.
+                guard old.name == fact.name, old.originalLine == fact.originalLine, old.received == fact.received,
+                      old.usable == fact.usable, old.paidLineTotal == fact.paidLineTotal, old.stock == fact.stock,
+                      old.purchaseDate == fact.purchaseDate, old.merchant == fact.merchant else { throw PantryReceiptError.changedEvidence }
+                existing.insert(fact.lineID)
+                continue
+            }
+            if case .added(let location) = fact.stock {
+                let key = ReceiptKey(sourceEventID: "receipt-acquisition/" + fact.receiptID.uuidString, orderLineID: fact.lineID,
+                    branchID: fact.merchant, segmentID: String(fact.ordinal))
+                let command = InventoryCommand(id: ReceiptAcquisition.identity(["create", fact.lineID.uuidString]),
+                    originID: originID, lotID: fact.lotID, eventID: ReceiptAcquisition.identity(["event", fact.lineID.uuidString]),
+                    expectedRevision: nil, occurredAt: now, change: .create(.init(foodID: fact.foodID, name: fact.name,
+                        source: .receipt(originID: originID, key: key), location: location, unit: fact.usable.unit,
+                        count: .exact(fact.usable), observedAt: now), observationID: ReceiptAcquisition.identity(["count", fact.lineID.uuidString])))
+                writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: now))
+            }
+            let row = try PantryAcquisitionCodec.row(fact)
+            if case .added = fact.stock { acquisitionBytes += row.payload.count }
+            rows.append(row)
+        }
+        try validateCapacity(of: writes, replacing: before, additionalPayloadBytes: acquisitionBytes)
+        try requireAccess()
+        guard try await store.inventoryState() == before.state else { throw PantryReceiptError.stale }
+        try requireAccess()
+        let id = UUID()
+        let batch = rows.isEmpty ? nil : try InventoryBatch(workspaceID: originID, operationID: id,
+            expectedRevision: expected.revision, request: Data(SHA256.hash(data: PantryAcquisitionCodec.data(rows))),
+            writes: writes, acquisitions: rows)
+        return .init(id: id, workspaceID: originID, revision: expected.revision, facts: facts, existing: existing, batch: batch)
+    }
+
+    func applyReceipt(_ review: PantryReceiptReview, at now: Date) async throws {
+        try requireAccess()
+        try await commitReviewedBatch(review.batch, workspaceID: review.workspaceID, revision: review.revision, at: now)
+    }
+
+    private func commitReviewedBatch(_ batch: InventoryBatch?, workspaceID: UUID, revision: Int64, at now: Date) async throws {
+        try requireAccess()
+        guard workspaceID == originID else { throw PantryReceiptError.stale }
+        let lease = try mutationGate?.beginExclusiveWrite()
+        defer { if let lease { mutationGate?.endExclusiveWrite(lease) } }
+        if let pendingStore, try pendingStore.read() != nil { throw Failure.pendingUnavailable }
+        guard let batch else {
+            guard try await store.inventoryState().revision == revision else { throw PantryReceiptError.stale }
+            try requireAccess()
+            return
+        }
+        _ = try await store.commitInventory(batch, at: now)
+        try requireAccess()
+    }
+
+    func receiptAliases(merchant: String? = nil, language: String? = nil) async throws -> [InventoryReceiptAlias] {
+        try requireAccess()
+        guard let aliasPersonaID else { throw Failure.unauthorized }
+        let aliases = try await store.receiptAliases(personaID: aliasPersonaID, merchant: merchant, language: language)
+        try requireAccess()
+        return aliases
+    }
+
+    func rememberReceiptAlias(_ source: ReceiptAcquisition, wording: String, language: String, expected: InventoryState, at now: Date) async throws {
+        try requireAccess()
+        guard let aliasPersonaID, expected.workspaceID == originID else { throw Failure.unauthorized }
+        let records = try await store.acquisitionRows(receiptID: source.receiptID, lineIDs: [source.lineID], firstRevisionOnly: true, limit: 1)
+        try requireAccess()
+        guard let row = records.first else { throw PantryReceiptError.stale }
+        let original = try PantryAcquisitionCodec.record(row)
+        let trimmed = wording.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard source.lotID == original.lotID, source.foodID == original.foodID, source.name == original.name,
+              source.originalLine == original.originalLine, original.merchant == source.merchant,
+              trimmed.unicodeScalars.contains(where: CharacterSet.letters.contains),
+              ReceiptImportDraft.containsWording(trimmed, in: original.originalLine) else { throw PantryReceiptError.invalid }
+        let alias = InventoryReceiptAlias(personaID: aliasPersonaID, merchant: original.merchant, language: language, wording: trimmed,
+            product: original.name, foodID: original.foodID, sourceID: original.id, lotID: original.lotID)
+        let prior = try await receiptAliases(merchant: original.merchant, language: language)
+        if let existing = prior.first(where: { InventoryReceiptAlias.key($0.wording) == InventoryReceiptAlias.key(trimmed) }) {
+            guard try await store.inventoryState() == expected else { throw PantryReceiptError.stale }
+            try requireAccess()
+            guard existing.foodID == alias.foodID, existing.product == alias.product else { throw PantryReceiptError.changedEvidence }
+            return
+        }
+        try await editReceiptAlias(.remember(alias), expected: expected, at: now)
+    }
+
+    func forgetReceiptAliases(_ aliases: [InventoryReceiptAlias], expected: InventoryState, at now: Date) async throws {
+        try requireAccess()
+        guard let aliasPersonaID, aliases.allSatisfy({ $0.personaID == aliasPersonaID }) else { throw Failure.unauthorized }
+        try await editReceiptAlias(.forget(personaID: aliasPersonaID, ids: aliases.map(\.id)), expected: expected, at: now)
+    }
+
+    private func editReceiptAlias(_ edit: InventoryReceiptAliasEdit, expected: InventoryState, at now: Date) async throws {
+        let id = UUID()
+        let request = try Data(SHA256.hash(data: PantryAcquisitionCodec.data(edit)))
+        let batch = InventoryBatch(workspaceID: originID, operationID: id, expectedRevision: expected.revision, request: request, aliasEdit: edit)
+        try await commitReviewedBatch(batch, workspaceID: expected.workspaceID, revision: expected.revision, at: now)
+    }
+
+    func latestReceiptRevision(_ original: ReceiptAcquisition) async throws -> ReceiptAcquisition {
+        try requireAccess()
+        let rows = try await store.acquisitionRows(receiptID: original.receiptID, lineIDs: [original.lineID], latestForLine: true, limit: 1)
+        try requireAccess()
+        guard let row = rows.first else { throw PantryReceiptError.stale }
+        return try PantryAcquisitionCodec.record(row)
+    }
+
+    func correctPaidTotal(_ original: ReceiptAcquisition, total: Money?, state: InventoryState, at now: Date) async throws {
+        try requireAccess()
+        let corrected = try original.correctingPaidTotal(total)
+        let latest = try await latestReceiptRevision(original)
+        guard latest == original || latest == corrected else { throw PantryReceiptError.stale }
+        let row = try PantryAcquisitionCodec.row(corrected)
+        let batch = try InventoryBatch(workspaceID: state.workspaceID, operationID: corrected.id,
+            expectedRevision: state.revision, request: PantryAcquisitionCodec.data(corrected), writes: [], acquisitions: [row])
+        try await applyReceipt(.init(id: corrected.id, workspaceID: state.workspaceID, revision: state.revision,
+            facts: [corrected], existing: [], batch: batch), at: now)
+    }
+
+    var permitsReceiptSource: Bool { authorize() }
 
     private func requireAccess() throws {
         guard authorize() else { throw Failure.unauthorized }

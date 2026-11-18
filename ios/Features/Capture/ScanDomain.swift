@@ -1,3 +1,4 @@
+import CoreDomain
 import Foundation
 
 /// A local evidence address. It conveys no role, payment, arrival or meal authority.
@@ -41,6 +42,7 @@ struct ScannedSource: Equatable, Sendable {
 struct ScanReceiptLine: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let originalText: String
+    var documentLine: ReceiptAcquisition.DocumentLine?
     var reviewedText: String
     var quantityNote: String
     var priceNote: String
@@ -63,12 +65,29 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
     let barcode: CapturedBarcode?
     let receiptLines: [ScanReceiptLine]
     let capturedAt: Date
+    var documentDigest: Data? = nil
+    var reviewedImageLines: [Int: ReviewedImageWording]? = nil
     var reference: SourceMediaReference { .init(workspaceID: target.workspaceID, mediaID: id) }
     func validate() throws {
         guard target.revision >= 0, capturedAt.timeIntervalSinceReferenceDate.isFinite,
               !reviewedLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               reviewedLabel.utf8.count <= 512, !reviewedLabel.contains("\0"),
               receiptLines.count <= 200, Set(receiptLines.map(\.id)).count == receiptLines.count else { throw ScanFailure.invalidText }
+        if let reviewedImageLines {
+            let lines = (reviewedText ?? originalText).components(separatedBy: "\n")
+            guard target.kind == .recipeSource, imageJPEG != nil, reviewedImageLines.count <= CaptureLimits.lines else { throw ScanFailure.invalidText }
+            for (index, reading) in reviewedImageLines {
+                try reading.validate()
+                guard lines.indices.contains(index), lines[index] == reading.text else { throw ScanFailure.invalidText }
+            }
+        }
+        if let documentDigest {
+            guard documentDigest.count == 32, imageJPEG == nil, !receiptLines.isEmpty,
+                  receiptLines.allSatisfy({ $0.documentLine != nil }) else { throw ScanFailure.invalidText }
+            let positions = receiptLines.compactMap(\.documentLine)
+            guard positions.allSatisfy({ (1...20).contains($0.page) && (1...200).contains($0.line) }),
+                  Set(positions.map(\.ordinal)).count == positions.count else { throw ScanFailure.invalidText }
+        } else if receiptLines.contains(where: { $0.documentLine != nil }) { throw ScanFailure.invalidText }
         try ScanLimits.text(originalText)
         if let reviewedText { try ScanLimits.text(reviewedText) }
         var total = 0

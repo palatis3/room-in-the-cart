@@ -24,13 +24,14 @@ struct CapturePrivateIdentity: Equatable {
     let target: CaptureTarget
     let initialLabel: String
     let sourceCurrent: @MainActor @Sendable () -> Bool
+    var makePantry: (@MainActor () -> PantryModel?)? = nil
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var identity: CapturePrivateIdentity?
     var body: some View {
         Group {
-            if identity != nil { CaptureReferenceShelf(target: target, initialLabel: initialLabel, authorize: { authorized() }) }
+            if identity != nil { CaptureReferenceShelf(target: target, initialLabel: initialLabel, authorize: { authorized() }, makePantry: makePantry) }
             else { Text(captureText("Unlock your private workspace to review this source.")) }
         }.task(id: target) { identity = CapturePrivateIdentity.current(access: access, household: household) }
     }

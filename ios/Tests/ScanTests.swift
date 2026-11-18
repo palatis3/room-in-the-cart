@@ -231,6 +231,32 @@ final class RecipeCaptureAdapterTests: XCTestCase {
 }
 
 @MainActor final class ScanModelTests: XCTestCase {
+    func testSupplementalRecipeImageLineRemainsBoundToItsSourceAndReopensOnlyAfterReview() async throws {
+        let jpeg = try ScanImageNormalizer.normalize(image())
+        let original = "Tacos\nServes 4\nIngredients\n2 torti11as\nInstructions\nWarm gently"
+        let source = ScannedSource(originalText: original, uncertainLines: ["2 torti11as"], originalImageData: jpeg, referenceJPEG: jpeg, barcodes: [])
+        let model = ScanModel(service: FixedScan(source: source))
+        model.stage(jpeg)
+        let deadline = Date().addingTimeInterval(2)
+        while model.busy, Date() < deadline { await Task.yield() }
+        XCTAssertFalse(model.busy)
+        model.acceptCandidate()
+        let reading = try ReviewedImageWording(text: "2 tortillas", method: .assistedImage, cropDigest: Data(repeating: 8, count: 32))
+        try model.applyRecipeImageReading(reading, line: 3, reviewedText: original, source: source)
+        XCTAssertEqual(model.originalText, original)
+        XCTAssertFalse(model.confirmed)
+        XCTAssertEqual(try RecipeOCRParser.draft(model.text).ingredientText, "2 tortillas")
+        XCTAssertThrowsError(try model.applyRecipeImageReading(reading, line: 3, reviewedText: original, source: source))
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .recipeSource)
+        XCTAssertThrowsError(try model.reviewed(target: target, label: "Tacos", barcode: nil))
+        model.confirmed = true
+        let record = try model.reviewed(target: target, label: "Tacos", barcode: nil)
+        let reopened = try RecordsMediaCodec.decode(RecordsMediaCodec.attachment(record))
+        XCTAssertEqual(reopened.reviewedImageLines?[3], reading)
+        XCTAssertEqual(reopened.originalText, original)
+        XCTAssertEqual(reopened.reviewedText, model.text)
+    }
+
     func testTypedFallbackAndExactlyOneReviewedCallback() throws {
         let model = ScanModel(text: "Package notes")
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 0, kind: .packageReference)

@@ -1,4 +1,6 @@
 import XCTest
+import CoreDomain
+import CryptoKit
 import CoreGraphics
 import CoreText
 import ImageIO
@@ -13,6 +15,27 @@ import UniformTypeIdentifiers
         for _ in 0..<2000 { if condition() { return }; await Task.yield() }
         XCTFail("Capture operation did not settle")
     }
+    func testReviewedPriceImageWordingPreservesOriginalAndLeavesCheckoutAmountsForTheShopper() throws {
+        let digest = Data(repeating: 1, count: 32)
+        let original = try PriceImageLine(digest: digest, ordinal: 1, wording: "2 por $? socios", uncertain: true)
+        let reading = try ReviewedImageWording(text: "2 por $5 socios", method: .assistedImage, cropDigest: Data(repeating: 2, count: 32))
+        let reviewed = try PriceImageLine(digest: digest, ordinal: 1, wording: original.wording, uncertain: true, reviewedReading: reading)
+        XCTAssertEqual(original.shelfID, reviewed.shelfID)
+        XCTAssertNil(ReviewedShelfImage.propose(reviewed.effectiveWording).currencyCode)
+        let unknownTotal = try ReviewedCheckoutImage(charges: [.init(field: .total, amount: nil, inclusion: .unknown, line: reviewed)])
+        let saved = try JSONDecoder().decode(ReviewedCheckoutImage.self, from: JSONEncoder().encode(unknownTotal))
+        XCTAssertEqual(saved.charges.first?.line.wording, original.wording)
+        XCTAssertEqual(saved.charges.first?.line.reviewedReading, reading)
+        XCTAssertNil(saved.displayedTotal)
+        XCTAssertEqual(saved.charges.first?.inclusion, .unknown)
+
+        let cropOnly = try PriceImageLine(digest: digest, ordinal: 1, wording: "", uncertain: true, reviewedReading: reading)
+        let other = try ReviewedImageWording(text: "Fee", method: .deviceOCR, cropDigest: Data(repeating: 3, count: 32))
+        XCTAssertNotEqual(cropOnly.shelfID, try PriceImageLine(digest: digest, ordinal: 1, wording: "", uncertain: true, reviewedReading: other).shelfID)
+        let legacy = try JSONSerialization.data(withJSONObject: ["digest": digest.base64EncodedString(), "ordinal": 1, "wording": original.wording, "uncertain": true])
+        XCTAssertEqual(try JSONDecoder().decode(PriceImageLine.self, from: legacy), original)
+    }
+
     func testTypedReviewRequiresConfirmationAndDeliversExactlyOnce() {
         let model = make()
         XCTAssertNil(model.reviewed())
@@ -38,6 +61,127 @@ import UniformTypeIdentifiers
         XCTAssertTrue(model.containsExclusion)
         model.confirmed = true
         XCTAssertEqual(model.reviewed()?.source, .paste)
+    }
+    func testAcceptedSpeechOffersNaturalListOnlyToShopperAndCanUseOneLineInstead() async throws {
+        let speech = FakeSpeech()
+        let model = make(speech)
+        model.startSpeech()
+        await settle { model.listening }
+        let words = "Two milks, bread and cereal for next week"
+        speech.yield(.init(text: words, isFinal: true, uncertain: false))
+        await settle { !model.busy && model.candidate != nil }
+        XCTAssertFalse(model.naturalListMode)
+        model.acceptCandidate()
+        XCTAssertTrue(model.naturalListMode)
+        let proposal = try model.fields(forList: true, destination: "Friday")
+        XCTAssertEqual(proposal.lines.map(\.name), ["milks", "bread", "cereal"])
+        XCTAssertEqual(proposal.timing, "for next week")
+        XCTAssertEqual(try model.fields(forList: false, destination: "Family").lines.count, 1)
+        model.naturalListMode = false
+        XCTAssertEqual(try model.fields(forList: true, destination: "Friday").lines.count, 1)
+        XCTAssertEqual(model.acceptedEvidence?.text, words)
+    }
+
+    func testInterruptedSpeechRetainsBothPartialCandidateAndTypedFallback() async throws {
+        let speech = FakeSpeech()
+        let model = make(speech)
+        model.startSpeech()
+        await settle { model.listening }
+        speech.yield(.init(text: "pan y leche", isFinal: false, uncertain: true))
+        await settle { model.candidate != nil }
+        speech.interrupt()
+        await settle { model.failure == .audioUnavailable && !model.busy }
+        XCTAssertEqual(model.text, "12 wraps")
+        XCTAssertFalse(speech.active)
+        model.acceptCandidate()
+        XCTAssertEqual(try model.fields(forList: true, destination: "Compra").lines.map(\.name), ["pan", "leche"])
+        XCTAssertNil(model.reviewed())
+    }
+
+    func testExplicitPasteChoosesOneRealPickupBeforeStagingAndExactReplay() throws {
+        let current = ShoppingLedger(title: "Weekend")
+        let next = ShoppingLedger(title: "Weekend")
+        let pickups = [current, next].map(CapturePickup.init)
+        var workspace = LedgerWorkspace(shops: [current, next], selectedShopID: current.id)
+        let model = make()
+        let words = "2,5 litros de leche y pan para la próxima compra"
+        XCTAssertFalse(model.naturalListMode)
+        model.naturalListMode = true
+        model.stagePaste([words])
+        model.acceptCandidate()
+        XCTAssertTrue(model.naturalListMode)
+        let proposal = try model.fields(forList: true, destination: current.title)
+        XCTAssertEqual(proposal.lines.count, 2)
+        XCTAssertEqual(proposal.lines[0].unit, .liter)
+        var batch = NaturalCaptureBatch(timing: proposal.timing, lines: proposal.lines, currentPickup: pickups[0])
+        XCTAssertNil(batch.pickup)
+        XCTAssertThrowsError(try batch.reviewed(proposal.lines, availablePickups: pickups))
+        batch.pickup = pickups[1]
+        XCTAssertThrowsError(try batch.reviewed(proposal.lines, availablePickups: [pickups[0]]))
+        let rows = try batch.reviewed(proposal.lines, availablePickups: pickups)
+        XCTAssertFalse(model.confirmed)
+        XCTAssertNil(model.reviewed())
+        var capture = try XCTUnwrap(model.reviewed(lines: rows, fieldDrafts: proposal.lines, naturalBatch: batch))
+        let staged = try CaptureLedgerImport.stage(capture, in: workspace, currentShopID: current.id)
+        XCTAssertEqual(staged.preview.shopID, next.id)
+        XCTAssertEqual(staged.preview.originalText, words)
+        XCTAssertEqual(staged.preview.source, .paste)
+        XCTAssertEqual(staged.preview.lines.map(\.id), proposal.lines.map(\.id))
+        XCTAssertEqual(staged.preview.lines.map(\.proposedLineID), proposal.lines.map(\.proposedLineID))
+        XCTAssertTrue(workspace.shops.allSatisfy { $0.lines.isEmpty })
+        XCTAssertThrowsError(try CaptureLedgerImport.stage(capture, in: workspace, currentShopID: next.id))
+        try workspace.shops[1].commitImport(staged.preview)
+        let replay = try CaptureLedgerImport.stage(capture, in: workspace, currentShopID: current.id)
+        XCTAssertTrue(replay.alreadyApplied)
+        XCTAssertEqual(replay.preview, staged.preview)
+        batch.pickup = pickups[0]
+        capture.naturalBatch = batch
+        XCTAssertThrowsError(try CaptureLedgerImport.stage(capture, in: workspace, currentShopID: current.id))
+        XCTAssertTrue(workspace.shops[0].lines.isEmpty)
+        XCTAssertEqual(workspace.shops[1].lines.count, 2)
+    }
+
+    func testMixedTimingKeepsEditableWordsAndGroupedGuestWordingRequiresAnOverride() throws {
+        let model = make()
+        model.naturalListMode = true
+        model.text = "milk for this week, bread for next week"
+        XCTAssertThrowsError(try model.fields(forList: true, destination: "Today")) {
+            XCTAssertEqual($0 as? StructuredCaptureFailure, .timingReviewRequired)
+        }
+        XCTAssertEqual(model.text, "milk for this week, bread for next week")
+        model.text = "tea; two more guests"
+        XCTAssertThrowsError(try model.fields(forList: true, destination: "Today")) {
+            XCTAssertEqual($0 as? StructuredCaptureFailure, .guestReviewRequired)
+        }
+        XCTAssertEqual(try model.fields(forList: true, destination: "Today", explicitlyTreatAsItems: true).lines.count, 2)
+    }
+
+    func testUnknownDestinationAndAmbiguousProductNeedReviewOnce() throws {
+        let current = ShoppingLedger(title: "Friday")
+        let pickup = CapturePickup(current)
+        let proposal = try StructuredCaptureParser.naturalList("mango and sticky rice; eggs to Mars", destination: current.title)
+        var drafts = proposal.lines
+        XCTAssertTrue(drafts[0].needsNaturalClarification)
+        var batch = NaturalCaptureBatch(timing: proposal.timing, lines: drafts, currentPickup: pickup)
+        XCTAssertNil(batch.pickup)
+        batch.pickup = pickup
+        XCTAssertThrowsError(try batch.reviewed(drafts, availablePickups: [pickup]))
+        drafts[0].name = "mango sticky rice"
+        drafts[0].confirmed = true
+        let rows = try batch.reviewed(drafts, availablePickups: [pickup])
+        XCTAssertEqual(rows.map(\.name), ["mango sticky rice", "eggs"])
+        XCTAssertEqual(rows.map(\.destination), ["Friday", "Friday"])
+        var changed = current
+        changed.title = "Monday"
+        let renamedPickup = CapturePickup(changed)
+        XCTAssertThrowsError(try batch.reviewed(drafts, availablePickups: [renamedPickup]))
+        batch.refreshPickups([renamedPickup])
+        XCTAssertNil(batch.pickup)
+        batch.pickup = renamedPickup
+        let refreshed = try batch.reviewed(drafts, availablePickups: [renamedPickup])
+        XCTAssertEqual(refreshed.map(\.id), rows.map(\.id))
+        XCTAssertEqual(refreshed.map(\.name), rows.map(\.name))
+        XCTAssertEqual(refreshed.map(\.destination), ["Monday", "Monday"])
     }
     func testDiscardCapturePreservesTypedDraft() {
         let model = make(); model.stagePaste(["cereal"]); model.discardCandidate()
@@ -157,11 +301,28 @@ import UniformTypeIdentifiers
                        CaptureTextPosition(midY: 0.5, minX: 0.1)]
         XCTAssertEqual(CaptureReadingOrder.indices(sameRow), [1,2,0])
     }
-    func testActualVisionOCRReadsLocalSyntheticImage() async throws {
-        let context = CGContext(data: nil, width: 700, height: 180, bitsPerComponent: 8, bytesPerRow: 0,
+    func testPriceImageOCRPreservesMembershipWordingAndNeverInfersCheckoutTotalFromSubtotal() async throws {
+        let image = try imageOfPriceText([("Members only 2 for $5", 110), ("Subtotal $18", 40)])
+        let evidence = try await OnDeviceTextCapture().recognize(image)
+        let text = evidence.text.split(separator: "\n").map(String.init)
+        let label = try XCTUnwrap(text.first(where: { $0.localizedCaseInsensitiveContains("members") }))
+        let proposal = ReviewedShelfImage.propose(label)
+        XCTAssertEqual(proposal.packages, 2)
+        XCTAssertEqual(proposal.amount?.minorUnits, 500)
+        XCTAssertEqual(proposal.conditions, label)
+        let i = try XCTUnwrap(text.firstIndex(where: { $0.localizedCaseInsensitiveContains("subtotal") }))
+        let line = try PriceImageLine(digest: Data(SHA256.hash(data: image)), ordinal: i, wording: text[i],
+            uncertain: evidence.uncertainLines.contains(text[i]))
+        let checkout = try ReviewedCheckoutImage(charges: [.init(field: .subtotal, amount: .init(minorUnits: 1800), inclusion: .unknown, line: line)])
+        XCTAssertNil(checkout.displayedTotal)
+        XCTAssertEqual(checkout.charges.first?.line.wording, text[i])
+    }
+
+    private func imageOfPriceText(_ rows: [(String, CGFloat)]) throws -> Data {
+        let context = CGContext(data: nil, width: 1000, height: 180, bitsPerComponent: 8, bytesPerRow: 0,
             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-        context.setFillColor(CGColor(gray: 1, alpha: 1)); context.fill(CGRect(x: 0, y: 0, width: 700, height: 180))
-        for (text, y) in [("12 wraps", 110), ("2 kg rice", 40)] {
+        context.setFillColor(CGColor(gray: 1, alpha: 1)); context.fill(CGRect(x: 0, y: 0, width: 1000, height: 180))
+        for (text, y) in rows {
             let font = CTFontCreateWithName("Helvetica" as CFString, 42, nil)
             let value = NSAttributedString(string: text, attributes: [NSAttributedString.Key(kCTFontAttributeName as String): font,
                 NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0, alpha: 1)])
@@ -172,7 +333,11 @@ import UniformTypeIdentifiers
         let output = NSMutableData()
         let destination = CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil)!
         CGImageDestinationAddImage(destination, image, nil); XCTAssertTrue(CGImageDestinationFinalize(destination))
-        let evidence = try await OnDeviceTextCapture().recognize(output as Data)
+        return output as Data
+    }
+    func testActualVisionOCRReadsLocalSyntheticImage() async throws {
+        let image = try imageOfPriceText([("12 wraps", 110), ("2 kg rice", 40)])
+        let evidence = try await OnDeviceTextCapture().recognize(image)
         XCTAssertTrue(evidence.text.contains("12 wraps")); XCTAssertTrue(evidence.text.contains("2 kg rice"))
         XCTAssertEqual(evidence.source, .photoOCR)
         XCTAssertNotNil(evidence.previewImageData)
@@ -196,6 +361,7 @@ import UniformTypeIdentifiers
         active = true
         return AsyncThrowingStream { stream = $0 }
     }
+    func interrupt() { stream?.finish(throwing: CaptureFailure.audioUnavailable) }
     func yield(_ update: SpeechCaptureUpdate) { stream?.yield(update) }
     func stop() { stops += 1; active = false; stream?.finish(); stream = nil }
 }

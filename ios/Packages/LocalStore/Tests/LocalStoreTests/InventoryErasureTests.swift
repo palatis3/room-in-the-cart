@@ -213,7 +213,7 @@ final class InventoryErasureTests: XCTestCase {
     try await old.close()
     try await store.close()
     XCTAssertThrowsError(try ComparisonStore(url: url)) {
-      XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(4))
+      XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(7))
     }
     let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
     let proof = try await reopened.inventoryOriginRetirement()
@@ -319,7 +319,7 @@ final class InventoryErasureTests: XCTestCase {
     XCTAssertEqual(try raw.integer("PRAGMA user_version"), 3)
     try raw.close()
     let store = try ComparisonStore(url: url, inventoryEnabled: true)
-    XCTAssertEqual(try scalar("PRAGMA user_version"), 4)
+    XCTAssertEqual(try scalar("PRAGMA user_version"), 7)
     let claim = record(.reservation, payload: "private old history")
     try await activate(store)
     let batch = InventoryBatch(

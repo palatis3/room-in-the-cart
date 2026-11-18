@@ -21,12 +21,14 @@ public struct LedgerRetailerPreview: Codable, Equatable, Sendable {
     public var source: String
     public var capturedAt: Date
     public var includedCharges: [String]
-    public init(total: Money? = nil, source: String, capturedAt: Date, includedCharges: [String] = []) {
-        self.total = total; self.source = source; self.capturedAt = capturedAt; self.includedCharges = includedCharges
+    public var screenshot: ReviewedCheckoutImage?
+    public init(total: Money? = nil, source: String, capturedAt: Date, includedCharges: [String] = [], screenshot: ReviewedCheckoutImage? = nil) {
+        self.total = total; self.source = source; self.capturedAt = capturedAt; self.includedCharges = includedCharges; self.screenshot = screenshot
     }
     public func validate() throws {
         try ledgerText(source, nonempty: true, maximum: 2048); try ledgerDate(capturedAt)
         guard total.map({ $0.minorUnits >= 0 }) ?? true, includedCharges.count <= 100 else { throw LedgerError.invalid("retailerPreview") }
+        if let screenshot { try screenshot.validate(); guard screenshot.displayedTotal == total else { throw LedgerError.invalid("checkoutImageTotal") } }
         for charge in includedCharges { try ledgerText(charge, nonempty: true, maximum: 512) }
     }
 }
@@ -876,6 +878,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func updateBasis(_ proposed: ShopBasis, evidenceFor terms: ShopBasis.RetailerTerms? = nil,
                                      reviewing expectedRevisionID: UUID? = nil, at: Date = Date()) throws {
         guard expectedRevisionID == nil || expectedRevisionID == revisionID else { throw LedgerError.stalePreview }
+        if let image = proposed.retailerPreview?.screenshot,
+           (image != basis.retailerPreview?.screenshot || proposed.retailerTerms != basis.retailerTerms),
+           terms != proposed.retailerTerms { throw LedgerError.stalePreview }
         var newBasis = proposed
         if basis.retailerTerms != proposed.retailerTerms, terms != proposed.retailerTerms {
             if basis.retailerPreview != nil { newBasis.retailerPreview = nil }
