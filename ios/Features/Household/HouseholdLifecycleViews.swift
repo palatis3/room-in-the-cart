@@ -22,7 +22,7 @@ struct HouseholdSetupSections: View {
                     TextField(ht("Your household alias"), text: $model.alias)
                     Toggle(ht("I confirm I am an adult"), isOn: $model.adultAttestation)
                     Text(ht("This is your declaration. It does not verify age or establish guardian consent.")).font(.caption)
-                    Toggle(ht("Keep my existing work private on this phone"), isOn: $model.keepLocalPrivate)
+                    Toggle(ht("Keep my lists and plans private when creating or joining a household"), isOn: $model.keepLocalPrivate)
                 }
                 Section(ht("Create a household")) {
                     TextField(ht("Household name"), text: $model.householdLabel)

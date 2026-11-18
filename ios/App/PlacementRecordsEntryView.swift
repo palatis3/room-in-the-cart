@@ -11,7 +11,7 @@ struct PlacementRecordsEntryView: View {
         Group {
             if activeNativeAccount || household.placementEvidenceUnlocked {
                 if let model { PlacementEntryView(model: model) }
-                else { Text(PlacementCopy.text("Placement reports are not configured on this iPhone.")) }
+                else { Text(PlacementCopy.text("Shared order reports are unavailable on this iPhone.")) }
             } else {
                 List {
                     if household.canUnlockPlacementEvidence {

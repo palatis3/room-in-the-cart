@@ -3903,18 +3903,18 @@
         }
       }
     },
-    "Email sign-in is not ready yet. Your private shopping tools work without an account.": {
+    "Email sign-in is unavailable. You can still use your private shopping tools.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Email sign-in is not ready yet. Your private shopping tools work without an account."
+            "value": "Email sign-in is unavailable. You can still use your private shopping tools."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El acceso por correo electrónico aún no está disponible. Tus herramientas privadas de compras funcionan sin una cuenta."
+            "value": "El inicio de sesión por correo electrónico no está disponible. Puedes seguir usando tus herramientas privadas de compras."
           }
         }
       }
@@ -4729,34 +4729,34 @@
         }
       }
     },
-    "Fresh email verification is unavailable on this build.": {
+    "You need a new email code to leave this household. Email verification is unavailable.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fresh email verification is unavailable on this build."
+            "value": "You need a new email code to leave this household. Email verification is unavailable."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta versión no permite volver a verificar tu identidad por correo."
+            "value": "Necesitas un código nuevo por correo electrónico para salir de este hogar. La verificación por correo no está disponible."
           }
         }
       }
     },
-    "Fresh email verification is unavailable on this build. Review deletion again when household sign-in is available.": {
+    "You need a new email code to delete your account. Email verification is unavailable.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fresh email verification is unavailable on this build. Review deletion again when household sign-in is available."
+            "value": "You need a new email code to delete your account. Email verification is unavailable."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta versión no permite volver a verificar tu identidad por correo. Revisa la eliminación cuando el inicio de sesión del hogar esté disponible."
+            "value": "Necesitas un código nuevo por correo electrónico para eliminar tu cuenta. La verificación por correo no está disponible."
           }
         }
       }
@@ -5068,18 +5068,18 @@
         }
       }
     },
-    "Household service is not configured": {
+    "Household sign-in is unavailable": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Household service is not configured"
+            "value": "Household sign-in is unavailable"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El servicio del hogar no está configurado"
+            "value": "No se puede iniciar sesión en el hogar"
           }
         }
       }
@@ -5742,6 +5742,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mantener mi trabajo existente privado en este teléfono"
+          }
+        }
+      }
+    },
+    "Keep my lists and plans private when creating or joining a household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep my lists and plans private when creating or joining a household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener mis listas y planes privados al crear un hogar o unirme a uno"
           }
         }
       }
@@ -6748,22 +6764,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nueva cantidad utilizable"
-          }
-        }
-      }
-    },
-    "No active household access is available for this account.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No active household access is available for this account."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta cuenta no tiene acceso activo a ningún hogar."
           }
         }
       }
@@ -8167,18 +8167,18 @@
         }
       }
     },
-    "Private shopping tools work without an account. Household sign-in will be available when the service is connected.": {
+    "You can make a private shopping list, compare packs and plan dinners on this iPhone without an account.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private shopping tools work without an account. Household sign-in will be available when the service is connected."
+            "value": "You can make a private shopping list, compare packs and plan dinners on this iPhone without an account."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las herramientas privadas de compras funcionan sin una cuenta. El acceso al hogar estará disponible cuando se conecte el servicio."
+            "value": "Puedes hacer una lista de compras privada, comparar paquetes y planear cenas en este iPhone sin una cuenta."
           }
         }
       }
@@ -14251,18 +14251,18 @@
         }
       }
     },
-    "This iPhone has no household service connection configured. Account deletion is unavailable.": {
+    "Account deletion is unavailable on this iPhone. Open Support in Settings for help.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This iPhone has no household service connection configured. Account deletion is unavailable."
+            "value": "Account deletion is unavailable on this iPhone. Open Support in Settings for help."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este iPhone no tiene configurada una conexión al servicio del hogar. La eliminación de cuentas no está disponible."
+            "value": "La eliminación de cuentas no está disponible en este iPhone. Para obtener ayuda, abre Soporte en Configuración."
           }
         }
       }

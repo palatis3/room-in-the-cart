@@ -36,6 +36,7 @@ struct GuardianChildRootView: View {
                         Text(GuardianCopy.text("Child sign-in is not available yet"))
                         if let message = coordinator.message { Text(message).accessibilityIdentifier("guardian.childRootResult") }
                         Button(GuardianCopy.text("Check child access again")) { Task { await coordinator.resume() } }
+                        GuardianChildDeletionHelp()
                     }
                 }
             }
@@ -119,6 +120,7 @@ struct GuardianNativeAuthenticationView: View {
                 Section { Text(message).accessibilityIdentifier("guardian.nativeAuthResult") }
             }
             if model.busy { ProgressView(GuardianCopy.text("Checking child setup…")) }
+            GuardianChildDeletionHelp()
         }.disabled(model.busy)
         .navigationTitle(GuardianCopy.text("Child sign-in"))
         .task { await model.load() }
@@ -216,6 +218,7 @@ struct GuardianChildRequestsView: View {
             }
             if let message = household.notice { Section { Text(message).accessibilityIdentifier("guardian.childRequestsResult") } }
             if household.busy { ProgressView(ht("Checking service…")) }
+            GuardianChildDeletionHelp()
         }.disabled(household.busy)
         .navigationTitle(GuardianCopy.text("My requests"))
         .sheet(item: $review) { value in

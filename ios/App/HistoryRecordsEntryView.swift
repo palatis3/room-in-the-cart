@@ -14,7 +14,7 @@ struct HistoryRecordsEntryView: View {
                 if let model {
                     HistoryEntryView(model: model, chooseShop: scope.canSelectShop == true || scope.selectionRequired == true ? { choosingScope = true } : nil)
                 }
-                else { Text(HistoryCopy.text("History is not configured on this iPhone.")) }
+                else { Text(HistoryCopy.text("Price records and period budgets are unavailable on this iPhone.")) }
             } else {
                 List {
                     Text(HistoryCopy.text("Connect your household to open saved price records and period plans."))

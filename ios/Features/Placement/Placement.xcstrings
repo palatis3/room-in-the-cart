@@ -1329,18 +1329,18 @@
         }
       }
     },
-    "Placement reports are not configured on this iPhone.": {
+    "Shared order reports are unavailable on this iPhone.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Placement reports are not configured on this iPhone."
+            "value": "Shared order reports are unavailable on this iPhone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los reportes de pedidos no están configurados en este iPhone."
+            "value": "Los reportes de pedidos compartidos no están disponibles en este iPhone."
           }
         }
       }

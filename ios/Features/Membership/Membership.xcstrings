@@ -510,19 +510,19 @@
         }
       }
     },
-    "Purchases are not available in this build.": {
+    "Household subscription purchases are unavailable. You can keep using the free planning tools.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Purchases are not available in this build."
+            "value": "Household subscription purchases are unavailable. You can keep using the free planning tools."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las compras no están disponibles en esta versión."
+            "value": "No se puede comprar una suscripción a Household. Puedes seguir usando las herramientas de planeación gratuitas."
           }
         }
       }

@@ -1090,18 +1090,18 @@
         }
       }
     },
-    "History is not configured on this iPhone.": {
+    "Price records and period budgets are unavailable on this iPhone.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "History is not configured on this iPhone."
+            "value": "Price records and period budgets are unavailable on this iPhone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El historial no está configurado en este iPhone."
+            "value": "Los registros de precios y los presupuestos por periodo no están disponibles en este iPhone."
           }
         }
       }

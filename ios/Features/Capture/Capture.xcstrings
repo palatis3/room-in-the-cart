@@ -834,19 +834,19 @@
         }
       }
     },
-    "Speech is not available in this build. Type or paste your list instead.": {
+    "Dictation is unavailable. You can type or paste your list.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Speech is not available in this build. Type or paste your list instead."
+            "value": "Dictation is unavailable. You can type or paste your list."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La voz no está disponible en esta versión. Escribe o pega tu lista."
+            "value": "El dictado no está disponible. Puedes escribir o pegar tu lista."
           }
         }
       }

@@ -5,6 +5,7 @@ import pg from 'pg';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
+import {restoreTestName,runIsolatedChildRestore,verifyChildBackup} from './guardian-child-restore-fixture.mjs';
 import {GuardianEnrollmentService} from '../dist/guardian.js';
 import {KWSWebhookVerifier} from '../dist/guardian-provider.js';
 import {createHTTPServer} from '../dist/http.js';
@@ -13,7 +14,7 @@ import {guardianRuntime} from '../dist/guardian-runtime.js';
 import {createRuntime,databaseConfiguration} from '../dist/runtime.js';
 import {createOperationsHTTPServer} from '../dist/operations-http.js';
 import {tokenHash} from '../dist/database.js';
-import {PrivacyService} from '../dist/privacy.js';
+import {PrivacyService,PrivacyMaintenance} from '../dist/privacy.js';
 import {deferProfileOnlyDeletion,openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
 const admin=new pg.Pool({connectionString:process.env.TEST_ADMIN_DATABASE_URL}),app=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL}),proof=new pg.Pool({connectionString:process.env.TEST_GUARDIAN_VERIFIER_DATABASE_URL});
 const journal=await openPrivacyJournalFixture(admin);
@@ -24,13 +25,22 @@ const verifier=new JWTIdentityVerifier({issuer,audience,jwksUrl:issuer+'/jwks'},
 const config={organizationId:randomUUID(),scope:'product',productId:randomUUID(),environment:'test'},signing='local-fixture-only-signing-secret';
 const notices=['en','es'].map(locale=>({locale,version:'fixture-reviewed-v1',methodVersion:'fixture-method-v1',scope:'own_requests',text:'Fictional reviewed notice '+locale,digest:tokenHash('Fictional reviewed notice '+locale),approvalReference:'fixture-only-not-legal-approval'}));
 const requests=[],otpRequests=[],otpActors=new Map();let failDelivery=false,holdVerify;
-const otpProvider={async start(email){otpRequests.push(email);},async verify(email,code){if(holdVerify)await holdVerify();if(code!=='123456'||!otpActors.has(email))throw new Error('fixture code');await freshAuth(otpActors.get(email));return{accessToken:otpActors.get(email).token,refreshToken:'fixture-refresh'};},async refresh(){throw new Error('unused');},async logout(){}};
+const pendingSignupFixture=new Map();
+const otpProvider={async start(email){otpRequests.push(email);const newSubject=pendingSignupFixture.get(email);if(newSubject){
+ await admin.query('INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,$2,NULL)',[newSubject,email]);pendingSignupFixture.delete(email);
+ }},async verify(email,code){if(holdVerify)await holdVerify();if(code!=='123456'||!otpActors.has(email))throw new Error('fixture code');await freshAuth(otpActors.get(email));return{accessToken:otpActors.get(email).token,refreshToken:'fixture-refresh'};},async refresh(){throw new Error('unused');},async logout(){}};
 const gateway={kind:'fixture',configuration:config,async start(input){requests.push(input);if(failDelivery)throw new Error('lost fictional reply');}};
 const repo=new HouseholdRepository(app,{allowChildNetwork:true,noticeVersion:notices[0].version,sessionStatus:new SupabaseSessionVerifier(issuer)});
-const guardian=new GuardianEnrollmentService(repo,{gateway,webhookVerifier:new KWSWebhookVerifier(config,[signing]),verifierPool:proof,emailDigestKey:randomBytes(32).toString('base64url'),notices,retentionPolicy:{pendingHours:1,evidenceDays:1,approvalReference:'fictional-policy'}});
+const guardian=new GuardianEnrollmentService(repo,{manualReviewRetentionDays:7,unmatchedReviewRetentionDays:2,gateway,webhookVerifier:new KWSWebhookVerifier(config,[signing]),verifierPool:proof,emailDigestKey:randomBytes(32).toString('base64url'),notices,retentionPolicy:{pendingHours:1,evidenceDays:1,approvalReference:'fictional-policy'}});
 const bff=new BrowserAuthService(repo,verifier,otpProvider,{encryptionKey:randomBytes(32).toString('base64'),childSignin:guardian});guardian.attachChildSignin(bff,otpProvider);
+const expectedChildDeletes=new Set();
+const childProvider={
+ async assertAvailable(subject){assert.ok(expectedChildDeletes.has(subject),'only the explicitly expected child may be passed to the fixture provider');assert.equal((await admin.query('SELECT 1 FROM auth.users WHERE id=$1',[subject])).rowCount,1);},
+ async deleteAccount(subject){assert.ok(expectedChildDeletes.has(subject));await admin.query('DELETE FROM auth.sessions WHERE user_id=$1',[subject]);await admin.query('DELETE FROM auth.users WHERE id=$1',[subject]);assert.equal((await admin.query('SELECT 1 FROM auth.users WHERE id=$1',[subject])).rowCount,0);}
+};
+const privacy=new PrivacyService(repo,{provider:childProvider,policy:privacyPolicy,journal:journal.port});
 const webOrigin='https://guardian.web.fixture.invalid';
-const server=createHTTPServer({repository:repo,verifier,guardian,browserAuth:bff,webOrigin,maxRequestsPerMinute:10000});let origin;
+const server=createHTTPServer({repository:repo,verifier,guardian,privacy,browserAuth:bff,webOrigin,clientAddress:req=>req.headers['x-fixture-client-address']??req.socket.remoteAddress,maxRequestsPerMinute:10000});let origin;
 before(async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;});
 after(async()=>{await new Promise(resolve=>server.close(resolve));await journal.close();await Promise.all([admin.end(),app.end(),proof.end()]);});
 async function actor(email='guardian-'+randomUUID()+'@fixture.invalid',confirmed=true){const subject=randomUUID(),session=randomUUID();await admin.query('INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,$2,$3)',[subject,email,confirmed?new Date():null]);await admin.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[session,subject]);const token=await new SignJWT({session_id:session,amr:[{method:'otp',timestamp:Math.floor(Date.now()/1000)}]}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setAudience(audience).setSubject(subject).setIssuedAt().setExpirationTime('1h').sign(privateKey);const value={subject,session,token,email};otpActors.set(email,value);return value;}
@@ -45,9 +55,19 @@ async function read(f,id){return ok(await call(f.adult,f.base+'/guardian/enrollm
 async function verified(f,extra={}){const made=await create(f,extra),sent=await start(f,made.setup);ok(await callback(event(sent.request)));return read(f,made.setup.enrollmentId);}
 async function consented(f,extra={}){let setup=await verified(f,extra);const input={clientKey:randomUUID(),baseRevision:setup.revision,noticeVersion:setup.noticeVersion,noticeDigest:setup.noticeDigest,childAlias:'Fictional child',decision:'grant',childSignInEmail:f.child.email};setup=ok(await call(f.adult,f.base+'/guardian/enrollments/'+setup.enrollmentId+'/consent','POST',input));return{setup,input};}
 async function freshAuth(person,method='otp',age=0){person.token=await new SignJWT({session_id:person.session,amr:[{method,timestamp:Math.floor(Date.now()/1000)-age}]}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setAudience(audience).setSubject(person.subject).setIssuedAt().setExpirationTime('1h').sign(privateKey);return person;}
-async function coveredNative(f,invitation){const input={clientKey:randomUUID(),token:invitation.token,email:f.child.email,challengeSecret:randomBytes(32).toString('base64url')};const challenge=ok(await call(null,'/v1/child-invitations/native-auth/start','POST',input));await freshAuth(f.child);const admit={clientKey:randomUUID(),householdId:challenge.householdId,challengeId:challenge.challengeId,challengeSecret:input.challengeSecret};ok(await call(f.child,'/v1/child-invitations/native-auth/admit','POST',admit));return{input,challenge,admit};}
+async function coveredNative(f,invitation){const input={clientKey:randomUUID(),token:invitation.token,email:f.child.email,challengeSecret:randomBytes(32).toString('base64url')};const challenge=ok(await call(null,'/v1/child-invitations/native-auth/start','POST',input,{'x-fixture-client-address':f.child.subject}));await freshAuth(f.child);const admit={clientKey:randomUUID(),householdId:challenge.householdId,challengeId:challenge.challengeId,challengeSecret:input.challengeSecret};ok(await call(f.child,'/v1/child-invitations/native-auth/admit','POST',admit));return{input,challenge,admit};}
 async function claimed(f,extra={}){const {setup}=await consented(f,extra),invitationInput={clientKey:randomUUID(),baseRevision:setup.revision,secret:randomBytes(32).toString('base64url')};const invitation=ok(await call(f.adult,f.base+'/guardian/enrollments/'+setup.enrollmentId+'/child-invitations','POST',invitationInput));await coveredNative(f,invitation);const input={clientKey:randomUUID(),token:invitation.token,pairingCode:'ABCD2345'};const claim=ok(await call(f.child,'/v1/child-invitations/claim','POST',input));return{setup:await read(f,setup.enrollmentId),claim,invitation,input,invitationInput};}
 async function active(f,extra={}){let state=await claimed(f,extra);const confirm={clientKey:randomUUID(),baseRevision:state.setup.revision,claimId:state.claim.claimId,pairingCode:state.input.pairingCode};state.setup=ok(await call(f.adult,f.base+'/guardian/enrollments/'+state.setup.enrollmentId+'/confirm-child','POST',confirm));const finish={clientKey:randomUUID(),householdId:f.house.householdId,claimId:state.claim.claimId,pairingCode:state.input.pairingCode,deviceSecret:randomBytes(32).toString('base64url')};const receipt=ok(await call(f.child,'/v1/child-invitations/finish','POST',finish));Object.assign(f.child,receipt);return{...state,confirm,finish,receipt};}
+
+const childDeletionPath='/guardian/child-account-deletions';
+async function reviewChildAccount(f,enrollmentId){
+ return ok(await call(f.adult,f.base+childDeletionPath+'/review','POST',{enrollmentId,childSignInEmail:f.child.email}));
+}
+function deletionReceipt(){return{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true};}
+async function requestChildAccount(f,enrollmentId,review,body=deletionReceipt()){
+ expectedChildDeletes.add(f.child.subject);
+ return call(f.adult,f.base+childDeletionPath,'POST',{...body,enrollmentId,reviewId:review.reviewId});
+}
 
 test('notice/create/verification exact retry binds notice and exact current guardian session/device',async()=>{
  const f=await family();assert.equal(ok(await call(f.adult,f.base+'/guardian/notice')).available,true);
@@ -251,6 +271,7 @@ test('paired child chooses an open pickup and sees only their own request until 
 test('trusted finish and pending-child identity deletion serialize in both deterministic lock orders',async t=>{
  for(const ordering of ['finish_first','deletion_first']){
   const f=await family(),state=await claimed(f);ok(await call(f.adult,f.base+'/guardian/enrollments/'+state.setup.enrollmentId+'/confirm-child','POST',{clientKey:randomUUID(),baseRevision:state.setup.revision,claimId:state.claim.claimId,pairingCode:state.input.pairingCode}));
+  const review=await reviewChildAccount(f,state.setup.enrollmentId);
   const details=(await admin.query('SELECT c.pairing_hash,a.email_digest FROM ritc.guardian_child_claim c JOIN ritc.guardian_child_invitation v USING(household_id,invite_id) JOIN ritc.guardian_attempt a USING(household_id,enrollment_id) WHERE c.household_id=$1 AND c.claim_id=$2',[f.house.householdId,state.claim.claimId])).rows[0];
   const lock=await admin.connect(),trusted=await proof.connect(),deleting=await app.connect();let finalizing,deletion;
   try{
@@ -258,9 +279,9 @@ test('trusted finish and pending-child identity deletion serialize in both deter
    const trustedPID=(await trusted.query('SELECT pg_backend_pid() pid')).rows[0].pid,deletePID=(await deleting.query('SELECT pg_backend_pid() pid')).rows[0].pid;
    const finish=()=>trusted.query('SELECT ritc.guardian_finish_verified($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) receipt',[f.house.householdId,state.claim.claimId,issuer,f.child.subject,f.child.session,details.pairing_hash,details.email_digest,randomUUID(),tokenHash(randomUUID()),randomUUID(),tokenHash(randomUUID()),f.adult.email,f.child.email]);
    const pinnedClient={query:deleting.query.bind(deleting),release(){}};const deletionRepo=new HouseholdRepository({connect:async()=>pinnedClient,query:deleting.query.bind(deleting)},{allowChildNetwork:true,noticeVersion:notices[0].version,sessionStatus:new SupabaseSessionVerifier(issuer)});
-   const deletionService=new PrivacyService(deletionRepo,{provider:privacyProvider,policy:privacyPolicy,journal:journal.port});const deletionIdentity=await verifier.verify(f.child.token),deletionInput={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[]};
+   const deletionService=new PrivacyService(deletionRepo,{provider:privacyProvider,policy:privacyPolicy,journal:journal.port});const deletionIdentity=await verifier.verify(f.adult.token),deletionInput={...deletionReceipt(),reviewId:review.reviewId};
    t.after(()=>deferProfileOnlyDeletion(admin,deletionInput.clientKey));
-   const erase=()=>deletionService.request(deletionIdentity,deletionInput).then(value=>({accepted:true,value}),error=>({accepted:false,error}));
+   const erase=()=>deletionService.requestChild(deletionIdentity,f.house.householdId,state.setup.enrollmentId,deletionInput).then(value=>({accepted:true,value}),error=>({accepted:false,error}));
    async function awaitLock(pid){for(let i=0;i<200;i++){if((await admin.query('SELECT wait_event_type FROM pg_stat_activity WHERE pid=$1',[pid])).rows[0]?.wait_event_type==='Lock')return;await new Promise(resolve=>setTimeout(resolve,2));}throw new Error('expected real PostgreSQL lock wait');}
    if(ordering==='finish_first'){finalizing=finish();await awaitLock(trustedPID);deletion=erase();await awaitLock(deletePID);await lock.query('COMMIT');const result=await finalizing;assert.ok(result.rows[0].receipt);await trusted.query('COMMIT');const resultDelete=await deletion;assert.equal(resultDelete.accepted,false);assert.equal(resultDelete.error.code,'unavailable');assert.equal(resultDelete.error.status,404);}
    else{deletion=erase();await awaitLock(deletePID);finalizing=finish();assert.equal((await finalizing).rows[0].receipt,null);await trusted.query('COMMIT');await lock.query('COMMIT');assert.equal((await deletion).accepted,true);}
@@ -287,4 +308,194 @@ test('production readiness cannot be enabled by flags, partial notices, missing 
  const combinedRole=(await admin.query("SELECT rolcanlogin,rolsuper,rolbypassrls,pg_has_role(oid,'ritc_guardian_verifier','MEMBER') AS verifier,pg_has_role(oid,'ritc_worker','MEMBER') AS worker,pg_has_role(oid,'ritc_app','MEMBER') AS app FROM pg_roles WHERE rolname='ritc_guardian_combined_worker'")).rows[0];
  assert.ok(combinedRole?.rolcanlogin&&combinedRole.verifier&&combinedRole.worker&&!combinedRole.app&&!combinedRole.rolsuper&&!combinedRole.rolbypassrls,'The existing intentionally combined fixture role is required for this negative test; this test does not create roles or change memberships.');
  const combined=new URL(process.env.TEST_GUARDIAN_VERIFIER_DATABASE_URL);combined.username='ritc_guardian_combined_worker';await assert.rejects(guardianRuntime(repo,{...environment,GUARDIAN_VERIFIER_DATABASE_URL:combined.toString()},databaseConfiguration),/verifier-only/);
+});
+
+test(restoreTestName,async()=>{
+ if(!process.env.RITC_CHILD_RESTORE_DIRECTORY)return runIsolatedChildRestore();
+ const f=await family(),enrolled=await active(f),id=enrolled.setup.enrollmentId;
+ const unjoined=await family(),pending=await claimed(unjoined),pendingId=pending.setup.enrollmentId;
+ for(const child of [f.child,unjoined.child]){
+  const preview=ok(await call(child,'/v1/privacy/deletion-preview'));
+  assert.equal(preview.adult,false);assert.equal(preview.deletionAvailable,false);assert.deepEqual(preview.households,[]);
+ }
+ const review=await reviewChildAccount(f,id),pendingReview=await reviewChildAccount(unjoined,pendingId);
+ await verifyChildBackup({family:f,unjoined,childMemberId:enrolled.receipt.memberId,journal,accept:async()=>{
+  const account=deletionReceipt(),noMembership=deletionReceipt();
+  ok(await requestChildAccount(f,id,review,account),202);
+  ok(await requestChildAccount(unjoined,pendingId,pendingReview,noMembership),202);
+  return {member:account.clientKey,unjoined:noMembership.clientKey};
+ }});
+});
+
+test('fresh joint evidence recovers a withdrawn child account after scheduled enrollment evidence retirement',async()=>{
+ const f=await family(),first=await active(f),consent=ok(await call(f.adult,f.base+'/guardian/consents')).consents[0];
+ ok(await call(f.adult,f.base+'/guardian/consents/'+consent.consentId+'/revoke','POST',{}));
+ // The scheduled job's due-row check is relative to the immutable revocation
+ // timestamp. Expire the enrollment evidence just as a completed policy purge does.
+ await admin.query('DELETE FROM ritc.guardian_enrollment WHERE household_id=$1 AND enrollment_id=$2',[f.house.householdId,first.setup.enrollmentId]);
+ assert.deepEqual(ok(await call(f.adult,f.base+childDeletionPath)),{children:[]});
+ const {setup}=await consented(f,{childId:consent.childId});
+ const invitation=ok(await call(f.adult,f.base+'/guardian/enrollments/'+setup.enrollmentId+'/child-invitations','POST',{clientKey:randomUUID(),baseRevision:setup.revision,secret:randomBytes(32).toString('base64url')}));
+ await coveredNative(f,invitation);
+ const review=await reviewChildAccount(f,setup.enrollmentId);
+ assert.equal(review.enrollmentId,setup.enrollmentId);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.consent WHERE household_id=$1 AND child_id=$2 AND revoked_at IS NULL',[f.house.householdId,consent.childId])).rowCount,0);
+});
+test('a second household requires independent proof for the same guardian and exact child',async()=>{
+ const f=await family(),first=await active(f);
+ const otherHouse=ok(await call(f.adult,'/v1/households','POST',{clientKey:randomUUID(),label:'Private second household',alias:'Guardian',adultAttestation:true}),201);
+ const base='/v1/households/'+otherHouse.householdId;
+ const adult={...f.adult,...ok(await call(f.adult,base+'/devices','POST',{}),201)};
+ const second={adult,child:{...f.child},house:otherHouse,base};
+ await active(second);
+ const list=ok(await call(f.adult,f.base+childDeletionPath));
+ assert.deepEqual(list.children,[{enrollmentId:first.setup.enrollmentId,childAlias:'Fictional child'}]);
+ const review=await reviewChildAccount(f,first.setup.enrollmentId);
+ assert.ok(!JSON.stringify(review).includes(otherHouse.householdId));
+ await admin.query("UPDATE ritc.guardian_relationship SET revoked_at=clock_timestamp() WHERE household_id=$1 AND child_id=$2",[otherHouse.householdId,second.child.memberId]);
+ assert.deepEqual(ok(await call(f.adult,f.base+childDeletionPath)),{children:[]});
+ assert.equal((await requestChildAccount(f,first.setup.enrollmentId,review)).status,404);
+});
+
+test('private guardian case intake, receipt, operator transitions and erasure never initiate provider deletion',async()=>{
+ const f=await family(),state=await active(f),enrollmentId=state.setup.enrollmentId;
+ const manual=f.base+childDeletionPath+'/manual-reviews',body={enrollmentId,clientKey:randomUUID(),childSignInEmail:f.child.email,confirm:true};
+ const other=await actor(),secondGuardian=randomUUID();
+ await admin.query("INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer) VALUES($1,$2,$3,$4,'Other','adult','active',false)",[f.house.householdId,secondGuardian,issuer,other.subject]);
+ await admin.query('INSERT INTO ritc.guardian_relationship(household_id,child_id,guardian_id,proof_ref) VALUES($1,$2,$3,$4)',[f.house.householdId,state.receipt.memberId,secondGuardian,'fixture']);
+ assert.deepEqual(ok(await call(f.adult,f.base+childDeletionPath)),{children:[]});
+ assert.deepEqual(ok(await call(f.adult,manual)),{available:true,children:[{enrollmentId,childAlias:'Fictional child',identityState:'confirmed'}],requests:[]});
+ assert.equal((await call(f.adult,manual,'POST',{...body,childSignInEmail:other.email})).status,404);
+ await freshAuth(f.adult,'otp',301);assert.equal((await call(f.adult,manual,'POST',body)).status,401);await freshAuth(f.adult);
+ const receipt=ok(await call(f.adult,manual,'POST',body),202);
+ assert.deepEqual(Object.keys(receipt).sort(),['requestId','status','createdAt','updatedAt','expiresAt'].sort());
+ assert.equal(receipt.requestId,body.clientKey);assert.equal(receipt.status,'received');
+ assert.deepEqual(ok(await call(f.adult,manual,'POST',body),202),receipt);
+ assert.equal((await call(f.adult,manual,'POST',{...body,clientKey:randomUUID()})).data.error.code,'review_already_requested');
+ const secondDevice={...other,...ok(await call(other,f.base+'/devices','POST',{}),201)};
+ assert.deepEqual(ok(await call(secondDevice,manual)),{available:true,children:[],requests:[]});
+ assert.equal((await call(secondDevice,manual,'POST',body)).status,404);
+ await assert.rejects(app.query('SELECT * FROM ritc.guardian_case_queue(5)'),error=>error.code==='42501');
+ await assert.rejects(app.query('SELECT * FROM ritc.guardian_deletion_case'),error=>error.code==='42501');
+ const operator=await admin.connect();
+ try{
+   await operator.query('BEGIN');await operator.query('SET LOCAL ROLE ritc_guardian_case_reviewer');
+   const queue=(await operator.query('SELECT * FROM ritc.guardian_case_queue(100)')).rows;
+   assert.ok(queue.some(item=>item.request_id===body.clientKey));assert.ok(!JSON.stringify(queue).includes(f.child.email));
+   assert.equal((await operator.query("SELECT ritc.guardian_case_update($1,'received','in_review') AS updated",[body.clientKey])).rows[0].updated,true);
+   await operator.query('COMMIT');
+ }finally{await operator.query('ROLLBACK');operator.release();}
+ assert.equal(ok(await call(f.adult,manual)).requests[0].status,'in_review');
+ const disabled=new GuardianEnrollmentService(repo,{emailDigestKey:guardian.options.emailDigestKey});
+ const auth={identity:await verifier.verify(f.adult.token),deviceToken:f.adult.deviceToken};
+ const list=await repo.authorized(f.house.householdId,auth,ctx=>disabled.manualDeletionCases(ctx,auth.identity));
+ assert.equal(list.available,false);assert.equal(list.requests[0].status,'in_review');assert.deepEqual(list.children,[]);
+ await assert.rejects(repo.authorized(f.house.householdId,auth,ctx=>disabled.openManualDeletionCase(ctx,auth.identity,body)),e=>e.code==='manual_review_unavailable');
+ assert.equal((await admin.query('SELECT 1 FROM ritc.privacy_job WHERE subject=$1',[f.child.subject])).rowCount,0);
+ // Resolve the competing relationship, then independently authorize deletion.
+ await admin.query('UPDATE ritc.guardian_relationship SET revoked_at=clock_timestamp() WHERE household_id=$1 AND child_id=$2 AND guardian_id=$3',[f.house.householdId,state.receipt.memberId,secondGuardian]);
+ const review=await reviewChildAccount(f,enrollmentId),receiptInput=deletionReceipt();
+ ok(await requestChildAccount(f,enrollmentId,review,receiptInput),202);
+ await deferProfileOnlyDeletion(admin,receiptInput.clientKey);
+ assert.deepEqual(ok(await call(f.adult,manual)).requests,[]);
+});
+
+test('provider signup interrupted before child admission opens only an enrollment investigation',async()=>{
+ const f=await family();
+ const newEmail='abandoned-'+randomUUID()+'@fixture.invalid',providerSubject=randomUUID();
+ f.child={email:newEmail};
+ const {setup}=await consented(f),enrollmentId=setup.enrollmentId;
+ const url=f.base+childDeletionPath+'/manual-reviews';
+ const input={clientKey:randomUUID(),enrollmentId,childSignInEmail:newEmail,confirm:true};
+ const invitation=ok(await call(f.adult,f.base+'/guardian/enrollments/'+enrollmentId+'/child-invitations','POST',{clientKey:randomUUID(),baseRevision:setup.revision,secret:randomBytes(32).toString('base64url')}));
+ assert.deepEqual(ok(await call(f.adult,url)).children,[]);
+ assert.equal((await call(f.adult,url,'POST',input)).status,404);
+ pendingSignupFixture.set(newEmail,providerSubject);
+ ok(await call(null,'/v1/child-invitations/native-auth/start','POST',{clientKey:randomUUID(),token:invitation.token,email:newEmail,challengeSecret:randomBytes(32).toString('base64url')}));
+ assert.equal((await admin.query('SELECT 1 FROM auth.users WHERE id=$1',[providerSubject])).rowCount,1);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.guardian_child_principal WHERE provider_user=$1',[providerSubject])).rowCount,0);
+ assert.deepEqual(ok(await call(f.adult,f.base+childDeletionPath)).children,[]);
+ assert.equal((await call(f.adult,f.base+childDeletionPath+'/review','POST',{enrollmentId,childSignInEmail:newEmail})).status,404);
+ assert.deepEqual(ok(await call(f.adult,url)).children,[{enrollmentId,childAlias:'Fictional child',identityState:'unmatched'}]);
+ assert.equal((await call(f.adult,url,'POST',{...input,childSignInEmail:f.adult.email})).status,404);
+ const receipt=ok(await call(f.adult,url,'POST',input),202);
+ assert.deepEqual(ok(await call(f.adult,url,'POST',input),202),receipt);
+ assert.ok(Math.abs(Date.parse(receipt.expiresAt)-Date.parse(receipt.createdAt)-2*86400000)<1000);
+ const row=(await admin.query('SELECT * FROM ritc.guardian_deletion_case WHERE request_id=$1',[receipt.requestId])).rows[0];
+ assert.equal(row.child_hash,null);assert.ok(!JSON.stringify(row).includes(newEmail));assert.ok(!JSON.stringify(row).includes(providerSubject));
+ assert.equal((await admin.query('SELECT 1 FROM ritc.privacy_job WHERE subject=$1',[providerSubject])).rowCount,0);
+ await admin.query('DELETE FROM ritc.guardian_enrollment WHERE household_id=$1 AND enrollment_id=$2',[f.house.householdId,enrollmentId]);
+ assert.deepEqual(ok(await call(f.adult,url)),{available:true,children:[],requests:[]});
+ assert.equal((await admin.query('SELECT 1 FROM auth.users WHERE id=$1',[providerSubject])).rowCount,1);
+});
+test('whole child account deletion reaches completion for a withdrawn profile and an interrupted child sign-in',async()=>{
+ const worker=new pg.Pool({connectionString:process.env.TEST_WORKER_DATABASE_URL});
+ try{
+  for(const paired of [true,false]){
+   const f=await family();
+   let enrollmentId;
+   if(paired){
+    const state=await active(f);enrollmentId=state.setup.enrollmentId;
+    const consent=ok(await call(f.adult,f.base+'/guardian/consents')).consents[0];
+    ok(await call(f.adult,f.base+'/guardian/consents/'+consent.consentId+'/revoke','POST',{}));
+    assert.equal((await admin.query('SELECT 1 FROM ritc.privacy_job WHERE subject=$1',[f.child.subject])).rowCount,0);
+   }else{
+    const {setup}=await consented(f);enrollmentId=setup.enrollmentId;
+    const invitation=ok(await call(f.adult,f.base+'/guardian/enrollments/'+enrollmentId+'/child-invitations','POST',{clientKey:randomUUID(),baseRevision:setup.revision,secret:randomBytes(32).toString('base64url')}));
+    assert.deepEqual(ok(await call(f.adult,f.base+childDeletionPath)),{children:[]});
+    await coveredNative(f,invitation);
+    assert.equal((await admin.query("SELECT 1 FROM ritc.member WHERE household_id=$1 AND kind='child'",[f.house.householdId])).rowCount,0);
+   }
+   const candidates=ok(await call(f.adult,f.base+childDeletionPath));
+   assert.deepEqual(candidates,{children:[{enrollmentId,childAlias:'Fictional child'}]});
+   expectedChildDeletes.add(f.child.subject);
+   const adultSelf=await call(f.child,'/v1/privacy/deletions','POST',{...deletionReceipt(),households:[]});
+   assert.equal(adultSelf.status,404);
+   const review=await reviewChildAccount(f,enrollmentId);
+   assert.deepEqual(Object.keys(review).sort(),['enrollmentId','childAlias','expiresAt','reviewId','verifiedBackupRetentionDays'].sort());
+   const receipt=deletionReceipt(),accepted=ok(await requestChildAccount(f,enrollmentId,review,receipt),202);
+   assert.equal(accepted.status,'pending');
+   const status='/v1/privacy/jobs/'+receipt.clientKey;
+   assert.equal((await call(null,status,'GET',undefined,{'x-deletion-token':deletionReceipt().statusToken})).status,404);
+   assert.deepEqual(ok(await call(null,status,'GET',undefined,{'x-deletion-token':receipt.statusToken})),accepted);
+   const runner=new PrivacyMaintenance(worker,{provider:childProvider,journal:journal.port,issuer});
+   assert.equal((await runner.run({batchSize:1})).completed,1);
+   const done=ok(await call(null,status,'GET',undefined,{'x-deletion-token':receipt.statusToken}));
+   assert.equal(done.status,'complete');assert.equal(done.providerAccountDeleted,true);
+   assert.equal((await admin.query('SELECT 1 FROM auth.users WHERE id=$1',[f.adult.subject])).rowCount,1);
+   ok(await call(f.adult,f.base+'/bootstrap'));
+  }
+ }finally{await worker.end();}
+});
+
+test('child account reviews require recent actual guardian, exact child email, current device and unchanged authority',async()=>{
+ const f=await family(),state=await active(f),id=state.setup.enrollmentId;
+ const reviewPath=f.base+childDeletionPath+'/review',body={enrollmentId:id,childSignInEmail:f.child.email};
+ const foreign=await family();
+ assert.equal((await call(foreign.adult,foreign.base+childDeletionPath+'/review','POST',body)).status,404);
+ assert.equal((await call(f.child,reviewPath,'POST',body)).status,404);
+ assert.equal((await call(f.adult,reviewPath,'POST',{...body,childSignInEmail:foreign.child.email})).status,404);
+ assert.equal((await call(f.adult,reviewPath,'POST',{...body,targetSubject:f.child.subject})).status,422);
+ await freshAuth(f.adult,'otp',301);
+ assert.equal((await call(f.adult,reviewPath,'POST',body)).data.error.code,'reauthentication_required');
+ await freshAuth(f.adult);
+ const old=await reviewChildAccount(f,id),review=await reviewChildAccount(f,id);
+ assert.equal((await requestChildAccount(f,id,old)).status,404);
+ const sibling=ok(await call(f.adult,f.base+'/devices','POST',{}),201);
+ assert.equal((await requestChildAccount({...f,adult:{...f.adult,...sibling}},id,review)).status,404);
+ await admin.query("UPDATE ritc.guardian_child_deletion_review SET expires_at=now()-interval '1 second' WHERE review_id=$1",[review.reviewId]);
+ assert.equal((await requestChildAccount(f,id,review)).status,404);
+ const renewed=await reviewChildAccount(f,id);
+ await admin.query('UPDATE auth.users SET email=$1 WHERE id=$2',[foreign.child.email,f.child.subject]);
+ assert.equal((await requestChildAccount(f,id,renewed)).status,404);
+ await admin.query('UPDATE auth.users SET email=$1 WHERE id=$2',[f.child.email,f.child.subject]);
+ const other=await actor();
+ const otherId=randomUUID();
+ await admin.query("INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer) VALUES($1,$2,$3,$4,'Second guardian','adult','active',false)",[f.house.householdId,otherId,issuer,other.subject]);
+ await admin.query('INSERT INTO ritc.guardian_relationship(household_id,child_id,guardian_id,proof_ref) VALUES($1,$2,$3,$4)',[f.house.householdId,state.receipt.memberId,otherId,'fixture']);
+ assert.deepEqual(ok(await call(f.adult,f.base+childDeletionPath)),{children:[]});
+ assert.equal((await requestChildAccount(f,id,renewed)).status,404);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.privacy_job WHERE subject=$1',[f.child.subject])).rowCount,0);
+ await assert.rejects(app.query('SELECT * FROM ritc.guardian_deletion_admission'),error=>error.code==='42501');
+ await assert.rejects(app.query('SELECT * FROM ritc.guardian_child_deletion_review'),error=>error.code==='42501');
 });

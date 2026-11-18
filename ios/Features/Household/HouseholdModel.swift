@@ -140,7 +140,7 @@ struct DeviceReminderPersona: Equatable {
         configured = true
     }
     func sendCode() async {
-        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
+        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is unavailable. You can still use your private shopping tools."); return }
         guard let auth, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
         let start = generation
@@ -162,7 +162,7 @@ struct DeviceReminderPersona: Equatable {
     }
 
     func verifyCode(continueInHousehold: () -> Bool = { false }) async {
-        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
+        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is unavailable. You can still use your private shopping tools."); return }
         guard let auth, let service, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
         let start = generation

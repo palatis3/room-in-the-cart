@@ -10,10 +10,16 @@ struct MembershipEntryView: View {
 
     var body: some View {
         Group {
-            if household.projection == nil || household.locked {
+            if !household.configured {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text(mtr("Household subscription purchases are unavailable. You can keep using the free planning tools."))
+                    Button(mtr("Continue with Free")) { dismiss() }
+                        .frame(minHeight: 44).accessibilityIdentifier("membership.free")
+                }.padding(20)
+            } else if household.membershipSession == nil {
                 VStack(alignment: .leading, spacing: 20) {
                     Text(tr("Choose your household first")).font(.title2.bold())
-                    Text(tr("A membership belongs to an authenticated household. Your Free records and manual tools remain available."))
+                    Text(tr("To subscribe or restore a purchase, sign in with your adult account and select your household. You can use the free planning tools without signing in."))
                     NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
                 }.padding(20)
             } else if let model = membership.model { MembershipView(model: model, household: household) }

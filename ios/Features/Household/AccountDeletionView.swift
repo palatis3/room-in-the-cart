@@ -18,6 +18,12 @@ struct AccountDeletionView: View {
     }
     var body: some View {
         Form {
+            if account.guardianRuntimeScope != nil {
+                Section { GuardianChildDeletionLink(household: account) }
+            } else {
+                Section { Text(GuardianCopy.text("To manage a child’s account, sign in to your guardian account, choose the child’s household, and open Guardian controls.")) }
+                GuardianDeletionSupportSection()
+            }
             AccountDeletionScope()
             ForEach(visibleReceipts) { receipt in receiptSection(receipt) }
             if let subject {
@@ -31,7 +37,7 @@ struct AccountDeletionView: View {
                             Button(ht("Sign out to verify again")) {
                                 Task { await account.signOut(); dismiss() }
                             }
-                        } else { Text(ht("Fresh email verification is unavailable on this build. Review deletion again when household sign-in is available.")) }
+                        } else { Text(ht("You need a new email code to delete your account. Email verification is unavailable.")) }
                     }
                 }
             } else {

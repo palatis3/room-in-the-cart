@@ -66,7 +66,9 @@ struct MembershipView: View {
                 }
             }
             Section(mtr("Household subscription")) {
-                if let offer = model.offer {
+                if !model.configuration.isReady {
+                    Text(mtr("Household subscription purchases are unavailable. You can keep using the free planning tools."))
+                } else if let offer = model.offer {
                     Text(offer.displayName).font(.headline)
                     Text(String(format: mtr("%@ every %@"), offer.displayPrice, offer.localizedPeriod))
                         .font(.title3).monospacedDigit()
@@ -77,12 +79,9 @@ struct MembershipView: View {
                         .accessibilityIdentifier("membership.subscribe")
                 } else if model.isLoadingOffer {
                     ProgressView(mtr("Loading the subscription offer…"))
-                } else if model.configuration.productID != nil {
+                } else {
                     Text(mtr("The subscription offer is unavailable. Your Free access is ready to use."))
                     Button(mtr("Retry offer")) { Task { await model.loadOffer() } }.disabled(model.isBusy)
-                }
-                if !model.configuration.isReady {
-                    Text(mtr("Purchases are not available in this build."))
                 }
                 if model.isBusy { ProgressView(mtr("Checking with Apple and your household…")) }
                 ForEach(model.statusMessages) { message in
@@ -188,7 +187,7 @@ func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
         case .signInRequired: return mtr("Sign in to an adult account and select its household to restore or subscribe.")
         case .wrongHousehold, .accountMismatch: return mtr("An App Store transaction or membership response does not match this account or household. Use the purchasing account to restore it.")
         case .unverified, .invalidReceipt, .invalidSnapshot, .serverRejected: return mtr("An App Store transaction could not be verified. Use Restore Purchases or contact support. Current membership access is shown above.")
-        case .notConfigured: return mtr("Purchases are not available in this build.")
+        case .notConfigured: return mtr("Household subscription purchases are unavailable. You can keep using the free planning tools.")
         case .unavailable: return mtr("That membership operation could not be completed. Try again or use Restore Purchases; current access is shown above.")
         case .membershipInactive: return mtr("Household access is inactive. Your Free work remains available.")
         case .notPurchaser: return mtr("Only the adult who purchased this household’s membership can manage its subscription and assign seats.")

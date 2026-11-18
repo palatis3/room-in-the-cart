@@ -31,8 +31,8 @@ struct HouseholdSettingsView: View {
             }
             if !model.configured {
                 Section(ht("Household access")) {
-                    Label(ht("Household service is not configured"), systemImage: "network.slash")
-                    Text(ht("Private shopping tools work without an account. Household sign-in will be available when the service is connected."))
+                    Label(ht("Household sign-in is unavailable"), systemImage: "network.slash")
+                    Text(ht("You can make a private shopping list, compare packs and plan dinners on this iPhone without an account."))
                 }
             } else if model.locked {
                 Section(ht("Protected account")) {
@@ -59,7 +59,7 @@ struct HouseholdSettingsView: View {
                         }.disabled(model.code.isEmpty)
                     }
                     } else {
-                        Text(ht("Email sign-in is not ready yet. Your private shopping tools work without an account."))
+                        Text(ht("Email sign-in is unavailable. You can still use your private shopping tools."))
                     }
                 }
             } else {
@@ -168,12 +168,13 @@ struct HouseholdSettingsView: View {
                         }
                     }
                 } else {
-                    Section(ht("Choose household")) {
-                        Toggle(ht("Keep my existing work private on this phone"), isOn: $model.keepLocalPrivate)
-                        ForEach(model.workspaces) { workspace in
-                            Button(workspace.label) { Task { await model.join(workspace) } }.disabled(!model.keepLocalPrivate)
+                    if !model.workspaces.isEmpty {
+                        Section(ht("Choose household")) {
+                            Toggle(ht("Keep my existing work private on this phone"), isOn: $model.keepLocalPrivate)
+                            ForEach(model.workspaces) { workspace in
+                                Button(workspace.label) { Task { await model.join(workspace) } }.disabled(!model.keepLocalPrivate)
+                            }
                         }
-                        if model.workspaces.isEmpty { Text(ht("No active household access is available for this account.")) }
                     }
                     if let lifecycle = model.lifecycle { HouseholdSetupSections(model: lifecycle) }
                 }
@@ -191,8 +192,9 @@ struct HouseholdSettingsView: View {
                         AccountDeletionView(account: model, deletion: deletion)
                     } else {
                         Form {
-                            Section { Text(ht("This iPhone has no household service connection configured. Account deletion is unavailable.")) }
+                            Section { Text(ht("Account deletion is unavailable on this iPhone. Open Support in Settings for help.")) }
                             AccountDeletionScope()
+                            GuardianDeletionSupportSection()
                         }.navigationTitle(ht("Account deletion"))
                     }
                 }.accessibilityIdentifier("household.accountDeletion")

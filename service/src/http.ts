@@ -42,9 +42,9 @@ import {HelperReview} from './helper-review.js';
 import {PlacementReports} from './placement-reports.js';
 import {HouseholdLifecycle} from './lifecycle.js';
 import {HouseholdDeviceManagement,deviceRevocationSchema} from './device-management.js';
-import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
+import {PrivacyService,deletionSchema,exitSchema,childAccountDeletionSchema} from './privacy.js';
 import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
-import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
+import {GuardianEnrollmentService,guardianCreateSchema,childDeletionReviewSchema,manualChildDeletionSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
 export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
@@ -102,7 +102,7 @@ export function createHTTPServer(options:HTTPOptions) {
     const withinCall=<T>(work:()=>Promise<T>):Promise<T>=>privacyCall?privacyCall.run(work):work();
     try {
       const method=req.method??'GET',url=new URL(req.url??'/','https://service.invalid');
-      if(url.pathname.startsWith('/v1/privacy/')||method==='POST'&&/^\/v1\/households\/[^/]+\/exit$/.test(url.pathname))privacyCall=privacyHTTPCall(req,res,correlationId);
+      if(url.pathname.startsWith('/v1/privacy/')||/^\/v1\/households\/[^/]+\/guardian\/child-account-deletions(?:\/(?:review|manual-reviews))?$/.test(url.pathname)||method==='POST'&&/^\/v1\/households\/[^/]+\/exit$/.test(url.pathname))privacyCall=privacyHTTPCall(req,res,correlationId);
       if(req.headers.origin&&req.headers.origin!==options.webOrigin)throw new ServiceError(403,'origin_denied','Use the configured application origin.');
       if(url.pathname==='/health'&&method==='GET'){send(200,{service:'room-in-the-cart',status:'running'});return;}
       const ip=options.clientAddress?options.clientAddress(req):req.socket.remoteAddress;
@@ -247,6 +247,33 @@ export function createHTTPServer(options:HTTPOptions) {
       if(!match)throw new ServiceError(404,'unavailable','Return to your current workspace.');
       const householdId=uuid.parse(match[1]),path=match[2]!;
       if(session&&session.householdId!==householdId)throw accessEnded();
+      if(path==='/guardian/child-account-deletions/manual-reviews'){
+        if(method==='GET'){
+          send(200,await repository.authorized(householdId,auth,ctx=>guardian.manualDeletionCases(ctx,auth.identity)));return;
+        }
+        if(method!=='POST')throw unavailable();
+        const input=manualChildDeletionSchema.parse(await privacyCall!.run(()=>body(req,4096)));
+        send(202,await repository.authorized(householdId,auth,ctx=>guardian.openManualDeletionCase(ctx,auth.identity,input)));return;
+      }
+      if(path==='/guardian/child-account-deletions'||path==='/guardian/child-account-deletions/review'){
+        const privacy=options.privacy,call=privacyCall!.call;
+        if(path==='/guardian/child-account-deletions'&&method==='GET'){
+          send(200,await repository.authorized(householdId,auth,ctx=>guardian.deletionCandidates(ctx,auth.identity)));return;
+        }
+        if(method!=='POST')throw unavailable();
+        if(!privacy)throw new ServiceError(503,'deletion_unavailable','Account deletion is unavailable.');
+        const payload=await privacyCall!.run(()=>body(req,4096));
+        if(path.endsWith('/review')){
+          const input=childDeletionReviewSchema.parse(payload);
+          // Provider/journal readiness may contact another service. Keep it outside the household lock.
+          const review=await repository.authorized(householdId,auth,ctx=>guardian.reviewChildDeletion(ctx,auth.identity,input));
+          const policy=await privacy.childDeletionPolicy(call);
+          send(200,{...review,...policy});return;
+        }
+        const {enrollmentId,...input}=childAccountDeletionSchema.extend({enrollmentId:uuid}).parse(payload);
+        await repository.authorized(householdId,auth,ctx=>guardian.checkDeletionReviewDevice(ctx,auth.identity,enrollmentId,input.reviewId));
+        send(202,await privacy.requestChild(auth.identity,householdId,enrollmentId,input,call));return;
+      }
       if(path==='/exit'&&method==='POST'){
         if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account lifecycle is not configured.');
         const input=exitSchema.parse(await privacyCall!.run(()=>body(req)));

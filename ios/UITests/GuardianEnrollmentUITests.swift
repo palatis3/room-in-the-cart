@@ -117,9 +117,10 @@ import XCTest
         let screenshot = XCTAttachment(screenshot:app.screenshot()); screenshot.name = name; screenshot.lifetime = .keepAlways; add(screenshot)
         let accessibility = XCTAttachment(string:app.debugDescription); accessibility.name = name + " accessibility"; accessibility.lifetime = .keepAlways; add(accessibility)
     }
-    func testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock() {
+    private func signInFromPrivateSettings(hasHousehold: Bool) {
         app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","--guardian-fixture-root",
             "--reset-guardian-root-fixture","--household-first-sign-in","-AppleLanguages","(en)","-AppleLocale","en_US"]
+        if !hasHousehold { app.launchArguments.append("--no-existing-households") }
         app.launch()
         let settings = app.buttons["settings"]
         XCTAssertTrue(settings.waitForExistence(timeout:15))
@@ -129,6 +130,26 @@ import XCTest
         tap("Email me a code")
         type("Email sign-in code", "123456")
         tap("Verify code")
+    }
+
+    func testFirstSignInWithoutHouseholdsShowsOnlySetupPrivacyChoice() {
+        signInFromPrivateSettings(hasHousehold: false)
+        let adult = app.switches["I confirm I am an adult"]
+        XCTAssertTrue(adult.waitForExistence(timeout:10))
+        XCTAssertFalse(app.switches["Keep my existing work private on this phone"].exists)
+        type("Your household alias", "First shopper")
+        toggle("I confirm I am an adult")
+        type("Household name", "First household")
+        let create = app.buttons["Create household"]
+        reveal(create, hitTarget:false)
+        XCTAssertFalse(create.isEnabled)
+        toggle("Keep my lists and plans private when creating or joining a household", searchTowardStart:true)
+        reveal(create)
+        XCTAssertTrue(create.isEnabled)
+    }
+
+    func testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock() {
+        signInFromPrivateSettings(hasHousehold: true)
 
         // Nothing else is tapped between verification and choosing the household.
         let family = app.buttons["Fixture family"]
@@ -227,6 +248,51 @@ import XCTest
         XCTAssertFalse(element("guardian.leaveChildSpace").exists)
         XCTAssertEqual(app.tabBars.count,0)
     }
+    func testVerifiedGuardianCanReviewAndCancelWholeChildAccountDeletionWithEnrollmentUnavailable() {
+        signInFromPrivateSettings(hasHousehold: true)
+        toggle("Keep my existing work private on this phone")
+        tap("Fixture family")
+        tap("Guardian controls")
+        tap("guardian.childDeletionEntry")
+        tap("guardian.reviewChildDeletion")
+        let verify = element("guardian.verifyDeletionEmail")
+        reveal(verify, hitTarget: false)
+        XCTAssertFalse(verify.isEnabled)
+        type("guardian.childDeletionEmail", "child@example.invalid")
+        tap("guardian.verifyDeletionEmail")
+        tap("guardian.confirmChildDeletion")
+        let alert = app.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout:5))
+        XCTAssertTrue(alert.staticTexts.containing(NSPredicate(format:"label CONTAINS %@", "Fixture child")).firstMatch.exists)
+        alert.buttons["Cancel"].tap()
+        XCTAssertFalse(alert.exists)
+        XCTAssertTrue(element("guardian.confirmChildDeletion").exists)
+        XCTAssertFalse(app.buttons["Check deletion status"].exists)
+        capture("Guardian cancelled permanent child account deletion after review")
+
+        tap("guardian.manualReviewEntry")
+        let closed = app.staticTexts["This review case is closed. Only a deletion receipt confirms that the account was erased."]
+        reveal(closed, hitTarget: false)
+        let unmatched = element("guardian.manualReviewCandidate")
+        reveal(unmatched)
+        XCTAssertTrue(unmatched.label.contains("account unconfirmed"))
+        unmatched.tap()
+        let investigate = app.staticTexts["A sign-in code was requested, but the child’s account has not been confirmed. Ask the review team to investigate the interrupted setup."]
+        reveal(investigate, hitTarget: false)
+        XCTAssertFalse(element("guardian.confirmChildDeletion").exists)
+        capture("Private review for an interrupted setup with a separate closed case")
+    }
+
+    func testSpanishChildInPartialSetupCanFindGuardianDeletionInstructions() {
+        launch("--guardian-fixture-child",spanish:true)
+        let help = element("guardian.childDeletionHelp")
+        reveal(help,hitTarget:false)
+        XCTAssertTrue(help.label.contains("Eliminar la cuenta de un menor"))
+        XCTAssertFalse(element("guardian.childDeletionEntry").exists)
+        XCTAssertFalse(element("guardian.confirmChildDeletion").exists)
+        capture("Spanish partial child enrollment directs verified guardian to deletion")
+    }
+
     func testUnavailableNeverOffersCreationOrAdultVerification() {
         launch("--guardian-fixture-unavailable")
         XCTAssertTrue(element("guardian.unavailable").exists)
