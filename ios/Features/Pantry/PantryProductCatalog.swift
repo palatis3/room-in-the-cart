@@ -23,7 +23,11 @@ actor PantryProductCatalog {
     static let shared = PantryProductCatalog()
     private struct Key: Hashable { let scope: UUID; let code: String; let spanish: Bool }
     private struct Entry { let time: Date; let value: ProductCatalogProposal? }
-    private struct Pending { let id: UUID; let task: Task<ProductCatalogProposal?, Error> }
+    private struct Pending {
+        let id = UUID()
+        let task: Task<ProductCatalogProposal?, Error>
+        var readers: Set<UUID> = []
+    }
     private struct Response: Decodable {
         let status: String
         let code: String?
@@ -55,12 +59,51 @@ actor PantryProductCatalog {
     }
 
     func lookup(_ barcode: CapturedBarcode, scope: UUID, spanish: Bool) async throws -> ProductCatalogProposal? {
+        try Task.checkCancellation()
         guard barcode.validGTIN else { throw ProductBatchError.invalid }
         let code = barcode.value
         let key = Key(scope: scope, code: String(repeating: "0", count: 14 - code.count) + code, spanish: spanish)
         let instant = now()
         if let existing = cache[key], instant >= existing.time, instant.timeIntervalSince(existing.time) < 86_400 { return existing.value }
-        if let existing = pending[key] { return try await existing.task.value }
+        let active: Pending
+        if let existing = pending[key] {
+            active = existing
+        } else {
+            active = Pending(task: try start(code: code, spanish: spanish, instant: instant))
+            pending[key] = active
+        }
+        let reader = UUID()
+        pending[key]?.readers.insert(reader)
+        defer { release(reader, key: key, request: active.id) }
+        do {
+            let value = try await withTaskCancellationHandler {
+                try await active.task.value
+            } onCancel: {
+                Task { await self.release(reader, key: key, request: active.id) }
+            }
+            try Task.checkCancellation()
+            guard !active.task.isCancelled, pending[key]?.id == active.id else { throw CancellationError() }
+            if cache[key] == nil, cache.count >= 96,
+               let oldest = cache.min(by: { $0.value.time < $1.value.time })?.key {
+                cache.removeValue(forKey: oldest)
+            }
+            cache[key] = .init(time: instant, value: value)
+            return value
+        } catch ProductBatchError.rateLimited {
+            try Task.checkCancellation()
+            guard pending[key]?.id == active.id else { throw CancellationError() }
+            backoff = instant.addingTimeInterval(60)
+            throw ProductBatchError.rateLimited
+        }
+    }
+
+    private func release(_ reader: UUID, key: Key, request: UUID) {
+        guard pending[key]?.id == request else { return }
+        pending[key]?.readers.remove(reader)
+        if pending[key]?.readers.isEmpty == true { pending.removeValue(forKey: key)?.task.cancel() }
+    }
+
+    private func start(code: String, spanish: Bool, instant: Date) throws -> Task<ProductCatalogProposal?, Error> {
         requests.removeAll { instant.timeIntervalSince($0) >= 60 }
         guard instant >= backoff, requests.count < 12 else { throw ProductBatchError.rateLimited }
         requests.append(instant)
@@ -70,7 +113,8 @@ actor PantryProductCatalog {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1"
         req.setValue("RoomInTheCart/" + version + " (hello@roominthecart.com)", forHTTPHeaderField: "User-Agent")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
-        let task = Task { [read] () -> ProductCatalogProposal? in
+        return Task { [read] () -> ProductCatalogProposal? in
+            try Task.checkCancellation()
             let (data, status) = try await read(req)
             try Task.checkCancellation()
             if status == 404 { return nil }
@@ -92,19 +136,6 @@ actor PantryProductCatalog {
             guard name != nil || quantity != nil else { return nil }
             let modified = row.last_modified_t.flatMap { $0 > 0 ? Date(timeIntervalSince1970: Double($0)) : nil }
             return .init(barcode: code, name: name, quantity: quantity, fetched: instant, modified: modified)
-        }
-        let id = UUID()
-        pending[key] = Pending(id: id, task: task)
-        defer { if pending[key]?.id == id { pending.removeValue(forKey: key) } }
-        do {
-            let value = try await task.value
-            guard !task.isCancelled, pending[key]?.id == id else { throw CancellationError() }
-            if cache.count >= 96, let oldest = cache.min(by: { $0.value.time < $1.value.time })?.key { cache.removeValue(forKey: oldest) }
-            cache[key] = .init(time: instant, value: value)
-            return value
-        } catch ProductBatchError.rateLimited {
-            backoff = instant.addingTimeInterval(60)
-            throw ProductBatchError.rateLimited
         }
     }
 

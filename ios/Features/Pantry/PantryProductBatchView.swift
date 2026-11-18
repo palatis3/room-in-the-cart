@@ -222,7 +222,7 @@ private struct PantryProductCandidateEditor: View {
     let scope: UUID
     let authorized: () -> Bool
     @Environment(\.locale) private var locale
-    @State private var looking = false
+    @State private var lookupRequest: UUID?
     @State private var message: String?
     @FocusState private var field: String?
 
@@ -291,11 +291,16 @@ private struct PantryProductCandidateEditor: View {
                             }
                         }
                     }
-                    if let code = row.barcode, code.validGTIN {
+                    if row.barcode?.validGTIN == true {
                         Section(pantryText("Public product lookup")) {
                             Text(pantryText("Open Food Facts receives the barcode, the app version and your IP address. You can also enter the package details yourself."))
-                            Button(pantryText("Look up this barcode")) { lookup(code) }
-                                .disabled(looking).accessibilityIdentifier("productBatch.lookup")
+                            if lookupRequest == nil {
+                                Button(pantryText("Look up this barcode")) { message = nil; lookupRequest = UUID() }
+                                    .accessibilityIdentifier("productBatch.lookup")
+                            } else {
+                                Button(pantryText("Cancel lookup")) { lookupRequest = nil }
+                                    .accessibilityIdentifier("productBatch.cancelLookup")
+                            }
                             if let proposal = row.catalog {
                                 if let name = proposal.name { Text(verbatim: name) }
                                 if let quantity = proposal.quantity {
@@ -322,21 +327,28 @@ private struct PantryProductCandidateEditor: View {
         .navigationTitle(pantryText("Review product")).privacySensitive()
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: field != nil, title: pantryText("Done"), identifier: "productBatch.editorDone") { field = nil }
+        .task(id: lookupRequest) { [request = lookupRequest] in
+            if let request, let code = row.barcode { await lookup(code, request: request) }
+        }
+        .onChange(of: row.included) { _, included in if !included { lookupRequest = nil } }
+        .onChange(of: authorized()) { _, allowed in if !allowed { lookupRequest = nil } }
+        .onDisappear { lookupRequest = nil }
     }
-    private func lookup(_ code: CapturedBarcode) {
-        guard authorized(), !looking else { return }
+
+    private func lookup(_ code: CapturedBarcode, request: UUID) async {
         let id = row.id
-        looking = true
-        Task {
-            defer { looking = false }
-            do {
-                let value = try await PantryProductCatalog.shared.lookup(code, scope: scope, spanish: locale.language.languageCode?.identifier == "es")
-                guard authorized(), row.id == id else { return }
-                row.catalog = value
-                message = value == nil ? pantryText("No catalog match. Enter the details from your package.") : nil
-            } catch {
-                if authorized() { message = pantryText("The catalog is unavailable. Enter the details from your package.") }
-            }
+        func current() -> Bool {
+            !Task.isCancelled && lookupRequest == request && authorized() && row.included && row.id == id && row.barcode == code
+        }
+        guard current() else { return }
+        defer { if lookupRequest == request { lookupRequest = nil } }
+        do {
+            let value = try await PantryProductCatalog.shared.lookup(code, scope: scope, spanish: locale.language.languageCode?.identifier == "es")
+            guard current() else { return }
+            row.catalog = value
+            message = value == nil ? pantryText("No catalog match. Enter the details from your package.") : nil
+        } catch {
+            if current() { message = pantryText("The catalog is unavailable. Enter the details from your package.") }
         }
     }
 }

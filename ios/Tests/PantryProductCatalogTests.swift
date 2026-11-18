@@ -84,3 +84,76 @@ final class PantryProductCatalogTests: XCTestCase {
         XCTAssertEqual(draft.lines.first?.name, "My unknown product")
     }
 }
+
+/// The first HTTP operation can report cancellation and still deliver buffered data after the new editor opens.
+private actor SuspendedCatalogTransport {
+    let firstStarted: XCTestExpectation
+    let firstCancelled: XCTestExpectation
+    let secondStarted: XCTestExpectation
+    private var replies: [Int: CheckedContinuation<String, Never>] = [:]
+    private(set) var count = 0
+
+    init(firstStarted: XCTestExpectation, firstCancelled: XCTestExpectation, secondStarted: XCTestExpectation) {
+        self.firstStarted = firstStarted
+        self.firstCancelled = firstCancelled
+        self.secondStarted = secondStarted
+    }
+
+    func send(_ request: URLRequest) async -> (Data, Int) {
+        count += 1
+        let index = count
+        guard index <= 2 else { return (Data(), 500) }
+        let name = await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                replies[index] = continuation
+                if index == 1 { firstStarted.fulfill() } else if index == 2 { secondStarted.fulfill() }
+            }
+        } onCancel: { [firstCancelled] in
+            if index == 1 { firstCancelled.fulfill() }
+        }
+        return (Data(#"{"status":"success","product":{"code":"3017620422003","product_name":"\#(name)"}}"#.utf8), 200)
+    }
+
+    func complete(_ index: Int, name: String) {
+        replies.removeValue(forKey: index)?.resume(returning: name)
+    }
+}
+
+extension PantryProductCatalogTests {
+    func testClosingEditorCancelsTransportAndLateReplyCannotReplaceReopenedLookup() async throws {
+        try await checkLateReply { reader, _, _ in reader.cancel() }
+    }
+
+    func testClosingBatchScopeRejectsInFlightProposalWithoutPoisoningNextLookup() async throws {
+        try await checkLateReply { _, catalog, scope in await catalog.close(scope: scope) }
+    }
+
+    private func checkLateReply(cancel: (Task<ProductCatalogProposal?, Error>, PantryProductCatalog, UUID) async -> Void) async throws {
+        let started = expectation(description: "First editor sent its selected barcode")
+        let cancelled = expectation(description: "Closing the editor cancelled its transport")
+        let reopened = expectation(description: "Reopened editor started a separate lookup")
+        let transport = SuspendedCatalogTransport(firstStarted: started, firstCancelled: cancelled, secondStarted: reopened)
+        let catalog = PantryProductCatalog(read: { await transport.send($0) })
+        let scope = UUID(), barcode = CapturedBarcode(symbology: "typed", value: "3017620422003")
+
+        let original = Task { try await catalog.lookup(barcode, scope: scope, spanish: false) }
+        await fulfillment(of: [started], timeout: 3)
+        await cancel(original, catalog, scope)
+        await fulfillment(of: [cancelled], timeout: 3)
+        let current = Task { try await catalog.lookup(barcode, scope: scope, spanish: false) }
+        await fulfillment(of: [reopened], timeout: 3)
+
+        await transport.complete(2, name: "Current jar")
+        await transport.complete(1, name: "Old jar")
+        let fresh = try await current.value
+        XCTAssertEqual(fresh?.name, "Current jar")
+        do {
+            _ = try await original.value
+            XCTFail("A closed editor received a late proposal")
+        } catch is CancellationError {}
+        let cached = try await catalog.lookup(barcode, scope: scope, spanish: false)
+        XCTAssertEqual(cached, fresh)
+        let count = await transport.count
+        XCTAssertEqual(count, 2)
+    }
+}

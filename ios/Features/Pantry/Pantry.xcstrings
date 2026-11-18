@@ -346,6 +346,23 @@
         }
       }
     },
+    "Cancel lookup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel lookup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar consulta"
+          }
+        }
+      }
+    },
     "Check the food name, amount and unit before reviewing.": {
       "extractionState": "manual",
       "localizations": {
