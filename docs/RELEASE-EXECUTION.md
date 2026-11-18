@@ -4,14 +4,21 @@ This checklist orders the remaining work; it does not replace Foundation 2.1's
 52 requirements, 27 screen contracts or B11 acceptance. The authoritative scope
 is [the build contract](product/foundation-gen2.1/08-build.md) and the requirement
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
-is one checkpoint, not release authorization. Updated November 17, 2026.
+is one checkpoint, not release authorization. Updated November 18, 2026.
 
 The user has added a 28-feature expansion before signing/distribution. Its
 [audited implementation plan](FEATURE-EXPANSION-PLAN.md) and
 [three-judge disposition](FEATURE-EXPANSION-AUDIT.md) now define the additional
 work. PR #10 merged as `3b767679`; plan approval and passing PR CI do not close
-original release obligations or certify unimplemented features. Current work
-begins with pinned-lot availability, then proceeds through usable feature slices.
+original release obligations or certify unimplemented features. PR #29 merged after 61 checks passed. The remaining combined feature work is
+in [PR #60](https://github.com/palatis3/room-in-the-cart/pull/60).
+[Current handoff](CURRENT-HANDOFF.md) tracks its qualification and staging revision.
+
+Xcode produced an unsigned arm64 iPhone Release archive at `1f3e5c75`.
+The app and both extensions matched their crash symbols. Package checks verified
+the embedded extensions, assets and privacy manifests. Signed distribution still
+requires the production subscription product ID, Supabase URL and publishable
+key, household service URL, and public privacy, terms and support URLs.
 
 The November 15 staging update rehearsal preserved the original saved comparison
 byte-for-byte, then saved and reopened a second revision after changing the
