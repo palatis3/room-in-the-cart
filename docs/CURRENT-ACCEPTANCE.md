@@ -1,6 +1,6 @@
 # Current implementation and acceptance map
 
-Use the [52-requirement map](#launch-requirement-traceability) and the [27-screen map](#route-traceability) to find the implementation and evidence for a particular feature. Foundation schedules the direct retailer connection (E05) for a later release. Each result applies to the build and environment where it ran. The [current handoff](CURRENT-HANDOFF.md#active-work-and-ownership) identifies the revision under test. The [first-release checklist](RELEASE-EXECUTION.md#execution-order) tracks the outstanding signing, device, provider, human review and rollout work.
+Use the [52-requirement map](#launch-requirement-traceability) and the [27-screen map](#route-traceability) to find the implementation and evidence for a particular feature. Foundation schedules the direct retailer connection (E05) for a later release. Each result applies to the build and environment where it ran. The [current handoff](CURRENT-HANDOFF.md#expansion-integration) identifies the revision under test. The [first-release checklist](RELEASE-EXECUTION.md#execution-order) tracks the outstanding signing, device, provider, human review and rollout work.
 
 ## Reading this map
 
@@ -215,7 +215,6 @@ billing; and final B11 acceptance and release authorization. Follow the checklis
 specific evidence and owner-deferred boundaries for each item.
 
 Apple paid membership/signing, SMTP and actual KWS activation remain owner deferred.
-The current staging schema is049; use the handoff for the verified deployment and
-rollback identity. Earlier schema029/030 and public-browser receipts in the historical
-snapshot are scoped historical proof, not the present deployment or full release acceptance.
-Direct retailer integrationE05 remains deferred; X01–X06 remain product boundaries.
+The November 18 staging deployment verified all 59 migration checksums. The deployment
+and rollback identifiers are in the [staging receipt](evidence/b11/staging-059-feedback-20261118/deployment.json).
+Direct retailer integration (E05) remains deferred. X01–X06 remain product boundaries.
