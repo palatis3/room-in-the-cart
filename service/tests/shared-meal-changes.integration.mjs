@@ -2357,7 +2357,7 @@ test('household Tonight subtracts protected existing meal allocations before mat
 });
 
 test('household Tonight ranks usable expiring food ahead of feedback and respects source revision and exclusions',async()=>{
- const f=await fixture(false),path=f.base+'/pantry/tonight',read=async()=>ok(await call(f.owner,path));
+ const f=await fixture(false),path=f.base+'/pantry/tonight',read=async(actor=f.owner)=>ok(await call(actor,path));
  const quantity={amount:{numerator:1,denominator:1},unit:'count',originalLiteral:'1'};
  const storedAt=new Date(Date.now()-3600000).toISOString();
  async function add(name,useFirstAt){
@@ -2372,7 +2372,7 @@ test('household Tonight ranks usable expiring food ahead of feedback and respect
   replayWindow:f.owner.window,clientKey:randomUUID(),recipe:{title,portions:1,minutes:20,
     ingredients:[{id:randomUUID(),name,quantity,reviewedLotIds:[lot]}]}});
  ok(await put(ids[0],'Earlier','Beans',beans));ok(await put(ids[1],'Later favorite','Beans',beans));ok(await put(ids[2],'Use peas first','Peas',peas));
- const order=async()=>(await read()).recipes.map(r=>r.recipeId);
+ const order=async(actor=f.owner)=>(await read(actor)).recipes.map(r=>r.recipeId);
  assert.deepEqual(await order(),[ids[2],ids[0],ids[1]]);
  const chosen=(await read()).recipes.find(r=>r.recipeId===ids[1]),shopId=await f.shop(),occurrenceId=randomUUID();
  let shopRevision=1;
@@ -2385,9 +2385,26 @@ test('household Tonight ranks usable expiring food ahead of feedback and respect
  const basePath=f.base+'/shops/'+shopId,cookPage=ok(await call(f.owner,basePath+'/cook-completion?occurrenceId='+occurrenceId));
  const {shopRevision:sr,authorityEpoch:ae,...base}=cookPage.base;shopRevision=sr;
  const cook=await command('cook.complete',{...base,servings:1,uses:cookPage.needs.map(n=>({rowId:randomUUID(),needId:n.id,kind:'notUsed'})),outputs:[]});
- const feedback=basePath+'/cook-feedback/'+occurrenceId,review=ok(await call(f.owner,feedback));
- ok(await call(f.owner,feedback,'PUT',{v:1,cookId:cook.cookId,grantEpoch:review.grantEpoch,authorityEpoch:review.authorityEpoch,
-   expectedRevision:null,replayWindow:f.owner.window,clientKey:randomUUID(),reactions:['makeAgain']}));
+ const feedback=basePath+'/cook-feedback/'+occurrenceId;
+ async function react(reactions) {
+   const review=ok(await call(f.owner,feedback));
+   ok(await call(f.owner,feedback,'PUT',{v:1,cookId:cook.cookId,grantEpoch:review.grantEpoch,authorityEpoch:review.authorityEpoch,
+     expectedRevision:review.revision,replayWindow:f.owner.window,clientKey:randomUUID(),reactions}));
+ }
+ await react(['childrenLikedIt']);
+ assert.deepEqual(await order(),[ids[2],ids[1],ids[0]],'A child-liked reaction only breaks the equivalent bean recipe tie');
+ const reader=await actor(),invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
+ reader.id=ok(await call(reader,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'Second adult'})).memberId;
+ await enroll(reader,f.h);
+ ok(await call(f.owner,f.base+'/pantry/grants','POST',{v:1,memberId:reader.id,expectedGrantEpoch:0,enabled:true}));
+ assert.deepEqual(await order(reader),[ids[2],ids[0],ids[1]],'Another authorized reader keeps their own ranking');
+ await react(['makeAgain','childrenLikedIt','tooMuchEffort']);
+ assert.deepEqual(await order(),[ids[2],ids[0],ids[1]],'The two positive reactions represent one impression and effort offsets it');
+ await react(['childrenLikedIt']);
+ assert.deepEqual(await order(),[ids[2],ids[1],ids[0]]);
+ await react([]);
+ assert.deepEqual(await order(),[ids[2],ids[0],ids[1]],'Withdrawing reactions restores the neutral ordering');
+ await react(['makeAgain']);
  assert.deepEqual(await order(),[ids[2],ids[1],ids[0]]);
  const updated=ok(await call(f.owner,path+'/recipes','POST',{v:1,recipeId:ids[1],baseRevision:1,grantEpoch:rank,reviewed:true,
    replayWindow:f.owner.window,clientKey:randomUUID(),recipe:{...chosen.reviewedRecipe,title:'Updated source'}}));

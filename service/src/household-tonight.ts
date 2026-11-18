@@ -278,7 +278,8 @@ async function recentFeedback(ctx: Context) {
   // their own shop, can break a tie. Erasure, withdrawal or Undo removes the signal.
   const { rows } = await ctx.db.query<{ recipe_id: string; score: number }>(
     `
-    SELECT c.recipe_id, sum(('makeAgain'=ANY(f.reactions))::int-('tooMuchEffort'=ANY(f.reactions))::int)::int score
+    SELECT c.recipe_id,
+      sum((f.reactions && ARRAY['makeAgain','childrenLikedIt'])::int - ('tooMuchEffort'=ANY(f.reactions))::int)::int score
     FROM ritc.tonight_choice c
     JOIN ritc.tonight_recipe r ON (r.household_id,r.recipe_id,r.revision)=(c.household_id,c.recipe_id,c.recipe_revision)
     JOIN ritc.shop s ON (s.household_id,s.shop_id)=(c.household_id,c.shop_id)
