@@ -11,17 +11,23 @@ struct FoodKeeperMatchFixtureLot: View {
     @State private var lotID: UUID?
     @State private var failed = false
 
+    private var digestAccess: PantryDigestAccess? {
+        guard let origin = model?.snapshot?.state.workspaceID,
+              let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
+        return PantryDigestAccess(scope: .init(origin: origin, identity: identity)) {
+            CapturePrivateIdentity.current(access: access, household: household) == identity
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            if let model, let lotID, let identity = CapturePrivateIdentity.current(access: access, household: household),
-               let origin = model.snapshot?.state.workspaceID {
+            if let model, let lotID, digestAccess != nil {
                 PantryLotEntryView(model: model, lotID: lotID, accessAllowed: true)
-                    .environment(\.pantryDigestAccess, PantryDigestAccess(scope: .init(origin: origin, identity: identity)) {
-                        CapturePrivateIdentity.current(access: access, household: household) == identity
-                    })
             } else if failed { Text("Fixture setup failed") }
             else { ProgressView() }
-        }.task {
+        }
+        .environment(\.pantryDigestAccess, digestAccess)
+        .task {
             guard model == nil, let identity = CapturePrivateIdentity.current(access: access, household: household) else { return }
             do {
                 let dir = FileManager.default.temporaryDirectory.appendingPathComponent("FoodKeeperMatch-" + UUID().uuidString)
