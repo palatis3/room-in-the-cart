@@ -158,10 +158,7 @@ import XCTest
         saveFreeRecipe(secondTitle)
         XCTAssertTrue(row(firstTitle).waitForExistence(timeout: 10), app.debugDescription)
         let global = match(secondTitle)
-        enableSwitch("adultHomeSummary.tonight", position: {
-            self.revealScrollableContent($0, initiallyUpward: false, entireRow: true)
-        })
-        XCTAssertEqual(home.value as? String, "1")
+        optInToHomeSummary("adultHomeSummary.tonight")
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         tap(app.buttons[lotID])
         tap(app.buttons["pantry.batch.meals"])
@@ -468,6 +465,14 @@ import XCTest
         XCTAssertTrue(summary.contains("Green lentils") && summary.contains("2 items"), summary)
     }
 
+    private func optInToHomeSummary(_ identifier: String) {
+        let setting = app.switches[identifier]
+        reveal(setting, initiallyUpward: false)
+        XCTAssertEqual(setting.value as? String, "0")
+        setting.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(setting.value as? String, "1")
+    }
+
     #if ADULT_WIDGET_LIVE_ACCEPTANCE
     /// Uses the real widget group and SpringBoard. Run on a freshly created dedicated simulator.
     func testOptedInUseSoonHomeWidgetReopensTheAuthorizedPantryAfterTermination() {
@@ -538,14 +543,6 @@ import XCTest
         if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
         tap(app.buttons["pantry.review"])
         tap(app.buttons["pantry.confirm"])
-    }
-
-    private func optInToHomeSummary(_ identifier: String) {
-        let setting = app.switches[identifier]
-        reveal(setting, initiallyUpward: false)
-        XCTAssertEqual(setting.value as? String, "0")
-        setting.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        XCTAssertEqual(setting.value as? String, "1")
     }
 
     private func placeWidgetAndColdTap(widgetTitle: String, expectedCount: String, reviewedTitle: String? = nil) {
