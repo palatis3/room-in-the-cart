@@ -291,18 +291,15 @@ struct ShopView: View {
     @State private var showingFirstList = false
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
-        GeometryReader { viewport in
-            VStack(spacing: 0) {
-                shopContent
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
-                // Keep scrolling text inside the actual content viewport. The
-                // footer occupies the boundary above bottom navigation.
-                Theme.canvas.frame(height: 8)
-                    .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
-                    .accessibilityHidden(true)
-            }
-            .fittingViewport(viewport.size)
+        VStack(spacing: 0) {
+            shopContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+            // Reserve space above bottom navigation while the scroll view
+            // takes its size directly from the available navigation content.
+            Theme.canvas.frame(height: 8)
+                .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
+                .accessibilityHidden(true)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
             .sheet(isPresented: $showingFirstList) {
