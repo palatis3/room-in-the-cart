@@ -273,6 +273,28 @@ final class InventoryPersistenceTests: XCTestCase {
         try await reopened.close()
     }
 
+    func testFiftySelectedFoodsStillFitWithAllReceiptRecognitionBindings() async throws {
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        try await activate(store)
+        let receipt = UUID(), owner = UUID(), day = UUID(), doc = UUID()
+        var writes: [InventoryWrite] = [], rows: [InventoryAcquisitionRow] = [], bindings: [InventoryReceiptBinding] = []
+        for ordinal in 0..<50 {
+            let parent = lot(), lotID = parent.record.key.id
+            writes += [parent, linked(.observation, lotID: lotID), linked(.event, lotID: lotID),
+                       linked(.sourceLink, lotID: lotID, id: lotID, source: .init(originID: store.workspaceID, sourceID: UUID().uuidString))]
+            let row = InventoryAcquisitionRow(id: UUID(), receiptID: receipt, lineID: UUID(), lotID: lotID, revision: 1, supersedesID: nil, payload: Data([1]))
+            rows.append(row)
+            bindings.append(.init(owner: owner, merchantDay: day, wording: UUID(), document: doc, ordinal: ordinal,
+                                  sourceID: row.id, receiptID: receipt, lotID: lotID))
+        }
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 1,
+            request: Data([1]), writes: writes, acquisitions: rows, receiptBindings: bindings))
+        let saved = try await store.rescanBindings(owner: owner, document: doc)
+        let foods = try await store.inventoryRecords(kind: .lot, limit: 100)
+        XCTAssertEqual(saved.count, 50); XCTAssertEqual(foods.count, 50)
+        try await store.close()
+    }
+
     func testRescanBindingsArePrivateAtomicAndErasedWithTheirPhysicalLine() async throws {
         let store = try ComparisonStore(url: url, inventoryEnabled: true)
         try await activate(store)
