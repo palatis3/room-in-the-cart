@@ -1,4 +1,3 @@
-import DeviceSurfaces
 import Foundation
 import CoreDomain
 import CryptoKit

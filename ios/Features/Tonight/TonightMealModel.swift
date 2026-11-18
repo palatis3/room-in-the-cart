@@ -80,7 +80,9 @@ import RecordArchive
     var homeScreenChoices: [PantryMealMatcher.Review] {
         guard let input, !failed, let profile = input.workspace.dinnerPlanning.privateMealPreferences,
               profile.settings.availableAppliances != nil else { return [] }
-        return suggestions.filter {
+        // Reactions personalize the private Tonight screen. Widget consent
+        // covers the reviewed meal title and count without that preference signal.
+        return PantryMealMatcher.ranked(reviews).filter {
             $0.preferenceRevision == profile.revision && $0.recipe.eligibilityEvidence?.requiredAppliances != nil &&
                 $0.allIngredientsCovered && Self.canChoose($0)
         }
