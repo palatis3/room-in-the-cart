@@ -104,6 +104,18 @@ To add a lot, submit `{v:1, kind:"pantry.addLot", clientKey, replayWindow, grant
 
 The placed-shop pantry endpoint retains its pantry/freezer location vocabulary. A shopper with standalone pantry authority can select compatible standalone lots through the existing shop commands. The joint allocator uses those same physical observations for reservations and shortfalls.
 
+### Tonight from shared pantry food
+
+With migration 059, an enrolled adult uses the `household_tonight` capability to open Tonight from Dinners or the household pantry. Clients connected to an earlier server keep their existing pantry and private Tonight routes.
+
+| Action | Service contract |
+| --- | --- |
+| Browse | `GET /pantry/tonight` reads the household’s reviewed recipes and current stock independently of the selected shop. Reading creates no pickup, reservation or meal. |
+| Review a recipe | An organizer calls `POST /pantry/tonight/recipes` with the reviewed recipe, explicit ingredient-to-lot links, grant epoch and a device-bound replay window. An edit uses the recipe ID and revision from the original organizer’s review. After a lost reply, retry the original command. |
+| Choose a dinner | The assigned shopper confirms a destination draft shop and sends the existing shopper command envelope with kind `meal.chooseTonight`. Its body binds the recipe ID and revision, review token, pantry grant epoch, day and occurrence ID. A stale review requires a fresh read. A successful exact retry confirms the same occurrence. |
+
+Quantities reflect the food still available after existing commitments. The response distinguishes confirmed coverage, a known missing amount and an unresolved amount. An incomplete checkout estimate stays visible when the available evidence cannot establish a price. Household preference details retain their separate read permission.
+
 ## Reviewed household meal preferences
 
 Migration 052 stores one revisioned household profile. An enrolled organizer opens Household Settings to edit it and separately choose which active adult members can read it. The service checks household membership, the current device and the preference grant on each request. A pantry or shop-planning grant conveys no permission to read the profile. Private iPhone preferences have their own storage and revision.
