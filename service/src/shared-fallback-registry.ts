@@ -153,7 +153,8 @@ export class SharedFallbackRegistry {
 
     const args=[...scope,source.occurrenceId,source.mealRevision];
     const authors=await ctx.db.query(`SELECT actor_id FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 AND revision<=$4
-      UNION SELECT actor_id FROM ritc.shared_meal_change WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 AND state='applied' AND shop_revision<$4`,args);
+      UNION SELECT actor_id FROM ritc.tonight_meal_author WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3
+    UNION SELECT actor_id FROM ritc.shared_meal_change WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 AND state='applied' AND shop_revision<$4`,args);
     const members=authors.rows.map(r=>r.actor_id as string), shops=[shop.shop_id];
     let recipe:Recipe;
     if(shop.placed_revision!==null){

@@ -68,6 +68,12 @@ public struct Rational: Codable, Hashable, Sendable, Comparable, CustomStringCon
         return try Self(checkedAdd(left, right), checkedMultiply(denominator, other.denominator / divisor))
     }
 
+    /// Used for shortages and free stock, where complete coverage leaves zero.
+    public func subtractingClampedToZero(_ other: Self) throws -> Self {
+        guard self > other else { return .zero }
+        return try subtracting(other)
+    }
+
     public func subtracting(_ other: Self) throws -> Self {
         guard self >= other else { throw DomainError.negativeQuantity }
         let divisor = Self.gcd(denominator, other.denominator)
@@ -93,6 +99,13 @@ public struct Rational: Codable, Hashable, Sendable, Comparable, CustomStringCon
 
     public func roundedUp() throws -> Int64 {
         try checkedAdd(numerator / denominator, numerator % denominator == 0 ? 0 : 1)
+    }
+
+    /// Round a nonnegative value to the nearest integer, rounding half upward.
+    func roundedNearest() throws -> Int64 {
+        let whole = numerator / denominator
+        let remainder = numerator % denominator
+        return try checkedAdd(whole, remainder >= denominator - remainder ? 1 : 0)
     }
 
     private static func gcd(_ first: Int64, _ second: Int64) -> Int64 {

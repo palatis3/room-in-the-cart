@@ -1,3 +1,4 @@
+import { householdPantryEpoch } from './pantry-lots.js';
 /** Independent, bounded historical record. Invoke only inside authorized's
  * household-locked transaction. This document grants no live authority. */
 import {z} from 'zod';
@@ -29,10 +30,10 @@ const foodHistorySchema=z.object({
  trackingRevisions:list(z.object({shopRevision:revision,recordedAt:date,food:portableFoodSchema}).strict())
 }).strict();
 const stockHistorySchema=z.object({
- lots:list(z.object({lotId:id,deliverySourceId:id.nullable(),location:z.enum(['pantry','freezer']),storedAt:date.nullable(),
+ lots:list(z.object({lotId:id,deliverySourceId:id.nullable(),location:z.enum(['pantry','freezer','fridge']),storedAt:date.nullable(),
   useFirstAt:date.nullable(),foodName:z.string().min(1).max(240),exclusionTags:z.array(z.string().min(1).max(240)).max(20)}).strict()),
  events:list(z.discriminatedUnion('kind',[
-  z.object({...stockEvent,kind:z.literal('observe'),confirmedAt:date,quantity:usableQuantitySchema.nullable()}).strict(),
+  z.object({...stockEvent,kind:z.literal('observe'),confirmedAt:date,quantity:usableQuantitySchema.nullable(),eventId:id.optional(),deliveryUsableId:id.optional()}).strict(),
   z.object({...stockEvent,kind:z.literal('select'),selected:z.boolean()}).strict(),
   z.object({...stockEvent,kind:z.literal('match'),...stockTarget,matched:z.boolean()}).strict(),
   z.object({...stockEvent,kind:z.literal('reserve'),...stockTarget,groupId:id,quantity:mealQuantity.nullable()}).strict()
@@ -119,7 +120,12 @@ export function projectSharedHistory(raw:unknown,asOf:Date){
  }
  if(record.stockHistory){
   const stock=record.stockHistory,lots=new Map(stock.lots.map(l=>[l.lotId,l]));
-  unique(stock.lots.map(l=>l.lotId));unique(stock.events.map(e=>e.pantryRevision));
+  unique(stock.lots.map(l=>l.lotId));
+  const batched=stock.events.flatMap(e=>e.kind==='observe' && e.eventId?[e]:[]);
+  const batches=new Set(batched.map(e=>e.pantryRevision));
+  unique(batched.map(e=>e.eventId));unique(batched.map(e=>e.lotId+'/'+e.pantryRevision));
+  const legacy=stock.events.filter(e=>e.kind!=='observe'||!e.eventId);
+  unique(legacy.map(e=>e.pantryRevision));check(legacy.every(e=>!batches.has(e.pantryRevision)));
   const carried=stock.carriedDeliveries??[],carriedIds=new Set(carried.map(c=>c.source.sourceId));
   unique(carried.map(c=>c.source.sourceId));check(carried.every(c=>c.originShopId!==record.origin.shopId&&!sources.has(c.source.sourceId)));
   check(carried.reduce((n,c)=>n+c.observations.length,0)<=2000);
@@ -138,7 +144,13 @@ export function projectSharedHistory(raw:unknown,asOf:Date){
   check(stock.lots.every(l=>l.deliverySourceId===null||l.deliverySourceId===l.lotId&&(sources.has(l.deliverySourceId)||carriedIds.has(l.deliverySourceId))));
   for(const event of stock.events){
    const lot=lots.get(event.lotId);check(lot);
-   if(event.kind==='observe')check(lot.deliverySourceId===null);
+   if(event.kind==='observe'){
+    if(lot.deliverySourceId===null) check(!event.deliveryUsableId);
+    else{
+     const observations=carried.find(c=>c.source.sourceId===lot.lotId)?.observations??record.deliveries.observations;
+     check(event.eventId && event.deliveryUsableId && observations.some(o=>o.kind==='usable' && o.body.sourceId===lot.lotId && o.body.observationId===event.deliveryUsableId));
+    }
+   }
    if(event.kind==='match'||event.kind==='reserve'){
     const meal=record.mealRevisions.find(m=>m.occurrenceId===event.occurrenceId&&m.revision===event.mealRevision)?.meal;
     const ingredient=meal?.planning?.ingredients.find(i=>i.id===event.ingredientId);check(ingredient);
@@ -171,8 +183,8 @@ export async function readSharedRecordHistory(repo:HouseholdRepository,ctx:Conte
  // Stock scope is selected-shop origin or an explicit historical use in this
  // shop. No household-wide dump or other shops' meal commitments are exported.
  const lotScope=`l.household_id=$1 AND (l.origin_shop_id=$2 OR EXISTS(SELECT 1 FROM ritc.pantry_event e WHERE e.household_id=l.household_id AND e.lot_id=l.lot_id AND e.shop_id=$2))`;
- const stockMetadata=await ctx.db.query(`SELECT l.lot_id,l.origin_shop_id,l.delivery_source_id,l.actor_id,s.history_retired_at FROM ritc.pantry_lot l JOIN ritc.shop s ON (s.household_id,s.shop_id)=(l.household_id,l.origin_shop_id) WHERE ${lotScope} ORDER BY l.lot_id LIMIT 2001`,scope);
- check(stockMetadata.rows.length<=2000&&stockMetadata.rows.every(l=>!l.history_retired_at));
+ const stockMetadata=await ctx.db.query(`SELECT l.lot_id,l.origin_shop_id,l.delivery_source_id,l.actor_id,s.history_retired_at FROM ritc.pantry_lot l LEFT JOIN ritc.shop s ON (s.household_id,s.shop_id)=(l.household_id,l.origin_shop_id) WHERE ${lotScope} ORDER BY l.lot_id LIMIT 2001`,scope);
+ check(stockMetadata.rows.length<=2000&&stockMetadata.rows.every(l=>!l.history_retired_at&&(l.origin_shop_id!==null||householdPantryEpoch(ctx)!==null)));
  const stockIds=stockMetadata.rows.map(l=>l.lot_id);
  const carriedIds=stockMetadata.rows.filter(l=>l.delivery_source_id!==null&&l.origin_shop_id!==shop.shop_id).map(l=>l.delivery_source_id);
  // Existing household stock reads permit physical evidence across shops. Only
@@ -187,8 +199,8 @@ export async function readSharedRecordHistory(repo:HouseholdRepository,ctx:Conte
   UNION SELECT p.member_id FROM ritc.delivery_source d JOIN ritc.shared_tracking_basket_origin p ON (p.household_id,p.shop_id,p.line_id)=(d.household_id,d.shop_id,d.line_id) WHERE d.household_id=$1 AND d.source_id=ANY($2::uuid[])
   UNION SELECT r.author_id FROM ritc.delivery_source d JOIN ritc.request_link l ON (l.household_id,l.shop_id,l.line_id)=(d.household_id,d.shop_id,d.line_id) JOIN ritc.request r ON (r.household_id,r.shop_id,r.request_id)=(l.household_id,l.shop_id,l.request_id) WHERE d.household_id=$1 AND d.source_id=ANY($2::uuid[])
  ) retained_sources WHERE member_id IS NOT NULL LIMIT 2001`,[ctx.householdId,carriedIds]);check(carriedAuthors.rows.length<=2000);
- const stockAuthors=await ctx.db.query(`SELECT DISTINCT e.actor_id,s.history_retired_at FROM ritc.pantry_event e JOIN ritc.shop s ON (s.household_id,s.shop_id)=(e.household_id,e.shop_id) WHERE e.household_id=$1 AND e.lot_id=ANY($3::uuid[]) AND (e.shop_id=$2 OR e.kind='observe') LIMIT 2001`,[...scope,stockIds]);
- check(stockAuthors.rows.length<=2000&&stockAuthors.rows.every(r=>!r.history_retired_at));
+ const stockAuthors=await ctx.db.query(`SELECT DISTINCT e.actor_id,s.history_retired_at,(e.event_id<>e.operation_id) AS batched FROM ritc.pantry_event e LEFT JOIN ritc.shop s ON (s.household_id,s.shop_id)=(e.household_id,e.shop_id) WHERE e.household_id=$1 AND e.lot_id=ANY($3::uuid[]) AND (e.shop_id=$2 OR e.kind='observe') LIMIT 2001`,[...scope,stockIds]);
+ check(stockAuthors.rows.length<=2000&&stockAuthors.rows.every(r=>!r.history_retired_at && (!r.batched || householdPantryEpoch(ctx)!==null)));
  // Recheck retained contributors before reading payloads. This deliberately
  // fails closed for an ended source instead of trusting historical authority.
  const provenance=await ctx.db.query<{member_id:string}>(`SELECT DISTINCT member_id FROM (
@@ -256,10 +268,11 @@ export async function readSharedRecordHistory(repo:HouseholdRepository,ctx:Conte
   check(retained_digest===digest(retained_snapshot)&&retained_snapshot.shopId===originShopId&&retained_snapshot.revision===source.placedRevision&&retained_snapshot.lines?.some((l:{lineId:string})=>l.lineId===source.lineId));
   return{originShopId,source,observations:carriedObservationRows.rows.filter(o=>o.source_id===source.sourceId).map(o=>({kind:o.kind,recordedAt:time(o.recorded_at),body:o.body}))};
  });
- const stockRows=await ctx.db.query(`SELECT e.lot_id,e.pantry_revision,e.kind,e.occurrence_id,e.meal_revision,e.ingredient_id,e.group_id,e.enabled,e.confirmed_at,e.quantity,o.committed_at FROM ritc.pantry_event e JOIN ritc.operation o USING(household_id,operation_id) WHERE e.household_id=$1 AND e.lot_id=ANY($3::uuid[]) AND (e.shop_id=$2 OR e.kind='observe') ORDER BY e.pantry_revision LIMIT 2001`,[...scope,stockIds]);check(stockRows.rows.length<=2000);
+ const stockRows=await ctx.db.query(`SELECT e.lot_id,e.event_id,e.operation_id,e.delivery_usable_id,e.pantry_revision,e.kind,e.occurrence_id,e.meal_revision,e.ingredient_id,e.group_id,e.enabled,e.confirmed_at,e.quantity,o.committed_at FROM ritc.pantry_event e JOIN ritc.operation o USING(household_id,operation_id) WHERE e.household_id=$1 AND e.lot_id=ANY($3::uuid[]) AND (e.shop_id=$2 OR e.kind='observe') ORDER BY e.pantry_revision,e.event_id LIMIT 2001`,[...scope,stockIds]);check(stockRows.rows.length<=2000);
  const events=stockRows.rows.map(r=>{
   const common={lotId:r.lot_id,pantryRevision:r.pantry_revision,recordedAt:time(r.committed_at)};
-  if(r.kind==='observe')return{...common,kind:'observe',confirmedAt:time(r.confirmed_at),quantity:r.quantity};
+  if(r.kind==='observe')return{...common,kind:'observe',confirmedAt:time(r.confirmed_at),quantity:r.quantity,
+    ...(r.event_id!==r.operation_id?{eventId:r.event_id}:{}),...(r.delivery_usable_id?{deliveryUsableId:r.delivery_usable_id}:{})};
   if(r.kind==='select')return{...common,kind:'select',selected:r.enabled};
   const target={occurrenceId:r.occurrence_id,mealRevision:r.meal_revision,ingredientId:r.ingredient_id};
   if(r.kind==='match')return{...common,kind:'match',...target,matched:r.enabled};

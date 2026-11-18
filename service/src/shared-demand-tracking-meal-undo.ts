@@ -86,7 +86,7 @@ export async function deriveTrackingMealUndo(repo:HouseholdRepository,ctx:Contex
  const reversed=(await ctx.db.query('SELECT 1 FROM ritc.shared_tracking_revision WHERE household_id=$1 AND shop_id=$2 AND reverses_operation_id=$3',[ctx.householdId,shop.shop_id,target])).rowCount!==0;check(!reversed,'tracking_already_reversed');
  const result=deriveSharedFoodUndoCore(evidence,{graph:current.graph,lines:lines(current),quote:shop.quote,shopRevision:shop.revision,storeBasis:{revision:shop.store_basis_revision??null,reviewRequired:shop.store_review_required??false}},
   {operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:current.graph.revision,at},ctx.now,previewTrackingMealProtection(current));
- const partition=inverseMealPartition(before,after,current,result.result.graph),facts=await actionFacts(repo,ctx,shop,{action:result.action},previewTrackingMealProtection(current));
+ const partition=inverseMealPartition(before,after,current,result.result.graph),facts=await actionFacts(repo,ctx,shop,{action:result.action},previewTrackingMealProtection(current),true);
  const candidate={...current,graph:result.result.graph,bindings:partition.bindings,unbound:partition.unbound};
  const identities=[...current.catalog,...before.catalog.filter(f=>!current.catalog.some(c=>c.id===f.id))];
  const catalog=await trackingCatalog(repo,ctx,shop,facts,{...candidate.graph,contributions:[...candidate.graph.contributions,...candidate.unbound.flatMap(u=>u.transferred?[u.transferred]:[])]},identities);

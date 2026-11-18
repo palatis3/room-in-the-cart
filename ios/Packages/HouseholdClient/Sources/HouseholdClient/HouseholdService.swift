@@ -12,6 +12,7 @@ public actor HouseholdService {
     private var householdID: String?
     private var subject: String?
     private var memberID: String?
+    private(set) var authorizedTonightSession: HouseholdPantrySession?
     private var selectedShopID: UUID?
     private var selectedGrantID: String?
     // A helper uses the grant header, never the ordinary shop-selection header.
@@ -26,7 +27,7 @@ public actor HouseholdService {
         guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         guard UUID(uuidString: householdID) != nil else { throw ClientError.configuration }
         if let grantID, UUID(uuidString: grantID) == nil { throw ClientError.configuration }
-        generation = UUID(); enrollment = nil; enrollmentSessionID = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
+        generation = UUID(); authorizedTonightSession = nil; enrollment = nil; enrollmentSessionID = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
         selectedGrantID = grantID; selectedShopID = nil; helperAccess = nil
         let start = generation
         let access = try await auth.access()
@@ -57,6 +58,24 @@ public actor HouseholdService {
               bootstrap.grantId == selectedGrantID else { throw ClientError.accessEnded }
         return enrollment.deviceId
     }
+    /// Stable across an ordinary shop selection. Enrollment, actor or helper
+    /// changes make an earlier household-wide pantry review unusable.
+    public func householdPantrySession(for bootstrap: HouseholdBootstrap) throws -> HouseholdPantrySession {
+        guard bootstrap.enrolled, bootstrap.grantId == nil, bootstrap.capabilities.contains("household_pantry"),
+              bootstrap.household.id == householdID, bootstrap.memberId == memberID else { throw ClientError.accessEnded }
+        return try currentHouseholdPantrySession()
+    }
+
+    func currentHouseholdPantrySession() throws -> HouseholdPantrySession { try currentHouseholdDeviceSession() }
+
+    func currentHouseholdDeviceSession() throws -> HouseholdDeviceSession {
+        guard selectedGrantID == nil, childAdoptionBinding == nil, let subject, !subject.isEmpty,
+              let householdID, let memberID, let enrollment,
+              let household = UUID(uuidString: householdID), let member = UUID(uuidString: memberID),
+              let device = UUID(uuidString: enrollment.deviceId) else { throw ClientError.accessEnded }
+        return HouseholdPantrySession(householdID: household, memberID: member, deviceID: device)
+    }
+
     /// The overview can show the household's sole open shop without putting a shop header on requests.
     public func pendingOwnRequest(in operations: [PendingOperation], bootstrap: HouseholdBootstrap) -> PendingOperation? {
         guard let householdID, bootstrap.household.id == householdID, bootstrap.memberId == memberID,
@@ -69,6 +88,12 @@ public actor HouseholdService {
     public func matches(_ operation: PendingOperation, memberID: String) -> Bool {
         operation.householdID == householdID && operation.memberID == memberID && operation.deviceID == enrollment?.deviceId
     }
+    func verifyReceiptAssistanceScope(_ scope: ReceiptAssistanceScope) throws {
+        guard subject == scope.subject, householdID == scope.householdID, memberID == scope.memberID,
+              selectedGrantID == nil, childAdoptionBinding == nil,
+              selectedShopID == nil || selectedShopID == scope.shopID.flatMap(UUID.init(uuidString:)) else { throw ClientError.accessEnded }
+    }
+
     private func accountRequest(subject: String, path: String, body: Data? = nil) async throws -> URLRequest {
         let start = generation
         guard selectedGrantID == nil, childAdoptionBinding == nil else { throw ClientError.accessEnded }
@@ -147,6 +172,7 @@ public actor HouseholdService {
                   value.canSelectShop != true else { throw ClientError.accessEnded }
         }
         memberID = value.memberId
+        authorizedTonightSession = value.canBrowseHouseholdTonight ? try currentHouseholdPantrySession() : nil
         if let enrollment, let householdID, let subject {
             let stored = StoredEnrollment(householdID: householdID, subject: subject, device: enrollment, grantID: selectedGrantID, shopID: selectedShopID,
                                           childMemberID: childAdoptionBinding == nil ? nil : memberID, childBinding: childAdoptionBinding, sessionID: enrollmentSessionID)
@@ -159,7 +185,8 @@ public actor HouseholdService {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
         let page: OwnRequestsPage = try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
         try page.validateReadTime()
-        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.authorAlias == nil }) else { throw ClientError.invalidResponse }
+        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.draftBasketLineId == nil && $0.sameItemOperationId == nil && $0.requestPairs == nil && $0.authorAlias == nil
+            && $0.reportedPurchaser == nil && $0.purchaseRecordedBy == nil && $0.canReportAuthorAsPurchaser == nil }) else { throw ClientError.invalidResponse }
         return page
     }
     public func requestPickups(cursor: UUID? = nil) async throws -> RequestPickupPage {
@@ -344,21 +371,22 @@ public actor HouseholdService {
         guard page.shopId == shopID else { throw ClientError.invalidResponse }
         return page
     }
-    public func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String) async throws -> SharedMealChangeIntent {
+    public func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String, evidence: SharedMealPreferenceEvidence? = nil) async throws -> SharedMealChangeIntent {
         let start = generation
         let live = try await sharedMealChanges(shopID: page.shopId)
         guard start == generation, !live.shopper, live.shopRevision == page.shopRevision, live.authorityEpoch == page.authorityEpoch,
-              live.grantRevision == page.grantRevision, let original = page.meals.first(where: { $0.id == occurrenceID }),
+              live.grantRevision == page.grantRevision, live.preferenceRevision == page.preferenceRevision, let original = page.meals.first(where: { $0.id == occurrenceID }),
               live.meals.contains(original), meal.day == original.meal.day, meal != original.meal,
               let subject, let householdID, let memberID, let enrollment else { throw ClientError.configuration }
-        let request = SharedMealChangeRequest(occurrenceId: occurrenceID, baseMealRevision: original.revision, shopRevision: page.shopRevision,
+        var request = SharedMealChangeRequest(occurrenceId: occurrenceID, baseMealRevision: original.revision, shopRevision: page.shopRevision,
             authorityEpoch: page.authorityEpoch, grantRevision: page.grantRevision, meal: meal, reason: reason)
+        request.preferenceReview = page.preferenceRevision.map { .init(revision: $0, evidence: evidence) }
         return try SharedMealChangeIntent(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, shopID: page.shopId, request: request)
     }
     public func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String?) async throws -> SharedMealChangeIntent {
         let start = generation
         let ideas = try await sharedMealIdeas(shopID: shopID)
-        guard start == generation, ideas.ideas.contains(idea), idea.state == "approved", idea.preview.canApprove,
+        guard start == generation, ideas.ideas.contains(idea), idea.state == "approved", idea.preview.requiresPreferenceReview != true, idea.preview.canApprove,
               idea.actorId.uuidString.lowercased() == memberID?.lowercased() else { throw ClientError.configuration }
         let page = try await sharedMealChanges(shopID: shopID)
         guard start == generation, page.shopRevision == ideas.shopRevision, page.authorityEpoch == ideas.authorityEpoch,
@@ -611,7 +639,13 @@ public actor HouseholdService {
               (base.requestRevision ?? 0) > 0 else { throw ClientError.configuration }
         struct Input: Encodable { let requestId: String; let base: CommandBase; let decision: ShopperDecision }
         let start = generation
-        try await authorizeShopper(shopID: shopID)
+        let capability: String?
+        switch decision {
+        case .sameItem, .undoSameItem: capability = "request_same_item"
+        case .reviewRequestPair, .undoRequestPair: capability = "request_pair_review"
+        default: capability = nil
+        }
+        try await authorizeShopper(shopID: shopID, capability: capability)
         guard start == generation else { throw ClientError.cancelled }
         return try await perform("shops/\(shopID)/previews", method: "POST", body: encoded(Input(requestId: requestID, base: base, decision: decision)))
     }
@@ -636,7 +670,10 @@ public actor HouseholdService {
         default: throw ClientError.configuration
         }
         guard envelope.clientKey == operation.clientKey else { throw ClientError.configuration }
-        try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+        let scope = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+        if confirming, envelope.body["reportedPurchaser"] != nil, !scope.capabilities.contains("request_purchase_attribution") {
+            throw ClientError.accessEnded
+        }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes)
@@ -681,7 +718,7 @@ public actor HouseholdService {
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
                "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve",
                "cookCopy.save", "cookCopy.markSent", "pantry.create", "pantry.storeDelivery", "pantry.observe",
-               "pantry.select", "pantry.match", "pantry.reserve", "mealRecovery.apply", "amendment.recordResponse"].contains(envelope.kind) else { throw ClientError.configuration }
+               "pantry.select", "pantry.match", "pantry.reserve", "cook.complete", "cook.resolve", "cook.undo", "mealRecovery.apply", "meal.chooseTonight", "amendment.recordResponse"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
@@ -690,6 +727,8 @@ public actor HouseholdService {
         } else {
             let capability = envelope.kind == "amendment.recordResponse" ? "confirmed_order" : envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
             let live = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+            if envelope.kind == "meal.chooseTonight", !live.canBrowseHouseholdTonight { throw ClientError.accessEnded }
+            if envelope.kind.hasPrefix("cook."), !live.capabilities.contains("cook_completion") { throw ClientError.accessEnded }
             if envelope.kind == "cookCopy.save", envelope.body["factIndex"] != nil,
                !live.capabilities.contains("cook_corrections") { throw ClientError.accessEnded }
             if envelope.kind == "mealRecovery.apply" || (envelope.kind == "cookCopy.save" && envelope.body["recoveryRevision"] != nil) {
@@ -704,9 +743,17 @@ public actor HouseholdService {
         }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
-        let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, omitSelectedShop: envelope.kind == "shop.create")
+        if envelope.kind == "meal.chooseTonight" {
+            guard UUID(uuidString: receipt.operationId) != nil, receipt.shopId == envelope.shopId, receipt.kind == envelope.kind,
+                  receipt.disposition == "meal_chosen", receipt.authorityEpoch == envelope.base.authorityEpoch,
+                  envelope.base.shopRevision < Int.max, receipt.shopRevision == envelope.base.shopRevision + 1,
+                  let occurrence = receipt.occurrenceId, envelope.body["occurrenceId"] == .string(occurrence.uuidString.lowercased())
+            else { throw ClientError.invalidResponse }
+        }
         if envelope.kind == "amendment.recordResponse" { try receipt.validateAmendment(envelope) }
         if envelope.kind == "mealRecovery.apply" { try receipt.validateRecovery(envelope) }
+        if envelope.kind.hasPrefix("cook.") { try receipt.validateCookCompletion(envelope) }
         if envelope.kind.hasPrefix("pantry.") { try receipt.validatePantry(envelope) }
         if envelope.kind.hasPrefix("cookCopy.") { try receipt.validateCookCopy(envelope) }
         if envelope.kind.hasPrefix("delivery.") {
@@ -1199,12 +1246,12 @@ public actor HouseholdService {
     /// Synchronous within the actor so a server denial can prove which new
     /// cleared generation it created before any re-enrollment can interleave.
     private func clearLocalScope() -> UUID {
-        generation = UUID(); enrollment = nil; enrollmentSessionID = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; helperAccess = nil; childAdoptionBinding = nil
+        generation = UUID(); authorizedTonightSession = nil; enrollment = nil; enrollmentSessionID = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; helperAccess = nil; childAdoptionBinding = nil
         try? deviceVault.clear()
         return generation
     }
     func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
-                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil, requestQueueGrant: UUID? = nil, maximumResponseBytes: Int? = nil, trackingLease: SharedTrackingTransportLease? = nil) async throws -> T {
+                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, omitSelectedShop: Bool = false, reportingShopID: String? = nil, requestQueueGrant: UUID? = nil, maximumResponseBytes: Int? = nil, trackingLease: SharedTrackingTransportLease? = nil) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }
         if let selectedGrantID, path != "bootstrap",
@@ -1234,7 +1281,7 @@ public actor HouseholdService {
         if let selectedGrantID { req.setValue(selectedGrantID, forHTTPHeaderField: "X-View-Grant-ID") }
         if let requestQueueGrant { req.setValue(requestQueueGrant.uuidString.lowercased(), forHTTPHeaderField: "X-Request-Queue-Grant") }
         if let reportingShopID { req.setValue(reportingShopID, forHTTPHeaderField: "X-Shop-ID") }
-        else if let selectedShopID, !creatingShop { req.setValue(selectedShopID.uuidString.lowercased(), forHTTPHeaderField: "X-Shop-ID") }
+        else if let selectedShopID, !omitSelectedShop { req.setValue(selectedShopID.uuidString.lowercased(), forHTTPHeaderField: "X-Shop-ID") }
         if !query.isEmpty {
             var components = URLComponents(url: req.url!, resolvingAgainstBaseURL: false)!
             components.queryItems = query; req.url = components.url

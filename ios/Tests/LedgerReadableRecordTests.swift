@@ -1,11 +1,41 @@
 import XCTest
 import CoreDomain
+import RecordArchive
 @testable import RoomInTheCart
 
 final class LedgerReadableRecordTests: XCTestCase {
     private struct Document: Encodable {
         let formatVersion = 1
         let workspace: LedgerWorkspace
+    }
+
+    @MainActor func testMealFeedbackPersonalBackupKeepsSelectedAdultAndSourceWhileHelperDropsReactions() throws {
+        let recipe = MealTemplate(title: "Rice", ingredients: [MealIngredient(name: "Rice", quantity: nil)])
+        var shop = ShoppingLedger(title: "Weekend")
+        let meal = try shop.chooseMeal(recipe)
+        var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)
+        let target = MealFeedbackSource.occurrence(shopID: shop.id, occurrenceID: meal)
+        let recipeTarget = MealFeedbackSource.recipe(id: recipe.id, revision: recipe.revision)
+        try workspace.updateMealFeedback(for: target, owner: "adultA", expectedRevision: nil, reactions: [.childrenLikedIt], at: Date())
+        try workspace.updateMealFeedback(for: target, owner: "adultB", expectedRevision: nil, reactions: [.tooMuchEffort], at: Date())
+        try workspace.updateMealFeedback(for: recipeTarget, owner: "adultA", expectedRevision: nil, reactions: [.makeAgain], at: Date())
+        let visible = try RecordsNativeCodec.ledgerScope(workspace, shop: shop, feedbackOwner: "adultA")
+        let hidden = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
+        XCTAssertTrue(hidden.privateMealFeedback.isEmpty)
+        XCTAssertEqual(visible.privateMealFeedback.map(\.source), [target])
+        XCTAssertEqual(visible.privateMealFeedback.first?.reactions, [.childrenLikedIt])
+        let library = try XCTUnwrap(RecordsNativeCodec.ledgerLibrary(workspace, feedbackOwner: "adultA"))
+        XCTAssertEqual(library.privateMealFeedback.map(\.source), [recipeTarget])
+        let bytes = try RecordsNativeCodec.canonical(Document(workspace: visible))
+        let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/" + UUID().uuidString, revision: ArchiveCodec.digest(bytes),
+            kind: .ledger, title: shop.title, savedAtMilliseconds: 1, nativePayload: bytes)
+        try RecordsNativeCodec.validate(record)
+        let personal = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: record.origin, revision: record.revision)
+        let restored = try RecordsNativeCodec.ledger(XCTUnwrap(personal.payload.records.first?.nativePayload))
+        XCTAssertEqual(restored.feedback(for: target, owner: "adultA")?.reactions, [.childrenLikedIt])
+        let helper = try ArchiveCodec.make(records: [record], kind: .helperShop, origin: record.origin, revision: record.revision, shopID: shop.id.uuidString)
+        XCTAssertNil(helper.payload.records.first?.nativePayload)
+        XCTAssertFalse(String(decoding: try ArchiveCodec.canonical(helper), as: UTF8.self).contains("childrenLikedIt"))
     }
 
     @MainActor func testShopSeparatesOutstandingItemsFromHandledHistoryAndRetainsImportDecisions() throws {
@@ -94,23 +124,40 @@ final class LedgerReadableRecordTests: XCTestCase {
         first.observedAt = date; first.writtenSlot = "Friday at noon"; first.source = "Paper quote"
         first.total = "38"; first.allChargesIncluded = true; first.quantitiesMatched = true
         first.availability = 1; first.singleStore = true; first.tripCash = "0"; first.extraMinutes = "0"; first.alreadyPlanned = true
+        first.eligibilityReviewed = true; first.orderMinimumKind = .noneRequired
         draft.first = first
         var second = first
         second.id = UUID(); second.label = "Market West"; second.branch = "West"; second.total = "35"
         second.eligibilityTerms = "Loyalty card"; second.tripCash = ""; second.extraMinutes = "18"; second.alreadyPlanned = false
         draft.second = second
-        var plan = DinnerPlanningState()
-        try plan.saveQuotePair(draft.pair(for: shop), access: access, at: date)
-        let workspace = LedgerWorkspace(shops: [shop], dinnerPlanning: plan)
-        let text = try LedgerReadableRecord.text(RecordsNativeCodec.canonical(Document(workspace: RecordsNativeCodec.ledgerScope(workspace, shop: shop))))
+        func record(_ draft: DinnerQuoteEditDraft) throws -> String {
+            var plan = DinnerPlanningState()
+            try plan.saveQuotePair(draft.pair(for: shop), access: access, at: date)
+            let workspace = LedgerWorkspace(shops: [shop], dinnerPlanning: plan)
+            return try LedgerReadableRecord.text(RecordsNativeCodec.canonical(Document(workspace: RecordsNativeCodec.ledgerScope(workspace, shop: shop))))
+        }
+        let text = try record(draft)
+        let breakEven = dinnerFormat("Second trip cash break-even: %@", dinnerMoney(Money(minorUnits: 300)))
         for fact in ["Market East", "Market West", "Paper quote", "Friday at noon", "Friday lunches", ledgerText("Protected"),
                      pTr("Whole checkout"), "Loyalty card", dinnerText("Reviewed available"), dinnerFormat("Extra minutes: %d", 18),
                      dinnerFormat("Checkout change, second minus first: %@", dinnerMoney(Money(minorUnits: -300))),
                      dinnerFormat("Checkout plus trip cash, second minus first: %@", dinnerMoney(nil)),
-                     dinnerFormat("Second trip cash break-even: %@", dinnerMoney(Money(minorUnits: 300)))] {
+                     dinnerText("These are entered observations, not live prices or stock."), breakEven] {
             XCTAssertTrue(text.contains(fact), fact)
         }
         XCTAssertFalse(text.contains(ledgerText("Applied by")))
+
+        var unreviewed = draft
+        unreviewed.second.eligibilityReviewed = false
+        let pendingEligibility = try record(unreviewed)
+        XCTAssertTrue(pendingEligibility.contains(dinnerText("Offer eligibility needs review")))
+        XCTAssertFalse(pendingEligibility.contains(breakEven))
+
+        var unknownMinimum = draft
+        unknownMinimum.first.orderMinimumKind = .unknown
+        let pendingMinimum = try record(unknownMinimum)
+        XCTAssertTrue(pendingMinimum.contains(dinnerText("Purchase minimum or eligible subtotal is unknown")))
+        XCTAssertFalse(pendingMinimum.contains(breakEven))
     }
 
     @MainActor func testLibraryKeepsTemplateAcceptedVersionRotationAndDraftDistinctFromShop() throws {

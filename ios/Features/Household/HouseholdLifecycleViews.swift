@@ -178,9 +178,12 @@ struct HouseholdHelperComposer: View {
     private func optionalText(_ value: String) -> String? { let value = value.trimmingCharacters(in: .whitespacesAndNewlines); return value.isEmpty ? nil : value }
 }
 
+private enum HouseholdCookingReportField: Hashable { case servings, ingredients, leftovers }
+
 struct HouseholdHelperView: View {
     @ObservedObject var model: HouseholdLifecycleModel
     @State private var clearProposal = false
+    @FocusState private var reportEditing: HouseholdCookingReportField?
     var body: some View {
         Form {
             if model.isHelper {
@@ -212,8 +215,13 @@ struct HouseholdHelperView: View {
                             Button(ht("Review and clear this suggestion retry")) { clearProposal = true }
                         }
                     } else if view.canPropose {
+                        Section {
+                            HouseholdCookingReport(model: model, view: view, editing: $reportEditing)
+                                .id([view.grantId, String(view.revision), model.scope?.memberId ?? ""].joined(separator: "/"))
+                        }
                         Section(ht("Suggest a correction")) {
                             TextField(ht("Suggestion"), text: $model.correction, axis: .vertical).lineLimit(3...7)
+                                .accessibilityIdentifier("helper.correction")
                             Text(ht("Suggestions wait for shopper review. They do not change the basket or instructions automatically."))
                             Button(ht("Send suggestion for review")) { Task { await model.sendProposal() } }
                         }
@@ -222,6 +230,11 @@ struct HouseholdHelperView: View {
                 lifecycleNotice(model)
             } else { Text(ht("This scoped view is no longer available. Ask the shopper for a fresh invitation.")) }
         }.disabled(model.busy).navigationTitle(ht("Cook instructions")).task { await model.loadHelper() }
+        .keyboardDoneAction(visible: reportEditing != nil, title: ht("Done"),
+                            identifier: "helper.cookingReport.done") { reportEditing = nil }
+        .onChange(of: model.helperView?.canPropose) { _, allowed in
+            if allowed != true { reportEditing = nil }
+        }
         .task(id: model.helperView?.expiresAt) {
             guard let date = model.helperView.flatMap({ serviceDate($0.expiresAt) }) else { return }
             if date > Date() { try? await Task.sleep(for: .seconds(date.timeIntervalSinceNow)) }
@@ -230,6 +243,57 @@ struct HouseholdHelperView: View {
         .confirmationDialog(ht("Clear this suggestion retry?"), isPresented: $clearProposal, titleVisibility: .visible) {
             Button(ht("Refresh instructions and clear retry"), role: .destructive) { Task { await model.clearPendingProposalAfterReview() } }
         } message: { Text(ht("Clearing a local retry does not remove a suggestion already received by the shopper.")) }
+    }
+}
+
+private struct HouseholdCookingReport: View {
+    @ObservedObject var model: HouseholdLifecycleModel
+    let view: HelperView
+    @State private var servings = ""
+    @State private var ingredients = ""
+    @State private var leftovers = ""
+    @State private var reviewedText: String?
+    @State private var expanded = false
+    @FocusState.Binding var editing: HouseholdCookingReportField?
+
+    private var wording: String {
+        var sections = [ht("Cooking report")]
+        let given = servings.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !given.isEmpty { sections.append(ht("Servings made") + "\n" + given) }
+        sections.append(ht("Ingredients used and substitutions") + "\n" + ingredients.trimmingCharacters(in: .whitespacesAndNewlines))
+        sections.append(ht("Leftovers and storage location") + "\n" + leftovers.trimmingCharacters(in: .whitespacesAndNewlines))
+        return sections.joined(separator: "\n\n")
+    }
+    var body: some View {
+        DisclosureGroup(ht("Report what you cooked"), isExpanded: $expanded) {
+            Text(ht("The shopper reviews this report before deciding whether to update the pantry."))
+            if let reviewedText {
+                Text(verbatim: reviewedText).accessibilityIdentifier("helper.cookingReport.preview")
+                Button(ht("Edit report")) { self.reviewedText = nil }
+                Button(ht("Send report to shopper")) {
+                    Task {
+                        let previous = model.proposalReceipt?.proposalId
+                        await model.sendProposal(reviewedText, reviewed: view)
+                        if model.proposalReceipt.map({ $0.proposalId != previous }) == true || model.pendingProposal != nil {
+                            self.reviewedText = nil; servings = ""; ingredients = ""; leftovers = ""; expanded = false
+                        }
+                    }
+                }.accessibilityIdentifier("helper.cookingReport.send")
+            } else {
+                TextField(ht("Servings made (optional)"), text: $servings)
+                    .focused($editing, equals: .servings).accessibilityIdentifier("helper.cookingReport.servings")
+                TextField(ht("Ingredients used and substitutions"), text: $ingredients, axis: .vertical)
+                    .focused($editing, equals: .ingredients).accessibilityIdentifier("helper.cookingReport.ingredients")
+                TextField(ht("Leftovers and storage location"), text: $leftovers, axis: .vertical)
+                    .focused($editing, equals: .leftovers).accessibilityIdentifier("helper.cookingReport.leftovers")
+                Text(ht("Include quantities you know. Enter none or unknown where appropriate."))
+                if wording.utf16.count > 1000 { Text(ht("Shorten the report to 1,000 characters including its headings.")) }
+                Button(ht("Review cooking report")) { editing = nil; reviewedText = wording }
+                    .accessibilityIdentifier("helper.cookingReport.review")
+                    .disabled(ingredients.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                              leftovers.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || wording.utf16.count > 1000)
+            }
+        }
     }
 }
 

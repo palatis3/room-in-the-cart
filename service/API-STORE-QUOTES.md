@@ -51,12 +51,15 @@ Each of exactly two options records:
   "terms":"Equivalent whole packs; no membership required; fees, taxes and discounts included",
   "itemsMinor":3200,"checkoutMinor":3500,"allChargesIncluded":true,
   "available":true,"quantitiesMatched":true,"singleStore":true,"eligibilityConfirmed":true,
+  "orderMinimum":{"kind":"noneRequired"},
   "tripAlreadyPlanned":false,"tripMinor":400,"extraMinutes":18,
   "capMinor":3800,"capScope":"wholeCheckout"
 }
 ```
 
 `mode` is `pickup`, `delivery`, or `inStore`. Time values are ISO instants with offsets. `terms` preserves the entered package, fee, discount and eligibility explanation. `quantitiesMatched` explicitly confirms that the option covers the same complete server-snapshotted commitments; it never infers equivalence from equal spend. `singleStore` excludes incomplete split-store alternatives. Availability is true, false, or null. Missing eligibility defaults to unconfirmed. `itemsMinor`, `checkoutMinor`, `tripMinor`, `extraMinutes`, and `capMinor` preserve unknown as null, independently from zero. Monetary inputs are nonnegative integer USD cents, at most 1,000,000,000; optional time is an integer number of minutes up to 525,600. Future quote evidence beyond five minutes is refused. Source and observation time remain attached to dated proof; there is no fetched stock or freshness promise.
+
+The adult reviews the order minimum for each store. Use `{"kind":"noneRequired"}` when the store explicitly has no minimum, or `{"kind":"required","minimumMinor":3000,"eligibleSubtotalMinor":3200}` for an entered minimum and eligible subtotal. An omitted minimum, an unknown minimum or eligible subtotal, or an unmet minimum keeps the chosen option unavailable for proposal and adoption.
 
 `comparison` separates `itemDelta`, `checkoutDelta`, `cashDelta`, and `minutesDelta`; every delta is second minus first. `firstCheckout`/`secondCheckout` are known only after included charges are confirmed. `firstTrip`/`secondTrip` add incremental trip cash once. Travel time remains its own unit and is never monetized. Missing charges propagate to checkout and trip totals. Conditional arithmetic may remain visible when availability or eligibility is unresolved, but `preferred` stays null. Unmatched quantities or split-store alternatives suppress comparison deltas. Ties have no preferred option.
 

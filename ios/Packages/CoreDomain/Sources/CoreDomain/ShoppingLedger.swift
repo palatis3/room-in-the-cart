@@ -21,12 +21,14 @@ public struct LedgerRetailerPreview: Codable, Equatable, Sendable {
     public var source: String
     public var capturedAt: Date
     public var includedCharges: [String]
-    public init(total: Money? = nil, source: String, capturedAt: Date, includedCharges: [String] = []) {
-        self.total = total; self.source = source; self.capturedAt = capturedAt; self.includedCharges = includedCharges
+    public var screenshot: ReviewedCheckoutImage?
+    public init(total: Money? = nil, source: String, capturedAt: Date, includedCharges: [String] = [], screenshot: ReviewedCheckoutImage? = nil) {
+        self.total = total; self.source = source; self.capturedAt = capturedAt; self.includedCharges = includedCharges; self.screenshot = screenshot
     }
     public func validate() throws {
         try ledgerText(source, nonempty: true, maximum: 2048); try ledgerDate(capturedAt)
         guard total.map({ $0.minorUnits >= 0 }) ?? true, includedCharges.count <= 100 else { throw LedgerError.invalid("retailerPreview") }
+        if let screenshot { try screenshot.validate(); guard screenshot.displayedTotal == total else { throw LedgerError.invalid("checkoutImageTotal") } }
         for charge in includedCharges { try ledgerText(charge, nonempty: true, maximum: 512) }
     }
 }
@@ -153,7 +155,9 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public var ingredients: [MealIngredient]
     public var notes: String
     public var sourceURL: String?
+    public var eligibilityEvidence: MealEligibilityEvidence? = nil
     public var sourceEvidence: RecipeSourceEvidence? = nil
+    public var recipeSteps: [RecipeStep]? = nil
     public var exclusions: [String]
     public var servingGroups: [ServingGroup]
     public var leadTimeMinutes: Int?
@@ -162,18 +166,21 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public init(id: UUID = UUID(), title: String, servings: Rational = .one,
                 ingredients: [MealIngredient] = [], notes: String = "", sourceURL: String? = nil,
                 exclusions: [String] = [], revision: Int = 0, servingGroups: [ServingGroup] = [],
-                leadTimeMinutes: Int? = nil, completedSteps: [String] = [], sourceEvidence: RecipeSourceEvidence? = nil) {
+                leadTimeMinutes: Int? = nil, completedSteps: [String] = [], sourceEvidence: RecipeSourceEvidence? = nil, recipeSteps: [RecipeStep]? = nil) {
         self.id = id; self.revision = revision; self.title = title; self.servings = servings
         self.ingredients = ingredients; self.notes = notes; self.sourceURL = sourceURL
         self.exclusions = exclusions; self.servingGroups = servingGroups
         self.leadTimeMinutes = leadTimeMinutes; self.completedSteps = completedSteps
         self.sourceEvidence = sourceEvidence
+        self.recipeSteps = recipeSteps
     }
 
     public func validate() throws {
         try ledgerText(title, nonempty: true, maximum: 512); try ledgerText(notes)
         if let sourceURL { try ledgerText(sourceURL, maximum: 2048) }
+        try eligibilityEvidence?.validate()
         try sourceEvidence?.validate()
+        if let recipeSteps { try RecipeStep.validate(recipeSteps, ingredientCount: ingredients.count) }
         try validateExclusions(exclusions)
         guard revision >= 0, servings > .zero, ingredients.count <= 200,
               servingGroups.count <= 100, completedSteps.count <= 100,
@@ -193,6 +200,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
 }
 
 public struct MealOccurrence: Codable, Equatable, Sendable, Identifiable {
+    public internal(set) var repeatedFrom: RepeatWeek.Source? = nil
     public var carryover: DinnerCarryoverLink? = nil
     public let id: UUID
     public let templateID: UUID?
@@ -202,6 +210,7 @@ public struct MealOccurrence: Codable, Equatable, Sendable, Identifiable {
     public var notes: String
     public var sourceURL: String?
     public var sourceEvidence: RecipeSourceEvidence? = nil
+    public var recipeSteps: [RecipeStep]? = nil
     public var exclusions: [String]
     public var servingGroups: [ServingGroup]
     public var leadTimeMinutes: Int?
@@ -265,7 +274,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public var isTrashed: Bool { trashedAt != nil }
 }
 
-public enum ImportSource: String, Codable, CaseIterable, Sendable { case typed, paste, selectedText, voice, photoOCR }
+public enum ImportSource: String, Codable, CaseIterable, Sendable { case typed, paste, selectedText, voice, assistedVoice, photoOCR }
 public enum ImportResolution: Codable, Hashable, Sendable {
     case addNew
     case addToLine(UUID)
@@ -414,6 +423,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     public var mealTemplates: [MealTemplate]
     public var selectedShopID: UUID?
     public var dinnerPlanning: DinnerPlanningState
+    public internal(set) var privateMealFeedback: [PrivateMealFeedback] = []
     public var listLayout = LedgerListLayout()
     public var packSelections: [LedgerPackSelection]
     public init(shops: [ShoppingLedger] = [], mealTemplates: [MealTemplate] = [], selectedShopID: UUID? = nil,
@@ -422,9 +432,10 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         self.dinnerPlanning = dinnerPlanning
         self.packSelections = packSelections
     }
-    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout }
+    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout, privateMealFeedback }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        if !privateMealFeedback.isEmpty { try c.encode(privateMealFeedback, forKey: .privateMealFeedback) }
         try c.encode(shops, forKey: .shops)
         try c.encode(mealTemplates, forKey: .mealTemplates)
         try c.encodeIfPresent(selectedShopID, forKey: .selectedShopID)
@@ -435,6 +446,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        privateMealFeedback = try c.decodeIfPresent([PrivateMealFeedback].self, forKey: .privateMealFeedback) ?? []
         listLayout = try c.decodeIfPresent(LedgerListLayout.self, forKey: .listLayout) ?? LedgerListLayout()
         shops = try c.decode([ShoppingLedger].self, forKey: .shops)
         mealTemplates = try c.decode([MealTemplate].self, forKey: .mealTemplates)
@@ -449,6 +461,14 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         if let selectedShopID, !shops.contains(where: { $0.id == selectedShopID }) { throw LedgerError.notFound(selectedShopID) }
         for shop in shops { try shop.validate() }
         for meal in mealTemplates { try meal.validate() }
+        guard privateMealFeedback.count <= 10_000 else { throw LedgerError.invalid("mealFeedback") }
+        var feedbackSources: [String: Set<MealFeedbackSource>] = [:]
+        for entry in privateMealFeedback {
+            guard !entry.owner.isEmpty, entry.owner.utf8.count <= 128, !entry.reactions.isEmpty,
+                  entry.reactions == MealReaction.allCases.filter(Set(entry.reactions).contains),
+                  feedbackSources[entry.owner, default: []].insert(entry.source).inserted,
+                  feedbackSourceExists(entry.source) else { throw LedgerError.invalid("mealFeedback") }
+        }
         try dinnerPlanning.validate(shops: shops)
         try listLayout.validate(shops: shops)
         guard packSelections.count <= 10_000 else { throw LedgerError.invalid("packSelections") }
@@ -593,12 +613,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func addManualLine(name: String, quantity: Quantity?, notes: String = "",
                                        exclusions: [String] = [], at: Date = Date()) throws -> UUID {
         try mutate("addManualLine", at: at) { next in
-            let lineID = next.appendLine(name: name, notes: notes)
-            next.contributions.append(LedgerContribution(id: UUID(), lineID: lineID, source: .manual,
-                productName: name, quantity: quantity, originalText: quantity?.originalLiteral ?? name,
-                notes: notes, exclusions: exclusions, removedAt: nil))
-            return lineID
+            next.appendManualFields(id: UUID(), contributionID: UUID(), name: name, quantity: quantity, notes: notes, exclusions: exclusions)
         }
+    }
+    private mutating func appendManualFields(id: UUID, contributionID: UUID, name: String, quantity: Quantity?, notes: String, exclusions: [String]) -> UUID {
+        let lineID = appendLine(id: id, name: name, notes: notes)
+        contributions.append(.init(id: contributionID, lineID: lineID, source: .manual, productName: name, quantity: quantity,
+                                   originalText: quantity?.originalLiteral ?? name, notes: notes, exclusions: exclusions, removedAt: nil))
+        return lineID
     }
 
     public mutating func approveStaple(lineID: UUID, purpose: String?, at date: Date = Date()) throws {
@@ -625,25 +647,28 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
     mutating func recordStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, exclusions: [String],
                                handledLine: HandledStapleLine?, at date: Date) throws {
-        var next = self
-        let newID: UUID?
+        let operation = choice == .needed ? "addManualLine" : (handledLine == nil ? "reviewPriorStaple" : "handle")
+        try mutate(operation, at: date) { next in
+            try next.applyStapleFields(review, choice: choice, quantity: quantity, exclusions: exclusions, handledLine: handledLine,
+                                       lineID: UUID(), contributionID: UUID(), at: date)
+        }
+    }
+
+    private mutating func applyStapleFields(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, exclusions: [String],
+                                            handledLine: HandledStapleLine?, lineID: UUID, contributionID: UUID, at date: Date) throws {
+        var newID: UUID?
         if choice == .needed {
             guard matchingStapleLine(named: review.line.name) == nil else { throw LedgerError.invalid("stapleAlreadyListed") }
-            newID = try next.addManualLine(name: review.line.name, quantity: quantity, notes: review.approval.purpose, exclusions: exclusions, at: date)
+            newID = appendManualFields(id: lineID, contributionID: contributionID, name: review.line.name, quantity: quantity,
+                                       notes: review.approval.purpose, exclusions: exclusions)
         } else if let handledLine {
             guard choice == .alreadyHandled, openStapleMatches(named: review.line.name).contains(where: { $0.id == handledLine.lineID })
             else { throw LedgerError.stalePreview }
-            try next.handle(lineID: handledLine.lineID, by: handledLine.boughtBy, at: date)
-            newID = nil
-        } else {
-            try next.mutate("reviewPriorStaple", at: date) { _ in }
-            newID = nil
+            try markHandled(handledLine.lineID, by: handledLine.boughtBy, at: date)
         }
-        var receipts = next.stapleReviews ?? []
+        var receipts = stapleReviews ?? []
         receipts.append(.init(source: review.source, choice: choice, handledLine: handledLine, newLineID: newID, quantity: quantity))
-        next.stapleReviews = receipts
-        try next.validate()
-        self = next
+        stapleReviews = receipts
     }
     /// External capture/inbox callers persist the returned preview before Apply.
     /// Reuse its full bytes for retries; re-staging a new preview with this ID is
@@ -803,7 +828,21 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func updateLine(lineID: UUID, name: String, notes: String, aisle: String, at: Date = Date()) throws {
         try mutate("updateLine", at: at) { next in
             let index = try next.lineIndex(lineID)
-            for source in next.contributions(forLineID: lineID) { try permittedProduct(name, exclusions: source.exclusions) }
+            let sources = next.contributions(forLineID: lineID)
+            for source in sources { try permittedProduct(name, exclusions: source.exclusions) }
+            let renamed = Set(sources.filter { $0.source.isMeal && $0.productName != name }.map(\.id))
+            if !renamed.isEmpty {
+                for position in next.mealOccurrences.indices {
+                    let occurrence = next.mealOccurrences[position]
+                    guard var steps = occurrence.recipeSteps else { continue }
+                    let affected = Set(occurrence.ingredientContributionIDs.indices.filter {
+                        renamed.contains(occurrence.ingredientContributionIDs[$0])
+                    })
+                    guard !affected.isEmpty else { continue }
+                    for index in steps.indices { steps[index].ingredientIndices.removeAll(where: affected.contains) }
+                    next.mealOccurrences[position].recipeSteps = steps
+                }
+            }
             next.lines[index].name = name; next.lines[index].notes = notes; next.lines[index].aisle = aisle
             for index in next.contributions.indices where next.contributions[index].lineID == lineID && next.contributions[index].removedAt == nil {
                 next.contributions[index].productName = name
@@ -842,11 +881,12 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
     public mutating func handle(lineID: UUID, by: String, at: Date = Date()) throws {
+        try mutate("handle", at: at) { next in try next.markHandled(lineID, by: by, at: at) }
+    }
+    private mutating func markHandled(_ lineID: UUID, by: String, at date: Date) throws {
         try ledgerText(by, nonempty: true, maximum: 512)
-        try mutate("handle", at: at) { next in
-            let index = try next.lineIndex(lineID)
-            next.lines[index].handledBy = by; next.lines[index].handledAt = at
-        }
+        let index = try self.lineIndex(lineID)
+        lines[index].handledBy = by; lines[index].handledAt = date
     }
     public mutating func reopen(lineID: UUID, at: Date = Date()) throws {
         try mutate("reopen", at: at) { next in
@@ -868,6 +908,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func updateBasis(_ proposed: ShopBasis, evidenceFor terms: ShopBasis.RetailerTerms? = nil,
                                      reviewing expectedRevisionID: UUID? = nil, at: Date = Date()) throws {
         guard expectedRevisionID == nil || expectedRevisionID == revisionID else { throw LedgerError.stalePreview }
+        if let image = proposed.retailerPreview?.screenshot,
+           (image != basis.retailerPreview?.screenshot || proposed.retailerTerms != basis.retailerTerms),
+           terms != proposed.retailerTerms { throw LedgerError.stalePreview }
         var newBasis = proposed
         if basis.retailerTerms != proposed.retailerTerms, terms != proposed.retailerTerms {
             if basis.retailerPreview != nil { newBasis.retailerPreview = nil }
@@ -923,7 +966,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
             next.mealOccurrences.append(MealOccurrence(id: occurrenceID, templateID: template.id, templateRevision: template.revision,
                 title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
-                sourceEvidence: template.sourceEvidence, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
+                sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
                 completedSteps: template.completedSteps, ingredientContributionIDs: ingredientIDs, scheduledDay: scheduledDay,
                 isHidden: false, removedAt: nil))
             return occurrenceID
@@ -1069,6 +1112,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             if let url = meal.sourceURL { try ledgerText(url, maximum: 2048) }
             guard meal.servings > .zero, meal.templateRevision.map({ $0 >= 0 }) ?? true,
                   meal.ingredientContributionIDs.count <= 200 else { throw LedgerError.invalid("mealOccurrence") }
+            if let steps = meal.recipeSteps { try RecipeStep.validate(steps, ingredientCount: meal.ingredientContributionIDs.count) }
             try uniqueIDs(meal.ingredientContributionIDs); try meal.scheduledDay?.validate(); try ledgerDate(meal.removedAt)
             let validationTemplate = MealTemplate(title: meal.title, servings: meal.servings, notes: meal.notes,
                 sourceURL: meal.sourceURL, exclusions: meal.exclusions, servingGroups: meal.servingGroups,
@@ -1125,13 +1169,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// Internal allowlisted transaction port. Runtime authorization and operation replay are
     /// owned by DinnerPlanningEngine; no public arbitrary workspace replacement is exposed.
     mutating func applyDinnerChanges(_ changes: [DinnerLedgerChange], expectedRevisionID: UUID,
-                                    revisionID: UUID, operationID: UUID, at: Date) throws {
+                                    revisionID: UUID, operationID: UUID, at: Date, repeatWeek: RepeatWeek.Plan? = nil,
+                                    staples: [RepeatWeek.PreparedStaple] = []) throws {
         guard self.revisionID == expectedRevisionID else { throw DinnerPlanningError.stalePreview }
-        guard !changes.isEmpty, changes.count <= 500 else { throw DinnerPlanningError.invalid("changes") }
+        guard (!changes.isEmpty || !staples.isEmpty), changes.count + staples.count <= 500 else { throw DinnerPlanningError.invalid("changes") }
         try mutate("dinner:\(operationID.uuidString)", at: at, revisionID: revisionID) { next in
             var touchedMeals = Set<UUID>()
             var adoptedBasis = false
-            for change in changes {
+            for (changeIndex, change) in changes.enumerated() {
                 switch change {
                 case .choose(let dinner):
                     try dinner.validate()
@@ -1145,9 +1190,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                             exclusions: dinner.template.exclusions + ingredient.exclusions, removedAt: nil))
                     }
                     let template = dinner.template
-                    next.mealOccurrences.append(MealOccurrence(id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
+                    next.mealOccurrences.append(MealOccurrence(repeatedFrom: repeatWeek?.meals[changeIndex].source, id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
                         title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
-                        sourceEvidence: template.sourceEvidence, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
+                        sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
                         completedSteps: template.completedSteps, ingredientContributionIDs: dinner.contributionIDs,
                         scheduledDay: dinner.day, isHidden: false, removedAt: nil))
                 case .move(let occurrenceID, let day):
@@ -1201,6 +1246,36 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     if basis != next.basis { next.basis = basis; next.basisRevision = try increment(next.basisRevision) }
                 }
             }
+            for row in staples {
+                try next.applyStapleFields(row.selection.review, choice: row.selection.choice, quantity: row.selection.quantity,
+                    exclusions: row.exclusions, handledLine: row.selection.handledLine, lineID: row.lineID, contributionID: row.contributionID, at: at)
+            }
+        }
+    }
+
+    mutating func restoreSwap(_ effect: DinnerSwapEffect, operationID: UUID, at date: Date) throws {
+        try mutate("undoDinnerSwap-\(operationID)", at: date) { next in
+            guard let originalIndex = next.mealOccurrences.firstIndex(where: { $0.id == effect.original.id }) else { throw LedgerError.notFound(effect.original.id) }
+            let replacementIndex = try next.mealIndex(effect.replacementID)
+            next.mealOccurrences[originalIndex] = effect.original
+            next.mealOccurrences[replacementIndex].removedAt = date
+            let oldSources = Dictionary(uniqueKeysWithValues: effect.before.ingredients.map { ($0.id, $0) })
+            let oldLines = Dictionary(uniqueKeysWithValues: effect.before.lines.map { ($0.id, $0) })
+            let createdSources = Set(effect.replacement.ingredientContributionIDs)
+            let createdLines = Set(effect.after.lines.map(\.id)).subtracting(oldLines.keys)
+            for index in next.contributions.indices {
+                let id = next.contributions[index].id
+                if let original = oldSources[id] { next.contributions[index] = original }
+                else if createdSources.contains(id) { next.contributions[index].removedAt = date }
+            }
+            for index in next.lines.indices {
+                let id = next.lines[index].id
+                if let original = oldLines[id] { next.lines[index] = original }
+                else if createdLines.contains(id) { next.lines[index].trashedAt = date }
+            }
+            let touchedEdges = Set(effect.after.edges.map(\.id))
+            next.allocations.removeAll { touchedEdges.contains($0.id) }
+            next.allocations += effect.before.edges
         }
     }
 
@@ -1445,7 +1520,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
 }
 
-private func normalizedProduct(_ value: String) -> String {
+func normalizedProduct(_ value: String) -> String {
     // Printable ASCII only needs case folding and space normalization.
     if value.utf8.allSatisfy({ (0x20...0x7e).contains($0) }) {
         return value.lowercased().split(separator: " ").joined(separator: " ")
@@ -1453,7 +1528,7 @@ private func normalizedProduct(_ value: String) -> String {
     return value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
         .split(whereSeparator: \.isWhitespace).joined(separator: " ")
 }
-private func ledgerText(_ value: String, nonempty: Bool = false, maximum: Int = 8192) throws {
+func ledgerText(_ value: String, nonempty: Bool = false, maximum: Int = 8192) throws {
     guard value.utf8.count <= maximum, !nonempty || !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
         throw LedgerError.invalid("text")
     }
@@ -1472,7 +1547,7 @@ private func validateExclusions(_ exclusions: [String]) throws {
     guard exclusions.count <= 100 else { throw LedgerError.invalid("exclusions") }
     for exclusion in exclusions { try ledgerText(exclusion, nonempty: true, maximum: 512) }
 }
-private func permittedProduct(_ name: String, exclusions: [String]) throws {
+func permittedProduct(_ name: String, exclusions: [String]) throws {
     guard !exclusions.isEmpty else { return }
     let words = normalizedProduct(name).components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }
     let product = " " + words.joined(separator: " ") + " "

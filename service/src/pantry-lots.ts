@@ -1,3 +1,4 @@
+import { activeFulfillment, remainingPromise } from './cook-quantities.js';
 import type {Context,Shop} from './repository.js';
 import {z} from 'zod';
 import {digest} from './database.js';
@@ -5,14 +6,15 @@ import {ServiceError,invalid,unavailable} from './errors.js';
 import {pantryBodies,pantryObservation,type Quantity} from './recovery-contracts.js';
 import {jointDeliveryInputs,requirePlaced,requireCompatibleMatch,storedDeliveryEvidence,reviewReservation,sameTarget,lower,validateReservation} from './delivery-evidence.js';
 import {deliveryCoverage,type DeliverySource,type ReservationHead,type SealedMeal} from './delivery-coverage.js';
-import {add,amount,cmp,dimension,wire,zero} from './physical-quantity.js';
+import {add,amount,cmp,dimension,sub,wire,zero,type Rat} from './physical-quantity.js';
 
 type Kind=keyof typeof pantryBodies;
-type Location='pantry'|'freezer';
+type Location='pantry'|'freezer'|'fridge';
+type PhysicalLocation=Location;
 type Match=DeliverySource['matches'][number];
 type Observation={observationId:string;confirmedAt:string;quantity:Quantity|null};
-interface LotRow {
-  lot_id:string;origin_shop_id:string;delivery_source_id:string|null;location:Location;
+export interface LotRow<L extends PhysicalLocation=Location> {
+  lot_id:string;origin_shop_id:string|null;delivery_source_id:string|null;location:L;
   stored_at:Date|null;use_first_at:Date|null;food_name:string|null;exclusion_tags:string[]|null;
 }
 interface Head {
@@ -31,11 +33,13 @@ async function requireReview(ctx:Context,shop:Shop,row:{supplyRevision:number;pa
   requirePlaced(shop);
   if(shop.supply_revision!==row.supplyRevision || await pantryRevision(ctx)!==row.pantryRevision) throw stale();
 }
-async function headRows(ctx:Context,ids:string[]){
-  const {rows}=await ctx.db.query<Head>(`SELECT DISTINCT ON(lot_id,kind,(CASE WHEN kind='observe' THEN NULL ELSE shop_id END),
-    occurrence_id,meal_revision,ingredient_id,group_id) * FROM ritc.pantry_event WHERE household_id=$1 AND lot_id=ANY($2::uuid[])
-    ORDER BY lot_id,kind,(CASE WHEN kind='observe' THEN NULL ELSE shop_id END),occurrence_id,meal_revision,ingredient_id,group_id,pantry_revision DESC`,[ctx.householdId,ids]);
-  return rows;
+async function headRows(ctx:Context,ids:string[],shopId?:string|null){
+  const {rows}=await ctx.db.query<Head & {fulfilled:Quantity[]|null}>(`SELECT DISTINCT ON(lot_id,kind,(CASE WHEN kind='observe' THEN NULL ELSE shop_id END),
+    occurrence_id,meal_revision,ingredient_id,group_id) e.*,e.event_id AS operation_id,
+    CASE WHEN kind='reserve' THEN ${activeFulfillment('e.event_id')} END AS fulfilled FROM ritc.pantry_event e WHERE household_id=$1 AND lot_id=ANY($2::uuid[])
+    AND ($3::boolean OR kind='observe' OR shop_id=$4)
+    ORDER BY lot_id,kind,(CASE WHEN kind='observe' THEN NULL ELSE shop_id END),occurrence_id,meal_revision,ingredient_id,group_id,pantry_revision DESC`,[ctx.householdId,ids,shopId===undefined,shopId??null]);
+  return rows.map(({fulfilled,...head})=>head.kind==='reserve'?{...head,quantity:remainingPromise(head.quantity,fulfilled)}:head);
 }
 function review(heads:Head[],lotId:string,shopId:string) {
   const scoped=heads.filter(h=>h.lot_id===lotId && h.shop_id===shopId);
@@ -44,23 +48,95 @@ function review(heads:Head[],lotId:string,shopId:string) {
     reservations:scoped.filter(h=>h.kind==='reserve').map(h=>({...target(h),groupId:h.group_id,reservationId:h.operation_id,quantity:h.quantity}))};
 }
 type Delivery=Awaited<ReturnType<typeof storedDeliveryEvidence>>[number];
-function materialize(row:LotRow,heads:Head[],delivery:Delivery|undefined) {
+function materialize(row:LotRow<PhysicalLocation>,heads:Head[],delivery:Delivery|undefined) {
   const head=heads.find(h=>h.lot_id===row.lot_id && h.kind==='observe');
   let observation:Observation|null=null;
-  if(delivery?.usable) observation={observationId:delivery.usable.observationId,confirmedAt:delivery.usable.confirmedAt,quantity:delivery.confirmed?.quantity??null};
+  if(delivery?.balance) observation=delivery.balance;
+  else if(delivery?.usable) observation={observationId:delivery.usable.observationId,confirmedAt:delivery.usable.confirmedAt,quantity:delivery.confirmed?.quantity??null};
   else if(head) observation={observationId:head.operation_id,confirmedAt:head.confirmed_at.toISOString(),quantity:head.quantity};
   return {lotId:row.lot_id,origin:row.delivery_source_id?'delivery' as const:'manual' as const,
     location:row.location,storedAt:row.stored_at,useFirstAt:row.use_first_at,foodName:delivery?.foodName??row.food_name!,
     exclusionTags:delivery?.exclusionTags??row.exclusion_tags!,observation};
 }
 
-export async function readPantry(ctx:Context,shop:Shop,cursor:string|null) {
-  requirePlaced(shop,true);
-  const result=await ctx.db.query<LotRow>('SELECT * FROM ritc.pantry_lot WHERE household_id=$1 AND ($2::uuid IS NULL OR lot_id>$2) ORDER BY lot_id LIMIT 51',[ctx.householdId,cursor]);
+export function householdPantryEpoch(ctx:Context):number|null {
+  const m=ctx.member;
+  return !ctx.viewGrantId && !ctx.ownRequestsOnly && m.kind==='adult' && m.state==='active' &&
+    (m.organizer || m.pantry_editor) ? m.pantry_grant_epoch??null : null;
+}
+
+/** The household matcher receives confirmed physical stock and amounts already promised,
+ * never the linked shoppers, meal names, receipt totals or other private provenance. */
+export async function tonightStock(ctx: Context, ids: string[], commitments:
+  (ctx:Context, input:Inputs, requested:Set<string>)=>Promise<Map<string,{value:Rat}|null>>) {
+  if (householdPantryEpoch(ctx) === null) throw unavailable();
+  if (!ids.length) return [];
+  const {rows} = await ctx.db.query<LotRow>(`
+    SELECT l.* FROM ritc.pantry_lot l WHERE l.household_id=$1 AND l.lot_id=ANY($2::uuid[])
+      AND (NOT cook_output OR EXISTS(SELECT FROM ritc.shared_cook c
+        WHERE (c.household_id,c.operation_id)=(l.household_id,l.operation_id) AND c.undone_by IS NULL))
+    ORDER BY use_first_at NULLS LAST,lot_id`,[ctx.householdId,ids]);
+  const heads = await headRows(ctx,ids);
+  const deliveryIds = rows.flatMap(row => row.delivery_source_id ? [row.delivery_source_id] : []);
+  const deliveries = new Map((await storedDeliveryEvidence(ctx,deliveryIds)).map(source=>[source.sourceId,source]));
+  const connectedShops = new Set([
+    ...heads.filter(head=>head.kind==='select' && head.enabled).map(head=>head.shop_id),
+    ...rows.flatMap(row=>row.delivery_source_id && row.origin_shop_id ? [row.origin_shop_id] : []),
+  ]);
+  const requested = new Set(ids);
+  const held = new Map<string,{value:Rat}|null>();
+  // Each connected component is disjoint. The shared recovery graph accounts for
+  // protected portions, replaced meals, outstanding promises and completed cooking.
+  for (const shopId of connectedShops) {
+    const input = await jointInputs(ctx,{shop_id:shopId},null,true);
+    for (const visited of input.shopIds) connectedShops.delete(visited);
+    for (const [lotId,commitment] of await commitments(ctx,input,requested)) held.set(lotId,commitment);
+  }
+  const headsByLot = new Map<string,Head[]>();
+  for (const head of heads) {
+    const previous = headsByLot.get(head.lot_id);
+    if (previous) previous.push(head);
+    else headsByLot.set(head.lot_id,[head]);
+  }
+  return rows.map(row=>{
+    const lot = materialize(row,headsByLot.get(row.lot_id)??[],deliveries.get(row.lot_id));
+    const quantity = lot.observation?.quantity;
+    const commitment = held.get(row.lot_id);
+    const free = quantity && commitment !== null ? sub(amount(quantity),commitment?.value??zero) : null;
+    return {id:row.lot_id,name:lot.foodName,tags:lot.exclusionTags,observed:lot.observation,
+      useFirstAt:lot.useFirstAt?.toISOString()??null,free:free?wire(free.n>0n?free:zero):null};
+  });
+}
+export async function physicalPantryPage(ctx:Context,cursor:string|null,shop?:Shop,includeRefrigerated=false) {
+  const epoch=householdPantryEpoch(ctx);
+  if(!shop && epoch===null) throw unavailable();
+  const result=await ctx.db.query<LotRow<PhysicalLocation>>(`SELECT * FROM ritc.pantry_lot
+    WHERE household_id=$1 AND ($2::uuid IS NULL OR lot_id>$2)
+    AND (NOT cook_output OR EXISTS(SELECT 1 FROM ritc.shared_cook c WHERE (c.household_id,c.operation_id)=(pantry_lot.household_id,pantry_lot.operation_id) AND c.undone_by IS NULL))
+    AND ($3::boolean OR location<>'fridge' OR ($5::boolean AND cook_output)) AND ($4::boolean OR origin_shop_id IS NOT NULL)
+    ORDER BY lot_id LIMIT 51`,[ctx.householdId,cursor,!shop,epoch!==null,includeRefrigerated]);
   const page=result.rows.slice(0,50),ids=page.map(l=>l.lot_id);
-  const heads=await headRows(ctx,ids),delivered=await storedDeliveryEvidence(ctx,page.flatMap(l=>l.delivery_source_id?[l.delivery_source_id]:[]));
-  const lots=page.map(l=>({...materialize(l,heads,delivered.find(s=>s.sourceId===l.lot_id)),...review(heads,l.lot_id,shop.shop_id)}));
-  return {...pantryScope(ctx,shop,await pantryRevision(ctx)),lots,nextCursor:result.rows.length>50?ids.at(-1):null};
+  const heads=await headRows(ctx,ids,shop?.shop_id??null),delivered=await storedDeliveryEvidence(ctx,page.flatMap(l=>l.delivery_source_id?[l.delivery_source_id]:[]));
+  // A staple purchase reviews immutable delivery evidence, never a later cook
+  // balance head. This field is limited to the separately authorized household page.
+  const purchases=shop?[]:await storedDeliveryEvidence(ctx,page.flatMap(l=>l.delivery_source_id?[l.delivery_source_id]:[]),null,true);
+  const receipts=!shop && ids.length ? (await ctx.db.query<{lot_id:string,evidence:unknown}>(
+    'SELECT lot_id,evidence FROM ritc.household_receipt_line WHERE household_id=$1 AND lot_id=ANY($2::uuid[])',[ctx.householdId,ids])).rows : [];
+  const receiptByLot=new Map(receipts.map(r=>[r.lot_id,r.evidence]));
+  const lots=page.map(l=>{
+    const physical=materialize(l,heads,delivered.find(s=>s.sourceId===l.lot_id));
+    const purchase=purchases.find(s=>s.sourceId===l.lot_id);
+    const purchaseObservation=purchase?.usable && purchase.confirmed ? {observationId:purchase.usable.observationId,
+      confirmedAt:purchase.usable.confirmedAt,quantity:purchase.confirmed.quantity}:null;
+    return shop?{...physical,...review(heads,l.lot_id,shop.shop_id)}:{...physical,purchaseObservation,
+      ...(receiptByLot.has(l.lot_id)?{receiptEvidence:receiptByLot.get(l.lot_id)}:{})};
+  });
+  return {lots,nextCursor:result.rows.length>50?ids.at(-1):null};
+}
+
+export async function readPantry(ctx:Context,shop:Shop,cursor:string|null,includeRefrigerated=false) {
+  requirePlaced(shop,true);
+  return {...pantryScope(ctx,shop,await pantryRevision(ctx)),...await physicalPantryPage(ctx,cursor,shop,includeRefrigerated)};
 }
 
 // Only shops joined by the same physical stock participate. Scope occurrence
@@ -68,7 +144,7 @@ export async function readPantry(ctx:Context,shop:Shop,cursor:string|null) {
 const scoped=(shopId:string,id:string)=>shopId+'/'+id;
 const unscoped=(id:string)=>id.slice(id.indexOf('/')+1);
 function targetKey(sourceId:string,m:Match){return [sourceId,m.occurrenceId,m.mealRevision,m.ingredientId].join('/');}
-export async function linkedComponent(ctx:Context,shop:Shop,focus:string|null){
+export async function linkedComponent(ctx:Context,shop:Pick<Shop,'shop_id'>,focus:string|null){
   const {rows:edges}=await ctx.db.query<{lot_id:string;shop_id:string}>(`SELECT lot_id,shop_id FROM (
     SELECT DISTINCT ON(lot_id,shop_id) lot_id,shop_id,enabled FROM ritc.pantry_event WHERE household_id=$1 AND kind='select'
     ORDER BY lot_id,shop_id,pantry_revision DESC) current WHERE enabled
@@ -93,10 +169,11 @@ export async function trackCookStockProvenance(ctx:Context,shop:Shop,copyId:stri
       SELECT actor_id FROM ritc.pantry_lot WHERE household_id=$1 AND lot_id=ANY($3::uuid[])
       UNION SELECT actor_id FROM ritc.pantry_event WHERE household_id=$1 AND lot_id=ANY($3::uuid[])
       UNION SELECT actor_id FROM ritc.operation WHERE household_id=$1 AND shop_id=ANY($4::uuid[]) AND kind LIKE 'delivery.%'
+      UNION SELECT actor_id FROM ritc.tonight_meal_author WHERE household_id=$1 AND shop_id=ANY($4::uuid[])
       UNION SELECT actor_id FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=ANY($4::uuid[])
     ) origins`,[ctx.householdId,copyId,[...lots],[...shops]]);
 }
-export async function jointInputs(ctx:Context,shop:Shop,focus:string|null=null,includeInventory=false){
+export async function jointInputs(ctx:Context,shop:Pick<Shop,'shop_id'>,focus:string|null=null,includeInventory=false){
   const {shops,lots}=await linkedComponent(ctx,shop,focus);
   const mealRows:SealedMeal[]=[],sources=new Map<string,DeliverySource>(),kinds=new Map<string,'delivery'|Location>();
   const delivery=await jointDeliveryInputs(ctx,[...shops],[...lots],includeInventory);
@@ -109,8 +186,14 @@ export async function jointInputs(ctx:Context,shop:Shop,focus:string|null=null,i
     sources.set(physical.sourceId,{...physical,matches,reservations:physical.reservations.map(map)});
     for(const m of matches) kinds.set(targetKey(physical.sourceId,m),'delivery');
   }
-  const {rows}=await ctx.db.query<LotRow>('SELECT * FROM ritc.pantry_lot WHERE household_id=$1 AND lot_id=ANY($2::uuid[]) ORDER BY use_first_at NULLS LAST,lot_id',[ctx.householdId,[...lots]]);
+  const {rows}=await ctx.db.query<LotRow>("SELECT * FROM ritc.pantry_lot WHERE household_id=$1 AND (location<>'fridge' OR cook_output) AND lot_id=ANY($2::uuid[]) AND (NOT cook_output OR EXISTS(SELECT 1 FROM ritc.shared_cook c WHERE (c.household_id,c.operation_id)=(pantry_lot.household_id,pantry_lot.operation_id) AND c.undone_by IS NULL)) ORDER BY use_first_at NULLS LAST,lot_id",[ctx.householdId,[...lots]]);
   const heads=await headRows(ctx,[...lots]);
+  if(householdPantryEpoch(ctx)===null) {
+    // Foreign shops can use additional standalone lots in this component.
+    // Keep those commitments in the allocator without exposing their sources.
+    const selectedHere=new Set(heads.filter(h=>h.kind==='select' && h.enabled && h.shop_id===shop.shop_id).map(h=>h.lot_id));
+    if(rows.some(l=>l.origin_shop_id===null && (l.lot_id===focus || selectedHere.has(l.lot_id)))) throw unavailable();
+  }
   for(const lot of rows){
     const value=materialize(lot,heads,sourceRows.get(lot.lot_id));
     const source=sources.get(lot.lot_id)??{sourceId:lot.lot_id,foodName:value.foodName,exclusionTags:value.exclusionTags,
@@ -145,7 +228,7 @@ export async function readJointCoverage(ctx:Context,shop:Shop){
   const needs=report.needs.filter(n=>visible(shop,n.occurrenceId)).map(n=>{
     const allocations=n.allocations.map(a=>({...a,kind:input.kinds.get(targetKey(a.sourceId,n))!}));
     return {...n,occurrenceId:unscoped(n.occurrenceId),allocations,
-      delivered:n.required?bucket(allocations,'delivery'):null,pantry:n.required?bucket(allocations,'pantry'):null,freezer:n.required?bucket(allocations,'freezer'):null};
+      delivered:n.required?bucket(allocations,'delivery'):null,pantry:n.required?bucket(allocations,'pantry'):null,freezer:n.required?bucket(allocations,'freezer'):null,fridge:n.required?bucket(allocations,'fridge'):null};
   });
   return {...pantryScope(ctx,shop,await pantryRevision(ctx)),unplannedOccurrenceIds:report.unplannedOccurrenceIds.filter(id=>visible(shop,id)).map(unscoped),needs};
 }

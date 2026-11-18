@@ -1,3 +1,5 @@
+import { activeFulfillment, remainingPromise } from './cook-quantities.js';
+import type {Quantity} from './recovery-contracts.js';
 import { confirmedDeliveryLines } from './order-amendments.js';
 import {deliveryCoverage,type SealedMeal,type ReservationHead,type DeliverySource} from './delivery-coverage.js';
 import { z } from 'zod';
@@ -12,7 +14,8 @@ type Arrival = z.infer<typeof deliveryArrivalBody>;
 type Usable = z.infer<typeof deliveryUsableBody>;
 interface SourceRow {
   shop_id:string; source_id:string; line_id:string; segment_key:string; food_name:string; exclusion_tags:string[];
-  reservations: ReservationHead[];
+  balance_id:string|null; balance_quantity:Quantity|null; balance_at:Date|null;
+  reservations: (ReservationHead & {fulfilled?:Quantity[]|null})[];
   matches: {occurrenceId:string;mealRevision:number;ingredientId:string}[];
   arrival: Arrival|null; usable: Usable|null; arrival_recorded: Date|null; usable_recorded: Date|null;
 }
@@ -34,11 +37,20 @@ const sealedJoin=`FROM ritc.shop_snapshot ss
   CROSS JOIN LATERAL jsonb_array_elements(ss.snapshot->'mealRefs') ref
   JOIN ritc.shared_meal_revision m ON m.household_id=ss.household_id AND m.shop_id=ss.shop_id
     AND m.occurrence_id=(ref->>'occurrenceId')::uuid AND m.revision=(ref->>'revision')::integer AND m.meal IS NOT NULL`;
-const mealFields='m.occurrence_id AS "occurrenceId",m.revision,m.meal';
+const mealFields=`m.occurrence_id AS "occurrenceId",m.revision,m.meal,EXISTS(SELECT 1 FROM ritc.shared_cook c
+ WHERE (c.household_id,c.shop_id,c.occurrence_id)=(m.household_id,m.shop_id,m.occurrence_id) AND c.undone_by IS NULL) AS completed`;
 const sealedMeals=`SELECT ${mealFields} ${sealedJoin} WHERE ss.household_id=$1 AND ss.shop_id=$2 AND ss.revision=$3`;
 
 // Physical observations and reviewed ingredient identity have independent heads.
-const sourceHeads = `SELECT s.*,matches.current AS matches,pins.current AS reservations,a.body AS arrival,a.recorded_at AS arrival_recorded,u.body AS usable,u.recorded_at AS usable_recorded
+const physicalFields='a.body AS arrival,a.recorded_at AS arrival_recorded,u.body AS usable,u.recorded_at AS usable_recorded,b.event_id AS balance_id,b.quantity AS balance_quantity,b.confirmed_at AS balance_at';
+const physicalJoins=`  LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
+    AND shop_id=s.shop_id AND source_id=s.source_id AND kind='arrival' ORDER BY supply_revision DESC LIMIT 1) a ON true
+  LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
+    AND shop_id=s.shop_id AND source_id=s.source_id AND kind='usable' ORDER BY supply_revision DESC LIMIT 1) u ON true
+  LEFT JOIN LATERAL (SELECT event_id,quantity,confirmed_at FROM ritc.pantry_event
+    WHERE household_id=s.household_id AND lot_id=s.source_id AND kind='observe'
+      AND delivery_usable_id=(u.body->>'observationId')::uuid ORDER BY pantry_revision DESC LIMIT 1) b ON true`;
+const sourceHeads = `SELECT s.*,matches.current AS matches,pins.current AS reservations,${physicalFields}
   FROM ritc.delivery_source s
   LEFT JOIN LATERAL (SELECT COALESCE(jsonb_agg(jsonb_build_object('occurrenceId',r.occurrence_id,
     'mealRevision',r.meal_revision,'ingredientId',r.ingredient_id) ORDER BY r.occurrence_id,r.ingredient_id)
@@ -47,18 +59,16 @@ const sourceHeads = `SELECT s.*,matches.current AS matches,pins.current AS reser
       WHERE household_id=s.household_id AND shop_id=s.shop_id AND source_id=s.source_id
       ORDER BY occurrence_id,meal_revision,ingredient_id,supply_revision DESC) r) matches ON true
   LEFT JOIN LATERAL (SELECT COALESCE(jsonb_agg(jsonb_build_object('occurrenceId',r.occurrence_id,'mealRevision',r.meal_revision,
-    'ingredientId',r.ingredient_id,'groupId',r.group_id,'reservationId',r.operation_id,'quantity',r.quantity)
+    'ingredientId',r.ingredient_id,'groupId',r.group_id,'reservationId',r.operation_id,'quantity',r.quantity,'fulfilled',${activeFulfillment('r.operation_id')})
     ORDER BY r.occurrence_id,r.meal_revision,r.ingredient_id,r.group_id),'[]'::jsonb) AS current FROM
     (SELECT DISTINCT ON (occurrence_id,meal_revision,ingredient_id,group_id) * FROM ritc.delivery_reservation
       WHERE household_id=s.household_id AND shop_id=s.shop_id AND source_id=s.source_id
       ORDER BY occurrence_id,meal_revision,ingredient_id,group_id,supply_revision DESC) r) pins ON true
-  LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
-    AND shop_id=s.shop_id AND source_id=s.source_id AND kind='arrival' ORDER BY supply_revision DESC LIMIT 1) a ON true
-  LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
-    AND shop_id=s.shop_id AND source_id=s.source_id AND kind='usable' ORDER BY supply_revision DESC LIMIT 1) u ON true`;
+  ${physicalJoins}`;
 const heads=sourceHeads+' WHERE s.household_id=$1 AND s.shop_id=$2';
 
-function sourceEvidence(row:SourceRow, asOf:string) {
+type PhysicalRow=Omit<SourceRow,'matches'|'reservations'>;
+function physicalEvidence(row:PhysicalRow, asOf:string, purchase=false) {
   // Each newly reviewed physical identity is distinct until deliberately mapped.
   const source = {id:row.source_id, foodId:row.source_id, identityRevision:1};
   const a=row.arrival, u=row.usable;
@@ -66,13 +76,20 @@ function sourceEvidence(row:SourceRow, asOf:string) {
     a && row.arrival_recorded ? {...a,id:a.observationId,identityRevision:1,recordedAt:row.arrival_recorded.toISOString()} : undefined,
     u && row.usable_recorded ? {...u,id:u.observationId,identityRevision:1,recordedAt:row.usable_recorded.toISOString()} : undefined, asOf);
   return {sourceId:source.id, foodId:source.foodId, lineId:row.line_id, segmentKey:row.segment_key, foodName:row.food_name,
-    exclusionTags:row.exclusion_tags, matches:row.matches, reservations:row.reservations, arrival:a, usable:u, confirmed:lot??null};
+    exclusionTags:row.exclusion_tags, arrival:a, usable:u, ...(row.balance_id && !purchase ? {balance:{observationId:row.balance_id,
+      confirmedAt:row.balance_at!.toISOString(),quantity:lot?row.balance_quantity:null}}:{}),
+    confirmed:lot && row.balance_id && !purchase ? (row.balance_quantity?{...lot,quantity:row.balance_quantity}:null):lot??null};
+}
+function sourceEvidence(row:SourceRow,asOf:string) {
+  return {...physicalEvidence(row,asOf),matches:row.matches,reservations:row.reservations.map(({fulfilled,...pin})=>({...pin,quantity:remainingPromise(pin.quantity,fulfilled??null)}))};
 }
 
-export async function storedDeliveryEvidence(ctx:Context,ids:string[],shopId:string|null=null) {
+export async function storedDeliveryEvidence(ctx:Context,ids:string[],shopId:string|null=null,purchase=false) {
   if(!ids.length) return [];
-  const result=await ctx.db.query<SourceRow>(sourceHeads+' WHERE s.household_id=$1 AND s.source_id=ANY($2::uuid[]) AND ($3::uuid IS NULL OR s.shop_id=$3)',[ctx.householdId,ids,shopId]);
-  return result.rows.map(row=>sourceEvidence(row,ctx.now.toISOString()));
+  const result=await ctx.db.query<PhysicalRow>(`SELECT s.source_id,s.shop_id,s.line_id,s.segment_key,s.food_name,s.exclusion_tags,${physicalFields}
+    FROM ritc.delivery_source s ${physicalJoins} WHERE s.household_id=$1 AND s.source_id=ANY($2::uuid[])
+    AND ($3::uuid IS NULL OR s.shop_id=$3)`,[ctx.householdId,ids,shopId]);
+  return result.rows.map(row=>physicalEvidence(row,ctx.now.toISOString(),purchase));
 }
 
 // Resolve the connected shops in two queries; unrelated delivery lines are not
@@ -116,7 +133,7 @@ export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null
   const sources = result.rows.slice(0,50).map(row=>sourceEvidence(row,asOf));
   return {shopId:shop.shop_id, placedRevision:shop.placed_revision, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch,
     recoveryRevision:shop.recovery_revision??0,
-    supplyRevision:shop.supply_revision, asOf, coverageAvailable:true, reservationsAvailable:true, lines, meals, sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
+    supplyRevision:shop.supply_revision, asOf, coverageAvailable:true, reservationsAvailable:true, lines, meals:meals.map(({completed,...m})=>completed?{...m,completed:true}:m), sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
 }
 
 type ReservationWrite=z.infer<typeof deliveryReservationBody>;

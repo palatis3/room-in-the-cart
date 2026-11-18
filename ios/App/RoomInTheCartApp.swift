@@ -1,5 +1,16 @@
+import CoreDomain
 import SwiftUI
 import DeviceSurfaces
+
+private struct PrivatePantryRetryKey: EnvironmentKey {
+    static let defaultValue: (@MainActor () -> Void)? = nil
+}
+private extension EnvironmentValues {
+    var privatePantryRetry: (@MainActor () -> Void)? {
+        get { self[PrivatePantryRetryKey.self] }
+        set { self[PrivatePantryRetryKey.self] = newValue }
+    }
+}
 
 #if DEBUG && (CONTRIBUTOR_CAPTURE_UI_FIXTURE || DINNER_DECISION_UI_FIXTURE)
 // The dedicated test build supplies its isolated @main from UITestSupport.
@@ -10,27 +21,75 @@ import DeviceSurfaces
         #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
         RITCAppCaptureProbe.install()
         #endif
+        #if DEBUG && targetEnvironment(simulator)
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("--ui-testing"), args.contains("--test-shopping-add-intent") {
+            Task { @MainActor in
+                let intent = AddGroceryItemIntent()
+                intent.wording = "2 kg rice"
+                _ = try? await intent.perform()
+            }
+        }
+        #endif
         // Keep inactive navigation labels legible against both system bar appearances.
         UITabBar.appearance().unselectedItemTintColor = UIColor(named: "secondary") ?? .secondaryLabel
     }
     var body: some Scene {
-        WindowGroup { GroceryWindow(notificationDelegate: notificationDelegate) }
+        WindowGroup {
+            #if DEBUG && targetEnvironment(simulator)
+            if Set(["--ui-testing", "--meal-language-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
+                MealLanguageFixture()
+            } else { GroceryWindow(notificationDelegate: notificationDelegate) }
+            #else
+            GroceryWindow(notificationDelegate: notificationDelegate)
+            #endif
+        }
+    }
+}
+
+#endif
+
+@MainActor private final class PrivatePantryRuntime: ObservableObject {
+    static let mutationGate = PantryMutationGate()
+    private var identity: CapturePrivateIdentity?
+    private var generation = UUID()
+
+    func update(_ next: CapturePrivateIdentity?) {
+        if identity != next { identity = next; generation = UUID() }
+    }
+
+    func authorization(for adult: CapturePrivateIdentity, access: WorkspaceAccess, household: HouseholdModel,
+                       child: GuardianChildCoordinator) -> @MainActor () -> Bool {
+        let original = generation
+        return { [weak self, weak access, weak household, weak child] in
+            guard let self, let access, let household, let child else { return false }
+            return self.identity == adult && self.generation == original && !child.presented &&
+                household.projection?.grantId == nil && CapturePrivateIdentity.current(access: access, household: household) == adult
+        }
     }
 }
 
 /// Observe activation in the window that receives widget and shortcut URLs.
-private struct GroceryWindow: View {
+struct GroceryWindow: View {
     let notificationDelegate: SurfaceNotificationDelegate
     @StateObject private var model = AppModel()
-    @StateObject private var ledger = LedgerModel()
-    @StateObject private var pickup = PickupModel()
-    @StateObject private var household = HouseholdModel()
+    @StateObject private var ledger = LedgerModel(inventoryProjectionsEnabled: true, mutationGate: PrivatePantryRuntime.mutationGate, usesLivePantry: true)
+    @StateObject private var pickup = PickupModel(mutationGate: PrivatePantryRuntime.mutationGate, usesLivePantry: true)
+    @StateObject private var household: HouseholdModel
+
+    init(notificationDelegate: SurfaceNotificationDelegate, household: HouseholdModel? = nil) {
+        self.notificationDelegate = notificationDelegate
+        _household = StateObject(wrappedValue: household ?? HouseholdModel())
+    }
     @StateObject private var access = WorkspaceAccess()
     @StateObject private var membership = MembershipCoordinator()
     @StateObject private var surfaces = DeviceSurfacesComposition()
     @StateObject private var navigation = NavigationRestorationModel()
     @StateObject private var guardianChild = GuardianChildCoordinator()
     @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var pantryRuntime = PrivatePantryRuntime()
+    @State private var pantryOpenAttempt = UUID()
+    @State private var failedPantryScope: PantryOpenScope?
     #if DEBUG && targetEnvironment(simulator)
     @StateObject private var recoveryFixture = PrivatePickupRecoveryFixture()
     #endif
@@ -40,7 +99,10 @@ private struct GroceryWindow: View {
             if scenePhase != .active && access.isProtected {
                 Theme.canvas.ignoresSafeArea()
             } else { root }
-        }.environment(\.pickupLedger, ledger)
+        }.modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
+            .environment(\.pickupLedger, ledger)
+            .environment(\.offersDuplicateAssistance, true)
+            .environment(\.privatePantryRetry, pantryRetry)
             .environmentObject(model)
             .environmentObject(ledger).environmentObject(pickup)
             .environmentObject(household).environmentObject(access)
@@ -77,11 +139,21 @@ private struct GroceryWindow: View {
                     DeviceSurfacesDestination(composition: surfaces, destination: destination,
                                               ledger: ledger, pickup: pickup, household: household)
                 }.environment(\.pickupLedger, ledger)
+                    .environment(\.guardianChildCoordinator, guardianChild)
+                    .environmentObject(model)
                     .environmentObject(ledger).environmentObject(pickup)
                     .environmentObject(household).environmentObject(access)
                     .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
             }
             .modifier(HouseholdWorkspaceProtection(household: household, access: access))
+            .onChange(of: privatePantryIdentity) { previous, identity in
+                pantryRuntime.update(identity)
+                if previous != nil { pickup.suspendPrivatePantry() }
+            }
+            .task(id: scenePhase) {
+                if scenePhase == .active { try? await PrivateReceiptInbox.expireOnForeground() }
+            }
+            .task(id: pantryOpenScope) { await openPrivatePantry(pantryOpenScope) }
             .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
             .onChange(of: guardianChild.presented) { _, childActive in
                 if childActive {
@@ -110,7 +182,9 @@ private struct GroceryWindow: View {
     }
     @ViewBuilder private var root: some View {
         #if DEBUG && targetEnvironment(simulator)
-        if recoveryFixture.requested && recoveryFixture.phase != .ready {
+        if ProcessInfo.processInfo.arguments.contains("--receipt-file-source-fixture") {
+            ReceiptFileSourceFixture()
+        } else if recoveryFixture.requested && recoveryFixture.phase != .ready {
             if recoveryFixture.phase == .failed { Text(verbatim: "Recovery fixture setup failed") }
             else { ProgressView() }
         } else { RootView() }
@@ -119,23 +193,86 @@ private struct GroceryWindow: View {
         #endif
     }
 
+    private var privatePantryIdentity: CapturePrivateIdentity? {
+        guard scenePhase == .active, !guardianChild.presented, household.projection?.grantId == nil else { return nil }
+        return CapturePrivateIdentity.current(access: access, household: household)
+    }
+
+    private struct PantryOpenScope: Equatable {
+        let adult: CapturePrivateIdentity?
+        let ledgerReady: Bool
+        let ledgerOrigin: UUID?
+        let attempt: UUID
+    }
+    private var pantryOpenScope: PantryOpenScope {
+        PantryOpenScope(adult: privatePantryIdentity, ledgerReady: ledger.ready, ledgerOrigin: ledger.sourceWorkspaceID, attempt: pantryOpenAttempt)
+    }
+    private var pantryCleanupPending: Bool {
+        guard let stores = pickup.pantryErasureStores else { return false }
+        return PantryErasureCoordinator.hasPendingCleanup(in: stores.configuration.erasureJournalDirectory,
+                                                         originID: stores.inventory.workspaceID)
+    }
+    private var pantryRetry: (@MainActor () -> Void)? {
+        guard let failed = failedPantryScope, failed == pantryOpenScope, failed.adult != nil,
+              !ledger.hasPendingLedgerDeletion, !pickup.pantryRestartAvailable, !pantryCleanupPending else { return nil }
+        return {
+            guard failed == pantryOpenScope, privatePantryIdentity == failed.adult else { return }
+            failedPantryScope = nil
+            pantryOpenAttempt = UUID()
+        }
+    }
+    private func recordPantryFailure(_ expected: PantryOpenScope) {
+        guard !Task.isCancelled, expected == pantryOpenScope, expected.adult != nil,
+              !ledger.hasPendingLedgerDeletion, !pickup.pantryRestartAvailable, !pantryCleanupPending else { return }
+        failedPantryScope = expected
+    }
+    @MainActor private func openPrivatePantry(_ scope: PantryOpenScope) async {
+        guard !Task.isCancelled else { return }
+        failedPantryScope = nil
+        pantryRuntime.update(scope.adult)
+        guard let identity = scope.adult else { return }
+        Diagnostics.record(.pantryScopeEntered)
+        if !scope.ledgerReady {
+            if !ledger.hasPendingLedgerDeletion { await ledger.open() }
+            if !ledger.ready && !ledger.opening {
+                Diagnostics.record(.pantryLedgerOpeningFailed)
+                recordPantryFailure(scope)
+            }
+            return  // Publishing ready starts a new task bound to the opened ledger.
+        }
+        let authorize = pantryRuntime.authorization(for: identity, access: access, household: household, child: guardianChild)
+        guard authorize(), !Task.isCancelled, ledger.sourceWorkspaceID == scope.ledgerOrigin else { return }
+        do {
+            let persona = ReceiptAcquisition.identity(["private-receipt-aliases", identity.actorID.uuidString,
+                identity.subject ?? "", identity.householdID ?? "", identity.memberID ?? ""])
+            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona, authorize: authorize)
+            if !pickup.ready { await pickup.load() }
+            if pickup.pantryRouteAvailable { Diagnostics.record(.pantryRouteReady) }
+            else if !pickup.pantryRestartAvailable {
+                Diagnostics.record(.pantryRouteUnavailable)
+                recordPantryFailure(scope)
+            }
+            #if DEBUG && targetEnvironment(simulator)
+            if authorize() { await recoveryFixture.prepare(ledger: ledger, pickup: pickup) }
+            #endif
+        } catch {
+            guard authorize(), !Task.isCancelled else { return }
+            recordPantryFailure(scope)
+            Diagnostics.record(.pantryBindingUnavailable)
+            pickup.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
+        }
+    }
+
     @MainActor private func openAdultWorkspace() async {
         guard scenePhase == .active, !guardianChild.presented, access.unlocked else { return }
         if !model.ready { await model.open() }
         guard !guardianChild.presented, access.unlocked else { return }
         if !ledger.ready { await ledger.open() }
-        guard !guardianChild.presented, access.unlocked else { return }
-        if !pickup.ready { await pickup.load() }
         guard scenePhase == .active, !guardianChild.presented, access.unlocked else { return }
-        #if DEBUG && targetEnvironment(simulator)
-        await recoveryFixture.prepare(ledger: ledger, pickup: pickup)
-        #endif
         navigation.resume()
         await surfaces.foreground()
     }
 }
-
-#endif
 
 struct RootView: View {
     @EnvironmentObject private var ledger: LedgerModel
@@ -167,26 +304,47 @@ private struct GuardianBoundaryRoot<AdultRoot: View>: View {
 }
 
 struct ShopView: View {
+    @Environment(\.privatePantryRetry) private var retryPrivatePantry
     @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var ledger: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var navigation: NavigationRestorationModel
+    @State private var showingFirstList = false
+    @State private var showingPantry = false
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
-        GeometryReader { viewport in
-            VStack(spacing: 0) {
-                shopContent
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
-                // Keep scrolling text inside the actual content viewport. The
-                // footer occupies the boundary above bottom navigation.
-                Theme.canvas.frame(height: 8)
-                    .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
-                    .accessibilityHidden(true)
-            }
-            .fittingViewport(viewport.size)
+        VStack(spacing: 0) {
+            shopContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+            // Reserve space above bottom navigation while the scroll view
+            // takes its size directly from the available navigation content.
+            Theme.canvas.frame(height: 8)
+                .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
+                .accessibilityHidden(true)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
+            .sheet(isPresented: $showingPantry) {
+                NavigationStack {
+                    PantrySetupView(pickup: pickup, ledger: ledger)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(ht("Close")) { showingPantry = false }
+                            }
+                        }
+                }
+            }
+            .sheet(isPresented: $showingFirstList) {
+                NavigationStack {
+                    FirstListEntry(model: ledger) { id in
+                        guard access.unlocked, ledger.shop?.id == id, let workspace = ledger.sourceWorkspaceID else { return }
+                        showingFirstList = false
+                        navigation.setPath([.shoppingList(actorID: access.localActorID, workspaceID: workspace, shopID: id)], for: .shop)
+                    }
+                }
+            }
     }
     private func pickupDestination<Content: View>(_ id: UUID, @ViewBuilder content: () -> Content) -> some View {
         Group {
@@ -210,10 +368,14 @@ struct ShopView: View {
         }.accessibilityIdentifier("newComparison")
     }
 
+    private var pantryLabel: some View {
+        Label(pantryText("My Pantry"), systemImage: "cabinet").frame(minHeight: 44)
+    }
+
     private var shopContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                if let journey = pickup.resumableJourney(for: ledger.shop?.id) {
+                if let journey = pickup.resumableJourney(for: ledger.shop?.id), !journey.offers.isEmpty {
                     let timelineStart = Date()
                     TimelineView(.explicit([timelineStart] + (journey.offers.map(\.deadline.cutoff) + (journey.pickup?.receipts.map(\.receivedAt) ?? [])).filter { $0 > timelineStart }.sorted())) { context in
                         if let offer = journey.nextUnfilledOffer(at: context.date) {
@@ -242,6 +404,10 @@ struct ShopView: View {
                         }
                     } else {
                         comparePacks.buttonStyle(PrimaryAction())
+                        Button { showingFirstList = true } label: {
+                            Label(ledgerText("Add a list"), systemImage: "list.bullet")
+                                .font(.headline).frame(minHeight: 44)
+                        }.disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("shop.addFirstList")
                         Text(tr("Works offline. No account needed.")).font(.footnote).foregroundStyle(Theme.secondary)
                     }
                     RestorableShoppingListLink {
@@ -249,8 +415,23 @@ struct ShopView: View {
                             .font(.headline).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
+                    if pickup.pantryRouteAvailable {
+                        if #available(iOS 18, *), household.projection?.canBrowseHouseholdTonight != true {
+                            NavigationLink { PantrySetupView(pickup: pickup, ledger: ledger) } label: { pantryLabel }
+                                .accessibilityIdentifier("shop.myPantry")
+                        } else {
+                            // iOS 17 can repeatedly rebuild Shop while pushing the observed pantry setup.
+                            Button { showingPantry = true } label: { pantryLabel }
+                                .accessibilityIdentifier("shop.myPantry")
+                        }
+                    } else if pickup.pantryRestartAvailable {
+                        PantryRestartButton(pickup: pickup)
+                    }
                     if ledger.shop == nil && (ledger.saving || ledger.hasPendingSave || ledger.error != nil) {
                         LedgerSaveStatus(model: ledger)
+                    } else if let retryPrivatePantry {
+                        Button(pantryText("Retry opening My Pantry"), action: retryPrivatePantry)
+                            .frame(minHeight: 44).accessibilityIdentifier("shop.retryMyPantry")
                     }
                     if let shop = ledger.shop {
                         if let closed = pickup.journeys.first(where: { $0.id == shop.id })?.closedAt {
@@ -281,6 +462,7 @@ struct ShopView: View {
                         }.foregroundStyle(Theme.action).accessibilityIdentifier("shop.checkOneChange")
                     }
                     if ledger.shop != nil {
+                        FirstListResumeButton(model: ledger, showingEditor: showingFirstList) { showingFirstList = true }
                         comparePacks.foregroundStyle(Theme.action)
                     }
                     NavigationLink {
@@ -382,6 +564,11 @@ struct RecordsView: View {
             }
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry() }
             RecordsRecoveryLink()
+            if pickup.pantryRouteAvailable {
+                NavigationLink(pantryText("Private price history")) {
+                    PantrySetupView(pickup: pickup, ledger: ledger, opensPriceHistory: true)
+                }.accessibilityIdentifier("records.privatePrices")
+            }
             NavigationLink(HistoryCopy.text("Prices and period budgets")) {
                 HistoryRecordsEntryView(household: household)
             }.accessibilityIdentifier("records.priceBudgetHistory")
@@ -446,6 +633,7 @@ struct SettingsView: View {
             }
             Section(tr("Household")) {
                 NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
+                HouseholdPantryLink(household: household)
                 NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
             }
             if surfaces.privateAuthorized {

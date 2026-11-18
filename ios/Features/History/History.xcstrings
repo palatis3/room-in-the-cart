@@ -4049,6 +4049,198 @@
           }
         }
       }
+    },
+    "Published evidence revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Published evidence revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión publicada del registro"
+          }
+        }
+      }
+    },
+    "Observation with unspecified price source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observation with unspecified price source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observación con origen del precio sin especificar"
+          }
+        }
+      }
+    },
+    "Review for a shared shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review for a shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar para una compra compartida"
+          }
+        }
+      }
+    },
+    "Reopen the private price and the current shared shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the private price and the current shared shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir el precio privado y la compra compartida actual."
+          }
+        }
+      }
+    },
+    "Open household price history to reconcile the reviewed write.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open household price history to reconcile the reviewed write."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre el historial de precios del hogar para comprobar el registro revisado."
+          }
+        }
+      }
+    },
+    "Publish selected price evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publish selected price evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicar los datos seleccionados del precio"
+          }
+        }
+      }
+    },
+    "The household receives these selected fields as a separate price record.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The household receives these selected fields as a separate price record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El hogar recibirá estos campos seleccionados como un registro de precio independiente."
+          }
+        }
+      }
+    },
+    "Publish this price to the selected shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publish this price to the selected shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicar este precio en la compra seleccionada"
+          }
+        }
+      }
+    },
+    "Choose a fulfillment mode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a fulfillment mode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una modalidad de compra"
+          }
+        }
+      }
+    },
+    "Review selected fields": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review selected fields"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los campos seleccionados"
+          }
+        }
+      }
+    },
+    "Review the selected shop, branch and fulfillment mode.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the selected shop, branch and fulfillment mode."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la compra seleccionada, la sucursal y la modalidad de compra."
+          }
+        }
+      }
+    },
+    "Package quantity unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package quantity unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad del paquete desconocida"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

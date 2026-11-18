@@ -7,7 +7,7 @@ import Combine
     @Published var confirmed = false
     @Published private var preferredNaturalListMode: Bool?
     var naturalListMode: Bool {
-        get { preferredNaturalListMode ?? (acceptedEvidence?.source == .speech) }
+        get { preferredNaturalListMode ?? (acceptedEvidence?.source == .speech || acceptedEvidence?.source == .assistedSpeech) }
         set {
             preferredNaturalListMode = newValue
             confirmed = false
@@ -62,6 +62,10 @@ import Combine
                 self.busy = false; self.failure = error as? CaptureFailure ?? .recognitionFailed
             }
         }
+    }
+    func stageOnlineTranscript(_ text: String) {
+        guard !closed, !busy, !delivered, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        stage(.init(text: text, source: .assistedSpeech, uncertainLines: [], sourceImageData: nil, previewImageData: nil))
     }
     func startSpeech() {
         guard !closed, !busy else { return }

@@ -12,6 +12,42 @@ final class DeviceSurfacesTests: XCTestCase {
         addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
         return directory.appendingPathComponent(name)
     }
+    func testPlannedDinnerProjectionKeepsLegacyOptionsDistinctAndOmitsAmbiguousTitles() throws {
+        let scope = UUID()
+        let options = try AdultFoodSummaryProjection(kind: .tonight, scope: scope, now: now, zone: .gmt, count: 1, reviewedTitle: "Wraps")
+        let oldPayload = try JSONEncoder().encode(options)
+        XCTAssertNil((try JSONSerialization.jsonObject(with: oldPayload) as? [String: Any])?["plannedDinner"])
+        XCTAssertNil(try AdultFoodSummaryProjection.decode(oldPayload).plannedDinner)
+        let planned = try AdultFoodSummaryProjection(kind: .tonight, scope: scope, now: now, zone: .gmt, count: 1,
+                                                     reviewedTitle: "Soup", plannedDinner: true)
+        XCTAssertEqual(try AdultFoodSummaryProjection.decode(JSONEncoder().encode(planned)), planned)
+        XCTAssertThrowsError(try AdultFoodSummaryProjection(kind: .tonight, scope: scope, now: now, zone: .gmt,
+                                                            count: 2, reviewedTitle: "Soup", plannedDinner: true))
+        XCTAssertThrowsError(try AdultFoodSummaryProjection(kind: .useSoon, scope: scope, now: now, zone: .gmt,
+                                                            count: 2, plannedDinner: true))
+    }
+    func testAdultHomeProjectionExpiresAtCivilMidnightAndRejectsPrivateExtras() throws {
+        let zone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-02T04:45:00Z"))
+        let scope = UUID()
+        let value = try AdultFoodSummaryProjection(kind: .useSoon, scope: scope, now: now, zone: zone, count: 2)
+        XCTAssertEqual(value.expiresAt.timeIntervalSince(now), 15 * 60)
+        XCTAssertTrue(value.isFresh(at: now, zone: zone))
+        XCTAssertFalse(value.isFresh(at: value.expiresAt, zone: zone))
+        XCTAssertFalse(value.isFresh(at: now, zone: TimeZone.gmt))
+        XCTAssertFalse(value.isFresh(at: now.addingTimeInterval(-1), zone: zone))
+        let directory = try file().deletingLastPathComponent()
+        let file = try AdultFoodSummaryFile(directory: directory, kind: .useSoon)
+        try file.publish(value)
+        XCTAssertEqual(try file.read(), value)
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file.url)) as? [String: Any])
+        json["member"] = "unexpected"
+        XCTAssertThrowsError(try AdultFoodSummaryProjection.decode(JSONSerialization.data(withJSONObject: json)))
+        XCTAssertThrowsError(try AdultFoodSummaryProjection(kind: .useSoon, scope: scope, now: now, zone: zone, count: 2, reviewedTitle: "Private lot"))
+        XCTAssertThrowsError(try AdultFoodSummaryProjection(kind: .tonight, scope: scope, now: now, zone: zone, count: 0, reviewedTitle: "Unreviewed meal"))
+        try file.clear()
+        XCTAssertThrowsError(try file.read())
+    }
     func intent(id: UUID = UUID(), handle: RouteHandle = .random(), day: Int = 20, subject: ReminderSubject = .offer) throws -> ReminderIntent {
         try ReminderIntent(id: id, personaID: UUID(), targetID: UUID(), subject: subject, sourceRevision: 4, routeHandle: handle,
             localTime: CivilReminderTime(year: 2027, month: 1, day: day, hour: 13, minute: 0, timeZoneID: "America/New_York"),

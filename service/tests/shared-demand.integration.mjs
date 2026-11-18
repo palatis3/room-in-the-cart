@@ -677,6 +677,24 @@ async function mealUndoPatch(f,occurrenceId,meal,{change=empty(),lines,quote,pro
   packs:(lines??shop.lines).map(l=>({lineId:l.lineId,usablePerPack:q(6),acceptUnresolved:false}))};
  const p=ok(await preview(f,input)),accepted=await apply(f,input,p);return {...accepted,receipt:ok(accepted.response),input};
 }
+test('a draft dinner swap appears in supported operation history and restores the exact dinner once',async()=>{
+ const {f,m}=await mealUndoFixture(),previous=ok(await call(f.owner,f.path));
+ const next={...m.meal,title:'Wraps with lime'};
+ const target=await mealUndoPatch(f,m.occurrenceId,next,{proposal:{dinnerSwap:true}});
+ const page=ok(await call(f.owner,f.path+'/demand'));
+ const candidate=ok(await foodCandidate(f,target.receipt.operationId,page));
+ assert.equal(candidate.mealUndo.occurrenceId,m.occurrenceId);
+ assert.deepEqual(candidate.mealUndo.touchedFields,['title']);
+ assert.deepEqual(candidate.action.body.mealEdit.meal,m.meal);
+ const packs=candidate.packReviewLineIds.map(lineId=>({lineId,usablePerPack:q(6),acceptUnresolved:false}));
+ const p=ok(await foodPreview(f,candidate,packs)),inverse=await apply(f,{action:p.action,base:candidate.base},p);
+ const final=ok(inverse.response);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',inverse.command)),final);
+ const restored=ok(await call(f.owner,f.path));
+ assert.deepEqual(restored.meals.find(r=>r.occurrenceId===m.occurrenceId).meal,m.meal);
+ assert.deepEqual(restored.lines,previous.lines);assert.deepEqual(restored.quote,previous.quote);
+});
+
 test('meal complete Undo restores a skipped dinner, original source and packs while later meal, staple and protected lunch survive',async()=>{
  const f=await fixture(),m=await mealGraph(f),lunchId=randomUUID(),ingredientId=randomUUID();
  const lunch={title:'Protected lunch',day:'2026-11-11',kind:'lunch',portions:2,protected:true,
@@ -806,7 +824,8 @@ async function undoSelectStore(f,{author=f.owner,grantRevision=0,choice='first',
  const before=ok(await call(f.owner,f.path)),path=f.path+'/store-quotes';
  const envelope=(extra={},grant=grantRevision)=>({operationId:randomUUID(),shopRevision:before.shopRevision,authorityEpoch:before.authorityEpoch,grantRevision:grant,...extra});
  if(author!==f.owner&&grantRevision===0){ok(await call(f.owner,path+'/grants','POST',envelope({adultId:author.id,enabled:true,targetRevision:0},0)));grantRevision=1;}
- const option={label:'Reviewed selection',store:'Same store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true};
+ const option={label:'Reviewed selection',store:'Same store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true,
+  orderMinimum:{kind:'noneRequired'}};
  const save=envelope({options:{first:option,second:{...option,branch:'B'}}},grantRevision);ok(await call(author,path+'/pairs','POST',save));
  let proposalId=null;
  if(author!==f.owner){const proposal=envelope({pairId:save.operationId,choice},grantRevision);ok(await call(author,path+'/proposals','POST',proposal));proposalId=proposal.operationId;}

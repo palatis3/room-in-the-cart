@@ -1,0 +1,19 @@
+{
+  "source": "e3a3b2acf91e7a6081ccdd3d263345d594ec5ef2",
+  "job": "https://github.com/palatis3/room-in-the-cart/actions/runs/44328308996/job/134889769215",
+  "artifactId": 14439854569,
+  "artifactSHA256": "7054a0974673dd117f93f6249f429e734d0be8ede85ce7bad83cd32b8c986fa8",
+  "device": "iPhone 17",
+  "platform": "iOS Simulator",
+  "osVersion": "27.0",
+  "osBuild": "24A434",
+  "fixture": "contributor-balanced-02",
+  "passed": 26,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "deviceManagementCasesSeconds": {
+    "testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess": 78.866,
+    "testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke": 190.425
+  }
+}

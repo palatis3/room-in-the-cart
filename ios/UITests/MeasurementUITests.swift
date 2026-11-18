@@ -18,6 +18,42 @@ import XCTest
         }
         app.terminate()
     }
+#if targetEnvironment(simulator)
+    func testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange() {
+        app.launchArguments = ["--ui-testing", "--measurement-fixture", "--foodkeeper-match-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_WORKSPACE"] = UUID().uuidString
+        app.launch()
+        let guide = app.buttons["pantry.foodKeeper"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 20), app.debugDescription)
+        tap(guide)
+        tap(app.buttons["foodKeeper.assistance"])
+        XCTAssertFalse(app.buttons["foodKeeper.assistance.confirm"].exists)
+        let wording = app.textFields["foodKeeper.assistance.wording"]
+        tap(wording)
+        wording.press(forDuration: 1.2)
+        let selectAll = app.menuItems["Select All"].exists ? app.menuItems["Select All"] : app.buttons["Select All"]
+        XCTAssertTrue(selectAll.waitForExistence(timeout: 5), app.debugDescription)
+        selectAll.tap()
+        wording.typeText("chicken from an opened can")
+        XCTAssertEqual(wording.value as? String, "chicken from an opened can")
+        tap(app.buttons["foodKeeper.assistance.done"])
+        tap(app.buttons["foodKeeper.assistance.send"])
+        let confirm = app.buttons["foodKeeper.assistance.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertFalse(app.buttons["foodKeeper.review.refrigerate_after_opening"].exists)
+        capture("Adult reviews suggested USDA entry before confirming")
+        tap(confirm)
+        tap(app.buttons["foodKeeper.review.refrigerate_after_opening"])
+        XCTAssertFalse(element("foodKeeper.rangeStart").exists)
+        setSwitch(app.switches["foodKeeper.confirmStorage"], enabled: true)
+        XCTAssertTrue(element("foodKeeper.rangeStart").waitForExistence(timeout: 8))
+        XCTAssertTrue(element("foodKeeper.rangeEnd").exists)
+        tap(app.buttons["foodKeeper.saveRange"])
+        XCTAssertTrue(element("foodKeeper.savedStatus").waitForExistence(timeout: 8))
+        capture("Deterministic FoodKeeper range after separate storage confirmation")
+    }
+#endif
+
     func testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped() {
         launch(reset: true)
         setLocalConsent(false, change: false)
@@ -176,7 +212,9 @@ import XCTest
         reveal(app.switches["Offer optional feedback after a pickup"])
     }
     private func setLocalConsent(_ enabled: Bool, change: Bool = true) {
-        let control = app.switches["Offer optional feedback after a pickup"]
+        setSwitch(app.switches["Offer optional feedback after a pickup"], enabled: enabled, change: change)
+    }
+    private func setSwitch(_ control: XCUIElement, enabled: Bool, change: Bool = true) {
         reveal(control)
         for _ in 0..<16 {
             let area = scrollableArea(), point = CGPoint(x: control.frame.minX + control.frame.width * 0.92, y: control.frame.midY)
@@ -186,7 +224,8 @@ import XCTest
         if change, control.value as? String != (enabled ? "1" : "0") {
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
-        XCTAssertEqual(control.value as? String, enabled ? "1" : "0")
+        let confirmed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", enabled ? "1" : "0"), object: control)
+        XCTAssertEqual(XCTWaiter.wait(for: [confirmed], timeout: 4), .completed, control.debugDescription)
     }
     private func choose(_ label: String, value: String) {
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", label)).firstMatch)

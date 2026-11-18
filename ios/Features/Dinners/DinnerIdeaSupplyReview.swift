@@ -1,7 +1,7 @@
 import Foundation
 import CoreDomain
 
-struct IdeaSupplyFood: Identifiable {
+struct IdeaSupplyFood: Identifiable, Equatable {
     let id: UUID
     let name: String
     let detail: String
@@ -10,7 +10,7 @@ struct IdeaSupplyFood: Identifiable {
 struct IdeaSupplyReservation: Identifiable {
     let id: UUID
     let name: String
-    let quantity: Quantity
+    let quantity: Quantity?
     let protected: Bool
 }
 
@@ -18,6 +18,7 @@ struct IdeaSupplyRow: Identifiable {
     let id: UUID
     let ingredients: [MealIngredient]
     let matchedName: String?
+    var preferenceResults: [MealEligibilityPolicy.Result] = []
     let excludedMatch: Bool
     let demand: Quantity?
     let credited: Quantity?
@@ -41,11 +42,14 @@ enum DinnerIdeaSupplyReview {
         let date: Date
     }
 
-    static func foods(shop: ShoppingLedger, journey: PickupJourney?, at now: Date) -> [IdeaSupplyFood] {
+    static func foods(shop: ShoppingLedger, journey: PickupJourney?, canonical: DinnerPantrySupply.Snapshot? = nil, at now: Date) -> [IdeaSupplyFood] {
         var seen = Set<UUID>()
         let lines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
         var choices = lines.enumerated().map { index, line in
             IdeaSupplyFood(id: line.id, name: line.name, detail: dinnerFormat("Shopping list item %@", String(index + 1)))
+        }
+        if let canonical {
+            return (canonical.foods + choices).filter { seen.insert($0.id).inserted }
         }
         let lots = journey.flatMap { $0.id == shop.id ? $0 : nil }.map { PickupFallbackOptions.lots($0, at: now) } ?? []
         for lot in lots {
@@ -62,11 +66,11 @@ enum DinnerIdeaSupplyReview {
     }
 
     static func rows(idea: DinnerIdeaDraft, shop: ShoppingLedger, workspace: LedgerWorkspace,
-                     workspaceID: UUID, journey: PickupJourney?, at now: Date) throws -> [IdeaSupplyRow] {
+                     workspaceID: UUID, journey: PickupJourney?, canonical: DinnerPantrySupply.Snapshot? = nil, at now: Date, preferences: MealPreferenceProfile? = nil) throws -> [IdeaSupplyRow] {
         let current = journey.flatMap { $0.id == shop.id && $0.closedAt == nil ? $0 : nil }
-        let lots = current.map { PickupFallbackOptions.lots($0, at: now) } ?? []
-        var needs = current?.stockNeeds ?? []
-        var unresolvedFoods = Set<UUID>()
+        let lots = canonical?.globallyFreeLots ?? (current.map { PickupFallbackOptions.lots($0, at: now) } ?? [])
+        var needs = canonical == nil ? (current?.stockNeeds ?? []) : []
+        var unresolvedFoods = canonical?.unresolvedFoodIDs ?? Set<UUID>()
         let placed = current?.basket?.phase == .reportedPlaced
         var named: [AllocationNeed] = []
         if let current, current.pickup != nil || placed {
@@ -84,13 +88,13 @@ enum DinnerIdeaSupplyReview {
                 named += reservations.needs
             }
         }
-        let separateNeedIDs = Set(needs.map(\.id))
+        let separateNeedIDs = Set(needs.map(\.id)).union(canonical?.representedNeedIDs ?? [])
         needs += named.filter { !separateNeedIDs.contains($0.id) }.map {
             StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority)
         }
         let allocation = try ConfirmedCarryoverAllocator.allocate(lots: lots, needs: needs,
-                                                                   reservations: current?.carryoverStockReservations ?? [])
-        let availableFoods = foods(shop: shop, journey: current, at: now)
+                                                                   reservations: canonical == nil ? (current?.carryoverStockReservations ?? []) : [])
+        let availableFoods = foods(shop: shop, journey: current, canonical: canonical, at: now)
         let foodIDs = Set(availableFoods.map(\.id))
         let scoped = (idea.supplyEvidence ?? []).filter { $0.workspaceID == workspaceID && $0.shopID == shop.id }
         var groups: [GroupID: [MealIngredient]] = [:]
@@ -108,18 +112,30 @@ enum DinnerIdeaSupplyReview {
             let unit = first.quantity?.unit
             let demand = try total(ingredients.map(\.quantity), unit: unit)
             let coverage = allocation.demands.filter { $0.foodID == foodID }
-            let reservations = coverage.compactMap { entry -> IdeaSupplyReservation? in
+            let projectedReservations = coverage.compactMap { entry -> IdeaSupplyReservation? in
                 guard let amount = entry.allocated, amount > .zero, let need = needs.first(where: { $0.id == entry.id }) else { return nil }
                 return IdeaSupplyReservation(id: need.id, name: need.name, quantity: quantity(amount, entry.unit), protected: need.priority == .protected)
             }
+            let reservations = (foodID.flatMap { canonical?.reservations[$0] } ?? []) + projectedReservations
             let balances = allocation.remainingLots.filter { $0.foodID == foodID }
             let matched = availableFoods.first { $0.id == foodID }
-            let labels = ([matched?.name].compactMap { $0 } + lots.filter { $0.foodID == foodID }.map(\.name))
+            let labels = ([matched?.name].compactMap { $0 } + lots.filter { $0.foodID == foodID }.map(\.name)
+                + (canonical?.foods.filter { $0.id == foodID }.map(\.name) ?? []))
+            var results: [MealEligibilityPolicy.Result] = []
+            if preferences != nil, !labels.isEmpty {
+                for ingredient in ingredients {
+                    let audited = scoped.first { $0.id == ingredient.id && $0.ingredientName == ingredient.name && $0.basisRevision == shop.basisRevision }
+                    let details = audited?.foodID == foodID && labels.allSatisfy({ $0 == audited?.reviewedFoodLabel }) ? audited?.foodDetails : nil
+                    results.append(MealEligibilityPolicy.evaluateFood(profile: preferences, labels: labels, evidence: details))
+                }
+            }
             let excludedMatch = !allows(labels, for: ingredients, in: idea)
             let valid = foodID.map { !unresolvedFoods.contains($0) } ?? true
-            let resolvedBalances = valid && !excludedMatch && balances.allSatisfy { $0.issues.isEmpty } && coverage.allSatisfy { $0.issues.isEmpty }
+            let resolvedBalances = valid && !excludedMatch && results.allSatisfy(\.eligible) && balances.allSatisfy { $0.issues.isEmpty } && coverage.allSatisfy { $0.issues.isEmpty }
             let free = try resolvedBalances ? total(balances.map { quantity($0.remainingUnallocated, $0.unit) }, unit: unit) : nil
-            let uncovered = try demand.flatMap { demand in try free.map { quantity(max(.zero, try demand.amount.subtracting($0.amount)), demand.unit) } }
+            let uncovered = try demand.flatMap { demand in
+                try free.map { quantity(try demand.amount.subtractingClampedToZero($0.amount), demand.unit) }
+            }
             var observations = ingredients.compactMap { ingredient -> Observation? in
                 guard let evidence = scoped.first(where: { $0.id == ingredient.id && $0.ingredientName == ingredient.name }),
                       evidence.basisRevision == shop.basisRevision, let pack = evidence.pack,
@@ -136,15 +152,25 @@ enum DinnerIdeaSupplyReview {
                     $0.pack.confirmedConversion == first.pack.confirmedConversion && $0.source == first.source && $0.date == first.date } ? first : nil
             }
             let excludedPack = observation.map { !allows([$0.pack.label], for: ingredients, in: idea) } ?? false
+            var packEligible = true
+            if let preferences, let observed = observation {
+                for ingredient in ingredients {
+                    let audited = scoped.first { $0.id == ingredient.id && $0.ingredientName == ingredient.name && $0.basisRevision == shop.basisRevision }
+                    let details = audited?.pack == observed.pack ? audited?.foodDetails : nil
+                    let result = MealEligibilityPolicy.evaluateFood(profile: preferences, labels: [observed.pack.label], evidence: details)
+                    results.append(result)
+                    if !result.eligible { packEligible = false }
+                }
+            }
             let count: Int64?
-            if excludedPack { count = nil }
+            if excludedPack || !packEligible { count = nil }
             else if uncovered?.amount == .zero { count = 0 }
             else if let uncovered, let usable = observation?.pack.usableQuantity,
                     let yield = try usable.converted(to: uncovered.unit, using: observation?.pack.confirmedConversion), yield > .zero {
                 count = try uncovered.amount.divided(by: yield).roundedUp()
             } else { count = nil }
             let cost = try count.flatMap { $0 == 0 ? Money.zero : try observation?.pack.price?.multiplied(by: $0) }
-            return IdeaSupplyRow(id: first.id, ingredients: ingredients, matchedName: matched?.name, excludedMatch: excludedMatch || excludedPack, demand: demand, credited: free, uncovered: uncovered,
+            return IdeaSupplyRow(id: first.id, ingredients: ingredients, matchedName: matched?.name, preferenceResults: results, excludedMatch: excludedMatch || excludedPack, demand: demand, credited: free, uncovered: uncovered,
                                  reservations: reservations, pack: observation?.pack, source: observation?.source, observedAt: observation?.date,
                                  packs: count, cost: cost, conflictingPacks: !observations.isEmpty && observation == nil)
         }

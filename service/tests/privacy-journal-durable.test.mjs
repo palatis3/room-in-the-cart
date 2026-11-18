@@ -200,19 +200,23 @@ test('real adapter: cancellation during a remote phase forwards actual signal an
   });
 });
 
-test('real adapter: automatic deadline aborts the actual in-flight transport signal', async () => {
+test('real adapter: automatic deadline aborts the actual in-flight transport signal', async t => {
+  t.mock.timers.enable({apis:['Date','setTimeout'],now:Date.now()});
   const f=fixture(), c=call({deadlineUnixMs:Date.now()+45});
-  let observedAbort=false, fallback;
-  f.hooks.reserve=received=>new Promise((resolve,reject)=>{
-    assert(received.signal instanceof AbortSignal);
-    const abort=()=>{observedAbort=true;clearTimeout(fallback);reject(Error('Fixture transport cancelled by actual signal'));};
-    if(received.signal.aborted)return abort();
-    received.signal.addEventListener('abort',abort,{once:true});
-    fallback=setTimeout(()=>reject(Error('No automatic deadline cancellation reached transport')),350);
+  let transportSignal;
+  f.hooks.reserve=received=>new Promise((_,reject)=>{
+    transportSignal=received.signal;
+    transportSignal.addEventListener('abort',()=>reject(transportSignal.reason),{once:true});
   });
-  try{await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),c));}
-  finally{clearTimeout(fallback);}
-  assert.equal(observedAbort,true);
+
+  const pending=f.adapter().port.beforeCommit(f.event(),c);
+  await Promise.race([f.entered('reserve'),pending]);
+  assert(transportSignal instanceof AbortSignal);
+  t.mock.timers.tick(44);
+  assert.equal(transportSignal.aborted,false);
+  t.mock.timers.tick(1);
+  assert.equal(transportSignal.aborted,true);
+  await assert.rejects(pending);
   assert.equal(f.records.length,0);assert.equal(f.acknowledgements.length,0);
 });
 

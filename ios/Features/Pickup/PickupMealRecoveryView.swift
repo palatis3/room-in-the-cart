@@ -35,12 +35,37 @@ struct PickupMealRecoveryEntry: View {
                     ForEach(values.filter { occurrenceID == nil || $0.meal.id == occurrenceID }, id: \.meal.id) { value in
                         Section(value.meal.title) {
                             PickupRecoveryMealSummary(definition: value, allocation: model.stockAllocation, carryovers: model.journey?.awayCarryovers ?? [])
+                            if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true {
+                                NavigationLink(recordsText("Cook this dinner")) {
+                                    ChosenDinnerCookingEntry(ledger: ledger, pickup: model, shopID: pickupID, mealID: value.meal.id) {
+                                        guard currentAuthority() != nil,
+                                              let current = try model.recoveryDefinitions().first(where: { $0.meal.id == value.meal.id }),
+                                              model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true
+                                        else { throw PickupMealRecoveryError.sourceChanged }
+                                        return try DinnerCookingPage(recovered: current)
+                                    }
+                                }.accessibilityIdentifier("cooking.openReplacement")
+                                if model.pantryIsActive {
+                                    NavigationLink(cookCompletionText("Record cooking and leftovers")) {
+                                        CookCompletionEntry(ledger: ledger, pickup: model, shopID: pickupID, mealID: value.meal.id)
+                                    }.accessibilityIdentifier("dinner.cookCompletion")
+                                }
+                            }
                             if model.journey?.closedAt == nil {
                                 if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true {
                                     NavigationLink(dinnerText("Move this dinner")) {
                                         PickupRecoveryCalendarView(model: model, original: value, currentAuthority: currentAuthority)
                                             .id(leaseID)
                                     }.accessibilityIdentifier("mealRecovery.move." + value.meal.id.uuidString)
+                                }
+                                if let history = model.journey?.mealRecovery,
+                                   let event = history.domain.events.last(where: { $0.request.target.id == value.meal.id }),
+                                   history.definitions.contains(where: { $0.operationID == event.id && $0.undoOf == nil }) {
+                                    NavigationLink(recoveryText("Review Undo for this dinner swap")) {
+                                        PickupRecoveryUndoView(model: model, forward: event.id,
+                                            currentAuthority: { acceptedAuthority() ?? currentAuthority() })
+                                            .id(leaseID)
+                                    }.accessibilityIdentifier("mealRecovery.undo." + value.meal.id.uuidString)
                                 }
                                 NavigationLink(recoveryText("Replace this whole dinner")) {
                                     PickupMealRecoveryEditor(model: model, original: value,
@@ -123,6 +148,81 @@ struct PickupMealRecoveryEntry: View {
         if session.refresh(presentation) { rotateLease() }
     }
     private func rotateLease() { leaseID = UUID() }
+}
+
+private struct PickupRecoveryUndoView: View {
+    @ObservedObject var model: PickupModel
+    let forward: UUID
+    let currentAuthority: () -> PickupRecoveryAuthority?
+    @Environment(\.dismiss) private var dismiss
+    @State private var review: PickupMealRecoveryReview?
+    @State private var message: String?
+    @State private var repeatAgreed = false
+    @State private var acceptsOpenNeeds = false
+    @State private var busy = false
+    var body: some View {
+        WorkingForm {
+            if let review, currentAuthority() == review.authority {
+                Section(recoveryText("Current dinner")) { Text(review.domain.request.target.title) }
+                Section(recoveryText("Dinner to restore")) {
+                    Text(review.definition.meal.title).font(.headline).accessibilityIdentifier("mealRecovery.restoredTitle")
+                    PickupRecoveryMealSummary(definition: review.definition, allocation: review.domain.afterAllocation,
+                        carryovers: model.journey?.awayCarryovers ?? [])
+                    Text(recoveryText("This saves a new set of dinner instructions. Your original order, receipts and charges keep their recorded values."))
+                }
+                Section(recoveryText("Food after Undo")) {
+                    ForEach(review.domain.afterAllocation.demands, id: \.id) { demand in
+                        if let name = review.domain.after.demands.first(where: { $0.id == demand.id })?.name {
+                            Text(name + " · " + recoveryCoverage(demand))
+                        }
+                    }
+                    if review.domain.repeatRequired {
+                        Toggle(recoveryText("I agree if this replacement repeats an accepted meal"), isOn: $repeatAgreed)
+                    }
+                    if !review.domain.feasible {
+                        Toggle(recoveryText("I accept that unresolved food or timing remains open"), isOn: $acceptsOpenNeeds)
+                    }
+                    Button(recoveryText("Confirm Undo of this dinner swap")) {
+                        var approved = review
+                        approved.domain = review.domain.confirming(repeatMeal: repeatAgreed, extraTrip: false, unresolved: acceptsOpenNeeds)
+                        busy = true
+                        Task {
+                            let saved = await model.applyMealRecovery(approved, currentAuthority: currentAuthority)
+                            busy = false
+                            if saved { dismiss() }
+                            else { self.review = nil; message = recoveryText("This dinner or its food changed. Review its current instructions before undoing the swap.") }
+                        }
+                    }.disabled(busy || (review.domain.repeatRequired && !repeatAgreed) || (!review.domain.feasible && !acceptsOpenNeeds))
+                    .accessibilityIdentifier("mealRecovery.confirmUndo")
+                }
+            } else {
+                if let message { Text(message) }
+                Button(recoveryText("Review the saved swap again")) { Task { await prepare() } }.disabled(busy)
+            }
+        }.navigationTitle(recoveryText("Undo dinner swap")).task { await prepare() }
+    }
+    @MainActor private func prepare() async {
+        guard !busy else { return }
+        busy = true
+        defer { busy = false }
+        review = nil; message = nil; repeatAgreed = false; acceptsOpenNeeds = false
+        guard let expected = currentAuthority() else { message = recoveryText("Reopen the pickup in the same private workspace."); return }
+        if model.pantryIsActive {
+            guard await model.refreshPantryStock() else {
+                message = recoveryText("This dinner or its food changed. Review its current instructions before undoing the swap.")
+                return
+            }
+        }
+        guard !Task.isCancelled, let authority = currentAuthority(), authority == expected else { message = recoveryText("Reopen the pickup in the same private workspace."); return }
+        do { review = try model.prepareRecoveryUndo(forward: forward, authority: authority) }
+        catch PickupRecoveryUndoError.actor { message = recoveryText("The adult who saved this swap must review its Undo.") }
+        catch PickupRecoveryUndoError.stock { message = recoveryText("The food counts or reservations used by this swap changed. Review the current food before choosing another dinner.") }
+        catch PickupRecoveryUndoError.cooked { message = recoveryText("This dinner has a cooking record. Review what was cooked before replacing it.") }
+        catch PickupRecoveryUndoError.repair { message = recoveryText("A separate repair instruction belongs to one of these dinners. Review it before choosing another dinner.") }
+        catch MealRecoveryError.protectedAllocation { message = recoveryText("Restoring this dinner would change food already allocated to another need. Review the affected meals and reservations.") }
+        catch PickupRecoveryUndoError.constraints { message = recoveryText("The earlier dinner does not meet the current reviewed meal requirements.") }
+        catch { message = recoveryText("This dinner or its food changed. Review its current instructions before undoing the swap.") }
+    }
 }
 
 private struct PickupRecoveryMealSummary: View {
@@ -367,6 +467,15 @@ private struct PickupMealRecoveryEditor: View {
         }
         Section(recoveryText("Reviewed stock evidence")) {
             Text(recoveryText("Only confirmed stock available at the review time can cover a need. Future observations and planned trips do not add available food."))
+            if let canonical = value.domain.canonicalAllocation {
+                ForEach(canonical.lots, id: \.id) { lot in
+                    VStack(alignment: .leading) {
+                        Text(lot.name + " · " + pantryCount(lot.count))
+                        Text(pantryLocationName(lot.location))
+                        Text(pantryText("Last quantity confirmation") + ": " + lot.confirmedAt.formatted())
+                    }
+                }
+            }
             ForEach(value.domain.stockEvidence, id: \.lot.id) { item in
                 VStack(alignment: .leading) {
                     Text(item.lot.name + " · " + pQuantity(item.lot.usable))

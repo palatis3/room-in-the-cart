@@ -80,6 +80,19 @@ extension HouseholdClientTests {
         let value = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded(ShopperDecision.link(lineID: line, promote: true))) as? [String: Any])
         XCTAssertEqual(Set(value.keys), Set(["choice", "lineId", "promote"]))
         XCTAssertEqual(value["lineId"] as? String, line); XCTAssertEqual(value["promote"] as? Bool, true)
+
+        let id = try XCTUnwrap(UUID(uuidString: "ACED1234-ABCD-4BCD-ABCD-ABCDEFABCDEF"))
+        for relationship in [RequestPairRelationship.sameItem, .additionalQuantity] {
+            let decision = ShopperDecision.reviewRequestPair(otherRequestId: id, otherRequestRevision: 4, relationship: relationship)
+            let pair = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded(decision)) as? [String: Any])
+            XCTAssertEqual(Set(pair.keys), ["choice", "otherRequestId", "otherRequestRevision", "relationship"])
+            XCTAssertEqual(pair["choice"] as? String, "reviewRequestPair")
+            XCTAssertEqual(pair["otherRequestId"] as? String, id.uuidString.lowercased())
+            XCTAssertEqual(pair["otherRequestRevision"] as? Int, 4)
+            XCTAssertEqual(pair["relationship"] as? String, relationship.rawValue)
+        }
+        let undo = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded(ShopperDecision.undoRequestPair(operationId: id))) as? [String: String])
+        XCTAssertEqual(undo, ["choice": "undoRequestPair", "operationId": id.uuidString.lowercased()])
     }
 }
 
@@ -173,6 +186,13 @@ extension HouseholdClientTests {
             kind: "request.confirmPurchase", base: .init(shopRevision: 7, authorityEpoch: 3, requestRevision: 2),
             body: ["requestId": .string(requestID), "lineId": .string(line), "placedRevision": .integer(5), "outcome": .string("bought")]),
             bootstrap: scope)
+        let attributed = try await service.prepare(envelope: .init(replayWindow: UUID().uuidString, shopId: shopID,
+            kind: "request.confirmPurchase", base: .init(shopRevision: 7, authorityEpoch: 3, requestRevision: 2),
+            body: ["requestId": .string(requestID), "lineId": .string(line), "placedRevision": .integer(5),
+                   "outcome": .string("bought"), "reportedPurchaser": .object(["kind": .string("self")])]), bootstrap: scope)
+        do { _ = try await service.executeShopper(attributed); XCTFail("Attributed command sent to an older service") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        XCTAssertTrue(stateLock.withLock { posts.isEmpty })
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: dir) }
         let file = dir.appendingPathComponent("shopper.json")
@@ -203,7 +223,7 @@ extension HouseholdClientTests {
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
                                       auth: auth, deviceVault: MemoryVault(), transport: transport())
-        var outcome: String?, privateLink = false
+        var outcome: String?, privateField: (String, Any)?
         let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             stateLock.lock(); defer { stateLock.unlock() }
@@ -215,7 +235,7 @@ extension HouseholdClientTests {
                 "ownQuantity": "a bag", "authoredAt": "2026-11-07T09:00:00Z", "receivedAt": "2026-11-07T09:01:00Z",
                 "status": "added", "route": "current", "ownActionAllowed": false]
             row["purchaseOutcome"] = outcome
-            if privateLink { row["linkedLineId"] = self.previewID }
+            if let (key, value) = privateField { row[key] = value }
             return (200, try JSONSerialization.data(withJSONObject: ["requests": [row]]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
@@ -227,9 +247,15 @@ extension HouseholdClientTests {
             XCTAssertEqual(page.requests[0].purchaseOutcome, known)
             XCTAssertEqual(page.requests[0].status, "added")
         }
-        stateLock.withLock { privateLink = true }
-        do { _ = try await service.ownRequests(); XCTFail("Own view accepted a private link") }
-        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        let pair: [String: Any] = ["otherRequestId": requestID, "otherRequestRevision": 1,
+                                   "relationship": "sameItem", "operationId": previewID]
+        for field: (String, Any) in [("linkedLineId", previewID), ("requestPairs", [pair]),
+                                     ("requestPairs", [] as [[String: Any]]), ("reportedPurchaser", "Buyer"),
+                                     ("purchaseRecordedBy", "Recorder"), ("canReportAuthorAsPurchaser", true)] {
+            stateLock.withLock { privateField = field }
+            do { _ = try await service.ownRequests(); XCTFail("Own view accepted a private shopper field") }
+            catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        }
     }
 }
 
@@ -243,11 +269,12 @@ extension HouseholdClientTests {
             .init(shopId: shopID, shopRevision: 8, authorityEpoch: 3, phase: phase, meals: nil, quote: quote,
                   lines: [], frozenRevision: 6, placedRevision: 6)
         }
-        func request(_ status: String = "added") throws -> OwnRequest {
-            let fields: [String: Any] = ["requestId": requestID, "shopId": shopID, "revision": 2, "originalItem": "Cereal",
+        func request(_ status: String = "added", id: String? = nil, shop: String? = nil, outcome: ConfirmedRequestPurchase? = nil) throws -> OwnRequest {
+            var fields: [String: Any] = ["requestId": id ?? requestID, "shopId": shop ?? shopID, "revision": 2, "originalItem": "Cereal",
                 "ownQuantity": "one box", "authoredAt": "2026-11-07T09:00:00Z", "receivedAt": "2026-11-07T09:01:00Z",
                 "authorAlias": "Jo", "status": status, "route": "current", "ownActionAllowed": false,
                 "linkedLineId": line.uuidString]
+            fields["purchaseOutcome"] = outcome?.rawValue
             return try JSONDecoder().decode(OwnRequest.self, from: JSONSerialization.data(withJSONObject: fields))
         }
         func placed(_ changes: [String: Any] = [:]) throws -> SharedDeliveryPage {
@@ -267,6 +294,14 @@ extension HouseholdClientTests {
                                          ["placedRevision": 5], ["authorityEpoch": 4],
                                          ["lines": [["lineId": UUID().uuidString, "name": "Cereal"]]], ["lines": []]] {
             XCTAssertNil(RequestPurchaseMatch(request: own, shop: shop(), placed: try placed(changed)))
+        }
+        let other = try request("pending", id: UUID().uuidString)
+        for outcome: ConfirmedRequestPurchase? in [nil, .notBought, .bought] {
+            let source = try request(outcome: outcome)
+            let match = try XCTUnwrap(RequestPurchaseMatch(request: source, shop: shop(), placed: snapshot))
+            XCTAssertEqual(match.isConfirmedSource(for: other), outcome == .bought)
+            XCTAssertFalse(match.isConfirmedSource(for: source))
+            XCTAssertFalse(match.isConfirmedSource(for: try request("pending", id: UUID().uuidString, shop: UUID().uuidString)))
         }
         XCTAssertNil(RequestPurchaseMatch(request: try request("handled"), shop: shop(), placed: snapshot))
         XCTAssertNil(RequestPurchaseMatch(request: own, shop: shop("draft"), placed: snapshot))

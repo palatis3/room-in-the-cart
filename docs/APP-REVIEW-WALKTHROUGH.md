@@ -41,6 +41,18 @@ On November 13 the ordinary Release simulator build passed the pack comparison i
 
 The November 14 Release build at `ab33d6cd` also passed step 1 on an iPhone SE (2nd generation) simulator running iOS 17.0 in both languages. After clearing pack A’s usable amount, the tester saved again and reopened Records. Each installation kept one “Demo wraps” comparison with two revisions. The original stored 16 items for $6.40 and 12 for $5.40. The correction kept pack B at $5.40 and left pack A’s count and cost unresolved. Both simulator results and the independent database checks are in `.build/ReviewWrapsAb33Nov14`.
 
+### Review a receipt offline
+
+Open **Shop → My Pantry → Review a receipt**. If My Pantry asks for setup, review the proposed batches and reservations first. In **Scan or type receipt lines**, enter these three lines from a fictional receipt:
+
+```text
+Oats 3 count USD 4.20
+Beans 2 kg at USD 2.50
+Bag fee USD 0.10
+```
+
+Review the wording and choose a purchase date. For Oats, confirm 3 received, 2 usable and $4.20 paid. For Beans, confirm 2 kg received and usable. Its printed unit rate should leave the paid line total unknown. Leave the fee skipped. Check the quantities and amounts on the confirmation screen, save, then reopen My Pantry. Expect two new food batches and the original receipt wording.
+
 ## Verify an update on an existing installation
 
 Use a dedicated test device and fictional groceries. Install the previous distributed build, save an offline pack comparison, and record the entered quantities, prices, result and revision. Install the signed candidate over it using the distribution update path. Keep the existing app data throughout.
@@ -48,6 +60,8 @@ Use a dedicated test device and fictional groceries. Install the previous distri
 Launch the candidate from the Home Screen. Open the comparison in Records and check the original values. Change the confirmed quantity at home, save, quit and reopen. Verify the new costs, both saved revisions and the original record identity. Record the device OS, both build numbers, the candidate commit and the results. When a release changes the database schema, include a store created with the previous schema.
 
 On November 13, the Release build at `717185e1` passed an in-place update on the iOS 17.0 iPhone SE simulator. The saved comparison reopened with its original revision byte-for-byte intact. After the shopper edited the stock and relaunched, the same record contained both revisions and passed the database integrity check. The local results are in `.build/Upgrade717Nov13`.
+
+On the iPhone 17e simulator running iOS 27, installing the unsigned Release at `439dda7d` over merged main `a8edfa17` preserved all 15 pickup revisions and nine ledger revisions. After pantry setup, four received wraps and two freezer wraps remained, with four reserved for dinner and two for lunch. Saving three lentils and restarting reopened the same new batch. [Release upgrade evidence](evidence/native/pantry-in-place-update-20261118/summary.json)
 
 The iOS 17.0 iPhone SE simulator also updated an existing Release installation to `fcc16ee1` with two units of rice and a package reference. Both existing ledger revisions and the package reference remained byte-for-byte intact. The shopper added a second reference, corrected its wording, and reopened both after relaunch. The new reference retained the original and corrected wording. Local results are in `.build/SourceUpgradeNov13`.
 
@@ -66,6 +80,17 @@ Run these steps with the submitted build and the isolated review household. The 
 5. Open **Settings → Household membership**. Inspect Apple's actual localized price/term, renewal disclosure, privacy/terms, **Restore Purchases**, **Manage Subscription** and the Free path. Test purchase, interrupted delivery, pending/cancelled/unverified outcomes, two named seats, restore with the original purchasing account, wrong-household denial, renewal, expiry and refund. A local StoreKit configuration is development evidence only. Record actual sandbox/TestFlight transaction and service reconciliation evidence separately.
 6. Review **Household requests → Account deletion**. Check its scope/status, offline retry, provider erasure and retained receipt behavior in the isolated environment. Check household exit separately. Deleting an account does not cancel its Apple subscription, and local deletion does not recall sent/exported copies.
 7. Test optional household measurement only after separate explicit consent. Review coded fields, submit one response, refresh after an uncertain result, then withdraw consent. Existing local pickup feedback must remain separate and must not upload automatically.
+
+8. With the enrolled adult, open **Settings → Household pantry → Add receipt to household pantry**. Add two fictional foods there, confirming a price for only one. Reopen the household pantry and check both quantities and the unknown price. Return to the adult’s private My Pantry and check that its original batches and receipt history are unchanged.
+
+### Choose a household dinner before a shop exists
+
+Use a review household with two enrolled adults and a confirmed pantry batch. On a server that offers **Household Tonight**, open it from **Shop → My Pantry** or **Dinners**.
+
+1. As the organizer, review a two-serving recipe using three units from the batch. Select the exact batch under **Match household batches**. If a household restriction applies, review the ingredients or brand printed on that package. Save the recipe and reopen it from the other tab.
+2. Open **Choose a shared dinner destination**, then cancel. Verify that the recipe is still available and browsing left the household without a new pickup.
+3. As the assigned shopper, select a draft shop, review the dinner and confirm once. Reopen the shared shop and verify the chosen dinner appears once on its selected day.
+4. For a second preview, have the other authorized adult correct the available quantity before confirmation. Verify that the shopper must refresh and review again. When the physical observation changes, check the current package before using its previous label statement again.
 
 ## Household walkthrough on the candidate build
 

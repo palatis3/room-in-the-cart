@@ -1,3 +1,5 @@
+import { VoiceAssistance } from './voice-assistance.js';
+import { ReceiptAssistance } from './receipt-assistance.js';
 import type { PoolConfig } from 'pg';
 import {createServer,type IncomingMessage,type Server} from 'node:http';
 import {serviceAvailability,maintenanceResponse} from './service-availability.js';
@@ -90,8 +92,10 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
     const clientAddress = deploymentClientAddress(environment);
     privacyRuntime=createPrivacyRuntime(pool,environment,'application');
     const privacy = new PrivacyService(repository,privacyRuntime.options);
-    const server = createHTTPServer({ repository, verifier, billing: new BillingService(appleGatewayFromEnvironment(environment)),
-      privacy,guardian:guardian.service,
+    const receiptAssistance = ReceiptAssistance.configured(environment);
+    const voiceAssistance = VoiceAssistance.configured(environment, receiptAssistance?.budget);
+    const server = createHTTPServer({ ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(appleGatewayFromEnvironment(environment)),
+      privacy,guardian:guardian.service, ...(receiptAssistance ? { receiptAssistance } : {}),
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;
     server.headersTimeout = 10_000;

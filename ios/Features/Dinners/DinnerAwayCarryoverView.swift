@@ -65,7 +65,7 @@ struct DinnerAwayCarryoverView: View {
     }
     private var need: AllocationNeed? { needs.first { $0.id == needID } }
     private var supplies: [AwayCarryoverSupply] {
-        guard let need, let journey else { return [] }; return AwayCarryoverEngine.supplies(for: need, in: journey)
+        guard let need, let journey else { return [] }; return model.supplies(for: need, in: journey)
     }
     private var supply: AwayCarryoverSupply? { supplies.first { $0.id == supplyID } }
     var body: some View {
@@ -76,10 +76,10 @@ struct DinnerAwayCarryoverView: View {
                 Text(pTr("Open this dinner's pickup before recounting its saved physical food."))
                 Button(pTr("Open this pickup's physical food")) { pickup.selectedID = dinner.shop?.id }
                     .accessibilityIdentifier("awayCarryover.selectPickup")
-            } else if let pending = model.pending {
-                pendingSection(pending)
             } else if let review = model.review {
                 reviewSection(review)
+            } else if let pending = model.pending {
+                pendingSection(pending)
             } else if !completed && journey?.closedAt == nil {
                 inputSections
             }
@@ -138,11 +138,11 @@ struct DinnerAwayCarryoverView: View {
             Section(pTr("Recount an existing physical source")) {
                 Picker(pTr("Saved batch or confirmed received food"), selection: $supplyID) {
                     Text(pTr("Choose the physical source")).tag(UUID?.none)
-                    ForEach(supplies) { item in Text("\(item.name) · \(pQuantity(item.quantity))").tag(Optional(item.id)) }
+                    ForEach(supplies) { item in Text("\(item.name) · \(model.supplyCount(item))").tag(Optional(item.id)) }
                 }.accessibilityIdentifier("awayCarryover.supply")
                 if supplies.isEmpty { Text(pTr("No confirmed physical source matches this need. Record and review its actual arrival or existing pantry batch first; an expected order is not stock.")) }
                 if let supply {
-                    Text("\(pTr("Previous observation")): \(supply.observedAt.formatted()) · \(pQuantity(supply.quantity))")
+                    Text("\(pTr("Previous observation")): \(model.supplyObservedAt(supply)?.formatted() ?? pTr("Unresolved")) · \(model.supplyCount(supply))")
                     Text(pTr("Current physically counted amount in this source")).font(.caption)
                     TextField(pTr("Current physically counted amount in this source"), text: $counted).accessibilityIdentifier("awayCarryover.counted")
                     Text(pTr(supply.quantity.unit.rawValue))
@@ -206,6 +206,19 @@ struct DinnerAwayCarryoverView: View {
             Text(dinnerDay(record.intent.plan.day))
             Text(pTr(record.phase == .prepared ? "The operation is saved; physical recount and calendar target are not yet complete." : "The physical reservation is saved; the calendar target still needs confirmation."))
             Text(pTr("Closing keeps this operation. Retry its original identities after resolving pending save controls; do not create another copy."))
+            if pickup.pantryIsActive && record.phase == .prepared {
+                Text(pTr("Cancelling releases only this preparation's held claim. Recount and review again to create a new carryover."))
+                Button(pTr("Cancel this saved preparation"), role: .destructive) {
+                    Task { _ = await model.cancelPrepared(record) }
+                }.disabled(model.busy || pickup.hasPendingSave)
+                    .accessibilityIdentifier("awayCarryover.cancelPrepared")
+            }
+            if pickup.pantryIsActive && record.phase == .reserved && record.intent.canonical == nil {
+                Button(pTr("Review this saved pantry reservation")) {
+                    if model.prepareSavedReservation(record) { approved = false }
+                }.disabled(model.busy || pickup.hasPendingSave)
+                    .accessibilityIdentifier("awayCarryover.reviewSaved")
+            }
             Button(pTr("Retry this saved carryover")) { Task { if await model.retry(record) { completed = true } } }
                 .accessibilityIdentifier("awayCarryover.retry").frame(minHeight: 44).disabled(model.busy)
         }
@@ -232,6 +245,14 @@ struct DinnerCarryoverDetailsView: View {
     let occurrenceID: UUID
     @EnvironmentObject private var pickup: PickupModel
     private var meal: MealOccurrence? { model.shop?.mealOccurrences.first { $0.id == occurrenceID && $0.removedAt == nil } }
+    private func coverage(_ journey: PickupJourney, reservationID: UUID) -> StockDemandCoverage? {
+        if pickup.pantryIsActive {
+            guard let live = try? pickup.liveStockProjection(for: journey.id),
+                  let allocation = try? live.legacyAllocation() else { return nil }
+            return allocation.demands.first { $0.id == reservationID }
+        }
+        return try? journey.carryoverAllocation(at: pickup.stockReviewDate).demands.first { $0.id == reservationID }
+    }
     var body: some View {
         Form {
             if let meal, let link = meal.carryover {
@@ -247,7 +268,7 @@ struct DinnerCarryoverDetailsView: View {
                     Text(record.intent.supply.name)
                     Text("\(pTr("Original dinner")): \(record.intent.plan.source.title)")
                     if let sourceDay = record.intent.plan.source.scheduledDay { Text(dinnerDay(sourceDay)) }
-                    if let demand = try? journey.carryoverAllocation(at: pickup.stockReviewDate).demands.first(where: { $0.id == link.reservationID }) {
+                    if let demand = coverage(journey, reservationID: link.reservationID) {
                         Text("\(pTr("Currently allocated from confirmed food")): \(demand.allocated.map { pQuantity($0, unit: demand.unit) } ?? pTr("Unresolved"))")
                         Text("\(pTr("Still short")): \(demand.shortfall.map { pQuantity($0, unit: demand.unit) } ?? pTr("Unresolved"))")
                     } else { Text(pTr("The physical reservation needs review. Do not assume this dinner is covered.")) }

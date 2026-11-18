@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {compareStoreQuotes} from '../dist/shared-store-quotes.js';
-const a={itemsMinor:3600,checkoutMinor:3800,allChargesIncluded:true,tripMinor:0,extraMinutes:0,available:true,quantitiesMatched:true,singleStore:true,eligibilityConfirmed:true,capMinor:3800,capScope:'wholeCheckout'};
+const a={itemsMinor:3600,checkoutMinor:3800,allChargesIncluded:true,tripMinor:0,extraMinutes:0,available:true,quantitiesMatched:true,singleStore:true,orderMinimum:{kind:"noneRequired"},eligibilityConfirmed:true,capMinor:3800,capScope:'wholeCheckout'};
 const b={...a,itemsMinor:3200,checkoutMinor:3500,tripMinor:400,extraMinutes:18};
 const compare=(first,second)=>compareStoreQuotes({first,second});
 test('separates item, checkout, incremental trip and elapsed time',()=>{
@@ -42,4 +42,19 @@ test('unknown eligibility preserves conditional deltas but withholds winner and 
 test('either option can have extra travel and cents stay exact at the accepted bound',()=>{
  const out=compare({...a,checkoutMinor:1_000_000_000,tripMinor:1_000_000_000},{...b,checkoutMinor:999_999_999,tripMinor:1_000_000_000});
  assert.equal(out.firstTrip,2_000_000_000);assert.equal(out.cashDelta,-1);assert.equal(out.preferred,'second');
+});
+test('nine usable wraps require enough packages in both complete plans; only eligible merchandise meets the minimum', () => {
+ const id='00000000-0000-4000-8000-000000000011';
+ const wraps={commitmentId:id,unit:'count',requiredUnits:9,usableUnitsPerPackage:6,packages:2};
+ const first={...a,supplies:[wraps]}, second={...b,supplies:[{...wraps,usableUnitsPerPackage:8}]};
+ const result=(option)=>compareStoreQuotes({first,second:option},[id]);
+ assert.equal(result(second).preferred,'first');
+ for (const minimum of [undefined,{kind:'unknown'},{kind:'required',minimumMinor:3300,eligibleSubtotalMinor:null},
+     {kind:'required',minimumMinor:3300,eligibleSubtotalMinor:3200}]) {
+  const out=result({...second,orderMinimum:minimum});assert.equal(out.preferred,null);assert.equal(out.secondTrip,3900);
+ }
+ assert.equal(result({...second,orderMinimum:{kind:'required',minimumMinor:3200,eligibleSubtotalMinor:3200}}).preferred,'first');
+ assert.equal(result({...second,supplies:[{...wraps,usableUnitsPerPackage:8,packages:1}]}).preferred,null);
+ assert.equal(result({...second,supplies:[{...wraps,unit:'gram'}]}).comparable,false);
+ assert.equal(result({...second,supplies:[{...wraps,requiredUnits:8}]}).comparable,false);
 });

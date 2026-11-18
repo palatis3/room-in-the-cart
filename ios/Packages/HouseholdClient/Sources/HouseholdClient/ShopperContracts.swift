@@ -119,6 +119,7 @@ public struct SharedMeal: Codable, Equatable, Sendable {
     }
 }
 public struct SharedMealOccurrence: Codable, Equatable, Identifiable, Sendable {
+    public private(set) var completed: Bool? = nil
     public let occurrenceId: UUID
     public let revision: Int
     public let meal: SharedMeal
@@ -128,6 +129,8 @@ public struct SharedMealEdit: Equatable, Sendable {
     public let occurrenceID: UUID
     public let meal: SharedMeal?
     public let proposalID: UUID?
+    public var preferenceReview: SharedRecipeReview?
+    public var dinnerSwap: Bool?
     public let changeProposalID: UUID?
     public var baseMealRevision: Int?
     public init(occurrenceID: UUID, meal: SharedMeal?, proposalID: UUID? = nil, changeProposalID: UUID? = nil) {
@@ -139,6 +142,8 @@ public struct SharedMealEdit: Equatable, Sendable {
         var fields: [String: JSONValue] = ["occurrenceId": .string(occurrenceID.uuidString.lowercased()), "meal": value]
         fields["baseMealRevision"] = baseMealRevision.map(JSONValue.integer) ?? .null
         if let proposalID { fields["proposalId"] = .string(proposalID.uuidString.lowercased()) }
+        if dinnerSwap == true { fields["dinnerSwap"] = .bool(true) }
+        if let preferenceReview { fields["preferenceReview"] = try JSONDecoder().decode(JSONValue.self, from: encoded(preferenceReview)) }
         if let changeProposalID { fields["changeProposalId"] = .string(changeProposalID.uuidString.lowercased()) }
         return .object(fields)
     }
@@ -150,21 +155,83 @@ public struct ShopperShop: Codable, Equatable, Sendable {
     public let meals: [SharedMealOccurrence]?
     public let quote: ShopperQuote; public let lines: [ShopperBasketLine]; public let frozenRevision: Int?; public let placedRevision: Int?
 }
+public enum ReviewedSameItemTarget: Equatable, Sendable, Encodable {
+    case meal(factId: UUID, factRevision: Int)
+    case purchase(sourceRequestId: UUID, sourceRequestRevision: Int, lineId: UUID, placedRevision: Int)
+
+    private enum CodingKeys: String, CodingKey { case kind, factId, factRevision, sourceRequestId, sourceRequestRevision, lineId, placedRevision }
+    public func encode(to encoder: Encoder) throws {
+        var fields = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .meal(let id, let revision):
+            try fields.encode("meal", forKey: .kind)
+            try fields.encode(id.uuidString.lowercased(), forKey: .factId)
+            try fields.encode(revision, forKey: .factRevision)
+        case .purchase(let request, let revision, let line, let placed):
+            try fields.encode("purchase", forKey: .kind)
+            try fields.encode(request.uuidString.lowercased(), forKey: .sourceRequestId)
+            try fields.encode(revision, forKey: .sourceRequestRevision)
+            try fields.encode(line.uuidString.lowercased(), forKey: .lineId)
+            try fields.encode(placed, forKey: .placedRevision)
+        }
+    }
+}
+public struct SameItemEvidence: Equatable, Sendable, Codable {
+    public let item: String
+    public let quantity: String?
+    public let sourceLabel: String
+    public let exclusions: [String]
+    public let reservationPurpose: String?
+    public let lineName: String?
+    public let packs: Int?
+}
+public enum RequestPairRelationship: String, Codable, Sendable {
+    case sameItem, additionalQuantity
+}
+public struct ReviewedRequestPair: Codable, Equatable, Sendable {
+    public let otherRequestId: UUID
+    public let otherRequestRevision: Int
+    public let relationship: RequestPairRelationship
+    public let operationId: UUID
+}
+public struct RequestPairEvidence: Codable, Equatable, Sendable {
+    public let otherRequestId: UUID
+    public let otherRequestRevision: Int
+    public let item: String
+    public let quantity: String?
+    public let authorAlias: String
+    public let relationship: RequestPairRelationship
+}
 public enum ShopperDecision: Equatable, Sendable, Encodable {
     case add(line: ShopperBasketLine, promote: Bool, reviewedPackEvidence: ReviewedRequestPackEvidence? = nil)
     case link(lineID: String, promote: Bool)
+    case sameItem(ReviewedSameItemTarget), undoSameItem(operationId: UUID)
+    case reviewRequestPair(otherRequestId: UUID, otherRequestRevision: Int, relationship: RequestPairRelationship)
+    case undoRequestPair(operationId: UUID)
     case deferRequest, dismiss, handled
     public var choice: String {
         switch self { case .add: return "add"; case .link: return "link"; case .deferRequest: return "defer"
-        case .dismiss: return "dismiss"; case .handled: return "handled" }
+        case .dismiss: return "dismiss"; case .handled: return "handled"
+        case .sameItem: return "sameItem"; case .undoSameItem: return "undoSameItem"
+        case .reviewRequestPair: return "reviewRequestPair"; case .undoRequestPair: return "undoRequestPair" }
     }
-    private enum CodingKeys: String, CodingKey { case choice, line, lineId, promote, reviewedPackEvidence }
+    private enum CodingKeys: String, CodingKey {
+        case choice, line, lineId, promote, reviewedPackEvidence, target, operationId
+        case otherRequestId, otherRequestRevision, relationship
+    }
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: CodingKeys.self)
         try values.encode(choice, forKey: .choice)
         switch self {
         case .add(let line, let promote, let evidence): try values.encode(line, forKey: .line); try values.encode(promote, forKey: .promote); try values.encodeIfPresent(evidence, forKey: .reviewedPackEvidence)
         case .link(let id, let promote): try values.encode(id, forKey: .lineId); try values.encode(promote, forKey: .promote)
+        case .sameItem(let target): try values.encode(target, forKey: .target)
+        case .undoSameItem(let id), .undoRequestPair(let id):
+            try values.encode(id.uuidString.lowercased(), forKey: .operationId)
+        case .reviewRequestPair(let id, let revision, let relationship):
+            try values.encode(id.uuidString.lowercased(), forKey: .otherRequestId)
+            try values.encode(revision, forKey: .otherRequestRevision)
+            try values.encode(relationship, forKey: .relationship)
         default: break
         }
     }
@@ -175,6 +242,8 @@ public struct ShopperBudget: Codable, Equatable, Sendable {
     public let lowerBoundMinor: Int; public let upperBoundMinor: Int?; public let wholeCheckoutWithinCap: Bool
 }
 public struct ShopperPreview: Codable, Equatable, Sendable {
+    public private(set) var sameItemEvidence: SameItemEvidence? = nil
+    public private(set) var requestPairEvidence: RequestPairEvidence? = nil
     public let previewId: String; public let expiresAt: String; public let shopRevision: Int; public let authorityEpoch: Int
     public let requestRevision: Int; public let choice: String; public let before: ShopperBudget; public let after: ShopperBudget
     public let changeMinor: Int?; public let requiresOverageAcceptance: Bool; public let requiresUnknownAcceptance: Bool
@@ -190,6 +259,8 @@ public struct ShopperReceipt: Codable, Equatable, Sendable {
     public private(set) var occurrenceId: UUID? = nil
     public private(set) var lotId: UUID? = nil
     public private(set) var pantryRevision: Int? = nil
+    public private(set) var cookId: UUID? = nil
+    public private(set) var grantEpoch: Int? = nil
     public private(set) var copyId: UUID? = nil
     public private(set) var sourceId: UUID? = nil
     public private(set) var supplyRevision: Int? = nil

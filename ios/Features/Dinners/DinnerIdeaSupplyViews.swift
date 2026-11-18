@@ -8,13 +8,17 @@ struct DinnerIdeaSupplyViews: View {
     @EnvironmentObject private var pickup: PickupModel
     @Environment(\.pickupLedger) private var ledger
     @State private var editing: MealIngredient?
+    @State private var editingBasis: DinnerPantrySupply.Basis?
 
     var body: some View {
         if let shop = model.shop, let workspaceID = model.localIdeaWorkspaceID {
             let now = Date()
             let journey = ledger?.sourceWorkspaceID == workspaceID ? pickup.journeys.first { $0.id == shop.id && $0.closedAt == nil } : nil
-            let rows = try? DinnerIdeaSupplyReview.rows(idea: idea, shop: shop, workspace: model.workspace,
-                workspaceID: workspaceID, journey: journey, at: now)
+            let canonical = try? DinnerPantrySupply.read(pickup: pickup, workspaceID: workspaceID,
+                linkedWorkspaceID: ledger?.sourceWorkspaceID, shopID: shop.id)
+            let supplyAvailable = !pickup.pantryIsActive || canonical != nil
+            let rows = supplyAvailable ? (try? DinnerIdeaSupplyReview.rows(idea: idea, shop: shop, workspace: model.workspace,
+                workspaceID: workspaceID, journey: journey, canonical: canonical, at: now, preferences: model.mealPreferences)) : nil
             VStack(alignment: .leading, spacing: 12) {
                 Text(dinnerText("Stock and whole packs")).font(.headline).accessibilityAddTraits(.isHeader)
                 Text(dinnerText("Only explicitly matched food is credited. Reviewing an idea leaves the shopping list and reservations unchanged."))
@@ -23,6 +27,7 @@ struct DinnerIdeaSupplyViews: View {
                         VStack(alignment: .leading, spacing: 5) {
                             Text(row.ingredients.map(\.name).joined(separator: " + ")).font(.headline)
                             if let matched = row.matchedName { Text(dinnerFormat("Matched food: %@", matched)) }
+                            ForEach(Array(row.preferenceResults.enumerated()), id: \.offset) { MealPreferenceIssues(result: $0.element) }
                             if row.excludedMatch { Text(dinnerText("This food or pack conflicts with the exclusions. Review the match.")) }
                             Text(dinnerFormat("Recipe needs: %@", dinnerQuantity(row.demand)))
                             ForEach(row.reservations) { reservation in
@@ -42,7 +47,7 @@ struct DinnerIdeaSupplyViews: View {
                             }
                             if row.conflictingPacks { Text(dinnerText("These pack observations differ. Review one pack for this food.")) }
                             ForEach(row.ingredients) { ingredient in
-                                Button(dinnerFormat("Review stock and pack for %@", ingredient.name)) { editing = ingredient }
+                                Button(dinnerFormat("Review stock and pack for %@", ingredient.name)) { editingBasis = canonical?.basis; editing = ingredient }
                                     .buttonStyle(.borderless).foregroundStyle(Theme.action).frame(minHeight: 44)
                                     .accessibilityIdentifier("ideaSupplyEdit-" + ingredient.id.uuidString)
                             }
@@ -50,19 +55,30 @@ struct DinnerIdeaSupplyViews: View {
                         Divider()
                     }
                 } else {
-                    Text(dinnerText("Review quantities and units before using this estimate."))
+                    if pickup.pantryIsActive && !supplyAvailable {
+                        Text(pantryText("Could not load a complete pantry. No partial availability is shown."))
+                    } else { Text(dinnerText("Review quantities and units before using this estimate.")) }
                 }
             }
             .onChange(of: shop.basisRevision) { _, _ in editing = nil }
+            .onChange(of: canonical?.basis) { _, _ in editing = nil }
+            .onChange(of: supplyAvailable) { _, available in if !available { editing = nil } }
             .sheet(item: $editing) { ingredient in
+                if supplyAvailable {
                 let evidence = idea.supplyEvidence?.first { $0.id == ingredient.id && $0.ingredientName == ingredient.name &&
                     $0.workspaceID == workspaceID && $0.shopID == shop.id }
                 IdeaSupplyEditor(ingredient: ingredient, shop: shop, workspaceID: workspaceID, previous: evidence,
-                                 foods: DinnerIdeaSupplyReview.foods(shop: shop, journey: journey, at: now), budget: model.budgetVisible) { value in
+                                 foods: DinnerIdeaSupplyReview.foods(shop: shop, journey: journey, canonical: canonical, at: now), budget: model.budgetVisible) { value in
                     defer { editing = nil }
                     guard model.shop?.id == shop.id, model.shop?.basisRevision == shop.basisRevision,
                           model.localIdeaWorkspaceID == workspaceID, model.editable else { return }
-                    update(value, ingredient.id)
+                    do {
+                        let current = try DinnerPantrySupply.read(pickup: pickup, workspaceID: workspaceID,
+                            linkedWorkspaceID: ledger?.sourceWorkspaceID, shopID: shop.id)
+                        guard current?.basis == editingBasis else { throw DinnerPlanningError.stalePreview }
+                        update(value, ingredient.id)
+                    } catch { model.report(error) }
+                }
                 }
             }
         } else {
@@ -80,6 +96,7 @@ private struct IdeaSupplyEditor: View {
     let save: (DinnerIdeaFoodEvidence?) -> Void
     private let originalPackQuantity: Quantity?
     @Environment(\.dismiss) private var dismiss
+    @State private var foodDetails: MealEligibilityEvidence
     @State private var foodID: UUID?
     @State private var packYield: String
     @State private var unit: UnitOfMeasure
@@ -95,6 +112,7 @@ private struct IdeaSupplyEditor: View {
         self.ingredient = ingredient; self.shop = shop; self.workspaceID = workspaceID
         self.foods = foods; self.budget = budget; self.save = save
         let current = previous.flatMap { $0.basisRevision == shop.basisRevision ? $0 : nil }
+        _foodDetails = State(initialValue: current?.foodDetails ?? .init())
         originalPackQuantity = current?.pack?.usableQuantity
         _foodID = State(initialValue: previous?.foodID.flatMap { id in foods.contains { $0.id == id } ? id : nil })
         _packYield = State(initialValue: current?.pack?.usableQuantity?.amount.description ?? "")
@@ -110,6 +128,7 @@ private struct IdeaSupplyEditor: View {
                 if field != nil { DinnerFocusedDoneBar { field = nil } }
                 supplyForm
             }
+            .onChange(of: foodID) { _, _ in foodDetails = .init() }
             .navigationTitle(dinnerText("Review ingredient supply"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -120,6 +139,10 @@ private struct IdeaSupplyEditor: View {
 
     private var supplyForm: some View {
         Form {
+            Section(dinnerText("Reviewed food details")) {
+                MealEvidenceFields(draft: $foodDetails, foodOnly: true)
+            }
+
             Section {
                 Text(dinnerText("Review ingredient supply"))
                     .font(.headline).fixedSize(horizontal: false, vertical: true)
@@ -183,8 +206,13 @@ private struct IdeaSupplyEditor: View {
             if hasPack, source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { throw DomainError.invalidNumber }
             guard foodID != nil || hasPack else { save(nil); return }
             let pack = hasPack ? PackOffer(id: ingredient.id.uuidString, label: ingredient.name, usableQuantity: quantity, price: cost) : nil
-            save(DinnerIdeaFoodEvidence(ingredient: ingredient, workspaceID: workspaceID, shopID: shop.id,
-                basisRevision: shop.basisRevision, foodID: foodID, pack: pack, source: hasPack ? source : nil, observedAt: hasPack ? observedAt : nil))
+            var evidence = DinnerIdeaFoodEvidence(ingredient: ingredient, workspaceID: workspaceID, shopID: shop.id,
+                basisRevision: shop.basisRevision, foodID: foodID, pack: pack, source: hasPack ? source : nil, observedAt: hasPack ? observedAt : nil)
+            if foodDetails != MealEligibilityEvidence() {
+                evidence.foodDetails = foodDetails
+                evidence.reviewedFoodLabel = foods.first { $0.id == foodID }?.name
+            }
+            save(evidence)
         } catch { self.error = dinnerText("Check the usable quantity, price and evidence source.") }
     }
 }

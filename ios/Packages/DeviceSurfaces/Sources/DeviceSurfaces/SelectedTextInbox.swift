@@ -1,4 +1,5 @@
 import Foundation
+import CDeviceSQLite
 import CryptoKit
 import UniformTypeIdentifiers
 
@@ -9,6 +10,16 @@ public struct InboxReceipt: Equatable, Sendable {
     public let createdAt: Date
     public let expiresAt: Date
     public let disposition: InboxDisposition
+
+    /// Older app-private reviews saved SQLite's 15-significant-digit rendering of the deadline.
+    public func matchesRecordedExpiry(_ recorded: Date) -> Bool {
+        if recorded == expiresAt { return true }
+        let text = withVaList([expiresAt.timeIntervalSince1970]) { sqlite3_vmprintf("%!.15g", $0) }
+        guard let text else { return false }
+        defer { sqlite3_free(text) }
+        guard let seconds = Double(String(cString: text)) else { return false }
+        return recorded == Date(timeIntervalSince1970: seconds)
+    }
 }
 public struct SelectedTextEntry: Equatable, Sendable, Identifiable {
     public var id: UUID { receipt.operationID }
@@ -18,8 +29,8 @@ public struct SelectedTextEntry: Equatable, Sendable, Identifiable {
     public var textForReview: String { editedText ?? originalText }
 }
 
-/// Only selected text and bounded deduplication receipts belong in this database.
-/// It contains no shop IDs, persona IDs, grants, financial records or auth credentials.
+/// Stores bounded text with deduplication receipts. The shopping-list inbox and
+/// the typed capture inbox have distinct database kinds and files.
 public actor SelectedTextInbox {
     public enum ReviewLimit: Error { case tooManyItems, receiptLimitReached }
     public static let maximumEntryBytes = 65_536
@@ -28,15 +39,24 @@ public actor SelectedTextInbox {
     public static let maximumTotalBytes = 1_048_576
     public static let maximumReceipts = 10_000
     public static let lifetime: TimeInterval = 7 * 24 * 60 * 60
-    private let database: SurfaceDatabase
+    let database: SurfaceDatabase
     public init(url: URL) throws {
-        database = try SurfaceDatabase(url: url, kind: "selected-text-inbox", schema: """
+        try self.init(url: url, kind: "selected-text-inbox")
+    }
+    init(url: URL, kind: String) throws {
+        database = try SurfaceDatabase(url: url, kind: kind, schema: """
         CREATE TABLE inbox (id TEXT PRIMARY KEY NOT NULL, digest TEXT NOT NULL, original TEXT, edited TEXT,
         bytes INTEGER NOT NULL CHECK(bytes >= 0), created REAL NOT NULL, expires REAL NOT NULL,
         disposition TEXT NOT NULL CHECK(disposition IN ('pending','consumed','discarded','expired')));
         """)
+        if kind == "shared-capture-inbox" { try Self.installReceiptStorage(database) }
     }
     public func stage(operationID: UUID, originalText: String, editedText: String? = nil, now: Date) throws -> InboxReceipt {
+        try stage(operationID: operationID, originalText: originalText, editedText: editedText, now: now, insertAttachment: {})
+    }
+
+    func stage(operationID: UUID, originalText: String, editedText: String?, now: Date,
+               insertAttachment: () throws -> Void) throws -> InboxReceipt {
         guard validDate(now), validDate(now.addingTimeInterval(Self.lifetime)) else { throw SurfaceError.invalid }
         let digest = try Self.digest(original: originalText, edited: editedText)
         return try database.transaction {
@@ -54,6 +74,7 @@ public actor SelectedTextInbox {
             guard all < Self.maximumReceipts else { throw ReviewLimit.receiptLimitReached }
             guard pending < Self.maximumPending, bytes <= Self.maximumTotalBytes - size else { throw SurfaceError.capacity }
             try database.execute("INSERT INTO inbox VALUES(?,?,?,?,?,?,?,?)", [.text(operationID.uuidString), .text(digest), .text(originalText), editedText.map(DBValue.text) ?? .null, .integer(Int64(size)), .double(now.timeIntervalSince1970), .double(now.addingTimeInterval(Self.lifetime).timeIntervalSince1970), .text(InboxDisposition.pending.rawValue)])
+            try insertAttachment()
             guard let saved = try receipt(operationID) else { throw SurfaceError.corrupt }; return saved
         }
     }
@@ -89,7 +110,7 @@ public actor SelectedTextInbox {
             return try receipt(id)!
         }
     }
-    private func expire(_ now: Date) throws {
+    func expire(_ now: Date) throws {
         try database.execute("UPDATE inbox SET disposition='expired',original=NULL,edited=NULL,bytes=0 WHERE disposition='pending' AND expires <= ?", [.double(now.timeIntervalSince1970)])
     }
     private func decodeReceipt(_ row: [String?]) throws -> InboxReceipt {

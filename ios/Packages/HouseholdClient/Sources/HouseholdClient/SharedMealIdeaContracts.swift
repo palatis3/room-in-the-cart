@@ -39,6 +39,29 @@ public struct SharedMealIdeaAmount: Codable, Equatable, Sendable, ExpressibleByI
 }
 
 /// Household-entered evidence only. Never populated from a device-private food or decision store.
+public struct SharedMealPreferenceEvidence: Codable, Equatable, Sendable {
+    public var reviewedIngredientDetails: [String]?
+    public var requiredAppliances: [String]?
+    public var brands: [String]?
+    public var effort: String?
+    public init() {}
+}
+
+public struct SharedMealPreferenceCheck: Codable, Equatable, Sendable {
+    public let eligible: Bool
+    public let blocked: [String]
+    public let unresolved: [String]
+    public let soft: [String]
+
+    func validate() throws {
+        let categories: Set<String> = ["ingredient", "dislike", "appliance", "brand", "effort", "duration_unknown", "duration_over"]
+        for values in [blocked, unresolved, soft] {
+            guard Set(values).count == values.count, Set(values).isSubset(of: categories) else { throw ClientError.invalidResponse }
+        }
+        guard eligible == (blocked.isEmpty && unresolved.isEmpty) else { throw ClientError.invalidResponse }
+    }
+}
+
 public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
     public struct Reservation: Codable, Equatable, Identifiable, Sendable {
         /// Editor identity only; saved evidence and comparisons remain name/amount based.
@@ -65,6 +88,7 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
             try c.encode(usableDenominator, forKey: .usableDenominator); try c.encode(evidence, forKey: .evidence)
         }
     }
+    public var preferenceEvidence: SharedMealPreferenceEvidence?
     public var title: String; public var source: String; public var servings: Int; public var minutes: Int?
     public var assumedExtras: [String]; public var exclusions: [String]; public var ingredients: [Ingredient]
     public init(title: String = "", source: String = "manual", servings: Int = 2, minutes: Int? = nil,
@@ -90,6 +114,7 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
     }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(preferenceEvidence, forKey: .preferenceEvidence)
         try c.encode(title, forKey: .title); try c.encode(source, forKey: .source); try c.encode(servings, forKey: .servings)
         try c.encode(minutes, forKey: .minutes); try c.encode(assumedExtras, forKey: .assumedExtras)
         try c.encode(exclusions, forKey: .exclusions); try c.encode(ingredients, forKey: .ingredients)
@@ -120,6 +145,8 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
     }
 }
 public struct SharedMealIdeaPreview: Codable, Equatable, Sendable {
+    public var preferenceCheck: SharedMealPreferenceCheck? = nil
+    public var requiresPreferenceReview: Bool? = nil
     public struct Ingredient: Codable, Equatable, Identifiable, Sendable {
         public let ingredientId: UUID; public let excluded: Bool; public let reserved: SharedMealIdeaAmount?
         public let remaining: SharedMealIdeaAmount?; public let shortage: SharedMealIdeaAmount?; public let wholePacks: Int?; public let unresolvedPrice: Bool; public let arithmeticUnavailable: Bool?
@@ -128,6 +155,7 @@ public struct SharedMealIdeaPreview: Codable, Equatable, Sendable {
     public let canApprove: Bool; public let ingredients: [Ingredient]
 }
 public struct SharedMealIdeaPage: Codable, Equatable, Sendable {
+    public var preferenceRevision: UUID? = nil
     public struct Idea: Codable, Equatable, Identifiable, Sendable {
         public let ideaId: UUID; public let revision: Int; public let actorId: UUID; public let state: String
         public let draft: SharedMealIdeaDraft; public let preview: SharedMealIdeaPreview
@@ -139,21 +167,26 @@ public struct SharedMealIdeaPage: Codable, Equatable, Sendable {
         guard shopRevision > 0, authorityEpoch > 0, grantRevision >= 0, ideas.count <= 100, Set(ideas.map(\.id)).count == ideas.count else { throw ClientError.invalidResponse }
         for idea in ideas {
             try idea.draft.validate()
+            try idea.preview.preferenceCheck?.validate()
+            if idea.preview.preferenceCheck?.eligible == false && idea.preview.canApprove { throw ClientError.invalidResponse }
             guard idea.revision > 0, ["draft","approved"].contains(idea.state), idea.preview.ingredients.map(\.id) == idea.draft.ingredients.map(\.id),
                   idea.preview.ingredients.allSatisfy({ ($0.reserved == nil || ($0.reserved!.numerator >= 0 && $0.reserved!.denominator > 0)) && $0.unresolvedPrice && ($0.wholePacks == nil || $0.wholePacks! >= 0) }) else { throw ClientError.invalidResponse }
         }
     }
 }
 public struct SharedMealIdeaWrite: Codable, Equatable, Sendable {
+    public var preferenceRevision: UUID? = nil
     public let clientKey: UUID; public let ideaId: UUID; public let baseRevision: Int?
     public let shopRevision: Int; public let authorityEpoch: Int; public let grantRevision: Int
     public let action: String; public let draft: SharedMealIdeaDraft; public let reviewedHouseholdEvidence: Bool
     public init(clientKey: UUID = UUID(), ideaId: UUID, baseRevision: Int?, page: SharedMealIdeaPage, action: String, draft: SharedMealIdeaDraft, reviewedHouseholdEvidence: Bool) {
+        self.preferenceRevision = page.preferenceRevision
         self.clientKey = clientKey; self.ideaId = ideaId; self.baseRevision = baseRevision; shopRevision = page.shopRevision
         authorityEpoch = page.authorityEpoch; grantRevision = page.grantRevision; self.action = action; self.draft = draft; self.reviewedHouseholdEvidence = reviewedHouseholdEvidence
     }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(preferenceRevision, forKey: .preferenceRevision)
         try c.encode(clientKey, forKey: .clientKey); try c.encode(ideaId, forKey: .ideaId); try c.encode(baseRevision, forKey: .baseRevision)
         try c.encode(shopRevision, forKey: .shopRevision); try c.encode(authorityEpoch, forKey: .authorityEpoch); try c.encode(grantRevision, forKey: .grantRevision)
         try c.encode(action, forKey: .action); try c.encode(draft, forKey: .draft); try c.encode(reviewedHouseholdEvidence, forKey: .reviewedHouseholdEvidence)

@@ -1,5 +1,11 @@
 # Local CI validation
 
+## November 18 ordinary iPhone test scheduling
+
+In the [November 18 core run](https://github.com/palatis3/room-in-the-cart/actions/runs/44259710342), UI03 waited 77.5 minutes after the shared build and executed for 19.1 minutes. During 68.2 minutes of that wait, the recorded jobs from the feature branch, main and Dependabot occupied fewer than six A2 machines. UI04 waited 70.8 minutes, including 54.2 minutes with fewer than six A1 assignments. Assignment counts cannot distinguish a free machine from one still provisioning.
+
+Ordinary UI jobs now request their existing A1 or A2 pool as soon as their shared products are ready. Each Actions concurrency group is unique to the run, attempt and shard. Fixture scheduling, the GitHub fallback and required checks keep their existing configuration. Compare build-to-start wait and the last required completion on the next full run, including any overlapping revisions.
+
 ## November 16 GitHub runtime replacement
 
 The `b17cb89b` core producer selected iOS27.0/24A434, then both Xcode and simctl
@@ -625,11 +631,12 @@ run on the existing build producer after enumeration and product packaging.
 As of the November 16 producer correction, upload follows model execution,
 runtime verification and owned-device cleanup. The consumer matrix retains
 all ten UI rows and their original slots. The complete
-compiled plan and model selectors remain unchanged. A failed model step allows
-UI consumers to proceed, but the required CI gate checks its raw outcome and
-rejects failed, skipped, cancelled or missing model results. The producer's outer
-cap is75minutes, replacing separate35-minute build and55-minute model jobs; the
-model step keeps its40-minute limit. UI admission now waits for this model step,
+compiled plan includes all model selectors. When the producer finishes,
+the **iPhone model test results** check publishes its raw model outcome on the PR.
+It runs on Linux and uses the result the Mac already collected. UI shards can run
+after a model failure, and the final CI gate rejects failed, skipped, cancelled or
+missing model results. The producer has a 75-minute limit and its model step has
+a 40-minute limit. UI admission now waits for this model step,
 and producer infrastructure failure can block the UI consumers. Hosted elapsed
 time remains to be measured.
 
@@ -1138,7 +1145,13 @@ recorded; the image documentation does not publish its build identifier.
 The rolling preview label is not an immutable image pin. Runner availability and
 successful hosted execution still need qualification at the migrated revision.
 
-`ios-swift-codeql` remains required on `macos-15` with Xcode 26.3. GitHub's
+The required `ios-swift-codeql` job uses GitHub's standard `macos-15-intel`
+runner with Xcode 26.3 (17C529) to trace the arm64 iPhone build. GitHub
+reported that it could not assign an arm64 Mac to this scan after 15 minutes.
+Compare queue time and traced build time separately on the Intel runner.
+[Run annotations](https://api.github.com/repos/palatis3/room-in-the-cart/check-runs/134824855150/annotations) · [Intel runner image](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)
+
+GitHub's
 [official CodeQL support notice](https://github.blog/changelog/2026-10-19-codeql-changes-for-macos-27-xcode-27-and-swift-6-4/)
 explicitly excludes Swift 6.4 and traced Xcode 27 builds; `build-mode: none` is
 not a Swift replacement. This hosted security exception preserves manual Swift

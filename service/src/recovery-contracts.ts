@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import {mealEvidence} from './meal-preferences.js';
 import { mealQuantity, mealAmount } from './shared-meal-planning.js';
 
 const id = z.string().uuid().transform(s => s.toLowerCase());
@@ -40,7 +41,7 @@ export const fallbackOptionsSchema=z.object({v:z.literal(1),base:recoveryBaseSch
   reviews:z.array(fallbackReviewSchema).max(100),trip:fallbackTrip.nullable()}).strict();
 export type FallbackSelection=z.infer<typeof fallbackSelectionSchema>;
 export const recoveryIntentSchema = z.object({
-  occurrenceId:id,targetDigest:hash,replacement:recoveryMealSchema,reviewedAt:time,fallback:fallbackSelectionSchema.optional(),
+  occurrenceId:id,targetDigest:hash,replacement:recoveryMealSchema,reviewedAt:time,dinnerSwap:z.literal(true).optional(),undoesSwap:id.optional(),preferenceEvidence:mealEvidence.optional(),fallback:fallbackSelectionSchema.optional(),
   // Explicit manual repeat choice; not proof of an accepted recipe/template.
   repeatOfOccurrenceId:id.nullable(),
   agreesToRepeat:z.boolean(),proposesExtraTrip:z.boolean(),agreesToExtraTrip:z.boolean(),acceptsUnresolved:z.boolean(),
@@ -82,13 +83,13 @@ export const importApprovalSchema = z.object({v:z.literal(1),clientKey:id,replay
 }).strict();
 
 const scoped = {householdId:id,shopId:id};
-export const sourceSchema = z.object({...scoped,id,foodId:id,identityRevision:revision.min(1),
+export const sourceSchema = z.object({...scoped,shopId:id.nullable(),id,foodId:id,identityRevision:revision.min(1),
   origin:z.discriminatedUnion('kind',[
     z.object({kind:z.literal('delivery'),sealedOrderRevision:revision,orderLineId:id,segmentKey:id}).strict(),
-    z.object({kind:z.literal('sharedStock'),batchId:id,location:z.enum(['pantry','freezer'])}).strict(),
+    z.object({kind:z.literal('sharedStock'),batchId:id,location:z.enum(['pantry','freezer','fridge'])}).strict(),
     z.object({kind:z.literal('reviewedImport'),originBindingId:id,reviewId:id,disclosureDigest:hash}).strict(),
   ]),
-}).strict();
+}).strict().refine(s=>s.shopId!==null || s.origin.kind==='sharedStock');
 // Identity revision is captured by the server when it admits an observation.
 // A request cannot relabel historical evidence by supplying this field.
 const observation = {...scoped,id,sourceId:id,identityRevision:revision.min(1),revision:revision,predecessorId:id.nullable(),recordedAt:time,actorId:id,operationId:id};
@@ -99,7 +100,7 @@ export const reservationSchema = z.object({id,sourceId:id,needId:id,quantity:mea
 // retailer arrival, order line, receipt, or member identity into the projection.
 const pantryObservationHistoryRow = z.object({
   householdId:id, id, sourceId:id, identityRevision:revision.min(1), revision:revision.min(1),
-  predecessorId:id.nullable(), confirmedAt:time, recordedAt:time, quantity:usableQuantitySchema.nullable(),
+  predecessorId:id.nullable(), confirmedAt:time, recordedAt:time, quantity:usableQuantitySchema.nullable(), deliveryUsableId:id.optional(),
 }).strict();
 // Already committed elsewhere, in an exact physical unit. A null hold means
 // the loader could not quantify that source's foreign commitments.

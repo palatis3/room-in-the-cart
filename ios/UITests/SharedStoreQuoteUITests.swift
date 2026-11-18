@@ -194,6 +194,7 @@ import XCTest
         enableSwitch(prefix+"allChargesIncluded")
         enableSwitch(prefix+"quantitiesMatched")
         enableSwitch(prefix+"singleStore")
+        tap(element(prefix+"purchaseMinimum")); tap(app.buttons["No purchase minimum"])
         tap(element(prefix+"availability")); tap(app.buttons["Reviewed available"])
         enterValue(trip,into:prefix+"tripCash")
         fill(minutes,into:prefix+"extraMinutes",requireDone:true)

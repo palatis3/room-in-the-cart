@@ -18,6 +18,40 @@
         }
       }
     },
+    "Additional checkout charges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional checkout charges"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos adicionales en caja"
+          }
+        }
+      }
+    },
+    "Additional checkout estimate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional checkout estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total estimado de la compra adicional"
+          }
+        }
+      }
+    },
     "Advance steps are complete for this meal": {
       "extractionState": "manual",
       "localizations": {
@@ -545,6 +579,23 @@
         }
       }
     },
+    "Optional top-up estimate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional top-up estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación de la compra adicional opcional"
+          }
+        }
+      }
+    },
     "Other commitments are unquantified": {
       "extractionState": "manual",
       "localizations": {
@@ -609,6 +660,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ver el reemplazo antes de guardarlo"
+          }
+        }
+      }
+    },
+    "Price of all additional packs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price of all additional packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio de todos los paquetes adicionales"
           }
         }
       }
@@ -817,6 +885,23 @@
         }
       }
     },
+    "Restore this dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar esta cena"
+          }
+        }
+      }
+    },
     "Retry reviewed replacement": {
       "extractionState": "manual",
       "localizations": {
@@ -830,6 +915,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reintentar el reemplazo revisado"
+          }
+        }
+      }
+    },
+    "Review Undo for this dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Undo for this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cómo deshacer el cambio de esta cena"
           }
         }
       }
@@ -1004,6 +1106,23 @@
         }
       }
     },
+    "Swap this dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar esta cena"
+          }
+        }
+      }
+    },
     "The full amount set aside is no longer backed": {
       "extractionState": "manual",
       "localizations": {
@@ -1034,6 +1153,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El nuevo día no tendrá hora límite hasta que establezcas una."
+          }
+        }
+      }
+    },
+    "These entered prices estimate a separate purchase. Saving the dinner records the meal change only.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These entered prices estimate a separate purchase. Saving the dinner records the meal change only."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos precios estiman una compra aparte. Guardar la cena registra solo el cambio de comida."
           }
         }
       }

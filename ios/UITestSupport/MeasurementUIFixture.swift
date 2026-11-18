@@ -57,6 +57,18 @@ private final class MeasurementFixtureServer: @unchecked Sendable {
         guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-measurement" else { return try denied("session_needed", 401) }
         if path.hasSuffix("/devices") { return try json(["deviceId": "measurement-device", "deviceToken": "measurement-token"], 201) }
         guard request.value(forHTTPHeaderField: "X-Device-Token") == "measurement-token" else { return try denied() }
+        if path.hasSuffix("/language-assistance/foodkeeper-match"),
+           ProcessInfo.processInfo.arguments.contains("--foodkeeper-match-fixture") {
+            if method == "GET" { return try json(["version":1,"available":true]) }
+            guard method == "POST", input["consent"] as? Bool == true,
+                  let source = (input["sourceLines"] as? [[String:String]])?.first,
+                  source["text"] == "chicken from an opened can", let line = source["id"],
+                  let requestID = input["requestID"] as? String, input["catalogVersion"] as? Int == 128,
+                  (input["candidates"] as? [[String:Any]])?.contains(where: { $0["id"] as? Int == 142 }) == true else {
+                return try denied("unexpected_matching_request", 422)
+            }
+            return try json(["version":1,"requestID":requestID,"catalogVersion":128,"suggestions":[["sourceLineID":line,"candidateID":142]]])
+        }
         if path.hasSuffix("/bootstrap") {
             return try json(["household": ["id": Self.household, "label": "Isolated measurement household"], "memberId": Self.member, "role": "shopper", "shopId": Self.shop, "enrolled": true, "queueConsent": false, "capabilities": ["shopper_commands", "shopper_inbox", "request_preview"]])
         }
@@ -192,7 +204,9 @@ struct MeasurementUIFixtureRoot: View {
                 Text("Deletes: \(state.deletes)").accessibilityIdentifier("fixture.measurement.deletes")
                 Text("Withdrawals: \(state.withdrawals)").accessibilityIdentifier("fixture.measurement.withdrawals")
             }.font(.caption2)
-            if let household = state.household, let local = state.local, let other = state.otherLocal,
+            if ProcessInfo.processInfo.arguments.contains("--foodkeeper-match-fixture"), let household = state.household {
+                FoodKeeperMatchFixtureLot().environmentObject(household).environmentObject(access)
+            } else if let household = state.household, let local = state.local, let other = state.otherLocal,
                let app = state.app, let ledger = state.ledger {
                 TabView {
                     NavigationStack { SettingsView() }.environmentObject(local).tabItem { Label("Settings", systemImage: "gearshape") }

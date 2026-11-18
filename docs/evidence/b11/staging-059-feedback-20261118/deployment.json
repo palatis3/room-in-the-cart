@@ -1,0 +1,44 @@
+{
+  "verifiedUTC": "2026-11-18T12:13:15.897600+00:00",
+  "source": "e98b228295abb57300dc7d98e519a8444bb3a4fe",
+  "manifestSHA256": "52dc72794ebd4410ce47e5bc6122b973344345c1b0a0cb4d64db891dd6e2b08b",
+  "stagingAlias": "room-in-the-cart-staging.vercel.app",
+  "deploymentId": "dpl_8FR8yKw95pA9ZMTRXhbsWGNV26gL",
+  "effectiveNode": "22.x",
+  "previousReadyDeployment": "dpl_2H4CLFJxoQRfYbVU8NMVJyLzmmEN",
+  "schedulerDeployment": "dpl_8FR8yKw95pA9ZMTRXhbsWGNV26gL",
+  "maintenanceUTC": "0 8 * * *",
+  "supabaseProject": "uwjxrotnocxxomqdetzk",
+  "appliedMigrationCount": 59,
+  "allMigrationChecksumsMatched": true,
+  "migrationAppliedDuringUpdate": false,
+  "sourceChanges": [
+    "service/src/household-tonight.ts",
+    "web/src/public-pages-content.ts"
+  ],
+  "checks": {
+    "protected": {
+      "api": 12,
+      "exactWebRoutesAndAssets": 21,
+      "databaseBackedHttp": 2
+    },
+    "public": {
+      "api": 12,
+      "exactWebRoutesAndAssets": 21,
+      "databaseBackedHttp": 2
+    }
+  },
+  "privacyPage": [
+    {
+      "lang": "en",
+      "path": "/privacy",
+      "exactBarcodeDisclosure": true
+    },
+    {
+      "lang": "es",
+      "path": "/privacy",
+      "exactBarcodeDisclosure": true
+    }
+  ],
+  "householdRanking": "Authenticated synthetic HTTP/PostgreSQL fixtures before deployment. No household was created or changed for hosted verification."
+}

@@ -1,3 +1,12 @@
+import {householdTonight,saveTonightRecipe} from './household-tonight.js';
+import {readMealPreferences, writeMealPreferences, preferenceGrants, changePreferenceGrant} from './meal-preferences.js';
+import {readMealFeedback,updateMealFeedback,reviewMyFeedbackWithdrawal,withdrawMyFeedback} from './household-meal-feedback.js';
+import {cookReview} from './shared-cook-completion.js';
+import { changeHouseholdStaples, householdStaples } from './household-staples.js';
+import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
+import {languagePurposes} from './language-purposes.js';
+import { ReceiptAssistance, receiptAssistanceInput, requireReceiptAdult, reserveCaptureAssistance } from './receipt-assistance.js';
+import { VoiceAssistance, voiceAssistanceInput } from './voice-assistance.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -38,7 +47,7 @@ import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
-export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -54,11 +63,12 @@ async function householdBody(req:IncomingMessage,path:string) {
   if(path.endsWith('/demand/previews')) return body(req,1_800_000);
   if(path.endsWith('/accepted-fallbacks')) return body(req,540_000);
   if(path.endsWith('/meal-recovery/options') || path.endsWith('/meal-recovery/preview')) return body(req,1_800_000);
-  if(path!=='/commands') return body(req);
-  const raw=await rawBody(req,1_800_000);
+  if(path!=='/commands' && path!=='/pantry/commands') return body(req);
+  const raw=await rawBody(req,path==='/pantry/commands'?1_048_576:1_800_000);
   let payload:unknown;
   try {payload=JSON.parse(raw.toString('utf8'));} catch {throw invalid();}
-  if(raw.length>65_536 && !(typeof payload==='object' && payload && 'kind' in payload && payload.kind==='mealRecovery.apply'))
+  const extendedKind=path==='/pantry/commands'?'pantry.acquireReceipt':'mealRecovery.apply';
+  if(raw.length>65_536 && !(typeof payload==='object' && payload && 'kind' in payload && payload.kind===extendedKind))
     throw new ServiceError(413,'body_too_large','Send one bounded command.');
   return payload;
 }
@@ -247,6 +257,76 @@ export function createHTTPServer(options:HTTPOptions) {
         z.object({}).strict().parse(await body(req));
         send(201,await repository.enroll(householdId,auth.identity));return;
       }
+      const language=languagePurposes.find(route=>path==='/language-assistance/'+route.kind);
+      if(language && (method==='GET'||method==='POST')) {
+        const transport=options.receiptAssistance;
+        const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
+        await authorize();
+        if(method==='GET') {send(200,{version:1,available:!!transport?.budget.maxLanguageMicros});return;}
+        if(!transport?.budget.maxLanguageMicros) throw new ServiceError(503,'language_assistance_unavailable','Continue editing on this device.');
+        const request=language.parse(await body(req,16_384));
+        const cancellation=new AbortController();
+        const stop=()=>cancellation.abort();
+        res.once('close',stop);
+        try {
+          if(res.destroyed)throw unavailable();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await request.checkScope(ctx,repository);
+            await reserveCaptureAssistance(ctx,auth.identity,request,transport.budget,transport.budget.maxLanguageMicros);
+          });
+          const result=await request.run(transport,cancellation.signal);
+          cancellation.signal.throwIfAborted();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await request.checkScope(ctx,repository);
+          });
+          send(200,result);
+        } finally {res.off('close',stop);}
+        return;
+      }
+      const visual = /^\/capture-assistance\/(recipe|shelf|checkout)-line$/.exec(path);
+      const voice = path === '/capture-assistance/transcription';
+      if(((path==='/receipt-assistance' || voice) && (method==='GET'||method==='POST')) || (visual && method==='POST')) {
+        const assistance=options.receiptAssistance;
+        const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
+        await authorize();
+        if(method==='GET'){
+          send(200,voice ? {version:1,available:!!assistance && !!options.voiceAssistance}
+            : {version:1,available:!!assistance,allowsCrop:!!assistance?.budget.maxCropMicros});
+          return;
+        }
+        if(!assistance)throw new ServiceError(503,'receipt_assistance_unavailable','Keep editing this receipt on your device.');
+        const prepare = async () => {
+          if (voice) {
+            const adapter = options.voiceAssistance;
+            if (!adapter) throw new ServiceError(503,'voice_transcription_unavailable','Continue with on-device dictation.');
+            const input = voiceAssistanceInput.parse(await body(req,1_281_024));
+            return {input,cost:adapter.maximumCost,run:(signal:AbortSignal)=>adapter.transcribe(input,signal)};
+          }
+          const input = receiptAssistanceInput.parse(await body(req,assistance.budget.maxCropMicros ? 251_000 : 2048));
+          if (visual && (!input.crop || !assistance.budget.maxCropMicros)) throw invalid();
+          const cost = input.crop ? assistance.budget.maxCropMicros : assistance.budget.maxRequestMicros;
+          return {input,cost,run:(signal:AbortSignal)=>visual
+            ? assistance.visibleLine(input,signal,z.enum(['recipe','shelf','checkout']).parse(visual[1]))
+            : assistance.extract(input,signal)};
+        };
+        const prepared = await prepare();
+        const cancellation=new AbortController();
+        const stop=()=>cancellation.abort();
+        res.once('close',stop);
+        try {
+          if(res.destroyed)throw unavailable();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await reserveCaptureAssistance(ctx,auth.identity,prepared.input,assistance.budget,prepared.cost);
+          });
+          const result=await prepared.run(cancellation.signal);
+          await authorize();
+          send(200,result);
+        } finally { res.off('close',stop); }
+        return;
+      }
       const verificationRoute=/^\/guardian\/enrollments\/([^/]+)\/verification$/.exec(path);
       if(verificationRoute&&method==='POST'){send(200,await guardian.verification(householdId,auth,uuid.parse(verificationRoute[1]),guardianActionSchema.parse(await body(req,4096))));return;}
       const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await householdBody(req,path):undefined;
@@ -254,7 +334,10 @@ export function createHTTPServer(options:HTTPOptions) {
       const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
       const placementRead=method==='GET'?/^\/shops\/([^/]+)\/placement-reports(?:\/[^/]+)?$/.exec(path):null;
       const historicalReportShopId=placementCommand?.shopId??(ownPlacement&&method==='GET'?uuid.parse(ownPlacement[1]):placementRead?uuid.parse(placementRead[1]):undefined);
-      const scopedAuth=historicalReportShopId?{...auth,historicalReportShopId}:auth;
+      // A selected shop is a navigation preference on the explicit household pantry surface.
+      // The authenticated household, device and any restricted grant still apply.
+      const {selectedShopId: _selectedShop,...householdAuth}=auth;
+      const scopedAuth=('/pantry'===path||path.startsWith('/pantry/')||path==='/meal-preferences'||path.startsWith('/meal-preferences/'))?householdAuth:historicalReportShopId?{...auth,historicalReportShopId}:auth;
       const output=await repository.authorized(householdId,scopedAuth,async ctx=>{
         if(path==='/devices/current/request-queue' && method==='PUT'){
           const {enabled}=z.object({enabled:z.boolean()}).strict().parse(payload);
@@ -271,6 +354,23 @@ export function createHTTPServer(options:HTTPOptions) {
           if(path==='/billing/purchase-context'&&method==='POST'){z.object({}).strict().parse(payload);return options.billing.prepare(ctx);}
           if(path==='/billing/seats'&&method==='PUT')return options.billing.replaceSeats(ctx,billingSeatsSchema.parse(payload));
         }
+        if(path==='/meal-preferences' && method==='GET')return readMealPreferences(ctx);
+        if(path==='/meal-preferences' && method==='POST')return writeMealPreferences(ctx,payload,decisions);
+        if(path==='/meal-preferences/grants' && method==='GET')return preferenceGrants(ctx);
+        if(path==='/meal-preferences/grants' && method==='POST')return changePreferenceGrant(ctx,payload);
+        if(path==='/pantry/tonight' && method==='GET')return householdTonight(ctx);
+        if(path==='/pantry/tonight/recipes' && method==='POST')return saveTonightRecipe(ctx,payload);
+        if(path==='/pantry' && method==='GET') {
+          const cursor=url.searchParams.get('cursor');
+          return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));
+        }
+        if(path==='/pantry/my-feedback-withdrawal' && method==='GET')return reviewMyFeedbackWithdrawal(ctx);
+        if(path==='/pantry/my-feedback-withdrawal' && method==='POST')return withdrawMyFeedback(ctx,payload);
+        if(path==='/pantry/staples' && method==='GET')return householdStaples(ctx,url.searchParams.get('zone')??'UTC');
+        if(path==='/pantry/staples' && method==='POST')return changeHouseholdStaples(ctx,payload);
+        if(path==='/pantry/commands' && method==='POST')return recordHouseholdPantryCommand(ctx,payload);
+        if(path==='/pantry/grants' && method==='GET')return pantryGrants(ctx);
+        if(path==='/pantry/grants' && method==='POST')return changePantryGrant(ctx,payload);
         if(path==='/members'&&method==='GET')return lifecycle.members(ctx);
         if(path==='/invites'&&method==='GET')return lifecycle.invites(ctx);
         if(path==='/views'&&method==='GET')return lifecycle.views(ctx);
@@ -354,6 +454,13 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          const feedback = /^\/cook-feedback\/([^/]+)$/.exec(tail ?? '');
+          if(feedback && (method==='GET' || method==='PUT')){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            const occurrence=uuid.parse(feedback[1]).toLowerCase();
+            return method==='GET' ? readMealFeedback(ctx,shop,occurrence) : updateMealFeedback(ctx,shop,occurrence,payload);
+          }
           if (tail === '/measurement-feedback') {
             if (method === 'GET') return measurement.read(ctx, shopId);
             if (method === 'POST') return measurement.feedback(ctx, shopId, payload);
@@ -401,7 +508,11 @@ export function createHTTPServer(options:HTTPOptions) {
             if(tail==='/pantry-lots/coverage') return readJointCoverage(ctx,shop);
             if(tail==='/pantry-lots/observation-preview') return previewCurrentPantryObservation(ctx,shop,payload,loadRecoveryPublication);
             const cursor=url.searchParams.get('cursor');
-            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor));
+            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor),url.searchParams.get('refrigerated')==='1');
+          }
+          if(tail==='/cook-completion' && method==='GET'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return cookReview(ctx,shop,uuid.parse(url.searchParams.get('occurrenceId')).toLowerCase());
           }
           if(tail==='/cook-copies' && method==='GET') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);

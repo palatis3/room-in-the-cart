@@ -1621,23 +1621,6 @@
         }
       }
     },
-    "The app’s capture tools process speech and images on this iPhone. Raw voice recordings are not retained or uploaded by the app. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a photo you select from iCloud before delivering it to the app.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The app’s capture tools process speech and images on this iPhone. Raw voice recordings are not retained or uploaded by the app. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a photo you select from iCloud before delivering it to the app."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las herramientas de captura de la app procesan la voz y las imágenes en este iPhone. La app no conserva ni sube las grabaciones de voz originales. Las fotos guardadas como evidencia permanecen en almacenamiento local protegido. Las exportaciones legibles y para ayudantes excluyen las fotos. Un archivo de recuperación cifrado puede incluir fotos de evidencia solo después de que las selecciones y revises. Apple puede descargar de iCloud una foto que selecciones antes de entregarla a la app."
-          }
-        }
-      }
-    },
     "Optional household measurement is separate. With explicit consent, the service stores the response codes you review, the shop identity, eligible week and notice version, and can match membership status to study retention. Existing local feedback, grocery text, prices and member names are not sent. Manage or withdraw that consent in Settings.": {
       "extractionState": "manual",
       "localizations": {
@@ -1753,6 +1736,248 @@
           "stringUnit": {
             "state": "translated",
             "value": "Operador"
+          }
+        }
+      }
+    },
+    "Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado habitual y el reconocimiento de texto en fotos se realizan en este iPhone. Las fotos guardadas como evidencia permanecen en el almacenamiento protegido del dispositivo. Apple puede descargar una foto que elijas de iCloud. Puedes incluir las fotos revisadas en un archivo de recuperación cifrado."
+          }
+        }
+      }
+    },
+    "When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando la asistencia en línea está disponible, un adulto autorizado puede revisar y enviar un fragmento de texto, una imagen recortada o una grabación de voz independiente a OpenAI a través de Room in the Cart. Escucha la grabación o revisa el recorte antes de enviarlo. También puedes seguir usando el editor local."
+          }
+        }
+      }
+    },
+    "Use soon will use the start of this range unless you have chosen a manual check date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use soon will use the start of this range unless you have chosen a manual check date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar pronto tomará el inicio de este intervalo, salvo que hayas elegido una fecha de revisión manual."
+          }
+        }
+      }
+    },
+    "Save quality range for this batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save quality range for this batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el intervalo de calidad para este lote"
+          }
+        }
+      }
+    },
+    "Quality range saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quality range saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el intervalo de calidad."
+          }
+        }
+      }
+    },
+    "Could not save this range. Check the current batch and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save this range. Check the current batch and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar el intervalo. Revisa el lote actual y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "This batch or reference has changed. Review its current storage and starting date again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch or reference has changed. Review its current storage and starting date again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El lote o la referencia cambió. Vuelve a revisar cómo se almacena ahora y la fecha inicial."
+          }
+        }
+      }
+    },
+    "Remove saved quality range": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved quality range"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar el intervalo de calidad guardado"
+          }
+        }
+      }
+    },
+    "This batch has no recorded starting date for this condition. Choose the day you can confirm.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch has no recorded starting date for this condition. Choose the day you can confirm."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este lote no tiene una fecha inicial registrada para esta condición. Elige la fecha que puedas confirmar."
+          }
+        }
+      }
+    },
+    "You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes consultar la guía FoodKeeper del USDA sin conexión. En Mi despensa puedes guardar una fecha para revisar la calidad de un alimento y activar un recordatorio diario. El recordatorio puede aparecer en la pantalla bloqueada. Te pide que abras Mi despensa y omite los nombres de los alimentos."
+          }
+        }
+      }
+    },
+    "When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al confirmar un recibo para la despensa del hogar, los adultos con acceso a la despensa pueden ver la tienda, la fecha de compra, la referencia que ingreses y, de cada renglón seleccionado, el texto original, el alimento, las cantidades, el lugar de almacenamiento y el precio si lo ingresaste. El archivo original se queda en este iPhone."
+          }
+        }
+      }
+    },
+    "If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si no se confirma que se guardó el recibo del hogar, este iPhone conserva una copia protegida de los datos revisados. Comprueba la despensa del hogar antes de reintentar el mismo cambio. Borrar el reintento conserva cualquier recibo ya guardado en el hogar."
+          }
+        }
+      }
+    },
+    "For optional online language help, review what will go to OpenAI through Room in the Cart. Depending on the task, this can include your wording, possible matches, or selected meal titles and reasons. For a FoodKeeper match, you share the label wording and the names and IDs of the guide entries shown. You choose whether to use a suggestion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For optional online language help, review what will go to OpenAI through Room in the Cart. Depending on the task, this can include your wording, possible matches, or selected meal titles and reasons. For a FoodKeeper match, you share the label wording and the names and IDs of the guide entries shown. You choose whether to use a suggestion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para usar la ayuda de redacción o de coincidencias en línea, revisa qué se enviará a OpenAI a través de Room in the Cart. Según la tarea, puede incluir tu texto, posibles coincidencias o los títulos y motivos de las comidas seleccionadas. Para buscar una coincidencia en FoodKeeper, compartes el texto de la etiqueta y los nombres e identificadores de las entradas que se muestran. Tú decides si usas la sugerencia."
+          }
+        }
+      }
+    },
+    "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando guardas una receta en «Esta noche en casa», envías al servicio del hogar los ingredientes, las porciones, los lotes que elegiste y las restricciones o los datos del paquete que hayas revisado. Los adultos con acceso a la despensa pueden ver el nombre de la receta y sus ingredientes cuando se les sugiere esa cena."
+          }
+        }
+      }
+    },
+    "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
           }
         }
       }

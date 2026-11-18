@@ -271,6 +271,11 @@ public struct StockDemandCoverage: Codable, Equatable, Sendable, Identifiable {
     public let allocated: Rational?
     public let shortfall: Rational?
     public let issues: [PickupIssue]
+    public init(id: UUID, foodID: UUID, unit: UnitOfMeasure, needed: Rational?, allocated: Rational?,
+                shortfall: Rational?, issues: [PickupIssue]) {
+        self.id = id; self.foodID = foodID; self.unit = unit; self.needed = needed
+        self.allocated = allocated; self.shortfall = shortfall; self.issues = issues
+    }
 }
 public struct StockAllocationEdge: Codable, Equatable, Sendable {
     public let lotID: UUID
@@ -278,6 +283,9 @@ public struct StockAllocationEdge: Codable, Equatable, Sendable {
     public let foodID: UUID
     public let unit: UnitOfMeasure
     public let amount: Rational
+    public init(lotID: UUID, needID: UUID, foodID: UUID, unit: UnitOfMeasure, amount: Rational) {
+        self.lotID = lotID; self.needID = needID; self.foodID = foodID; self.unit = unit; self.amount = amount
+    }
 }
 public struct StockLotBalance: Codable, Equatable, Sendable {
     public let lotID: UUID
@@ -285,19 +293,30 @@ public struct StockLotBalance: Codable, Equatable, Sendable {
     public let unit: UnitOfMeasure
     public let remainingUnallocated: Rational
     public let issues: [PickupIssue]
+    public init(lotID: UUID, foodID: UUID, unit: UnitOfMeasure, remainingUnallocated: Rational, issues: [PickupIssue]) {
+        self.lotID = lotID; self.foodID = foodID; self.unit = unit
+        self.remainingUnallocated = remainingUnallocated; self.issues = issues
+    }
 }
 public struct StockAllocationResult: Codable, Equatable, Sendable {
     public let demands: [StockDemandCoverage]
     public let allocations: [StockAllocationEdge]
     public let remainingLots: [StockLotBalance]
-    public var confirmedCoverageComplete: Bool { !demands.isEmpty && demands.allSatisfy { $0.shortfall == .zero } }
+    /// Presentation may project a scoped view of a previously computed all-shop
+    /// allocation. These value constructors never reserve or mutate physical food.
+    public init(demands: [StockDemandCoverage], allocations: [StockAllocationEdge], remainingLots: [StockLotBalance]) {
+        self.demands = demands; self.allocations = allocations; self.remainingLots = remainingLots
+    }
+    public var confirmedCoverageComplete: Bool {
+        !demands.isEmpty && demands.allSatisfy { $0.issues.isEmpty && $0.allocated != nil && $0.shortfall == .zero }
+    }
 }
 
 /// Works on a fresh installation with no shop, order, receipt, or invented meal date.
 /// The result allocates only explicitly confirmed matching lots. All quantities are
 /// normalized to the first need's unit for that food; unknown conversions stay visible.
 public enum ConfirmedStockAllocator {
-    public static func allocate(lots: [ConfirmedStockLot], needs: [StockNeed]) throws -> StockAllocationResult {
+    public static func allocate(lots: [ConfirmedStockLot], needs: [StockNeed], firstLotID: UUID? = nil) throws -> StockAllocationResult {
         guard Set(lots.map(\.id)).count == lots.count, Set(needs.map(\.id)).count == needs.count else { throw PickupError.duplicateIdentity }
         for lot in lots {
             guard !lot.name.isEmpty, lot.confirmedAt.timeIntervalSinceReferenceDate.isFinite else { throw PickupError.invalidEvidence }
@@ -315,7 +334,9 @@ public enum ConfirmedStockAllocator {
                 $0.element.priority == $1.element.priority ? $0.offset < $1.offset : $0.element.priority < $1.element.priority
             }.map(\.element)
             let matched = lots.filter { $0.foodID == food }
-            let foodLots = matched.filter { $0.useFirst == true } + matched.filter { $0.useFirst != true }
+            let preferred = matched.filter { $0.id == firstLotID }
+            let others = preferred.isEmpty ? matched : matched.filter { $0.id != firstLotID }
+            let foodLots = preferred + others.filter { $0.useFirst == true } + others.filter { $0.useFirst != true }
             guard let unit = needs.first(where: { $0.foodID == food })?.amount.unit ?? foodLots.first?.usable.unit else { continue }
             let requests = try foodNeeds.map { try $0.amount.converted(to: unit) }
             let supplies = try foodLots.map { try $0.usable.converted(to: unit) }

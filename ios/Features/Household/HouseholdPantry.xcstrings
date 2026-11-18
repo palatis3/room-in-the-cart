@@ -1,0 +1,1318 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%lld purchase days, usually %lld days apart.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld purchase days, usually %lld days apart."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld días de compra, normalmente con %lld días entre ellos."
+          }
+        }
+      }
+    },
+    "%lld reviewed purchases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld reviewed purchases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld compras revisadas"
+          }
+        }
+      }
+    },
+    "1 reviewed purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 reviewed purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 compra revisada"
+          }
+        }
+      }
+    },
+    "Add receipt to household pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add receipt to household pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir recibo a la despensa del hogar"
+          }
+        }
+      }
+    },
+    "Adults with pantry access can see stored food, add food and correct counts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adults with pantry access can see stored food, add food and correct counts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los adultos con acceso a la despensa pueden ver y añadir alimentos y corregir cantidades."
+          }
+        }
+      }
+    },
+    "Adults with pantry access can see the store, date, any receipt reference you enter and the selected food lines, including original wording, quantities, storage location and any prices you enter. The original file stays on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adults with pantry access can see the store, date, any receipt reference you enter and the selected food lines, including original wording, quantities, storage location and any prices you enter. The original file stays on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los adultos con acceso a la despensa pueden ver la tienda, la fecha, la referencia del recibo que ingreses y los renglones de alimentos seleccionados, con el texto original, las cantidades, el lugar de almacenamiento y los precios que ingreses. El archivo original se queda en este dispositivo."
+          }
+        }
+      }
+    },
+    "An earlier retry ended when pantry access changed. Check the current stock.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An earlier retry ended when pantry access changed. Check the current stock."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reintento anterior dejó de estar disponible al cambiar el acceso a la despensa. Revisa las existencias actuales."
+          }
+        }
+      }
+    },
+    "Check the count and unit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the count and unit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad y la unidad."
+          }
+        }
+      }
+    },
+    "Check the food name, amount and exclusions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the food name, amount and exclusions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprueba el nombre, la cantidad y las exclusiones del alimento."
+          }
+        }
+      }
+    },
+    "Check the stock below. Retrying sends the same change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the stock below. Retrying sends the same change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las existencias a continuación. Al reintentar se envía el mismo cambio."
+          }
+        }
+      }
+    },
+    "Choose a delivery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una entrega"
+          }
+        }
+      }
+    },
+    "Choose the stored deliveries you bought. A reminder needs three comparable purchase days.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the stored deliveries you bought. A reminder needs three comparable purchase days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige las entregas guardadas que compraste. Un recordatorio requiere tres días de compras comparables."
+          }
+        }
+      }
+    },
+    "Clear saved retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear saved retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar el reintento guardado"
+          }
+        }
+      }
+    },
+    "Clear the saved retry after checking stock?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the saved retry after checking stock?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quieres eliminar el reintento guardado después de revisar las existencias?"
+          }
+        }
+      }
+    },
+    "Confirm and add food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm and add food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar y añadir el alimento"
+          }
+        }
+      }
+    },
+    "Confirm corrected count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm corrected count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la cantidad corregida"
+          }
+        }
+      }
+    },
+    "Confirm receipt for this household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm receipt for this household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar el recibo para este hogar"
+          }
+        }
+      }
+    },
+    "Confirm this purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar esta compra"
+          }
+        }
+      }
+    },
+    "Correct count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corregir cantidad"
+          }
+        }
+      }
+    },
+    "Corrected count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrected count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad corregida"
+          }
+        }
+      }
+    },
+    "Count corrected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count corrected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad corregida."
+          }
+        }
+      }
+    },
+    "Count corrected. Reload to see the updated stock.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count corrected. Reload to see the updated stock."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad corregida. Vuelve a cargar para ver las existencias actualizadas."
+          }
+        }
+      }
+    },
+    "Dismiss this reminder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss this reminder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar este recordatorio"
+          }
+        }
+      }
+    },
+    "Edit addition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit addition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar el alimento"
+          }
+        }
+      }
+    },
+    "Edit count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar cantidad"
+          }
+        }
+      }
+    },
+    "Edit purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar compra"
+          }
+        }
+      }
+    },
+    "Food added to the household pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food added to the household pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añadió el alimento a la despensa del hogar."
+          }
+        }
+      }
+    },
+    "Food added. Reload to see the updated stock.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food added. Reload to see the updated stock."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añadió el alimento. Vuelve a cargar la despensa para ver las existencias actualizadas."
+          }
+        }
+      }
+    },
+    "Food exclusions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food exclusions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusiones alimentarias"
+          }
+        }
+      }
+    },
+    "Forget this staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget this staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar este alimento"
+          }
+        }
+      }
+    },
+    "Forget this staple and its reviewed purchases?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget this staple and its reviewed purchases?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Olvidar este alimento y sus compras revisadas?"
+          }
+        }
+      }
+    },
+    "Grant access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar acceso"
+          }
+        }
+      }
+    },
+    "Grant pantry access?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant pantry access?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quieres dar acceso a la despensa?"
+          }
+        }
+      }
+    },
+    "Has pantry access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has pantry access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con acceso a la despensa"
+          }
+        }
+      }
+    },
+    "Household pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Despensa del hogar"
+          }
+        }
+      }
+    },
+    "I checked the stock. Clear retry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the stock. Clear retry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya revisé las existencias. Eliminar reintento."
+          }
+        }
+      }
+    },
+    "Load more food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más alimentos"
+          }
+        }
+      }
+    },
+    "Manage pantry access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage pantry access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administrar acceso a la despensa"
+          }
+        }
+      }
+    },
+    "Manual recall": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual recall"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorio manual"
+          }
+        }
+      }
+    },
+    "Need %@ this week?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Need %@ this week?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Necesitas %@ esta semana?"
+          }
+        }
+      }
+    },
+    "New staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo alimento habitual"
+          }
+        }
+      }
+    },
+    "No loaded delivery has a confirmed usable quantity.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No loaded delivery has a confirmed usable quantity."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna entrega cargada tiene una cantidad utilizable confirmada."
+          }
+        }
+      }
+    },
+    "No loaded delivery has reviewed purchase evidence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No loaded delivery has reviewed purchase evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna entrega cargada tiene comprobantes de compra revisados."
+          }
+        }
+      }
+    },
+    "No pantry access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pantry access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin acceso a la despensa"
+          }
+        }
+      }
+    },
+    "Only you can see and answer your reminders on your enrolled devices.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only you can see and answer your reminders on your enrolled devices."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo tú puedes ver y responder a tus recordatorios en tus dispositivos registrados."
+          }
+        }
+      }
+    },
+    "Pantry access has changed. Check household access again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry access has changed. Check household access again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió el acceso a la despensa. Vuelve a comprobar el acceso al hogar."
+          }
+        }
+      }
+    },
+    "Previous count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad anterior"
+          }
+        }
+      }
+    },
+    "Purchase day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día de la compra"
+          }
+        }
+      }
+    },
+    "Receipt saved. Reload to see the household food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt saved. Reload to see the household food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibo guardado. Vuelve a cargar para ver los alimentos del hogar."
+          }
+        }
+      }
+    },
+    "Received usable quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received usable quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable recibida"
+          }
+        }
+      }
+    },
+    "Refrigerator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refrigerator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refrigerador"
+          }
+        }
+      }
+    },
+    "Reload pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar la despensa"
+          }
+        }
+      }
+    },
+    "Reload pantry access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload pantry access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar permisos de la despensa"
+          }
+        }
+      }
+    },
+    "Remember a staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember a staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordar un alimento habitual"
+          }
+        }
+      }
+    },
+    "Remove access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar acceso"
+          }
+        }
+      }
+    },
+    "Remove from this staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from this staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar de este alimento habitual"
+          }
+        }
+      }
+    },
+    "Remove pantry access?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove pantry access?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quieres quitar el acceso a la despensa?"
+          }
+        }
+      }
+    },
+    "Remove this purchase from the reminder?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this purchase from the reminder?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitar esta compra del recordatorio?"
+          }
+        }
+      }
+    },
+    "Retry the same change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar el mismo cambio"
+          }
+        }
+      }
+    },
+    "Review a purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una compra"
+          }
+        }
+      }
+    },
+    "Review count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la cantidad"
+          }
+        }
+      }
+    },
+    "Review pantry addition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pantry addition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el alimento"
+          }
+        }
+      }
+    },
+    "Review purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar compra"
+          }
+        }
+      }
+    },
+    "Reviewed purchases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed purchases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras revisadas"
+          }
+        }
+      }
+    },
+    "Reviewed receipt saved to household pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed receipt saved to household pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el recibo revisado en la despensa del hogar."
+          }
+        }
+      }
+    },
+    "Saved pantry change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved pantry change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio guardado en la despensa"
+          }
+        }
+      }
+    },
+    "Shared pantry destination": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared pantry destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Despensa de destino"
+          }
+        }
+      }
+    },
+    "Snooze for one week": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snooze for one week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posponer una semana"
+          }
+        }
+      }
+    },
+    "Staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento habitual"
+          }
+        }
+      }
+    },
+    "Staple name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staple name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del alimento habitual"
+          }
+        }
+      }
+    },
+    "Staple reminders": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staple reminders"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorios de alimentos habituales"
+          }
+        }
+      }
+    },
+    "Still have it": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still have it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía tengo"
+          }
+        }
+      }
+    },
+    "Stored delivery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrega guardada"
+          }
+        }
+      }
+    },
+    "Stored food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos guardados"
+          }
+        }
+      }
+    },
+    "The pantry or its permissions changed. Reload and check the current stock.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pantry or its permissions changed. Reload and check the current stock."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La despensa o sus permisos cambiaron. Vuelve a cargar y revisa las existencias actuales."
+          }
+        }
+      }
+    },
+    "The result could not be confirmed. Reload the pantry to check stock and any saved retry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result could not be confirmed. Reload the pantry to check stock and any saved retry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo confirmar el resultado. Vuelve a cargar la despensa para revisar las existencias y los reintentos guardados."
+          }
+        }
+      }
+    },
+    "The retry period has ended.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The retry period has ended."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminó el plazo para reintentar."
+          }
+        }
+      }
+    },
+    "There are no other active adults to manage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no other active adults to manage."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay otros adultos activos a los que puedas dar acceso."
+          }
+        }
+      }
+    },
+    "Turn off my reminders": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off my reminders"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar mis recordatorios"
+          }
+        }
+      }
+    },
+    "Turn off reminders and forget your reviewed purchases?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off reminders and forget your reviewed purchases?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desactivar los recordatorios y olvidar tus compras revisadas?"
+          }
+        }
+      }
+    },
+    "Turn on my reminders": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on my reminders"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar mis recordatorios"
+          }
+        }
+      }
+    },
+    "Use the receipt to check the purchase day and the amount of usable food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the receipt to check the purchase day and the amount of usable food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulta el recibo para verificar el día de la compra y la cantidad de alimento utilizable."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

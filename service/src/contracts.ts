@@ -1,5 +1,7 @@
+import {cookBodies} from './cook-completion-contracts.js';
 import {demandReviewSchema} from './shared-demand-contracts.js';
 import { recoveryPreviewSchema, pantryBodies, deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
+import { recipeReview } from './meal-preferences.js';
 import { z } from 'zod';
 import { sharedMealSchema } from './shared-meal-planning.js';
 import {reviewedPackEvidenceSchema,matchesReviewedPack} from './request-pack-evidence.js';
@@ -18,22 +20,32 @@ export const quoteSchema = z.object({
   taxesMinor: minor.nullable(), depositsMinor: minor.nullable(), discountsMinor: minor.nullable(),
   observedAt: timestamp, expiresAt: timestamp,
 }).strict().refine(q => Date.parse(q.expiresAt)>Date.parse(q.observedAt), 'Quote expiry must follow observation');
+const sameItemTarget = z.discriminatedUnion('kind', [
+  z.object({kind:z.literal('meal'),factId:uuid.toLowerCase(),factRevision:z.int().positive()}).strict(),
+  z.object({kind:z.literal('purchase'),sourceRequestId:uuid.toLowerCase(),sourceRequestRevision:z.int().positive(),
+    lineId:uuid.toLowerCase(),placedRevision:z.int().positive()}).strict(),
+]);
 export const decisionSchema = z.discriminatedUnion('choice', [
   z.object({ choice: z.literal('add'), line: lineSchema, promote: z.boolean().default(false), reviewedPackEvidence: reviewedPackEvidenceSchema.optional() }).strict(),
   z.object({ choice: z.literal('link'), lineId: uuid, promote: z.boolean().default(false) }).strict(),
+  z.object({choice:z.literal('sameItem'),target:sameItemTarget}).strict(),
+  z.object({choice:z.literal('reviewRequestPair'),otherRequestId:uuid.toLowerCase(),otherRequestRevision:z.int().positive(),relationship:z.enum(['sameItem','additionalQuantity'])}).strict(),
+  z.object({choice:z.literal('undoRequestPair'),operationId:uuid.toLowerCase()}).strict(),
+  z.object({choice:z.literal('undoSameItem'),operationId:uuid.toLowerCase()}).strict(),
   z.object({ choice: z.enum(['defer','dismiss','handled']) }).strict(),
  ]).superRefine((decision,ctx)=>{
   if(decision.choice==='add'&&decision.reviewedPackEvidence&&!matchesReviewedPack(decision.line,decision.reviewedPackEvidence))ctx.addIssue({code:'custom',message:'Reviewed pack evidence must match the chosen sufficient available whole packs',path:['reviewedPackEvidence']});
 });
 export const previewSchema = z.object({ requestId: uuid, base: z.object({ shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), requestRevision: z.number().int().positive() }).strict(), decision: decisionSchema }).strict();
+export const chooseTonight=z.object({v:z.literal(1),recipeId:uuid.toLowerCase(),recipeRevision:z.number().int().positive().max(2147483647),grantEpoch:z.number().int().nonnegative().max(2147483647),reviewToken:z.string().regex(/^[a-f0-9]{64}$/),day:z.iso.date().nullable(),occurrenceId:uuid.toLowerCase()}).strict();
 export const envelopeSchema = z.object({
   v: z.literal(1), replayWindow: uuid, clientKey: uuid, shopId: uuid,
-  kind: z.enum(['amendment.recordResponse','mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.undoAcceptance','request.confirmPurchase','request.carry']),
+  kind: z.enum(['meal.chooseTonight','cook.complete','cook.resolve','cook.undo','amendment.recordResponse','mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.undoAcceptance','request.confirmPurchase','request.carry']),
   base: z.object({ shopRevision: z.number().int().min(0), authorityEpoch: z.number().int().min(0), requestRevision: z.number().int().positive().optional() }).strict(),
   body: z.record(z.string(),z.unknown()),
 }).strict();
 const empty = z.object({}).strict();
-const mealEdit = z.object({ occurrenceId: uuid, baseMealRevision: z.number().int().positive().nullable(), meal: sharedMealSchema.nullable(), proposalId: uuid.optional(), changeProposalId: uuid.optional() }).strict()
+const mealEdit = z.object({ dinnerSwap:z.literal(true).optional(), preferenceReview:recipeReview.optional(), occurrenceId: uuid, baseMealRevision: z.number().int().positive().nullable(), meal: sharedMealSchema.nullable(), proposalId: uuid.optional(), changeProposalId: uuid.optional() }).strict()
   .refine(value => !(value.proposalId && value.changeProposalId), 'Review one proposal at a time');
 const copyId = uuid.toLowerCase();
 const copyRevision = z.number().int().min(1).max(2_147_483_647);
@@ -87,8 +99,10 @@ export const bodySchemas = {
   'amendment.recordResponse':amendmentResponseBody,
   'mealRecovery.apply':recoveryApplyBody,
   ...pantryBodies,
+  ...cookBodies,
   'cookCopy.save':cookCopySaveBody, 'cookCopy.markSent':cookCopySendBody,
   'delivery.reserve': deliveryReservationBody, 'delivery.match': deliveryMatchBody, 'delivery.register': deliverySourceBody, 'delivery.arrival': deliveryArrivalBody, 'delivery.usable': deliveryUsableBody,
+  'meal.chooseTonight':chooseTonight,
   'shop.create': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200) }).strict(),
   'shop.patch': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200), mealEdit: mealEdit.optional(), demandReview:demandReviewSchema.optional(), reviewedStoreBasisRevision: z.number().int().positive().optional() }).strict(),
   'shop.freeze': z.object({trackingReview:demandReviewSchema.optional()}).strict(), 'shop.reopen': empty,
@@ -100,7 +114,11 @@ export const bodySchemas = {
   'request.withdraw': z.object({ requestId: uuid }).strict(),
   'request.carry': z.object({sourceShopId:copyId,sourceAuthorityEpoch:copyRevision,requestId:copyId}).strict(),
   'request.confirmPurchase': z.object({requestId:uuid.toLowerCase(),lineId:uuid.toLowerCase(),placedRevision:copyRevision,
-    outcome:z.enum(['bought','notBought','unknown'])}).strict(),
+    outcome:z.enum(['bought','notBought','unknown']),
+    reportedPurchaser:z.discriminatedUnion('kind',[
+      z.object({kind:z.literal('unknown')}).strict(), z.object({kind:z.literal('self')}).strict(),
+      z.object({kind:z.literal('requestAuthor'),requestId:uuid.toLowerCase(),requestRevision:copyRevision,expectedAlias:z.string().min(1).max(240)}).strict()
+    ]).optional()}).strict().refine(body=>!body.reportedPurchaser||body.outcome==='bought'),
   'request.clarify': z.object({ requestId: uuid, question: z.string().trim().min(1).max(300) }).strict(),
   'request.undoAcceptance':z.object({targetOperationId:uuid.toLowerCase(),requestId:uuid.toLowerCase(),baseRequestRevision:copyRevision,lines:z.array(lineSchema.extend({originalItem:z.string().min(1).max(240).refine(x=>x===x.trim()),feeEligible:z.boolean()})).max(200),quote:quoteSchema,operationUndoReview:z.object({previewId:uuid.toLowerCase(),previewDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict()}).strict(),
   'request.apply': z.object({ requestId: uuid, previewId: uuid, acceptOverage: z.boolean(), acceptUnknown: z.boolean(), demandReview:demandReviewSchema.optional() }).strict(),

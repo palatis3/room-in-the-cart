@@ -17,7 +17,7 @@ private struct CaptureProvider: TimelineProvider {
     }
 }
 
-@main struct RoomInTheCartWidget: Widget {
+struct RoomInTheCartWidget: Widget {
     let kind = "RoomInTheCartCapture"
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: CaptureProvider()) { entry in
@@ -28,5 +28,70 @@ private struct CaptureProvider: TimelineProvider {
         }.configurationDisplayName(SurfaceCopy.text("Grocery entry"))
             .description(SurfaceCopy.text("Open the app to review an entry. Private details stay in the app."))
             .supportedFamilies([.systemSmall, .accessoryCircular, .accessoryRectangular, .accessoryInline])
+    }
+}
+
+private struct FoodEntry: TimelineEntry {
+    let date: Date
+    let summary: AdultFoodSummaryProjection?
+}
+
+private struct FoodProvider: TimelineProvider {
+    let kind: AdultFoodSummaryKind
+    func placeholder(in context: Context) -> FoodEntry { FoodEntry(date: Date(), summary: nil) }
+    func getSnapshot(in context: Context, completion: @escaping (FoodEntry) -> Void) {
+        completion(placeholder(in: context))
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<FoodEntry>) -> Void) {
+        let now = Date()
+        guard context.family == .systemMedium, !context.isPreview,
+              let directory = try? IOSSurfaceContainers.directory(groupKey: SurfaceInfo.widgetGroupKey),
+              let value = try? AdultFoodSummaryFile(directory: directory, kind: kind).read(),
+              value.isFresh(at: now, zone: .current) else {
+            completion(Timeline(entries: [FoodEntry(date: now, summary: nil)], policy: .never)); return
+        }
+        completion(Timeline(entries: [FoodEntry(date: now, summary: value),
+                                      FoodEntry(date: value.expiresAt, summary: nil)], policy: .atEnd))
+    }
+}
+
+private protocol AdultFoodWidget: Widget { var kind: AdultFoodSummaryKind { get } }
+
+private extension AdultFoodWidget {
+    var title: String { SurfaceCopy.text(kind == .useSoon ? "Use soon" : "Tonight") }
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind.widgetKind, provider: FoodProvider(kind: kind)) { entry in
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title).font(.headline)
+                if let summary = entry.summary, summary.isFresh(at: Date(), zone: .current) {
+                    if summary.plannedDinner == true && summary.count == 1 {
+                        Text(SurfaceCopy.text("Planned for tonight"))
+                    } else {
+                        let format = kind == .useSoon ? SurfaceCopy.text("Batches to check today or earlier: %lld")
+                            : summary.plannedDinner == true ? SurfaceCopy.text("%lld dinners planned")
+                            : SurfaceCopy.text("Reviewed meal options: %lld")
+                        Text(String(format: format, locale: Locale.current, Int64(summary.count)))
+                    }
+                    if let title = summary.reviewedTitle { Text(verbatim: title).lineLimit(2) }
+                } else { Text(SurfaceCopy.text("Open the app to review this item")) }
+            }.privacySensitive()
+                .widgetURL(entry.summary.flatMap { (try? IOSSurfaceContainers.urls())?.url(handle: $0.route) })
+                .containerBackground(.fill.tertiary, for: .widget)
+        }.configurationDisplayName(title)
+            .description(SurfaceCopy.text("Show a private summary after turning it on in the app."))
+            .supportedFamilies([.systemMedium])
+            .containerBackgroundRemovable(false)
+            .disfavoredLocations([.lockScreen, .standBy, .iPhoneWidgetsOnMac], for: [.systemMedium])
+    }
+}
+
+private struct TonightWidget: AdultFoodWidget { let kind = AdultFoodSummaryKind.tonight }
+private struct UseSoonWidget: AdultFoodWidget { let kind = AdultFoodSummaryKind.useSoon }
+
+@main struct GroceryWidgets: WidgetBundle {
+    var body: some Widget {
+        RoomInTheCartWidget()
+        UseSoonWidget()
+        TonightWidget()
     }
 }

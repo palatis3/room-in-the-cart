@@ -6323,6 +6323,246 @@
           }
         }
       }
+    },
+    "Close without saving these changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close without saving these changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar sin guardar estos cambios"
+          }
+        }
+      }
+    },
+    "Add by photo or voice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add by photo or voice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir con foto o voz"
+          }
+        }
+      }
+    },
+    "Resume list draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume list draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar con el borrador de la lista"
+          }
+        }
+      }
+    },
+    "Add a list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una lista"
+          }
+        }
+      }
+    },
+    "Draft unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador no disponible"
+          }
+        }
+      }
+    },
+    "Reopen the private shopping list to check the current workspace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the private shopping list to check the current workspace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir la lista de compras privada para comprobar el espacio de trabajo actual."
+          }
+        }
+      }
+    },
+    "The shopping workspace changed. Review your draft wording again before creating a pickup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shopping workspace changed. Review your draft wording again before creating a pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El espacio de compras ha cambiado. Revisa de nuevo el texto del borrador antes de crear un pedido para recoger."
+          }
+        }
+      }
+    },
+    "Review as a new pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review as a new pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar como un nuevo pedido para recoger"
+          }
+        }
+      }
+    },
+    "Discard draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar el borrador"
+          }
+        }
+      }
+    },
+    "This draft changed or expired. Reopen it to review the saved version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This draft changed or expired. Reopen it to review the saved version."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El borrador cambió o caducó. Vuelve a abrirlo para revisar la versión guardada."
+          }
+        }
+      }
+    },
+    "Draft could not be saved. Keep this screen open or reopen the saved version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft could not be saved. Keep this screen open or reopen the saved version."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar el borrador. Mantén abierta esta pantalla o vuelve a abrir la versión guardada."
+          }
+        }
+      }
+    },
+    "Saving draft on this device…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving draft on this device…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando el borrador en este dispositivo…"
+          }
+        }
+      }
+    },
+    "A private draft expires 7 days after your last edit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A private draft expires 7 days after your last edit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El borrador privado caduca 7 días después del último cambio."
+          }
+        }
+      }
+    },
+    "Private draft saved on this device. It expires 7 days after your last edit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private draft saved on this device. It expires 7 days after your last edit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador privado guardado en este dispositivo. Caduca 7 días después del último cambio."
+          }
+        }
+      }
+    },
+    "Retry saving draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry saving draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar guardar el borrador"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

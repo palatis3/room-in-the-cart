@@ -32,6 +32,10 @@ struct SurfaceRuntimeIsolation {
         guard shouldReset else { return }
         if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
     }
+    func makeReceiptInbox(live: () throws -> SharedCaptureInbox) throws -> SharedCaptureInbox {
+        if isUITesting { return try SharedCaptureInbox(url: directory.appendingPathComponent("test-receipts.sqlite")) }
+        return try live()
+    }
     func makeInbox(live: () throws -> SelectedTextInbox) throws -> SelectedTextInbox {
         if isUITesting { return try SelectedTextInbox(url: directory.appendingPathComponent("TestInbox/selected-text.sqlite")) }
         return try live()

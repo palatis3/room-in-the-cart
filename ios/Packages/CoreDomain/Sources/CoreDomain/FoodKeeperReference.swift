@@ -1,9 +1,9 @@
 import Foundation
 
-public enum FoodKeeperStorage: String, CaseIterable, Sendable { case pantry, refrigerator, freezer }
-public enum FoodKeeperStartingEvent: Sendable { case purchased, opened, thawed }
+public enum FoodKeeperStorage: String, Codable, CaseIterable, Sendable { case pantry, refrigerator, freezer }
+public enum FoodKeeperStartingEvent: String, Codable, Sendable { case purchased, opened, thawed }
 
-public enum FoodKeeperCondition: String, CaseIterable, Sendable {
+public enum FoodKeeperCondition: String, Codable, CaseIterable, Sendable {
     case pantry, pantryPurchased = "from_date_of_purchase_pantry", pantryOpened = "pantry_after_opening"
     case refrigerated = "refrigerate", refrigeratedPurchased = "from_date_of_purchase_refrigerate"
     case refrigeratedOpened = "refrigerate_after_opening", refrigeratedThawed = "refrigerate_after_thawing"
@@ -106,6 +106,23 @@ public struct FoodKeeperProduct: Identifiable, Decodable, Sendable {
     }
 }
 
+/// A shopper-confirmed source interval, retained with the edition and civil dates that produced it.
+public struct FoodKeeperReviewedRange: Codable, Equatable, Sendable {
+    public let version: Int
+    public let productID: Int
+    public let storage: FoodKeeperStorage
+    public let condition: FoodKeeperCondition
+    public let event: FoodKeeperStartingEvent
+    public let start: MealDay
+    public let earliest: MealDay
+    public let latest: MealDay
+
+    public func matches(_ reference: FoodKeeperReference, asOf today: MealDay) -> Bool {
+        reference.reviewedRange(productID: productID, condition: condition, storage: storage, event: event,
+                                start: start, asOf: today, historyConfirmed: true) == self
+    }
+}
+
 public struct FoodKeeperReference: Sendable {
     public let version: Int
     public let products: [FoodKeeperProduct]
@@ -120,6 +137,16 @@ public struct FoodKeeperReference: Sendable {
         guard file.version == 128, !file.products.isEmpty, file.products.allSatisfy(\.valid),
               Set(file.products.map(\.id)).count == file.products.count else { throw Failure.invalid }
         return FoodKeeperReference(version: file.version, products: file.products)
+    }
+
+    public func reviewedRange(productID: Int, condition: FoodKeeperCondition, storage: FoodKeeperStorage,
+                              event: FoodKeeperStartingEvent, start: MealDay, asOf today: MealDay,
+                              historyConfirmed: Bool) -> FoodKeeperReviewedRange? {
+        guard let product = products.first(where: { $0.id == productID }),
+              let range = product.window(for: condition, storage: storage, event: event, start: start,
+                                         asOf: today, historyConfirmed: historyConfirmed) else { return nil }
+        return .init(version: version, productID: productID, storage: storage, condition: condition, event: event,
+                     start: start, earliest: range.earliest, latest: range.latest)
     }
 
     public func suggestedTerms(for text: String) -> [String] {

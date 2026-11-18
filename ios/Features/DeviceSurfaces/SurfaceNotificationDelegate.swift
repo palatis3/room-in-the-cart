@@ -25,6 +25,11 @@ import DeviceSurfaces
     }
 
     func acceptTap(actionIdentifier: String, userInfo: [AnyHashable: Any]) {
+        if actionIdentifier == UNNotificationDefaultActionIdentifier, userInfo.count == 1,
+           let raw = userInfo["pantryDigest"] as? String, let token = UUID(uuidString: raw) {
+            PantryDigestStore.shared.tapped = token
+            return
+        }
         guard actionIdentifier == UNNotificationDefaultActionIdentifier,
               let info = userInfo as? [String: String], Set(info.keys) == ["surfaceHandle"],
               let raw = info["surfaceHandle"], let handle = try? RouteHandle(raw) else { return }

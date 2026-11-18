@@ -91,7 +91,13 @@ public struct MealRecoveryEvent: Codable, Equatable, Sendable, Identifiable {
     public let stockEvidence: [RecoveryStockEvidence]
     public let reservations: [ConfirmedStockReservation]
     public let appliedAt: Date
+    public let canonicalAllocation: CanonicalRecoveryAllocation?
     public var id: UUID { request.id }
+    init(request: MealRecoveryRequest, stockEvidence: [RecoveryStockEvidence], reservations: [ConfirmedStockReservation],
+         appliedAt: Date, canonicalAllocation: CanonicalRecoveryAllocation? = nil) {
+        self.request = request; self.stockEvidence = stockEvidence; self.reservations = reservations
+        self.appliedAt = appliedAt; self.canonicalAllocation = canonicalAllocation
+    }
 }
 
 /// This value contains meal history only. Purchase lines, receipts, charges, templates
@@ -129,6 +135,9 @@ public struct MealRecoveryReview: Equatable, Sendable {
     public let source: MealRecoveryState
     public let stockEvidence: [RecoveryStockEvidence]
     public let reservations: [ConfirmedStockReservation]
+    public let canonicalAllocation: CanonicalRecoveryAllocation?
+    /// Exact complete resulting graph for the app to compare before journaling.
+    public let canonicalAfterClaims: [InventoryReservation]?
     public let before: MealRecoveryProjection
     public let after: MealRecoveryProjection
     public let beforeAllocation: StockAllocationResult
@@ -151,6 +160,33 @@ public struct MealRecoveryReview: Equatable, Sendable {
 
 public enum MealRecoveryEngine {
     public static func project(_ state: MealRecoveryState) throws -> MealRecoveryProjection {
+        try project(state, verifyingReplacements: [])
+    }
+
+    /// Persisted cooking receipts can refer to a replacement that has since moved
+    /// or been replaced again. Verify all referenced versions during one replay.
+    public static func project(_ state: MealRecoveryState, verifyingReplacements recorded: [RecoveryMeal]) throws -> MealRecoveryProjection {
+        try replay(state, verifying: recorded) { _, _, _ in }
+    }
+
+    /// Read the original transaction's exact resulting demand/claim graph from its immutable proof.
+    public static func recordedResult(_ operation: UUID, in state: MealRecoveryState) throws -> (MealRecoveryProjection, [InventoryReservation]?) {
+        var result: (MealRecoveryProjection, [InventoryReservation]?)?
+        _ = try replay(state, verifying: []) { event, projection, claims in
+            if event.id == operation { result = (projection, claims) }
+        }
+        guard let result else { throw MealRecoveryError.stale }
+        return result
+    }
+
+    private static func replay(_ state: MealRecoveryState, verifying recorded: [RecoveryMeal],
+                               observe: (MealRecoveryEvent, MealRecoveryProjection, [InventoryReservation]?) -> Void) throws -> MealRecoveryProjection {
+        var pending: [UUID: RecoveryMeal] = [:]
+        for meal in recorded {
+            if let existing = pending[meal.revisionID], existing != meal { throw MealRecoveryError.invalid }
+            pending[meal.revisionID] = meal
+        }
+        var replaced = Set<UUID>()
         guard state.originalMeals.count <= 1_000, state.events.count <= 1_000,
               Set(state.originalMeals.map(\.id)).count == state.originalMeals.count,
               Set(state.originalMeals.map(\.revisionID)).count == state.originalMeals.count else { throw MealRecoveryError.invalid }
@@ -175,9 +211,12 @@ public enum MealRecoveryEngine {
                       priorInstant.map({ event.appliedAt >= $0 }) ?? true else { throw MealRecoveryError.invalid }
                 let result = try evaluate(event.request, shopID: state.shopID, current: current,
                     outside: current.outsideDemands, usedNeeds: usedNeeds, usedRevisions: usedRevisions,
-                    knownTemplates: knownTemplates, evidence: event.stockEvidence, reservations: event.reservations, at: event.appliedAt)
+                    knownTemplates: knownTemplates, evidence: event.stockEvidence, reservations: event.reservations,
+                    canonicalAllocation: event.canonicalAllocation, at: event.appliedAt)
                 try consent(event.request, feasible: result.food && result.timing, repeats: result.repeats)
+                if !pending.isEmpty { replaced.insert(event.request.replacement.id) }
                 current = result.after
+                observe(event, current, result.afterClaims)
                 usedNeeds.formUnion(event.request.replacement.needs.map(\.id))
                 usedRevisions.insert(event.request.replacement.revisionID)
                 if let template = event.request.replacement.templateID { knownTemplates.insert(template) }
@@ -192,42 +231,62 @@ public enum MealRecoveryEngine {
                 priorInstant = event.appliedAt
                 remainingContexts.removeAll { $0.id == event.id }
             }
+            if let meal = pending.removeValue(forKey: current.revisionID) {
+                guard replaced.contains(meal.id), current.meals.contains(meal) else { throw MealRecoveryError.invalid }
+            }
         }
+        guard pending.isEmpty else { throw MealRecoveryError.invalid }
         return current
     }
 
     public static func preview(_ request: MealRecoveryRequest, in state: MealRecoveryState,
                                stockEvidence: [RecoveryStockEvidence], reservations: [ConfirmedStockReservation],
-                               at instant: Date) throws -> MealRecoveryReview {
+                               canonicalAllocation: CanonicalRecoveryAllocation? = nil, at instant: Date) throws -> MealRecoveryReview {
         let current = try project(state)
         let meals = state.originalMeals + state.events.map { $0.request.replacement }
         let result = try evaluate(request, shopID: state.shopID, current: current, outside: current.outsideDemands,
             usedNeeds: Set(meals.flatMap(\.needs).map(\.id) + current.outsideDemands.map(\.id)),
             usedRevisions: Set(meals.map(\.revisionID) + [state.originalRevisionID] + state.contextChanges.map { $0.request.revisionID }),
-            knownTemplates: Set(meals.compactMap(\.templateID)), evidence: stockEvidence, reservations: reservations, at: instant)
+            knownTemplates: Set(meals.compactMap(\.templateID)), evidence: stockEvidence, reservations: reservations,
+            canonicalAllocation: canonicalAllocation, at: instant)
         return MealRecoveryReview(request: request, source: state, stockEvidence: stockEvidence, reservations: reservations,
+            canonicalAllocation: canonicalAllocation, canonicalAfterClaims: result.afterClaims,
             before: current, after: result.after, beforeAllocation: result.beforeAllocation, afterAllocation: result.afterAllocation,
             foodConfirmed: result.food, timingConfirmed: result.timing, repeatRequired: result.repeats)
+    }
+
+    public static func preview(_ request: MealRecoveryRequest, in state: MealRecoveryState,
+                               canonicalAllocation: CanonicalRecoveryAllocation, at instant: Date) throws -> MealRecoveryReview {
+        try preview(request, in: state, stockEvidence: [], reservations: [], canonicalAllocation: canonicalAllocation, at: instant)
+    }
+
+    @discardableResult public static func apply(_ review: MealRecoveryReview, to state: inout MealRecoveryState,
+                                               canonicalAllocation: CanonicalRecoveryAllocation,
+                                               at instant: Date) throws -> MealRecoveryEvent {
+        try apply(review, to: &state, stockEvidence: [], reservations: [], canonicalAllocation: canonicalAllocation, at: instant)
     }
 
     /// Domain validation is not authorization. The local/server adapter must recheck
     /// current actor/scope even for retries, then atomically persist this value by CAS.
     @discardableResult public static func apply(_ review: MealRecoveryReview, to state: inout MealRecoveryState,
                                                stockEvidence: [RecoveryStockEvidence], reservations: [ConfirmedStockReservation],
+                                               canonicalAllocation: CanonicalRecoveryAllocation? = nil,
                                                at instant: Date) throws -> MealRecoveryEvent {
         _ = try project(state)
         if let existing = state.events.first(where: { $0.id == review.request.id }) {
             guard existing.request == review.request, existing.stockEvidence == review.stockEvidence,
-                  existing.reservations == review.reservations else { throw MealRecoveryError.operationConflict }
+                  existing.reservations == review.reservations, existing.canonicalAllocation == review.canonicalAllocation else { throw MealRecoveryError.operationConflict }
             return existing
         }
-        guard state == review.source, stockEvidence == review.stockEvidence, reservations == review.reservations else {
+        guard state == review.source, stockEvidence == review.stockEvidence, reservations == review.reservations,
+              canonicalAllocation == review.canonicalAllocation else {
             throw MealRecoveryError.stale
         }
-        let fresh = try preview(review.request, in: state, stockEvidence: stockEvidence, reservations: reservations, at: instant)
+        let fresh = try preview(review.request, in: state, stockEvidence: stockEvidence, reservations: reservations,
+            canonicalAllocation: canonicalAllocation, at: instant)
         guard fresh == review else { throw MealRecoveryError.stale }
         try consent(review.request, feasible: fresh.feasible, repeats: fresh.repeatRequired)
-        let event = MealRecoveryEvent(request: review.request, stockEvidence: stockEvidence, reservations: reservations, appliedAt: instant)
+        let event = MealRecoveryEvent(request: review.request, stockEvidence: stockEvidence, reservations: reservations, appliedAt: instant, canonicalAllocation: canonicalAllocation)
         var candidate = state; candidate.append(event)
         _ = try project(candidate)
         state = candidate
@@ -238,13 +297,15 @@ public enum MealRecoveryEngine {
         let after: MealRecoveryProjection
         let beforeAllocation: StockAllocationResult
         let afterAllocation: StockAllocationResult
+        let afterClaims: [InventoryReservation]?
         let food: Bool
         let timing: Bool
         let repeats: Bool
     }
     private static func evaluate(_ request: MealRecoveryRequest, shopID: UUID, current: MealRecoveryProjection,
                                  outside: [StockNeed], usedNeeds: Set<UUID>, usedRevisions: Set<UUID>, knownTemplates: Set<UUID>,
-                                 evidence: [RecoveryStockEvidence], reservations: [ConfirmedStockReservation], at instant: Date) throws -> Evaluation {
+                                 evidence: [RecoveryStockEvidence], reservations: [ConfirmedStockReservation],
+                                 canonicalAllocation: CanonicalRecoveryAllocation?, at instant: Date) throws -> Evaluation {
         guard instant.timeIntervalSinceReferenceDate.isFinite, request.reviewedAt.timeIntervalSinceReferenceDate.isFinite,
               request.reviewedAt <= instant, request.shopID == shopID, request.baseRevisionID == current.revisionID,
               let index = current.meals.firstIndex(where: { $0.id == request.target.id }),
@@ -277,8 +338,18 @@ public enum MealRecoveryEngine {
         // Validate even retained future evidence; availability only affects counting.
         _ = try ConfirmedStockAllocator.allocate(lots: evidence.map(\.lot), needs: [])
         let lots = evidence.filter { $0.availableAt <= instant }.map(\.lot)
-        let beforeAllocation = try ConfirmedCarryoverAllocator.allocate(lots: lots, needs: current.demands, reservations: reservations)
-        let afterAllocation = try ConfirmedCarryoverAllocator.allocate(lots: lots, needs: after.demands, reservations: reservations)
+        let beforeAllocation: StockAllocationResult, afterAllocation: StockAllocationResult
+        let afterClaims: [InventoryReservation]?
+        if let canonical = canonicalAllocation {
+            guard evidence.isEmpty, reservations.isEmpty, canonical.asOf == request.reviewedAt,
+                  canonical.basis.sourceHeads.contains(where: { $0.journeyID == shopID }) else { throw MealRecoveryError.invalid }
+            let result = try canonical.evaluate(before: current.demands, after: after.demands, replacedNeedIDs: replacedIDs)
+            beforeAllocation = result.before; afterAllocation = result.after; afterClaims = result.afterClaims
+        } else {
+            beforeAllocation = try ConfirmedCarryoverAllocator.allocate(lots: lots, needs: current.demands, reservations: reservations)
+            afterAllocation = try ConfirmedCarryoverAllocator.allocate(lots: lots, needs: after.demands, reservations: reservations)
+            afterClaims = nil
+        }
         let affectedFoods = Set((old.needs + new.needs).filter { $0.priority != .protected }.map(\.foodID))
         for need in current.demands where !replacedIDs.contains(need.id) {
             guard after.demands.first(where: { $0.id == need.id }) == need,
@@ -306,7 +377,10 @@ public enum MealRecoveryEngine {
         }
         // Apply the same saved exclusion vocabulary to named ingredients and actual
         // matched lots, without inventing medical judgments or identity from labels.
-        let names = new.ingredients.map(\.foodName) + lots.filter { lot in new.needs.contains { $0.foodID == lot.foodID } }.map(\.name)
+        let matchedFoods = Set(new.needs.map(\.foodID))
+        let matchedNames = canonicalAllocation.map { $0.lots.filter { matchedFoods.contains($0.foodID) }.map(\.name) } ??
+            lots.filter { matchedFoods.contains($0.foodID) }.map(\.name)
+        let names = new.ingredients.map(\.foodName) + matchedNames
         for name in names {
             let recipe = MealTemplate(id: new.id, title: new.title,
                 ingredients: [MealIngredient(id: new.id, name: name, quantity: nil)], exclusions: new.exclusions)
@@ -319,7 +393,7 @@ public enum MealRecoveryEngine {
             timing = instant.addingTimeInterval(TimeInterval(minutes) * 60) <= due &&
                 (new.requiredLeadMinutes.map { minutes >= $0 || new.advanceStepsCompleted } ?? true)
         } else { timing = false }
-        return Evaluation(after: after, beforeAllocation: beforeAllocation, afterAllocation: afterAllocation, food: food,
+        return Evaluation(after: after, beforeAllocation: beforeAllocation, afterAllocation: afterAllocation, afterClaims: afterClaims, food: food,
                           timing: timing, repeats: new.templateID.map(knownTemplates.contains) ?? false)
     }
     private static func consent(_ request: MealRecoveryRequest, feasible: Bool, repeats: Bool) throws {

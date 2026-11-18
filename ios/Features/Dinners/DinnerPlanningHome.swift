@@ -28,6 +28,7 @@ extension LedgerModel: DinnerWorkspaceStore {}
 struct DinnerWorkspaceView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
     @Environment(\.pickupLedger) private var liveLedger
+    @Environment(\.dinnerHousehold) private var household
     let startPickup: () -> Void
     @ViewBuilder let saveStatus: () -> SaveStatus
     @State private var weekStart = Date()
@@ -39,6 +40,15 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     Text(dinnerText("Plan dinners, one decision at a time.")).font(.title2.bold())
                     if let shop = model.shop { Text(shop.title).font(.headline) }
                     Text(dinnerText("Manual dinners and calendar changes stay available on Free. A preview changes nothing until you apply it."))
+                }
+                if let household { HouseholdTonightLink(household: household) }
+                if let liveLedger, liveLedger.ready, model.store === liveLedger {
+                    Section {
+                        NavigationLink(dinnerText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: liveLedger) }
+                            .accessibilityIdentifier("dinner.mealPreferences")
+                        NavigationLink(tonightText("Tonight")) { TonightEntry() }
+                            .accessibilityIdentifier("dinner.tonight")
+                    }
                 }
                 if model.shop == nil {
                     Section {
@@ -62,6 +72,10 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                 DinnerWeekView(model: model, shopID: shop.id, weekStart: $weekStart,
                                     showWeekGrid: $showWeekGrid, saveStatus: saveStatus)
                             }.accessibilityIdentifier("dinnerWeekEntry")
+                            DinnerDecisionButton(model: model, title: dinnerText("Repeat last week"),
+                                                 identifier: "dinner.repeatWeek") {
+                                DinnerRepeatWeekView(model: model, initialDate: weekStart)
+                            }.disabled(!model.editable)
                         }
                     }
                     Section(dinnerText("Plan")) {
@@ -77,7 +91,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                         NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }
                         if model.budgetVisible {
                             if let shop = model.shop {
-                                DinnerDecisionButton(model: model, title: dinnerText("Pairing and fallback evidence"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
+                                DinnerDecisionButton(model: model, title: dinnerText("Price a dinner plan or compare pairings"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
                             }
                             NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
                         }
@@ -272,6 +286,9 @@ struct DinnerPreviewView: View {
         List {
             Group {
                 if let preview = model.preview, model.canReviewPreview {
+                    if let detail = model.currentSwapReview {
+                        DinnerSwapEvidenceView(review: detail, showPrices: model.budgetVisible)
+                    }
                     Section {
                         Text(dinnerText("Review before applying")).font(.title2.bold())
                         Text(dinnerText("Only the changes listed here will be applied. Cancel keeps your saved pickup unchanged."))

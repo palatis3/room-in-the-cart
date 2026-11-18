@@ -21,7 +21,7 @@ const server=createHTTPServer({repository:repo,verifier,billing:new BillingServi
 let origin;
 before(async()=>{await admin.query('CREATE SCHEMA IF NOT EXISTS auth; CREATE TABLE IF NOT EXISTS auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz)');await migrate(adminURL);await assertRuntimeRole(runtime);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;});
 after(async()=>{await new Promise(resolve=>server.close(resolve));await Promise.all([runtime.end(),admin.end()]);});
-async function fixture() {
+async function fixture({createShop=true}={}) {
   const h=randomUUID(),shopId=randomUUID(),lineId=randomUUID(),actors={};
   const c=await admin.connect();try{
     await c.query('BEGIN');await c.query('INSERT INTO ritc.household(household_id,label) VALUES($1,$2)',[h,'Fictional household']);
@@ -61,7 +61,7 @@ async function fixture() {
   const line={lineId,originalItem:'Original basket',packs:1,unitPriceMinor:3720,feeEligible:true};
   function envelope(actor,kind,body,base={shopRevision:1,authorityEpoch:1},key=randomUUID()){return{v:1,replayWindow:actors[actor].window,clientKey:key,shopId,kind,base,body};}
   async function command(actor,kind,body,base,key){return http(actor,'POST','/commands',envelope(actor,kind,body,base,key));}
-  const created=await command('Mia','shop.create',{quote,lines:[line]},{shopRevision:0,authorityEpoch:0});assert.equal(created.status,200,JSON.stringify(created.data));
+  if(createShop){const created=await command('Mia','shop.create',{quote,lines:[line]},{shopRevision:0,authorityEpoch:0});assert.equal(created.status,200,JSON.stringify(created.data));}
   async function send(actor='Sam',extra={}){const payload={clientRequestId:randomUUID(),originalItem:'Fictional cereal',ownQuantity:'one box',authoredAt:new Date().toISOString(),...extra};const c=envelope(actor,'request.send',payload,{shopRevision:0,authorityEpoch:0});const response=await http(actor,'POST','/commands',c);assert.equal(response.status,200,JSON.stringify(response.data));return{...response.data,envelope:c};}
   async function preview(request,decision={choice:'add',line:{lineId:randomUUID(),originalItem:'Fictional cereal',packs:1,unitPriceMinor:349,feeEligible:true},promote:false},actor='Mia',base={shopRevision:1,authorityEpoch:1,requestRevision:request.revision}) {
     return http(actor,'POST','/shops/'+shopId+'/previews',{requestId:request.requestId,base,decision});
@@ -452,7 +452,7 @@ test('self-serve adult household creation is atomic, idempotent and rejects chil
   await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Sam.id]);
   assert.equal((await f.http('Sam','POST','/v1/households',{...input,clientKey:randomUUID()})).status,503);
   const enrolled=await f.http('Mia','POST','/v1/households/'+h+'/devices',{});assert.equal(enrolled.status,201);
-  const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['request_queue_permission','own_requests','household_admin']);
+  const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['meal_preferences_read','meal_preferences_admin','household_pantry','household_tonight','my_feedback_withdrawal','household_pantry_grants','request_queue_permission','own_requests','household_admin']);
 });
 
 test('invitation display names use the new member’s language and preserve existing names on blank joins',async()=>{
@@ -1172,4 +1172,302 @@ test('deferred request pages contain only eligible current grants and exclude ol
   assert.equal((await transfer('Mia',2)).status,200);
   assert.equal((await f.http('Mia','POST','/commands',carry)).data.error.code,'authority_changed');
   assert.equal((await page(dest)).data.requests[0].sourceAuthorityEpoch,3);
+});
+
+test('standalone household pantry checks a live adult grant and device before any receipt, with zero shops',async()=>{
+  const f=await fixture({createShop:false}),foreign=await fixture({createShop:false});
+  const get=(actor,path='/pantry',headers={})=>f.http(actor,'GET',path,undefined,headers);
+  const grant=(enabled,expectedGrantEpoch)=>f.http('Mia','POST','/pantry/grants',
+    {v:1,memberId:f.actors.Alex.id,enabled,expectedGrantEpoch});
+  const write=(actor,c)=>f.http(actor,'POST','/pantry/commands',c);
+  const first=await get('Mia','/pantry',{'X-Shop-ID':randomUUID()});
+  assert.equal(first.status,200);assert.deepEqual(first.data.lots,[]);
+  assert.equal(first.data.grantEpoch,0);assert.equal(first.data.householdId,f.h);
+  assert.deepEqual((await get('Mia','/pantry/grants')).data.adults,[{memberId:f.actors.Alex.id,label:'Alex',enabled:false,grantEpoch:0}]);
+  assert.equal((await get('Alex')).status,404);assert.equal((await get('Sam')).status,404);
+  assert.equal((await f.http('Mia','POST','/pantry/grants',{v:1,memberId:f.actors.Sam.id,enabled:true,expectedGrantEpoch:0})).status,404);
+  assert.equal((await f.http('Mia','POST','/pantry/grants',{v:1,memberId:f.actors.Mia.id,enabled:false,expectedGrantEpoch:0})).status,404);
+  const granted=(await grant(true,0)).data;assert.equal(granted.adults[0].grantEpoch,1);
+  assert.deepEqual((await grant(true,0)).data,granted);
+  assert.equal((await get('Alex','/pantry/grants')).status,404);
+  assert((await get('Alex','/bootstrap')).data.capabilities.includes('household_pantry'));
+  assert(!(await get('Sam','/bootstrap')).data.capabilities.includes('household_pantry'));
+  assert((await get('Alex','/bootstrap')).data.capabilities.includes('household_tonight'));
+  assert(!(await get('Sam','/bootstrap')).data.capabilities.includes('household_tonight'));
+  assert.equal((await get('Sam','/pantry/tonight')).status,404);
+  const page=(await get('Alex')).data,time=new Date(Date.now()-1000).toISOString();
+  const data={v:1,kind:'pantry.addLot',clientKey:randomUUID(),replayWindow:f.actors.Alex.window,
+    grantEpoch:page.grantEpoch,pantryRevision:page.pantryRevision,body:{foodName:'Cold peas',location:'fridge',storedAt:time,useFirstAt:null,
+      exclusionTags:[],confirmedAt:time,quantity:{unit:'count',amount:{numerator:3,denominator:2},originalLiteral:'1 1/2'}}};
+  assert.equal((await write('Alex',{...data,body:{...data.body,foodName:'bad\u0000name'}})).status,422);
+  assert.equal((await write('Alex',{...data,body:{...data.body,actorId:f.actors.Mia.id}})).status,422);
+  const [one,other]=await Promise.all([write('Alex',data),write('Alex',{...data,clientKey:randomUUID(),body:{...data.body,foodName:'Another'}})]);
+  assert.deepEqual([one.status,other.status].sort(),[200,409]);
+  const observed=(await get('Mia')).data;
+  assert.equal(observed.lots.length,1);assert.deepEqual(observed.lots[0].observation.quantity,data.body.quantity);
+  assert.deepEqual(Object.keys(observed.lots[0]).sort(),['exclusionTags','foodName','location','lotId','observation','origin','purchaseObservation','storedAt','useFirstAt'].sort());
+  assert.equal(observed.lots[0].location,'fridge');assert.equal(JSON.stringify(observed).includes(f.actors.Alex.id),false);
+  const request={...data,pantryRevision:observed.pantryRevision,clientKey:randomUUID()};
+  const committed=await write('Alex',request);assert.equal(committed.status,200,JSON.stringify(committed.data));
+  assert.deepEqual((await write('Alex',request)).data,committed.data);
+  assert.equal((await write('Alex',{...request,body:{...request.body,foodName:'different'}})).data.error.code,'key_reused');
+  const lotId=committed.data.lotId,quantity={unit:'count',amount:{numerator:0,denominator:1},originalLiteral:'0'};
+  const correction={...request,kind:'pantry.correctCount',clientKey:randomUUID(),pantryRevision:committed.data.pantryRevision,
+    body:{lotId,predecessorId:committed.data.operationId,confirmedAt:time,quantity}};
+  assert.equal((await write('Alex',{...correction,body:{...correction.body,predecessorId:randomUUID()}})).data.error.code,'stale_supply');
+  assert.equal((await write('Alex',{...correction,body:{...correction.body,lotId:randomUUID()}})).status,404);
+  const fixed=await write('Alex',correction);assert.equal(fixed.status,200,JSON.stringify(fixed.data));
+  assert.equal(fixed.data.lotId,lotId);assert.notEqual(fixed.data.operationId,lotId);
+  assert.deepEqual((await get('Mia')).data.lots.find(l=>l.lotId===lotId).observation.quantity,quantity);
+  const missing={...correction,clientKey:randomUUID(),pantryRevision:fixed.data.pantryRevision,
+    body:{...correction.body,predecessorId:fixed.data.operationId,quantity:null}};
+  const unknown=await write('Alex',missing);assert.equal(unknown.status,200);
+  assert.deepEqual((await write('Alex',correction)).data,fixed.data);
+  assert.equal((await write('Alex',{...correction,body:{...correction.body,quantity:null}})).data.error.code,'key_reused');
+  assert.equal((await write('Alex',{...correction,clientKey:randomUUID()})).data.error.code,'stale_supply');
+  const reopened=(await get('Alex')).data;
+  assert.equal(reopened.pantryRevision,unknown.data.pantryRevision);
+  assert.equal(reopened.lots.length,2);assert.equal(reopened.lots.find(l=>l.lotId===lotId).observation.quantity,null);
+  const events=(await admin.query(`SELECT operation_id,predecessor_observation_id AS predecessor,quantity,shop_id
+    FROM ritc.pantry_event WHERE household_id=$1 AND lot_id=$2 ORDER BY pantry_revision`,[f.h,lotId])).rows;
+  assert.deepEqual(events.map(e=>[e.operation_id,e.predecessor,e.quantity,e.shop_id]),[
+    [lotId,null,request.body.quantity,null],[fixed.data.operationId,lotId,quantity,null],
+    [unknown.data.operationId,fixed.data.operationId,null,null]]);
+  const scoped=(await get('Mia','/pantry',{'X-View-Grant-ID':randomUUID()}));assert(scoped.status>=400);
+  assert.equal((await foreign.http('Mia','GET','/pantry')).data.lots.length,0);
+  assert.equal((await foreign.http(f.actors.Alex,'GET','/pantry')).status,404);
+  assert.equal((await admin.query('SELECT count(*)::int AS n FROM ritc.shop WHERE household_id=$1',[f.h])).rows[0].n,0);
+
+  assert.equal((await grant(false,1)).data.adults[0].grantEpoch,2);
+  assert.equal((await get('Alex')).status,404);assert.equal((await write('Alex',request)).status,404);
+  assert.equal((await write('Alex',correction)).status,404);
+  assert.equal((await grant(true,0)).status,409);
+  assert.equal((await grant(true,2)).data.adults[0].grantEpoch,3);
+  assert.equal((await write('Alex',request)).data.error.code,'refresh_required');
+  assert.equal((await write('Alex',{...request,grantEpoch:3})).data.error.code,'refresh_required');
+  assert.equal((await write('Alex',{...correction,grantEpoch:3})).data.error.code,'refresh_required');
+  const now=(await get('Mia')).data;
+  const keep={...data,clientKey:randomUUID(),grantEpoch:now.grantEpoch,replayWindow:f.actors.Mia.window,pantryRevision:now.pantryRevision,
+    body:{...data.body,foodName:'Independent flour',location:'pantry',quantity:null}};
+  const survivor=await write('Mia',keep);assert.equal(survivor.status,200);
+  const edited={...data,grantEpoch:3,clientKey:randomUUID(),pantryRevision:now.pantryRevision+1};
+  const later=await write('Alex',edited);assert.equal(later.status,200);
+  const erasedCorrection={...correction,clientKey:randomUUID(),grantEpoch:3,pantryRevision:later.data.pantryRevision,
+    body:{...correction.body,lotId:survivor.data.lotId,predecessorId:survivor.data.operationId}};
+  assert.equal((await write('Alex',erasedCorrection)).status,200);
+  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.actors.Alex.id]);
+  const survivingLots=(await get('Mia')).data.lots;
+  assert.deepEqual(survivingLots.map(l=>l.foodName),['Independent flour']);
+  assert.equal(survivingLots[0].observation,null);
+  assert.equal((await write('Alex',erasedCorrection)).data.error.code,'refresh_required');
+  assert.equal((await write('Alex',edited)).data.error.code,'refresh_required');
+  await admin.query("UPDATE ritc.replay_window SET revoked_at=clock_timestamp() WHERE household_id=$1 AND window_id=$2",[f.h,f.actors.Mia.window]);
+  assert.equal((await write('Mia',keep)).data.error.code,'refresh_required');
+  await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
+  assert.equal((await write('Mia',keep)).status,403);
+});
+
+test('private household preference grants, reviewed updates and revoked retries are isolated from pantry',async()=>{
+  const f=await fixture({createShop:false}), other=await fixture({createShop:false});
+  const path='/meal-preferences', get=(name,headers={})=>f.http(name,'GET',path,undefined,headers);
+  const grant=(enabled,expectedGrantEpoch)=>f.http('Mia','POST',path+'/grants',
+    {v:1,memberId:f.actors.Alex.id,enabled,expectedGrantEpoch});
+  const command={v:1,clientKey:randomUUID(),replayWindow:f.actors.Mia.window,grantEpoch:0,expectedRevision:null,
+    settings:{exclusions:['peanut'],dislikes:[],preferredBrands:['Casa'],availableAppliances:['stove'],timeLimit:{maximumMinutes:20,strict:true},
+      strictDislikes:false,strictBrands:false,strictEffort:false}};
+  const write=(command)=>f.http('Mia','POST',path,command);
+  assert.equal((await get('Mia',{'X-Shop-ID':randomUUID()})).data.revision,null);
+  assert.equal((await get('Alex')).status,404);assert.equal((await get('Sam')).status,404);
+  assert.equal((await get('Mia',{'X-View-Grant-ID':randomUUID()})).status,404);
+  assert.equal((await f.http('Mia','POST','/pantry/grants',{v:1,memberId:f.actors.Alex.id,enabled:true,expectedGrantEpoch:0})).status,200);
+  assert.equal((await get('Alex')).status,404);
+  const stored=await write(command);assert.equal(stored.status,200,JSON.stringify(stored.data));
+  assert.deepEqual(stored.data.settings,command.settings);assert.deepEqual((await write(command)).data,stored.data);
+  assert.equal((await write({...command,settings:null})).status,409);
+  assert.equal((await grant(true,0)).status,200);
+  const reader=await get('Alex');assert.equal(reader.data.canWrite,false);assert.deepEqual(reader.data.settings,command.settings);
+  assert.deepEqual((await other.http('Mia','GET',path)).data.settings,null);
+  assert.equal((await f.http('Alex','POST',path,command)).status,404);
+  assert.equal((await grant(false,1)).status,200);assert.equal((await get('Alex')).status,404);
+  assert.equal((await grant(true,2)).status,200);assert.equal((await get('Alex')).data.grantEpoch,3);
+  assert.equal((await grant(false,1)).status,409);
+  assert.equal((await write({...command,clientKey:randomUUID(),expectedRevision:stored.data.revision,
+    settings:{...command.settings,exclusions:['pin','PIN']}})).status,422);
+  const removed=await write({...command,clientKey:randomUUID(),expectedRevision:stored.data.revision,settings:null});
+  assert.equal(removed.status,200);assert.equal(removed.data.settings,null);assert.notEqual(removed.data.revision,stored.data.revision);
+  assert.equal((await write(command)).status,409);
+  assert.equal((await write({...command,expectedRevision:removed.data.revision})).status,409);
+  const restored=await write({...command,clientKey:randomUUID(),expectedRevision:removed.data.revision});
+  assert.equal(restored.status,200);
+  // A second organizer keeps one existing rule and adds another. Erasing the
+  // original author must remove the inherited inputs while preserving the new rule.
+  await admin.query("UPDATE ritc.member SET organizer=true WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Alex.id]);
+  const transferred=(await get('Alex')).data;
+  const updated=await f.http('Alex','POST',path,{...command,clientKey:randomUUID(),replayWindow:f.actors.Alex.window,
+    expectedRevision:transferred.revision,grantEpoch:transferred.grantEpoch,settings:{...command.settings,exclusions:['Peanut','mushroom']}});
+  assert.equal(updated.status,200,JSON.stringify(updated.data));
+  const client=await admin.connect(),job=randomUUID(),lease=randomUUID();
+  try {
+    await client.query('BEGIN');
+    const hash=tokenHash(issuer+'\n'+f.actors.Mia.subject);
+    await client.query(`INSERT INTO ritc.privacy_job(job_id,identity_hash,issuer,subject,receipt_hash,payload_digest,state,receipt_retention_days,marker_retention_days,receipt_until,marker_until,lease_id,lease_until)
+      VALUES($1,$2,$3,$4,$5,$5,'processing',1,1,now()+interval '1 day',now()+interval '1 day',$6,now()+interval '1 hour')`,
+      [job,hash,issuer,f.actors.Mia.subject,tokenHash(job),lease]);
+    await client.query("SELECT set_config('app.erasure_job',$1,true),set_config('app.erasure_lease',$2,true)",[job,lease]);
+    await client.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.actors.Mia.id]);
+    await client.query('COMMIT');
+  } catch(e) { await client.query('ROLLBACK');throw e; } finally {client.release();}
+  const erased=await get('Alex');
+  assert.deepEqual(erased.data.settings.exclusions,['mushroom']);
+  assert.deepEqual(erased.data.settings.preferredBrands,[]);
+  assert.equal(erased.data.settings.availableAppliances,undefined);
+  assert.notEqual(erased.data.revision,updated.data.revision);
+  assert.equal(erased.data.settings.timeLimit,undefined);
+  assert.equal((await write(command)).status,409);
+  await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
+  assert.equal((await write(command)).status,403);
+});
+
+test('duplicate help rechecks the assigned shopper and exact basket candidates before and after matching',async t=>{
+  const f=await fixture(), {request}=await f.send('Alex',{originalItem:f.line.originalItem});
+  let calls=0, changeAfterSend=false;
+  const transport={budget:{dailyAccountRequests:12,dailyMicros:200,maxRequestMicros:5,maxLanguageMicros:5},
+    structuredText:async text=>{
+      const body=JSON.parse(text);
+      calls++;
+      assert.equal(body.sourceLines[0].text,f.line.originalItem);
+      assert.notEqual(body.sourceLines[0].id,request.requestId);
+      assert.equal(body.candidates[0].text,f.line.originalItem);
+      assert.notEqual(body.candidates[0].id,f.lineId);
+      if(changeAfterSend) await admin.query('UPDATE ritc.basket_line SET original_item=$1 WHERE household_id=$2 AND shop_id=$3 AND line_id=$4',
+        ['Changed label',f.h,f.shopId,f.lineId]);
+      return {suggestions:[{sourceLineID:body.sourceLines[0].id,candidateID:body.candidates[0].id}]};
+    }};
+  const mock=createHTTPServer({repository:repo,verifier,receiptAssistance:transport,webOrigin:'https://web.fixture.invalid',maxRequestsPerMinute:10000});
+  await new Promise(resolve=>mock.listen(0,'127.0.0.1',resolve));
+  t.after(()=>new Promise(resolve=>mock.close(resolve)));
+  const route='http://127.0.0.1:'+mock.address().port+'/v1/households/'+f.h+'/language-assistance/request-duplicate';
+  const sourceLines=[{id:request.requestId,text:f.line.originalItem}], candidates=[{id:f.lineId,text:f.line.originalItem}];
+  const post=async(actor,overrides={},headers={})=>{
+    const user=f.actors[actor];
+    return fetch(route,{method:'POST',headers:{authorization:'Bearer '+user.token,'X-Device-Token':user.deviceToken,
+      'X-Shop-ID':f.shopId,'Content-Type':'application/json',...headers},body:JSON.stringify({
+        version:1,requestID:randomUUID(),issuedAt:Date.now(),consent:true,locale:'en',shopID:f.shopId,shopRevision:1,
+        authorityEpoch:1,requestRevision:1,sourceLines,candidates,...overrides})});
+  };
+  for(const actor of ['Sam','Alex']) assert.equal((await post(actor)).ok,false);
+  assert.equal((await post('Mia',{}, {'X-View-Grant-Id':randomUUID()})).ok,false);
+  for(const changed of [{shopID:randomUUID()},{requestRevision:2},{shopRevision:2},
+    {sourceLines:[{id:request.requestId,text:'Other words'}]},{candidates:[{id:randomUUID(),text:f.line.originalItem}]},
+    {candidates:[{id:f.lineId,text:'Other label'}]}]) assert.equal((await post('Mia',changed)).ok,false);
+  assert.equal(calls,0);
+  const accepted=await post('Mia');
+  const reply=await accepted.json();
+  assert.equal(accepted.status,200,JSON.stringify(reply));
+  assert.deepEqual(reply.suggestions,[{sourceLineID:request.requestId,candidateID:f.lineId}]);
+  changeAfterSend=true;
+  assert.equal((await post('Mia')).ok,false);
+  assert.equal(calls,2);
+  const row=await admin.query('SELECT status FROM ritc.request WHERE household_id=$1 AND request_id=$2',[f.h,request.requestId]);
+  assert.equal(row.rows[0].status,'pending');
+});
+
+test('reviewed shared receipt lines commit once, preserve partial selection and redact every replay after erasure',async()=>{
+  const f=await fixture({createShop:false}),foreign=await fixture({createShop:false});
+  const grant=(enabled,epoch)=>f.http('Mia','POST','/pantry/grants',{v:1,memberId:f.actors.Alex.id,enabled,expectedGrantEpoch:epoch});
+  const page=()=>f.http('Mia','GET','/pantry'), write=(actor,c,headers)=>f.http(actor,'POST','/pantry/commands',c,headers);
+  const q=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
+  const line=(ordinal,foodName)=>({ordinal,original:'Printed '+foodName,foodName,location:'pantry',received:q(3),usable:q(2),
+    paidUSDMinor:ordinal===0?129:null,delivery:null,printed:null});
+  const body={receiptId:randomUUID(),imageId:randomUUID(),merchant:'Market',reference:'Reviewed 123',zone:'UTC',
+    purchaseDay:'2026-01-10',lines:[line(0,'Beans'),line(2,'Pears')]};
+  const make=(base,body,actor='Alex',epoch=1)=>({v:1,kind:'pantry.acquireReceipt',replayWindow:f.actors[actor].window,
+    clientKey:randomUUID(),grantEpoch:epoch,pantryRevision:base,body});
+  assert.equal((await write('Alex',make(0,body))).status,404);
+  assert.equal((await grant(true,0)).status,200);
+  const base=(await page()).data.pantryRevision,command=make(base,body);
+  assert.equal((await write('Sam',command)).status,404);
+  assert.equal((await write('Alex',command,{'X-View-Grant-ID':randomUUID()})).status,404);
+  assert.equal((await write('Alex',{...command,body:{...body,lines:[body.lines[0],{...line(1,'Broken'),usable:q(4)}]}})).status,422);
+  const failed={...command,body:{...body,lines:[body.lines[0],{...body.lines[1],delivery:{lotId:randomUUID(),observationId:randomUUID()}}]}};
+  assert.equal((await write('Alex',failed)).status,409);
+  assert.equal((await page()).data.pantryRevision,base);
+  const [a,b]=await Promise.all([write('Alex',command),write('Alex',command)]);
+  assert.equal(a.status,200,JSON.stringify(a.data));assert.deepEqual(a,b);
+  assert.equal(a.data.pantryRevision,base+1);assert.equal(a.data.savedCount,2);
+  assert.deepEqual(a.data.receiptLines.map(l=>l.ordinal),[0,2]);assert.equal(new Set(a.data.receiptLines.map(l=>l.lotId)).size,2);
+  const lots=(await page()).data.lots;assert.equal(lots.length,2);
+  assert.deepEqual(lots.find(l=>l.foodName==='Beans').receiptEvidence.line.paidUSDMinor,129);
+  assert.deepEqual(lots.find(l=>l.foodName==='Pears').observation.quantity,q(2));
+  const extended=make(base+1,{...body,lines:[body.lines[0],line(4,'Milk')]});
+  const later=await write('Alex',extended);assert.equal(later.status,200,JSON.stringify(later.data));assert.equal(later.data.savedCount,1);
+  assert.equal(later.data.receiptLines[0].lotId,a.data.receiptLines[0].lotId);
+  assert.deepEqual((await write('Alex',command)).data,a.data);
+  assert.equal((await write('Alex',{...command,body:{...body,merchant:'Changed'}})).data.error.code,'key_reused');
+  const repeat=make(base+2,body);const noop=await write('Alex',repeat);
+  assert.equal(noop.data.savedCount,0);assert.equal(noop.data.pantryRevision,base+2);
+  const changed=make(base+2,{...body,lines:[line(7,'Rollback'),{...body.lines[0],usable:q(1)}]});
+  assert.equal((await write('Alex',changed)).data.error.code,'receipt_conflict');
+  assert.equal((await page()).data.lots.length,3);
+  assert.equal((await foreign.http('Mia','GET','/pantry')).data.lots.length,0);
+  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shop WHERE household_id=$1',[f.h])).rows[0].n,0);
+  await grant(false,1);assert.equal((await write('Alex',command)).status,404);
+  await grant(true,2);assert.equal((await write('Alex',command)).data.error.code,'refresh_required');
+  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.actors.Alex.id]);
+  assert.equal((await page()).data.lots.length,0);
+  const records=await admin.query('SELECT count(*)::int n FROM ritc.operation_response WHERE household_id=$1 AND operation_id=ANY($2::uuid[])',[f.h,[a.data.operationId,later.data.operationId,noop.data.operationId]]);
+  assert.equal(records.rows[0].n,0);
+  assert.equal((await write('Mia',make((await page()).data.pantryRevision,body,'Mia',0))).data.error.code,'refresh_required');
+});
+
+test('fifty long reviewed receipt lines remain one bounded household stock revision',async()=>{
+ const f=await fixture({createShop:false});
+ const quantity={amount:{numerator:1,denominator:1},unit:'count',originalLiteral:'1'};
+ const lines=Array.from({length:50},(_,ordinal)=>({ordinal,original:'Grocery '.repeat(215)+ordinal,foodName:'Food '+ordinal,
+   location:'pantry',received:quantity,usable:quantity}));
+ const body={receiptId:randomUUID(),merchant:'Market',purchaseDay:'2026-01-05',zone:'UTC',lines};
+ const command={v:1,kind:'pantry.acquireReceipt',grantEpoch:0,pantryRevision:0,clientKey:randomUUID(),replayWindow:f.actors.Mia.window,body};
+ const write=c=>f.http('Mia','POST','/pantry/commands',c);
+ assert(Buffer.byteLength(JSON.stringify(command))>65_536);
+ assert.equal((await write({...command,body:{...body,lines:[...lines,{...lines[0],ordinal:50}]}})).status,422);
+ const saved=await write(command);assert.equal(saved.status,200,JSON.stringify(saved.data));
+ assert.equal(saved.data.savedCount,50);assert.equal(saved.data.pantryRevision,1);
+ const counts=await admin.query('SELECT count(*)::int n,count(DISTINCT operation_id)::int ops,count(DISTINCT pantry_revision)::int revisions FROM ritc.pantry_event WHERE household_id=$1',[f.h]);
+ assert.deepEqual(counts.rows[0],{n:50,ops:1,revisions:1});
+});
+
+test('a reported purchaser is separate from the recorder and private to the assigned shopper', async()=>{
+  const f=await purchaseFixture(), foreign=await purchaseFixture('Alex');
+  const other=(await f.send('Alex')).request;
+  const explicit={kind:'requestAuthor',requestId:other.requestId,requestRevision:other.revision,expectedAlias:'Alex'};
+  const inbox=async()=> (await f.http('Mia','GET','/shops/'+f.shopId+'/inbox')).data.requests;
+  const row=async()=> (await inbox()).find(r=>r.requestId===f.requestId);
+  const send=c=>f.http('Mia','POST','/commands',c);
+  function command(revision,outcome,reportedPurchaser){
+    return f.envelope('Mia','request.confirmPurchase',{requestId:f.requestId,lineId:f.lineId,placedRevision:f.placedRevision,
+      outcome,...(reportedPurchaser?{reportedPurchaser}:{})},{shopRevision:f.shopRevision,authorityEpoch:1,requestRevision:revision});
+  }
+  const rev=f.requestRevision;
+  assert.equal((await inbox()).find(r=>r.requestId===other.requestId).canReportAuthorAsPurchaser,true);
+  assert.equal((await row()).canReportAuthorAsPurchaser,undefined);
+  assert.equal((await send(command(rev,'notBought',explicit))).status,422);
+  assert.equal((await send(command(rev,'bought',{...explicit,requestId:foreign.requestId}))).status,404);
+  assert.equal((await send(command(rev,'bought',{...explicit,requestRevision:other.revision+1}))).status,409);
+  assert.equal((await send(command(rev,'bought',{...explicit,requestId:f.requestId,requestRevision:rev}))).status,404);
+  const legacy=await send(command(rev,'bought')); assert.equal(legacy.status,200);
+  let current=await row(); assert.equal(current.purchaseRecordedBy,'Mia'); assert.equal(current.reportedPurchaser,undefined);
+  const selected=command(current.revision,'bought',explicit);
+  const saved=await send(selected); assert.equal(saved.status,200,JSON.stringify(saved.data));
+  assert.deepEqual((await send(selected)).data,saved.data);
+  current=await row(); assert.equal(current.reportedPurchaser,'Alex'); assert.equal(current.purchaseRecordedBy,'Mia');
+  const own=(await f.http('Sam','GET','/requests/mine')).data.requests[0];
+  assert.equal(own.purchaseOutcome,'bought');
+  for(const field of ['purchaseRecordedBy','reportedPurchaser','canReportAuthorAsPurchaser']) assert.equal(own[field],undefined);
+  const corrected=await send(command(current.revision,'notBought')); assert.equal(corrected.status,200);
+  current=await row(); assert.equal(current.purchaseOutcome,'notBought'); assert.equal(current.reportedPurchaser,undefined);
+  const self=await send(command(current.revision,'bought',{kind:'self'})); assert.equal(self.status,200);
+  current=await row(); assert.equal(current.reportedPurchaser,'Mia');
+  assert.equal((await send(command(current.revision,'bought',{...explicit,expectedAlias:'Different adult'}))).status,409);
+  const unknown=await send(command(current.revision,'bought',{kind:'unknown'})); assert.equal(unknown.status,200);
+  current=await row(); assert.equal(current.purchaseOutcome,'bought'); assert.equal(current.reportedPurchaser,undefined);
 });

@@ -16,6 +16,87 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testColdAddItemShortcutOpensEditableFirstDraftWithoutCreatingPickup() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--test-shopping-add-intent",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let editor = app.textViews["ledgerImportText"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 30))
+        XCTAssertEqual(editor.value as? String, "2 kg rice")
+        tap(app.buttons["Close"])
+        XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12))
+        app.terminate()
+        launch(reset: false)
+        tap(app.buttons["shop.addFirstList"])
+        XCTAssertTrue(editor.waitForExistence(timeout: 10))
+        XCTAssertEqual(editor.value as? String, "", "Closing untouched Shortcut wording must not save it in a seven-day draft")
+        tap(app.buttons["Close"])
+        app.terminate()
+
+        app.launchArguments.append("--test-shopping-add-intent")
+        app.launch()
+        XCTAssertTrue(editor.waitForExistence(timeout: 30))
+        XCTAssertEqual(editor.value as? String, "2 kg rice")
+        tap(editor)
+        editor.typeText(" noodles")
+        let edited = editor.value as? String
+        XCTAssertTrue(edited?.contains("noodles") == true)
+        XCTAssertTrue(edited?.contains("2 kg rice") == true)
+        let done = app.buttons["Done"]
+        if done.exists, done.isHittable { done.tap() }
+        tap(app.buttons["Close"])
+        XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12))
+        tap(app.buttons["shop.addFirstList"])
+        XCTAssertTrue(editor.waitForExistence(timeout: 10))
+        XCTAssertEqual(editor.value as? String, edited)
+    }
+
+    func testFirstListResumesAfterRelaunchAndCreatesOneUndoablePickupOnConfirmation() {
+        for language in ["en", "es"] {
+            launch(language: language, largeDark: language == "es")
+            let add = app.buttons["shop.addFirstList"]
+            tap(add)
+            let close = app.buttons[language == "en" ? "Close" : "Cerrar"]
+            tap(close)
+            XCTAssertTrue(add.waitForExistence(timeout: 5))
+            tap(add)
+            let field = app.textViews["ledgerImportText"]
+            let wording = language == "en" ? "2 kg rice" : "2 kg arroz"
+            tap(field)
+            field.typeText(wording)
+            let done = language == "en" ? "Done" : "Listo"
+            let doneButton = app.buttons[done]
+            XCTAssertTrue(doneButton.waitForExistence(timeout: 5) && doneButton.isHittable)
+            doneButton.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+            let saved = app.staticTexts["firstList.draftStatus"]
+            // At accessibility sizes the focused editor scrolls the status row
+            // above the visible part of the Form. Bring it back before reading it.
+            let form = app.collectionViews["ledgerImportForm"]
+            for _ in 0..<5 {
+                if saved.exists && saved.isHittable { break }
+                form.swipeDown(velocity: .slow)
+            }
+            XCTAssertTrue(saved.exists && saved.isHittable)
+            let label = language == "en" ? "Private draft saved on this device. It expires 7 days after your last edit." :
+                "Borrador privado guardado en este dispositivo. Caduca 7 días después del último cambio."
+            expectation(for: NSPredicate(format: "label == %@", label), evaluatedWith: saved)
+            waitForExpectations(timeout: 10)
+            app.terminate()
+            launch(language: language, reset: false, largeDark: language == "es")
+            tap(app.buttons["shop.addFirstList"])
+            XCTAssertTrue(form.waitForExistence(timeout: 5))
+            reveal(field)
+            XCTAssertEqual(field.value as? String, wording)
+            tap(app.buttons["ledgerReviewImport"])
+            tap(app.buttons["ledgerCommitImport"])
+            let undo = app.buttons["ledgerUndoImport"]
+            tap(undo)
+            XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
+            app.terminate()
+        }
+    }
+
     func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {
         for language in ["en", "es"] {
             launch(language: language)
@@ -96,7 +177,9 @@ final class RoomInTheCartUITests: XCTestCase {
     func testConfirmedComparisonDeletionSurvivesRestart() throws {
         launch()
         openEmptyComparison()
-        type([("itemName", "Fictional record to delete"), ("needed", "2"), ("stock", "3")])
+        type([("itemName", "Fictional record to delete")])
+        type([("needed", "2")])
+        type([("stock", "3")])
         compare()
         assertContains("No packs needed for this item.")
         saveAndAssertDurableStatus()
@@ -104,7 +187,11 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["Recovery, exports and saved records"])
         tap(app.buttons["Delete this source"])
         tap(app.buttons["Delete from this iPhone"])
-        assertContains("The selected source was deleted from this iPhone.")
+        let status = app.staticTexts["records.status"]
+        let deletionCompleted = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND hittable == true AND label == %@",
+                                   "The selected source was deleted from this iPhone."), object: status)
+        XCTAssertEqual(XCTWaiter.wait(for: [deletionCompleted], timeout: 8), .completed)
         screenshot("Confirmed-fictional-source-deletion")
         app.terminate()
         launch(reset: false)
@@ -743,7 +830,7 @@ final class RoomInTheCartUITests: XCTestCase {
             XCTAssertTrue(keyboard.exists || keyboard.waitForExistence(timeout: 5))
             // For a standalone whole number, operate the displayed keys before
             // dismissing the numeric keyboard. The needed amount may have multiple digits.
-            let numericFields = ["needed", "aQuantity", "aPrice", "bQuantity", "bPrice", "itemCap"]
+            let numericFields = ["needed", "stock", "aQuantity", "aPrice", "bQuantity", "bPrice", "itemCap"]
             if fields.count == 1, numericFields.contains(id), !text.isEmpty,
                text.allSatisfy({ $0.isASCII && $0.isNumber }) {
                 for digit in text {

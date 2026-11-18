@@ -32,6 +32,28 @@ final class FoodKeeperReferenceTests: XCTestCase {
         XCTAssertTrue(Set(source.products.map(\.id)).isDisjoint(with: [221, 645, 264, 496]))
     }
 
+    func testSavedQualityRangeRetainsProvenanceAndRejectsUnsupportedOrChangedEvidence() throws {
+        let reference = try FoodKeeperReference.bundled()
+        let opened = try date(2026, 10, 30)
+        let today = try date(2026, 11, 1)
+        let range = try XCTUnwrap(reference.reviewedRange(productID: 142, condition: .refrigeratedOpened,
+            storage: .refrigerator, event: .opened, start: opened, asOf: today, historyConfirmed: true))
+        let restored = try JSONDecoder().decode(FoodKeeperReviewedRange.self, from: JSONEncoder().encode(range))
+        XCTAssertEqual(restored, range)
+        XCTAssertEqual(restored.version, 128)
+        XCTAssertEqual(restored.earliest, try date(2026, 11, 2))
+        XCTAssertEqual(restored.latest, try date(2026, 11, 3))
+        XCTAssertTrue(restored.matches(reference, asOf: today))
+        let stale = FoodKeeperReviewedRange(version: 127, productID: 142, storage: .refrigerator,
+            condition: .refrigeratedOpened, event: .opened, start: opened, earliest: restored.earliest, latest: restored.latest)
+        XCTAssertFalse(stale.matches(reference, asOf: today))
+        for (product, condition, event) in [(179, FoodKeeperCondition.refrigeratedOpened, FoodKeeperStartingEvent.opened),
+                                            (142, .refrigeratedThawed, .thawed), (9999, .refrigeratedOpened, .opened)] {
+            XCTAssertNil(reference.reviewedRange(productID: product, condition: condition, storage: .refrigerator,
+                event: event, start: opened, asOf: today, historyConfirmed: true))
+        }
+    }
+
     func testDatedReviewRequiresConfirmedHistoryLocationEventAndLocalDay() throws {
         let source = try FoodKeeperReference.bundled()
         let chicken = try XCTUnwrap(source.products.first { $0.id == 142 })

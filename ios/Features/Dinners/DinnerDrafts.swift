@@ -87,11 +87,13 @@ enum DinnerDraftValidationError: LocalizedError, Equatable {
 }
 
 struct DinnerTemplateDraft {
+    var evidence: MealEligibilityEvidence
     let id: UUID
     let original: MealTemplate?
     var title: String; var servings: String; var ingredients: [DinnerIngredientDraft]; var groups: [DinnerGroupDraft]
     var notes: String; var source: String; var exclusions: String; var lead: String; var completed: String
     init(_ template: MealTemplate? = nil) {
+        evidence = template?.eligibilityEvidence ?? .init()
         original = template; id = template?.id ?? UUID(); title = template?.title ?? ""; servings = template?.servings.description ?? ""
         ingredients = template?.ingredients.map(DinnerIngredientDraft.init) ?? [DinnerIngredientDraft()]
         groups = template?.servingGroups.map(DinnerGroupDraft.init) ?? []
@@ -105,6 +107,10 @@ struct DinnerTemplateDraft {
         var value = MealTemplate(id: id, title: title, servings: enteredServings, ingredients: try ingredients.map { try $0.ingredient() },
             notes: notes, sourceURL: source.isEmpty ? nil : source, exclusions: DinnerEntry.list(exclusions),
             revision: original?.revision ?? 0, servingGroups: try groups.map { try $0.group() }, leadTimeMinutes: try DinnerEntry.minutes(lead), completedSteps: DinnerEntry.list(completed), sourceEvidence: original?.sourceEvidence)
+        if evidence != MealEligibilityEvidence() { value.eligibilityEvidence = evidence }
+        if let original, let steps = original.recipeSteps {
+            value.recipeSteps = RecipeStep.rebinding(steps, from: original.ingredients, to: value.ingredients)
+        }
         if let original, original != value {
             let (revision, overflow) = original.revision.addingReportingOverflow(1)
             guard !overflow else { throw DomainError.overflow }; value.revision = revision
@@ -148,10 +154,35 @@ struct DinnerCommitmentDraft: Identifiable {
 }
 /// An inclusive retailer total is accepted only after the user confirms its scope.
 /// Blank total/trip cash remain unknown. No fees or availability are invented.
+struct StoreSupplyDraft {
+    var needed = ""
+    var usable = ""
+    var packs = ""
+    var unit = UnitOfMeasure.count
+
+    init() {}
+    init(_ value: StoreCommitmentSupply) {
+        needed = String(value.requiredUnits); usable = String(value.usableUnitsPerPackage); packs = String(value.packages); unit = value.unit
+    }
+    func value(_ id: UUID) throws -> StoreCommitmentSupply {
+        guard let required = Int64(needed), let perPack = Int64(usable), let count = Int64(packs) else {
+            throw DinnerPlanningError.invalid("commitmentSupply")
+        }
+        let row = StoreCommitmentSupply(commitmentID: id, unit: unit, requiredUnits: required, usableUnitsPerPackage: perPack, packages: count)
+        _ = try row.surplus()
+        return row
+    }
+}
+
 struct DinnerStoreDraft {
     var id = UUID(); var label = ""; var storeID = ""; var branch = ""; var mode = ShoppingMode.pickup
     var slot = Date(); var observedAt = Date(); var source = ""; var total = ""; var allChargesIncluded = false
     var quantitiesMatched = false; var availability = 0; var singleStore = false
+    var orderMinimumKind = StoreOrderMinimum.Kind.unknown
+    var minimumAmount = "", eligibleSubtotal = ""
+    var eligibilityReviewed = false
+    var detailSupply = false
+    var supply: [UUID: StoreSupplyDraft] = [:]
     var itemSubtotal = ""; var eligibilityTerms = ""
     var tripCash = ""; var extraMinutes = ""; var alreadyPlanned = false
     private var saved: StoreQuoteOption?
@@ -167,6 +198,11 @@ struct DinnerStoreDraft {
     init() {}
     init(_ saved: StoreQuoteOption) {
         self.saved = saved
+        orderMinimumKind = saved.orderMinimum?.kind ?? .unknown
+        minimumAmount = Self.amount(saved.orderMinimum?.minimum); eligibleSubtotal = Self.amount(saved.orderMinimum?.eligibleSubtotal)
+        eligibilityReviewed = saved.eligibilityReviewed == true
+        detailSupply = saved.supplies != nil
+        for row in saved.supplies ?? [] { supply[row.id] = .init(row) }
         let context = saved.quote.context
         id = saved.id; label = saved.label; storeID = context.storeID; branch = context.branchID; mode = context.mode
         if let date = Self.slotDate(context.slot) { slot = date }
@@ -210,6 +246,20 @@ struct DinnerStoreDraft {
         return (lower, upper, reason)
     }
 
+    func orderMinimum() throws -> StoreOrderMinimum {
+        guard orderMinimumKind == .required else { return .init(orderMinimumKind) }
+        let value = StoreOrderMinimum(.required, minimum: try DinnerEntry.money(minimumAmount), eligibleSubtotal: try DinnerEntry.money(eligibleSubtotal))
+        _ = try value.status()
+        return value
+    }
+    func reviewedSupply(_ ids: [UUID]) throws -> [StoreCommitmentSupply]? {
+        guard detailSupply else { return nil }
+        return try ids.compactMap { id in
+            guard let row = supply[id], !row.needed.isEmpty || !row.usable.isEmpty || !row.packs.isEmpty else { return nil }
+            return try row.value(id)
+        }
+    }
+
     func option(commitments: DinnerCommitmentSet, basis: ShopBasis) throws -> StoreQuoteOption {
         let amount = try DinnerEntry.money(total)
         let evidence: CostEvidence
@@ -249,7 +299,8 @@ struct DinnerStoreDraft {
             trip: StoreTripEvidence(incrementalCash: cash,
                 extraMinutes: try DinnerEntry.minutes(extraMinutes), tripAlreadyPlanned: alreadyPlanned), cap: cap, adoptionBasis: saved != nil && saved?.adoptionBasis == nil ? nil : adopted, observedItemSubtotal: try DinnerEntry.money(itemSubtotal),
             eligibilityTerms: eligibilityTerms.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : eligibilityTerms,
-            unreviewedInclusiveTotal: allChargesIncluded ? nil : amount)
+            unreviewedInclusiveTotal: allChargesIncluded ? nil : amount, orderMinimum: saved?.orderMinimum == nil && orderMinimumKind == .unknown ? nil : try orderMinimum(),
+            supplies: try reviewedSupply(commitments.commitments.map(\.id)), eligibilityReviewed: saved?.eligibilityReviewed == nil && !eligibilityReviewed ? nil : eligibilityReviewed)
     }
 }
 

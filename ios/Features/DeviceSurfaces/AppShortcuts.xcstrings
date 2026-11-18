@@ -16,6 +16,38 @@
           }
         }
       }
+    },
+    "Add a grocery item in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a grocery item in ${applicationName}"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un artículo en ${applicationName}"
+          }
+        }
+      }
+    },
+    "Open my shopping list in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open my shopping list in ${applicationName}"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir mi lista de compras en ${applicationName}"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -110,6 +110,15 @@ import CoreDomain
                     }
                 }
                 if kind == .recipe {
+                    if let photo = model.accepted, localPhotoConsent {
+                        let source = model.text
+                        let lines = source.components(separatedBy: "\n")
+                        AssistedImageLines(wording: lines, image: photo.referenceJPEG, purpose: .recipe, authorized: {
+                            authorize() && localPhotoConsent && model.accepted == photo && model.text == source
+                        }) { index, reading in
+                            try model.applyRecipeImageReading(reading, line: index, reviewedText: source, source: photo)
+                        }
+                    }
                     Button(captureText("Review recipe fields")) {
                         do { recipe = try RecipeOCRParser.draft(model.text); error = nil }
                         catch { self.error = captureText("Shorten the text or type the source again, then review.") }
@@ -183,7 +192,7 @@ import CoreDomain
                 .accessibilityIdentifier("scan.localConsent")
             Text(captureText("Turning off photo processing discards text from the photo and edits to it. Your earlier typed or pasted text returns."))
                 .font(.footnote)
-            Text(captureText("The app does not upload photos or source text. Choosing an iCloud photo may download it through Apple. You can continue by typing without enabling photos."))
+            Text(captureText("This iPhone reads the photo. Choosing an iCloud photo may download it through Apple. If you use online help, you choose which text or image crop to send."))
                 .font(.footnote)
             Button(captureText("Take a photo for review")) { requestCamera() }.disabled(!canReview || !localPhotoConsent)
                 .accessibilityIdentifier("scan.camera")
@@ -198,7 +207,7 @@ import CoreDomain
             }.disabled(!canReview)
                 .accessibilityLabel(captureText("Paste source text"))
             if model.busy || loadingPhoto || requestingCamera { ProgressView(captureText("Preparing source for review…")) }
-            Text(captureText("Recognition stays on this device. Saved photo references are reduced in size and omit location metadata; the app does not save them to your photo library."))
+            Text(captureText("Saved photo references are smaller copies without location metadata. The app keeps them separate from your photo library."))
                 .font(.footnote)
         }
     }
@@ -235,7 +244,7 @@ import CoreDomain
                 .focused($focusedField, equals: .sourceLabel)
             if receiptLines == nil {
                 Button(captureText("Review printed lines")) {
-                    do { receiptLines = try ScanLimits.receiptLines(model.text); error = nil }
+                    do { receiptLines = try ScanLimits.receiptLines(model.text, uncertain: Set(model.accepted?.uncertainLines ?? [])); error = nil }
                     catch { self.error = captureText("Shorten the text or type the source again, then review.") }
                 }.disabled(!canReview || model.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             } else {
@@ -273,6 +282,19 @@ import CoreDomain
             Text(captureText("Ingredient wording, one per line"))
             TextEditor(text: recipeField(\.ingredientText)).frame(minHeight: 140).accessibilityLabel(captureText("Ingredient wording, one per line"))
                 .focused($focusedField, equals: .ingredients)
+            if recipe?.notes.isEmpty == false {
+                Toggle(captureText("Use each instruction line as a cooking step"), isOn: Binding(
+                    get: { recipe?.useInstructionLines ?? false }, set: { recipe?.useInstructionLines = $0 }
+                ))
+            }
+            if let current = recipe, !current.instructionLines.isEmpty {
+                NavigationLink(recordsText("Review ingredients and timers by step")) {
+                    RecipeStepReviewView(steps: current.stepEdits.current(instructions: current.instructionLines, ingredients: current.ingredientLines),
+                                         ingredients: current.ingredientLines) { index, step in
+                        recipe?.stepEdits.apply(step, at: index, instructions: current.instructionLines, ingredients: current.ingredientLines)
+                    }
+                }
+            }
             if let text = recipe?.unclassifiedText, !text.isEmpty {
                 Text(captureText("Unclassified source wording — copy only what belongs in the recipe"))
                 Text(text).textSelection(.enabled)

@@ -38,12 +38,20 @@ import DeviceSurfaces
             try await Task.sleep(for:.milliseconds(20))
         }
         XCTAssertTrue(surfaces.privateAuthorized); XCTAssertNotNil(try widget.read().routeHandle)
+        let identity = try XCTUnwrap(CapturePrivateIdentity.current(access: access, household: adult))
+        let scope = PantryDigestScope(origin: try XCTUnwrap(ledger.sourceWorkspaceID), identity: identity)
+        let permission = PantryDigestAccess(scope: scope, authorized: { true })
+        try surfaces.homeSummaries.setEnabled(true, kind: .useSoon, access: permission)
+        try surfaces.homeSummaries.update(.useSoon, access: permission, count: 2)
         surfaces.destination = .capture(UUID())
         let marker = GuardianChildPresentationMarker(url:directory.appendingPathComponent("child-root.json")), coordinator = GuardianChildCoordinator(bundle:bundle,marker:marker)
         coordinator.open(adult:adult,access:access,surfaces:surfaces)
         XCTAssertTrue(coordinator.presented); XCTAssertFalse(access.unlocked); XCTAssertTrue(access.isProtected)
         XCTAssertFalse(surfaces.privateAuthorized); XCTAssertNil(surfaces.destination); XCTAssertNil(surfaces.draft); XCTAssertTrue(surfaces.entries.isEmpty)
         XCTAssertNil(try widget.read().routeHandle); XCTAssertTrue(try marker.read())
+        XCTAssertFalse(surfaces.homeSummaries.enabled(.useSoon, scope: scope))
+        let summaryFile = try AdultFoodSummaryFile(directory: widget.url.deletingLastPathComponent(), kind: .useSoon)
+        XCTAssertThrowsError(try summaryFile.read())
         for _ in 0..<100 {
             if coordinator.destination != .starting && !coordinator.busy { break }
             try await Task.sleep(for:.milliseconds(20))

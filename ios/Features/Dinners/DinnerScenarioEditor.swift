@@ -48,8 +48,22 @@ struct DinnerScenarioEditor: View {
         guard let ledger = linkedLedger, ledger.sourceWorkspaceID == model.store.sourceWorkspaceID else { return nil }
         return pickup.journeys.first { $0.id == draft.shopID }
     }
-    private var leftoversCurrent: Bool { draft.leftoverRevision == nil || draft.leftoverRevision == currentPickup?.revision }
+    private var canonicalSupply: DinnerPantrySupply.Snapshot? {
+        try? DinnerPantrySupply.read(pickup: pickup, workspaceID: model.localIdeaWorkspaceID,
+            linkedWorkspaceID: linkedLedger?.sourceWorkspaceID, shopID: draft.shopID)
+    }
+    private var leftoversCurrent: Bool {
+        guard !draft.reviewedLeftovers.isEmpty else { return true }
+        if pickup.pantryIsActive {
+            guard let reviewed = draft.leftoverPantryBasis else { return false }
+            return canonicalSupply?.basis == reviewed
+        }
+        return draft.leftoverPantryBasis == nil && draft.leftoverRevision == currentPickup?.revision
+    }
     var body: some View {
+        let canonical = canonicalSupply
+        let lots = canonical.map { DinnerLibraryPairings.unreservedLots(canonical: $0) }
+            ?? (pickup.pantryIsActive ? [] : currentPickup.flatMap { try? DinnerLibraryPairings.unreservedLots($0, at: Date()) } ?? [])
         Form {
             Section {
                 if dynamicTypeSize.isAccessibilitySize {
@@ -137,11 +151,19 @@ struct DinnerScenarioEditor: View {
                 Section(dinnerText("Food identities, stock and usable packs")) {
                     Text(dinnerText("Create each food identity explicitly. A confirmed lot is shared once across every matched need; outside reservations are protected first."))
                     ForEach($draft.foods) { $food in
-                        NavigationLink(food.name.isEmpty ? dinnerText("Name and review this food") : food.name) { DinnerFoodEvidenceEditor(food: $food) }
+                        NavigationLink(food.name.isEmpty ? dinnerText("Name and review this food") : food.name) {
+                            DinnerFoodEvidenceEditor(food: $food, usesFreePantryStock: draft.leftoverPantryBasis != nil
+                                && draft.reviewedLeftovers.contains { $0.foodID == food.id })
+                        }
                     }
                     Button(dinnerText("Add a reviewed food identity")) { draft.foods.append(DinnerFoodEvidenceDraft()) }.disabled(draft.foods.count >= 100)
                 }
-                if let journey = currentPickup, let lots = try? DinnerLibraryPairings.unreservedLots(journey, at: Date()), !lots.isEmpty {
+                if pickup.pantryIsActive && canonical == nil {
+                    Section(dinnerText("Confirmed unreserved leftovers")) {
+                        Text(pantryText("Could not load a complete pantry. No partial availability is shown."))
+                    }
+                }
+                if !lots.isEmpty {
                     Section(dinnerText("Confirmed unreserved leftovers")) {
                         ForEach(lots) { lot in
                             Text("\(lot.name) · \(dinnerQuantity(lot.usable)) · \(lot.confirmedAt.formatted())")
@@ -151,16 +173,27 @@ struct DinnerScenarioEditor: View {
                             }
                         }
                         Button(dinnerText("Use only the reviewed leftover balances")) {
+                            guard !pickup.pantryIsActive || (canonical != nil && canonicalSupply?.basis == canonical?.basis) else {
+                                model.report(DinnerPlanningError.stalePreview); return
+                            }
                             draft.reviewedLeftovers = lots.compactMap { lot in
                                 guard let food = leftoverChoices[lot.id] else { return nil }
                                 return .init(id: lot.id,foodID: food,name: lot.name,usable: lot.usable,confirmedAt: lot.confirmedAt,source: lot.source)
                             }
-                            draft.leftoverRevision = draft.reviewedLeftovers.isEmpty ? nil : journey.revision
+                            if canonical != nil {
+                                let linked = Set(draft.reviewedLeftovers.map(\.foodID))
+                                for index in draft.foods.indices where linked.contains(draft.foods[index].id) {
+                                    draft.foods[index].stockConfirmed = false
+                                    draft.foods[index].outsideAmount = ""
+                                }
+                            }
+                            draft.leftoverRevision = draft.reviewedLeftovers.isEmpty || canonical != nil ? nil : currentPickup?.revision
+                            draft.leftoverPantryBasis = draft.reviewedLeftovers.isEmpty ? nil : canonical?.basis
                         }
                     }
                 }
                 if !draft.reviewedLeftovers.isEmpty {
-                    Button(dinnerText("Remove linked leftovers from this comparison")) { draft.reviewedLeftovers = []; draft.leftoverRevision = nil; leftoverChoices = [:] }
+                    Button(dinnerText("Remove linked leftovers from this comparison")) { draft.reviewedLeftovers = []; draft.leftoverRevision = nil; draft.leftoverPantryBasis = nil; leftoverChoices = [:] }
                 }
                 DinnerScenarioBasketFields(draft: $draft)
                 DinnerScenarioContextFields(draft: $draft)
@@ -202,7 +235,7 @@ struct DinnerScenarioEditor: View {
                 if leftoversCurrent, let reviewed, let shop = model.shop, reviewed.shopID == shop.id, reviewed.baseRevision == shop.revisionID,
                    reviewed.planningRevision == model.state.revisionID {
                     DinnerScenarioReviewView(model: model, current: reviewed.current, alternatives: libraryAlternatives.isEmpty ? [reviewed.candidate] : libraryAlternatives,
-                        selectedAcceptedDinnerIDs: DinnerLibraryPairings.chosen(in: shop, state: model.state).union(reviewed.current.acceptedDinnerIDs), cap: reviewed.cap, excludedByRules: conflicts, library: library)
+                        selectedAcceptedDinnerIDs: DinnerLibraryPairings.chosen(in: shop, state: model.state).union(reviewed.current.acceptedDinnerIDs), cap: reviewed.cap, excludedByRules: conflicts, library: library, reviewedPantryBasis: draft.leftoverPantryBasis)
                 } else { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
             }
     }
@@ -248,6 +281,18 @@ private struct DinnerScenarioBasketFields: View {
                     if !draft.feeThreshold.isEmpty { Toggle(dinnerText("Counts toward the fee threshold"), isOn: $line.feeEligible) }
                 }
             }
+            ForEach($draft.essentials) { $line in
+                VStack(alignment: .leading) {
+                    TextField(dinnerText("Household essential"), text: $line.name)
+                    TextField(dinnerText("Essential cost in USD, optional"), text: $line.cost)
+                    if !draft.feeThreshold.isEmpty {
+                        Toggle(dinnerText("Counts toward the fee threshold"), isOn: $line.feeEligible)
+                    }
+                }
+            }.onDelete { draft.essentials.remove(atOffsets: $0) }
+            Button(dinnerText("Include a household essential")) {
+                draft.essentials.append(DinnerBaselineCostDraft(id: UUID(), name: ""))
+            }
             Toggle(dinnerText("Every other dinner, lunch, side and staple is included once"), isOn: $draft.baselineComplete)
             Toggle(dinnerText("Compared recipe purchases are excluded from these remaining line costs"), isOn: $draft.baselineExcludesComparedRecipes)
             TextField(dinnerText("All checkout fees in USD, optional"), text: $draft.fee)
@@ -280,29 +325,34 @@ private struct DinnerScenarioContextFields: View {
 }
 private struct DinnerFoodEvidenceEditor: View {
     @Binding var food: DinnerFoodEvidenceDraft
+    let usesFreePantryStock: Bool
     var body: some View {
         Form {
             Section(dinnerText("Reviewed food identity")) {
                 TextField(dinnerText("Food name"), text: $food.name)
                 Text(dinnerText("Use this identity only for ingredients and packs you explicitly reviewed as the same food."))
             }
-            Section(dinnerText("Confirmed usable stock")) {
-                TextField(dinnerText("Usable amount at home, optional"), text: $food.stockAmount)
-                DinnerUnitPicker(unit: $food.stockUnit)
-                Picker(dinnerText("Stock source"), selection: $food.stockSource) {
-                    Text(dinnerText("Pantry")).tag(ConfirmedStockSource.pantry)
-                    Text(dinnerText("Freezer")).tag(ConfirmedStockSource.freezer)
-                    Text(dinnerText("Manual confirmation")).tag(ConfirmedStockSource.manual)
+            if usesFreePantryStock {
+                Text(dinnerText("This food uses confirmed free pantry stock. Its held portions are already excluded."))
+            } else {
+                Section(dinnerText("Confirmed usable stock")) {
+                    TextField(dinnerText("Usable amount at home, optional"), text: $food.stockAmount)
+                    DinnerUnitPicker(unit: $food.stockUnit)
+                    Picker(dinnerText("Stock source"), selection: $food.stockSource) {
+                        Text(dinnerText("Pantry")).tag(ConfirmedStockSource.pantry)
+                        Text(dinnerText("Freezer")).tag(ConfirmedStockSource.freezer)
+                        Text(dinnerText("Manual confirmation")).tag(ConfirmedStockSource.manual)
+                    }
+                    DatePicker(dinnerText("Stock confirmed at"), selection: $food.stockDate)
+                    Toggle(dinnerText("I confirmed this dated usable amount"), isOn: $food.stockConfirmed)
+                    Text(dinnerText("Unconfirmed stock is not allocated. No pantry quantity is guessed."))
                 }
-                DatePicker(dinnerText("Stock confirmed at"), selection: $food.stockDate)
-                Toggle(dinnerText("I confirmed this dated usable amount"), isOn: $food.stockConfirmed)
-                Text(dinnerText("Unconfirmed stock is not allocated. No pantry quantity is guessed."))
-            }
-            Section(dinnerText("Protect needs outside this comparison")) {
-                TextField(dinnerText("Amount reserved for other needs, optional"), text: $food.outsideAmount)
-                DinnerUnitPicker(unit: $food.outsideUnit)
-                Toggle(dinnerText("I reviewed all outside reservations; blank means none"), isOn: $food.outsideReservationsReviewed)
-                Text(dinnerText("Outside reservations are allocated before these dinner demands and are counted only once."))
+                Section(dinnerText("Protect needs outside this comparison")) {
+                    TextField(dinnerText("Amount reserved for other needs, optional"), text: $food.outsideAmount)
+                    DinnerUnitPicker(unit: $food.outsideUnit)
+                    Toggle(dinnerText("I reviewed all outside reservations; blank means none"), isOn: $food.outsideReservationsReviewed)
+                    Text(dinnerText("Outside reservations are allocated before these dinner demands and are counted only once."))
+                }
             }
             Section(dinnerText("One usable pack")) {
                 TextField(dinnerText("Pack description"), text: $food.packLabel)

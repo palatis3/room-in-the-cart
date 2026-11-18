@@ -77,7 +77,7 @@ enum RequestDuplicateGrouping {
         }
     }
 
-    private static func comparisonName(_ original: String) -> String {
+    static func comparisonName(_ original: String) -> String {
         original.precomposedStringWithCanonicalMapping
             .split(whereSeparator: \.isWhitespace).joined(separator: " ")
             .lowercased(with: Locale(identifier: "en_US_POSIX"))

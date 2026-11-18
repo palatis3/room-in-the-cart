@@ -20,6 +20,32 @@ import CoreDomain
     }
 }
 @MainActor final class DinnerFeatureModelTests: XCTestCase {
+    func testPrivateMealPreferenceSaveWithoutPickupReopensAndRejectsAnOlderEditor() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let origin = try XCTUnwrap(model.sourceWorkspaceID)
+        var settings = MealPreferenceSettings()
+        settings.exclusions = ["peanut"]
+        let denied = await model.saveMealPreferences(settings, expectedRevision: nil, workspaceID: origin, authorize: { false })
+        XCTAssertFalse(denied)
+        let saved = await model.saveMealPreferences(settings, expectedRevision: nil, workspaceID: origin, authorize: { true })
+        XCTAssertTrue(saved)
+        let reopened = LedgerModel(databaseURL: url)
+        await reopened.open()
+        XCTAssertNil(reopened.shop)
+        let profile = try XCTUnwrap(reopened.workspace.dinnerPlanning.privateMealPreferences)
+        XCTAssertEqual(profile.settings, settings)
+        let stale = await reopened.saveMealPreferences(.init(), expectedRevision: nil, workspaceID: origin, authorize: { true })
+        XCTAssertFalse(stale)
+        let removed = await reopened.saveMealPreferences(.init(), expectedRevision: profile.revision, workspaceID: origin, authorize: { true })
+        XCTAssertTrue(removed)
+        XCTAssertNotEqual(reopened.workspace.dinnerPlanning.privateMealPreferences?.revision, profile.revision)
+        XCTAssertNil(reopened.shop)
+    }
+
     let now = Date(timeIntervalSince1970: 1_800_000_000)
     private func fixture(paid: Bool = false, catalog: [MealTemplate] = []) -> (MemoryDinnerStore, DinnerFeatureModel) {
         let store = MemoryDinnerStore()
@@ -554,6 +580,7 @@ import CoreDomain
         let (store, model) = fixture()
         let commitments = DinnerCommitmentSet(commitments: [DinnerCommitment(name: "Dinner", kind: .dinner, portions: .one)])
         var a = DinnerStoreDraft(); a.label = "A"; a.storeID = "a"; a.branch = "branch-a"; a.source = "Reviewed retailer total"
+        a.orderMinimumKind = .noneRequired; a.eligibilityReviewed = true
         a.allChargesIncluded = true; a.total = "12"; a.quantitiesMatched = true; a.singleStore = true; a.availability = 1; a.tripCash = "0"
         var b = a; b.id = UUID(); b.label = "B"; b.storeID = "b"; b.branch = "branch-b"; b.total = "10"
         let shop = model.shop!
@@ -687,6 +714,28 @@ import CoreDomain
         let wrapNeed = review.current.demands.first { $0.foodID == draft.foods[0].id }!
         XCTAssertEqual(result.stockAllocation.demands.first { $0.id == wrapNeed.id }?.allocated, .one)
     }
+    func testCanonicalFreeStockAndReviewedEssentialAreAppliedOnce() throws {
+        let (shop, state, original) = try fixture()
+        var draft = original
+        let wraps = draft.foods[0]
+        let free = Quantity(amount: try Rational(4), unit: .count, originalLiteral: "4 free")
+        draft.reviewedLeftovers = [ConfirmedStockLot(id: UUID(), foodID: wraps.id, name: wraps.name,
+            usable: free, confirmedAt: Date(), source: .pantry)]
+        draft.leftoverPantryBasis = .init(originID: UUID(), inventoryRevision: 7, sourceHeads: [])
+        draft.essentials = [DinnerBaselineCostDraft(id: UUID(), name: "Laundry soap", cost: "4.50", feeEligible: false)]
+        let reviewed = try draft.build(shop: shop, state: state)
+        for plan in [reviewed.current, reviewed.candidate] {
+            XCTAssertEqual(plan.baselineLines.filter { $0.id == draft.essentials[0].id }.count, 1)
+            let result = try DinnerScenarioEngine.evaluate(plan, acceptedDinners: state.acceptedDinners)
+            let pack = try XCTUnwrap(result.packs.first { $0.foodID == wraps.id }?.result)
+            XCTAssertEqual(pack.amountToBuy, try Rational(2))
+            XCTAssertEqual(pack.packsToBuy, 1)
+        }
+        draft.foods[0].outsideReservationsReviewed = true
+        draft.foods[0].outsideAmount = "2"
+        XCTAssertThrowsError(try draft.build(shop: shop, state: state))
+    }
+
     func testUnknownPackYieldAndPriceNeverBecomeZeroOrCoverage() throws {
         let (shop, state, original) = try fixture(); var draft = original
         draft.foods[0].yieldReviewed = false; draft.foods[0].packPrice = ""

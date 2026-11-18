@@ -40,11 +40,6 @@ class PlanIOSFixtureTests(unittest.TestCase):
         isolated = {f"{suite}-{method.rsplit('/', 1)[1]}"
                     for suite in ISOLATED_SUITES for method in self.inventory[suite]}
         self.assertCountEqual(actual, grouped | isolated | set(DELIVERY_SHARDS))
-        self.assertEqual(len(actual), 26)
-        self.assertEqual(self.inventory["SharedCreatedMealUndoUITests"], {
-            f"{UI_TARGET}/SharedCreatedMealUndoUITests/testCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple",
-            f"{UI_TARGET}/SharedCreatedMealUndoUITests/testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple",
-        })
         self.assertIn("RecipeLibraryAcceptanceUITests", suites_for("contributor"))
         self.assertIn("CorrectionPrivacyAcceptanceUITests", suites_for("contributor"))
         self.assertNotIn("LibraryPrivacyUITestCase", actual)
@@ -81,6 +76,18 @@ class PlanIOSFixtureTests(unittest.TestCase):
                     selectors.extend(lines)
                 self.assertCountEqual(selectors, enabled)
 
+    def test_previously_executed_selectors_keep_their_profile_and_shard(self):
+        # Each row comes from a passing XCTest result in GitHub Actions run 44150889945.
+        # New methods are covered by the exact current-source test above, without changing this fixture.
+        historical = Path(__file__).with_name("fixtures") / "ios-fixture-selectors.tsv"
+        remaining = set(historical.read_text(encoding="utf-8").splitlines())
+        for profile in ("contributor", "dinner"):
+            plan = make_plan(enumeration(self.enabled_for(profile)), profile, self.inventory)
+            for shard, details in plan["shards"].items():
+                for identifier in details["test_identifiers"]:
+                    remaining.discard(f"{profile}\t{shard}\t{identifier.removesuffix('()')}")
+        self.assertEqual(sorted(remaining), [], "Previously executed fixture selectors were dropped or rerouted")
+
     def test_records_and_dinner_keep_exact_standalone_names_profiles_and_selectors(self):
         plans = {profile: make_plan(enumeration(self.enabled_for(profile)), profile, self.inventory)
                  for profile in ("contributor", "dinner")}
@@ -91,20 +98,37 @@ class PlanIOSFixtureTests(unittest.TestCase):
                          sorted(self.inventory["RecordsMediaUITests"]))
         self.assertNotIn("suites", records)
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
-        self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
-        self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 95)
+        dinner = plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]
+        self.assertEqual(dinner["suite"], "DinnerDecisionSheetUITests")
+        pricing = f"{UI_TARGET}/DinnerDecisionSheetUITests/testCurrentDinnerCostSeparatesServingValueFromPackagesAndCheckout"
+        self.assertEqual([identifier.removesuffix("()") for identifier in dinner["test_identifiers"]].count(pricing), 1)
+        correction = f"{UI_TARGET}/ContributorRequestUITests/testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen"
+        contributor = plans["contributor"]["shards"]["contributor-balanced-02"]["test_identifiers"]
+        self.assertEqual([selector.removesuffix("()") for selector in contributor].count(correction), 1)
+        preferences = f"{UI_TARGET}/ContributorRequestUITests/testHouseholdMealPreferencesOrganizerReviewsAndAdultReads"
+        self.assertEqual([selector.removesuffix("()") for selector in contributor].count(preferences), 1)
+        staples = f"{UI_TARGET}/ContributorRequestUITests/testAdultReviewsHouseholdStaplePurchaseAndAnswersQuestionAcrossReopen"
+        self.assertEqual([selector.removesuffix("()") for selector in contributor].count(staples), 1)
+        foodkeeper = f"{UI_TARGET}/MeasurementUITests/testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange"
+        measurement_shard = plans["contributor"]["shards"]["contributor-balanced-02"]["test_identifiers"]
+        self.assertEqual([value.removesuffix("()") for value in measurement_shard].count(foodkeeper), 1)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
         later_page = f"{UI_TARGET}/RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling"
         return_shard = plans["contributor"]["shards"]["contributor-balanced-01"]["test_identifiers"]
-        self.assertEqual([value.removesuffix("()") for value in return_shard].count(later_page), 1)
+        comparison_selectors = [value.removesuffix("()") for value in return_shard]
+        self.assertEqual(comparison_selectors.count(later_page), 1)
+        for method in ("testShopperReviewsTwoUnaddedRequestsAndUndoesThePairFromTheOtherRequest",
+                       "testOlderServerShowsOtherOpenRequestWithoutPairActions"):
+            self.assertEqual(comparison_selectors.count(f"{UI_TARGET}/RequestDuplicateComparisonUITests/{method}"), 1)
         large_lunches = f"{UI_TARGET}/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
         decision_shard = plans["contributor"]["shards"]["contributor-balanced-03"]["test_identifiers"]
         civil_shard = plans["contributor"]["shards"]["contributor-balanced-04"]["test_identifiers"]
         recipe_link = f"{UI_TARGET}/RecipeLibraryAcceptanceUITests/testRecipeLinkAllowsMissingYieldCorrectionBeforeSaving"
         self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(recipe_link), 1)
+        timers = f"{UI_TARGET}/RecipeLibraryAcceptanceUITests/testCookingTimersRestoreInSpanishAtLargestTextAndEndOnRequest"
+        self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(timers), 1)
         for language in ("English", "Spanish"):
             optional_night = f"{UI_TARGET}/SharedMealCivilDateUITests/test{language}UnscheduledMealCanBeScheduledWithoutReplacingItsNeeds"
             self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(optional_night), 1)
@@ -130,7 +154,6 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertIn(first_sign_in, [value.removesuffix("()") for value in enrollment])
         fallbacks = plans["contributor"]["shards"]["SharedFallbackUITests"]
         self.assertEqual(fallbacks["suite"], "SharedFallbackUITests")
-        self.assertEqual(len(fallbacks["test_identifiers"]), 2)
         paid_case = f"{UI_TARGET}/PaidPickupRecoveryUITests/testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy"
         group = plans["contributor"]["shards"]["contributor-balanced-04"]
         self.assertIn(paid_case, [identifier.removesuffix("()") for identifier in group["test_identifiers"]])
@@ -142,9 +165,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         shards = make_plan(enumeration(self.enabled_for("contributor")), "contributor", self.inventory)["shards"]
         delivery = {name: shard["test_identifiers"] for name, shard in shards.items()
                     if shard.get("suite") == "SharedDeliveryUITests"}
-        self.assertEqual({name: len(cases) for name, cases in delivery.items()},
-                         {"SharedDeliveryUITests-stock-and-purchase": 4,
-                          "SharedDeliveryUITests-recovery-cook-and-closeout": 7})
+        self.assertEqual(set(delivery), set(DELIVERY_SHARDS))
         recovery = delivery["SharedDeliveryUITests-recovery-cook-and-closeout"]
         for method in ("testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
                        "testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart"):
@@ -183,6 +204,12 @@ class PlanIOSFixtureTests(unittest.TestCase):
             with self.subTest(case=identifier, state="disabled"):
                 with self.assertRaisesRegex(ValueError, "Fixture tests must not be disabled"):
                     make_plan(enumeration(remaining, [STOREKIT_TEST, identifier]), "contributor", self.inventory)
+
+    def test_cooking_report_uses_contributor_enrollment_fixture(self):
+        enabled = self.enabled_for("contributor")
+        plan = make_plan(enumeration(enabled), "contributor", self.inventory)
+        report = f"{UI_TARGET}/ContributorRequestUITests/testEditableCookReportPreservesCorrectionDraftAndReadOnlyGrantCannotWriteStock"
+        self.assertIn(report + "()", plan["shards"]["contributor-balanced-02"]["test_identifiers"])
 
     def test_new_method_in_balanced_suite_keeps_its_whole_suite_and_all_other_methods(self):
         inventory = {suite: set(methods) for suite, methods in self.inventory.items()}

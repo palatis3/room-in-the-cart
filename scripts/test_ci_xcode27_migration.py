@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, A2_RUNNER, RELEASE_BUILD_JOB, CORE_BUILD_JOB, A2_JOBS, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
+from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, A2_RUNNER, SWIFT_PACKAGES_JOB, RELEASE_BUILD_JOB, CORE_BUILD_JOB, A2_JOBS, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
 from check_ios_performance import compare_baseline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +27,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                 seen.add(key)
                 env = {**workflow.get('env', {}), **job.get('env', {})}
                 if key == ('ci.yml', 'ios-swift-codeql'):
-                    self.assertEqual(job['runs-on'], 'macos-15')
+                    self.assertEqual(job['runs-on'], 'macos-15-intel')
                     self.assertEqual(env['DEVELOPER_DIR'], '/Applications/Xcode_26.3.app/Contents/Developer')
                     self.assertNotIn('CI_IPHONE_RUNTIME', env)
                     self.assertNotIn('CI_IPHONE_NAME', env)
@@ -97,6 +97,10 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertIn('scripts/check_built_app.py .build/RoomInTheCart.xcarchive', verify['run'])
             for diagnostic in ('sw_vers', 'uname -m', '/Applications/Xcode*.app'):
                 self.assertLess(command.index(diagnostic), command.index('bash scripts/check_ci_xcode27.sh'))
+            if (workflow, name) == SWIFT_PACKAGES_JOB:
+                # SwiftPM compiles and exercises the macOS host without an iOS simulator.
+                self.assertNotIn('runtime_identity', command)
+                continue
             if (workflow, name) == ('ios-deep.yml', 'storekit'):
                 # Billing checks its policy-selected OS after loading the shared products.
                 setup = next(s for s in jobs[name]['steps'] if s.get('id') == 'storekit-runtime')

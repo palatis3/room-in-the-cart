@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import CoreDomain
 import LocalStore
+import DeviceSurfaces
 import RecordArchive
 import HouseholdClient
 
@@ -109,18 +110,20 @@ private struct RecordsPlanningProjection: Codable {
         try ArchiveCodec.preflight(data)
         return try LedgerModel.validatePayload(data)
     }
-    static func ledgerScope(_ workspace: LedgerWorkspace, shop: ShoppingLedger) throws -> LedgerWorkspace {
+    static func ledgerScope(_ workspace: LedgerWorkspace, shop: ShoppingLedger, feedbackOwner: String? = nil) throws -> LedgerWorkspace {
         let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: shop).decoded()
         var value = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id, dinnerPlanning: planning,
             packSelections: workspace.packSelections.filter { $0.shopID == shop.id })
         value.listLayout = workspace.listLayout.scoped(to: shop)
+        value.copyPrivateMealFeedback(from: workspace, owner: feedbackOwner, includeRecipes: false)
         try value.validate()
         return value
     }
-    static func ledgerLibrary(_ workspace: LedgerWorkspace) throws -> LedgerWorkspace? {
+    static func ledgerLibrary(_ workspace: LedgerWorkspace, feedbackOwner: String? = nil) throws -> LedgerWorkspace? {
         let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: nil).decoded()
         guard !workspace.mealTemplates.isEmpty || !planning.acceptedDinners.isEmpty || !planning.rotations.isEmpty || !planning.ideas.isEmpty else { return nil }
-        let value = LedgerWorkspace(mealTemplates: workspace.mealTemplates, dinnerPlanning: planning)
+        var value = LedgerWorkspace(mealTemplates: workspace.mealTemplates, dinnerPlanning: planning)
+        value.copyPrivateMealFeedback(from: workspace, owner: feedbackOwner)
         try value.validate()
         return value
     }
@@ -167,17 +170,17 @@ private struct RecordsPlanningProjection: Codable {
         return record
     }
     static func recoveredLedger(_ saved: RecoveredRecord, current: LedgerRecord, scope: RecordsRecoveryCapture.Scope,
-                                sources: [SourceMediaRecord]) throws -> [ArchiveRecord] {
+                                sources: [SourceMediaRecord], feedbackOwner: String? = nil) throws -> [ArchiveRecord] {
         let workspace = try ledger(current.payload)
         var result = try workspace.shops.map { shop in
-            let scoped = try ledgerScope(workspace, shop: shop)
+            let scoped = try ledgerScope(workspace, shop: shop, feedbackOwner: feedbackOwner)
             let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
             let lines = shop.contributions.filter { $0.removedAt == nil }.map {
                 HelperLine(label: $0.productName, originalAmount: $0.quantity?.originalLiteral ?? "", originalUnit: $0.quantity?.unit.rawValue ?? "")
             }
             return try revised(saved.record, nativePayload: bytes, id: shop.id.uuidString, title: shop.title, date: current.savedAt, lines: lines)
         }
-        if let library = try ledgerLibrary(workspace) {
+        if let library = try ledgerLibrary(workspace, feedbackOwner: feedbackOwner) {
             let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
             result.append(try revised(saved.record, nativePayload: bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
         }
@@ -249,7 +252,8 @@ struct RecordsToolsEntryView: View {
     }
     var body: some View {
         Group {
-            if let tools = composition.tools { RecordsToolsView(model: tools, recipeLibraryOnly: dinnerModel != nil) }
+            if let tools = composition.tools { RecordsToolsView(model: tools, recipeLibraryOnly: dinnerModel != nil, pantry: composition.pantryTools, pantryErasure: composition.pantryErasure, didDismissPantryErasure: composition.didDismissPantryErasure) }
+            else if composition.cleanupOnly, let erasure = composition.pantryErasure { Form { RecordsPantryErasureSection(model: erasure, didDismiss: composition.didDismissPantryErasure) } }
             else if composition.error != nil {
                 ContentUnavailableView {
                     Label(recordsText("Records could not open"), systemImage: "exclamationmark.triangle")
@@ -271,7 +275,7 @@ struct RecordsToolsEntryView: View {
         }
         .onChange(of: scenePhase) { _, phase in composition.bind(access: access, household: household, active: phase == .active) }
         .onDisappear { composition.clearPrivatePreviews() }
-        .sheet(item: $composition.destination, onDismiss: { Task { await composition.tools?.refresh() } }) { destination in
+        .sheet(item: $composition.destination, onDismiss: { Task { await composition.recoveredDestinationDismissed() } }) { destination in
             NavigationStack {
                 Group {
                     switch destination.content {
@@ -283,7 +287,10 @@ struct RecordsToolsEntryView: View {
                             NavigationLink(recordsText("Open recovered dinners")) { RecordsRecoveredDinnersView(ledger: model) }
                         }.navigationTitle(recordsText("Recovered workspace")).environmentObject(model)
                     case let .pickup(model): PickupHomeView(model: model).environment(\.pickupLedger, nil)
-                    case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger, dinnerModel: dinnerModel)
+                    case let .pantry(session): RecordsRecoveredPantryView(session: session)
+                    case let .recipe(recipe):
+                        RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger, dinnerModel: dinnerModel,
+                            cooking: composition.cookingContext(copy: destination.id, recipe: recipe))
                     case let .sharedRecord(record, text):
                         ScrollView { Text(text).textSelection(.enabled).accessibilityIdentifier("records.sharedRecoveredText").frame(maxWidth: .infinity, alignment: .leading).padding() }
                             .navigationTitle(recordsTitle(record))
@@ -324,14 +331,36 @@ private struct RecordsRecoveredDinnersView: View {
     }
 }
 
-@MainActor private final class RecordsComposition: ObservableObject {
+private struct RecordsRecoveredPantryView: View {
+    @ObservedObject var session: RecordsPantrySession
+    var body: some View {
+        Group {
+            if let model = session.model, session.phase == .ready, session.hasAccess {
+                PantryHomeView(model: model, accessAllowed: session.hasAccess)
+            } else {
+                ContentUnavailableView(recordsText("Records could not open"), systemImage: "lock")
+            }
+        }
+    }
+}
+
+@MainActor private final class RecordsComposition: ObservableObject, PantryErasureObserver {
     struct Destination: Identifiable {
-        enum Content { case comparison(AppModel, ComparisonDraft, SavedComparison), ledger(LedgerModel), pickup(PickupModel), recipe(ImportedRecipe), sharedRecord(ArchiveRecord, String), ledgerDeletion(WholeLedgerDeletionReview) }
+        enum Content { case comparison(AppModel, ComparisonDraft, SavedComparison), ledger(LedgerModel), pickup(PickupModel), pantry(RecordsPantrySession), recipe(ImportedRecipe), sharedRecord(ArchiveRecord, String), ledgerDeletion(WholeLedgerDeletionReview) }
         let id: String
         let content: Content
     }
     @Published var tools: RecordsToolsModel?
-    @Published var destination: Destination?
+    @Published private(set) var cleanupOnly = false
+    @Published private(set) var pantryErasure: RecordsPantryErasureModel?
+    @Published private(set) var pantryTools: RecordsPantryToolsModel?
+    @Published var destination: Destination? {
+        didSet {
+            if oldValue?.id != destination?.id, case .pantry(let session) = oldValue?.content {
+                session.invalidate()
+            }
+        }
+    }
     @Published var error: ArchiveError?
     @Published private(set) var deletingLedger = false
     let app: AppModel
@@ -339,6 +368,8 @@ private struct RecordsRecoveredDinnersView: View {
     let pickup: PickupModel
     private let erasureCleanup: RecordsErasureCleanup
     private var registry: RecoveryRegistry?
+    private var pantryWorker: PantryArchiveWorker?
+    private var pantrySessions: [UUID: RecordsPantrySession] = [:]
     private var directory: URL?
     private var loading = false
     private var pickupOrigin: String?
@@ -353,6 +384,7 @@ private struct RecordsRecoveredDinnersView: View {
     }
     private var visibleIdentity: RecordsScope?
     private var authorizationGeneration = UUID()
+    private var dataGeneration = UUID()
     private let recoveryLifetime = RecordsRecoveryLifetime.shared
     func bind(access: WorkspaceAccess, household: HouseholdModel, active: Bool) {
         self.access = access; self.household = household; self.active = active
@@ -362,7 +394,112 @@ private struct RecordsRecoveredDinnersView: View {
         let identity = active ? privateIdentity() : nil
         if identity != visibleIdentity { clearPrivatePreviews(); visibleIdentity = identity }
     }
-    func clearPrivatePreviews() { authorizationGeneration = UUID(); recoveryLifetime.invalidate(); tools?.invalidateForSourceErasure(); destination = nil }
+    func clearPrivatePreviews() {
+        authorizationGeneration = UUID(); recoveryLifetime.invalidate(); tools?.invalidateForSourceErasure(); pantryTools?.invalidate(); pantryErasure?.invalidate(); destination = nil
+        let closing = Array(pantrySessions.values)
+        closing.forEach { $0.invalidate() }
+        guard !closing.isEmpty else { return }
+        Task { [self] in
+            do { try await closePantrySessions(closing) }
+            catch { self.error = .unavailable }
+        }
+    }
+    func recoveredDestinationDismissed() async {
+        do { try await closePantrySessions(except: destination?.id) }
+        catch { self.error = .unavailable }
+        await tools?.refresh()
+    }
+    private func closePantrySessions(except retainedID: String? = nil) async throws {
+        try await closePantrySessions(pantrySessions.values.filter { $0.id.uuidString != retainedID })
+    }
+    private func closePantrySessions(_ closing: [RecordsPantrySession]) async throws {
+        closing.forEach { $0.invalidate() }
+        var failed = false
+        for session in closing {
+            if await session.close() {
+                if pantrySessions[session.id] === session { pantrySessions.removeValue(forKey: session.id) }
+            } else { failed = true }
+        }
+        guard !failed else { throw ArchiveError.unavailable }
+    }
+    private func pantrySession(for copy: RecoveredPantryCopy,
+                               authorize: @escaping RecordsToolsModel.Authorization) async throws -> RecordsPantrySession {
+        guard authorize(), let registry, let directory, let pantryWorker else { throw ArchiveError.unavailable }
+        let current = try await registry.currentPantryCopy(copy)
+        guard authorize() else { throw ArchiveError.unavailable }
+        if let existing = pantrySessions[copy.id] {
+            if existing.copy.lifetime == current.lifetime, existing.hasAccess, existing.phase == .ready {
+                return existing
+            }
+            guard await existing.close(), authorize() else { throw ArchiveError.unavailable }
+            if pantrySessions[copy.id] === existing { pantrySessions.removeValue(forKey: copy.id) }
+        }
+        guard pantrySessions[copy.id] == nil, authorize() else { throw ArchiveError.unavailable }
+        let session = RecordsPantrySession(copy: current,
+            root: directory.appendingPathComponent("Recoveries", isDirectory: true), worker: pantryWorker,
+            registry: registry, lifetime: recoveryLifetime, gate: PantryMutationGate(),
+            protectedWorkspaceIDs: { [weak self] in
+                guard let self else { return [] }
+                return Set([self.ledger.sourceWorkspaceID, self.pickup.sourceWorkspaceID, self.app.store?.workspaceID].compactMap { $0 })
+            }, authorize: authorize)
+        // Publish ownership before the first suspension so revocation/cleanup can
+        // cancel and await even an opening that has not returned its store yet.
+        pantrySessions[copy.id] = session
+        guard await session.open(), authorize() else {
+            if await session.close(), pantrySessions[copy.id] === session { pantrySessions.removeValue(forKey: copy.id) }
+            throw ArchiveError.unavailable
+        }
+        return session
+    }
+    private func openPantry(_ copy: RecoveredPantryCopy,
+                            authorize: @escaping RecordsToolsModel.Authorization) async throws {
+        try await closePantrySessions(except: copy.id.uuidString)
+        guard authorize() else { throw ArchiveError.unavailable }
+        let session = try await pantrySession(for: copy, authorize: authorize)
+        guard authorize(), session.hasAccess else { throw ArchiveError.unavailable }
+        destination = Destination(id: copy.id.uuidString, content: .pantry(session))
+    }
+    private func captureRecoveredPantry(_ copy: RecoveredPantryCopy, output: PantryArchiveWorker,
+                                        authorize: @escaping RecordsToolsModel.Authorization) async throws -> PantryArchiveHandle {
+        let wasDisplayed = destination?.id == copy.id.uuidString
+        let session = try await pantrySession(for: copy, authorize: authorize)
+        do {
+            let handle = try await session.captureArchive(to: output)
+            guard authorize() else { throw ArchiveError.unavailable }
+            if !wasDisplayed {
+                guard await session.close() else { throw ArchiveError.unavailable }
+                if pantrySessions[copy.id] === session { pantrySessions.removeValue(forKey: copy.id) }
+            }
+            return handle
+        } catch {
+            if !wasDisplayed, await session.close(), pantrySessions[copy.id] === session {
+                pantrySessions.removeValue(forKey: copy.id)
+            }
+            throw error
+        }
+    }
+    /// Each capture has its own temporary parent. An import arriving while Files
+    /// is open can therefore own an independent package with the same bundle ID.
+    private func temporaryCapture(_ write: (PantryArchiveWorker) async throws -> PantryArchiveHandle) async throws -> PantryArchiveHandle {
+        let parent = FileManager.default.temporaryDirectory.appendingPathComponent("PantryExports", isDirectory: true)
+        try protectDirectory(parent)
+        let job = parent.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let writer = try PantryArchiveWorker(root: job)
+        do { return try await write(writer) }
+        catch { try? FileManager.default.removeItem(at: job); throw error }
+    }
+    private static func discardTemporaryCapture(_ handle: PantryArchiveHandle) throws {
+        let base = FileManager.default.temporaryDirectory.appendingPathComponent("PantryExports", isDirectory: true).standardizedFileURL
+        let job = handle.directory.deletingLastPathComponent().standardizedFileURL
+        guard UUID(uuidString: job.lastPathComponent) != nil, job.deletingLastPathComponent().path == base.path,
+              handle.directory.lastPathComponent == handle.reference.bundleID.uuidString else { throw ArchiveError.invalidIdentity }
+        if FileManager.default.fileExists(atPath: job.path) { try FileManager.default.removeItem(at: job) }
+    }
+    private var feedbackOwner: String? {
+        guard let scope = privateIdentity(), scope.grantID == nil else { return nil }
+        return scope.identity.mealFeedbackOwner
+    }
+
     private func privateIdentity() -> RecordsScope? {
         guard let access, let household,
               let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
@@ -370,20 +507,70 @@ private struct RecordsRecoveredDinnersView: View {
         return RecordsScope(identity: identity, shopID: projection?.shopId, grantID: projection?.grantId,
                            capabilities: Set(projection?.capabilities ?? []))
     }
-    private func captureAuthorization() -> RecordsToolsModel.Authorization? {
+    private func captureAuthorization(forErasure: Bool = false) -> RecordsToolsModel.Authorization? {
         guard active, let identity = privateIdentity() else { return nil }
         let ledgerID = ledger.sourceWorkspaceID, comparisonID = app.store?.workspaceID
-        let generation = authorizationGeneration
+        let pickupID = pickup.sourceWorkspaceID
+        let generation = authorizationGeneration, data = dataGeneration
         return { [weak self] in
             guard let self else { return false }
-            return self.active && self.authorizationGeneration == generation && self.privateIdentity() == identity &&
-                self.ledger.sourceWorkspaceID == ledgerID && self.app.store?.workspaceID == comparisonID
+            return self.active && self.authorizationGeneration == generation && (forErasure || self.dataGeneration == data) && self.privateIdentity() == identity &&
+                self.ledger.sourceWorkspaceID == ledgerID && self.app.store?.workspaceID == comparisonID &&
+                self.pickup.sourceWorkspaceID == pickupID
         }
+    }
+    func cookingContext(copy: String, recipe: ImportedRecipe) -> CookingSessionContext? {
+        guard let source = UUID(uuidString: copy), let workspace = ledger.sourceWorkspaceID,
+              let scope = privateIdentity(), let authorized = captureAuthorization(), authorized(),
+              let key = try? CookingSessionKey(workspace: workspace, actor: scope.identity.actorID,
+                audience: [scope.identity.subject, scope.identity.householdID, scope.identity.memberID, scope.identity.role, scope.shopID, scope.grantID],
+                kind: .recipe, source: source, revision: recipe.id) else { return nil }
+        return CookingSessionContext(key: key, authorize: { [weak self] in
+            authorized() && self?.destination?.id == copy
+        })
     }
     private let recipeLibraryOnly: Bool
     init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup, recipeLibraryOnly: Bool) {
         self.recipeLibraryOnly = recipeLibraryOnly
         self.app = app; self.ledger = ledger; self.pickup = pickup; self.erasureCleanup = erasureCleanup
+        pickup.observePrivatePantryErasure(self)
+    }
+
+    func invalidatePantryPresentation(origin: UUID, initiatedHere: Bool) {
+        // Any Records import or recovered copy can contain lineage from this origin.
+        // Only the initiating erasure keeps its separate consent to finish cleanup.
+        dataGeneration = UUID()
+        pantryErasureChangedRecords = true
+        if initiatedHere { pantryErasure?.redactReviewedContent() }
+        else { pantryErasure?.invalidate() }
+        tools?.invalidateForSourceErasure()
+        pantryTools?.invalidate()
+        recoveryLifetime.invalidate()
+        destination = nil
+        for session in pantrySessions.values { session.invalidate() }
+    }
+
+    func drainPantryPresentation(origin: UUID) async throws {
+        await registry?.discardUndo()
+        try await closePantrySessions()
+        try await pantryTools?.invalidateAndDrain()
+    }
+
+    func pantryCleanupFinished(origin: UUID, initiatedHere: Bool) async {
+        if !initiatedHere && active { await didDismissPantryErasure() }
+    }
+    private var pantryErasureChangedRecords = false
+    func didDismissPantryErasure() async {
+        guard cleanupOnly || pantryErasureChangedRecords else { return }
+        pantryErasureChangedRecords = false
+        tools?.invalidateForSourceErasure()
+        pantryTools?.invalidate()
+        tools = nil
+        pantryTools = nil
+        pantryErasure = nil
+        pickupOrigin = nil
+        cleanupOnly = false
+        await load()
     }
     func load() async {
         guard tools == nil, !loading else { return }
@@ -401,9 +588,78 @@ private struct RecordsRecoveredDinnersView: View {
             self.directory = directory
             let registry = try RecoveryRegistry(url: directory.appendingPathComponent("recovery-v1.json"))
             self.registry = registry
+            let stores = pickup.pantryErasureStores
+            let pendingCleanup = stores.map {
+                PantryErasureCoordinator.hasPendingCleanup(in: $0.configuration.erasureJournalDirectory, originID: $0.inventory.workspaceID)
+            } ?? false
+            if (pickup.pantryRecoveryAvailable || pendingCleanup) && !recipeLibraryOnly {
+                let worker = try PantryArchiveWorker(root: directory.appendingPathComponent("PantryArchives", isDirectory: true))
+                try await worker.reconcilePreparedImports(registry: registry)
+                pantryWorker = worker
+                pantryErasure = RecordsPantryErasureModel(beginAuthorization: { [weak self] in self?.captureAuthorization(forErasure: true) },
+                    coordinator: { [weak self] authorize in
+                        guard let self, let stores = self.pickup.pantryErasureStores, authorize() else { throw ArchiveError.unavailable }
+                        let config = stores.configuration
+                        return PantryErasureCoordinator(inventory: stores.inventory, ledger: config.ledger,
+                            gate: config.gate, pendingDirectory: config.pendingStore.fileURL.deletingLastPathComponent(),
+                            registry: registry, worker: worker, journalDirectory: config.erasureJournalDirectory,
+                            receiptFilesForErasure: { origin, date in
+                                try await PrivateReceiptInbox.open().receiptErasureCandidates(origin: origin, now: date)
+                            }, recoveredDirectory: directory.appendingPathComponent("Recoveries", isDirectory: true),
+                            initiatingPresentation: self, cleanup: { [weak self] cleanup, receipt in
+                                guard let self, authorize(), cleanup.originID == receipt.workspaceID else { throw ArchiveError.unavailable }
+                                try await PantryDigestStore.shared.erase(origin: cleanup.originID, whole: cleanup.wholeOrigin, inventory: stores.inventory)
+                                self.pantryErasureChangedRecords = true
+                                if let clips = cleanup.sharedReceipts {
+                                    try await PrivateReceiptInbox.open().retireReceipts(clips, origin: cleanup.originID, now: Date())
+                                }
+                                try await worker.reconcilePreparedImports(registry: registry, requireIdle: true)
+                                for id in cleanup.pickupIDs {
+                                    try await self.erasureCleanup.erasePickupRecord(cleanup.originID, id)
+                                }
+                                if cleanup.wholeOrigin {
+                                    try await CaptureMediaStore.shared.eraseWorkspace(cleanup.originID)
+                                    try await CaptureCorrectionStore.shared.eraseProfile(CaptureCorrectionScope(
+                                        profileID: "local:" + cleanup.originID.uuidString, localeIdentifier: "en-US"))
+                                }
+                                try await self.purgeOrphanWorkspaces()
+                            }, authorize: { authorize() && config.erasureAuthorization() })
+                    })
+                cleanupOnly = pendingCleanup
+                if pendingCleanup { return }
+                pantryTools = RecordsPantryToolsModel(worker: worker, registry: registry, captureLive: { [weak self] authorize in
+                    guard let self else { throw ArchiveError.unavailable }
+                    return try await self.temporaryCapture { try await self.pickup.capturePantryArchive(worker: $0, authorize: authorize) }
+                }, validateLocalDependencies: { [weak self] handle, authorize in
+                    guard let self else { throw ArchiveError.unavailable }
+                    try await self.pickup.validatePantryArchive(handle, worker: worker, authorize: authorize)
+                }, openRecovered: { [weak self] copy, authorize in
+                    guard let self else { throw ArchiveError.unavailable }
+                    try await self.openPantry(copy, authorize: authorize)
+                }, captureIndependent: { [weak self] copy, authorize in
+                    guard let self else { throw ArchiveError.unavailable }
+                    return try await self.temporaryCapture { try await self.captureRecoveredPantry(copy, output: $0, authorize: authorize) }
+                }, beginAuthorization: { [weak self] in self?.captureAuthorization() }, willRemove: { [weak self] copyIDs in
+                    guard let self else { throw ArchiveError.unavailable }
+                    for id in copyIDs {
+                        if let session = self.pantrySessions[id] {
+                            session.invalidate()
+                            if self.destination?.id == id.uuidString { self.destination = nil }
+                            guard await session.close() else { throw ArchiveError.unavailable }
+                            if self.pantrySessions[id] === session { self.pantrySessions.removeValue(forKey: id) }
+                        }
+                    }
+                }, discardCapture: { handle in try Self.discardTemporaryCapture(handle) }, cleanup: { [weak self] in
+                    guard let self else { throw ArchiveError.unavailable }
+                    try await self.purgeOrphanWorkspaces()
+                })
+            }
             if ledger.hasPendingLedgerDeletion { try await synchronizeLedgerErasure() }
             else { try await synchronizeErasure() }
-            if !ledger.hasPendingLedgerDeletion { pickupOrigin = "pickups/" + (try await pickup.archiveListing()).workspaceID.uuidString }
+            if !ledger.hasPendingLedgerDeletion && !pickup.pantryRestartAvailable {
+                guard let origin = pickup.sourceWorkspaceID else { throw ArchiveError.unavailable }
+                pickupOrigin = "pickups/" + origin.uuidString
+            }
             tools = RecordsToolsModel(registry: registry, snapshot: { [weak self] in
                 guard let self else { throw ArchiveError.unavailable }; return try await self.snapshot()
             }, validateNativePayload: { [weak self] record in
@@ -414,7 +670,7 @@ private struct RecordsRecoveredDinnersView: View {
                 guard let self else { throw ArchiveError.unavailable }; try await self.delete(record, authorize: authorize)
             }, canDeleteSource: { [weak self] record in
                 guard let self else { return false }
-                return (record.kind == .comparison && record.origin == self.app.store.map { "comparisons/" + $0.workspaceID.uuidString }) || (record.kind == .pickup && record.origin == self.pickupOrigin)
+                return (record.kind == .comparison && record.origin == self.app.store.map { "comparisons/" + $0.workspaceID.uuidString }) || (record.kind == .pickup && !self.pickup.pantryIsActive && record.origin == self.pickupOrigin)
             }, cleanupRecoveredWorkspaces: { [weak self] in
                 guard let self else { throw ArchiveError.unavailable }; try await self.purgeOrphanWorkspaces()
             }, willRemoveRecovered: { [weak self] in
@@ -423,6 +679,17 @@ private struct RecordsRecoveredDinnersView: View {
                 guard let self else { throw ArchiveError.unavailable }
                 let review = try await self.ledger.reviewWholeLedgerDeletion()
                 self.destination = Destination(id: "whole-ledger-deletion", content: .ledgerDeletion(review))
+            }, captureInbox: {
+                #if DEBUG
+                if SurfaceRuntimeIsolation.usesUITestWorkspace(launchArguments: ProcessInfo.processInfo.arguments) {
+                    return try SharedCaptureInbox(url: directory.appendingPathComponent("test-shared-captures.sqlite"))
+                }
+                #endif
+                let bundle = Bundle.main
+                _ = try SurfaceConfiguration(inboxGroup: bundle.object(forInfoDictionaryKey: SurfaceInfo.inboxGroupKey) as? String,
+                    widgetGroup: bundle.object(forInfoDictionaryKey: SurfaceInfo.widgetGroupKey) as? String,
+                    urlScheme: bundle.object(forInfoDictionaryKey: SurfaceInfo.schemeKey) as? String)
+                return try IOSSurfaceContainers.sharedCaptures(bundle: bundle)
             }, beginAuthorization: { [weak self] in self?.captureAuthorization() })
             error = nil
         } catch { self.error = error as? ArchiveError ?? .unavailable }
@@ -438,7 +705,7 @@ private struct RecordsRecoveredDinnersView: View {
     private func synchronizeErasure() async throws {
         guard let registry, let store = app.store else { throw ArchiveError.unavailable }
         let tombstones = try await store.tombstones()
-        let pickupTombstones = try await pickup.archiveTombstones()
+        let pickupTombstones = pickup.pantryRestartAvailable ? [] : try await pickup.archiveTombstones()
         let erased = tombstones.map { ArchiveSourceIdentity(origin: "comparisons/" + $0.workspaceID.uuidString, recordID: $0.id.uuidString) }
             + pickupTombstones.map { ArchiveSourceIdentity(origin: "pickups/" + $0.workspaceID.uuidString, recordID: $0.id.uuidString) }
         try await registry.registerErasedSources(erased)
@@ -463,16 +730,22 @@ private struct RecordsRecoveredDinnersView: View {
     }
     private func purgeOrphanWorkspaces() async throws {
         guard let registry, let directory else { throw ArchiveError.unavailable }
+        if let pantryWorker {
+            let retired = try await registry.permanentlyRetiredPantryBundleIDs()
+            try await pantryWorker.removePermanentlyRetiredBundles(retired)
+        }
         let root = directory.appendingPathComponent("Recoveries", isDirectory: true)
+        let retained = try await registry.retainedRecoveryCopyIDs()
+        try CookingSessionResources.eraseUnretainedRecipes(retaining: Set(retained.compactMap(UUID.init(uuidString:))))
         guard FileManager.default.fileExists(atPath: root.path) else { return }
-        let retained = Set(try await registry.refreshList().map(\.id))
         let folders = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { UUID(uuidString: $0.lastPathComponent) != nil && !retained.contains($0.lastPathComponent) }
         guard !folders.isEmpty else { return }
         recoveryLifetime.invalidate(); destination = nil
+        try await closePantrySessions()
         await recoveryLifetime.drain()
         // A concurrent reviewed import may have retained a copy while we drained.
-        let current = Set(try await registry.refreshList().map(\.id))
+        let current = try await registry.retainedRecoveryCopyIDs()
         let protectedWorkspaceIDs = Set([ledger.sourceWorkspaceID, pickup.sourceWorkspaceID, app.store?.workspaceID].compactMap { $0 })
         for url in folders {
             guard !current.contains(url.lastPathComponent) else { continue }
@@ -521,7 +794,7 @@ private struct RecordsRecoveredDinnersView: View {
         if ledger.ready, let originID = ledger.sourceWorkspaceID {
             let workspace = try RecordsNativeCodec.ledger(ledger.exportPayload())
             for shop in workspace.shops {
-                let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
+                let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop, feedbackOwner: feedbackOwner)
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
                 let lines = shop.contributions.filter { $0.removedAt == nil }.map { contribution in
                     HelperLine(label: contribution.productName, originalAmount: contribution.quantity?.originalLiteral ?? "",
@@ -531,27 +804,31 @@ private struct RecordsRecoveredDinnersView: View {
                     revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title,
                     savedAtMilliseconds: ArchiveCodec.milliseconds(ledger.savedAt ?? Date(timeIntervalSince1970: 0)), helperLines: lines, nativePayload: bytes))
             }
-            if let library = try RecordsNativeCodec.ledgerLibrary(workspace) {
+            if let library = try RecordsNativeCodec.ledgerLibrary(workspace, feedbackOwner: feedbackOwner) {
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
                 result.append(ArchiveRecord(id: "meal-library", origin: "ledger/" + originID.uuidString,
                     revision: ArchiveCodec.digest(bytes), kind: .ledger, title: "Reusable dinners",
                     savedAtMilliseconds: ArchiveCodec.milliseconds(ledger.savedAt ?? Date(timeIntervalSince1970: 0)), nativePayload: bytes))
             }
         }
-        let pickupSnapshot = try await pickup.archiveListing()
-        let pickupBatch = RecordsSnapshotProjection.project(pickupSnapshot.listing, origin: "pickups/" + pickupSnapshot.workspaceID.uuidString) { saved in
-            let value = try RecordsNativeCodec.pickup(saved.payload)
-            guard value.id == saved.id else { throw ArchiveError.invalidIdentity }
-            let bytes = try RecordsNativeCodec.canonical(value)
-            let lines = (value.basket?.current.lines ?? []).map { line in
-                HelperLine(label: line.name, originalAmount: line.quantity.originalLiteral, originalUnit: line.quantity.unit.rawValue)
+        var pickupMediaOrigin: UUID?
+        if !pickup.pantryRestartAvailable {
+            let pickupSnapshot = try await pickup.archiveListing()
+            let pickupBatch = RecordsSnapshotProjection.project(pickupSnapshot.listing, origin: "pickups/" + pickupSnapshot.workspaceID.uuidString) { saved in
+                let value = try RecordsNativeCodec.pickup(saved.payload)
+                guard value.id == saved.id else { throw ArchiveError.invalidIdentity }
+                let bytes = try RecordsNativeCodec.canonical(value)
+                let lines = (value.basket?.current.lines ?? []).map { line in
+                    HelperLine(label: line.name, originalAmount: line.quantity.originalLiteral, originalUnit: line.quantity.unit.rawValue)
+                }
+                return ArchiveRecord(id: saved.id.uuidString, origin: "pickups/" + pickupSnapshot.workspaceID.uuidString,
+                    revision: ArchiveCodec.digest(bytes), kind: .pickup,
+                    title: value.basket?.current.lines.first?.name ?? value.urgent.first?.meal ?? "Pickup",
+                    savedAtMilliseconds: ArchiveCodec.milliseconds(saved.savedAt), helperLines: lines, nativePayload: bytes)
             }
-            return ArchiveRecord(id: saved.id.uuidString, origin: "pickups/" + pickupSnapshot.workspaceID.uuidString,
-                revision: ArchiveCodec.digest(bytes), kind: .pickup,
-                title: value.basket?.current.lines.first?.name ?? value.urgent.first?.meal ?? "Pickup",
-                savedAtMilliseconds: ArchiveCodec.milliseconds(saved.savedAt), helperLines: lines, nativePayload: bytes)
+            result += pickupBatch.records; unavailableRecords += pickupBatch.unavailable
+            pickupMediaOrigin = pickupSnapshot.workspaceID
         }
-        result += pickupBatch.records; unavailableRecords += pickupBatch.unavailable
         // A separately recovered workspace may have been edited since import. Export
         // its committed domain state, retaining the original source identity and parent.
         if let registry {
@@ -578,7 +855,9 @@ private struct RecordsRecoveredDinnersView: View {
             sourceMedia += listing.records
         }
         guard authorize() else { throw ArchiveError.unavailable }
-        sourceMedia += try await mediaListing(workspaceID: pickupSnapshot.workspaceID, authorize: authorize, unavailableRecords: &unavailableRecords).records
+        if let pickupMediaOrigin {
+            sourceMedia += try await mediaListing(workspaceID: pickupMediaOrigin, authorize: authorize, unavailableRecords: &unavailableRecords).records
+        }
         guard authorize() else { throw ArchiveError.unavailable }
         for index in result.indices {
             result[index] = try RecordsMediaCodec.attaching(sourceMedia, to: result[index])
@@ -626,7 +905,21 @@ private struct RecordsRecoveredDinnersView: View {
         }
         let url = folder.appendingPathComponent(filename)
         guard FileManager.default.fileExists(atPath: url.path) else {
-            do { try RecordsNativeCodec.validate(saved.record); return [saved.record] }
+            do {
+                try RecordsNativeCodec.validate(saved.record)
+                if saved.record.kind == .ledger, let bytes = saved.record.nativePayload {
+                    let workspace = try RecordsNativeCodec.ledger(bytes)
+                    if workspace.privateMealFeedback.contains(where: { $0.owner != feedbackOwner }) {
+                        var visible = workspace
+                        visible.copyPrivateMealFeedback(from: workspace, owner: feedbackOwner)
+                        let payload = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: visible))
+                        return [try RecordsNativeCodec.revised(saved.record, nativePayload: payload, id: saved.record.id,
+                            title: saved.record.title, date: Date(timeIntervalSince1970: Double(saved.record.savedAtMilliseconds) / 1000),
+                            lines: saved.record.helperLines)]
+                    }
+                }
+                return [saved.record]
+            }
             catch { return omitRecovered(saved, reason: .invalidNative, unavailableRecords: &unavailableRecords) }
         }
         if saved.record.kind == .ledger {
@@ -639,7 +932,7 @@ private struct RecordsRecoveredDinnersView: View {
             guard let current else { return omitRecovered(saved, reason: .unreadableStorage, unavailableRecords: &unavailableRecords) }
             do {
             let sources = try await mediaListing(workspaceID: opened.scope.workspaceID, authorize: authorize, liveScope: opened.scope, unavailableRecords: &unavailableRecords).records
-            return try RecordsNativeCodec.recoveredLedger(saved, current: current, scope: opened.scope, sources: sources)
+            return try RecordsNativeCodec.recoveredLedger(saved, current: current, scope: opened.scope, sources: sources, feedbackOwner: feedbackOwner)
             } catch { return omitRecovered(saved, reason: .invalidNative, unavailableRecords: &unavailableRecords) }
         }
         let store: ComparisonStore
@@ -694,6 +987,16 @@ private struct RecordsRecoveredDinnersView: View {
            let id = UUID(uuidString: record.id), try await store.isErased(id: id) { throw ArchiveError.conflict }
         if record.origin == pickupOrigin, let id = UUID(uuidString: record.id),
            try await pickup.archiveTombstones().contains(where: { $0.id == id }) { throw ArchiveError.conflict }
+        if record.kind == .pickup || record.kind == .ledger {
+            if let stores = pickup.pantryErasureStores {
+                try await PantryArchivePrivacyValidator.validate(record, inventory: stores.inventory,
+                    ledger: stores.configuration.ledger, gate: stores.configuration.gate,
+                    retiredOrigins: pickup.retiredPantryOrigins, authorize: authorize)
+            } else if pickup.usesLivePantry {
+                throw ArchiveError.unavailable
+            }
+        }
+        guard authorize() else { throw ArchiveError.unavailable }
         try RecordsNativeCodec.validate(record)
     }
     func deleteWholeLedger(_ review: WholeLedgerDeletionReview) async throws {
@@ -855,19 +1158,33 @@ private struct RecordsRecipeAdoptionView: View {
     let recipe: ImportedRecipe
     @ObservedObject var ledger: LedgerModel
     let dinnerModel: DinnerFeatureModel?
+    let cooking: CookingSessionContext?
     @State private var editing = false
     private var template: MealTemplate {
         // The placeholder is never shown or saved. The editor requires the person to
         // enter positive servings; original yield and ingredient words remain intact.
         MealTemplate(title: recipe.title, servings: .one,
             ingredients: recipe.ingredients.map { MealIngredient(name: $0, quantity: nil) },
-            notes: ([recipe.yieldText, recipe.notes] + recipe.steps).filter { !$0.isEmpty }.joined(separator: "\n"), sourceURL: recipe.sourceURL)
+            notes: [recipe.yieldText, recipe.notes].filter { !$0.isEmpty }.joined(separator: "\n"), sourceURL: recipe.sourceURL,
+            recipeSteps: recipe.steps.isEmpty ? nil : recipe.cookingSteps)
     }
     var body: some View {
         Form {
             Text(recipe.title).font(.title2.bold())
+            if let cooking {
+                NavigationLink(recordsText("Cook this recipe")) {
+                    CookingSessionView(title: recipe.title, steps: recipe.cookingSteps, ingredients: recipe.ingredients,
+                        legacyNotes: recipe.notes, yieldText: recipe.yieldText, context: cooking,
+                        finishTitle: ledger.shop == nil ? nil : recordsText("Choose a dinner for this pickup")) {
+                            dinnerEditor
+                        }
+                }.accessibilityIdentifier("cooking.openRecipe")
+            }
             Text(recipe.yieldText)
             ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { _, value in Text(value) }
+            if !recipe.steps.isEmpty {
+                NavigationLink(recordsText("Cooking steps")) { RecipeStepReviewView(steps: recipe.cookingSteps, ingredients: recipe.ingredients) }
+            }
             ForEach(Array(recipe.steps.enumerated()), id: \.offset) { _, value in Text(value) }
             Text(recipe.notes)
             if let source = recipe.sourceURL { Text(source).textSelection(.enabled) }
@@ -882,13 +1199,14 @@ private struct RecordsRecipeAdoptionView: View {
         }
         .navigationTitle(recordsText("Saved recipe"))
         .sheet(isPresented: $editing) {
-            NavigationStack {
-                if let dinnerModel {
-                    DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: true)
-                } else {
-                    LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true)
-                }
-            }
+            NavigationStack { dinnerEditor }
+        }
+    }
+    @ViewBuilder private var dinnerEditor: some View {
+        if let dinnerModel {
+            DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: true)
+        } else {
+            LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true)
         }
     }
 }

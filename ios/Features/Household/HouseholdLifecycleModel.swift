@@ -219,9 +219,14 @@ import HouseholdClient
         } catch { if start == scopeGeneration { await handle(error) } }
     }
     func sendProposal() async {
-        guard isHelper, let helperView, helperView.canPropose, pendingProposal == nil, !busy else { return }
-        let text = correction.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, text.count <= 1000 else { notice = ht("Enter a suggestion up to 1,000 characters."); return }
+        guard let helperView else { return }
+        await sendProposal(correction, reviewed: helperView)
+    }
+
+    func sendProposal(_ wording: String, reviewed helperView: HelperView) async {
+        guard isHelper, self.helperView == helperView, helperView.canPropose, pendingProposal == nil, !busy else { return }
+        let text = wording.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, text.utf16.count <= 1000 else { notice = ht("Enter a suggestion up to 1,000 characters."); return }
         busy = true; notice = nil; proposalReceipt = nil; defer { busy = false }; let start = scopeGeneration
         do {
             let intent = try await service.prepareHelperProposal(grantID: helperView.grantId, baseRevision: helperView.revision, correction: text)
@@ -241,7 +246,8 @@ import HouseholdClient
         do {
             let receipt = try await service.executeHelperProposal(intent)
             guard start == scopeGeneration else { return }
-            proposalReceipt = receipt; correction = ""
+            proposalReceipt = receipt
+            if correction.trimmingCharacters(in: .whitespacesAndNewlines) == intent.reviewedCorrection { correction = "" }
             var saved = try await store.read(); saved.proposals.removeAll { $0.id == intent.id }; try await store.save(saved)
             guard start == scopeGeneration else { return }; pendingProposal = nil
             notice = ht("Your suggestion was received for review. The shared instructions and shopping basket have not changed.")
@@ -259,7 +265,8 @@ import HouseholdClient
             let fresh = try await service.currentHelperView(grantID: pendingProposal.grantID)
             guard start == scopeGeneration else { return }
             var saved = try await store.read(); saved.proposals.removeAll { $0.id == pendingProposal.id }; try await store.save(saved)
-            guard start == scopeGeneration else { return }; self.pendingProposal = nil; helperView = fresh; correction = ""
+            guard start == scopeGeneration else { return }; self.pendingProposal = nil; helperView = fresh
+            if correction.trimmingCharacters(in: .whitespacesAndNewlines) == pendingProposal.reviewedCorrection { correction = "" }
         } catch { if start == scopeGeneration { await handle(error) } }
     }
     func loadProposals(grantID: String, more: Bool = false) async {

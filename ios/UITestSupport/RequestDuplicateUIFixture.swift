@@ -5,7 +5,15 @@ import SwiftUI
     @Published var model: HouseholdInboxModel?
     @Published var commands = 0
     @Published var failed = false
-    private let server = S23DuplicateFixtureServer(pageBoundary:true)
+    private let server: S23DuplicateFixtureServer
+    init() {
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("--s23-request-pair") {
+            server = S23DuplicateFixtureServer(pairMode: args.contains("--s23-older-server") ? .olderServer : .available)
+        } else {
+            server = S23DuplicateFixtureServer(pageBoundary: true, mealNames: args.contains("--s23-same-meal") ? ["Cereal"] : [])
+        }
+    }
     func start() async {
         guard model == nil, ProcessInfo.processInfo.arguments.contains("--ui-testing"),
               ProcessInfo.processInfo.arguments.contains("--request-duplicates-fixture") else { return }

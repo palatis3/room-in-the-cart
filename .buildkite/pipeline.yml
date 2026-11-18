@@ -1,0 +1,21 @@
+# Install these static steps in the pipeline editor. The guard runs before a Mac is allocated.
+steps:
+  - label: "Qualify one iPhone XCTest"
+    key: native-qualification
+    if: >-
+      (build.source == "ui" || build.source == "api") &&
+      build.pull_request.id == null &&
+      (build.branch == "main" || build.branch == "codex/buildkite-native-qualification")
+    agents:
+      queue: macos-27-medium
+    concurrency: 2
+    concurrency_group: room-in-the-cart/native-qualification
+    timeout_in_minutes: 30
+    command: bash .buildkite/qualify-native.sh
+    artifact_paths:
+      - ".build/qualification.txt"
+      - ".build/test-plan/qualification.txt"
+      - ".build/test-summary.json"
+      - ".build/test-details.json"
+      - ".build/Tests*.log"
+      - ".build/test-run-timing*.json"

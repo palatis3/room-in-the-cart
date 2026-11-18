@@ -61,6 +61,7 @@ struct DeviceReminderPersona: Equatable {
     private let lifecycleStore: LifecycleIntentStore
     private let historyStore: HistoryPendingStore
     let fallbackPendingStore: FallbackPendingStore
+    let pantryPendingStore: HouseholdPantryPendingStore
     private let quotePendingStore: StoreQuotesPendingStore
     let guardianIntentStore: GuardianIntentStore
     private let deviceRevocationStore: DeviceRevocationStore
@@ -83,7 +84,9 @@ struct DeviceReminderPersona: Equatable {
     }
     private var attempts = 0
     private var retryAfter = Date.distantPast
-    private var generation = UUID()
+    // Brief continuation through the existing shop picker. Never cache a title, stock facts, or review token.
+    var tonightDestinationReturn: HouseholdTonightReturn?
+    private(set) var generation = UUID()
     // An explicit OTP from private Settings may continue on the protected root for this session.
     @Published private var verifiedHouseholdSubject: String?
     private var contributorEnrollmentRevision = UUID()
@@ -105,6 +108,7 @@ struct DeviceReminderPersona: Equatable {
         historyStore = HistoryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("history.json"))
         placementStore = PlacementPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("placement.json"))
         fallbackPendingStore = FallbackPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("fallback-recipes.json"))
+        pantryPendingStore = HouseholdPantryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("household-pantry.json"))
         quotePendingStore = StoreQuotesPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("store-quotes.json"))
         deviceRevocationStore = DeviceRevocationStore(url: queueURL.deletingPathExtension().appendingPathExtension("devices.json"))
         let guardianNamespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + (guardianChildOnly ? ".covered-child.guardian." : ".guardian.") + (bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String ?? "injected")
@@ -152,6 +156,7 @@ struct DeviceReminderPersona: Equatable {
     func dismissVerifiedHousehold() { verifiedHouseholdSubject = nil }
 
     private func invalidateSessionActions() {
+        tonightDestinationReturn = nil
         generation = UUID()
         dismissVerifiedHousehold()
     }
@@ -294,6 +299,10 @@ struct DeviceReminderPersona: Equatable {
             }
             // Revoke the old view as soon as authority is known, even if the request list cannot load.
             projection = fresh
+            if prior.capabilities.contains("household_pantry"), !fresh.capabilities.contains("household_pantry"), let subject = identity?.subject {
+                try await pantryPendingStore.purge(householdID: prior.household.id, subject: subject)
+                guard start == generation else { return }
+            }
             do { try await refreshRequestPickups(service, start: start) }
             catch {
                 if start == generation { clearRequestPickups() }
@@ -811,6 +820,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await placementStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await fallbackPendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await quotePendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await pantryPendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await guardianIntentStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await deviceRevocationStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         guard start == generation, self.identity?.subject == subject, !locked else { return }
@@ -875,6 +885,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await placementStore.purge() } catch { failed = true }
         do { try await fallbackPendingStore.purge() } catch { failed = true }
         do { try await quotePendingStore.purge() } catch { failed = true }
+        do { try await pantryPendingStore.purge() } catch { failed = true }
         do { try await guardianIntentStore.purge() } catch { failed = true }
         do { try await deviceRevocationStore.purge() } catch { failed = true }
         do {
@@ -962,6 +973,9 @@ struct DeviceReminderPersona: Equatable {
         if let shopperInbox, shopperInbox.authorized, shopperInbox.householdID == projection.household.id,
            shopperInbox.memberID == projection.memberId, shopperInbox.shopID == projection.shopId,
            shopperInbox.supportsPurchaseConfirmation == projection.capabilities.contains("request_purchase_confirmation"),
+           shopperInbox.supportsPurchaseAttribution == projection.capabilities.contains("request_purchase_attribution"),
+           shopperInbox.supportsSameItem == projection.capabilities.contains("request_same_item"),
+           shopperInbox.supportsRequestPairs == projection.capabilities.contains("request_pair_review"),
            shopperInbox.supportsDeferredRequests == projection.capabilities.contains("deferred_requests") { return }
         shopperInbox?.clear()
         let start = generation
@@ -1007,6 +1021,8 @@ struct DeviceReminderPersona: Equatable {
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await quotePendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await pantryPendingStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await guardianIntentStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await deviceRevocationStore.purge() }
@@ -1024,6 +1040,21 @@ func ht(_ key: String) -> String { String(localized: String.LocalizationValue(ke
 
 // E09 uses the active native session; recovered files never supply this authority.
 extension HouseholdModel {
+    var mealPreferenceScope: HouseholdPreferenceScope? {
+        guard !guardianChildOnly, !locked, let subject = identity?.subject, let p = projection, p.enrolled,
+              p.grantId == nil, p.capabilities.contains("meal_preferences_read"),
+              ["organizer", "shopper", "contributor"].contains(p.role) else { return nil }
+        return .init(generation: generation, enrollment: contributorEnrollmentRevision, subject: subject,
+                     householdID: p.household.id, memberID: p.memberId, administer: p.capabilities.contains("meal_preferences_admin"))
+    }
+    var householdPantryScope: HouseholdPantryRuntime? {
+        guard !guardianChildOnly, !locked, let subject = identity?.subject, let p = projection, p.enrolled,
+              p.grantId == nil, p.capabilities.contains("household_pantry"),
+              ["organizer", "shopper", "contributor"].contains(p.role) else { return nil }
+        return .init(generation: generation, enrollmentRevision: contributorEnrollmentRevision, subject: subject,
+                     householdID: p.household.id, memberID: p.memberId, managesGrants: p.capabilities.contains("household_pantry_grants"))
+    }
+
     var storeQuotesPendingStore: StoreQuotesPendingStore { quotePendingStore }
     var storeQuoteScope: StoreQuoteScope? {
         guard !locked, let identity, let projection, projection.grantId == nil,

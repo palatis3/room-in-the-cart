@@ -1,0 +1,30 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@: no price is linked to the confirmed food identity." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@: no price is linked to the confirmed food identity." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@: no hay un precio vinculado a la identidad confirmada del alimento." } }
+      }
+    },
+    "%@: package price needs review." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@: package price needs review." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@: hay que revisar el precio del paquete." } }
+      }
+    },
+    "%@: previous package evidence is stale or conflicting; review the price again." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@: previous package evidence is stale or conflicting; review the price again." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@: los datos anteriores del paquete ya no son vigentes o no coinciden; revisa el precio de nuevo." } }
+      }
+    },
+    "%@: previous package price %@, %@, reviewed %@. Confirm the price for this pickup." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@: previous package price %@, %@, reviewed %@. Confirm the price for this pickup." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@: precio anterior del paquete %@, %@, revisado el %@. Confirma el precio para esta recogida." } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

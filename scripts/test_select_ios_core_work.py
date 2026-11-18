@@ -145,6 +145,16 @@ class SelectCoreWorkTests(unittest.TestCase):
                          'EXPECTED_TEST_COUNT': '${{ steps.plan.outputs.model_count }}'})
         self.assertEqual(producer['outputs']['model_result'], '${{ steps.models.outcome }}')
         self.assertEqual(jobs['ios-tests']['needs'], 'ios-build')
+        report = jobs['ios-model-results']
+        self.assertEqual(report['needs'], 'ios-build')
+        self.assertEqual(report['runs-on'], 'ubuntu-24.04')
+        step, = report['steps']
+        self.assertEqual(step['env']['MODEL_OUTCOME'], '${{ needs.ios-build.outputs.model_result }}')
+        for outcome in ('success', 'failure', 'skipped', 'cancelled', ''):
+            with self.subTest(reported_model_outcome=outcome):
+                checked = subprocess.run(['bash', '-c', step['run']], env={**os.environ, 'MODEL_OUTCOME': outcome},
+                                         capture_output=True, text=True)
+                self.assertEqual(checked.returncode == 0, outcome == 'success')
         gate = jobs['ci-gate']
         code = gate['steps'][0]['run'].split("<<'PY'\n", 1)[1].rsplit('\nPY', 1)[0]
         results = {name: {'result': 'success'} for name in gate['needs']}

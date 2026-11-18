@@ -1,0 +1,269 @@
+{
+  "source": "b2085d9d8b2425e75e0b7d6924db5d6971d34d43",
+  "environment": {
+    "osVersion": "27.0",
+    "osBuildNumber": "24A434",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 27.1\nBuild version 27A9275",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "testProducts": {
+    "source": "b2085d9d8b2425e75e0b7d6924db5d6971d34d43",
+    "planSha256": "e273b3906dc17212917427b2c597acf0eac69cf22aa15529ad2482ff7b0a848a",
+    "appExecutableSha256": "351b13cbb314e2614bac66b4d6152b0447d60727b7a3afd61e718276b50918e7",
+    "testsExecutableSha256": "c017a44801ec90a4ebb2f53da89ce4afccfd5054ee71a923e33934783af52a31",
+    "toolchain": "Xcode 27.1\nBuild version 27A9275",
+    "fixtureSha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+  },
+  "cases": [
+    {
+      "case": "launch",
+      "results": {
+        "startedUTC": "2026-11-18T10:52:25.247821+00:00",
+        "xcodebuild": 0,
+        "finishedUTC": "2026-11-18T10:54:58.745608+00:00",
+        "executionValidation": 0,
+        "metricValidation": 0
+      },
+      "runtimeWarnings": 0,
+      "persisted": {}
+    },
+    {
+      "case": "rendered",
+      "results": {
+        "startedUTC": "2026-11-18T10:55:37.478140+00:00",
+        "xcodebuild": 0,
+        "finishedUTC": "2026-11-18T10:59:42.753135+00:00",
+        "executionValidation": 0,
+        "metricValidation": 0
+      },
+      "runtimeWarnings": 0,
+      "persisted": {
+        "sqliteQuickCheck": "ok",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20
+      }
+    },
+    {
+      "case": "scroll",
+      "results": {
+        "startedUTC": "2026-11-18T11:00:22.781958+00:00",
+        "xcodebuild": 0,
+        "finishedUTC": "2026-11-18T11:02:39.499603+00:00",
+        "executionValidation": 0,
+        "metricValidation": 0
+      },
+      "runtimeWarnings": 0,
+      "persisted": {
+        "sqliteQuickCheck": "ok",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0
+      }
+    }
+  ],
+  "results": {
+    "launch": {
+      "responsiveLaunchMedianSeconds": 6.8760857500000006
+    },
+    "rendered": {
+      "searchP95Milliseconds": 2708.309958456084,
+      "checkP95Milliseconds": 1769.8570000939071
+    },
+    "scroll": {
+      "scrollMedianSeconds": 2.583001417,
+      "absoluteMemoryMedianKilobytes": 79350.328,
+      "peakMemoryMedianKilobytes": 79546.936,
+      "maximumPeakMemoryKilobytes": 79727.16
+    }
+  },
+  "series": [
+    {
+      "name": "Responsive launch",
+      "unit": "s",
+      "samples": [
+        6.515589042,
+        6.726178041000001,
+        7.461995917,
+        6.8760857500000006,
+        6.949884917
+      ],
+      "median": 6.8760857500000006
+    },
+    {
+      "name": "Scroll duration",
+      "unit": "s",
+      "samples": [
+        2.583170333,
+        2.5661829170000003,
+        2.584649,
+        2.583001417,
+        2.5821727500000002
+      ],
+      "median": 2.583001417
+    },
+    {
+      "name": "Physical memory change",
+      "unit": "kB",
+      "samples": [
+        -16.384,
+        131.072,
+        458.752,
+        32.768,
+        -180.224
+      ],
+      "median": 32.768
+    },
+    {
+      "name": "Absolute physical memory",
+      "unit": "kB",
+      "samples": [
+        75762.232,
+        75975.224,
+        79481.4,
+        79628.856,
+        79350.328
+      ],
+      "median": 79350.328
+    },
+    {
+      "name": "Peak physical memory",
+      "unit": "kB",
+      "samples": [
+        75893.304,
+        76073.528,
+        79727.16,
+        79727.16,
+        79546.936
+      ],
+      "median": 79546.936
+    },
+    {
+      "name": "Search to accessible result",
+      "unit": "ms",
+      "samples": [
+        2374.82454162091,
+        2420.97399989143,
+        2813.565250020474,
+        2660.5691250879318,
+        2652.7809998951852,
+        2354.676250135526,
+        2519.6312498301268,
+        2371.8669165391475,
+        2708.309958456084,
+        2423.828333383426,
+        2463.269541505724,
+        2217.108208220452,
+        2514.2888750415295,
+        2397.44258322753,
+        2173.8172085024416,
+        1629.3486249633133,
+        1593.2739581912756,
+        1613.0141250323504,
+        1596.4260834734887,
+        1600.2552083227783
+      ],
+      "p95": 2708.309958456084
+    },
+    {
+      "name": "Check to result removal",
+      "unit": "ms",
+      "samples": [
+        1721.6556665953249,
+        1657.7212917618454,
+        1942.612083395943,
+        1769.8570000939071,
+        1628.0377500224859,
+        1588.6042499914765,
+        1601.658416679129,
+        1655.7641667313874,
+        1621.6627499088645,
+        1601.9953333307058,
+        1585.840875050053,
+        1584.219291806221,
+        1581.949666608125,
+        1550.2442084252834,
+        1511.837916681543,
+        1424.177291803062,
+        1483.0717083532363,
+        1441.972333472222,
+        1430.4074165411294,
+        1435.7436667196453
+      ],
+      "p95": 1769.8570000939071
+    }
+  ],
+  "simulatorHitches": {
+    "status": "unavailable",
+    "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+  },
+  "numericAcceptanceProfileAvailable": false,
+  "previousSameEnvironment": {
+    "source": "8b15c5a69065e11c1d383a9df4fec18e0b9093b0",
+    "differences": [
+      {
+        "measure": "Responsive launch median",
+        "unit": "s",
+        "previous": 7.213279125000001,
+        "current": 6.8760857500000006,
+        "difference": -0.337193375,
+        "percentDifference": -4.674619811000314
+      },
+      {
+        "measure": "Search P95",
+        "unit": "ms",
+        "previous": 2648.4305835328996,
+        "current": 2708.309958456084,
+        "difference": 59.879374923184514,
+        "percentDifference": 2.260938054993611
+      },
+      {
+        "measure": "Checkoff P95",
+        "unit": "ms",
+        "previous": 1726.9302085042,
+        "current": 1769.8570000939071,
+        "difference": 42.926791589707136,
+        "percentDifference": 2.4857282233130107
+      },
+      {
+        "measure": "Scroll median",
+        "unit": "s",
+        "previous": 2.58315675,
+        "current": 2.583001417,
+        "difference": -0.00015533299999992423,
+        "percentDifference": -0.00601330136081879
+      },
+      {
+        "measure": "Absolute memory median",
+        "unit": "kB",
+        "previous": 73828.92,
+        "current": 79350.328,
+        "difference": 5521.407999999996,
+        "percentDifference": 7.478651997076469
+      },
+      {
+        "measure": "Peak memory median",
+        "unit": "kB",
+        "previous": 73976.376,
+        "current": 79546.936,
+        "difference": 5570.559999999998,
+        "percentDifference": 7.530187745341843
+      },
+      {
+        "measure": "Maximum peak memory",
+        "unit": "kB",
+        "previous": 76597.816,
+        "current": 79727.16,
+        "difference": 3129.3439999999973,
+        "percentDifference": 4.085421965555769
+      }
+    ]
+  }
+}

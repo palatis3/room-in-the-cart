@@ -52,7 +52,7 @@ class WorkflowGuardTests(unittest.TestCase):
     def test_current_inventory_and_existing_workflow_supersession(self):
         positions = validate_workflows(sorted((ROOT / '.github/workflows').glob('*.yml')))
         self.assertEqual({(value['workflow'], value['job']) for value in positions.values()}, ROUTED_NATIVE_JOBS)
-        self.assertEqual(len(positions), 8)
+        self.assertEqual(len(positions), 9)
         self.assertEqual(len(POLICY), 18)
         data, _, _ = parse_workflow(self.path)
         self.assertIn('on', data)
@@ -97,7 +97,7 @@ class WorkflowGuardTests(unittest.TestCase):
                         group = evaluate(expression, context)
                         groups[identity] = group
                         native = fixed_groups.get(identity)
-                        if not native:
+                        if not native and identity != core:
                             native = {'bitrise-A1': 'ritc-bitrise-a1-slot-0', 'bitrise-A2': 'ritc-bitrise-a2-slot-0'}.get(provider)
                         if trusted and native:
                             self.assertEqual(group, native)
@@ -116,6 +116,22 @@ class WorkflowGuardTests(unittest.TestCase):
                     fallbacks = [value.casefold() for value in groups.values() if value.startswith('ritc-github-job-')]
                     self.assertEqual(len(fallbacks), len(set(fallbacks)))
 
+    def test_swift_packages_keeps_the_source_gate_and_coverage_artifacts(self):
+        workflow, _, _ = parse_workflow(ROOT / '.github/workflows/ci.yml')
+        job = workflow['jobs']['swift-packages']
+        self.assertEqual(job['needs'], 'source-checks')
+        self.assertEqual(job['if'], "needs.source-checks.outputs.ios_provider == 'github'")
+        self.assertEqual(job['runs-on'], FIXTURE_RUNNER)
+        test = next(step for step in job['steps'] if '--enable-code-coverage' in step.get('run', ''))
+        self.assertIn('ios/Packages/*/Package.swift', test['run'])
+        self.assertIn('list --skip-build', test['run'])
+        self.assertIn('scripts/check_swift_package_results.py', test['run'])
+        upload = next(step for step in job['steps'] if step.get('uses', '').startswith('actions/upload-artifact@'))
+        self.assertEqual(upload['if'], 'always()')
+        self.assertIs(upload['with']['include-hidden-files'], True)
+        self.assertEqual(upload['with']['path'].splitlines(), [
+            '.build/package-results', 'ios/Packages/**/.build/**/codecov/*.json'])
+
     def test_product_jobs_seek_pool_capacity_without_cross_run_slot_blocking(self):
         groups = set()
         for run in (100, 101):
@@ -133,11 +149,11 @@ class WorkflowGuardTests(unittest.TestCase):
                     self.assertEqual(group, f'ritc-bitrise-producer-{identity[0][:-4]}-{identity[1]}-{run}-{attempt}')
                     self.assertNotIn('-slot-', group)
                     groups.add(group)
-        self.assertEqual(len(groups), 16)
-        # Product admission never changes the consumers' twelve shared lanes.
+        self.assertEqual(len(groups), 20)
+        # The StoreKit fixture still shares its assigned lane.
         self.assertEqual(POLICY[STOREKIT_JOB], 2)
 
-    def test_twelve_lanes_are_shared_across_workflows_and_disjoint_between_pools(self):
+    def test_twelve_fixture_lanes_are_shared_and_disjoint_between_pools(self):
         context = {'github.event.pull_request.head.repo.full_name': 'palatis3/room-in-the-cart',
                    'github.event_name': 'push', 'vars.RITC_GITHUB_MAC_ONLY': '',
                    'github.repository': 'palatis3/room-in-the-cart', 'github.run_id': 1,
@@ -146,7 +162,7 @@ class WorkflowGuardTests(unittest.TestCase):
         for pool in ('A1', 'A2'):
             for slot in range(6):
                 evaluated = set()
-                for identity in (('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
+                for identity in (('ios-fixtures.yml', 'contributor-tests'),
                                  ('ios-fixtures.yml', 'dinner-tests')):
                     expression = bitrise_group(identity, POLICY[identity])
                     for token, value in {**context, 'matrix.provider': 'bitrise-' + pool,
@@ -185,9 +201,9 @@ class WorkflowGuardTests(unittest.TestCase):
         for changed in (consumer.replace(FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER),
                         consumer.replace("matrix.provider == 'bitrise-A1'", 'true'),
                         consumer.replace(core_group, 'ritc-macos-slot-${{ matrix.macos_slot }}'),
-                        consumer.replace('matrix.pool_slot', 'matrix.macos_slot'),
+                        consumer.replace(core_group, 'ritc-bitrise-a2-slot-2'),
                         consumer.replace("matrix.provider == 'bitrise-A2'", 'true'),
-                        consumer.replace('ritc-bitrise-a2-slot-', 'ritc-bitrise-a1-slot-'),
+                        consumer.replace(core_group, bitrise_group(FIXTURE_JOB, POLICY[FIXTURE_JOB])),
                         consumer.replace('github.run_attempt', 'github.run_id'),
                         consumer.replace('matrix.shard', 'matrix.macos_slot'),
                         consumer.replace('bitrise-runner-A2', 'bitrise-runner-more ci'),
@@ -219,7 +235,7 @@ class WorkflowGuardTests(unittest.TestCase):
                 with self.subTest(changed=changed), self.assertRaises(ValueError):
                     self.validate(changed, producer_policy)
         self.path = Path(self.temp.name) / 'probe.yml'
-        for label in (FIXTURE_RUNNER, A1_LABEL, 'xcode-27-xlarge', 'macos-15-xlarge'):
+        for label in (FIXTURE_RUNNER, A1_LABEL, 'xcode-27-xlarge', 'macos-15-xlarge', 'macos-15-intel'):
             with self.assertRaisesRegex(ValueError, 'Expected standard GitHub runner'):
                 self.validate(GITHUB_TEXT.replace('runs-on: macos-15', 'runs-on: ' + label))
 

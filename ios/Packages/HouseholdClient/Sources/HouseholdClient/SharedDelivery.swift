@@ -81,15 +81,30 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
         public let reservations: [Reservation]?
         public let arrival: Arrival?
         public let usable: Usable?
+        public struct Balance: Codable, Equatable, Sendable {
+            public let observationId: UUID
+            public let confirmedAt: String
+            public let quantity: SharedMealQuantity?
+        }
+        public private(set) var balance: Balance? = nil
         public let confirmed: Lot?
         public var id: UUID { sourceId }
 
         func validate() throws {
             guard arrival.map({ $0.sourceId == id }) ?? true, usable.map({ $0.sourceId == id }) ?? true else { throw ClientError.invalidResponse }
+            if let balance {
+                guard let usable, balance.observationId != usable.observationId, validHelperTimestamp(balance.confirmedAt),
+                      balance.quantity?.validStockQuantity != false, balance.quantity == confirmed?.quantity else { throw ClientError.invalidResponse }
+                if let actual = balance.quantity {
+                    guard let raw = usable.usable, let maximum = DeliveryUnit.convert(raw, to: actual.unit),
+                          let remaining = DeliveryUnit.convert(actual, to: actual.unit),
+                          remaining.compare(maximum) != .orderedDescending else { throw ClientError.invalidResponse }
+                }
+            }
             if let confirmed {
                 guard confirmed.sourceId == id, confirmed.foodId == foodId, confirmed.arrivalId == arrival?.observationId,
                       confirmed.usableId == usable?.observationId, usable?.arrivalObservationId == confirmed.arrivalId,
-                      confirmed.quantity == usable?.usable else { throw ClientError.invalidResponse }
+                      confirmed.quantity == (balance?.quantity ?? usable?.usable) else { throw ClientError.invalidResponse }
             }
         }
     }
@@ -306,7 +321,7 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
                     try row.validateReservations(expected: expected, sources: sources)
                     parts.remove(at: index)
                 }
-                guard parts.isEmpty else { throw ClientError.invalidResponse }
+                guard parts.isEmpty || occurrence.completed == true else { throw ClientError.invalidResponse }
             }
             guard byIngredient.isEmpty else { throw ClientError.invalidResponse }
         }

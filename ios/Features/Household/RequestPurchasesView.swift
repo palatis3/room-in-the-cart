@@ -16,11 +16,7 @@ struct RequestPurchasesView: View {
     @State private var reviewing: RequestPurchaseMatch?
 
     private var placed: SharedDeliveryPage? {
-        guard model.canReadDelivery, model.scope.capabilities.contains("request_purchase_confirmation"),
-              inbox.supportsPurchaseConfirmation, model.scope.memberId == inbox.memberID,
-              model.scope.household.id == inbox.householdID, model.scope.shopId == shopID, inbox.shopID == shopID,
-              let page = model.deliveryRecord, UUID(uuidString: shopID) == page.shopId else { return nil }
-        return page
+        inbox.placedPurchasePage(in: model, shopID: shopID)
     }
 
     var body: some View {
@@ -37,6 +33,9 @@ struct RequestPurchasesView: View {
                                 Text(match.request.originalItem).font(.headline)
                                 if let author = match.request.authorAlias { Text(author) }
                                 Text(purchaseStatus(match.request.purchaseOutcome)).foregroundStyle(.secondary)
+                                if inbox.supportsPurchaseAttribution {
+                                    PurchaseAttributionLabels(request: match.request)
+                                }
                             }
                         }
                         .accessibilityIdentifier("purchase.request." + match.request.id)
@@ -60,9 +59,10 @@ struct RequestPurchasesView: View {
         .sheet(item: $reviewing) { reviewed in
             NavigationStack {
                 if let page = placed, let match = inbox.purchaseMatch(reviewed.id, placed: page), match == reviewed {
-                    RequestPurchaseEditor(match: match, busy: inbox.busy || model.busy || inbox.pending != nil || model.pending != nil) { outcome in
+                    RequestPurchaseEditor(match: match, busy: inbox.busy || model.busy || inbox.pending != nil || model.pending != nil,
+                                          supportsAttribution: inbox.supportsPurchaseAttribution, requests: inbox.requests) { outcome, buyer in
                         guard let current = placed, model.pending == nil else { return }
-                        await inbox.confirmPurchase(match, outcome: outcome, placed: current)
+                        await inbox.confirmPurchase(match, outcome: outcome, placed: current, purchaser: buyer)
                         reviewing = nil
                     }
                 } else {
@@ -76,10 +76,101 @@ struct RequestPurchasesView: View {
     }
 }
 
+private extension HouseholdInboxModel {
+    func canReadPurchasePage(in model: HouseholdShopModel, shopID: String) -> Bool {
+        supportsPurchaseConfirmation && model.canReadDelivery &&
+        model.scope.capabilities.contains("request_purchase_confirmation") &&
+        model.scope.memberId == memberID && model.scope.household.id == householdID &&
+        model.scope.shopId == shopID && self.shopID == shopID
+    }
+
+    func placedPurchasePage(in model: HouseholdShopModel, shopID: String) -> SharedDeliveryPage? {
+        guard canReadPurchasePage(in: model, shopID: shopID), let page = model.deliveryRecord,
+              UUID(uuidString: shopID) == page.shopId else { return nil }
+        return page
+    }
+}
+
+struct DuplicatePurchasedRequestSection: View {
+    @ObservedObject var shop: HouseholdShopModel
+    @ObservedObject var inbox: HouseholdInboxModel
+    let request: OwnRequest
+    let group: RequestDuplicateGroup
+
+    var body: some View {
+        if inbox.canSelectSameItem(for: request), inbox.canReadPurchasePage(in: shop, shopID: request.shopId),
+           group.requests.contains(where: { $0.id != request.id && $0.purchaseOutcome == .bought && $0.linkedLineId != nil }) {
+            Section(ht("Previously purchased for this pickup")) {
+                if let page = inbox.placedPurchasePage(in: shop, shopID: request.shopId),
+                   let current = inbox.shop, current.shopRevision == page.shopRevision,
+                   current.authorityEpoch == page.authorityEpoch, current.placedRevision == page.placedRevision {
+                    let groupIDs = Set(group.requests.map(\.id))
+                    let matches = inbox.purchaseMatches(placed: page).filter {
+                        groupIDs.contains($0.id) && $0.isConfirmedSource(for: request)
+                    }
+                    if matches.isEmpty {
+                        Text(ht("The confirmed purchase is no longer available for this request."))
+                    }
+                    ForEach(matches) { match in
+                        if let sourceID = UUID(uuidString: match.id) {
+                            let source = match.request
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(match.line.name).font(.headline)
+                                if let author = source.authorAlias { LabeledContent(ht("Requested by"), value: author) }
+                                if let quantity = source.ownQuantity { Text(verbatim: quantity) }
+                                if let packs = match.line.packs {
+                                    LabeledContent(ht("Packs in the placed order"), value: packs.formatted())
+                                }
+                                Text(purchaseStatus(source.purchaseOutcome)).foregroundStyle(.secondary)
+                                Button(ht("Review as the same item")) {
+                                    let target = ReviewedSameItemTarget.purchase(sourceRequestId: sourceID,
+                                        sourceRequestRevision: source.revision, lineId: match.line.id,
+                                        placedRevision: match.placedRevision)
+                                    Task { await inbox.selectSameItem(target, for: request) }
+                                }
+                                .accessibilityIdentifier("household.duplicates.reviewPurchase." + source.id)
+                            }
+                        }
+                    }
+                } else {
+                    Button(ht("Check the placed order")) {
+                        Task {
+                            await shop.load()
+                            await shop.loadDelivery()
+                            if let page = shop.deliveryRecord, page.shopRevision != inbox.shop?.shopRevision ||
+                               page.authorityEpoch != inbox.shop?.authorityEpoch {
+                                await inbox.load()
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("household.duplicates.checkPurchase")
+                }
+            }
+            .disabled(shop.busy || inbox.busy || shop.pending != nil || inbox.pending != nil)
+        }
+    }
+}
+
+private struct PurchaseAttributionLabels: View {
+    let request: OwnRequest
+
+    var body: some View {
+        if request.purchaseOutcome == .bought {
+            LabeledContent(ht("Bought by"), value: request.reportedPurchaser ?? ht("Unknown"))
+        }
+        if let recorder = request.purchaseRecordedBy {
+            LabeledContent(ht("Confirmation recorded by"), value: recorder)
+        }
+    }
+}
+
 private struct RequestPurchaseEditor: View {
     let match: RequestPurchaseMatch
     let busy: Bool
-    let save: (ConfirmedRequestPurchase?) async -> Void
+    let supportsAttribution: Bool
+    let requests: [OwnRequest]
+    let save: (ConfirmedRequestPurchase?, ReportedPurchaser?) async -> Void
+    @State private var purchaser: ReportedPurchaser?
     @Environment(\.dismiss) private var dismiss
     @State private var review: Choice?
 
@@ -106,20 +197,44 @@ private struct RequestPurchaseEditor: View {
                 LabeledContent(ht("Whole packs"), value: match.line.packs?.formatted() ?? ht("Unknown"))
                 LabeledContent(ht("Placed revision"), value: match.placedRevision.formatted())
             }
-            Section(ht("Current purchase status")) { Text(purchaseStatus(match.request.purchaseOutcome)) }
+            Section(ht("Current purchase status")) {
+                Text(purchaseStatus(match.request.purchaseOutcome))
+                if supportsAttribution { PurchaseAttributionLabels(request: match.request) }
+            }
             if let review {
                 Section(ht("Review purchase confirmation")) {
                     Text(review.label).font(.headline)
+                    if supportsAttribution, review == .bought {
+                        Picker(ht("Bought by"), selection: $purchaser) {
+                            Text(ht("Choose a purchaser")).tag(nil as ReportedPurchaser?)
+                            Text(ht("Unknown")).tag(ReportedPurchaser.unknown as ReportedPurchaser?)
+                            Text(ht("I bought it")).tag(ReportedPurchaser.myself as ReportedPurchaser?)
+                            ForEach(requests) { request in
+                                if request.shopId == match.request.shopId, request.canReportAuthorAsPurchaser == true,
+                                   let alias = request.authorAlias {
+                                    Text(verbatim: alias + " · " + request.originalItem)
+                                        .tag(ReportedPurchaser.requestAuthor(id: request.id, revision: request.revision,
+                                                                            expectedAlias: alias) as ReportedPurchaser?)
+                                }
+                            }
+                        }.accessibilityIdentifier("purchase.buyer")
+                    }
                     Text(ht("The requester will see the updated purchase status."))
-                    Button(ht("Save reviewed status")) { Task { await save(review.outcome) } }
+                    Button(ht("Save reviewed status")) {
+                        Task { await save(review.outcome, supportsAttribution && review == .bought ? purchaser : nil) }
+                    }.disabled(supportsAttribution && review == .bought && purchaser == nil)
                         .accessibilityIdentifier("purchase.save")
                     Button(ht("Change choice")) { self.review = nil }
                 }
             } else {
                 Section(ht("What happened to this request?")) {
                     ForEach(Choice.allCases, id: \.self) { choice in
-                        if match.request.purchaseOutcome != choice.outcome {
-                            Button(choice.label) { review = choice }
+                        if match.request.purchaseOutcome != choice.outcome || supportsAttribution && choice == .bought {
+                            let changingBuyer = match.request.purchaseOutcome == .bought && choice == .bought
+                            Button(changingBuyer ? ht("Review who bought this") : choice.label) {
+                                purchaser = changingBuyer ? nil : .unknown
+                                review = choice
+                            }
                                 .accessibilityIdentifier("purchase.choice." + (choice.outcome?.rawValue ?? "unknown"))
                         }
                     }

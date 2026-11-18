@@ -1,6 +1,125 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose one HTTPS recipe page, or share a plain-text shopping list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one HTTPS recipe page, or share a plain-text shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una página de recetas HTTPS o comparte una lista de compras en texto sin formato."
+          }
+        }
+      }
+    },
+    "Could not save this link. In Import a recipe link, paste the address or remove an older shared link and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save this link. In Import a recipe link, paste the address or remove an older shared link and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar este enlace. En Importar un enlace de receta, pega la dirección o elimina un enlace compartido anterior e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Open Import a recipe link in Room in the Cart to review this link within seven days.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Import a recipe link in Room in the Cart to review this link within seven days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Importar un enlace de receta en Room in the Cart para revisar este enlace en un plazo de siete días."
+          }
+        }
+      }
+    },
+    "Save recipe link for review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save recipe link for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar enlace de receta para revisar"
+          }
+        }
+      }
+    },
+    "Use the selected text as a shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the selected text as a shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el texto seleccionado como lista de compras"
+          }
+        }
+      }
+    },
+    "Could not save recipe link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save recipe link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar el enlace de la receta"
+          }
+        }
+      }
+    },
+    "Recipe link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace de receta"
+          }
+        }
+      }
+    },
     "Apply your line edits before saving or adding this list.": {
       "localizations": {
         "en": {
@@ -1581,6 +1700,406 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar descarta los cambios de revisión sin guardar."
+          }
+        }
+      }
+    },
+    "Choose one readable receipt file up to 10 MB.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one readable receipt file up to 10 MB."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un archivo de recibo legible de hasta 10 MB."
+          }
+        }
+      }
+    },
+    "Could not stage this receipt. Open the private pantry to remove an older shared file, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not stage this receipt. Open the private pantry to remove an older shared file, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar este recibo. Abre la despensa privada, elimina un archivo compartido anterior y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Leer un archivo de recibo en Mi despensa para revisarlo en un plazo de siete días. El archivo se conserva en este dispositivo hasta que se revise, se descarte o venza."
+          }
+        }
+      }
+    },
+    "Save receipt file for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save receipt file for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar archivo de recibo para revisar"
+          }
+        }
+      }
+    },
+    "Save original text as a receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save original text as a receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el texto original como recibo"
+          }
+        }
+      }
+    },
+    "Receipt file": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt file"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivo de recibo"
+          }
+        }
+      }
+    },
+    "Add grocery item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add grocery item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un artículo"
+          }
+        }
+      }
+    },
+    "Append to saved draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append to saved draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir al borrador guardado"
+          }
+        }
+      }
+    },
+    "Item wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto del artículo"
+          }
+        }
+      }
+    },
+    "Open an editable draft and confirm before adding anything.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open an editable draft and confirm before adding anything."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre un borrador editable y confirma antes de añadir artículos."
+          }
+        }
+      }
+    },
+    "Open shopping list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir lista de compras"
+          }
+        }
+      }
+    },
+    "Shortcut item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo del atajo"
+          }
+        }
+      }
+    },
+    "Show on my Home Screen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show on my Home Screen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en mi pantalla de inicio"
+          }
+        }
+      }
+    },
+    "Could not update the Home Screen setting. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not update the Home Screen setting. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar el ajuste de la pantalla de inicio. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Anyone who can see your unlocked Home Screen may see this summary. iOS may briefly keep a previous widget image after you turn it off or change accounts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone who can see your unlocked Home Screen may see this summary. iOS may briefly keep a previous widget image after you turn it off or change accounts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quien vea tu pantalla de inicio desbloqueada podrá ver este resumen. iOS puede conservar brevemente una imagen anterior del widget después de desactivarlo o cambiar de cuenta."
+          }
+        }
+      }
+    },
+    "Use soon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use soon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar pronto"
+          }
+        }
+      }
+    },
+    "Tonight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta noche"
+          }
+        }
+      }
+    },
+    "Batches to check today or earlier: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batches to check today or earlier: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lotes con fecha de revisión de hoy o anterior: %lld"
+          }
+        }
+      }
+    },
+    "Planned for tonight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena planificada para hoy"
+          }
+        }
+      }
+    },
+    "%lld dinners planned": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dinners planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld cenas planificadas"
+          }
+        }
+      }
+    },
+    "Include my planned dinners": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include my planned dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir mis cenas planificadas"
+          }
+        }
+      }
+    },
+    "Shows today’s planned dinner title, or a count if several are planned. With no planned dinner, shows reviewed options.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows today’s planned dinner title, or a count if several are planned. With no planned dinner, shows reviewed options."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra el nombre de la cena planificada para hoy, o cuántas hay si se planificaron varias. Si no hay ninguna, muestra opciones revisadas."
+          }
+        }
+      }
+    },
+    "Reviewed meal options: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed meal options: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opciones de comida revisadas: %lld"
+          }
+        }
+      }
+    },
+    "Show a private summary after turning it on in the app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show a private summary after turning it on in the app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra un resumen privado tras activarlo en la app."
+          }
+        }
+      }
+    },
+    "Shows the first reviewed meal title and the number of fully covered options.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the first reviewed meal title and the number of fully covered options."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra el título de la primera comida revisada y cuántas opciones tienen todos los ingredientes disponibles."
           }
         }
       }

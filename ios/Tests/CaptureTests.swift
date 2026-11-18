@@ -1,5 +1,8 @@
 import XCTest
+import AVFoundation
+import HouseholdClient
 import CoreDomain
+import CryptoKit
 import CoreGraphics
 import CoreText
 import ImageIO
@@ -14,6 +17,111 @@ import UniformTypeIdentifiers
         for _ in 0..<2000 { if condition() { return }; await Task.yield() }
         XCTFail("Capture operation did not settle")
     }
+    func testReviewedPriceImageWordingPreservesOriginalAndLeavesCheckoutAmountsForTheShopper() throws {
+        let digest = Data(repeating: 1, count: 32)
+        let original = try PriceImageLine(digest: digest, ordinal: 1, wording: "2 por $? socios", uncertain: true)
+        let reading = try ReviewedImageWording(text: "2 por $5 socios", method: .assistedImage, cropDigest: Data(repeating: 2, count: 32))
+        let reviewed = try PriceImageLine(digest: digest, ordinal: 1, wording: original.wording, uncertain: true, reviewedReading: reading)
+        XCTAssertEqual(original.shelfID, reviewed.shelfID)
+        XCTAssertNil(ReviewedShelfImage.propose(reviewed.effectiveWording).currencyCode)
+        let unknownTotal = try ReviewedCheckoutImage(charges: [.init(field: .total, amount: nil, inclusion: .unknown, line: reviewed)])
+        let saved = try JSONDecoder().decode(ReviewedCheckoutImage.self, from: JSONEncoder().encode(unknownTotal))
+        XCTAssertEqual(saved.charges.first?.line.wording, original.wording)
+        XCTAssertEqual(saved.charges.first?.line.reviewedReading, reading)
+        let repeated = try PriceImageLine(digest: digest, ordinal: 4, wording: "Total?", uncertain: true, reviewedReading: reading)
+        XCTAssertThrowsError(try ReviewedCheckoutImage(charges: saved.charges + [.init(field: .subtotal, amount: nil, inclusion: .unknown, line: repeated)]))
+        XCTAssertNil(saved.displayedTotal)
+        XCTAssertEqual(saved.charges.first?.inclusion, .unknown)
+
+        let cropOnly = try PriceImageLine(digest: digest, ordinal: 1, wording: "", uncertain: true, reviewedReading: reading)
+        let other = try ReviewedImageWording(text: "Fee", method: .deviceOCR, cropDigest: Data(repeating: 3, count: 32))
+        XCTAssertNotEqual(cropOnly.shelfID, try PriceImageLine(digest: digest, ordinal: 1, wording: "", uncertain: true, reviewedReading: other).shelfID)
+        let legacy = try JSONSerialization.data(withJSONObject: ["digest": digest.base64EncodedString(), "ordinal": 1, "wording": original.wording, "uncertain": true])
+        XCTAssertEqual(try JSONDecoder().decode(PriceImageLine.self, from: legacy), original)
+    }
+
+    func testConsentedVoiceClipIsPreviewedThenAddedThroughOrdinaryListReview() async throws {
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 9_600))
+        buffer.frameLength = 9_600
+        let floats = try XCTUnwrap(buffer.floatChannelData?[0])
+        for i in 0..<Int(buffer.frameLength) { floats[i] = Float(sin(Double(i) * 0.05) * 0.3) }
+        let recorded = try VoiceListSampleBuffer(input: format)
+        recorded.append(buffer)
+        let clip = try recorded.clip()
+        XCTAssertGreaterThan(clip.duration, 0.15)
+        XCTAssertLessThanOrEqual(clip.duration, 0.20)
+        XCTAssertEqual(try AVAudioPlayer(data: clip.playbackWAV).duration, clip.duration, accuracy: 0.001)
+        XCTAssertEqual(clip.playbackWAV.dropFirst(44), clip.pcm)
+        let input = try VoiceTranscriptionRequest(consentingTo: clip, language: "es")
+        let raw = "leche y pan"
+        let server = S24FixtureServer()
+        defer { server.close() }
+        let transport = HTTPTransport(session: server.makeSession())
+        let auth = AdultAuth(configuration: try .init(projectURL: server.baseURL, publishableKey: "sb_publishable_fixture_only"),
+                             vault: S24FixtureVault(), transport: transport)
+        let client = HouseholdService(configuration: try .init(baseURL: server.baseURL), auth: auth, deviceVault: S24FixtureVault(), transport: transport)
+        _ = try await auth.verifyEmailCode(email: "person@example.invalid", code: "123456")
+        _ = try await client.enroll(householdID: S24FixtureServer.household)
+        server.intercept = { call in
+            guard call.request.url?.path.hasSuffix("/capture-assistance/transcription") == true else { return false }
+            do {
+                let value: [String:Any]
+                if call.request.httpMethod == "GET" {
+                    XCTAssertNil(call.request.httpBody)
+                    value = ["version":1,"available":true]
+                } else {
+                    var bytes = call.request.httpBody ?? Data()
+                    if bytes.isEmpty, let stream = call.request.httpBodyStream {
+                        stream.open(); defer { stream.close() }
+                        var buffer = [UInt8](repeating: 0, count: 4096)
+                        while stream.hasBytesAvailable {
+                            let count = stream.read(&buffer, maxLength: buffer.count)
+                            guard count > 0 else { break }
+                            bytes.append(buffer, count: count)
+                        }
+                    }
+                    let sent = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String:Any])
+                    XCTAssertEqual(sent["pcm"] as? String, clip.pcm.base64EncodedString())
+                    XCTAssertEqual(sent["consent"] as? Bool, true)
+                    XCTAssertEqual(sent["language"] as? String, "es")
+                    value = ["version":1,"requestID":input.requestID.uuidString,"language":"es","text":raw]
+                }
+                let response = try XCTUnwrap(HTTPURLResponse(url: XCTUnwrap(call.request.url), statusCode: 200, httpVersion: nil, headerFields: nil))
+                call.client?.urlProtocol(call, didReceive: response, cacheStoragePolicy: .notAllowed)
+                call.client?.urlProtocol(call, didLoad: try JSONSerialization.data(withJSONObject: value))
+                call.client?.urlProtocolDidFinishLoading(call)
+            } catch { call.client?.urlProtocol(call, didFailWithError: error) }
+            return true
+        }
+        let scope = ReceiptAssistanceScope(subject: "fixture-adult", householdID: S24FixtureServer.household,
+            memberID: S24FixtureServer.member, shopID: S24FixtureServer.shop)
+        let available = try await client.voiceTranscriptionAvailable(scope: scope)
+        XCTAssertTrue(available)
+        let transcript = try await client.transcribeVoiceList(input, scope: scope)
+        let model = make()
+        model.stageOnlineTranscript(transcript.text)
+        XCTAssertEqual(model.text, "12 wraps")
+        XCTAssertNil(model.reviewed())
+        model.acceptCandidate()
+        XCTAssertTrue(model.naturalListMode)
+        model.text = "leche y pan integral"
+        model.confirmed = true
+        let lines = try model.fields(forList: true, destination: "This pickup").lines.map { line in
+            var row = line; row.confirmed = true
+            return try XCTUnwrap(row.reviewed(expectedDestination: "This pickup"))
+        }
+        let capture = try XCTUnwrap(model.reviewed(lines: lines))
+        var shop = ShoppingLedger()
+        let preview = try CaptureLedgerImport.stage(capture, in: shop)
+        XCTAssertTrue(shop.contributions.isEmpty)
+        try shop.commitImport(preview.preview)
+        XCTAssertEqual(shop.importBatches.first?.preview.source, .assistedVoice)
+        XCTAssertEqual(shop.importBatches.first?.preview.originalText, raw)
+        XCTAssertEqual(shop.contributions.count, 2)
+        XCTAssertTrue(try CaptureLedgerImport.stage(capture, in: shop).alreadyApplied)
+    }
+
     func testTypedReviewRequiresConfirmationAndDeliversExactlyOnce() {
         let model = make()
         XCTAssertNil(model.reviewed())
@@ -279,11 +387,33 @@ import UniformTypeIdentifiers
                        CaptureTextPosition(midY: 0.5, minX: 0.1)]
         XCTAssertEqual(CaptureReadingOrder.indices(sameRow), [1,2,0])
     }
-    func testActualVisionOCRReadsLocalSyntheticImage() async throws {
-        let context = CGContext(data: nil, width: 700, height: 180, bitsPerComponent: 8, bytesPerRow: 0,
+    func testPriceImageOCRPreservesMembershipWordingAndNeverInfersCheckoutTotalFromSubtotal() async throws {
+        let image = try imageOfPriceText([("Members only 2 for $5 USD 500 g", 110), ("Subtotal $18", 40)])
+        let evidence = try await OnDeviceTextCapture().recognize(image)
+        let text = evidence.text.split(separator: "\n").map(String.init)
+        let label = try XCTUnwrap(text.first(where: { $0.localizedCaseInsensitiveContains("members") }))
+        let proposal = ReviewedShelfImage.propose(label)
+        XCTAssertEqual(proposal.packages, 2)
+        XCTAssertEqual(proposal.amount?.minorUnits, 500)
+        XCTAssertEqual(proposal.conditions, label)
+        XCTAssertEqual(proposal.packageSize?.amount, try Rational(500))
+        XCTAssertEqual(proposal.packageSize?.unit, .gram)
+        let i = try XCTUnwrap(text.firstIndex(where: { $0.localizedCaseInsensitiveContains("subtotal") }))
+        let line = try PriceImageLine(digest: Data(SHA256.hash(data: image)), ordinal: i, wording: text[i],
+            uncertain: evidence.uncertainLines.contains(text[i]))
+        let offers = ReviewedCheckoutImage.proposals(from: [line])
+        let subtotal = try XCTUnwrap(offers[.subtotal])
+        XCTAssertEqual(subtotal.amount?.minorUnits, 1800)
+        let checkout = try ReviewedCheckoutImage(charges: [subtotal])
+        XCTAssertNil(checkout.displayedTotal)
+        XCTAssertEqual(checkout.charges.first?.line.wording, text[i])
+    }
+
+    private func imageOfPriceText(_ rows: [(String, CGFloat)]) throws -> Data {
+        let context = CGContext(data: nil, width: 1000, height: 180, bitsPerComponent: 8, bytesPerRow: 0,
             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-        context.setFillColor(CGColor(gray: 1, alpha: 1)); context.fill(CGRect(x: 0, y: 0, width: 700, height: 180))
-        for (text, y) in [("12 wraps", 110), ("2 kg rice", 40)] {
+        context.setFillColor(CGColor(gray: 1, alpha: 1)); context.fill(CGRect(x: 0, y: 0, width: 1000, height: 180))
+        for (text, y) in rows {
             let font = CTFontCreateWithName("Helvetica" as CFString, 42, nil)
             let value = NSAttributedString(string: text, attributes: [NSAttributedString.Key(kCTFontAttributeName as String): font,
                 NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0, alpha: 1)])
@@ -294,7 +424,11 @@ import UniformTypeIdentifiers
         let output = NSMutableData()
         let destination = CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil)!
         CGImageDestinationAddImage(destination, image, nil); XCTAssertTrue(CGImageDestinationFinalize(destination))
-        let evidence = try await OnDeviceTextCapture().recognize(output as Data)
+        return output as Data
+    }
+    func testActualVisionOCRReadsLocalSyntheticImage() async throws {
+        let image = try imageOfPriceText([("12 wraps", 110), ("2 kg rice", 40)])
+        let evidence = try await OnDeviceTextCapture().recognize(image)
         XCTAssertTrue(evidence.text.contains("12 wraps")); XCTAssertTrue(evidence.text.contains("2 kg rice"))
         XCTAssertEqual(evidence.source, .photoOCR)
         XCTAssertNotNil(evidence.previewImageData)

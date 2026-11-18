@@ -1,5 +1,20 @@
 import Foundation
 
+public enum ReportedPurchaser: Hashable, Sendable {
+    case unknown, myself
+    case requestAuthor(id: String, revision: Int, expectedAlias: String)
+
+    fileprivate var wire: JSONValue {
+        switch self {
+        case .unknown: return .object(["kind": .string("unknown")])
+        case .myself: return .object(["kind": .string("self")])
+        case let .requestAuthor(id, revision, alias):
+            return .object(["kind": .string("requestAuthor"), "requestId": .string(id),
+                            "requestRevision": .integer(revision), "expectedAlias": .string(alias)])
+        }
+    }
+}
+
 /// A request's service-provided link must resolve in this exact placed snapshot.
 public struct RequestPurchaseMatch: Equatable, Identifiable, Sendable {
     public var id: String { request.id }
@@ -20,8 +35,18 @@ public struct RequestPurchaseMatch: Equatable, Identifiable, Sendable {
         base = CommandBase(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch, requestRevision: request.revision)
     }
 
-    public func body(outcome: ConfirmedRequestPurchase?) -> [String: JSONValue] {
-        ["requestId": .string(request.id), "lineId": .string(line.id.uuidString.lowercased()),
+    /// A confirmed purchase may be reviewed for a different request in the same shop.
+    /// The shopper still decides whether the item, amount and intended use match.
+    public func isConfirmedSource(for other: OwnRequest) -> Bool {
+        guard request.purchaseOutcome == .bought, request.shopId == other.shopId,
+              let otherID = UUID(uuidString: other.id) else { return false }
+        return otherID != UUID(uuidString: request.id)
+    }
+
+    public func body(outcome: ConfirmedRequestPurchase?, purchaser: ReportedPurchaser? = nil) -> [String: JSONValue] {
+        var body: [String: JSONValue] = ["requestId": .string(request.id), "lineId": .string(line.id.uuidString.lowercased()),
          "placedRevision": .integer(placedRevision), "outcome": .string(outcome?.rawValue ?? "unknown")]
+        if outcome == .bought, let purchaser { body["reportedPurchaser"] = purchaser.wire }
+        return body
     }
 }

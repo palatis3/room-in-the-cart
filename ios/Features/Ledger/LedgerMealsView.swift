@@ -260,7 +260,8 @@ struct LedgerMealEditor: View {
             let candidate = MealTemplate(id: template?.id ?? UUID(), title: title, servings: count, ingredients: needs, notes: notes,
                                          sourceURL: source.isEmpty ? nil : source, exclusions: separated(exclusions),
                                          revision: (template?.revision ?? -1) + 1, servingGroups: groups, leadTimeMinutes: minutes,
-                                         completedSteps: completed.split(separator: "\n").map(String.init))
+                                         completedSteps: completed.split(separator: "\n").map(String.init), sourceEvidence: template?.sourceEvidence,
+                                         recipeSteps: template?.recipeSteps.map { RecipeStep.rebinding($0, from: template?.ingredients ?? [], to: needs) })
             try candidate.validate()
             reviewToSave = LedgerMealSaveReview(context: context, candidate: candidate)
             validation = nil
@@ -286,6 +287,17 @@ private struct LedgerOccurrenceView: View {
                     Text(ledgerFormat("Servings: %@", amountText(meal.servings)))
                     Text(meal.scheduledDay.map(ledgerMealDay) ?? ledgerText("Unscheduled"))
                     if !meal.notes.isEmpty { Text(meal.notes) }
+                    if let steps = meal.recipeSteps, !steps.isEmpty {
+                        NavigationLink(recordsText("Cooking steps")) {
+                            RecipeStepReviewView(steps: steps, ingredients: meal.ingredientContributionIDs.map { id in
+                                guard let contribution = shop.contributions.first(where: { $0.id == id && $0.removedAt == nil }) else {
+                                    return recordsText("Ingredient no longer available")
+                                }
+                                guard contribution.quantity != nil else { return contribution.productName }
+                                return contribution.productName + " · " + ledgerQuantity(contribution.quantity)
+                            })
+                        }
+                    }
                     if let source = meal.sourceURL { Text(source).textSelection(.enabled) }
                     if !meal.exclusions.isEmpty { Text(ledgerFormat("Exclusions: %@", meal.exclusions.joined(separator: ", "))) }
                     Button(ledgerText("Assign or change the date")) { editingDate = true }.accessibilityIdentifier("ledgerScheduleMeal")

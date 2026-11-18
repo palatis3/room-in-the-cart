@@ -35,7 +35,7 @@ struct PickupRecoveryMealDefinition: Codable, Equatable {
         guard unassigned > .zero else { throw PickupMealRecoveryError.invalid }
         return unassigned
     }
-    func validate(replacing previous: Self? = nil) throws {
+    func validate(replacing previous: Self? = nil, restoringSealedTemplate: Bool = false) throws {
         guard Set(ingredientRules.map(\.needID)).count == ingredientRules.count,
               Set(ingredientRules.map(\.needID)) == Set(meal.needs.map(\.id)),
               Set(groups.map(\.id)).count == groups.count,
@@ -93,7 +93,7 @@ struct PickupRecoveryMealDefinition: Codable, Equatable {
                 }
                 guard total == (try quantity.amount.multiplied(by: scale)) else { throw PickupMealRecoveryError.invalid }
             }
-        } else if previous != nil, meal.templateID != nil || meal.templateVersion != nil {
+        } else if previous != nil, !restoringSealedTemplate, meal.templateID != nil || meal.templateVersion != nil {
             throw PickupMealRecoveryError.invalid
         }
     }
@@ -173,6 +173,8 @@ struct PickupRecoveryDefinitionRecord: Codable, Equatable {
     let operationID: UUID
     let definition: PickupRecoveryMealDefinition
     let localActorID: UUID
+    var undoOf: UUID? = nil
+    var authorScopeDigest: String? = nil
 }
 struct PickupRecoveryCalendarBasis: Codable, Equatable {
     let occurrenceID: UUID
@@ -189,7 +191,7 @@ struct PickupMealRecoveryHistory: Codable, Equatable {
         let recorded = domain.events.last { $0.request.target.id == occurrenceID }.flatMap { event in definitions.first { $0.operationID == event.id }?.definition }
         return try (recorded ?? source.definitions().first { $0.meal.id == occurrenceID })?.withMeal(current)
     }
-    func validate() throws {
+    func validate(recordedReplacements: [RecoveryMeal] = []) throws {
         try source.validate()
         let originals = try source.definitions()
         guard domain.shopID == source.shop.id, domain.originalRevisionID == source.shop.revisionID,
@@ -198,13 +200,23 @@ struct PickupMealRecoveryHistory: Codable, Equatable {
               Set(ledgerCalendarBasis.map(\.occurrenceID)).count == ledgerCalendarBasis.count,
               Set(definitions.map(\.operationID)).count == definitions.count,
               Set(definitions.map(\.operationID)) == Set(domain.events.map(\.id)) else { throw PickupMealRecoveryError.invalid }
-        _ = try MealRecoveryEngine.project(domain)
+        _ = try MealRecoveryEngine.project(domain, verifyingReplacements: recordedReplacements)
         var previous = Dictionary(uniqueKeysWithValues: originals.map { ($0.meal.id, $0) })
+        var inverses: Set<UUID> = []
         for event in domain.events {
             guard let record = definitions.first(where: { $0.operationID == event.id }),
                   record.definition.meal == event.request.replacement,
                   let old = previous[event.request.target.id], old.meal.ingredients == event.request.target.ingredients else { throw PickupMealRecoveryError.invalid }
-            try record.definition.validate(replacing: old)
+            if let forward = record.undoOf {
+                guard inverses.insert(forward).inserted,
+                      let sourceRecord = definitions.first(where: { $0.operationID == forward }),
+                      sourceRecord.undoOf == nil, sourceRecord.localActorID == record.localActorID,
+                      sourceRecord.authorScopeDigest == nil || sourceRecord.authorScopeDigest == record.authorScopeDigest,
+                      event.request.target == sourceRecord.definition.meal,
+                      record.operationID == Self.undoOperation(forward),
+                      record.definition == (try inverseDefinition(forward)) else { throw PickupMealRecoveryError.invalid }
+            }
+            try record.definition.validate(replacing: old, restoringSealedTemplate: record.undoOf != nil)
             previous[event.request.target.id] = record.definition
         }
     }

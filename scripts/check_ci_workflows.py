@@ -20,11 +20,12 @@ A1_SLOT_PREFIX = 'ritc-bitrise-a1-slot-'
 A1_LABEL = 'bitrise-runner-A1'
 A2_SLOT_PREFIX = 'ritc-bitrise-a2-slot-'
 A2_LABEL = 'bitrise-runner-A2'
+SWIFT_PACKAGES_JOB = ('ci.yml', 'swift-packages')
 CORE_BUILD_JOB = ('ci.yml', 'ios-build')
 RELEASE_BUILD_JOB = ('ci.yml', 'ios-release')
 STOREKIT_JOB = ('ios-deep.yml', 'storekit')
 A2_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB, STOREKIT_JOB}
-PRODUCER_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB,
+PRODUCER_JOBS = {SWIFT_PACKAGES_JOB, CORE_BUILD_JOB, RELEASE_BUILD_JOB,
                  ('ios-fixtures.yml', 'build-contributor'), ('ios-fixtures.yml', 'build-dinner')}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
@@ -39,11 +40,11 @@ FIXTURE_CONSUMER_RUNNER = ("${{ " + FIXTURE_TRUSTED +
     "' || matrix.provider == 'bitrise-A1' && '" + A1_LABEL + "') || 'xcode-27' }}")
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
-# Provider admission lets four product jobs use any free machine in their pool.
+# Provider admission lets build and package jobs use any free machine in their pool.
 # Integers retain fixed consumer lanes. Matrices retain their reviewed identities
 # and producers. GitHub-only leaves use the platform's five macOS slots directly.
 POLICY = {
-    ('ci.yml', 'swift-packages'): None,
+    SWIFT_PACKAGES_JOB: 'provider',
     RELEASE_BUILD_JOB: 'provider',
     ('release-checks.yml', 'staging-iphone'): None,
     ('ci.yml', 'ios-swift-codeql'): None,
@@ -62,12 +63,12 @@ POLICY = {
     ('ios-native-wire.yml', 'native-wire'): None,
     ('ios-toggle-diagnostic.yml', 'control'): None,
 }
-ROUTED_NATIVE_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB, STOREKIT_JOB, ('ci.yml', 'ios-tests')} | {
-    ('ios-fixtures.yml', name) for name in ('build-contributor', 'build-dinner', 'contributor-tests', 'dinner-tests')}
+ROUTED_NATIVE_JOBS = PRODUCER_JOBS | {
+    STOREKIT_JOB, ('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'), ('ios-fixtures.yml', 'dinner-tests')}
 
 
 def github_job_group(identity, matrix_fields=()):
-    """A non-shared group for expressions whose Bitrise branch needs a group."""
+    """A unique Actions job group across workflow runs, attempts and matrix rows."""
     workflow, job = identity
     arguments = ('github.run_id', 'github.run_attempt', *(f'matrix.{field}' for field in matrix_fields))
     placeholders = '-'.join('{' + str(index) + '}' for index in range(len(arguments)))
@@ -75,6 +76,8 @@ def github_job_group(identity, matrix_fields=()):
 
 
 def bitrise_group(identity, expected):
+    if identity == ('ci.yml', 'ios-tests'):
+        return "${{ " + github_job_group(identity, ('shard',)) + " }}"
     if expected == 'provider':
         workflow, job = identity
         route = (f"format('ritc-bitrise-producer-{workflow.removesuffix('.yml')}-{job}-{{0}}-{{1}}', "
@@ -238,7 +241,8 @@ def validate_workflows(paths, policy=POLICY):
             expected = policy[identity]
             validate_native_matrix(job, identity, expected)
             if identity not in ROUTED_NATIVE_JOBS:
-                require(job.get('runs-on') in GITHUB_RUNNERS, f'Expected standard GitHub runner: {identity}')
+                runners = ('macos-15-intel',) if identity == ('ci.yml', 'ios-swift-codeql') else GITHUB_RUNNERS
+                require(job.get('runs-on') in runners, f'Expected standard GitHub runner: {identity}')
                 require('concurrency' not in job, f'GitHub native job must use provider admission: {identity}')
                 continue
             runner = A2_RUNNER if identity in A2_JOBS else FIXTURE_RUNNER if identity in PRODUCER_JOBS else FIXTURE_CONSUMER_RUNNER

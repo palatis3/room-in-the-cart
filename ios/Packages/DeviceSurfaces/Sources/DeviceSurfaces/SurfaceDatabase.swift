@@ -1,7 +1,7 @@
 import Foundation
 import CDeviceSQLite
 
-enum DBValue { case text(String), double(Double), integer(Int64), null }
+enum DBValue { case text(String), double(Double), integer(Int64), blob(Data), null }
 final class SurfaceDatabase: @unchecked Sendable {
     private var db: OpaquePointer?
     private let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
@@ -50,11 +50,32 @@ final class SurfaceDatabase: @unchecked Sendable {
             if result == SQLITE_DONE { return output }
             guard result == SQLITE_ROW else { throw SurfaceError.corrupt }
             output.append((0..<sqlite3_column_count(statement)).map { column in
-                guard sqlite3_column_type(statement, column) != SQLITE_NULL, let pointer = sqlite3_column_text(statement, column) else { return nil }
+                let type = sqlite3_column_type(statement, column)
+                // SQLite's default text rendering on older systems can round a REAL timestamp.
+                if type == SQLITE_FLOAT { return String(sqlite3_column_double(statement, column)) }
+                guard type != SQLITE_NULL, let pointer = sqlite3_column_text(statement, column) else { return nil }
                 return String(cString: pointer)
             })
         }
     }
+    func joinedBlobs(_ sql: String, _ values: [DBValue], expected: Int, chunkLimit: Int) throws -> Data {
+        let statement = try prepare(sql, values)
+        defer { sqlite3_finalize(statement) }
+        var result = Data()
+        result.reserveCapacity(expected)
+        while true {
+            let status = sqlite3_step(statement)
+            if status == SQLITE_DONE { break }
+            let length = Int(sqlite3_column_bytes(statement, 0))
+            guard status == SQLITE_ROW, sqlite3_column_type(statement, 0) == SQLITE_BLOB,
+                  length > 0, length <= chunkLimit, length <= expected - result.count,
+                  let bytes = sqlite3_column_blob(statement, 0) else { throw SurfaceError.corrupt }
+            result.append(bytes.assumingMemoryBound(to: UInt8.self), count: length)
+        }
+        guard result.count == expected else { throw SurfaceError.corrupt }
+        return result
+    }
+
     func transaction<T>(_ body: () throws -> T) throws -> T {
         try execute("BEGIN IMMEDIATE")
         do { let value = try body(); try execute("COMMIT"); return value }
@@ -69,6 +90,8 @@ final class SurfaceDatabase: @unchecked Sendable {
             case .text(let string): status = string.withCString { sqlite3_bind_text(statement, index, $0, -1, transient) }
             case .integer(let integer): status = sqlite3_bind_int64(statement, index, integer)
             case .double(let double): status = sqlite3_bind_double(statement, index, double)
+            case .blob(let bytes):
+                status = bytes.withUnsafeBytes { sqlite3_bind_blob(statement, index, $0.baseAddress, Int32($0.count), transient) }
             case .null: status = sqlite3_bind_null(statement, index)
             }
             guard status == SQLITE_OK else { sqlite3_finalize(statement); throw SurfaceError.unavailable }

@@ -22,6 +22,7 @@ private struct SharedShopContent: View {
                 Section {
                     Text(model.scope.household.label).font(.headline)
                     Text(ht("This is the household service's shared shop. Private lists, meals and records on this phone are not uploaded."))
+                    if model.scope.shopId == nil { HouseholdPantryLink(household: household) }
                     Button(ht("Refresh shared shop")) { Task { await model.load() } }
                     if household.storeQuoteScope != nil {
                         NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: household) }
@@ -54,7 +55,25 @@ private struct SharedShopContent: View {
                             }
                             if let meals = shop.meals, !meals.isEmpty {
                                 Text(ht("Shared meal plan")).font(.headline)
-                                ForEach(meals) { SharedMealFacts(meal: $0.meal) }
+                                ForEach(meals) { occurrence in
+                                    SharedMealFacts(meal: occurrence.meal)
+                                    if model.canCompleteCook, let id = UUID(uuidString: shop.shopId) {
+                                        NavigationLink(cookingText("Record cooking")) {
+                                            SharedCookCompletionView(model: model, household: household, shopID: id, occurrence: occurrence.id)
+                                        }.accessibilityIdentifier("sharedShop.cook." + occurrence.id.uuidString)
+                                    }
+                                    if occurrence.meal.kind == "dinner", !occurrence.meal.protected, model.canManage, !model.editing, model.review == nil {
+                                        if shop.phase == "draft", household.sharedMealChangeScope != nil {
+                                            NavigationLink(sharedRecoveryText("Swap this dinner")) {
+                                                SharedMealChangesView(household: household, dinnerID: occurrence.id)
+                                            }.accessibilityIdentifier("sharedShop.swap." + occurrence.id.uuidString)
+                                        } else if shop.phase == "placed", model.canReadMealRecovery, let shopID = UUID(uuidString: shop.shopId) {
+                                            NavigationLink(sharedRecoveryText("Swap this dinner")) {
+                                                SharedRecoveryDeskView(model: model, household: household, shopID: shopID, dinnerID: occurrence.id)
+                                            }.accessibilityIdentifier("sharedShop.swap." + occurrence.id.uuidString)
+                                        }
+                                    }
+                                }
                             }
                             if model.canManage {
                                 NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model, shopID: shop.shopId) }
@@ -146,6 +165,11 @@ private struct SharedShopContent: View {
                 if model.reviewedCurrentFacts { Button(ht("Clear after reviewing current shop")) { clearingRetry = true } }
             }
         case .needsReview:
+            if model.canCompleteCook, let occurrence = model.pendingCookOccurrence, let id = model.scope.shopId.flatMap(UUID.init(uuidString:)) {
+                NavigationLink(cookingText("Review cooking and current stock")) {
+                    SharedCookCompletionView(model: model, household: household, shopID: id, occurrence: occurrence)
+                }
+            }
             Section {
                 if model.pending?.sharedTrackingBinding != nil || model.pending?.sharedRequestUndoBinding != nil {
                     Text(st("The saved action is unresolved. Refresh current access, then retry the same saved action. A refresh does not undo or discard it."))

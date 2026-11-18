@@ -50,12 +50,20 @@ final class StoreQuoteNativeWireTests: XCTestCase {
             XCTAssertFalse(basket.quote.complete)
         } else {
             XCTAssertFalse(page.shopper); XCTAssertTrue(page.adults.isEmpty)
-            let options = EnteredStoreQuoteOptions(first:option(label:"First",checkout:3800,trip:0,minutes:0),second:option(label:"Second",checkout:3500,trip:400,minutes:18))
+            var firstQuote = option(label:"First",checkout:3800,trip:0,minutes:0)
+            var secondQuote = option(label:"Second",checkout:3500,trip:400,minutes:18)
+            func reviewedSupply(_ units: Int64) -> [EnteredCommitmentSupply] {
+                page.commitments.map { .init(commitmentId: $0.id, unit: "count", requiredUnits: 9, usableUnitsPerPackage: units, packages: 2) }
+            }
+            firstQuote.supplies = reviewedSupply(6); secondQuote.supplies = reviewedSupply(8)
+            secondQuote.orderMinimum = .init(kind: .required, minimumMinor: 3300, eligibleSubtotalMinor: 3400)
+            let options = EnteredStoreQuoteOptions(first: firstQuote, second: secondQuote)
             let save = try await service.prepareStoreQuote(shopID:shop,action:.pairs,request:.init(page:page,options:options))
             let first = try await service.executeStoreQuote(save), retry = try await service.executeStoreQuote(save)
             XCTAssertEqual(first,retry)
             var current = try await service.storeQuotes(shopID:shop)
             let pair = try XCTUnwrap(current.pairs.first { $0.id == save.id })
+            XCTAssertEqual(pair.options, options)
             XCTAssertTrue(pair.own); XCTAssertTrue(pair.proposals.isEmpty); XCTAssertEqual(current.shopRevision,page.shopRevision)
             XCTAssertEqual(pair.comparison.firstCheckout,3800); XCTAssertEqual(pair.comparison.secondCheckout,3500)
             XCTAssertEqual(pair.comparison.checkoutDelta,-300); XCTAssertEqual(pair.comparison.cashDelta,100)
@@ -78,6 +86,6 @@ final class StoreQuoteNativeWireTests: XCTestCase {
         return .init(label:label,store:label,branch:label == "Second" ? "West branch":"East branch",mode:"pickup",
             slot:f.string(from:now.addingTimeInterval(3600)),observedAt:f.string(from:now),source:"Manual reviewed checkout",itemsMinor:checkout,
             checkoutMinor:checkout,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:trip == 0,
-            tripMinor:trip,extraMinutes:minutes,capMinor:4000,eligibilityConfirmed:true)
+            tripMinor:trip,extraMinutes:minutes,capMinor:4000,eligibilityConfirmed:true,orderMinimum:.init(kind:.noneRequired))
     }
 }

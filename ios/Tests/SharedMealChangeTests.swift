@@ -23,7 +23,7 @@ private actor MealChangeFixture: SharedMealChangesServing {
         if deny { throw ClientError.service(status: 403, code: "membership_inactive", correlationID: nil, retryAfter: nil) }
         return value
     }
-    func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String) async throws -> SharedMealChangeIntent {
+    func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String, evidence: SharedMealPreferenceEvidence? = nil) async throws -> SharedMealChangeIntent {
         try await authorize()
         return try SharedMealChangeIntent(subject: scope.subject, householdID: scope.householdID, memberID: scope.memberID, deviceID: "enrolled-device", shopID: scope.shopID,
             request: .init(occurrenceId: occurrenceID, baseMealRevision: 2, shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch, grantRevision: page.grantRevision, meal: meal, reason: reason))

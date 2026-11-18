@@ -21,6 +21,17 @@ struct DinnerLibraryPairings {
     let excludedByLimit: Int
     var candidates: [LibraryPairingCandidate]
 
+    /// Every candidate here uses the same physical batch in its original unit.
+    /// Preserve Tonight's order when two recipes would use the same amount.
+    static func usingBatch(_ lotID: UUID, reviews: [PantryMealMatcher.Review],
+                           feedback: [MealFeedbackSource: MealFeedbackSignal] = [:]) -> [PantryMealMatcher.Review] {
+        let candidates = PantryMealMatcher.ranked(reviews, feedback: feedback).compactMap { review -> (meal: PantryMealMatcher.Review, amount: Rational)? in
+            guard let use = review.batchUse, use.lotID == lotID else { return nil }
+            return (meal: review, amount: use.used.amount)
+        }
+        return candidates.sorted { $0.amount > $1.amount }.map(\.meal)
+    }
+
     static func chosen(in shop: ShoppingLedger, state: DinnerPlanningState) -> Set<UUID> {
         let chosenTemplates = Set(shop.mealOccurrences.filter { $0.removedAt == nil }.compactMap(\.templateID))
         return Set(state.acceptedDinners.filter { chosenTemplates.contains($0.template.id) }.map(\.id))
@@ -166,6 +177,12 @@ struct DinnerLibraryPairings {
 
 extension DinnerLibraryPairings {
     /// Keep the real lot's identity and label. Only the currently unallocated balance can be reviewed.
+    /// Canonical input is already free across all shops. Do not rerun old needs
+    /// or pins against it, and never release the meal being compared implicitly.
+    static func unreservedLots(canonical: DinnerPantrySupply.Snapshot) -> [ConfirmedStockLot] {
+        canonical.globallyFreeLots
+    }
+
     static func unreservedLots(_ journey: PickupJourney, at now: Date) throws -> [ConfirmedStockLot] {
         let stock = PickupFallbackOptions.lots(journey, at: now)
         // Honor exact carryover pins without broadening this comparison's eligible receipt set.

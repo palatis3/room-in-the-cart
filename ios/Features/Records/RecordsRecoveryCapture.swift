@@ -27,6 +27,25 @@ import Darwin
     func revalidate(_ lease: Lease, copy: RecoveredRecord, registry: RecoveryRegistry) async throws {
         guard lease.authorize(), try await registry.refreshList().contains(copy), lease.authorize() else { throw ArchiveError.unavailable }
     }
+    /// The owner keeps this lease until the displayed pantry's operations have
+    /// stopped and its SQLite actor has closed, not just until Open returns.
+    func begin(copy: RecoveredPantryCopy, registry: RecoveryRegistry,
+               authorize: @escaping RecordsToolsModel.Authorization) async throws -> Lease {
+        let captured = generation
+        guard authorize() else { throw ArchiveError.unavailable }
+        _ = try await registry.currentPantryCopy(copy)
+        guard authorize(), generation == captured else { throw ArchiveError.unavailable }
+        let id = UUID(); active.insert(id)
+        return Lease(id: id, authorize: { [weak self] in
+            guard let self else { return false }
+            return self.generation == captured && self.active.contains(id) && authorize()
+        })
+    }
+    func revalidate(_ lease: Lease, copy: RecoveredPantryCopy, registry: RecoveryRegistry) async throws {
+        guard lease.authorize() else { throw ArchiveError.unavailable }
+        _ = try await registry.currentPantryCopy(copy)
+        guard lease.authorize() else { throw ArchiveError.unavailable }
+    }
     func finish(_ lease: Lease) {
         active.remove(lease.id)
         if active.isEmpty { let pending = waiters; waiters = []; pending.forEach { $0.resume() } }
@@ -117,9 +136,16 @@ import Darwin
             try await store.close()
         } else if hasPickup {
             try requireStoreFiles(pickupURL)
-            let store = try ComparisonStore(url: pickupURL)
-            actual = PhysicalScope(formatMajor: 1, recoveryCopyID: copyID, storeKind: .pickup, physicalWorkspaceID: store.workspaceID)
-            try await store.close()
+            let marker = directory.appendingPathComponent(PantryRecoveryCoordinator.manifestFilename)
+            if FileManager.default.fileExists(atPath: marker.path) {
+                let workspaceID = try await PantryRecoveryCoordinator.workspaceForCleanup(directory: directory,
+                    protectedWorkspaceIDs: protectedWorkspaceIDs)
+                actual = PhysicalScope(formatMajor: 1, recoveryCopyID: copyID, storeKind: .pickup, physicalWorkspaceID: workspaceID)
+            } else {
+                let store = try ComparisonStore(url: pickupURL)
+                actual = PhysicalScope(formatMajor: 1, recoveryCopyID: copyID, storeKind: .pickup, physicalWorkspaceID: store.workspaceID)
+                try await store.close()
+            }
         } else { actual = nil }
         let physical: PhysicalScope?
         if FileManager.default.fileExists(atPath: directory.appendingPathComponent(filename).path) {

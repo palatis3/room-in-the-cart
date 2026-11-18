@@ -5,8 +5,30 @@ struct PickupSavedStockSection: View {
     @ObservedObject var model: PickupModel
     let journey: PickupJourney
     var onlyFoodID: UUID? = nil
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var guardianChild
+
+    private var privateReadAllowed: Bool {
+        PickupStockReviewPresentation.current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
+            workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
+            childPresented: guardianChild?.presented == true, household: household).scope(presentationID: UUID()) != nil
+    }
 
     var body: some View {
+        if model.pantryIsActive {
+            if privateReadAllowed {
+                if journey.closedAt == nil {
+                    PickupLivePantrySection(model: model, journeyID: journey.id, onlyFoodID: onlyFoodID)
+                } else { legacySections }
+            } else {
+                Section { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
+            }
+        } else { legacySections }
+    }
+
+    @ViewBuilder private var legacySections: some View {
         let batches = journey.stockLots.filter { $0.source != .manual && (onlyFoodID == nil || $0.foodID == onlyFoodID) }
         let previous = model.journeys.first { $0.id == journey.originShopID }
         let older = (previous?.stockLots ?? []).filter { lot in
@@ -28,7 +50,7 @@ struct PickupSavedStockSection: View {
                 }
             }
         }
-        if onlyFoodID == nil, !older.isEmpty {
+        if !model.pantryIsActive, onlyFoodID == nil, !older.isEmpty {
             Section(pTr("Recheck a batch from the previous shop")) {
                 ForEach(older) { lot in
                     NavigationLink(lot.name) {
@@ -37,6 +59,121 @@ struct PickupSavedStockSection: View {
                 }
             }
         }
+    }
+}
+
+/// Live records are global physical lots. A previous-trip alias is navigation
+/// evidence only; there is deliberately no "carry/copy" action after cutover.
+private struct PickupLivePantrySection: View {
+    @ObservedObject var model: PickupModel
+    let journeyID: UUID
+    let onlyFoodID: UUID?
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var guardianChild
+
+    private var presentation: PickupStockReviewPresentation {
+        .current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
+                 workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
+                 childPresented: guardianChild?.presented == true, household: household)
+    }
+    private var canRead: Bool { presentation.scope(presentationID: UUID()) != nil }
+
+    var body: some View {
+        Section(pTr("Saved pantry and freezer batches")) {
+            if !canRead {
+                Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+            } else if let projection = try? model.liveStockProjection(for: journeyID) {
+                let lots = projection.lots.filter { onlyFoodID == nil || $0.current.foodID == onlyFoodID }
+                if lots.isEmpty { Text(pantryText("No food recorded here.")) }
+                ForEach(lots) { row in
+                    NavigationLink {
+                        PickupPantryLotDestination(model: model, journeyID: journeyID, lotID: row.id)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 6) {
+                            PantryLotSummary(lot: row.current, availability: row.availability,
+                                             availabilityNeedsReview: !row.issues.isEmpty)
+                            LabeledContent(pantryText("Storage location"), value: pantryLocationName(row.current.location))
+                            if row.current.useFirst == true { Text(pTr("Use this batch first")) }
+                        }.accessibilityElement(children: .combine)
+                    }.accessibilityIdentifier("stockBatch-" + row.readerID.uuidString)
+                }
+            } else {
+                Text(pantryText("Could not load a complete pantry. No partial availability is shown."))
+                Button(pantryText("Refresh pantry")) { Task { _ = await model.refreshPantryStock() } }
+                    .disabled(model.saving).frame(minHeight: 44)
+            }
+        }.privacySensitive()
+    }
+}
+
+/// This view owns one factory-created editor. A persona/guardian/scene change
+/// immediately hides its contents and invalidates any suspended repository work.
+private struct PickupPantryLotDestination: View {
+    @ObservedObject var model: PickupModel
+    let journeyID: UUID
+    let lotID: UUID
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var guardianChild
+    @State private var pantry: PantryModel?
+    @State private var admittedPresentation: PickupStockReviewPresentation?
+
+    private var presentation: PickupStockReviewPresentation {
+        .current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
+                 workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
+                 childPresented: guardianChild?.presented == true, household: household)
+    }
+    private var accessAllowed: Bool {
+        admittedPresentation == presentation && presentation.scope(presentationID: UUID()) != nil
+    }
+    private var projectionRow: PantryLiveStockProjection.Lot? {
+        (try? model.liveStockProjection(for: journeyID))?.lot(canonicalID: lotID)
+    }
+
+    var body: some View {
+        Group {
+            if let pantry, accessAllowed {
+                PantryLotEntryView(model: pantry, lotID: lotID, accessAllowed: accessAllowed,
+                                   availabilityNeedsReview: projectionRow?.issues.isEmpty != true)
+            } else {
+                Form {
+                    if presentation.scope(presentationID: UUID()) == nil {
+                        Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                    } else {
+                        PickupSaveStatus(model: model, onRetried: openEntry)
+                        if model.hasPendingSave, model.error == nil {
+                            Text(pantryText("A saved change is waiting for recovery. Retry it or review its saved status."))
+                            Button(pTr("Retry save")) { Task { if await model.retrySave() { openEntry() } } }
+                                .disabled(model.saving)
+                        }
+                        if !model.hasPendingSave, !model.saving {
+                            Text(pantryText("Could not load a complete pantry. No partial availability is shown."))
+                            Button(pantryText("Refresh pantry")) {
+                                Task { if await model.refreshPantryStock() { openEntry() } }
+                            }.frame(minHeight: 44)
+                        }
+                    }
+                }.navigationTitle(pantryText("Pantry food"))
+            }
+        }
+        .privacySensitive()
+        .onAppear(perform: openEntry)
+        .onChange(of: presentation) { _, _ in openEntry() }
+        .onChange(of: model.hasPendingSave) { _, pending in if !pending && pantry == nil { openEntry() } }
+        .onChange(of: model.saving) { _, saving in if !saving && pantry == nil { openEntry() } }
+        .onDisappear { pantry?.accessLost(); pantry = nil; admittedPresentation = nil }
+    }
+
+    private func openEntry() {
+        if pantry != nil, admittedPresentation == presentation { return }
+        pantry?.accessLost(); pantry = nil; admittedPresentation = nil
+        guard presentation.scope(presentationID: UUID()) != nil,
+              let journey = model.journeys.first(where: { $0.id == journeyID }), journey.closedAt == nil,
+              let entry = model.makePantryModel() else { return }
+        admittedPresentation = presentation; pantry = entry
     }
 }
 
@@ -70,82 +207,108 @@ private struct PickupBatchReview: View {
     }
 
     var body: some View {
+        if model.pantryIsActive, !isClosedHistory {
+            // A detail screen that was already pushed when cutover completed
+            // must resolve its source alias, never keep editing the copied count.
+            if presentation.scope(presentationID: UUID()) != nil,
+               let projection = try? model.liveStockProjection(for: journeyID),
+               let row = projection.lots.first(where: {
+                   $0.current.foodID == lot.foodID && $0.scopedLegacyLotIDs.contains(lot.id)
+               }) {
+                PickupPantryLotDestination(model: model, journeyID: journeyID, lotID: row.id)
+            } else {
+                Form {
+                    PickupSaveStatus(model: model)
+                    Text(pantryText("This food is unavailable. Return to My Pantry and refresh."))
+                }.navigationTitle(pantryText("Pantry food"))
+            }
+        } else { legacyDetail }
+    }
+
+    private var isClosedHistory: Bool {
+        model.journeys.first(where: { $0.id == journeyID })?.closedAt != nil
+    }
+
+    private var legacyDetail: some View {
         Form {
-            PickupSaveStatus(model: model)
-            Section(lot.name) {
-                Text(pTr(lot.source == .freezer ? "Freezer" : "Pantry"))
-                Text("\(pQuantity(lot.usable)) · \(lot.confirmedAt.formatted())")
-                if !carrying, let allocation = model.allocation {
-                    let reservations = allocation.allocations.filter { $0.lotID == lot.id }
-                    ForEach(reservations, id: \.needID) { edge in
-                        let name = model.journey?.needs.first { $0.id == edge.needID }?.name ??
-                            model.journey?.stockNeeds.first { $0.id == edge.needID }?.name ??
-                            model.journey?.plannedNeeds.first { $0.id == edge.needID }?.name
-                        if let name {
-                            Text("\(name) · \(pQuantity(edge.amount, unit: edge.unit))")
+            if !model.pantryIsActive || presentation.scope(presentationID: UUID()) != nil {
+                PickupSaveStatus(model: model)
+                Section(lot.name) {
+                    Text(pTr(lot.source == .freezer ? "Freezer" : "Pantry"))
+                    Text("\(pQuantity(lot.usable)) · \(lot.confirmedAt.formatted())")
+                    if !carrying, let allocation = displayedAllocation {
+                        let reservations = allocation.allocations.filter { $0.lotID == lot.id }
+                        ForEach(reservations, id: \.needID) { edge in
+                            let source = model.journeys.first { $0.id == journeyID }
+                            let name = source?.needs.first { $0.id == edge.needID }?.name ??
+                                source?.stockNeeds.first { $0.id == edge.needID }?.name ??
+                                source?.plannedNeeds.first { $0.id == edge.needID }?.name
+                            if let name {
+                                Text("\(name) · \(pQuantity(edge.amount, unit: edge.unit))")
+                            }
                         }
-                    }
-                    if let balance = allocation.remainingLots.first(where: { $0.lotID == lot.id }) {
-                        if balance.issues.isEmpty {
-                            Text("\(pTr("Unreserved")): \(pQuantity(balance.remainingUnallocated, unit: balance.unit))")
-                        } else {
-                            Text(pTr("Unresolved"))
+                        if let balance = allocation.remainingLots.first(where: { $0.lotID == lot.id }) {
+                            if balance.issues.isEmpty {
+                                Text("\(pTr("Unreserved")): \(pQuantity(balance.remainingUnallocated, unit: balance.unit))")
+                            } else {
+                                Text(pTr("Unresolved"))
+                            }
                         }
                     }
                 }
-            }
-            if model.journey?.id == journeyID, model.journey?.closedAt == nil {
-                Section(pTr(carrying ? "Confirm for this shop" : "Correct the observed batch")) {
-                    if carrying || lot.id == lot.foodID {
-                        Picker(pTr("Reviewed matching food need"), selection: $foodID) {
-                            Text(pTr("Keep unassigned until a meal is reviewed")).tag(UUID?.none)
-                            ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
+                if !model.pantryIsActive, model.journey?.id == journeyID, model.journey?.closedAt == nil {
+                    Section(pTr(carrying ? "Confirm for this shop" : "Correct the observed batch")) {
+                        if carrying || lot.id == lot.foodID {
+                            Picker(pTr("Reviewed matching food need"), selection: $foodID) {
+                                Text(pTr("Keep unassigned until a meal is reviewed")).tag(UUID?.none)
+                                ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
+                            }
                         }
-                    }
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(pTr("Confirmed usable amount"))
-                        TextField(pTr("Confirmed usable amount"), text: $amount)
-                            .keyboardType(.numbersAndPunctuation).focused($amountFocused)
-                            .accessibilityIdentifier("stockReview.amount")
-                    }
-                    Text(pTr(lot.usable.unit.rawValue))
-                    DatePicker(pTr("Batch observed at"), selection: $observedAt, in: ...Date())
-                    Toggle(pTr("Use this batch first"), isOn: $useFirst)
-                    Toggle(pTr("I reviewed identity, exclusions and usable quantity"), isOn: $checked)
-                        .accessibilityIdentifier("stockReview.identityChecked")
-                    Button(pTr("Preview batch effects")) { preview() }
-                        .disabled(!checked || amount.isEmpty || model.saving || model.hasPendingSave || currentScope == nil)
-                        .accessibilityIdentifier("stockReview.preview")
-                }
-            }
-            if let review {
-                Section {
-                    Text(pTr("Review dependent meals")).font(.headline).accessibilityAddTraits(.isHeader)
-                        .accessibilityFocused($previewFocused)
-                    Text("\(pTr("Confirmed usable amount")): \(pQuantity(review.lot.usable))")
-                    Text(review.lot.confirmedAt.formatted())
-                    if review.lot.useFirst == true { Text(pTr("Use this batch first")) }
-                    if review.meals.isEmpty { Text(pTr("No reviewed meal depends on this batch.")) }
-                    ForEach(review.meals) { effect in
-                        PickupStockMealEffectRow(effect: effect)
-                            .accessibilityIdentifier("stockReview.meal." + effect.id.uuidString)
-                    }
-                    if !model.isCurrentStockLotReview(review, scope: currentScope) {
-                        Text(pTr("The batch or meal commitments changed. Review the effects again before saving."))
-                            .accessibilityIdentifier("stockReview.stale")
-                    }
-                    Toggle(pTr("I reviewed the effects on every dependent meal"), isOn: $effectsConfirmed)
-                        .accessibilityIdentifier("stockReview.effectsChecked")
-                    Button(pTr("Save reviewed batch")) {
-                        Task {
-                            if await model.applyStockLotReview(review, scope: currentScope, confirmed: effectsConfirmed) { dismiss() }
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(pTr("Confirmed usable amount"))
+                            TextField(pTr("Confirmed usable amount"), text: $amount)
+                                .keyboardType(.numbersAndPunctuation).focused($amountFocused)
+                                .accessibilityIdentifier("stockReview.amount")
                         }
-                    }.disabled(!effectsConfirmed || !model.isCurrentStockLotReview(review, scope: currentScope))
-                        .accessibilityIdentifier("stockReview.apply")
-                    Button(pTr("Cancel batch preview"), role: .cancel) { cancelPreview() }
-                        .disabled(model.saving).accessibilityIdentifier("stockReview.cancel")
+                        Text(pTr(lot.usable.unit.rawValue))
+                        DatePicker(pTr("Batch observed at"), selection: $observedAt, in: ...Date())
+                        Toggle(pTr("Use this batch first"), isOn: $useFirst)
+                        Toggle(pTr("I reviewed identity, exclusions and usable quantity"), isOn: $checked)
+                            .accessibilityIdentifier("stockReview.identityChecked")
+                        Button(pTr("Preview batch effects")) { preview() }
+                            .disabled(!checked || amount.isEmpty || model.saving || model.hasPendingSave || currentScope == nil)
+                            .accessibilityIdentifier("stockReview.preview")
+                    }
                 }
-            }
+                if let review, !model.pantryIsActive {
+                    Section {
+                        Text(pTr("Review dependent meals")).font(.headline).accessibilityAddTraits(.isHeader)
+                            .accessibilityFocused($previewFocused)
+                        Text("\(pTr("Confirmed usable amount")): \(pQuantity(review.lot.usable))")
+                        Text(review.lot.confirmedAt.formatted())
+                        if review.lot.useFirst == true { Text(pTr("Use this batch first")) }
+                        if review.meals.isEmpty { Text(pTr("No reviewed meal depends on this batch.")) }
+                        ForEach(review.meals) { effect in
+                            PickupStockMealEffectRow(effect: effect)
+                                .accessibilityIdentifier("stockReview.meal." + effect.id.uuidString)
+                        }
+                        if !model.isCurrentStockLotReview(review, scope: currentScope) {
+                            Text(pTr("The batch or meal commitments changed. Review the effects again before saving."))
+                                .accessibilityIdentifier("stockReview.stale")
+                        }
+                        Toggle(pTr("I reviewed the effects on every dependent meal"), isOn: $effectsConfirmed)
+                            .accessibilityIdentifier("stockReview.effectsChecked")
+                        Button(pTr("Save reviewed batch")) {
+                            Task {
+                                if await model.applyStockLotReview(review, scope: currentScope, confirmed: effectsConfirmed) { dismiss() }
+                            }
+                        }.disabled(!effectsConfirmed || !model.isCurrentStockLotReview(review, scope: currentScope))
+                            .accessibilityIdentifier("stockReview.apply")
+                        Button(pTr("Cancel batch preview"), role: .cancel) { cancelPreview() }
+                            .disabled(model.saving).accessibilityIdentifier("stockReview.cancel")
+                    }
+                }
+            } else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
         }.navigationTitle(pTr("Batch details"))
             .onChange(of: amount) { _, _ in checked = false; cancelPreview() }
             .onChange(of: foodID) { _, _ in checked = false; cancelPreview() }
@@ -155,12 +318,19 @@ private struct PickupBatchReview: View {
             .onChange(of: presentation) { _, value in
                 if reviewSession.refresh(value) { cancelPreview() }
             }
+            .onChange(of: model.pantryIsActive) { _, _ in cancelPreview() }
             .onChange(of: model.journey?.revision) { _, _ in effectsConfirmed = false }
             .onChange(of: scenePhase) { _, phase in if phase != .active { cancelPreview() } }
             .scrollDismissesKeyboard(.interactively)
             .keyboardDoneAction(visible: amountFocused, title: tr("Done")) { amountFocused = false }
     }
 
+    private var displayedAllocation: StockAllocationResult? {
+        if let historical = model.journeys.first(where: { $0.id == journeyID }), historical.closedAt != nil {
+            return try? historical.carryoverAllocation(at: model.stockReviewDate)
+        }
+        return model.allocation
+    }
     private var presentation: PickupStockReviewPresentation {
         .current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
             workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
@@ -266,6 +436,11 @@ struct PickupNewStockSection: View {
     @State private var stockObservedAt = Date()
     @State private var useFirst = false
     var body: some View {
+        if model.pantryIsActive {
+            PickupCanonicalAddSection(model: model, ingredientID: ingredientID)
+        } else { legacyForm }
+    }
+    private var legacyForm: some View {
         Section(pTr("Confirm pantry or freezer food")) {
             if let ingredientID,
                let match = model.journey?.reviewedStockMatches.first(where: { $0.id == ingredientID }) {
@@ -306,6 +481,7 @@ struct PickupNewStockSection: View {
             .onChange(of: useFirst) { _, _ in stockConfirmed = false }
     }
     private func addStock() {
+        guard !model.pantryIsActive else { return }
         do {
             guard !stockName.isEmpty, let quantity = try ComparisonModel.quantity(stockAmount, stockUnit) else { throw CocoaError(.validationMissingMandatoryProperty) }
             let journeyID = model.journey?.id ?? newJourneyID
@@ -329,6 +505,154 @@ struct PickupNewStockSection: View {
         guard savedDraft != nil else { return }
         stockID = UUID(); stockName = ""; stockAmount = ""; stockConfirmed = false
         useFirst = false; stockObservedAt = Date()
+    }
+}
+
+/// A route is an explicit identity binding, not permission to read or write.
+/// It is resolved after an authorized refresh and expires when that source changes.
+struct PickupPantryAddContext: Equatable {
+    let workspaceID: UUID
+    let journeyID: UUID?
+    let journeyRevision: Int64?
+    let reviewedFood: PantryReviewedFood?
+
+    @MainActor static func resolve(model: PickupModel, ingredientID: UUID?) throws -> Self {
+        guard let context = try model.pantryReviewContext(), model.journey?.closedAt == nil else {
+            throw PickupStockReviewError.stale
+        }
+        let food: PantryReviewedFood?
+        if let ingredientID {
+            guard let match = model.journey?.reviewedStockMatches.first(where: { $0.id == ingredientID }) else {
+                throw PickupStockReviewError.stale
+            }
+            food = .init(id: match.id, name: match.name, inventoryWorkspaceID: context.snapshot.state.workspaceID,
+                         inventoryRevision: context.snapshot.state.revision)
+        } else { food = nil }
+        return .init(workspaceID: context.snapshot.state.workspaceID, journeyID: model.journey?.id,
+                     journeyRevision: model.journey?.revision, reviewedFood: food)
+    }
+
+    @MainActor func matches(model: PickupModel) -> Bool {
+        guard model.pantryIsActive, model.sourceWorkspaceID == workspaceID,
+              model.journey?.id == journeyID, model.journey?.revision == journeyRevision,
+              model.journey?.closedAt == nil else { return false }
+        guard let reviewedFood else { return true }
+        return model.journey?.reviewedStockMatches.contains {
+            $0.id == reviewedFood.id && $0.name == reviewedFood.name
+        } == true
+    }
+}
+
+private struct PickupCanonicalAddSection: View {
+    @ObservedObject var model: PickupModel
+    let ingredientID: UUID?
+    @State private var selectedFoodID: UUID?
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var guardianChild
+    private var presentation: PickupStockReviewPresentation {
+        .current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
+                 workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
+                 childPresented: guardianChild?.presented == true, household: household)
+    }
+    var body: some View {
+        Section(pantryText("Add food")) {
+            if presentation.scope(presentationID: UUID()) == nil {
+                Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+            } else {
+                if ingredientID == nil, model.pantryReadIsCurrent {
+                    Picker(pTr("Reviewed matching food need"), selection: $selectedFoodID) {
+                        Text(pTr("Keep unassigned until a meal is reviewed")).tag(UUID?.none)
+                        ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
+                    }
+                }
+                NavigationLink {
+                    PickupPantryAddDestination(model: model, ingredientID: ingredientID ?? selectedFoodID)
+                } label: { Text(pantryText("Add food")).frame(minHeight: 44) }
+                Text(pTr("Only confirmed matching food enters allocation. Do not enter the same batch twice."))
+            }
+        }
+        .privacySensitive()
+    }
+}
+
+private struct PickupPantryAddDestination: View {
+    @ObservedObject var model: PickupModel
+    let ingredientID: UUID?
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var guardianChild
+    @State private var pantry: PantryModel?
+    @State private var admittedPresentation: PickupStockReviewPresentation?
+    @State private var admittedContext: PickupPantryAddContext?
+    @State private var generation = UUID()
+    @State private var opening = false
+    private var presentation: PickupStockReviewPresentation {
+        .current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
+                 workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
+                 childPresented: guardianChild?.presented == true, household: household)
+    }
+    private var accessAllowed: Bool {
+        admittedPresentation == presentation && presentation.scope(presentationID: UUID()) != nil
+            && admittedContext?.matches(model: model) == true
+    }
+    var body: some View {
+        Group {
+            if let pantry, accessAllowed {
+                PantryAddFoodEntryView(model: pantry, accessAllowed: accessAllowed, reviewedFood: admittedContext?.reviewedFood,
+                                       refreshContext: { invalidate(); await openEntry() })
+            } else {
+                Form {
+                    if presentation.scope(presentationID: UUID()) == nil {
+                        Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                    } else {
+                        PickupSaveStatus(model: model, onRetried: { Task { await openEntry() } })
+                        if model.hasPendingSave, model.error == nil {
+                            Text(pantryText("A saved change is waiting for recovery. Retry it or review its saved status."))
+                            Button(pTr("Retry save")) { Task { if await model.retrySave() { await openEntry() } } }
+                                .disabled(model.saving)
+                        }
+                        if opening || model.saving { ProgressView(pantryText("Working…")) }
+                        else if !model.hasPendingSave {
+                            Text(pantryText("Could not load a complete pantry. No partial availability is shown."))
+                            Button(pantryText("Refresh pantry")) { Task { await openEntry() } }.frame(minHeight: 44)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle(pantryText("Add food"))
+        .privacySensitive()
+        .task { await openEntry() }
+        .onChange(of: presentation) { _, _ in invalidate(); Task { await openEntry() } }
+        .onChange(of: model.selectedID) { _, _ in invalidate() }
+        .onChange(of: model.journey?.revision) { _, _ in
+            if admittedContext?.matches(model: model) == false { invalidate() }
+        }
+        .onChange(of: model.hasPendingSave) { _, pending in
+            if !pending && pantry == nil { Task { await openEntry() } }
+        }
+        .onDisappear { invalidate() }
+    }
+    private func invalidate() {
+        generation = UUID(); pantry?.accessLost(); pantry = nil
+        admittedPresentation = nil; admittedContext = nil; opening = false
+    }
+    private func openEntry() async {
+        guard pantry == nil, !opening else { return }
+        invalidate()
+        let token = generation, initialPresentation = presentation
+        guard initialPresentation.scope(presentationID: UUID()) != nil, model.pantryIsActive,
+              !model.hasPendingSave, !model.saving else { return }
+        opening = true
+        defer { if generation == token { opening = false } }
+        guard await model.refreshPantryStock(), !Task.isCancelled, generation == token,
+              presentation == initialPresentation,
+              let context = try? PickupPantryAddContext.resolve(model: model, ingredientID: ingredientID),
+              let entry = model.makePantryModel() else { return }
+        admittedPresentation = initialPresentation; admittedContext = context; pantry = entry
     }
 }
 

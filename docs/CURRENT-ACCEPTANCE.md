@@ -1,6 +1,6 @@
 # Current implementation and acceptance map
 
-Use the [52-requirement map](#launch-requirement-traceability) and the [27-screen map](#route-traceability) to find the implementation and evidence for a particular feature. Foundation schedules the direct retailer connection (E05) for a later release. Each result applies to the build and environment where it ran. The [current handoff](CURRENT-HANDOFF.md#active-work-and-ownership) identifies the revision under test. The [first-release checklist](RELEASE-EXECUTION.md#execution-order) tracks the outstanding signing, device, provider, human review and rollout work.
+Use the [52-requirement map](#launch-requirement-traceability) and the [27-screen map](#route-traceability) to find the implementation and evidence for a particular feature. Foundation schedules the direct retailer connection (E05) for a later release. Each result applies to the build and environment where it ran. The [current handoff](CURRENT-HANDOFF.md#expansion-integration) identifies the revision under test. The [first-release checklist](RELEASE-EXECUTION.md#execution-order) tracks the outstanding signing, device, provider, human review and rollout work.
 
 ## Reading this map
 
@@ -133,7 +133,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | F02 | Stable contribution/allocation identities, explicit duplicate/match and exclusions; N526, PLANNING, STOCK. Ordinary native removal/Cancel/restart plus exact SQLite history pass on the reviewed source. | Complete the shared-device task and final combined qualification. |
 | F03 | Independent templates, drafts, snapshots, placed originals, retailer-confirmed amendments, proposals and fills; shared confirmation/retry never implies arrival or payment. [Shared evidence](evidence/native/shared-amendment-20261107/verification.json). | Final hosted and real OS external-action/retry journey. |
 | F04 | Scoped dated price evidence; expected/hold/pending/posted/included-credit/top-up separation; N526, B175, QUOTES. | Real manually entered evidence and final receipt/settlement task. |
-| F05 | Distinct principal/member/device/grant/seat/shopper; 023 enrollment fence and scoped device revocation; B175, G29, DEVICE. | S21 native rerun, hosted and mixed-device authority. |
+| F05 | Distinct principal/member/device/grant/seat/shopper; 023 enrollment fence and scoped device revocation; B175, G29, DEVICE. The [current-device fixture](evidence/native/household-devices-20261118/verification.json) passed English Cancel and targeted revoke plus Spanish largest-text pagination and revoke on an iPhone 17 simulator. | Hosted and mixed-device authority. |
 | F06 | Catalogs/formatting, independent UI/recipient locale, access/focus controls; N526, LIBRARY, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE, CHECKOUT-KEYBOARD, CAPTURE-FIELDS, REDUCE-MOTION. The [unfiltered Shop and comparison audit](evidence/native/minimum-os-current-20261104/validation.json) passed on iOS 17 and iOS 27. The iOS 17 comparison also passed at the largest text size in dark mode. The [iOS 17 Spanish week check](evidence/native/meal-week-20261104/validation.json) mirrored the Grid and Back control and opened the correct day note. | Human en-US/es-US, physical VoiceOver/Switch Control and broader right-to-left and largest-text route checks. |
 | F07 | Versioned bounded archive/media staging, siblings, canonical identity and scoped cleanup; N526, F07, RECOVERY-FILES. | Physical file providers and photo flow, production deletion recovery. |
 | F08 | Actor-keyed outboxes and authoritative local service receipts; separate draft/waiting/received/conflict/placed states; N526, B175, WEB, WEB-OFFLINE, NATIVE-OFFLINE. | Deployed offline/refresh/device-loss task. |
@@ -215,7 +215,5 @@ billing; and final B11 acceptance and release authorization. Follow the checklis
 specific evidence and owner-deferred boundaries for each item.
 
 Apple paid membership/signing, SMTP and actual KWS activation remain owner deferred.
-The current staging schema is049; use the handoff for the verified deployment and
-rollback identity. Earlier schema029/030 and public-browser receipts in the historical
-snapshot are scoped historical proof, not the present deployment or full release acceptance.
-Direct retailer integrationE05 remains deferred; X01–X06 remain product boundaries.
+On November 18, Staging reopened on schema 060 with request matching and the staple reminder fix. The migration preserved all 143 prior rows in 167 checked tables. The public API, web routes, maintenance schedule and worker passed verification. After a new match is saved, recovery requires a service that supports Undo for that match or a coordinated restore. [Staging receipt](evidence/b11/staging-060-request-matches-20261118/deployment.json)
+Direct retailer integration (E05) remains deferred. X01–X06 remain product boundaries.

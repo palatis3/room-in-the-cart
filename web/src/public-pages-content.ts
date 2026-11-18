@@ -214,8 +214,8 @@ export const publicPages = {
       "es": "Privacidad y datos"
     },
     "lead": {
-      "en": "Implementation disclosures · updated November 3, 2026.",
-      "es": "Información de la implementación · actualizada el 3 de noviembre de 2026."
+      "en": "Implementation disclosures · updated November 18, 2026.",
+      "es": "Información de la implementación · actualizada el 18 de noviembre de 2026."
     },
     "notice": {
       "en": "Operator policy review and production retention details are still pending. This implementation guide is not a complete operator-approved release privacy policy. The Support page has the supplied support email address.",
@@ -235,6 +235,10 @@ export const publicPages = {
           {
             "en": "Local records remain until you change or delete their scope. Recovery files and messages you save or share are separate copies. This source inventory does not establish provider backup retention or a production retention period.",
             "es": "Los registros locales permanecen hasta que cambies o elimines su alcance. Los archivos de recuperación y mensajes que guardas o compartes son copias separadas. Este inventario del código no establece la retención de copias de seguridad de proveedores ni un plazo de retención en producción."
+          },
+          {
+            "en": "You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names.",
+            "es": "Puedes consultar la guía FoodKeeper del USDA sin conexión. En Mi despensa puedes guardar una fecha para revisar la calidad de un alimento y activar un recordatorio diario. El recordatorio puede aparecer en la pantalla bloqueada. Te pide que abras Mi despensa y omite los nombres de los alimentos."
           }
         ]
       },
@@ -247,6 +251,18 @@ export const publicPages = {
           {
             "en": "Optional connected features use the information needed for the action you review: account email and identity, member aliases, enrolled device/session identifiers, household requests and instructions, shared-shop budget and price evidence, and Apple membership transaction evidence. Permissions limit what each person can read or change.",
             "es": "Las funciones conectadas opcionales usan la información necesaria para la acción que revisas: correo e identidad de la cuenta, alias de miembros, identificadores de dispositivo o sesión inscritos, solicitudes e instrucciones del hogar, presupuesto y pruebas de precios de compras compartidas, y pruebas de transacciones de membresía de Apple. Los permisos limitan lo que cada persona puede leer o cambiar."
+          },
+          {
+            "en": "When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone.",
+            "es": "Al confirmar un recibo para la despensa del hogar, los adultos con acceso a la despensa pueden ver la tienda, la fecha de compra, la referencia que ingreses y, de cada renglón seleccionado, el texto original, el alimento, las cantidades, el lugar de almacenamiento y el precio si lo ingresaste. El archivo original se queda en este iPhone."
+          },
+          {
+            "en": "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion.",
+            "es": "Cuando guardas una receta en «Esta noche en casa», envías al servicio del hogar los ingredientes, las porciones, los lotes que elegiste y las restricciones o los datos del paquete que hayas revisado. Los adultos con acceso a la despensa pueden ver el nombre de la receta y sus ingredientes cuando se les sugiere esa cena."
+          },
+          {
+            "en": "If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place.",
+            "es": "Si no se confirma que se guardó el recibo del hogar, este iPhone conserva una copia protegida de los datos revisados. Comprueba la despensa del hogar antes de reintentar el mismo cambio. Borrar el reintento conserva cualquier recibo ya guardado en el hogar."
           },
           {
             "en": "The implemented service uses Supabase for identity and PostgreSQL storage, Vercel for staging hosting, and Apple for subscription payment and verification. The app does not receive payment card or bank account numbers. Final provider settings and production retention require operator review.",
@@ -265,8 +281,20 @@ export const publicPages = {
         },
         "paragraphs": [
           {
-            "en": "The app’s capture tools process speech and images on this iPhone. Raw voice recordings are not retained or uploaded by the app. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a photo you select from iCloud before delivering it to the app.",
-            "es": "Las herramientas de captura de la app procesan la voz y las imágenes en este iPhone. La app no conserva ni sube las grabaciones de voz originales. Las fotos guardadas como evidencia permanecen en almacenamiento local protegido. Las exportaciones legibles y para ayudantes excluyen las fotos. Un archivo de recuperación cifrado puede incluir fotos de evidencia solo después de que las selecciones y revises. Apple puede descargar de iCloud una foto que selecciones antes de entregarla a la app."
+            "en": "Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a selected iCloud photo.",
+            "es": "El dictado habitual y el reconocimiento de texto en fotos se procesan en este iPhone. Las fotos guardadas como evidencia permanecen en el almacenamiento local protegido. Las exportaciones legibles y para ayudantes excluyen las fotos. Un archivo de recuperación cifrado puede incluirlas si las seleccionas y revisas. Apple puede descargar de iCloud una foto que elijas."
+          },
+          {
+            "en": "When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor.",
+            "es": "Cuando la asistencia en línea está disponible, un adulto autorizado puede revisar y enviar un fragmento de texto, una imagen recortada o una grabación de voz independiente a OpenAI a través de Room in the Cart. Escucha la grabación o revisa el recorte antes de enviarlo. También puedes seguir usando el editor local."
+          },
+          {
+            "en": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself.",
+            "es": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
+          },
+          {
+            "en": "For optional online language help, review what will go to OpenAI through Room in the Cart. Depending on the task, this can include your wording, possible matches, or selected meal titles and reasons. For a FoodKeeper match, you share the label wording and the names and IDs of the guide entries shown. You choose whether to use a suggestion.",
+            "es": "Para usar la ayuda de redacción o de coincidencias en línea, revisa qué se enviará a OpenAI a través de Room in the Cart. Según la tarea, puede incluir tu texto, posibles coincidencias o los títulos y motivos de las comidas seleccionadas. Para buscar una coincidencia en FoodKeeper, compartes el texto de la etiqueta y los nombres e identificadores de las entradas que se muestran. Tú decides si usas la sugerencia."
           }
         ]
       },

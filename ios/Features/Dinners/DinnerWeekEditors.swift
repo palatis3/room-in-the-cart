@@ -5,6 +5,9 @@ struct DinnerOccurrenceView: View {
     @ObservedObject var model: DinnerFeatureModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var ledger: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.guardianChildCoordinator) private var child
     let occurrenceID: UUID
     @State private var date = Date()
     @State private var scheduled = false
@@ -22,6 +25,13 @@ struct DinnerOccurrenceView: View {
                 if current.carryover != nil {
                     DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)
                 } else { occurrenceForm }
+            case .failure where draftSwapUndo != nil:
+                Form {
+                    if let receipt = draftSwapUndo {
+                        DinnerSwapUndoSection(model: model, receipt: receipt)
+                    }
+                    DinnerFeedback(model: model)
+                }.navigationTitle(dinnerText("Dinner swap")).dinnerAccess(model)
             case .failure:
                 ContentUnavailableView(currentDinnerText("Current dinner unavailable"), systemImage: "arrow.triangle.2.circlepath",
                     description: Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes.")))
@@ -29,6 +39,12 @@ struct DinnerOccurrenceView: View {
             }
         }
     }
+    private var draftSwapUndo: DinnerApplyReceipt? {
+        guard let shop = model.shop, model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID,
+              pickup.recoveryLedger === ledger, model.phaseProvider(shop.id) == .draft else { return nil }
+        return model.latestUndoableSwap(occurrenceID: occurrenceID)
+    }
+
     private var currentRoute: Result<DinnerMealDestination, Error> {
         Result { try model.currentMealDestination(occurrenceID, pickup: pickup) }
     }
@@ -45,6 +61,55 @@ struct DinnerOccurrenceView: View {
                         if let templateID = meal.templateID {
                             NavigationLink(captureText("Original recipe source")) { RecipeSourceReview(model: model, templateID: templateID, evidence: evidence) }
                         } else { RecipeSourceDisclosure(evidence: evidence) }
+                    }
+                }
+                if model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID, let shop = model.shop {
+                    if model.phaseProvider(shop.id) == .draft {
+                        Section {
+                            DinnerDecisionButton(model: model, title: dinnerText("Swap this dinner"), identifier: "dinner.swap") {
+                                DinnerSwapView(model: model, meal: meal)
+                            }.disabled(!model.editable)
+                        }
+                        if let receipt = draftSwapUndo { DinnerSwapUndoSection(model: model, receipt: receipt) }
+                    } else if model.phaseProvider(shop.id) == .reportedPlaced, pickup.ready,
+                              !pickup.saving, !pickup.hasPendingSave, pickup.recoveryLedger === ledger,
+                              pickup.journey?.id == shop.id, pickup.journey?.closedAt == nil {
+                        Section {
+                            NavigationLink(dinnerText("Swap this dinner")) {
+                                PickupMealRecoveryEntry(model: pickup, ledger: ledger, pickupID: shop.id,
+                                                        occurrenceID: meal.id, carryoverPlanner: model)
+                            }.accessibilityIdentifier("dinner.swap.placed")
+                        }
+                    }
+                    Section {
+                        NavigationLink(recordsText("Cook this dinner")) {
+                            ChosenDinnerCookingEntry(ledger: ledger, pickup: pickup, shopID: shop.id, mealID: meal.id) {
+                                guard model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID,
+                                      let current = model.shop, current.id == shop.id,
+                                      case .original(let original) = try model.currentMealDestination(meal.id, pickup: pickup) else {
+                                    throw PickupMealRecoveryError.sourceChanged
+                                }
+                                return try DinnerCookingPage(original: original, shop: current)
+                            }
+                        }.accessibilityIdentifier("cooking.openDinner")
+                        NavigationLink(dinnerText("Private meal feedback")) {
+                            MealFeedbackEntry(ledger: ledger, source: .occurrence(shopID: shop.id, occurrenceID: meal.id), title: meal.title)
+                        }.accessibilityIdentifier("dinner.mealFeedback")
+                        if let suggested = portionSuggestion(meal) {
+                            Text(dinnerFormat("You reported too many leftovers. Consider %@ servings for this dinner.", suggested.description))
+                            NavigationLink(dinnerText("Review smaller portions")) {
+                                DinnerManualAdjustmentView(model: model, meal: meal, suggestedServings: suggested)
+                            }
+                        }
+                        if pickup.pantryIsActive {
+                            NavigationLink(cookCompletionText("Record cooking and leftovers")) {
+                                CookCompletionEntry(ledger: ledger, pickup: pickup, shopID: shop.id, mealID: meal.id)
+                            }.accessibilityIdentifier("dinner.cookCompletion")
+                        } else if pickup.pantryRouteAvailable {
+                            NavigationLink(cookCompletionText("Set up My Pantry to record cooking and leftovers")) {
+                                PantrySetupView(pickup: pickup, ledger: ledger)
+                            }.accessibilityIdentifier("dinner.cookSetup")
+                        }
                     }
                 }
                 Section { DinnerAwayCarryoverLink(model: model, occurrenceID: meal.id) }
@@ -95,6 +160,14 @@ struct DinnerOccurrenceView: View {
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
 
+    private func portionSuggestion(_ meal: MealOccurrence) -> Rational? {
+        guard household.projection?.grantId == nil, child?.presented != true,
+              UIApplication.shared.isProtectedDataAvailable,
+              let identity = CapturePrivateIdentity.current(access: access, household: household),
+              let shopID = model.shop?.id else { return nil }
+        return ledger.workspace.suggestedFutureServings(shopID: shopID, occurrenceID: meal.id, owner: identity.mealFeedbackOwner, at: Date())
+    }
+
     private func resetCalendarDraft() {
         let day = meal?.scheduledDay
         scheduled = day != nil
@@ -114,9 +187,9 @@ struct DinnerManualAdjustmentView: View {
     @State private var bindings: [DinnerBindingDraft]
     @State private var showPreview = false
     private var reviewsAllocations: Bool { meal.servingGroups.contains(where: \.isProtected) }
-    init(model: DinnerFeatureModel, meal: MealOccurrence) {
+    init(model: DinnerFeatureModel, meal: MealOccurrence, suggestedServings: Rational? = nil) {
         self.model = model; self.meal = meal; baseRevision = model.shop?.revisionID
-        _servings = State(initialValue: meal.servings.description)
+        _servings = State(initialValue: (suggestedServings ?? meal.servings).description)
         _groups = State(initialValue: meal.servingGroups.map(DinnerGroupDraft.init))
         _amounts = State(initialValue: meal.ingredientContributionIDs.compactMap { id in
             model.shop?.contributions.first(where: { $0.id == id }).map {

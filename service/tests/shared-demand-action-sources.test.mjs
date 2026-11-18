@@ -113,7 +113,7 @@ function proposalFixture(row){
  return {calls,shop,ctx};
 }
 test('shared change validator checks exact meal and SQL authority predicates without consumption',async()=>{
- const meal=fixture().meal,f=proposalFixture({body:{meal},actor_id:randomUUID(),grant_revision:3});
+ const meal=fixture().meal,f=proposalFixture({body:{meal},original_meal:{...meal,title:'Previously reviewed dinner'},actor_id:randomUUID(),grant_revision:3});
  await requireSharedMealChange(f.ctx,f.shop,randomUUID(),randomUUID(),2,meal);
  assert.equal(f.calls.length,1);assert.match(f.calls[0].sql,/c.state='pending'/);assert.match(f.calls[0].sql,/a.state='active'/);assert.match(f.calls[0].sql,/p.revision=c.grant_revision/);
  assert.equal(f.calls[0].args[4],4);assert.equal(f.calls[0].args[5],2);assert.equal(f.calls[0].args[6],2);
@@ -124,7 +124,7 @@ test('revoked/dismissed/unavailable proposals fail; consumption only follows a v
  const f=proposalFixture(null),meal=fixture().meal;
  await assert.rejects(consumeSharedMealChange(f.ctx,f.shop,randomUUID(),randomUUID(),2,meal),{code:'stale_proposal'});
  assert.equal(f.calls.length,1);assert.ok(!f.calls.some(c=>c.sql.startsWith('UPDATE')));
- const g=proposalFixture({body:{meal},actor_id:randomUUID(),grant_revision:3});
+ const g=proposalFixture({body:{meal},original_meal:{...meal,title:'Previously reviewed dinner'},actor_id:randomUUID(),grant_revision:3});
  await consumeSharedMealChange(g.ctx,g.shop,randomUUID(),randomUUID(),2,meal);assert.equal(g.calls.length,2);assert.match(g.calls[1].sql,/^UPDATE ritc.shared_meal_change/);
 });
 test('new occurrence still requires current approved idea before any consumption',async()=>{

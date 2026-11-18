@@ -1,0 +1,50 @@
+format_version: '25'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: ios
+meta:
+  bitrise.io:
+    stack: osx-xcode-27.1.x
+pipelines:
+  app-pair:
+    triggers:
+      push:
+        - branch: main
+        - branch: codex/dinner-shopping-integration
+        - branch: codex/first-version-followup
+    workflows:
+      compact-cooking: {}
+      large-tonight: {}
+workflows:
+  compact-cooking:
+    envs:
+      - RITC_NATIVE_LANE: compact-cooking
+    steps:
+      - bundle::native-app: {}
+  large-tonight:
+    envs:
+      - RITC_NATIVE_LANE: large-tonight
+    steps:
+      - bundle::native-app: {}
+step_bundles:
+  native-app:
+    steps:
+      - script@1.2.1:
+          title: Check out exact public source and verify native app journey
+          timeout: 1800
+          inputs:
+            - content: |-
+                #!/bin/bash
+                set -euo pipefail
+                case "${BITRISE_GIT_BRANCH:-}" in main|codex/dinner-shopping-integration|codex/first-version-followup) ;; *) exit 2;; esac
+                test -z "${BITRISE_PULL_REQUEST:-}"
+                test -z "${BITRISEIO_PULL_REQUEST_REPOSITORY_URL:-}"
+                [[ "${BITRISE_GIT_COMMIT:-}" =~ ^[0-9a-f]{40}$ ]]
+                export GIT_TERMINAL_PROMPT=0
+                source_dir=$(mktemp -d "${BITRISE_SOURCE_DIR:?}/ritc-native.XXXXXX")
+                git init --quiet "$source_dir"
+                cd "$source_dir"
+                git -c credential.helper= fetch --quiet --no-tags --depth=1 \
+                  https://github.com/palatis3/room-in-the-cart.git "$BITRISE_GIT_COMMIT"
+                test "$(git rev-parse FETCH_HEAD)" = "$BITRISE_GIT_COMMIT"
+                git checkout --quiet --detach FETCH_HEAD
+                bash scripts/run_bitrise_native_app.sh "$RITC_NATIVE_LANE"

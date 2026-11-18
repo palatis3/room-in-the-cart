@@ -1,3 +1,4 @@
+import {mealConstraints, mealEligibility, mealEvidence} from './meal-preferences.js';
 import { z } from 'zod';
 import type { Context, HouseholdRepository } from './repository.js';
 import type { MealMoves } from './meal-moves.js';
@@ -18,6 +19,7 @@ function wire(v:Fraction):IdeaAmount|null {const q=reduced(v),limit=BigInt(Numbe
 function literal(v:IdeaAmount):string {return typeof v==='number'?String(v):v.denominator===1?String(v.numerator):`${v.numerator}/${v.denominator}`;}
 
 export const sharedIdeaDraftSchema = z.object({
+  preferenceEvidence: mealEvidence.optional(),
   title: label, source: z.enum(['manual','app_template']), servings: positive.max(1000), minutes: positive.nullable(),
   assumedExtras: z.array(label).max(20), exclusions: z.array(label).max(20),
   ingredients: z.array(z.object({ id, name: label, required: positiveAmount.nullable(), unit: z.enum(['count','gram','kilogram','ounce','pound','milliliter','liter','fluidOunce','cup']),
@@ -50,7 +52,7 @@ export function evaluateSharedIdea(value:SharedIdeaDraft) {
   });
   return {canApprove:ingredients.every(i=>!i.excluded&&i.wholePacks!==null),ingredients};
 }
-export const sharedIdeaWriteSchema=z.object({clientKey:id,ideaId:id,baseRevision:z.number().int().positive().nullable(),
+export const sharedIdeaWriteSchema=z.object({preferenceRevision:id.nullish(),clientKey:id,ideaId:id,baseRevision:z.number().int().positive().nullable(),
   shopRevision:z.number().int().positive(),authorityEpoch:z.number().int().positive(),grantRevision:z.number().int().nonnegative(),
   action:z.enum(['save','approve']),draft:sharedIdeaDraftSchema,reviewedHouseholdEvidence:z.boolean()}).strict();
 export type SharedIdeaWrite=z.infer<typeof sharedIdeaWriteSchema>;
@@ -59,12 +61,19 @@ export class SharedMealIdeas {
   constructor(private readonly repo:HouseholdRepository,private readonly moves:MealMoves){}
   async read(ctx:Context,id:string){
     const {shop,shopper,plannerId,grantRevision}=await this.moves.context(ctx,id,true);
-    const rows=(await ctx.db.query(`SELECT idea_id,revision,actor_id,state,draft FROM ritc.shared_meal_idea
+    const profile=await mealConstraints(ctx);
+    const rows=(await ctx.db.query(`SELECT idea_id,revision,actor_id,state,draft,preference_revision FROM ritc.shared_meal_idea
       WHERE household_id=$1 AND shop_id=$2 AND authority_epoch=$3 AND grant_revision=$4
       AND actor_id IN ($5,$6) ORDER BY updated_at DESC,idea_id LIMIT 100`,
       [ctx.householdId,id,shop.authority_epoch,grantRevision,ctx.member.member_id,shopper?plannerId:ctx.member.member_id])).rows;
-    return {shopId:id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,grantRevision,shopper,
-      ideas:rows.map(row=>({ideaId:row.idea_id,revision:row.revision,actorId:row.actor_id,state:row.state,draft:row.draft,preview:evaluateSharedIdea(sharedIdeaDraftSchema.parse(row.draft))}))};
+    return {...(profile.revision ? {preferenceRevision:profile.revision}:{}),shopId:id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,grantRevision,shopper,
+      ideas:rows.map(row=>{
+        const draft=sharedIdeaDraftSchema.parse(row.draft), preview=evaluateSharedIdea(draft);
+        const match=mealEligibility(profile.settings,draft.ingredients.map(i=>i.name),draft.preferenceEvidence,draft.minutes);
+        const requiresReview=row.state==='approved' && (row.preference_revision??null)!==profile.revision;
+        return {ideaId:row.idea_id,revision:row.revision,actorId:row.actor_id,state:row.state,draft:row.draft,
+          preview:{...preview,canApprove:preview.canApprove&&match.eligible,...(profile.revision?{preferenceCheck:match,requiresPreferenceReview:requiresReview}:{})}};
+      })};
   }
   async write(ctx:Context,id:string,input:SharedIdeaWrite){
     const {shop,grantRevision}=await this.moves.context(ctx,id,true);
@@ -75,12 +84,19 @@ export class SharedMealIdeas {
     const current=(await ctx.db.query('SELECT revision,actor_id,authority_epoch,grant_revision,state,draft FROM ritc.shared_meal_idea WHERE household_id=$1 AND shop_id=$2 AND idea_id=$3',[ctx.householdId,id,input.ideaId])).rows[0];
     if(current ? current.actor_id!==ctx.member.member_id||current.authority_epoch!==shop.authority_epoch||current.grant_revision!==grantRevision||current.revision!==input.baseRevision : input.baseRevision!==null)throw stale();
     const preview=evaluateSharedIdea(input.draft);
+    const profile=await mealConstraints(ctx);
+    if(input.action==='approve'){
+      if ((profile.settings || input.preferenceRevision != null) && (input.preferenceRevision??null)!==profile.revision) throw stale();
+      if (!mealEligibility(profile.settings,input.draft.ingredients.map(i=>i.name),input.draft.preferenceEvidence,input.draft.minutes).eligible) {
+        throw new ServiceError(409,'idea_review_required','Review the meal constraints and missing ingredients or appliance details.');
+      }
+    }
     if(input.action==='approve'&&(!current||!input.reviewedHouseholdEvidence||!preview.canApprove||digest(current.draft)!==digest(input.draft)))throw new ServiceError(409,'idea_review_required','Save corrections, review household evidence and resolve excluded or ambiguous quantities before approval.');
     if(!current){const count=await ctx.db.query('SELECT count(*)::int AS n FROM ritc.shared_meal_idea WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,id]);if(count.rows[0].n>=100)throw new ServiceError(409,'idea_limit','Review the existing ideas before adding another.');}
     const revision=(current?.revision??0)+1,state=input.action==='approve'?'approved':'draft';
-    await ctx.db.query(`INSERT INTO ritc.shared_meal_idea(household_id,shop_id,idea_id,actor_id,authority_epoch,grant_revision,revision,state,draft)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(household_id,shop_id,idea_id) DO UPDATE SET revision=$7,state=$8,draft=$9,updated_at=now()`,
-      [ctx.householdId,id,input.ideaId,ctx.member.member_id,shop.authority_epoch,grantRevision,revision,state,input.draft]);
+    await ctx.db.query(`INSERT INTO ritc.shared_meal_idea(household_id,shop_id,idea_id,actor_id,authority_epoch,grant_revision,revision,state,draft,preference_revision)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(household_id,shop_id,idea_id) DO UPDATE SET revision=$7,state=$8,draft=$9,preference_revision=$10,updated_at=now()`,
+      [ctx.householdId,id,input.ideaId,ctx.member.member_id,shop.authority_epoch,grantRevision,revision,state,input.draft,profile.revision]);
     const response={saved:true,ideaId:input.ideaId,revision,state};
     await ctx.db.query('INSERT INTO ritc.shared_idea_receipt(household_id,shop_id,idea_id,actor_id,client_key,fingerprint,response) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,id,input.ideaId,ctx.member.member_id,input.clientKey,digest({shopId:id,...input}),response]);
     return response;
@@ -90,12 +106,16 @@ export class SharedMealIdeas {
 /** A new occurrence must match the approved idea under the current adult's grant. */
 export async function requireApprovedSharedIdea(ctx:Context,shopId:string,authorityEpoch:number,grantRevision:number,
   actorId:string,ideaId:string,revision:number,meal:unknown,exactProposalReceipt=false) {
-  const row=(await ctx.db.query(`SELECT draft FROM ritc.shared_meal_idea WHERE household_id=$1 AND shop_id=$2 AND idea_id=$3
+  const row=(await ctx.db.query(`SELECT draft,preference_revision FROM ritc.shared_meal_idea WHERE household_id=$1 AND shop_id=$2 AND idea_id=$3
     AND actor_id=$4 AND authority_epoch=$5 AND grant_revision=$6 AND revision=$7 AND state='approved'`,
     [ctx.householdId,shopId,ideaId,actorId,authorityEpoch,grantRevision,revision])).rows[0];
   if(!row)throw stale();
   const draft=sharedIdeaDraftSchema.parse(row.draft),day=(meal as {day?:unknown})?.day;
   if(!evaluateSharedIdea(draft).canApprove)throw stale();
+  if(!exactProposalReceipt){
+    const profile=await mealConstraints(ctx);
+    if((row.preference_revision??null)!==profile.revision || !mealEligibility(profile.settings,draft.ingredients.map(i=>i.name),draft.preferenceEvidence,draft.minutes).eligible)throw stale();
+  }
   const ingredients=draft.ingredients.map(i=>({
     id:i.id,name:i.name,quantity:i.required===null ? null : {
       amount:typeof i.required==='number' ? {numerator:i.required,denominator:1} : i.required,

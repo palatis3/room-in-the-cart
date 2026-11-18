@@ -165,7 +165,7 @@ enum PickupStockReviewEngine {
 extension PickupModel {
     func previewStockLot(_ lot: ConfirmedStockLot, in journeyID: UUID, replacing original: ConfirmedStockLot? = nil,
                          carriedFrom priorLot: ConfirmedStockLot? = nil, scope: PickupStockReviewScope) throws -> PickupStockLotReview {
-        guard ready, !saving, !hasPendingSave, scope.permitsReview, scope.workspaceID == sourceWorkspaceID,
+        guard !pantryIsActive, ready, !saving, !hasPendingSave, scope.permitsReview, scope.workspaceID == sourceWorkspaceID,
               let current = journey, current.id == journeyID else { throw PickupStockReviewError.stale }
         let previous = journeys.first { $0.id == current.originShopID }
         let instant = stockReviewDate
@@ -183,7 +183,7 @@ extension PickupModel {
     }
 
     func isCurrentStockLotReview(_ review: PickupStockLotReview, scope: PickupStockReviewScope?) -> Bool {
-        guard ready, !saving, !hasPendingSave, let scope, scope.permitsReview, scope == review.scope,
+        guard !pantryIsActive, ready, !saving, !hasPendingSave, let scope, scope.permitsReview, scope == review.scope,
               scope.workspaceID == sourceWorkspaceID, let current = journey, current.id == review.journeyID,
               current.closedAt == nil else { return false }
         if let applied = appliedStockReviewRevisions[review.id] {
@@ -199,7 +199,7 @@ extension PickupModel {
 
     @discardableResult
     func applyStockLotReview(_ review: PickupStockLotReview, scope: PickupStockReviewScope?, confirmed: Bool) async -> Bool {
-        guard confirmed, isCurrentStockLotReview(review, scope: scope) else {
+        guard !pantryIsActive, confirmed, isCurrentStockLotReview(review, scope: scope) else {
             error = pTr("The batch or meal commitments changed. Review the effects again before saving.")
             return false
         }
