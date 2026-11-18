@@ -336,6 +336,230 @@
           }
         }
       }
+    },
+    "Choose a meal using my words": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a meal using my words"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una comida con mis palabras"
+          }
+        }
+      }
+    },
+    "These choices have changed. Return to the current meal review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These choices have changed. Return to the current meal review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las opciones cambiaron. Vuelve a la revisión actual de comidas."
+          }
+        }
+      }
+    },
+    "Words and titles to send to OpenAI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Words and titles to send to OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palabras y títulos que se enviarán a OpenAI"
+          }
+        }
+      }
+    },
+    "Type what you want and select up to eight titles. Only your words, language and these titles with temporary references will be shared. Omit personal details.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type what you want and select up to eight titles. Only your words, language and these titles with temporary references will be shared. Omit personal details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe lo que buscas y selecciona hasta ocho títulos. Solo se compartirán tus palabras, el idioma y estos títulos con referencias temporales. Omite los datos personales."
+          }
+        }
+      }
+    },
+    "What would you like?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What would you like?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué te gustaría?"
+          }
+        }
+      }
+    },
+    "Send these words and titles": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send these words and titles"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar estas palabras y títulos"
+          }
+        }
+      }
+    },
+    "Suggested meal to review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested meal to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida sugerida para revisar"
+          }
+        }
+      }
+    },
+    "Review this choice with the current local quantities, holds and prices.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this choice with the current local quantities, holds and prices."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa esta opción con las cantidades, las reservas y los precios actuales que tienes en el dispositivo."
+          }
+        }
+      }
+    },
+    "Review this choice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this choice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta opción"
+          }
+        }
+      }
+    },
+    "Online meal selection is unavailable. Choose directly in the meal list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online meal selection is unavailable. Choose directly in the meal list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La selección de comidas en línea no está disponible. Elige directamente en la lista de comidas."
+          }
+        }
+      }
+    },
+    "Choose from reviewed meals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose from reviewed meals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir entre las comidas revisadas"
+          }
+        }
+      }
+    },
+    "No title matched your wording. You can choose directly.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No title matched your wording. You can choose directly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún título coincidió con tus palabras. Puedes elegir directamente."
+          }
+        }
+      }
+    },
+    "This suggestion could not be verified. Review the current meal choices.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This suggestion could not be verified. Review the current meal choices."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar la sugerencia. Revisa las opciones de comida actuales."
+          }
+        }
+      }
+    },
+    "Selected for local review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected for local review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionada para revisar en el dispositivo"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

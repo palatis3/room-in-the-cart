@@ -32,6 +32,12 @@ struct DinnerSwapView: View {
                     }
                 }
                 Section(dinnerText("Replacement dinner")) {
+                    if options.contains(where: \.canChoose) {
+                        MealChoiceWordingLink(refresh: {
+                            if pickup.pantryIsActive { return await pickup.refreshPantryStock() }
+                            return pickup.ready
+                        }, makeSource: wordingChoices)
+                    }
                     ForEach(options) { option in
                         VStack(alignment: .leading, spacing: 4) {
                             Button {
@@ -93,6 +99,14 @@ struct DinnerSwapView: View {
         selected = nil; matches = [:]
         do { options = try model.swapOptions(occurrenceID: meal.id, groupID: groupID, pickup: pickup) }
         catch { options = []; model.report(error) }
+    }
+
+    private func wordingChoices() throws -> MealChoiceSource {
+        let group = groupID, chosen = selected, reviewedMatches = matches, currentOwner = owner
+        return try MealChoiceSource.swap(model, pickup: pickup, occurrence: meal.id, group: group, displayed: options,
+            authorized: { currentOwner != nil && model.editorIdentity == currentOwner && groupID == group && selected == chosen && matches == reviewedMatches }) { id in
+            if selected != id { selected = id; matches = [:] }
+        }
     }
 
     private func issueText(_ issue: DinnerSwapOption.Issue) -> String {

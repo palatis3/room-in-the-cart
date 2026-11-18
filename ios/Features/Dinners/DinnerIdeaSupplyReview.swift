@@ -1,7 +1,7 @@
 import Foundation
 import CoreDomain
 
-struct IdeaSupplyFood: Identifiable {
+struct IdeaSupplyFood: Identifiable, Equatable {
     let id: UUID
     let name: String
     let detail: String

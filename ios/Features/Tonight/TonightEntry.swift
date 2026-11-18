@@ -18,6 +18,7 @@ struct TonightEntry: View {
     init(batch: TonightMealModel.Batch? = nil) {
         _model = StateObject(wrappedValue: TonightMealModel(batch: batch))
     }
+    @State private var suggestedSecond: PantryMealMatcher.Review?
     @State private var choosing: MealTemplate?
     @State private var sourceToReview: TonightMealModel.Source?
     @State private var manual = false
@@ -187,6 +188,9 @@ struct TonightEntry: View {
                 }
             }
             if let original = scope, let ledgerID = ledger.sourceWorkspaceID {
+                if model.suggestions.contains(where: canChoose) {
+                    wordingLink(following: false)
+                }
                 TonightExplanationEntry(meals: model, ledgerID: ledgerID,
                     authorize: { scope == original && !ledger.saving && !ledger.hasPendingSave },
                     refresh: { await refresh() }, choose: { recipe in
@@ -301,9 +305,12 @@ struct TonightEntry: View {
         if model.followingMeals.isEmpty {
             Text(tonightText("No other reviewed recipe uses this remainder yet. Check the ingredient matches in your recipe library."))
         }
-        ForEach(model.followingMeals) { next in
+        if !model.followingMeals.isEmpty { wordingLink(following: true) }
+        let ordered = model.followingMeals.sorted { $0 == suggestedSecond && $1 != suggestedSecond }
+        ForEach(ordered) { next in
             VStack(alignment: .leading, spacing: 6) {
                 Text(next.recipe.title).font(.headline)
+                if next == suggestedSecond { Text(mealExplanationText("Selected for local review")) }
                 if let use = next.batchUse {
                     LabeledContent(tonightText("Would use from this batch"), value: ledgerQuantity(use.used))
                     LabeledContent(tonightText("Unreserved amount left afterward"), value: ledgerQuantity(use.remaining))
@@ -328,6 +335,24 @@ struct TonightEntry: View {
                 .accessibilityIdentifier("tonight.batch.second.\(next.id)")
         }
     }
+    private func wordingLink(following: Bool) -> some View {
+        MealChoiceWordingLink(refresh: {
+            await refresh()
+            return scope != nil && !model.failed && !applying
+        }, makeSource: {
+            guard let original = scope, let ledgerID = ledger.sourceWorkspaceID else { throw TonightMealModel.Failure.stale }
+            return try MealChoiceSource.tonight(model, ledgerID: ledgerID, following: following,
+                authorized: { scope == original && !applying }) { chosen in
+                if following {
+                    // This is hypothetical stock left after the first meal. Retain the ordinary second-meal comparison.
+                    suggestedSecond = chosen
+                } else {
+                    choosing = chosen.recipe; destination = ledger.workspace.selectedShopID; preview = nil; message = nil
+                }
+            }
+        })
+    }
+
     private func canChoose(_ review: PantryMealMatcher.Review) -> Bool {
         TonightMealModel.canChoose(review) && (model.batch == nil || review.batchUse?.lotID == model.batch?.lotID)
     }

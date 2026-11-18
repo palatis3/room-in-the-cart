@@ -169,6 +169,15 @@ import LocalStore
         }
         XCTAssertTrue(approved)
         let optionsAfter = try f.model.swapOptions(occurrenceID: f.target, pickup: f.pickup)
+        var proposed: UUID?
+        let source = try MealChoiceSource.swap(f.model, pickup: f.pickup, occurrence: f.target, group: nil, displayed: optionsAfter,
+            authorized: { f.scope.authorized }) { proposed = $0 }
+        XCTAssertFalse(source.options.contains(where: { $0.id == differentServings.id }))
+        let beforeAssistance = f.ledger.workspace
+        try source.select(option.id)
+        XCTAssertEqual(proposed, option.id)
+        XCTAssertEqual(f.ledger.workspace, beforeAssistance)
+        XCTAssertThrowsError(try source.select(differentServings.id))
         let mismatched = try XCTUnwrap(optionsAfter.first { $0.id == differentServings.id })
         XCTAssertFalse(mismatched.canChoose)
         if case .servingsMismatch = mismatched.issue {} else { XCTFail("Expected an explicit servings review, not silent scaling") }
@@ -181,7 +190,10 @@ import LocalStore
         XCTAssertThrowsError(try f.model.prepareSwap(freshOption, pickup: f.pickup))
         let restricted = try XCTUnwrap(f.model.swapOptions(occurrenceID: f.target, pickup: f.pickup).first)
         XCTAssertFalse(restricted.canChoose); XCTAssertTrue(restricted.eligibility.unresolved.contains(.appliancesUnknown))
+        XCTAssertFalse(source.isCurrent())
+        XCTAssertThrowsError(try source.select(option.id))
         f.scope.authorized = false
+        XCTAssertThrowsError(try source.select(option.id))
         XCTAssertThrowsError(try f.model.swapOptions(occurrenceID: f.target, pickup: f.pickup))
         XCTAssertThrowsError(try f.model.prepareSwap(restricted, pickup: f.pickup))
     }

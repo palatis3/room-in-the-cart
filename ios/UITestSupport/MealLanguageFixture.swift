@@ -36,10 +36,17 @@ private final class MealNoteProtocol: URLProtocol {
                     guard payload?["consent"] as? Bool == true, let id = payload?["requestID"] as? String,
                           let line = (payload?["sourceLines"] as? [[String: String]])?.first,
                           let text = line["text"], let sourceID = line["id"] else { throw URLError(.cannotParseResponse) }
-                    let feedback = path.hasSuffix("/meal-feedback")
-                    let quote = feedback ? text : (text.hasSuffix("guisantes") ? "guisantes" : "peas")
-                    let kind = feedback ? "makeAgain" : "dislike"
-                    value = ["version":1,"requestID":id,"suggestions":[["sourceLineID":sourceID,"kind":kind,"quote":quote]]]
+                    if path.hasSuffix("/meal-choice") {
+                        guard let candidates = payload?["candidates"] as? [[String: String]],
+                              let match = candidates.first(where: { $0["title"] == "Arroz con tomates" }),
+                              let reference = match["id"] else { throw URLError(.cannotParseResponse) }
+                        value = ["version":1,"requestID":id,"candidateID":reference]
+                    } else {
+                        let feedback = path.hasSuffix("/meal-feedback")
+                        let quote = feedback ? text : (text.hasSuffix("guisantes") ? "guisantes" : "peas")
+                        let kind = feedback ? "makeAgain" : "dislike"
+                        value = ["version":1,"requestID":id,"suggestions":[["sourceLineID":sourceID,"kind":kind,"quote":quote]]]
+                    }
                 }
             } else { throw URLError(.unsupportedURL) }
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type":"application/json"])!
@@ -74,6 +81,9 @@ struct MealLanguageFixture: View {
     @StateObject private var access: WorkspaceAccess
     @State private var household: HouseholdModel?
     @State private var recipe = MealTemplate(title:"Test supper")
+    @State private var swap: DinnerFeatureModel?
+    @State private var pickup: PickupModel?
+
     @State private var failed = false
     private let directory: URL
     init() {
@@ -87,6 +97,12 @@ struct MealLanguageFixture: View {
         NavigationStack {
             if let household {
                 List {
+                    if let swap, let pickup, let original = ledger.shop?.mealOccurrences.first {
+                        NavigationLink("Swap") {
+                            DinnerSwapView(model: swap, meal: original)
+                                .environmentObject(pickup).environmentObject(household).environmentObject(access)
+                        }.accessibilityIdentifier("mealFixture.swap")
+                    }
                     NavigationLink("Preferences") { PrivateMealPreferencesEntry(ledger: ledger).environmentObject(household).environmentObject(access) }.accessibilityIdentifier("mealFixture.preferences")
                     NavigationLink("Feedback") { MealFeedbackEntry(ledger: ledger, source: .recipe(id: recipe.id, revision: recipe.revision),
                         title: recipe.title).environmentObject(household).environmentObject(access) }.accessibilityIdentifier("mealFixture.feedback")
@@ -110,6 +126,26 @@ struct MealLanguageFixture: View {
                 guard let first = model.workspaces.first else { throw ClientError.configuration }
                 model.keepLocalPrivate = true; await model.join(first)
                 guard model.projection?.enrolled == true else { throw ClientError.configuration }
+                if ProcessInfo.processInfo.arguments.contains("--meal-choice-fixture") {
+                    guard let origin = ledger.sourceWorkspaceID else { throw ClientError.configuration }
+                    let instant = Date()
+                    var shop = ShoppingLedger(title: "Fixture", basis: .init(branch: "Fixture"))
+                    let ingredient = MealIngredient(name: "Rice", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"))
+                    _ = try shop.chooseMeal(.init(title: "Original dinner", ingredients: [ingredient]), at: instant)
+                    let accepted = AcceptedDinner(id: UUID(), template: .init(title: "Arroz con tomates", ingredients: [ingredient]),
+                        acceptedAt: instant, acceptedFallback: false)
+                    let context = DinnerAccessContext(scope: .local(workspaceID: origin), actorID: "adult-note", shopID: shop.id,
+                        assignedShopperID: "adult-note", canPlan: true, canReadBudget: true, hasPaidTools: true, roleRevision: 0,
+                        verifiedAt: instant, validUntil: instant.addingTimeInterval(3600))
+                    guard await ledger.change(key: "fixture-swap", { workspace in
+                        workspace.shops = [shop]; workspace.selectedShopID = shop.id
+                        try workspace.dinnerPlanning.accept(accepted, access: context, at: instant)
+                    }) else { throw ClientError.configuration }
+                    let localPickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+                    await localPickup.load(); localPickup.bindCookLedger(ledger)
+                    pickup = localPickup
+                    swap = DinnerFeatureModel(store: ledger, access: { id in id == context.shopID ? context : nil }, phase: { _ in .draft })
+                }
                 household = model
             } catch { failed = true }
         }
