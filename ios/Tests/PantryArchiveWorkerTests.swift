@@ -309,6 +309,160 @@ import RecordArchive
         try await f.worker.discardExport(bundle)
     }
 
+    private func rescanDraft(_ store: ComparisonStore, file: String, words: [String]) throws -> ReceiptImportDraft {
+        let document = ExtractedReceiptDocument(digest: Data(SHA256.hash(data: Data(file.utf8))), pages: [
+            .init(id: 1, method: .pdfText, lines: words.enumerated().map { .init(id: $0.offset + 1, text: $0.element) })
+        ])
+        let target = CaptureTarget(workspaceID: store.workspaceID, containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        var draft = try ReceiptImportDraft(source: document.source(target: target, merchant: "East market", stage: .finalInvoice,
+            selection: Set(words.indices.map { .init(page: 1, line: $0 + 1) }), at: now))
+        draft.dateConfirmed = true
+        draft.purchaseDate = now
+        for index in draft.lines.indices {
+            draft.lines[index].treatment = .add
+            if draft.lines[index].printed?.quantity != nil { draft.lines[index].usePrintedQuantity() }
+            else { draft.lines[index].received = "1" }
+            draft.lines[index].usable = "1"
+            draft.lines[index].paid = draft.lines[index].printed?.amount ?? "2.00"
+        }
+        return draft
+    }
+
+    private func rescanPrompt(_ draft: ReceiptImportDraft, repository: PantryRepository, state: InventoryState) async throws -> ReceiptRescanPrompt {
+        do {
+            _ = try await repository.reviewReceipt(draft, expected: state, at: now)
+            XCTFail("A new document needs the shopper's original-or-separate decision")
+            throw PantryReceiptError.invalid
+        } catch let prompt as ReceiptRescanPrompt { return prompt }
+    }
+
+    func testCrossDocumentRescanLinksOnlyReviewedRowsAcrossRestartAndPreservesOriginalCorrections() async throws {
+        let f = try await fixture(), actor = UUID()
+        let repository = PantryRepository(store: f.store, aliasPersonaID: actor, authorize: { true })
+        let first = try rescanDraft(f.store, file: "first full photo", words: ["RICE 1 CT USD 2.00"])
+        let original = try await repository.reviewReceipt(first, expected: f.store.inventoryState(), at: now)
+        try await repository.applyReceipt(original, at: now)
+        let rice = try XCTUnwrap(original.facts.first)
+        XCTAssertEqual(rice.originalLine, "RICE 1 CT USD 2.00")
+        XCTAssertEqual(rice.name, "RICE")
+        XCTAssertEqual(rice.paidLineTotal, try Money(decimal: "2.00"))
+        try await repository.correctPaidTotal(rice, total: Money(decimal: "1.75"), state: f.store.inventoryState(), at: now)
+        let state = try await f.store.inventoryState()
+        var cropped = try rescanDraft(f.store, file: "second cropped photo", words: ["BEANS", "RICE 1 CT USD 2.00", "LENTILS"])
+        cropped.lines[2].treatment = .skip
+        let prompt = try await rescanPrompt(cropped, repository: repository, state: state)
+        XCTAssertEqual(prompt.candidates.map(\.id), [rice.receiptID])
+        XCTAssertEqual(prompt.candidates.first?.matches[1], [rice.id])
+        cropped.rescanDecision = .init(basis: prompt.basis, receipt: rice.receiptID, existingByOrdinal: [1: rice.id])
+        let reviewed = try await repository.reviewReceipt(cropped, expected: state, at: now)
+        XCTAssertEqual(reviewed.existing, [rice.lineID])
+        XCTAssertEqual(reviewed.facts.last, rice)
+        let beans = try XCTUnwrap(reviewed.facts.first)
+        XCTAssertEqual(beans.receiptID, rice.receiptID)
+        XCTAssertEqual(beans.ordinal, rice.ordinal)
+        XCTAssertNotEqual(beans.lineID, rice.lineID)
+        XCTAssertNotNil(beans.lineDocumentID)
+        XCTAssertEqual(beans.documentLine?.line, 1)
+        try await repository.applyReceipt(reviewed, at: now)
+        let reopened = try ComparisonStore(url: f.directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        let restored = PantryRepository(store: reopened, aliasPersonaID: actor, authorize: { true })
+        try await restored.applyReceipt(reviewed, at: now)
+        let openState = try await reopened.inventoryState()
+        cropped.rescanDecision = nil
+        let already = try await restored.reviewReceipt(cropped, expected: openState, at: now)
+        XCTAssertNil(already.batch)
+        XCTAssertEqual(already.existing, [rice.lineID, beans.lineID])
+        cropped.lines[2].treatment = .add
+        let remaining = try await restored.reviewReceipt(cropped, expected: openState, at: now)
+        XCTAssertEqual(remaining.facts.count, 3)
+        XCTAssertEqual(remaining.existing, [rice.lineID, beans.lineID])
+        try await restored.applyReceipt(remaining, at: now)
+        let rows = try await restored.acquisitionHistory(receiptID: rice.receiptID)
+        XCTAssertEqual(rows.count, 4)
+        XCTAssertEqual(rows.first(where: { $0.supersedesID == rice.id })?.paidLineTotal, try Money(decimal: "1.75"))
+        let lots = try await reopened.inventoryRecords(kind: .lot)
+        XCTAssertEqual(lots.count, 4, "One initial fixture lot, original rice, new beans and new lentils")
+        try await reopened.close()
+        f.cleanup.track(repository, restored)
+    }
+
+    func testCrossDocumentRescanChangedEvidenceRequiresCorrectionOrSeparateAndSkippedOldLineCanAnchorNewFood() async throws {
+        let f = try await fixture(), actor = UUID()
+        let repository = PantryRepository(store: f.store, aliasPersonaID: actor, authorize: { true })
+        let first = try rescanDraft(f.store, file: "original rice", words: ["RICE"])
+        let initial = try await repository.reviewReceipt(first, expected: f.store.inventoryState(), at: now)
+        try await repository.applyReceipt(initial, at: now)
+        let rice = try XCTUnwrap(initial.facts.first)
+        var other = try rescanDraft(f.store, file: "new invoice", words: ["OATS", "RICE"])
+        other.lines[1].paid = "4.20"
+        let state = try await f.store.inventoryState()
+        let prompt = try await rescanPrompt(other, repository: repository, state: state)
+        other.rescanDecision = .init(basis: prompt.basis, receipt: rice.receiptID, existingByOrdinal: [1: rice.id])
+        do { _ = try await repository.reviewReceipt(other, expected: state, at: now); XCTFail("Different prices cannot replace the original") }
+        catch PantryReceiptError.changedEvidence {}
+        let unchanged = try await f.store.inventoryState()
+        XCTAssertEqual(unchanged, state)
+        var separate = other
+        separate.rescanDecision = .init(basis: prompt.basis, receipt: nil, existingByOrdinal: [:])
+        let different = try await repository.reviewReceipt(separate, expected: state, at: now)
+        XCTAssertEqual(different.facts.first?.receiptID, other.receiptID)
+        XCTAssertNotEqual(other.receiptID, rice.receiptID)
+        XCTAssertEqual(different.facts.count, 2)
+        XCTAssertTrue(different.existing.isEmpty)
+        let anotherAdult = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })
+        other.rescanDecision = nil
+        let privateReview = try await anotherAdult.reviewReceipt(other, expected: state, at: now)
+        XCTAssertEqual(privateReview.facts.first?.receiptID, other.receiptID)
+        XCTAssertTrue(privateReview.existing.isEmpty)
+        other.lines[1].treatment = .skip
+        let anchored = try await rescanPrompt(other, repository: repository, state: state)
+        XCTAssertEqual(anchored.candidates.first?.matches[0], [])
+        other.rescanDecision = .init(basis: anchored.basis, receipt: rice.receiptID, existingByOrdinal: [:])
+        let partial = try await repository.reviewReceipt(other, expected: state, at: now)
+        XCTAssertEqual(partial.facts.map(\.name), ["OATS"])
+        XCTAssertEqual(partial.facts.first?.receiptID, rice.receiptID)
+        try await repository.applyReceipt(partial, at: now)
+        let rows = try await repository.acquisitionHistory(receiptID: rice.receiptID)
+        XCTAssertEqual(rows.count, 2)
+        XCTAssertEqual(rows.first { $0.id == rice.id }, rice)
+        f.cleanup.track(repository, anotherAdult)
+    }
+
+    func testRescanChecksStoreCivilDateWordingAndAttributionBeforeOfferingAnyPurchase() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })
+        let original = try rescanDraft(f.store, file: "shopper source", words: ["RICE"])
+        let reviewed = try await repository.reviewReceipt(original, expected: f.store.inventoryState(), at: now)
+        try await repository.applyReceipt(reviewed, at: now)
+        let one = try XCTUnwrap(reviewed.facts.first)
+        let legacy = PantryRepository(store: f.store, authorize: { true })
+        let unowned = try rescanDraft(f.store, file: "old local source", words: ["PEARS"])
+        let accepted = try await legacy.reviewReceipt(unowned, expected: f.store.inventoryState(), at: now)
+        try await legacy.applyReceipt(accepted, at: now)
+        let state = try await f.store.inventoryState()
+        for key in ["merchant", "day", "wording", "legacy"] {
+            let word = key == "wording" ? "DEPOSIT" : key == "legacy" ? "PEARS" : "RICE"
+            var next = try rescanDraft(f.store, file: key, words: [word])
+            if key == "merchant" { next.merchant = "West market" }
+            if key == "day" { next.purchaseDate = now.addingTimeInterval(-86400) }
+            let unrelated = try await repository.reviewReceipt(next, expected: state, at: now)
+            XCTAssertEqual(unrelated.facts.first?.receiptID, next.receiptID)
+            XCTAssertTrue(unrelated.existing.isEmpty)
+        }
+        var repeatLine = try rescanDraft(f.store, file: "two rows", words: ["RICE", "RICE"])
+        let prompt = try await rescanPrompt(repeatLine, repository: repository, state: state)
+        repeatLine.rescanDecision = .init(basis: prompt.basis, receipt: one.receiptID, existingByOrdinal: [0: one.id, 1: one.id])
+        _ = try await rescanPrompt(repeatLine, repository: repository, state: state)
+        repeatLine.rescanDecision = .init(basis: prompt.basis, receipt: one.receiptID, existingByOrdinal: [1: one.id])
+        let resolved = try await repository.reviewReceipt(repeatLine, expected: state, at: now)
+        XCTAssertEqual(resolved.facts.count, 2)
+        XCTAssertEqual(resolved.existing, [one.lineID])
+        let otherActor = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })
+        do { _ = try await otherActor.reviewReceipt(original, expected: state, at: now); XCTFail("An exact document must also respect known ownership") }
+        catch ComparisonStoreError.invalidInput {}
+        f.cleanup.track(repository, legacy, otherActor)
+    }
+
     func testReceiptPartialReviewRetryPriceCorrectionRecoveryAndErasure() async throws {
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })

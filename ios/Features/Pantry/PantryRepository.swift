@@ -61,9 +61,9 @@ final class PantryRepository {
     /// standalone editors must share a configured journal and mutation gate.
     let aliasPersonaID: UUID?
     let pendingStore: PantryPendingStore?
-    private let store: ComparisonStore
+    let store: ComparisonStore
     private let authorize: () -> Bool
-    private let limits: ReadLimits
+    let limits: ReadLimits
     private let mutationGate: PantryMutationGate?
     var originID: UUID { store.workspaceID }
     func observeErasure(_ observer: any PantryErasureObserver) { mutationGate?.observeErasure(observer) }
@@ -556,13 +556,20 @@ final class PantryRepository {
     func reviewReceipt(_ draft: ReceiptImportDraft, expected: InventoryState, at now: Date) async throws -> PantryReceiptReview {
         let before = try await loadForEditing(at: now)
         guard before.state == expected else { throw PantryReceiptError.stale }
+        guard draft.workspaceID == originID, draft.dateConfirmed, draft.purchaseDate <= now,
+              !draft.merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw PantryReceiptError.invalid }
+        let selected = draft.selectedLines
+        guard (1...50).contains(selected.count), Set(selected.map(\.ordinal)).count == selected.count else { throw PantryReceiptError.selection }
         var matched = Set<UUID>()
         for identity in draft.evidenceIdentities {
             if let id = try await store.acquisitionReceiptID(for: identity) { matched.insert(id) }
             try requireAccess()
         }
         guard matched.count < 2 else { throw PantryReceiptError.changedEvidence }
-        let receiptID = matched.first ?? draft.receiptID
+        let recognition = ReceiptRecognition(draft: draft, persona: aliasPersonaID, revision: expected.revision)
+        let plan = try await rescanPlan(draft, recognition: recognition, exact: matched.first)
+        try requireAccess()
+        let receiptID = plan.receipt
         if draft.lines.contains(where: { $0.treatment != .skip && $0.appliedAlias != nil }) {
             let allowed = try await receiptAliases(merchant: draft.merchant, language: draft.language)
             for line in draft.lines where line.treatment != .skip {
@@ -571,22 +578,34 @@ final class PantryRepository {
                       ReceiptImportDraft.containsWording(alias.wording, in: line.original) else { throw PantryReceiptError.stale }
             }
         }
-        var facts = try draft.facts(receiptID: receiptID, snapshot: before, at: now)
         var prior: [UUID: ReceiptAcquisition] = [:], cursor: UUID?
         repeat {
             let page = try await acquisitionHistory(receiptID: receiptID, after: cursor, limit: 200)
             for value in page where value.revision == 1 {
-                guard value.merchant == facts.first?.merchant, value.purchaseDate == facts.first?.purchaseDate else { throw PantryReceiptError.changedEvidence }
-                if let old = value.transactionReference, let new = facts.first?.transactionReference, old != new { throw PantryReceiptError.changedEvidence }
                 prior[value.lineID] = value
             }
             cursor = page.count == 200 ? page.last?.id : nil
         } while cursor != nil
+        var source = draft
+        if let old = prior.values.first, plan.document != nil {
+            guard ReceiptRecognition.normalize(old.merchant) == ReceiptRecognition.normalize(draft.merchant) else { throw PantryReceiptError.changedEvidence }
+            source.merchant = old.merchant
+            source.purchaseDate = old.purchaseDate
+        }
+        var facts = try source.facts(receiptID: receiptID, snapshot: before, at: now, lineDocumentID: plan.document)
+        for value in prior.values {
+            guard value.merchant == facts.first?.merchant, value.purchaseDate == facts.first?.purchaseDate else { throw PantryReceiptError.changedEvidence }
+            if let old = value.transactionReference, let new = facts.first?.transactionReference, old != new { throw PantryReceiptError.changedEvidence }
+        }
+        let priorByID = Dictionary(uniqueKeysWithValues: prior.values.map { ($0.id,$0) })
+        var bindings: [InventoryReceiptBinding] = []
         var writes: [InventoryWrite] = [], rows: [InventoryAcquisitionRow] = []
         var existing = Set<UUID>(), acquisitionBytes = 0
         for (index, line) in draft.selectedLines.enumerated() {
             let fact = facts[index]
-            if let old = prior[fact.lineID] {
+            let mapped = plan.originals[line.ordinal]
+            if let mapped, priorByID[mapped] == nil { throw PantryReceiptError.stale }
+            if let old = mapped.flatMap({ priorByID[$0] }) ?? prior[fact.lineID] {
                 // Another image of the same confirmed transaction can differ.
                 // Never silently replace the original evidence or increase stock.
                 let sourceName = line.sourceName?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -595,11 +614,15 @@ final class PantryRepository {
                 let preservedName = line.appliedAlias == nil && sourceName == fact.name && old.foodID != old.lotID
                 guard line.appliedAlias == nil || old.foodID == fact.foodID,
                       old.name == fact.name || preservedName,
-                      old.originalLine == fact.originalLine, old.received == fact.received,
+                      old.originalLine == fact.originalLine || (mapped != nil && ReceiptRecognition.normalize(old.originalLine) == ReceiptRecognition.normalize(fact.originalLine)),
+                      old.received == fact.received,
                       old.usable == fact.usable, old.paidLineTotal == fact.paidLineTotal, old.stock == fact.stock,
                       old.purchaseDate == fact.purchaseDate, old.merchant == fact.merchant else { throw PantryReceiptError.changedEvidence }
+                if let recognition, !plan.bound.contains(line.ordinal), plan.authorizedRows.contains(old.id) {
+                    bindings.append(recognition.binding(old, ordinal: line.ordinal, additionalDocument: plan.document != nil))
+                }
                 facts[index] = old
-                existing.insert(fact.lineID)
+                existing.insert(old.lineID)
                 continue
             }
             if case .added(let location) = fact.stock {
@@ -615,15 +638,16 @@ final class PantryRepository {
             let row = try PantryAcquisitionCodec.row(fact)
             if case .added = fact.stock { acquisitionBytes += row.payload.count }
             rows.append(row)
+            if let recognition { bindings.append(recognition.binding(fact, ordinal: line.ordinal, additionalDocument: plan.document != nil)) }
         }
         try validateCapacity(of: writes, replacing: before, additionalPayloadBytes: acquisitionBytes)
         try requireAccess()
         guard try await store.inventoryState() == before.state else { throw PantryReceiptError.stale }
         try requireAccess()
         let id = UUID()
-        let batch = rows.isEmpty ? nil : try InventoryBatch(workspaceID: originID, operationID: id,
+        let batch = rows.isEmpty && bindings.isEmpty ? nil : try InventoryBatch(workspaceID: originID, operationID: id,
             expectedRevision: expected.revision, request: Data(SHA256.hash(data: PantryAcquisitionCodec.data(rows))),
-            writes: writes, acquisitions: rows)
+            writes: writes, acquisitions: rows, receiptBindings: bindings)
         return .init(id: id, workspaceID: originID, revision: expected.revision, facts: facts, existing: existing, batch: batch)
     }
 

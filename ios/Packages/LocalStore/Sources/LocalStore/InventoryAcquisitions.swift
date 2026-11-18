@@ -32,7 +32,7 @@ extension ComparisonStore {
         return result
     }
 
-    public func acquisitionRows(receiptID: UUID? = nil, lineIDs: [UUID]? = nil, revision: Int64? = nil, firstRevisionOnly: Bool = false, latestForLine: Bool = false, currentOnly: Bool = false, after: UUID? = nil, limit: Int = 100) throws -> [InventoryAcquisitionRow] {
+    public func acquisitionRows(receiptID: UUID? = nil, lineIDs: [UUID]? = nil, sourceIDs: [UUID]? = nil, revision: Int64? = nil, firstRevisionOnly: Bool = false, latestForLine: Bool = false, currentOnly: Bool = false, after: UUID? = nil, limit: Int = 100) throws -> [InventoryAcquisitionRow] {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
         try database.requireInventoryOriginLive()
         guard (1...InventoryPersistenceLimits.pageItems).contains(limit) else { throw ComparisonStoreError.invalidInput }
@@ -44,6 +44,12 @@ extension ComparisonStore {
             let parameters = Array(repeating: "?", count: lineIDs.count).joined(separator: ",")
             conditions.append("line_id IN (" + parameters + ")")
             values += lineIDs.map { .text($0.uuidString) }
+        }
+        if let sourceIDs {
+            guard (1...InventoryPersistenceLimits.pageItems).contains(sourceIDs.count) else { throw ComparisonStoreError.invalidInput }
+            let marks = Array(repeating: "?", count: sourceIDs.count).joined(separator: ",")
+            conditions.append("id IN (" + marks + ")")
+            values += sourceIDs.map { .text($0.uuidString) }
         }
         if currentOnly {
             conditions.append("NOT EXISTS(SELECT 1 FROM inventory_acquisitions n WHERE n.line_id=a.line_id AND n.revision>a.revision)")
