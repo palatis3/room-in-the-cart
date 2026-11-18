@@ -46,7 +46,8 @@ struct PriceImageReview: View {
                                 get: { selections[field] ?? -1 }, set: { index in
                                     guard selections[field] != index else { return }
                                     selections[field] = index
-                                    amounts[field] = nil
+                                    let suggested = lines.indices.contains(index) ? ReviewedCheckoutImage.proposedAmount(for: field, from: lines[index]) : nil
+                                    amounts[field] = suggested.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue }
                                     inclusions[field] = nil
                                 }
                             )) {
@@ -110,6 +111,13 @@ struct PriceImageReview: View {
                 }
                 guard !Task.isCancelled, authorized() else { return }
                 lines = recognized
+                if purpose == .checkout {
+                    let proposals = ReviewedCheckoutImage.proposals(from: recognized)
+                    selections = proposals.mapValues { $0.line.ordinal }
+                    amounts = proposals.compactMapValues { charge in
+                        charge.amount.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue }
+                    }
+                }
             } catch {
                 guard !Task.isCancelled, authorized() else { return }
                 notice = pantryText("Couldn’t read this image. Choose another image or enter the evidence manually.")

@@ -25,6 +25,60 @@ final class ReviewedPriceImageTests: XCTestCase {
         XCTAssertFalse(observation.isPaidPrice)
     }
 
+    func testCheckoutProposesUniqueBilingualFieldsAndLeavesAmbiguousAmountsForReview() throws {
+        let digest = Data(repeating: 5, count: 32)
+        let text = ["Subtotal: $18.00", "Descuento -$2,50", "Tax $0.70", "Sales tax $0.40",
+                    "Propina 1,25", "Gastos de envío: USD 2", "Total a pagar $19.85"]
+        let lines = try text.enumerated().map { try PriceImageLine(digest: digest, ordinal: $0.offset, wording: $0.element, uncertain: false) }
+        let offers = ReviewedCheckoutImage.proposals(from: lines)
+        XCTAssertEqual(offers[.subtotal]?.amount?.minorUnits, 1800)
+        XCTAssertEqual(offers[.discount]?.amount?.minorUnits, 250)
+        XCTAssertEqual(offers[.tip]?.amount?.minorUnits, 125)
+        XCTAssertEqual(offers[.fee]?.amount?.minorUnits, 200)
+        XCTAssertNil(offers[.tax])
+        XCTAssertEqual(offers[.total]?.line, lines.last)
+        let review = try ReviewedCheckoutImage(charges: Array(offers.values))
+        XCTAssertEqual(review.displayedTotal?.minorUnits, 1985)
+        XCTAssertTrue(review.charges.allSatisfy { $0.inclusion == .unknown })
+
+        for raw in ["Estimated credit $8", "Total 10.00 CAD", "Tax 8%", "Tip -$4", "Total $2.345",
+                    "Total $10 / $12", "Tax €2.15"] {
+            let line = try PriceImageLine(digest: digest, ordinal: 0, wording: raw, uncertain: false)
+            XCTAssertTrue(ReviewedCheckoutImage.proposals(from: [line]).isEmpty, raw)
+        }
+        let uncertain = try PriceImageLine(digest: digest, ordinal: 0, wording: "Total $50", uncertain: true)
+        XCTAssertNil(ReviewedCheckoutImage.proposals(from: [uncertain])[.total])
+        let standalone = try PriceImageLine(digest: digest, ordinal: 0, wording: "$3.25", uncertain: false)
+        XCTAssertTrue(ReviewedCheckoutImage.proposals(from: [standalone]).isEmpty)
+        XCTAssertEqual(ReviewedCheckoutImage.proposedAmount(for: .fee, from: standalone)?.minorUnits, 325)
+        XCTAssertNil(ReviewedCheckoutImage.proposedAmount(for: .total, from: lines[0]))
+    }
+
+    func testShelfPackageSizeAndPriceStayIndependentOfUnitRatesAndPromotions() {
+        let shelf = ReviewedShelfImage.propose("Yogur 1,5 kg — socios 2 por $5,50 USD")
+        XCTAssertEqual(shelf.amount?.minorUnits, 550)
+        XCTAssertEqual(shelf.packages, 2)
+        XCTAssertEqual(ReviewedShelfImage.propose("Members only 2 for $5 USD 500 g").amount?.minorUnits, 500)
+        XCTAssertEqual(ReviewedShelfImage.propose("Aceite 250 ml 4,90 EUR").amount?.minorUnits, 490)
+        XCTAssertNil(ReviewedShelfImage.propose("Members 2 for $5, regular $4 each").amount)
+        XCTAssertEqual(shelf.packageSize?.amount, try? Rational(3, 2))
+        XCTAssertEqual(shelf.packageSize?.unit, .kilogram)
+        XCTAssertNotNil(shelf.conditions)
+        XCTAssertEqual(ReviewedShelfImage.propose("Milk 12 fl oz $2.75").packageSize?.unit, .fluidOunce)
+        XCTAssertEqual(ReviewedShelfImage.propose("Oats 500g $3.29").amount?.minorUnits, 329)
+        let rate = ReviewedShelfImage.propose("unit price $0.75 per 100 g")
+        XCTAssertNil(rate.packageSize)
+        XCTAssertEqual(rate.rateQuantity?.amount, try? Rational(100))
+        XCTAssertEqual(rate.rateQuantity?.unit, .gram)
+        XCTAssertEqual(rate.priceBasis, .unit)
+        XCTAssertEqual(ReviewedShelfImage.propose("Oats 500g $3.29").priceBasis, .bundle)
+        XCTAssertEqual(ReviewedShelfImage.propose("$4/lb").rateQuantity?.unit, .pound)
+        XCTAssertNil(ReviewedShelfImage.propose("Tea 100 g or 250 g $4.00").packageSize)
+        XCTAssertNil(ReviewedShelfImage.propose("Juice 6 x 12 fl oz $8").packageSize)
+        XCTAssertNil(ReviewedShelfImage.propose("Save $1.50 with coupon").amount)
+        XCTAssertNil(ReviewedShelfImage.propose("Was $6.00 now $4.00").amount)
+    }
+
     func testCheckoutKeepsPrintedTotalIndependentOfUnknownTaxTipAndSubtotal() throws {
         let digest = Data(repeating: 3, count: 32)
         func line(_ index: Int, _ text: String) throws -> PriceImageLine {
