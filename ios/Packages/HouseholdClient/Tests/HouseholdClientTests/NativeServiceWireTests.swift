@@ -74,6 +74,7 @@ final class NativeServiceWireTests: XCTestCase {
         entered.itemName = "  Maíz  "
         let writablePrices = try await service.historyOwnedShops()
         let publicationShop = try XCTUnwrap(writablePrices.shops.first { $0.shopId == shop })
+        entered.price = .exact(minor: 215)
         entered.evidenceKind = .paidReceipt
         entered.variant = "White corn"
         entered.sourceRevision = .init(sourceId: UUID().uuidString.lowercased(), revision: 1,
