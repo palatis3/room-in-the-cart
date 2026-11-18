@@ -185,7 +185,15 @@ import XCTest
         tap(guide)
         tap(app.buttons["foodKeeper.assistance"])
         XCTAssertFalse(app.buttons["foodKeeper.assistance.confirm"].exists)
-        fill("chicken from an opened can", into: "foodKeeper.assistance.wording", replacing: true)
+        let wording = app.textFields["foodKeeper.assistance.wording"]
+        tap(wording)
+        wording.press(forDuration: 1.2)
+        let selectAll = app.menuItems["Select All"].exists ? app.menuItems["Select All"] : app.buttons["Select All"]
+        XCTAssertTrue(selectAll.waitForExistence(timeout: 5), app.debugDescription)
+        selectAll.tap()
+        wording.typeText("chicken from an opened can")
+        XCTAssertEqual(wording.value as? String, "chicken from an opened can")
+        tap(app.buttons["foodKeeper.assistance.done"])
         tap(app.buttons["foodKeeper.assistance.send"])
         let confirm = app.buttons["foodKeeper.assistance.confirm"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 8), app.debugDescription)
