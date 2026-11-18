@@ -12,6 +12,7 @@ struct PantryProductBatchView: View {
     @State private var photoConsent = false
     @State private var review: PantryReceiptReview?
     @State private var result: String?
+    @State private var inputMessage: String?
     @State private var saved = false
     @State private var working = false
     @State private var code = ""
@@ -57,14 +58,17 @@ struct PantryProductBatchView: View {
                     Button(pantryText("Add typed product")) {
                         do {
                             let added = try batch.addManual(name: name, code: code)
-                            result = added ? nil : pantryText("Already in this batch. Change its package count to add another.")
+                            inputMessage = added ? nil : pantryText("Already in this batch. Change its package count to add another.")
                             code = ""; name = ""; focus = nil; confirmed = false
-                        } catch { result = pantryText("Check the product wording and the 12-product batch limit.") }
+                        } catch { inputMessage = pantryText("Check the product wording and the 12-product batch limit.") }
                     }.disabled(name.isEmpty && code.isEmpty).accessibilityIdentifier("productBatch.add")
+                    if let inputMessage {
+                        Text(inputMessage).accessibilityIdentifier("productBatch.inputStatus")
+                    }
                     PantryProductPhotoInput(consent: $photoConsent, authorized: { authorized && review == nil && !saved }, add: { source in
                         let added = try batch.addPhoto(source)
                         confirmed = false
-                        result = added == 0 ? pantryText("Already in this batch. Change its package count to add another.") : nil
+                        inputMessage = added == 0 ? pantryText("Already in this batch. Change its package count to add another.") : nil
                     }, revoke: { batch.revokePhotos(); confirmed = false })
                 }
                 if !batch.candidates.isEmpty {

@@ -26,7 +26,9 @@ import XCTest
         tap(app.buttons["productBatch.add"])
         tap(code); code.typeText("LOCAL-OATS")
         tap(app.buttons["productBatch.add"])
-        XCTAssertTrue(app.staticTexts["productBatch.status"].label.contains("Already in this batch"))
+        let duplicate = app.staticTexts["productBatch.inputStatus"]
+        XCTAssertTrue(duplicate.waitForExistence(timeout: 5))
+        XCTAssertTrue(duplicate.label.contains("Already in this batch"))
         XCTAssertFalse(app.buttons["productBatch.row.1"].exists)
         tap(app.buttons["productBatch.row.0"])
         let name = app.textFields["productBatch.productName"]
@@ -56,6 +58,75 @@ import XCTest
         XCTAssertTrue(row.label.contains("2"))
         capture("Two deliberately received packages on one pantry batch")
     }
+
+#if NATIVE_PRODUCT_BATCH_PHOTOS
+    // The qualification device is seeded with the three dated images from scripts/fixtures/pantry_product_photos.swift.
+    func testSelectedPhotosAndBarcodeAreEditedTogetherAndOnlyConfirmedPackagesPersist() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.productBatch"])
+        enableSwitch("productBatch.photoConsent")
+
+        func choose(day: Int) {
+            tap(app.buttons["productBatch.photo"])
+            let asset = app.images.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS[c] %@",
+                "PXGGridLayout-Info", "March " + String(day))).firstMatch
+            XCTAssertTrue(asset.waitForExistence(timeout: 12), app.debugDescription)
+            asset.tap()
+        }
+
+        func edit(_ ordinal: Int, from label: String, name: String, size: String, count: String, skip: Bool = false) {
+            let item = app.buttons["productBatch.row." + String(ordinal)]
+            XCTAssertTrue(item.waitForExistence(timeout: 15))
+            XCTAssertTrue(item.label.localizedCaseInsensitiveContains(label), item.label)
+            tap(item)
+            fill(name, into: "productBatch.productName", replacing: true, control: app.textFields["productBatch.productName"])
+            fill(size, into: "productBatch.packSize", replacing: true, control: app.textFields["productBatch.packSize"])
+            fill(count, into: "productBatch.packCount", control: app.textFields["productBatch.packCount"])
+            if skip {
+                let toggle = app.switches["productBatch.include"]
+                reveal(toggle, initiallyUpward: false)
+                toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+                XCTAssertEqual(toggle.value as? String, "0")
+            }
+            tap(app.navigationBars["Review product"].buttons.firstMatch)
+        }
+
+        choose(day: 10)
+        edit(0, from: "LENTILS", name: "Green lentils", size: "400", count: "1")
+        choose(day: 11)
+        edit(1, from: "RICE", name: "Brown rice", size: "2", count: "1", skip: true)
+        choose(day: 12)
+        let third = app.buttons["productBatch.row.2"]
+        XCTAssertTrue(third.waitForExistence(timeout: 15))
+        tap(third)
+        XCTAssertTrue(app.staticTexts["3017620422003"].waitForExistence(timeout: 5))
+        tap(app.navigationBars["Review product"].buttons.firstMatch)
+        choose(day: 12)
+        XCTAssertTrue(app.staticTexts["productBatch.inputStatus"].waitForExistence(timeout: 12))
+        XCTAssertFalse(app.buttons["productBatch.row.3"].exists)
+        edit(2, from: "JAR", name: "Reviewed bean jar", size: "375", count: "2")
+        fill("Market", into: "productBatch.merchant", control: app.textFields["productBatch.merchant"])
+        enableSwitch("productBatch.received")
+        tap(app.buttons["productBatch.review"])
+        let commit = app.buttons["productBatch.commit"]
+        XCTAssertTrue(commit.waitForExistence(timeout: 8))
+        capture("Two photos and repeated barcode after edited batch review")
+        tap(commit)
+        XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
+        restart()
+        tap(app.buttons["shop.myPantry"])
+        let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
+        for (name, quantity) in [("Green lentils", "400"), ("Reviewed bean jar", "750")] {
+            let lot = lots.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
+            reveal(lot)
+            XCTAssertTrue(lot.label.contains(quantity), lot.label)
+        }
+        XCTAssertFalse(lots.matching(NSPredicate(format: "label CONTAINS %@", "Brown rice")).firstMatch.exists)
+        capture("Confirmed private food after relaunch")
+    }
+#endif
 
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
         launch(reset: true)
