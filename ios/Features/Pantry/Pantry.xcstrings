@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Confirmed from this batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed from this batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmado de este lote"
+          }
+        }
+      }
+    },
+    "This food still needs a confirmed batch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This food still needs a confirmed batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún falta confirmar un lote para este alimento."
+          }
+        }
+      }
+    },
+    "Still needed across batches": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still needed across batches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad que aún falta entre todos los lotes"
+          }
+        }
+      }
+    },
     "Retry opening My Pantry": {
       "localizations": {
         "en": {

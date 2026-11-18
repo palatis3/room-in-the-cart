@@ -22,6 +22,7 @@ struct PantryReservationSection: View {
     @ObservedObject var model: PantryModel
     let lot: InventoryLot
     let availabilityNeedsReview: Bool
+    let amountFocus: FocusState<Bool>.Binding
     @State private var draft: Draft?
     @State private var purpose = ""
     @State private var amount = ""
@@ -37,17 +38,32 @@ struct PantryReservationSection: View {
     var body: some View {
         Section(pantryText("Reservations for this batch")) {
             if let snapshot = model.snapshot {
-                let claims = snapshot.reservations.filter { $0.lotID == lot.id && $0.state != .released }
-                    .sorted { ($0.name, $0.id.uuidString) < ($1.name, $1.id.uuidString) }
-                ForEach(claims) { claim in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(claim.name).font(.headline)
-                        LabeledContent(pantryText("Reserved need"), value: pantryQuantity(claim.amount))
-                        if let day = claim.personal?.day { LabeledContent(pantryText("For date"), value: day.iso8601) }
-                        if claim.state == .unresolved { Text(pantryText("This reservation needs review. Its promise is not released.")) }
-                        if claim.personal != nil && claim.state == .active {
-                            Button(pantryText("Release food from this reservation")) { begin(claim: claim) }
-                                .frame(minHeight: 44).disabled(!model.canEdit)
+                let rows = snapshot.availability.reservations(for: lot, among: snapshot.reservations)
+                ForEach(rows) { row in
+                    let claim = row.reservation
+                    if !availabilityNeedsReview || claim.lotID == lot.id {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(claim.name).font(.headline)
+                            LabeledContent(pantryText("Reserved need"), value: pantryQuantity(row.coverage.requested))
+                            if let day = claim.personal?.day { LabeledContent(pantryText("For date"), value: day.iso8601) }
+                            if !availabilityNeedsReview {
+                                if let edge = row.allocation {
+                                    let portion = Quantity(amount: edge.amount, unit: edge.unit, originalLiteral: edge.amount.description)
+                                    coverageAmount("Confirmed from this batch", portion, identifier: "pantry.claimBacking.\(claim.id.uuidString)")
+                                } else if claim.lotID == nil {
+                                    Text(pantryText("This food still needs a confirmed batch."))
+                                }
+                                if let shortage = row.coverage.shortfall, shortage.amount > .zero {
+                                    coverageAmount("Still needed across batches", shortage, identifier: "pantry.claimShortfall.\(claim.id.uuidString)")
+                                }
+                            }
+                            if availabilityNeedsReview || row.coverage.unresolved {
+                                Text(pantryText("This reservation needs review. Its promise is not released."))
+                            }
+                            if claim.personal != nil && claim.state == .active {
+                                Button(pantryText("Release food from this reservation")) { begin(claim: claim) }
+                                    .frame(minHeight: 44).disabled(!model.canEdit)
+                            }
                         }
                     }
                 }
@@ -79,6 +95,8 @@ struct PantryReservationSection: View {
                 if draft.claim == nil || !releaseAll {
                     TextField(pantryFormat("Amount in %@", pantryUnit(draft.claim?.amount?.unit ?? lot.unit)), text: $amount)
                         .keyboardType(.numbersAndPunctuation)
+                        .focused(amountFocus)
+                        .accessibilityIdentifier("pantry.reservationAmount")
                 }
                 Button(pantryText("Review reservation")) {
                     Task {
@@ -97,6 +115,14 @@ struct PantryReservationSection: View {
         }
         .onChange(of: model.savedLotID) { _, id in if id == lot.id { draft = nil } }
         .onChange(of: model.snapshot?.state.revision) { _, _ in draft = nil }
+    }
+
+    private func coverageAmount(_ text: String, _ amount: Quantity, identifier: String) -> some View {
+        LabeledContent(pantryText(text), value: pantryQuantity(amount))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(pantryText(text))
+            .accessibilityValue(pantryQuantity(amount))
+            .accessibilityIdentifier(identifier)
     }
 
     private func begin(claim: InventoryReservation?) {

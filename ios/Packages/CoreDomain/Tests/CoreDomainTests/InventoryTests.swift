@@ -221,6 +221,47 @@ final class InventoryTests: XCTestCase {
             current: nil, at: now))
     }
 
+    func testBatchDetailShowsExactMealAllocationAndWholeLunchShortfallWithoutDuplicatingHolds() throws {
+        let first = try lot(.exact(q(2)), useFirst: true)
+        let second = try lot(.exact(q(1)))
+        let lunch = claim(nil, amount: q(4), priority: .protected)
+        let projection = try project([second, first], [lunch])
+        for (batch, amount) in [(first, 2), (second, 1)] {
+            let rows = projection.reservations(for: batch, among: [lunch])
+            XCTAssertEqual(rows.map(\.id), [lunch.id])
+            XCTAssertEqual(rows.first?.allocation?.lotID, batch.id)
+            XCTAssertEqual(rows.first?.allocation?.amount, q(Int64(amount)).amount)
+            XCTAssertEqual(rows.first?.coverage.requested?.amount, q(4).amount)
+            XCTAssertEqual(rows.first?.coverage.shortfall?.amount, .one)
+        }
+        let pinned = claim(second, amount: q(2), priority: .protected)
+        let pinnedProjection = try project([first, second], [pinned])
+        XCTAssertTrue(pinnedProjection.reservations(for: first, among: [pinned]).isEmpty)
+        let rows = pinnedProjection.reservations(for: second, among: [pinned])
+        XCTAssertEqual(rows.first?.coverage.shortfall?.amount, .one)
+        XCTAssertEqual(rows.first?.allocation?.amount, .one)
+    }
+
+    func testBatchDetailSeparatesUnconfirmedBackingFromAnotherBatchsActualMealAllocation() throws {
+        let unknown = try lot(.unknown), known = try lot(.exact(q(1)))
+        let lunch = claim(nil, amount: q(2), priority: .protected)
+        let retired = claim(nil, amount: q(1), state: .released)
+        let rows = [lunch, retired]
+        let projection = try project([unknown, known], rows)
+        let waiting = projection.reservations(for: unknown, among: rows)
+        XCTAssertEqual(waiting.map(\.id), [lunch.id])
+        XCTAssertNil(waiting.first?.allocation)
+        XCTAssertTrue(waiting.first?.coverage.unresolved == true)
+        XCTAssertNil(waiting.first?.coverage.shortfall)
+        let backed = projection.reservations(for: known, among: rows)
+        XCTAssertEqual(backed.first?.allocation?.amount, .one)
+        XCTAssertEqual(backed.first?.id, lunch.id)
+        let pinned = claim(unknown, amount: q(2), priority: .protected)
+        let pinnedProjection = try project([unknown, known], [pinned])
+        XCTAssertEqual(pinnedProjection.reservations(for: unknown, among: [pinned]).first?.coverage.issues, [.reservationUnresolved])
+        XCTAssertTrue(pinnedProjection.reservations(for: known, among: [pinned]).isEmpty)
+    }
+
     func testPinKeepsBReservedDespiteAUseFirst() throws {
         let a = try lot(.exact(q(4)), useFirst: true), b = try lot(.exact(q(4)))
         let result = try project([a, b], [claim(b, amount: q(4))])

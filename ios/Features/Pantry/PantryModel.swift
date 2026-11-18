@@ -337,8 +337,13 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
                     throw error
                 }
             }
+            // Reserving or releasing changes the claim, so its receipt can have no lot head.
+            let reviewedLotID = entry?.command.lotID ?? pending.flatMap {
+                $0.operationID == result.receipt.operationID ? $0.command.lotID : nil
+            }
             pending = nil; review = nil; requiresFreshReview = false
-            pendingWasCommitted = false; notice = .saved; savedLotID = result.receipt.heads.first { $0.key.kind == .lot }?.key.id
+            pendingWasCommitted = false; notice = .saved
+            savedLotID = reviewedLotID ?? result.receipt.heads.first { $0.key.kind == .lot }?.key.id
             await didSave?()
         }
     }
