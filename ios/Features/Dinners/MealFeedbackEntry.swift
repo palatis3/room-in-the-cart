@@ -42,9 +42,13 @@ struct MealFeedbackEntry: View {
                     languageBasis: { revision in
                         MealLanguageBasis.current(ledger: ledger, access: access, household: household,
                             childPresented: child?.presented == true, source: source, revision: revision)
-                    }) { draft, revision in
+                    }) { draft, revision, assistedBasis in
                     await ledger.change(key: "private-meal-feedback", reviewedPantryBasis: nil,
-                        authorize: { self.identity == identity && ledger.sourceWorkspaceID == origin }) { workspace in
+                        authorize: {
+                            self.identity == identity && ledger.sourceWorkspaceID == origin &&
+                                (assistedBasis == nil || assistedBasis == MealLanguageBasis.current(ledger: ledger, access: access,
+                                    household: household, childPresented: child?.presented == true, source: source, revision: revision, duringSave: true))
+                        }) { workspace in
                         try workspace.updateMealFeedback(for: source, owner: owner, expectedRevision: revision, reactions: draft, at: Date())
                     }
                 }.id(EditorIdentity(owner: owner, origin: origin, source: source))
@@ -56,7 +60,8 @@ struct MealFeedbackEntry: View {
 private struct MealFeedbackEditor: View {
     let title: String
     let languageBasis: (UUID?) -> MealLanguageBasis?
-    let save: (Set<MealReaction>, UUID?) async -> Bool
+    let save: (Set<MealReaction>, UUID?, MealLanguageBasis?) async -> Bool
+    @State private var assistedBasis: MealLanguageBasis?
     @Environment(\.dismiss) private var dismiss
     @State private var original: PrivateMealFeedback?
     @State private var reactions: Set<MealReaction>
@@ -64,7 +69,7 @@ private struct MealFeedbackEditor: View {
     @State private var failed = false
 
     init(title: String, existing: PrivateMealFeedback?, languageBasis: @escaping (UUID?) -> MealLanguageBasis?,
-         save: @escaping (Set<MealReaction>, UUID?) async -> Bool) {
+         save: @escaping (Set<MealReaction>, UUID?, MealLanguageBasis?) async -> Bool) {
         self.languageBasis = languageBasis
         self.title = title
         self.save = save
@@ -83,8 +88,8 @@ private struct MealFeedbackEditor: View {
                     })).accessibilityIdentifier("mealFeedback." + reaction.rawValue)
                 }
             }
-            MealLanguageDraftLink(basis: { languageBasis(original?.revision) }, draft: { .feedback(reactions) }) { result in
-                if case .feedback(let edited) = result { reactions = edited }
+            MealLanguageDraftLink(basis: { languageBasis(original?.revision) }, draft: { .feedback(reactions) }) { result, basis in
+                if case .feedback(let edited) = result { reactions = edited; assistedBasis = basis }
             }
             Section {
                 if failed { Text(dinnerText("Feedback changed or could not be saved. Reopen this meal to review it.")) }
@@ -103,7 +108,7 @@ private struct MealFeedbackEditor: View {
         guard !busy else { return }
         busy = true
         Task {
-            let saved = await save(selected, original?.revision)
+            let saved = await save(selected, original?.revision, assistedBasis)
             busy = false
             if saved { dismiss() } else { failed = true }
         }

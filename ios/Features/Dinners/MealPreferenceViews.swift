@@ -111,12 +111,14 @@ struct PrivateMealPreferencesEntry: View {
                 MealPreferenceEditor(profile: profile, languageBasis: { revision in
                     MealLanguageBasis.current(ledger: ledger, access: access, household: household,
                         childPresented: child?.presented == true, source: nil, revision: revision)
-                }) { settings, revision in
+                }) { settings, revision, assistedBasis in
                     let access = access, household = household, child = child, ledger = ledger
                     return await ledger.saveMealPreferences(settings, expectedRevision: revision, workspaceID: workspaceID) {
                         child?.presented != true && household.projection?.grantId == nil &&
                         UIApplication.shared.isProtectedDataAvailable && ledger.sourceWorkspaceID == workspaceID &&
-                        CapturePrivateIdentity.current(access: access, household: household) == identity
+                        CapturePrivateIdentity.current(access: access, household: household) == identity &&
+                        (assistedBasis == nil || assistedBasis == MealLanguageBasis.current(ledger: ledger, access: access,
+                            household: household, childPresented: child?.presented == true, source: nil, revision: revision, duringSave: true))
                     }
                 }.id([identity.actorID.uuidString, identity.subject, identity.householdID, identity.memberID, identity.role, workspaceID.uuidString])
             } else { Text(dinnerText("Unlock your private workspace to review meal preferences.")) }
@@ -125,7 +127,8 @@ struct PrivateMealPreferencesEntry: View {
 }
 
 struct MealPreferenceEditor: View {
-    let save: (MealPreferenceSettings, UUID?) async -> Bool
+    let save: (MealPreferenceSettings, UUID?, MealLanguageBasis?) async -> Bool
+    @State private var assistedBasis: MealLanguageBasis?
     private let initial: MealPreferenceProfile?
     private let canSetTimeLimit: Bool
     private let languageBasis: ((UUID?) -> MealLanguageBasis?)?
@@ -136,8 +139,8 @@ struct MealPreferenceEditor: View {
     @State private var busy = false
     @FocusState private var textFocus: String?
     @State private var failed = false
-    init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, languageBasis: ((UUID?) -> MealLanguageBasis?)? = nil,
-         save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
+    init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, languageBasis: ((UUID?) -> MealLanguageBasis?)?,
+         save: @escaping (MealPreferenceSettings, UUID?, MealLanguageBasis?) async -> Bool) {
         self.save = save
         self.canSetTimeLimit = canSetTimeLimit
         self.languageBasis = languageBasis
@@ -145,6 +148,11 @@ struct MealPreferenceEditor: View {
         _draft = State(initialValue: profile?.settings ?? .init())
         _base = State(initialValue: profile?.revision)
         _minutes = State(initialValue: profile?.settings.timeLimit.map { String($0.maximumMinutes) } ?? "")
+    }
+    init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
+        self.init(profile: profile, canSetTimeLimit: canSetTimeLimit, languageBasis: nil) { settings, revision, _ in
+            await save(settings, revision)
+        }
     }
     @State private var base: UUID?
     var body: some View {
@@ -176,8 +184,8 @@ struct MealPreferenceEditor: View {
                 if draft.maximumEffort != nil { Toggle(dinnerText("Require this effort limit"), isOn: $draft.strictEffort) }
             }.disabled(reviewing)
             if !reviewing, let languageBasis {
-                MealLanguageDraftLink(basis: { languageBasis(base) }, draft: { .preferences(draft) }) { result in
-                    if case .preferences(let settings) = result { draft = settings }
+                MealLanguageDraftLink(basis: { languageBasis(base) }, draft: { .preferences(draft) }) { result, basis in
+                    if case .preferences(let settings) = result { draft = settings; assistedBasis = basis }
                 }
             }
             Section {
@@ -187,7 +195,7 @@ struct MealPreferenceEditor: View {
                     Button(dinnerText("Save reviewed preferences")) {
                         busy = true
                         Task {
-                            let ok = await save(draft, base)
+                            let ok = await save(draft, base, assistedBasis)
                             busy = false
                             if ok { dismiss() } else { failed = true }
                         }

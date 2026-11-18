@@ -1,6 +1,7 @@
 import CoreDomain
 import Foundation
 import HouseholdClient
+import UIKit
 
 enum MealLanguageChoice: String, Decodable {
     case dislike, preferredBrand, makeAgain, tooMuchEffort, childrenLikedIt, tooManyLeftovers
@@ -50,8 +51,9 @@ struct MealLanguageBasis: Equatable {
     let revision: UUID?
 
     @MainActor static func current(ledger: LedgerModel, access: WorkspaceAccess, household: HouseholdModel,
-                                   childPresented: Bool, source: MealFeedbackSource?, revision: UUID?) -> Self? {
-        guard ledger.ready, !ledger.saving, !ledger.hasPendingSave, !ledger.hasPendingLedgerDeletion,
+                                   childPresented: Bool, source: MealFeedbackSource?, revision: UUID?, duringSave: Bool = false) -> Self? {
+        guard UIApplication.shared.applicationState == .active, UIApplication.shared.isProtectedDataAvailable,
+              ledger.ready, duringSave || !ledger.saving, !ledger.hasPendingSave, !ledger.hasPendingLedgerDeletion,
               !household.guardianChildOnly, household.projection?.grantId == nil, !childPresented,
               let identity = CapturePrivateIdentity.current(access: access, household: household),
               let subject = identity.subject, let householdID = identity.householdID, let memberID = identity.memberID,

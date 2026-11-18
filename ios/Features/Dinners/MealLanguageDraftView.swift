@@ -5,7 +5,7 @@ import HouseholdClient
 struct MealLanguageDraftLink: View {
     let basis: () -> MealLanguageBasis?
     let draft: () -> MealLanguageDraft
-    let use: (MealLanguageDraft) -> Void
+    let use: (MealLanguageDraft, MealLanguageBasis) -> Void
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scene
     @State private var opened: Session?
@@ -40,7 +40,7 @@ private struct MealLanguageDraftReview: View {
     let original: MealLanguageDraft
     let current: () -> MealLanguageBasis?
     let draft: () -> MealLanguageDraft
-    let use: (MealLanguageDraft) -> Void
+    let use: (MealLanguageDraft, MealLanguageBasis) -> Void
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
@@ -64,7 +64,7 @@ private struct MealLanguageDraftReview: View {
                     else if available {
                         Section(dinnerText("Words to share with OpenAI")) {
                             Text(dinnerText("Type only the words you want to send. Leave out names and personal details. Your saved meal, preferences and feedback stay on this device."))
-                            TextField(dinnerText("My words"), text: $wording, axis: .vertical)
+                            TextField(dinnerText("My words"), text: $wording).submitLabel(.done)
                                 .accessibilityIdentifier("mealLanguage.note")
                             Button(dinnerText("Send these words for a suggestion")) { send() }
                                 .disabled(pending != nil || review != nil || attempts >= 2 || !ReceiptLineAssistanceRequest.accepts(text))
@@ -79,7 +79,7 @@ private struct MealLanguageDraftReview: View {
                                     do {
                                         let edited = try review.applying(current: current(), draft: draft(), text: text)
                                         guard active else { return }
-                                        use(edited)
+                                        use(edited, basis)
                                         dismiss()
                                     } catch { clear(); message = dinnerText("The meal or draft changed. Open the suggestion again.") }
                                 }.accessibilityIdentifier("mealLanguage.use")
