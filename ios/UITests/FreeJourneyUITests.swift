@@ -54,6 +54,38 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
+    func testPrivateLotPrintedWordingCanBeReviewedReopenedInSpanishAndRemoved() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill("Green lentils", into: "pantry.foodName")
+        fill("2", into: "pantry.amount")
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Green lentils")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.packageDate"])
+        XCTAssertTrue(app.buttons["Choose a label photo"].exists)
+        XCTAssertTrue(app.buttons["Photograph the printed date"].exists)
+        let wording = "BEST BEFORE 03/04"
+        fill(wording, into: "packageDate.wording")
+        XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
+        tap(app.buttons["packageDate.save"])
+        XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
+        app.terminate()
+        launch(reset: false, spanish: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(lot)
+        XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
+        tap(app.buttons["pantry.packageDate"])
+        XCTAssertTrue(app.navigationBars["Fecha impresa en el envase"].waitForExistence(timeout: 8))
+        XCTAssertEqual(editableElement("packageDate.wording").value as? String, wording)
+        tap(app.buttons["packageDate.remove"])
+        XCTAssertTrue(app.navigationBars["Green lentils"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts[wording].exists)
+    }
+
     func testPantryManualCheckDateRemainsAvailableWhenDigestPermissionIsDenied() {
         launch(reset: true)
         tap(app.buttons["shop.myPantry"])

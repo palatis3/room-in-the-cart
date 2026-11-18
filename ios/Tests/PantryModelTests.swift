@@ -1,4 +1,6 @@
 import XCTest
+import CryptoKit
+import UIKit
 import CoreDomain
 import LocalStore
 import SQLite3
@@ -321,6 +323,89 @@ extension PantryModelTests {
         XCTAssertEqual(try reopened.document(scope).rules.first?.day, original.latest)
         try await reopened.erase(origin: db.workspaceID, whole: true, inventory: db)
         XCTAssertTrue(try reopened.document(scope).rules.isEmpty)
+        try await db.close()
+    }
+
+    func testPrintedPackageDateRecognizesSelectedSpanishLabelAndPreservesCorrectionAcrossReopen() async throws {
+        let bounds = CGRect(x: 0, y: 0, width: 890, height: 250)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(bounds: bounds, format: format).image { _ in
+            UIColor.white.setFill()
+            UIRectFill(bounds)
+            for (index, text) in ["CONSUMO PREFERENTE", "2027-11-25", "LOTE 25840"].enumerated() {
+                (text as NSString).draw(at: CGPoint(x: 25, y: 12 + index * 72),
+                    withAttributes: [.font: UIFont.systemFont(ofSize: 40), .foregroundColor: UIColor.black])
+            }
+        }
+        let bytes = try XCTUnwrap(image.pngData())
+        let recognized = try await OnDeviceTextCapture().recognize(bytes)
+        let selected = recognized.text.components(separatedBy: .newlines).prefix(2).joined(separator: "\n")
+        let digest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+        let zone = "Europe/Madrid"
+        let draft = try PrintedPackageDate.reviewingPhoto(selected, digest: digest, zone: zone)
+        XCTAssertEqual(draft.meaning, .bestBefore)
+        XCTAssertEqual(draft.day?.iso8601, "2027-11-25")
+        XCTAssertFalse(try XCTUnwrap(draft.selectedPhotoText).contains("25840"))
+        XCTAssertEqual(PrintedPackageDate.proposedDay(in: "25 de noviembre de 2027", zone: zone), draft.day)
+        for wording in ["03/04/27", "JAN 2027", "2027-02-29", "2027-11-24 2027-11-25"] {
+            XCTAssertNil(PrintedPackageDate.proposedDay(in: wording, zone: zone))
+        }
+        XCTAssertEqual(PrintedDateMeaning.suggested(for: "Packed on / best before"), .other)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let lot = UUID()
+        let scope = PantryDigestScope(origin: UUID(), identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let store = PantryPackageDateStore(folder: folder)
+        let corrected = PrintedPackageDate(wording: "Consumo preferente: 26 NOV 2027", meaning: .bestBefore,
+            day: try MealDay(year: 2027, month: 11, day: 26, timeZoneIdentifier: zone),
+            selectedPhotoText: draft.selectedPhotoText, photoDigest: digest)
+        try store.replace(nil, with: corrected, scope: scope, lot: lot, authorized: { true })
+        let reopened = PantryPackageDateStore(folder: folder)
+        XCTAssertEqual(try reopened.load(scope, lot: lot), corrected)
+        XCTAssertThrowsError(try reopened.replace(nil, with: draft, scope: scope, lot: lot, authorized: { true }))
+        XCTAssertThrowsError(try reopened.replace(corrected, with: nil, scope: scope, lot: lot, authorized: { false }))
+        try reopened.replace(corrected, with: nil, scope: scope, lot: lot, authorized: { true })
+        XCTAssertNil(try reopened.load(scope, lot: lot))
+    }
+
+    func testPrivatePrintedLabelKeepsManualCheckAcrossMoveAndFollowsLotAndOriginErasure() async throws {
+        let (dir, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let model = model(db)
+        await model.load()
+        let lot = try await add(model)
+        let origin = db.workspaceID
+        func scope(_ origin: UUID) -> PantryDigestScope {
+            .init(origin: origin, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        }
+        let adult = scope(origin), anotherAdult = scope(origin), otherWorkspace = scope(UUID())
+        let folder = dir.appendingPathComponent("labels")
+        let digest = PantryDigestStore(folder: folder, scheduler: DigestSchedulerSpy())
+        let store = digest.packageDates
+        let printed = PrintedPackageDate(wording: "BEST BY 03/04", meaning: .bestBefore, day: nil, selectedPhotoText: nil, photoDigest: nil)
+        let check = try MealDay(year: 2027, month: 8, day: 5, timeZoneIdentifier: "America/New_York")
+        try await digest.saveDay(adult, lot: lot, day: check, authorized: { true })
+        try store.replace(nil, with: printed, scope: adult, lot: lot.id, authorized: { true })
+        XCTAssertNil(try store.load(anotherAdult, lot: lot.id))
+        XCTAssertNil(try store.load(otherWorkspace, lot: lot.id))
+        let removedLot = UUID()
+        for owner in [adult, anotherAdult, otherWorkspace] {
+            try store.replace(nil, with: printed, scope: owner, lot: removedLot, authorized: { true })
+        }
+        XCTAssertEqual(try digest.document(adult).rules.first?.day, check)
+        XCTAssertTrue(try digest.document(adult).selections.isEmpty)
+        await model.prepare(lotID: lot.id, action: .move(.freezer))
+        await model.confirmReview(acknowledgingReservations: true)
+        try await digest.reconcile(adult, lots: try XCTUnwrap(model.snapshot?.lots))
+        try await digest.erase(origin: origin, whole: false, inventory: db)
+        XCTAssertEqual(try store.load(adult, lot: lot.id), printed)
+        XCTAssertNil(try store.load(adult, lot: removedLot))
+        XCTAssertNil(try store.load(anotherAdult, lot: removedLot))
+        XCTAssertEqual(try digest.document(adult).rules.first?.day, check)
+        try await digest.erase(origin: origin, whole: true, inventory: db)
+        XCTAssertNil(try store.load(adult, lot: lot.id))
+        XCTAssertEqual(try store.load(otherWorkspace, lot: removedLot), printed)
         try await db.close()
     }
 

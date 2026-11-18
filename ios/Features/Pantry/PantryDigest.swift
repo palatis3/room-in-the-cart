@@ -225,6 +225,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         return PantryDigestStore(folder: isolation.directory.deletingLastPathComponent().appendingPathComponent("PantryDigests"),
                                 scheduler: PantryDigestNotifications(isolated: isolation.isUITesting))
     }()
+    let packageDates: PantryPackageDateStore
     private let folder: URL
     private let scheduler: any PantryDigestScheduling
     private let now: () -> Date
@@ -235,6 +236,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
 
     init(folder: URL, scheduler: any PantryDigestScheduling, now: @escaping () -> Date = Date.init) {
         self.folder = folder; self.scheduler = scheduler; self.now = now
+        packageDates = PantryPackageDateStore(folder: folder.appendingPathComponent("PrintedDates", isDirectory: true))
     }
     private func file(_ scope: PantryDigestScope) -> URL {
         folder.appendingPathComponent(scope.origin.uuidString + "-" + scope.owner + ".json")
@@ -366,6 +368,9 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
 
     /// Called from the receipt-bound erasure cleanup, including recovery after process death.
     func erase(origin: UUID, whole: Bool, inventory: ComparisonStore) async throws {
+        try await packageDates.erase(origin: origin, whole: whole) { lot in
+            try await inventory.inventoryRecord(.init(.lot, lot)) != nil
+        }
         let urls = try documents(for: origin)
         guard !urls.isEmpty else { return }
         for url in urls {
