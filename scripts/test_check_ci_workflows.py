@@ -52,7 +52,7 @@ class WorkflowGuardTests(unittest.TestCase):
     def test_current_inventory_and_existing_workflow_supersession(self):
         positions = validate_workflows(sorted((ROOT / '.github/workflows').glob('*.yml')))
         self.assertEqual({(value['workflow'], value['job']) for value in positions.values()}, ROUTED_NATIVE_JOBS)
-        self.assertEqual(len(positions), 8)
+        self.assertEqual(len(positions), 9)
         self.assertEqual(len(POLICY), 18)
         data, _, _ = parse_workflow(self.path)
         self.assertIn('on', data)
@@ -116,6 +116,22 @@ class WorkflowGuardTests(unittest.TestCase):
                     fallbacks = [value.casefold() for value in groups.values() if value.startswith('ritc-github-job-')]
                     self.assertEqual(len(fallbacks), len(set(fallbacks)))
 
+    def test_swift_packages_keeps_the_source_gate_and_coverage_artifacts(self):
+        workflow, _, _ = parse_workflow(ROOT / '.github/workflows/ci.yml')
+        job = workflow['jobs']['swift-packages']
+        self.assertEqual(job['needs'], 'source-checks')
+        self.assertEqual(job['if'], "needs.source-checks.outputs.ios_provider == 'github'")
+        self.assertEqual(job['runs-on'], FIXTURE_RUNNER)
+        test = next(step for step in job['steps'] if '--enable-code-coverage' in step.get('run', ''))
+        self.assertIn('ios/Packages/*/Package.swift', test['run'])
+        self.assertIn('list --skip-build', test['run'])
+        self.assertIn('scripts/check_swift_package_results.py', test['run'])
+        upload = next(step for step in job['steps'] if step.get('uses', '').startswith('actions/upload-artifact@'))
+        self.assertEqual(upload['if'], 'always()')
+        self.assertIs(upload['with']['include-hidden-files'], True)
+        self.assertEqual(upload['with']['path'].splitlines(), [
+            '.build/package-results', 'ios/Packages/**/.build/**/codecov/*.json'])
+
     def test_product_jobs_seek_pool_capacity_without_cross_run_slot_blocking(self):
         groups = set()
         for run in (100, 101):
@@ -133,7 +149,7 @@ class WorkflowGuardTests(unittest.TestCase):
                     self.assertEqual(group, f'ritc-bitrise-producer-{identity[0][:-4]}-{identity[1]}-{run}-{attempt}')
                     self.assertNotIn('-slot-', group)
                     groups.add(group)
-        self.assertEqual(len(groups), 16)
+        self.assertEqual(len(groups), 20)
         # The StoreKit fixture still shares its assigned lane.
         self.assertEqual(POLICY[STOREKIT_JOB], 2)
 

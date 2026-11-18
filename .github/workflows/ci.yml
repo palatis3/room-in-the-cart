@@ -214,7 +214,11 @@ jobs:
   swift-packages:
     needs: source-checks
     if: needs.source-checks.outputs.ios_provider == 'github'
-    runs-on: xcode-27
+    concurrency:
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && format('ritc-bitrise-producer-ci-swift-packages-{0}-{1}', github.run_id, github.run_attempt) || format('ritc-github-job-ci-swift-packages-{0}-{1}', github.run_id, github.run_attempt) }}
+      queue: max
+      cancel-in-progress: false
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-A1' || 'xcode-27' }}
     timeout-minutes: 25
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
@@ -223,7 +227,19 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: bash scripts/check_ci_xcode27.sh
+        run: |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
       - name: Check Swift syntax before compilation
         timeout-minutes: 3
         run: python3 scripts/check_swift_syntax.py
