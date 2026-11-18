@@ -1,5 +1,8 @@
 import {readMealPreferences, writeMealPreferences, preferenceGrants, changePreferenceGrant} from './meal-preferences.js';
-import {recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants} from './household-pantry.js';
+import {readMealFeedback,updateMealFeedback,reviewMyFeedbackWithdrawal,withdrawMyFeedback} from './household-meal-feedback.js';
+import {cookReview} from './shared-cook-completion.js';
+import { changeHouseholdStaples, householdStaples } from './household-staples.js';
+import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -284,6 +287,10 @@ export function createHTTPServer(options:HTTPOptions) {
           const cursor=url.searchParams.get('cursor');
           return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));
         }
+        if(path==='/pantry/my-feedback-withdrawal' && method==='GET')return reviewMyFeedbackWithdrawal(ctx);
+        if(path==='/pantry/my-feedback-withdrawal' && method==='POST')return withdrawMyFeedback(ctx,payload);
+        if(path==='/pantry/staples' && method==='GET')return householdStaples(ctx,url.searchParams.get('zone')??'UTC');
+        if(path==='/pantry/staples' && method==='POST')return changeHouseholdStaples(ctx,payload);
         if(path==='/pantry/commands' && method==='POST')return recordHouseholdPantryCommand(ctx,payload);
         if(path==='/pantry/grants' && method==='GET')return pantryGrants(ctx);
         if(path==='/pantry/grants' && method==='POST')return changePantryGrant(ctx,payload);
@@ -370,6 +377,13 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          const feedback = /^\/cook-feedback\/([^/]+)$/.exec(tail ?? '');
+          if(feedback && (method==='GET' || method==='PUT')){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            const occurrence=uuid.parse(feedback[1]).toLowerCase();
+            return method==='GET' ? readMealFeedback(ctx,shop,occurrence) : updateMealFeedback(ctx,shop,occurrence,payload);
+          }
           if (tail === '/measurement-feedback') {
             if (method === 'GET') return measurement.read(ctx, shopId);
             if (method === 'POST') return measurement.feedback(ctx, shopId, payload);
@@ -417,7 +431,11 @@ export function createHTTPServer(options:HTTPOptions) {
             if(tail==='/pantry-lots/coverage') return readJointCoverage(ctx,shop);
             if(tail==='/pantry-lots/observation-preview') return previewCurrentPantryObservation(ctx,shop,payload,loadRecoveryPublication);
             const cursor=url.searchParams.get('cursor');
-            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor));
+            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor),url.searchParams.get('refrigerated')==='1');
+          }
+          if(tail==='/cook-completion' && method==='GET'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return cookReview(ctx,shop,uuid.parse(url.searchParams.get('occurrenceId')).toLowerCase());
           }
           if(tail==='/cook-copies' && method==='GET') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);

@@ -119,6 +119,7 @@ public struct SharedMeal: Codable, Equatable, Sendable {
     }
 }
 public struct SharedMealOccurrence: Codable, Equatable, Identifiable, Sendable {
+    public private(set) var completed: Bool? = nil
     public let occurrenceId: UUID
     public let revision: Int
     public let meal: SharedMeal
@@ -192,6 +193,8 @@ public struct ShopperReceipt: Codable, Equatable, Sendable {
     public private(set) var occurrenceId: UUID? = nil
     public private(set) var lotId: UUID? = nil
     public private(set) var pantryRevision: Int? = nil
+    public private(set) var cookId: UUID? = nil
+    public private(set) var grantEpoch: Int? = nil
     public private(set) var copyId: UUID? = nil
     public private(set) var sourceId: UUID? = nil
     public private(set) var supplyRevision: Int? = nil

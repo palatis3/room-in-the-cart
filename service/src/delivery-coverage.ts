@@ -7,7 +7,7 @@ import { type Rat, zero, add, sub, min, amount, dimension, inUnit } from './phys
 
 export interface SealedMeal {
   occurrenceId:string; revision:number; meal:SharedMealValue; protectedIngredientIds?:string[];
-  shopId?:string; allocationScope?:number;
+  shopId?:string; allocationScope?:number; completed?:boolean;
   // Effective recovery ingredients each represent one already-reviewed need.
   allocationOrder?:ReadonlyMap<string,{id:string;due:string|null}>;
 }
@@ -21,7 +21,7 @@ export interface DeliverySource {
 }
 type Issue = 'unknownQuantity'|'unknownSplit'|'noMatch'|'unconfirmed'|'unitMismatch'|'exclusion'|'protectedQuantityUnknown'|'reservationShortfall';
 interface Need extends Match {
-  groupIds:string[]; protected:boolean; required:Quantity|null; issues:Set<Issue>;
+  completed:boolean; groupIds:string[]; protected:boolean; required:Quantity|null; issues:Set<Issue>;
   eligible:DeliverySource[];
   order:{id:string;due:string|null;scope?:number};
 }
@@ -43,7 +43,7 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
   }
   const needs:Need[]=[];
   const unplannedOccurrenceIds:string[]=[];
-  for(const {occurrenceId,revision,meal,protectedIngredientIds,shopId,allocationScope,allocationOrder} of meals) {
+  for(const {occurrenceId,revision,meal,protectedIngredientIds,shopId,allocationScope,allocationOrder,completed=false} of meals) {
     const plan=meal.planning;
     if(!plan?.ingredients.length) { unplannedOccurrenceIds.push(occurrenceId);continue; }
     for(const ingredient of plan.ingredients) {
@@ -72,7 +72,8 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
           due:plan.deadline?.at??null,
         };
         const order={...reviewed,id:scope?scope+'/'+reviewed.id:reviewed.id,...(allocationScope===undefined?{}:{scope:allocationScope})};
-        needs.push({...target,groupIds,required,protected:protectedGroup,issues,eligible,order});
+        if(completed && !pins.has(targetKey(target)+'/'+groupIds[0])) continue;
+        needs.push({...target,completed,groupIds,required,protected:protectedGroup,issues,eligible,order});
       }
     }
   }
@@ -114,10 +115,10 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
       }
       if(sub(requested,pin.backed).n>0n) row.need.issues.add('reservationShortfall');
     }
-    for(const row of group) row.missing=allocate(graph,row.index,sink,row.missing);
+    for(const row of group) if(!row.need.completed) row.missing=allocate(graph,row.index,sink,row.missing);
   }
   return {unplannedOccurrenceIds, needs:rows.map(({need,edges,reservations,missing})=>{
-    const {eligible,issues,required,order,...identity}=need;
+    const {eligible,issues,required,order,completed,...identity}=need;
     const fixed=new Map(reservations.map(pin=>[pin.sourceId,pin.backed]));
     return {...identity,required,issues:[...issues],covered:required?inUnit(sub(amount(required),missing),required.unit):null,
       missing:required?inUnit(missing,required.unit):null,

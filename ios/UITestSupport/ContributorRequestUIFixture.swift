@@ -146,13 +146,22 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     let rejectedCorrection = ProcessInfo.processInfo.arguments.contains("--rejected-correction-fixture")
     let helperReadback = ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture")
     let grant = UUID().uuidString.lowercased()
-    let pantryCorrection = ProcessInfo.processInfo.arguments.contains("--household-pantry-correction")
     let preferenceOrganizer = ProcessInfo.processInfo.arguments.contains("--household-meal-organizer")
     let preferenceReader = ProcessInfo.processInfo.arguments.contains("--household-meal-reader")
     private var preferenceRevision: String?
     private var profile: [String: Any]?
     private let reader = UUID().uuidString.lowercased()
     private var readerEnabled = false
+    let pantryCorrection = ProcessInfo.processInfo.arguments.contains("--household-pantry-correction") ||
+        ProcessInfo.processInfo.arguments.contains("--household-staple-reminders")
+    private let stapleFixture = ProcessInfo.processInfo.arguments.contains("--household-staple-reminders")
+    private var stapleRevision = UUID().uuidString
+    private let stapleGroup = UUID().uuidString
+    private var stapleAnswered = false
+    private var extraStapleName: String?
+    private let extraGroup = UUID().uuidString
+    private let extraHead = UUID().uuidString
+    private let pastSources = [UUID().uuidString, UUID().uuidString, UUID().uuidString]
     private let pantryDevice = UUID().uuidString, pantryLot = UUID().uuidString
     private var pantryRow: [String: Any]?
     private var pantryReceipts: [String: [String: Any]] = [:]
@@ -214,6 +223,41 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             if path.hasSuffix("/bootstrap") {
                 return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member, "role": "organizer",
                                      "enrolled": true, "queueConsent": false, "capabilities": ["household_pantry", "household_pantry_grants"]])
+            }
+            if stapleFixture && path.hasSuffix("/pantry/staples") {
+                let today = ISO8601DateFormatter().string(from: Date()).prefix(10)
+                let zone: String
+                if request.httpMethod == "POST" {
+                    guard let action = json["action"] as? [String: Any], let kind = action["kind"] as? String,
+                          (json["expectedRevision"] as? String)?.lowercased() == stapleRevision.lowercased() else { throw URLError(.badServerResponse) }
+                    switch kind {
+                    case "answer" where action["choice"] as? String == "stillHave": stapleAnswered = true
+                    case "purchase" where (action["lotId"] as? String)?.lowercased() == pantryLot.lowercased():
+                        guard (action["observationId"] as? String)?.lowercased() == extraHead.lowercased(),
+                              let name = action["name"] as? String, !name.isEmpty else { throw URLError(.badServerResponse) }
+                        extraStapleName = name
+                    default: throw URLError(.badServerResponse)
+                    }
+                    stapleRevision = UUID().uuidString
+                    zone = json["zone"] as? String ?? "UTC"
+                } else {
+                    zone = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "zone" })?.value ?? "UTC"
+                }
+                let purchases = zip(pastSources, ["2026-09-01", "2026-09-08", "2026-09-15"]).map { ["lotId": $0.0, "day": $0.1, "foodName": "Milk"] }
+                let prompt: [String: Any] = ["purchaseDays": 3, "intervalDays": 7, "dueDay": "2026-09-22", "basis": String(repeating: "a", count: 64)]
+                var groups: [[String: Any]] = [["id": stapleGroup, "name": "Milk", "purchases": purchases, "prompt": stapleAnswered ? NSNull() as Any : prompt]]
+                if let extraStapleName {
+                    groups.append(["id": extraGroup, "name": extraStapleName, "purchases": [["lotId": pantryLot, "day": String(today), "foodName": "Oats"]], "prompt": NSNull()])
+                }
+                return try response(["v": 1, "householdId": household, "memberId": member, "grantEpoch": 0, "pantryRevision": 0,
+                                     "today": String(today), "zone": zone, "revision": stapleRevision, "enabled": true, "groups": groups])
+            }
+            if stapleFixture && path.hasSuffix("/pantry") {
+                let amount: [String: Any] = ["unit": "count", "originalLiteral": "2", "amount": ["numerator": 2, "denominator": 1]]
+                let lot: [String: Any] = ["lotId": pantryLot, "foodName": "Oats", "location": "pantry", "origin": "delivery", "exclusionTags": [],
+                                          "observation": ["confirmedAt": "2026-11-01T12:00:00Z", "observationId": extraHead, "quantity": amount]]
+                return try response(["v": 1, "householdId": household, "grantEpoch": 0, "pantryRevision": 0,
+                                     "asOf": "2026-11-01T12:00:00Z", "lots": [lot], "nextCursor": NSNull()])
             }
             if path.hasSuffix("/pantry") {
                 return try response(["v": 1, "householdId": household, "grantEpoch": 0, "pantryRevision": pantryReceipts.count,

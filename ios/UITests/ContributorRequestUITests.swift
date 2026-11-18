@@ -49,6 +49,29 @@ import XCTest
         XCTAssertFalse(app.switches["Alex"].exists)
     }
 
+    func testAdultReviewsHouseholdStaplePurchaseAndAnswersQuestionAcrossReopen() {
+        app.launchArguments = ["--ui-testing", "--household-staple-reminders", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["household.pantry"])
+        let entry = app.buttons["householdPantry.staples"]
+        tap(entry)
+        let have = app.buttons["householdStaple.stillHave"]
+        tap(have)
+        XCTAssertFalse(have.exists)
+        tap(app.buttons["householdStaple.purchase"])
+        tap(element("householdStaple.delivery"))
+        tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Oats")).firstMatch)
+        fill("Oats", into: "householdStaple.name")
+        tap(app.buttons["householdStaple.review"])
+        tap(app.buttons["householdStaple.confirmPurchase"])
+        XCTAssertTrue(app.staticTexts["1 reviewed purchase"].waitForExistence(timeout: 10))
+        tap(app.buttons["Done"])
+        tap(entry)
+        XCTAssertTrue(app.staticTexts["1 reviewed purchase"].waitForExistence(timeout: 10))
+        XCTAssertFalse(have.exists)
+        XCTAssertTrue(app.staticTexts["3 reviewed purchases"].exists)
+    }
+
     func testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen() {
         app.launchArguments = ["--ui-testing", "--household-pantry-correction", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
