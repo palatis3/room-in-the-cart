@@ -87,12 +87,28 @@ export async function householdStaples(ctx:Context,zone:string) {
       if(alias){const ids=aliases.get(alias)??new Set<string>();ids.add(group.group_id);aliases.set(alias,ids);}
     }
   }
+  let unknownDemand=open.length>2000;
+  const unclassified=open.map(row=>row.name).filter(name=>!aliases.has(normalize(name)));
+  if(!unknownDemand && unclassified.length){
+    // A reviewed pantry label can identify unrelated demand without enrolling that food as a staple.
+    // Only exact, unrestricted labels qualify; a missing or ambiguous match keeps the question on hold.
+    const reviewed=await ctx.db.query<{name:string}>(`SELECT COALESCE(l.food_name,d.food_name) AS name
+      FROM ritc.pantry_lot l LEFT JOIN ritc.delivery_source d
+        ON (d.household_id,d.shop_id,d.source_id)=(l.household_id,l.origin_shop_id,l.delivery_source_id)
+      LEFT JOIN ritc.staple_purchase p ON p.household_id=l.household_id AND p.member_id=$2 AND p.lot_id=l.lot_id
+      WHERE l.household_id=$1 AND COALESCE(l.food_name,d.food_name)=ANY($3::text[])
+      GROUP BY COALESCE(l.food_name,d.food_name)
+      HAVING bool_and(p.lot_id IS NULL AND cardinality(COALESCE(l.exclusion_tags,d.exclusion_tags))=0)`,
+      [...scope(ctx),unclassified]);
+    const known=new Set(reviewed.rows.map(row=>row.name));
+    unknownDemand=unclassified.some(name=>!known.has(name));
+  }
   return {...state,groups:groups.map(group=>{
     const rows=purchases.filter(p=>p.group_id===group.group_id);
     const candidate=comparablePurchaseInterval(rows.map(p=>({day:p.purchase_day,quantity:reviewedFood(facts.get(p.lot_id),p)})));
     const basis=digest(rows.map(p=>[p.lot_id,p.arrival_id,p.usable_id,p.purchase_day]));
     const answered=group.answer_basis===basis && (group.answer!=='snooze' || (group.until_day??'')>today);
-    const openDemand=open.length>2000 || open.some(r=>{const ids=aliases.get(normalize(r.name));return !ids || ids.has(group.group_id);});
+    const openDemand=unknownDemand || open.some(row=>aliases.get(normalize(row.name))?.has(group.group_id));
     const prompt=candidate && !answered && !openDemand && candidate.dueDay<=today?{...candidate,basis}:null;
     return {id:group.group_id,name:group.name,purchases:rows.map(p=>({lotId:p.lot_id,day:p.purchase_day,foodName:facts.get(p.lot_id)?.foodName??null})),prompt};
   })};

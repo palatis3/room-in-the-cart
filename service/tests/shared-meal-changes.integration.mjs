@@ -1894,6 +1894,19 @@ test('household staples require reviewed comparable deliveries, live grants and 
  const reread=await write({...currentFirstAction,groupId:group.id,name:null}),question=reread.groups[0].prompt;
  assert.equal(reread.groups[0].purchases.length,3);assert.notEqual(question.basis,originalQuestion.basis);
  const noShopInfo=JSON.stringify(current);assert(!noShopInfo.includes(f.shopId));assert(!noShopInfo.includes(f.planner.id));
+ const breadRequest=ok(await f.send(f.command('request.send',{clientRequestId:randomUUID(),originalItem:'Bread',
+   ownQuantity:null,authoredAt:p.time,route:'next'}))).request;
+ assert.equal((await read()).groups[0].prompt,null,'Unclassified demand keeps the question on hold');
+ const bread=(await p.create('Bread')).lotId;
+ ok(await p.send((await p.preview(bread,f.quantity(2))).cmd));
+ const afterBread=await read();
+ assert.equal(afterBread.groups.length,1,'Bread was recorded in the pantry, never enrolled as a staple');
+ assert.deepEqual(afterBread.groups[0].prompt,question,'A separate reviewed pantry food does not hide a due staple');
+ assert(!JSON.stringify(afterBread).includes('Bread'),'The reminder response must omit other foods and request wording');
+ await p.create('Bread',['sesame-free']);
+ assert.equal((await read()).groups[0].prompt,null,'The bare request cannot distinguish pantry lots with different exclusions');
+ const removeBread=f.command('request.withdraw',{requestId:breadRequest.requestId});
+ removeBread.base.requestRevision=breadRequest.revision;ok(await f.send(removeBread));
  const open=f.command('request.send',{clientRequestId:randomUUID(),originalItem:'Wraps',ownQuantity:null,authoredAt:p.time,route:'next'});
  const requested=await f.send(open);assert.equal(requested.status,200,JSON.stringify(requested.data));
  assert.equal((await read()).groups[0].prompt,null);
