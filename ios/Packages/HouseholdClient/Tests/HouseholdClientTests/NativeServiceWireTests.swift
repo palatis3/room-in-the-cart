@@ -199,6 +199,8 @@ final class NativeServiceWireTests: XCTestCase {
                 XCTAssertEqual(own.purchaseOutcome, .notBought)
                 XCTAssertEqual(own.status, "added")
                 XCTAssertNil(own.linkedLineId)
+                XCTAssertNil(own.reportedPurchaser)
+                XCTAssertNil(own.purchaseRecordedBy)
                 XCTAssertNil(own.authorAlias)
             } else {
                 try await exercisePurchaseConfirmation(service, scope: scope, shopID: shop, requestID: request)
@@ -377,6 +379,7 @@ final class NativeServiceWireTests: XCTestCase {
         XCTAssertEqual(successor.originalItem, source.originalItem)
         XCTAssertEqual(successor.authorAlias, source.authorAlias)
         XCTAssertEqual(successor.ownQuantity, source.ownQuantity)
+        try await exerciseRequestPair(service, scope: scope, shop: draft, first: successor, window: window)
 
         let requestBase = CommandBase(shopRevision: draft.shopRevision, authorityEpoch: draft.authorityEpoch,
                                       requestRevision: successor.revision)
@@ -416,9 +419,77 @@ final class NativeServiceWireTests: XCTestCase {
         XCTAssertEqual(history.requests.first?.carriedForward, true)
     }
 
+    private func exerciseRequestPair(_ service: HouseholdService, scope: HouseholdBootstrap, shop: ShopperShop,
+                                     first: OwnRequest, window: ReplayWindow) async throws {
+        XCTAssertTrue(scope.capabilities.contains("request_pair_review"))
+        let shopID = first.shopId
+        let send = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID, kind: "request.send",
+            base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch),
+            body: ["clientRequestId": .string(UUID().uuidString.lowercased()), "originalItem": .string(first.originalItem),
+                   "ownQuantity": .string("two boxes for lunches"), "authoredAt": .string(ISO8601DateFormatter().string(from: Date()))]),
+            bootstrap: scope)
+        let sent = try await service.execute(send)
+        let second = sent.request
+        XCTAssertEqual(first.ownQuantity, "one box")
+        XCTAssertEqual(second.ownQuantity, "two boxes for lunches")
+        func review(_ row: OwnRequest, other: OwnRequest, alias: String, decision: ShopperDecision) async throws -> ShopperReceipt {
+            let preview = try await service.shopperPreview(shopID: shopID, requestID: row.id,
+                base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch, requestRevision: row.revision),
+                decision: decision)
+            let evidence = try XCTUnwrap(preview.requestPairEvidence)
+            XCTAssertEqual(evidence.otherRequestId, UUID(uuidString: other.id))
+            XCTAssertEqual(evidence.otherRequestRevision, other.revision)
+            XCTAssertEqual(evidence.item, other.originalItem)
+            XCTAssertEqual(evidence.quantity, other.ownQuantity)
+            XCTAssertEqual(evidence.authorAlias, alias)
+            XCTAssertEqual(evidence.relationship, .sameItem)
+            XCTAssertEqual(preview.before, preview.after)
+            let op = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID, kind: "request.apply",
+                base: preview.base, body: ["requestId": .string(row.id), "previewId": .string(preview.previewId),
+                                         "acceptOverage": .bool(false), "acceptUnknown": .bool(false)]), bootstrap: scope)
+            let receipt = try await service.executeShopper(op)
+            let replay = try await service.executeShopper(op)
+            XCTAssertEqual(replay, receipt)
+            XCTAssertEqual(receipt.disposition, row.status)
+            XCTAssertEqual(receipt.requestRevision, row.revision)
+            return receipt
+        }
+        let receipt = try await review(first, other: second, alias: "Mia", decision: .reviewRequestPair(
+            otherRequestId: XCTUnwrap(UUID(uuidString: second.id)), otherRequestRevision: second.revision, relationship: .sameItem))
+        let pairID = try XCTUnwrap(UUID(uuidString: receipt.operationId))
+        let paired = try await service.shopperInbox(shopID: shopID)
+        for (before, other) in [(first, second), (second, first)] {
+            let row = try XCTUnwrap(paired.requests.first { $0.id == before.id })
+            XCTAssertEqual(row.status, before.status)
+            XCTAssertEqual(row.ownQuantity, before.ownQuantity)
+            XCTAssertEqual(row.revision, before.revision)
+            let pair = try XCTUnwrap(row.requestPairs?.first)
+            XCTAssertEqual(pair.otherRequestId, UUID(uuidString: other.id))
+            XCTAssertEqual(pair.operationId, pairID)
+            XCTAssertEqual(pair.relationship, .sameItem)
+        }
+        let afterApply = try await service.shopperShop(shopID: shopID)
+        XCTAssertEqual(afterApply, shop)
+        let mine = try await service.ownRequests()
+        XCTAssertEqual(mine.requests, [second])
+        _ = try await review(second, other: first, alias: "Alex", decision: .undoRequestPair(operationId: pairID))
+        let undone = try await service.shopperInbox(shopID: shopID)
+        XCTAssertEqual(Set(undone.requests.map(\.id)), Set([first.id, second.id]))
+        for row in undone.requests {
+            let before = row.id == first.id ? first : second
+            XCTAssertNil(row.requestPairs)
+            XCTAssertEqual(row.status, before.status)
+            XCTAssertEqual(row.ownQuantity, before.ownQuantity)
+            XCTAssertEqual(row.revision, before.revision)
+        }
+        let afterUndo = try await service.shopperShop(shopID: shopID)
+        XCTAssertEqual(afterUndo, shop)
+    }
+
     private func exercisePurchaseConfirmation(_ service: HouseholdService, scope: HouseholdBootstrap,
                                               shopID: String, requestID: String) async throws {
         XCTAssertTrue(scope.capabilities.contains("request_purchase_confirmation"))
+        XCTAssertTrue(scope.capabilities.contains("request_purchase_attribution"))
         let shop = try await service.shopperShop(shopID: shopID)
         let placed = try await service.deliveryEvidence(shopID: shopID)
         let window = try await service.replayWindow()
@@ -431,10 +502,21 @@ final class NativeServiceWireTests: XCTestCase {
             XCTAssertEqual(match.request.authorAlias, "Alex")
             XCTAssertEqual(match.request.ownQuantity, "one box")
             XCTAssertEqual(match.request.purchaseOutcome, expected)
+            XCTAssertEqual(request.reportedPurchaser, expected == .bought ? "Alex" : nil)
+            XCTAssertEqual(request.purchaseRecordedBy, expected == .bought ? "Mia" : nil)
             XCTAssertEqual(match.line.name, "Original basket")
             XCTAssertEqual(match.line.packs, 1)
+            let purchaser: ReportedPurchaser?
+            if outcome == .bought {
+                XCTAssertEqual(request.canReportAuthorAsPurchaser, true)
+                purchaser = .requestAuthor(id: request.id, revision: request.revision,
+                                           expectedAlias: try XCTUnwrap(request.authorAlias))
+            } else {
+                purchaser = nil
+            }
             let op = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID,
-                kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome)), bootstrap: scope)
+                kind: "request.confirmPurchase", base: match.base,
+                body: match.body(outcome: outcome, purchaser: purchaser)), bootstrap: scope)
             XCTAssertFalse(op.targetsShop(nil))
             XCTAssertFalse(op.targetsShop(UUID().uuidString))
             let first = try await service.executeShopper(op)
@@ -447,6 +529,8 @@ final class NativeServiceWireTests: XCTestCase {
         let final = try await service.shopperInbox(shopID: shopID)
         let saved = try XCTUnwrap(final.requests.first { $0.id == requestID })
         XCTAssertEqual(saved.purchaseOutcome, .notBought)
+        XCTAssertNil(saved.reportedPurchaser)
+        XCTAssertEqual(saved.purchaseRecordedBy, "Mia")
         XCTAssertEqual(saved.status, "added")
         XCTAssertEqual(saved.linkedLineId, placed.lines.first?.id)
     }
