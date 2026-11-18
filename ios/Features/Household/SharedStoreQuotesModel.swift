@@ -161,6 +161,21 @@ extension HouseholdService: SharedStoreQuotesServing {}
     }
 }
 
+extension EnteredOrderMinimum {
+    var reviewedMinimum: StoreOrderMinimum {
+        StoreOrderMinimum(StoreOrderMinimum.Kind(rawValue: kind.rawValue) ?? .unknown,
+            minimum: minimumMinor.map { Money(minorUnits: Int64($0)) },
+            eligibleSubtotal: eligibleSubtotalMinor.map { Money(minorUnits: Int64($0)) })
+    }
+}
+extension EnteredCommitmentSupply {
+    func reviewedSupply() throws -> StoreCommitmentSupply {
+        guard let unit = UnitOfMeasure(rawValue: unit) else { throw ClientError.configuration }
+        return StoreCommitmentSupply(commitmentID: commitmentId, unit: unit, requiredUnits: requiredUnits,
+            usableUnitsPerPackage: usableUnitsPerPackage, packages: packages)
+    }
+}
+
 /// CoreDomain remains the comparison engine for the connected and local screens.
 enum SharedStoreQuoteMath {
     static let firstID = UUID(uuidString: "00000000-0000-4000-8000-000000000001")!
@@ -174,22 +189,12 @@ enum SharedStoreQuoteMath {
             let context = CheckoutContext(storeID: source.store, branchID: source.branch, mode: ShoppingMode(rawValue: source.mode)!, slot: source.slot,
                 commitmentsID: same.id, observedAt: serviceDate(source.observedAt)!, source: source.source)
             let evidence = source.allChargesIncluded ? source.checkoutMinor.map { CostEvidence.exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Checkout total is unknown") : .unknown(reason: "Checkout charges are unreviewed")
-            let minimum = source.orderMinimum.map { entry in
-                StoreOrderMinimum(StoreOrderMinimum.Kind(rawValue: entry.kind.rawValue) ?? .unknown,
-                    minimum: entry.minimumMinor.map { Money(minorUnits: Int64($0)) },
-                    eligibleSubtotal: entry.eligibleSubtotalMinor.map { Money(minorUnits: Int64($0)) })
-            }
-            let supplies = try source.supplies?.map { row in
-                guard let unit = UnitOfMeasure(rawValue: row.unit) else { throw ClientError.configuration }
-                return StoreCommitmentSupply(commitmentID: row.commitmentId, unit: unit, requiredUnits: row.requiredUnits,
-                    usableUnitsPerPackage: row.usableUnitsPerPackage, packages: row.packages)
-            }
             return StoreQuoteOption(id: id, label: source.label, commitments: same,
                 quote: CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(evidence)),
                 available: source.available, quantitiesMatched: source.quantitiesMatched, singleStore: source.singleStore,
                 trip: StoreTripEvidence(incrementalCash: source.tripMinor.map { .exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Trip cash is unknown"), extraMinutes: source.extraMinutes, tripAlreadyPlanned: source.tripAlreadyPlanned),
                 observedItemSubtotal: source.itemsMinor.map { Money(minorUnits: Int64($0)) }, eligibilityTerms: source.terms.isEmpty ? nil : source.terms,
-                orderMinimum: minimum, supplies: supplies, eligibilityReviewed: source.eligibilityConfirmed)
+                orderMinimum: source.orderMinimum?.reviewedMinimum, supplies: try source.supplies?.map { try $0.reviewedSupply() }, eligibilityReviewed: source.eligibilityConfirmed)
         }
         let pair = TwoStoreQuotePair(shopID: shopID, baseRevisionID: shopID, basisRevision: 0, first: try option(options.first,id: firstID), second: try option(options.second,id: secondID))
         return try TwoStoreQuoteEngine.evaluateEnteredQuotes(pair)

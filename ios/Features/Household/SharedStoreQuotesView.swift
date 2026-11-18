@@ -318,11 +318,9 @@ private struct SharedStoreQuoteFacts: View {
             Text(value.tripAlreadyPlanned ? dinnerText("Trip already planned") : dinnerText("Additional trip"))
             if let minutes = value.extraMinutes { Text(dinnerFormat("Extra minutes: %d", minutes)) }
             Text(value.available == true ? dinnerText("Required availability reviewed") : dinnerText("Required availability unresolved"))
-            QuoteOrderEvidenceSummary(status: result.minimumStatus, rows: value.supplies?.compactMap { row in
-                guard let unit = UnitOfMeasure(rawValue: row.unit) else { return nil }
-                return StoreCommitmentSupply(commitmentID: row.commitmentId, unit: unit, requiredUnits: row.requiredUnits,
-                    usableUnitsPerPackage: row.usableUnitsPerPackage, packages: row.packages)
-            } ?? [], names: Dictionary(uniqueKeysWithValues: commitments.map { ($0.id, $0.label) }))
+            QuoteOrderEvidenceSummary(status: result.minimumStatus, minimum: value.orderMinimum?.reviewedMinimum,
+                rows: value.supplies?.compactMap { try? $0.reviewedSupply() } ?? [],
+                names: Dictionary(uniqueKeysWithValues: commitments.map { ($0.id, $0.label) }))
             cap(value)
         }.padding(.vertical, 6).accessibilityElement(children: .combine)
     }

@@ -152,7 +152,7 @@ struct DinnerQuotesView: View {
             } else {
                 Text(dinnerFormat("Checkout: %@", dinnerMoney(value.checkout.total.exact)))
             }
-            QuoteOrderEvidenceSummary(status: value.minimumStatus, rows: option.supplies ?? [],
+            QuoteOrderEvidenceSummary(status: value.minimumStatus, minimum: option.orderMinimum, rows: option.supplies ?? [],
                 names: Dictionary(uniqueKeysWithValues: option.commitments.commitments.map { ($0.id, $0.name) }))
             Text(dinnerCap(value.checkout.cap))
             switch option.trip.incrementalCash {
@@ -267,6 +267,7 @@ struct DinnerStoreFields: View {
 
 struct QuoteOrderEvidenceSummary: View {
     let status: StoreOrderMinimum.Status
+    let minimum: StoreOrderMinimum?
     let rows: [StoreCommitmentSupply]
     let names: [UUID: String]
     var body: some View {
@@ -276,10 +277,15 @@ struct QuoteOrderEvidenceSummary: View {
         case .met: Text(dinnerText("Purchase minimum met"))
         case .notMet: Text(dinnerText("Purchase minimum not met"))
         }
+        if let minimum, minimum.kind == .required {
+            LabeledContent(dinnerText("Required merchandise subtotal"), value: dinnerMoney(minimum.minimum))
+            LabeledContent(dinnerText("Eligible merchandise subtotal"), value: dinnerMoney(minimum.eligibleSubtotal))
+        }
         ForEach(rows) { row in
             if let surplus = try? row.surplus() {
                 VStack(alignment: .leading) {
                     Text(verbatim: names[row.id] ?? row.id.uuidString)
+                    LabeledContent(dinnerText("Units needed"), value: String(row.requiredUnits) + " " + dinnerUnit(row.unit))
                     Text(verbatim: String(row.packages) + " × " + String(row.usableUnitsPerPackage) + " " + dinnerUnit(row.unit))
                     LabeledContent(surplus >= 0 ? dinnerText("Excess usable quantity") : dinnerText("Missing usable quantity"),
                                    value: String(abs(surplus)) + " " + dinnerUnit(row.unit))
