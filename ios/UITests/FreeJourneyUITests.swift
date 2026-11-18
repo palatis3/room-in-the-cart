@@ -70,7 +70,7 @@ import XCTest
             app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
                 "tonight.result.", title)).firstMatch
         }
-        func saveRecipe(_ title: String) {
+        func saveFreeRecipe(_ title: String) {
             tap(app.buttons["Review a recipe by hand"])
             fill(title, into: "tonight.recipe.title")
             fill("1", into: "tonight.recipe.servings")
@@ -103,6 +103,24 @@ import XCTest
         }
         let home = app.switches["adultHomeSummary.tonight"]
         launch(reset: true)
+        // Keep the first recipe in the accepted dinner library. The private
+        // Tonight editor has one Free reusable slot for the second recipe.
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinnerStartPickup"])
+        fill("Weeknight pickup", into: "ledgerShopName")
+        tap(app.buttons["ledgerCreateShop"])
+        tap(app.buttons["dinnerLibrary"])
+        tap(app.buttons["ledgerNewTemplate"])
+        fill(firstTitle, into: "ledgerDinnerTitle")
+        fill("1", into: "ledgerDinnerServings", replacing: true)
+        fill("Tortillas", into: "Ingredient name")
+        fill("2", into: "Amount, optional")
+        enableSwitch("Required appliances reviewed")
+        tap(app.buttons["ledgerReviewDinner"])
+        tap(app.buttons["ledgerSaveDinner"])
+        tap(app.buttons["Done"])
+        restart()
+        tap(app.tabBars.buttons["Shop"])
         tap(app.buttons["shop.myPantry"])
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
@@ -129,8 +147,8 @@ import XCTest
         enableSwitch("Limit recipes to available appliances")
         tap(app.buttons["preferences.review"])
         tap(app.buttons["preferences.save"])
-        saveRecipe(firstTitle)
-        saveRecipe(secondTitle)
+        saveFreeRecipe(secondTitle)
+        XCTAssertTrue(row(firstTitle).waitForExistence(timeout: 10), app.debugDescription)
         let global = match(secondTitle)
         enableSwitch("adultHomeSummary.tonight", position: { self.reveal($0, initiallyUpward: false) })
         XCTAssertEqual(home.value as? String, "1")
@@ -150,7 +168,6 @@ import XCTest
         XCTAssertTrue(element("tonight.batch.second." + second.recipe).exists, app.debugDescription)
         tap(app.buttons["Close second-meal suggestions"])
         tap(app.buttons["tonight.choose." + first.recipe])
-        fill("Trial pickup", into: "New pickup name")
         tap(app.buttons["Preview dinner choice"])
         tap(app.buttons["Cancel preview"])
         XCTAssertFalse(app.buttons["tonight.apply"].exists, app.debugDescription)
