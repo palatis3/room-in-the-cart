@@ -4109,13 +4109,26 @@ import XCTest
     }
     private func returnToVisibleAnchor(_ target: XCUIElement, rootTitles: [String] = []) {
         for _ in 0..<8 {
-            let leading = app.navigationBars.buttons.allElementsBoundByIndex.filter {
-                $0.exists && $0.isHittable && $0.identifier != "settings" && $0.frame.midX < app.frame.midX
-            }.sorted { $0.frame.minX < $1.frame.minX }
+            let activeBar = app.navigationBars.allElementsBoundByAccessibilityElement.last(where: { $0.isHittable })
+            let back = activeBar.flatMap { bar -> XCUIElement? in
+                // Bind the control to its source screen. A leading index can resolve
+                // to Settings on the root while the previous screen is disappearing.
+                let source = app.navigationBars.matching(NSPredicate(format: "identifier == %@", bar.identifier)).firstMatch
+                let nativeBack = source.buttons["BackButton"].firstMatch
+                if nativeBack.exists && nativeBack.isHittable { return nativeBack }
+                // Older navigation bars can expose Back under its destination title.
+                let leading = source.buttons.matching(NSPredicate(format: "identifier != %@", "settings"))
+                    .allElementsBoundByAccessibilityElement.filter { $0.isHittable && $0.frame.midX < app.frame.midX }
+                    .min { $0.frame.minX < $1.frame.minX }
+                guard let leading, let snapshot = try? leading.snapshot(), snapshot.identifier != "settings",
+                      !snapshot.identifier.isEmpty || !snapshot.label.isEmpty else { return nil }
+                return source.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@",
+                    snapshot.identifier, snapshot.label)).firstMatch
+            }
             if !rootTitles.isEmpty {
                 let rootBar = app.navigationBars.matching(NSPredicate(format: "identifier IN %@ OR label IN %@", rootTitles, rootTitles)).firstMatch
                 let rootTab = app.tabBars.buttons.matching(NSPredicate(format: "identifier IN %@ OR label IN %@", rootTitles, rootTitles)).firstMatch
-                if leading.isEmpty && rootTab.exists && rootTab.isSelected && rootBar.exists && rootBar.isHittable &&
+                if back == nil && rootTab.exists && rootTab.isSelected && rootBar.exists && rootBar.isHittable &&
                     !rootBar.frame.isEmpty && rootBar.frame.intersects(app.frame) {
                     // A root's lazy links may be below large introductory text.
                     // A user-named detail can share the root title. Require
@@ -4138,11 +4151,14 @@ import XCTest
                 }
                 if target.isHittable { return }
             }
-            guard let button = leading.first else {
+            guard let back, back.exists && back.isHittable else {
                 XCTFail("No visible back control while returning to \(target)")
                 return
             }
-            button.tap()
+            back.tap()
+            // A previous and next screen may share a title. Re-evaluate the
+            // destination even if that screen keeps an identically named Back.
+            _ = back.waitForNonExistence(timeout: 2)
         }
         XCTAssertTrue(target.exists && target.isHittable, "Root or destination is not visible: \(target)")
     }
