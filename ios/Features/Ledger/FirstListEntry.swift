@@ -42,8 +42,10 @@ struct FirstListContents: Equatable, Codable {
     func update(_ next: FirstListContents) {
         guard !closed, authorize(), !stale else { return }
         content = next
-        guard writer == nil, saved != content else { return }
-        failed = false; writing = true
+        guard writer == nil else { return }
+        if failed { failed = false }
+        guard saved != content else { return }
+        writing = true
         writer = Task {
             defer { writer = nil; writing = false }
             do {
@@ -64,8 +66,6 @@ struct FirstListContents: Equatable, Codable {
         guard !closed, authorize(), saved == next, !failed, !stale else { return nil }
         return version
     }
-
-    func failedToApply() { failed = true }
 
     func reviewAgain() async {
         guard stale, authorize() else { return }

@@ -18,6 +18,15 @@ import CoreDomain
         contents.original += "\n3 limones"
         let saved = await editor.flush(contents)
         XCTAssertNotNil(saved); XCTAssertNil(ledger.shop)
+        var oversized = contents
+        oversized.original = String(repeating: "x", count: StagedListImport.maximumTextBytes + 1)
+        let rejected = await editor.flush(oversized)
+        XCTAssertNil(rejected)
+        XCTAssertTrue(editor.failed)
+        let restoredVersion = await editor.flush(contents)
+        XCTAssertEqual(restoredVersion, saved)
+        XCTAssertFalse(editor.failed)
+        XCTAssertNil(ledger.shop)
         XCTAssertFalse(String(decoding: try ledger.exportPayload(), as: UTF8.self).contains("cebollas"))
 
         let resumed = LedgerModel(databaseURL: url)
@@ -37,7 +46,9 @@ import CoreDomain
         XCTAssertEqual(reopenedReview.content.choices, contents.choices)
         let denied = await resumed.commitFirstList(review, decisions: contents.choices, draft: reviewed, title: candidate.title, authorize: { false })
         XCTAssertFalse(denied); XCTAssertNil(resumed.shop)
-        let accepted = await resumed.commitFirstList(review, decisions: contents.choices, draft: reviewed, title: candidate.title, authorize: { true })
+        let retryVersion = await reopenedReview.flush(contents)
+        XCTAssertEqual(retryVersion, reviewed)
+        let accepted = await resumed.commitFirstList(review, decisions: contents.choices, draft: try XCTUnwrap(retryVersion), title: candidate.title, authorize: { true })
         XCTAssertTrue(accepted); XCTAssertEqual(resumed.workspace.shops.count, 1)
         XCTAssertEqual(resumed.shop?.importBatches.first?.preview.originalText, contents.original)
         let afterSave = try await newStore.firstListDraft(owner: owner)

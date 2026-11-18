@@ -252,8 +252,10 @@ struct LedgerImportView: View {
                     guard preview.shopID == shopID, firstDraft.authorize(), let draft = await firstDraft.flush(firstContents) else { return }
                     if await model.commitFirstList(preview, decisions: decisions, draft: draft, title: ledgerText("Pickup"), authorize: firstDraft.authorize) {
                         onFirstSave?(shopID); dismiss()
-                    } else if !model.hasPendingSave {
-                        firstDraft.failedToApply()
+                    } else {
+                        if !model.hasPendingSave, model.error == nil {
+                            model.error = ledgerText("Could not save on this iPhone. Your entries are still here. Retry the same change.")
+                        }
                         focus = .status
                     }
                 } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, authorize: authorizeEntry, { try $0.commitImport(preview, decisions: decisions) }) {
