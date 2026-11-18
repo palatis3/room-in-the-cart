@@ -79,6 +79,7 @@ struct PantryPriceHistoryView: View {
 
 private struct PantryPriceDetail: View {
     @ObservedObject var model: PantryModel
+    @EnvironmentObject private var household: HouseholdModel
     let row: PrivatePriceEvidence
     let state: InventoryState
     let history: [PrivatePriceEvidence]
@@ -109,6 +110,12 @@ private struct PantryPriceDetail: View {
                             LabeledContent(pantryText("Line"), value: String(line.line))
                         }
                     } else { Text(verbatim: row.sourceText) }
+                }
+                if row.currencyCode == "USD", row.amountMinor != nil, row.isPaidPrice || row.source == .shelf || row.source == .currentQuote,
+                   let scope = household.projection, scope.enrolled, scope.grantId == nil, !household.locked, household.identity != nil {
+                    NavigationLink(HistoryCopy.text("Review for a shared shop")) {
+                        PrivatePricePublicationView(pantry: model, household: household, price: row, state: state)
+                    }
                 }
                 if row.isPaidPrice, row.amountMinor != nil {
                     Button(pantryText("Review a credit or refund")) { adjusting = true }

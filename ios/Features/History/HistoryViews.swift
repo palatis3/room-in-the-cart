@@ -122,6 +122,7 @@ struct HistoryEntryView: View {
                 .disabled(model.busy).frame(minHeight: 44).accessibilityIdentifier("history.loadPrices")
             Text(HistoryCopy.text("History requires active membership and current access. Saved individual records remain available with Free access."))
                 .font(.footnote)
+            Toggle(pantryText("Show paid prices only"), isOn: $model.filter.paidOnly)
             TextField(HistoryCopy.text("Filter by store"), text: $model.filter.store).accessibilityIdentifier("history.filterStore")
             TextField(HistoryCopy.text("Filter by branch"), text: $model.filter.branch).accessibilityIdentifier("history.filterBranch")
             Picker(HistoryCopy.text("Filter by channel"), selection: $model.filter.channel) {
@@ -146,6 +147,7 @@ struct HistoryEntryView: View {
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(observation.itemName).font(.headline)
+                        Text(HistoryCopy.priceKind(observation.evidenceKind))
                         Text(observation.packLabel)
                         Text(observation.store + " · " + observation.branch)
                         Text(HistoryCopy.channel(observation.channel.rawValue) + " · " + HistoryCopy.mode(observation.mode.rawValue)).font(.caption)
@@ -162,6 +164,10 @@ struct HistoryEntryView: View {
     @ViewBuilder private var observationEditor: some View {
         Section(HistoryCopy.text("Observed item and pack")) {
             shopPicker(selection: $model.observationDraft.shopID)
+            Picker(pantryText("Price source"), selection: $model.observationDraft.evidenceKind) {
+                ForEach([HistoryPriceKind.shelf, .paidManual, .quote], id: \.self) { kind in Text(HistoryCopy.priceKind(kind)).tag(kind) }
+            }
+            TextField(pantryText("Brand or variant"), text: $model.observationDraft.variant)
             TextField(HistoryCopy.text("Item name as observed"), text: $model.observationDraft.itemName)
             TextField(HistoryCopy.text("Pack label as observed"), text: $model.observationDraft.packLabel)
             Toggle(HistoryCopy.text("Record a usable pack quantity"), isOn: $model.observationDraft.hasUsablePack)
@@ -468,6 +474,11 @@ private struct HistoryObservationDetails: View {
     var body: some View {
         Group {
             Text(observation.itemName).font(.headline)
+            Text(HistoryCopy.priceKind(observation.evidenceKind))
+            if let variant = observation.variant { LabeledContent(pantryText("Brand or variant"), value: variant) }
+            if let ref = observation.sourceRevision {
+                LabeledContent(HistoryCopy.text("Published evidence revision"), value: String(ref.revision))
+            }
             LabeledContent(HistoryCopy.text("Pack label"), value: observation.packLabel)
             if let pack = observation.usablePack {
                 LabeledContent(HistoryCopy.text("Original quantity wording"), value: pack.originalLiteral)
