@@ -22,13 +22,13 @@ struct PantryReservationSection: View {
     @ObservedObject var model: PantryModel
     let lot: InventoryLot
     let availabilityNeedsReview: Bool
+    let amountFocus: FocusState<Bool>.Binding
     @State private var draft: Draft?
     @State private var purpose = ""
     @State private var amount = ""
     @State private var date = Date()
     @State private var includeDate = false
     @State private var releaseAll = false
-    @FocusState private var editingAmount: Bool
 
     private struct Draft {
         let basis: PantryReviewedFood
@@ -95,7 +95,7 @@ struct PantryReservationSection: View {
                 if draft.claim == nil || !releaseAll {
                     TextField(pantryFormat("Amount in %@", pantryUnit(draft.claim?.amount?.unit ?? lot.unit)), text: $amount)
                         .keyboardType(.numbersAndPunctuation)
-                        .focused($editingAmount)
+                        .focused(amountFocus)
                         .accessibilityIdentifier("pantry.reservationAmount")
                 }
                 Button(pantryText("Review reservation")) {
@@ -111,15 +111,6 @@ struct PantryReservationSection: View {
                     }
                 }.frame(minHeight: 44).disabled(!model.canEdit)
                 Button(pantryText("Cancel")) { self.draft = nil }.frame(minHeight: 44)
-            }
-        }
-        .toolbar {
-            if editingAmount {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button(pantryText("Done")) { editingAmount = false }
-                        .accessibilityIdentifier("pantry.reservationAmountDone")
-                }
             }
         }
         .onChange(of: model.savedLotID) { _, id in if id == lot.id { draft = nil } }

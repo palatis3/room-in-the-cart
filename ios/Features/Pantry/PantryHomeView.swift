@@ -241,6 +241,7 @@ private struct PantryLotView: View {
     let accessAllowed: Bool
     var availabilityNeedsReview = false
     let recount: () -> Void
+    @FocusState private var reservationAmountFocused: Bool
     @AccessibilityFocusState private var resultFocused: Bool
     private var lot: InventoryLot? { accessAllowed ? model.snapshot?.lots.first { $0.id == lotID } : nil }
     var body: some View {
@@ -254,7 +255,8 @@ private struct PantryLotView: View {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
                 }
-                PantryReservationSection(model: model, lot: lot, availabilityNeedsReview: availabilityNeedsReview)
+                PantryReservationSection(model: model, lot: lot, availabilityNeedsReview: availabilityNeedsReview,
+                                        amountFocus: $reservationAmountFocused)
                     .id(lot.id)
                 Section {
                     action("Have enough", .haveEnough)
@@ -278,6 +280,9 @@ private struct PantryLotView: View {
                 Text(pantryPhase(model.phase))
                 if model.busy { ProgressView(pantryText("Working…")) }
             } else { Text(pantryText("This food is unavailable. Return to My Pantry and refresh.")) }
+        }
+        .keyboardDoneAction(visible: reservationAmountFocused, title: pantryText("Done"), identifier: "pantry.reservationAmountDone") {
+            reservationAmountFocused = false
         }
         .navigationTitle(lot?.name ?? pantryText("Pantry food"))
         .onChange(of: model.notice) { _, notice in if notice == .saved { resultFocused = true } }
