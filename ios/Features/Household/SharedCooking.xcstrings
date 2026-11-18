@@ -429,6 +429,12 @@
     "Review cooking and current stock": {
       "extractionState": "manual",
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review cooking and current stock"
+          }
+        },
         "es": {
           "stringUnit": {
             "state": "translated",
