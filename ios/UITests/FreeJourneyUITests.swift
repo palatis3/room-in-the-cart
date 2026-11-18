@@ -819,8 +819,10 @@ import XCTest
         let details = app.buttons["fixture.checkout.details"]
         XCTAssertTrue(details.waitForExistence(timeout: 20), app.debugDescription)
         tap(details)
-        tap(app.buttons["priceImage.readCheckout"])
-        tap(app.buttons["priceImage.choose"])
+        tapVisibleFormRow(app.buttons["priceImage.readCheckout"], marker: "OPEN_CHECKOUT_IMAGE")
+        let chooser = element("priceImage.choose")
+        XCTAssertTrue(chooser.waitForExistence(timeout: 8), app.debugDescription)
+        chooser.tap()
         try chooseNewestSourcePhoto()
         let subtotal = app.textFields["priceImage.amount.subtotal"]
         XCTAssertTrue(subtotal.waitForExistence(timeout: 25), app.debugDescription)
