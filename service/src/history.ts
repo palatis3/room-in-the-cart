@@ -43,9 +43,44 @@ export class PriceBudgetHistory {
  if(input.allEvidenceEntered)await ctx.db.query('INSERT INTO ritc.financial_review(household_id,shop_id,review_id,actor_id,source_version,reviewed_at) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(household_id,shop_id) DO UPDATE SET review_id=$3,actor_id=$4,source_version=$5,reviewed_at=$6',[ctx.householdId,shopId,reviewId,ctx.member.member_id,sourceVersion,ctx.now]);else await ctx.db.query('DELETE FROM ritc.financial_review WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shopId]);
  const summary=await this.summary(ctx,s);return this.receipt(ctx,'financial.review',shopId,input.clientKey,prior.fingerprint,{reviewId,shopId,sourceVersion,reviewedAt:ctx.now.toISOString(),allEvidenceEntered:input.allEvidenceEntered,appShopClosed:s.phase==='closed',reconciledEntered:summary.reconciledEntered});
  }
- async observe(ctx:Context,input:z.infer<typeof observationWriteSchema>){const o=input.observation;await this.shop(ctx,o.shopId);const prior=await this.prior(ctx,'price.observe',o.id,input);if(prior.response)return prior.response;this.time(o.observedAt,ctx);await ctx.db.query('INSERT INTO ritc.price_observation(household_id,observation_id,shop_id,actor_id,record,observed_at) VALUES($1,$2,$3,$4,$5,$6)',[ctx.householdId,o.id,o.shopId,ctx.member.member_id,o,o.observedAt]);return this.receipt(ctx,'price.observe',o.id,input.clientKey,prior.fingerprint,{observationId:o.id,shopId:o.shopId,recorded:true});}
+ async observe(ctx:Context,input:z.infer<typeof observationWriteSchema>){
+  const observation=input.observation;
+  const shop=await this.shop(ctx,observation.shopId);
+  const prior=await this.prior(ctx,'price.observe',observation.id,input);
+  if(prior.response)return prior.response;
+  this.time(observation.observedAt,ctx);
+  let observationId=observation.id;
+  if(observation.sourceRevision){
+   if(observation.sourceRevision.shopRevision!==shop.revision || observation.sourceRevision.authorityEpoch!==shop.authority_epoch)
+    throw new ServiceError(409,'stale_source','Review the current shared shop and shopper authority again.');
+   const ref=observation.sourceRevision;
+   // The existing household transaction already serializes authority and observation changes.
+   const existing=(await ctx.db.query(`SELECT observation_id,record FROM ritc.price_observation
+    WHERE household_id=$1 AND shop_id=$2 AND actor_id=$3 AND record ? 'sourceRevision'
+      AND record->'sourceRevision'->>'sourceId'=$4 ORDER BY ((record->'sourceRevision'->>'revision')::bigint) DESC LIMIT 1`,
+    [ctx.householdId,shop.shop_id,ctx.member.member_id,ref.sourceId])).rows[0];
+   if(existing) {
+    const previous=existing.record.sourceRevision.revision;
+    if(previous>ref.revision || existing.record.evidenceKind!==observation.evidenceKind)
+     throw new ServiceError(409,'stale_source','Review the latest published source revision.');
+    if(previous===ref.revision){
+     if(digest({...existing.record,sourceRevision:ref})!==digest(observation))throw new ServiceError(409,'price_conflict','This price revision already has different reviewed evidence.');
+     observationId=existing.observation_id;
+     return this.receipt(ctx,'price.observe',observation.id,input.clientKey,prior.fingerprint,{observationId,shopId:shop.shop_id,recorded:true});
+    }
+   }
+  }
+  await ctx.db.query('INSERT INTO ritc.price_observation(household_id,observation_id,shop_id,actor_id,record,observed_at) VALUES($1,$2,$3,$4,$5,$6)',
+   [ctx.householdId,observationId,shop.shop_id,ctx.member.member_id,observation,observation.observedAt]);
+  return this.receipt(ctx,'price.observe',observationId,input.clientKey,prior.fingerprint,{observationId,shopId:shop.shop_id,recorded:true});
+ }
  async observations(ctx:Context,cursor:string|null){await this.paid(ctx);let after:string|undefined;if(cursor){after=(await ctx.db.query(`SELECT p.observed_at::text AS observed_at FROM ritc.price_observation p JOIN ritc.shop s USING(household_id,shop_id) WHERE p.household_id=$1 AND p.observation_id=$2 AND ${budgetReadScope('s','$3')} AND s.history_retired_at IS NULL AND p.retired_at IS NULL AND ($4::uuid IS NULL OR s.shop_id=$4)`,[ctx.householdId,cursor,ctx.member.member_id,ctx.selectedShopId??null])).rows[0]?.observed_at;if(!after)throw unavailable();}
- const rows=(await ctx.db.query(`SELECT p.observation_id,p.record FROM ritc.price_observation p JOIN ritc.shop s USING(household_id,shop_id) WHERE p.household_id=$1 AND ${budgetReadScope('s','$2')} AND s.history_retired_at IS NULL AND p.retired_at IS NULL AND ($3::uuid IS NULL OR s.shop_id=$3) AND ($4::timestamptz IS NULL OR (p.observed_at,p.observation_id)<($4,$5::uuid)) ORDER BY p.observed_at DESC,p.observation_id DESC LIMIT 101`,[ctx.householdId,ctx.member.member_id,ctx.selectedShopId??null,after??null,cursor])).rows;return{observations:rows.slice(0,100).map(r=>r.record),nextCursor:rows.length>100?rows[99].observation_id:null};}
+ const rows=(await ctx.db.query(`SELECT p.observation_id,p.record FROM ritc.price_observation p JOIN ritc.shop s USING(household_id,shop_id) WHERE p.household_id=$1 AND ${budgetReadScope('s','$2')} AND s.history_retired_at IS NULL AND p.retired_at IS NULL
+ AND (NOT (p.record ? 'sourceRevision') OR NOT EXISTS (SELECT 1 FROM ritc.price_observation newer
+  WHERE newer.household_id=p.household_id AND newer.shop_id=p.shop_id AND newer.actor_id=p.actor_id
+    AND newer.record ? 'sourceRevision' AND newer.record->'sourceRevision'->>'sourceId'=p.record->'sourceRevision'->>'sourceId'
+    AND (newer.record->'sourceRevision'->>'revision')::bigint>(p.record->'sourceRevision'->>'revision')::bigint))
+ AND ($3::uuid IS NULL OR s.shop_id=$3) AND ($4::timestamptz IS NULL OR (p.observed_at,p.observation_id)<($4,$5::uuid)) ORDER BY p.observed_at DESC,p.observation_id DESC LIMIT 101`,[ctx.householdId,ctx.member.member_id,ctx.selectedShopId??null,after??null,cursor])).rows;return{observations:rows.slice(0,100).map(r=>r.record),nextCursor:rows.length>100?rows[99].observation_id:null};}
  async observation(ctx:Context,id:string){const row=(await ctx.db.query('SELECT shop_id,record,retired_at FROM ritc.price_observation WHERE household_id=$1 AND observation_id=$2',[ctx.householdId,id])).rows[0];if(!row||row.retired_at)throw unavailable();await this.shop(ctx,row.shop_id,false,true);return{observation:row.record};}
  async retire(ctx:Context,shopId:string,input:z.infer<typeof historyRetireSchema>){const s=await this.shop(ctx,shopId,true),prior=await this.prior(ctx,'history.retire',shopId,input);if(prior.response)return prior.response;if(s.history_retired_at)throw unavailable();this.checkVersion(await this.version(ctx,s),input.sourceVersion);await ctx.db.query('UPDATE ritc.shop SET history_retired_at=$3 WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shopId,ctx.now]);return this.receipt(ctx,'history.retire',shopId,input.clientKey,prior.fingerprint,{shopId,retired:true});}
  private async summary(ctx:Context,s:Record<string,any>):Promise<ShopSummary>{const version=await this.version(ctx,s),entries=await this.entries(ctx,s.shop_id),review=(await ctx.db.query('SELECT source_version FROM ritc.financial_review WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,s.shop_id])).rows[0];let expectation=null;if(s.quote.scope==='wholeCheckout'){const calculated=checkout(await this.repo.lines(ctx,s.shop_id),s.quote);expectation={lowerMinor:calculated.lowerBoundMinor,upperMinor:calculated.upperBoundMinor};}return summarizeShop(s.shop_id,version,entries,expectation,s.phase==='closed'&&Boolean(review&&digest(review.source_version)===digest(version)));}

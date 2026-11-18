@@ -56,7 +56,7 @@ struct PickupSettlementView: View {
                         initialLabel: captureText("Receipt source"), sourceCurrent: {
                             model.ready && !model.saving && !model.hasPendingSave && model.sourceWorkspaceID == workspaceID &&
                             model.journey?.id == journey.id && model.journey?.revision == journey.revision
-                        })
+                        }, makePantry: model.pantryRouteAvailable ? model.makePantryModel : nil)
                 }.accessibilityIdentifier("pickup.scanReceipt")
             }
             Section(pTr("Record evidence")) {

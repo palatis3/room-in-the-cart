@@ -28,6 +28,8 @@ enum HistoryMoney {
 struct HistoryObservationDraft: Equatable {
     var id = UUID().uuidString.lowercased()
     var shopID = ""
+    var evidenceKind: HistoryPriceKind = .shelf
+    var variant = ""
     var itemName = "", packLabel = "", store = "", branch = "", eligibility = "", sourceText = ""
     var sourceLocale = Locale.current.identifier
     var channel: HistoryPriceChannel = .storeShelf
@@ -52,7 +54,8 @@ struct HistoryObservationDraft: Equatable {
         }
         return try .init(id: id, shopId: shopID, itemName: itemName, packLabel: packLabel, usablePack: pack, price: price,
                          store: store, branch: branch, channel: channel, mode: mode, eligibility: eligibility,
-                         observedAt: HistoryDate.string(observedAt), sourceText: sourceText, sourceLocale: sourceLocale)
+                         observedAt: HistoryDate.string(observedAt), sourceText: sourceText, sourceLocale: sourceLocale,
+                         evidenceKind: evidenceKind, variant: variant.isEmpty ? nil : variant)
     }
 }
 struct HistoryReservationDraft: Equatable, Identifiable {
@@ -116,11 +119,13 @@ struct HistoryPeriodDraft: Equatable {
     }
 }
 struct HistoryPriceFilter: Equatable {
+    var paidOnly = false
     var store = "", branch = "", channel = "", mode = ""
     var from: Date?, through: Date?
     var lastStartDate: Date?, lastEndDate: Date?
     func matches(_ value: HistoryPriceObservation) -> Bool {
-        guard store.isEmpty || value.store.localizedCaseInsensitiveContains(store),
+        guard !paidOnly || value.evidenceKind?.isPaid == true,
+              store.isEmpty || value.store.localizedCaseInsensitiveContains(store),
               branch.isEmpty || value.branch.localizedCaseInsensitiveContains(branch),
               channel.isEmpty || value.channel.rawValue == channel,
               mode.isEmpty || value.mode.rawValue == mode,

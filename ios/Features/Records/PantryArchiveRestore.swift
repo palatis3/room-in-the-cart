@@ -14,6 +14,12 @@ enum PantryArchiveRestore {
         var lots: [InventoryLot] = [], observations: [InventoryObservation] = []
         var links: [PantryPersistenceCodec.SourceLink] = []
         var history = source.history + [.restoredFrom(source.descriptor)]
+        for case .price(let origin, let price) in source.history where origin == source.descriptor.originID {
+            history.append(.price(originID: newOriginID, price))
+        }
+        for case .acquisition(let origin, let fact) in source.history where origin == source.descriptor.originID {
+            history.append(.acquisition(originID: newOriginID, fact))
+        }
         history += source.lots.map(PantryArchiveCodec.History.originalLot)
         history += source.observations.map { .originalObservation(originID: source.descriptor.originID, $0) }
         history += source.events.map(PantryArchiveCodec.History.originalEvent)
@@ -67,6 +73,10 @@ enum PantryArchiveRestore {
         var result: Set<UUID> = [source.descriptor.originID]
         for evidence in source.history {
             switch evidence {
+            case .price(let origin, _): result.insert(origin)
+            case .acquisition(let origin, let row):
+                result.insert(origin)
+                if let pickup = row.savedPickup { result.insert(pickup.originID) }
             case .migration(let value): result.insert(value.originID)
             case .sourceHead(let id, _), .originalObservation(let id, _): result.insert(id)
             case .pickupPending(let value):

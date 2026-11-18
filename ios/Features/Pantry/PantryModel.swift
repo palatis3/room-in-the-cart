@@ -64,6 +64,122 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         phase = .accessDenied; notice = nil; busy = false; requiresFreshReview = false; pendingWasCommitted = false
     }
 
+    func reviewReceipt(_ draft: ReceiptImportDraft) async throws -> PantryReceiptReview {
+        guard canEdit, let basis = snapshot?.state else { throw PantryReceiptError.stale }
+        let token = generation
+        let review = try await repository.reviewReceipt(draft, expected: basis, at: clock())
+        guard token == generation, canEdit, snapshot?.state == basis else { throw PantryReceiptError.stale }
+        return review
+    }
+
+    func saveReceipt(_ review: PantryReceiptReview) async throws {
+        guard canEdit else { throw PantryReceiptError.stale }
+        let token = generation
+        busy = true
+        defer { if token == generation { busy = false } }
+        willMutateOrRecover?()
+        try await repository.applyReceipt(review, at: clock())
+        let result = try await repository.load(at: clock())
+        guard token == generation else { throw PantryReceiptError.stale }
+        snapshot = result
+        await didSave?()
+    }
+
+    func priceHistory(after page: PantryPricePage? = nil) async throws -> PantryPricePage {
+        guard phase != .accessDenied else { throw PantryReceiptError.stale }
+        let token = generation
+        let next = try await repository.pricePage(after: page)
+        guard token == generation, phase != .accessDenied else { throw PantryReceiptError.stale }
+        return next
+    }
+
+    func writePrice(_ evidence: PrivatePriceEvidence, expected: InventoryState) async throws {
+        try await changeReceipt(expected) {
+            try await repository.savePrice(evidence, expected: expected, at: clock())
+        }
+    }
+
+    func verifyPriceSource(_ value: PrivatePriceEvidence, expected: InventoryState) async throws {
+        let token = generation
+        guard canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        try await repository.verifyPriceSource(value, expected: expected)
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+    }
+
+    func recordedPriceRevision(_ current: PrivatePriceEvidence, revision: Int64, expected: InventoryState) async throws -> PrivatePriceEvidence {
+        let token = generation
+        guard canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        let record = try await repository.recordedPriceRevision(current, revision: revision, expected: expected)
+        guard token == generation, canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        return record
+    }
+
+    func priceAdjustments(for id: UUID, expected: InventoryState) async throws -> [PrivatePriceEvidence] {
+        let token = generation
+        guard canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        let adjustments = try await repository.priceAdjustments(for: id, expected: expected)
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+        return adjustments
+    }
+
+    func receiptHistory(after: UUID? = nil) async throws -> [ReceiptAcquisition] {
+        guard canEdit else { throw PantryReceiptError.stale }
+        let token = generation
+        let page = try await repository.acquisitionHistory(after: after)
+        guard token == generation else { throw PantryReceiptError.stale }
+        return page
+    }
+
+    func latestReceiptRevision(_ selected: ReceiptAcquisition) async throws -> ReceiptAcquisition {
+        guard canEdit else { throw PantryReceiptError.stale }
+        let token = generation
+        let latest = try await repository.latestReceiptRevision(selected)
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+        return latest
+    }
+
+    var permitsReceiptSource: Bool { canEdit && repository.permitsReceiptSource }
+
+    var supportsReceiptAliases: Bool { repository.aliasPersonaID != nil }
+
+    func receiptAliases(merchant: String? = nil, language: String? = nil) async throws -> [InventoryReceiptAlias] {
+        guard canEdit else { throw PantryReceiptError.stale }
+        let token = generation
+        let aliases = try await repository.receiptAliases(merchant: merchant, language: language)
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+        return aliases
+    }
+
+    func rememberReceiptAlias(_ source: ReceiptAcquisition, wording: String, language: String, state: InventoryState) async throws {
+        try await changeReceipt(state) {
+            try await repository.rememberReceiptAlias(source, wording: wording, language: language, expected: state, at: clock())
+        }
+    }
+
+    func forgetReceiptAliases(_ aliases: [InventoryReceiptAlias], state: InventoryState) async throws {
+        try await changeReceipt(state) {
+            try await repository.forgetReceiptAliases(aliases, expected: state, at: clock())
+        }
+    }
+
+    func correctReceiptPrice(_ original: ReceiptAcquisition, total: Money?, reviewedState: InventoryState) async throws {
+        try await changeReceipt(reviewedState) {
+            try await repository.correctPaidTotal(original, total: total, state: reviewedState, at: clock())
+        }
+    }
+
+    private func changeReceipt(_ reviewedState: InventoryState, change: () async throws -> Void) async throws {
+        guard canEdit, snapshot?.state == reviewedState else { throw PantryReceiptError.stale }
+        let token = generation
+        busy = true
+        defer { if token == generation { busy = false } }
+        try await change()
+        let updated = try await repository.load(at: clock())
+        guard token == generation else { throw PantryReceiptError.stale }
+        snapshot = updated
+        await didSave?()
+    }
+
     func load() async {
         guard !busy else { return }
         let token = generation

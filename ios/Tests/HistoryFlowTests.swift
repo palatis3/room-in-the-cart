@@ -1,4 +1,5 @@
 import XCTest
+import CoreDomain
 import HouseholdClient
 @testable import RoomInTheCart
 
@@ -6,6 +7,31 @@ import HouseholdClient
     private let household = "10000000-0000-4000-8000-000000000001"
     private let member = "10000000-0000-4000-8000-000000000002"
     private let shop = "10000000-0000-4000-8000-000000000003"
+
+    func testReviewedSharedPriceOmitsPrivateIdentitiesAndRequiresCurrentWritableShop() async throws {
+        let (model, service, _, _) = try await setup()
+        let assigned = try XCTUnwrap(model.ownedShops.first)
+        let origin = UUID(), food = UUID(), lot = UUID(), privateID = UUID()
+        let paid = PrivatePriceEvidence(id: privateID, source: .paidManual, foodID: food, linkedLotID: lot, name: "Cashews",
+            variant: "Unsalted", store: "Market", branch: "Main", date: Date(timeIntervalSince1970: 1_750_000_000),
+            currencyCode: "USD", amountMinor: 500, pack: .init(count: 2, perPackage:
+                Quantity(amount: try Rational(400), unit: .gram, originalLiteral: "400 g")), sourceText: "2 bags")
+        let published = try PrivatePricePublication.observation(paid, workspace: origin, shop: assigned, branch: "Main", mode: .inStore)
+        XCTAssertEqual(published.evidenceKind, .paidManual)
+        XCTAssertEqual(published.usablePack?.amount.numerator, 800)
+        let bytes = String(decoding: try JSONEncoder().encode(published), as: UTF8.self).lowercased()
+        for id in [origin, food, lot, privateID] { XCTAssertFalse(bytes.contains(id.uuidString.lowercased())) }
+        try model.reviewPublication(published)
+        XCTAssertFalse(model.approved)
+        XCTAssertNil(model.pending)
+        var stale = published
+        stale.sourceRevision = .init(sourceId: try XCTUnwrap(published.sourceRevision?.sourceId), revision: 1,
+                                     shopRevision: assigned.revision + 1, authorityEpoch: assigned.authorityEpoch)
+        XCTAssertThrowsError(try model.reviewPublication(stale))
+        service.ownedSources = []
+        await model.loadOwnedShops()
+        XCTAssertThrowsError(try model.reviewPublication(published))
+    }
 
     func testNewBudgetPeriodKeepsLocalClockTimeAcrossDaylightSavingChanges() throws {
         var calendar = Calendar(identifier: .gregorian)
