@@ -652,7 +652,7 @@ struct LedgerFactsView: View {
             .sheet(isPresented: $choosingScreenshot) {
                 NavigationStack {
                     if isCurrent, let screenshotTerms, screenshotTerms == currentTerms {
-                        PriceImageReview(purpose: .checkout, acceptCheckout: { reviewed in
+                        PriceImageReview(purpose: .checkout, authorized: { isCurrent && screenshotTerms == currentTerms }, acceptCheckout: { reviewed in
                             guard isCurrent, screenshotTerms == currentTerms else { return }
                             screenshot = reviewed
                             hasRetailerPreview = true

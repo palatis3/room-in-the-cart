@@ -6,6 +6,7 @@ import SwiftUI
 struct PriceImageReview: View {
     enum Purpose { case shelf, checkout }
     let purpose: Purpose
+    let authorized: () -> Bool
     var acceptShelf: (PriceImageLine) -> Void = { _ in }
     var acceptCheckout: (ReviewedCheckoutImage) -> Void = { _ in }
     @Environment(\.dismiss) private var dismiss
@@ -26,11 +27,11 @@ struct PriceImageReview: View {
             }.accessibilityIdentifier("priceImage.choose")
             if loading { ProgressView() }
             if let notice { Text(verbatim: notice) }
-            if !lines.isEmpty {
+            if authorized(), !lines.isEmpty {
                 if purpose == .shelf {
                     Section(pantryText("Choose the printed price line")) {
                         ForEach(lines, id: \.ordinal) { line in
-                            Button { acceptShelf(line); dismiss() } label: {
+                            Button { guard authorized() else { return }; acceptShelf(line); dismiss() } label: {
                                 VStack(alignment: .leading) {
                                     Text(verbatim: line.wording)
                                     if line.uncertain { Text(pantryText("Uncertain image wording")).font(.caption) }
@@ -68,6 +69,7 @@ struct PriceImageReview: View {
                         }
                     }
                     Button(pantryText("Use reviewed screenshot")) {
+                        guard authorized() else { return }
                         do {
                             let charges = try ReviewedCheckoutImage.Field.allCases.compactMap { field -> ReviewedCheckoutImage.Charge? in
                                 guard let i = selections[field], lines.indices.contains(i) else { return nil }
@@ -86,9 +88,15 @@ struct PriceImageReview: View {
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() } } }
         .keyboardDoneAction(visible: focusedAmount != nil, title: pantryText("Done"), identifier: "priceImage.done") { focusedAmount = nil }
         .privacySensitive()
+        .onChange(of: authorized()) { _, allowed in
+            if !allowed {
+                photo = nil; lines = []; selections = [:]; amounts = [:]; inclusions = [:]; notice = nil
+                dismiss()
+            }
+        }
         .task(id: photo) {
             lines = []; selections = [:]; amounts = [:]; inclusions = [:]; notice = nil
-            guard let photo else { loading = false; return }
+            guard let photo, authorized() else { loading = false; return }
             loading = true
             defer { if !Task.isCancelled { loading = false } }
             do {
@@ -100,10 +108,10 @@ struct PriceImageReview: View {
                 let recognized = try evidence.text.split(separator: "\n").enumerated().map { ordinal, value in
                     try PriceImageLine(digest: digest, ordinal: ordinal, wording: String(value), uncertain: uncertain.contains(String(value)))
                 }
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, authorized() else { return }
                 lines = recognized
             } catch {
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, authorized() else { return }
                 notice = pantryText("Couldn’t read this image. Choose another image or enter the evidence manually.")
             }
         }

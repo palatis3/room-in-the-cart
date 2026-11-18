@@ -475,7 +475,8 @@ private struct PantryPriceEditor: View {
         }
         .sheet(isPresented: $selectingImage) {
             NavigationStack {
-                PriceImageReview(purpose: .shelf, acceptShelf: { line in
+                PriceImageReview(purpose: .shelf, authorized: { model.permitsReceiptSource && model.snapshot?.state == expected }, acceptShelf: { line in
+                    guard model.permitsReceiptSource && model.snapshot?.state == expected else { return }
                     printed = line
                     source = line.wording
                     let suggestion = ReviewedShelfImage.propose(line.wording)
