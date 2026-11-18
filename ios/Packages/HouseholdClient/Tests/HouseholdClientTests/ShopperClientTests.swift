@@ -243,11 +243,12 @@ extension HouseholdClientTests {
             .init(shopId: shopID, shopRevision: 8, authorityEpoch: 3, phase: phase, meals: nil, quote: quote,
                   lines: [], frozenRevision: 6, placedRevision: 6)
         }
-        func request(_ status: String = "added") throws -> OwnRequest {
-            let fields: [String: Any] = ["requestId": requestID, "shopId": shopID, "revision": 2, "originalItem": "Cereal",
+        func request(_ status: String = "added", id: String? = nil, shop: String? = nil, outcome: ConfirmedRequestPurchase? = nil) throws -> OwnRequest {
+            var fields: [String: Any] = ["requestId": id ?? requestID, "shopId": shop ?? shopID, "revision": 2, "originalItem": "Cereal",
                 "ownQuantity": "one box", "authoredAt": "2026-11-07T09:00:00Z", "receivedAt": "2026-11-07T09:01:00Z",
                 "authorAlias": "Jo", "status": status, "route": "current", "ownActionAllowed": false,
                 "linkedLineId": line.uuidString]
+            fields["purchaseOutcome"] = outcome?.rawValue
             return try JSONDecoder().decode(OwnRequest.self, from: JSONSerialization.data(withJSONObject: fields))
         }
         func placed(_ changes: [String: Any] = [:]) throws -> SharedDeliveryPage {
@@ -267,6 +268,14 @@ extension HouseholdClientTests {
                                          ["placedRevision": 5], ["authorityEpoch": 4],
                                          ["lines": [["lineId": UUID().uuidString, "name": "Cereal"]]], ["lines": []]] {
             XCTAssertNil(RequestPurchaseMatch(request: own, shop: shop(), placed: try placed(changed)))
+        }
+        let other = try request("pending", id: UUID().uuidString)
+        for outcome: ConfirmedRequestPurchase? in [nil, .notBought, .bought] {
+            let source = try request(outcome: outcome)
+            let match = try XCTUnwrap(RequestPurchaseMatch(request: source, shop: shop(), placed: snapshot))
+            XCTAssertEqual(match.isConfirmedSource(for: other), outcome == .bought)
+            XCTAssertFalse(match.isConfirmedSource(for: source))
+            XCTAssertFalse(match.isConfirmedSource(for: try request("pending", id: UUID().uuidString, shop: UUID().uuidString)))
         }
         XCTAssertNil(RequestPurchaseMatch(request: try request("handled"), shop: shop(), placed: snapshot))
         XCTAssertNil(RequestPurchaseMatch(request: own, shop: shop("draft"), placed: snapshot))

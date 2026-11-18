@@ -20,6 +20,14 @@ public struct RequestPurchaseMatch: Equatable, Identifiable, Sendable {
         base = CommandBase(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch, requestRevision: request.revision)
     }
 
+    /// A confirmed purchase may be reviewed for a different request in the same shop.
+    /// The shopper still decides whether the item, amount and intended use match.
+    public func isConfirmedSource(for other: OwnRequest) -> Bool {
+        guard request.purchaseOutcome == .bought, request.shopId == other.shopId,
+              let otherID = UUID(uuidString: other.id) else { return false }
+        return otherID != UUID(uuidString: request.id)
+    }
+
     public func body(outcome: ConfirmedRequestPurchase?) -> [String: JSONValue] {
         ["requestId": .string(request.id), "lineId": .string(line.id.uuidString.lowercased()),
          "placedRevision": .integer(placedRevision), "outcome": .string(outcome?.rawValue ?? "unknown")]

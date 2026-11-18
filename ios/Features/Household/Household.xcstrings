@@ -1666,6 +1666,23 @@
         }
       }
     },
+    "Check the placed order": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the placed order"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar el pedido realizado"
+          }
+        }
+      }
+    },
     "Check the quantity and refresh the batch before reviewing again.": {
       "extractionState": "manual",
       "localizations": {
@@ -7565,6 +7582,23 @@
         }
       }
     },
+    "Packs in the placed order": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packs in the placed order"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes en el pedido realizado"
+          }
+        }
+      }
+    },
     "Pantry": {
       "extractionState": "manual",
       "localizations": {
@@ -7952,6 +7986,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan anterior"
+          }
+        }
+      }
+    },
+    "Previously purchased for this pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously purchased for this pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra anterior para esta recogida"
           }
         }
       }
@@ -10216,6 +10267,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar y reemplazar las instrucciones compartidas"
+          }
+        }
+      }
+    },
+    "Review as the same item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review as the same item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar como el mismo artículo"
           }
         }
       }
@@ -12968,6 +13036,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "La solicitud completa, con el texto original, el propósito y las exclusiones, debe caber en 240 caracteres para el artículo y 80 para la cantidad. Acorta el texto de origen y vuelve a revisarlo; no se ha recortado ni enviado nada."
+          }
+        }
+      }
+    },
+    "The confirmed purchase is no longer available for this request.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The confirmed purchase is no longer available for this request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compra confirmada ya no está disponible para esta solicitud."
           }
         }
       }

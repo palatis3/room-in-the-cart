@@ -16,11 +16,7 @@ struct RequestPurchasesView: View {
     @State private var reviewing: RequestPurchaseMatch?
 
     private var placed: SharedDeliveryPage? {
-        guard model.canReadDelivery, model.scope.capabilities.contains("request_purchase_confirmation"),
-              inbox.supportsPurchaseConfirmation, model.scope.memberId == inbox.memberID,
-              model.scope.household.id == inbox.householdID, model.scope.shopId == shopID, inbox.shopID == shopID,
-              let page = model.deliveryRecord, UUID(uuidString: shopID) == page.shopId else { return nil }
-        return page
+        inbox.placedPurchasePage(in: model, shopID: shopID)
     }
 
     var body: some View {
@@ -73,6 +69,81 @@ struct RequestPurchasesView: View {
             }
         }
         .onChange(of: placed == nil) { _, unavailable in if unavailable { reviewing = nil } }
+    }
+}
+
+private extension HouseholdInboxModel {
+    func canReadPurchasePage(in model: HouseholdShopModel, shopID: String) -> Bool {
+        supportsPurchaseConfirmation && model.canReadDelivery &&
+        model.scope.capabilities.contains("request_purchase_confirmation") &&
+        model.scope.memberId == memberID && model.scope.household.id == householdID &&
+        model.scope.shopId == shopID && self.shopID == shopID
+    }
+
+    func placedPurchasePage(in model: HouseholdShopModel, shopID: String) -> SharedDeliveryPage? {
+        guard canReadPurchasePage(in: model, shopID: shopID), let page = model.deliveryRecord,
+              UUID(uuidString: shopID) == page.shopId else { return nil }
+        return page
+    }
+}
+
+struct DuplicatePurchasedRequestSection: View {
+    @ObservedObject var shop: HouseholdShopModel
+    @ObservedObject var inbox: HouseholdInboxModel
+    let request: OwnRequest
+    let group: RequestDuplicateGroup
+
+    var body: some View {
+        if inbox.canSelectSameItem(for: request), inbox.canReadPurchasePage(in: shop, shopID: request.shopId),
+           group.requests.contains(where: { $0.id != request.id && $0.purchaseOutcome == .bought && $0.linkedLineId != nil }) {
+            Section(ht("Previously purchased for this pickup")) {
+                if let page = inbox.placedPurchasePage(in: shop, shopID: request.shopId),
+                   let current = inbox.shop, current.shopRevision == page.shopRevision,
+                   current.authorityEpoch == page.authorityEpoch, current.placedRevision == page.placedRevision {
+                    let groupIDs = Set(group.requests.map(\.id))
+                    let matches = inbox.purchaseMatches(placed: page).filter {
+                        groupIDs.contains($0.id) && $0.isConfirmedSource(for: request)
+                    }
+                    if matches.isEmpty {
+                        Text(ht("The confirmed purchase is no longer available for this request."))
+                    }
+                    ForEach(matches) { match in
+                        if let sourceID = UUID(uuidString: match.id) {
+                            let source = match.request
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(match.line.name).font(.headline)
+                                if let author = source.authorAlias { LabeledContent(ht("Requested by"), value: author) }
+                                if let quantity = source.ownQuantity { Text(verbatim: quantity) }
+                                if let packs = match.line.packs {
+                                    LabeledContent(ht("Packs in the placed order"), value: packs.formatted())
+                                }
+                                Text(purchaseStatus(source.purchaseOutcome)).foregroundStyle(.secondary)
+                                Button(ht("Review as the same item")) {
+                                    let target = ReviewedSameItemTarget.purchase(sourceRequestId: sourceID,
+                                        sourceRequestRevision: source.revision, lineId: match.line.id,
+                                        placedRevision: match.placedRevision)
+                                    Task { await inbox.selectSameItem(target, for: request) }
+                                }
+                                .accessibilityIdentifier("household.duplicates.reviewPurchase." + source.id)
+                            }
+                        }
+                    }
+                } else {
+                    Button(ht("Check the placed order")) {
+                        Task {
+                            await shop.load()
+                            await shop.loadDelivery()
+                            if let page = shop.deliveryRecord, page.shopRevision != inbox.shop?.shopRevision ||
+                               page.authorityEpoch != inbox.shop?.authorityEpoch {
+                                await inbox.load()
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("household.duplicates.checkPurchase")
+                }
+            }
+            .disabled(shop.busy || inbox.busy || shop.pending != nil || inbox.pending != nil)
+        }
     }
 }
 
