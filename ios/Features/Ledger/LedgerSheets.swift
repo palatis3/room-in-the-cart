@@ -570,8 +570,6 @@ struct LedgerFactsView: View {
     @State private var cap: String
     @State private var reserve: String
     @State private var fees: String
-    @State private var choosingScreenshot = false
-    @State private var screenshotTerms: ShopBasis.RetailerTerms?
     @State private var screenshot: ReviewedCheckoutImage?
     @State private var hasRetailerPreview: Bool
     @State private var retailerTotal: String
@@ -685,10 +683,9 @@ struct LedgerFactsView: View {
                             retailerDate = Date(); includedCharges = ""; evidenceTerms = currentTerms; screenshot = nil
                         }
                     } else {
-                        Button(pantryText("Read a checkout screenshot")) {
-                            screenshotTerms = currentTerms
-                            choosingScreenshot = true
-                        }.accessibilityIdentifier("priceImage.readCheckout")
+                        let terms = currentTerms
+                        NavigationLink(pantryText("Read a checkout screenshot")) { checkoutImage(for: terms) }
+                            .accessibilityIdentifier("priceImage.readCheckout")
                         Toggle(ledgerText("Record a retailer preview"), isOn: $hasRetailerPreview)
                     }
                     if hasRetailerPreview && !needsFreshEvidence {
@@ -733,22 +730,6 @@ struct LedgerFactsView: View {
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Describe this pickup"))
-            .sheet(isPresented: $choosingScreenshot) {
-                NavigationStack {
-                    if isCurrent, let screenshotTerms, screenshotTerms == currentTerms {
-                        PriceImageReview(purpose: .checkout, authorized: { isCurrent && screenshotTerms == currentTerms }, acceptCheckout: { reviewed in
-                            guard isCurrent, screenshotTerms == currentTerms else { return }
-                            screenshot = reviewed
-                            hasRetailerPreview = true
-                            retailerTotal = reviewed.displayedTotal.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
-                            retailerSource = pantryText("Checkout screenshot")
-                            includedCharges = reviewed.charges.filter { $0.inclusion == .included }.map { priceImageField($0.field) }.joined(separator: ", ")
-                            retailerDate = Date()
-                            evidenceTerms = currentTerms
-                        })
-                    }
-                }
-            }
             .onChange(of: currentTerms) { old, new in
                 if old == evidenceTerms, !hasRetailerPreview, fees.isEmpty, retailerSource.isEmpty, retailerTotal.isEmpty, includedCharges.isEmpty {
                     evidenceTerms = new; retailerDate = Date()
@@ -757,6 +738,18 @@ struct LedgerFactsView: View {
             .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done"), identifier: "ledgerFactsKeyboardDone") { inputFocus = nil }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
+    }
+    private func checkoutImage(for terms: ShopBasis.RetailerTerms) -> some View {
+        PriceImageReview(purpose: .checkout, authorized: { isCurrent && terms == currentTerms }, acceptCheckout: { reviewed in
+            guard isCurrent, terms == currentTerms else { return }
+            screenshot = reviewed
+            hasRetailerPreview = true
+            retailerTotal = reviewed.displayedTotal.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
+            retailerSource = pantryText("Checkout screenshot")
+            includedCharges = reviewed.charges.filter { $0.inclusion == .included }.map { priceImageField($0.field) }.joined(separator: ", ")
+            retailerDate = Date()
+            evidenceTerms = terms
+        })
     }
     private func review() {
         inputFocus = nil
