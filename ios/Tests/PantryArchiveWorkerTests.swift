@@ -145,6 +145,12 @@ import RecordArchive
                 ledger: f.ledger, gate: f.gate, authorize: { true })
             XCTFail("Reimport must honor a price and its credits erased at the original store")
         } catch PantryArchivePrivacyValidator.Failure.retired {}
+        let quote = PrivatePriceEvidence(id: UUID(), source: .currentQuote, name: "Rice", store: "East market",
+            mode: .pickup, date: now, currencyCode: "USD", amountMinor: 440, pack: nil, sourceText: "Entered from checkout")
+        try await repository.savePrice(quote, expected: after.state, at: now)
+        let quoted = try await repository.pricePage()
+        XCTAssertEqual(quoted.standalone, [quote])
+        XCTAssertFalse(quote.isPaidPrice)
         try await reader.discardRestoration(restored)
         try await reader.discardImport(imported, registry: registry)
         try await f.worker.discardExport(bundle)
