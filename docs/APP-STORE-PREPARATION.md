@@ -43,7 +43,7 @@ Compara dos presentaciones del mismo alimento según la cantidad que necesitas y
 
 ## TestFlight draft for the first internal build
 
-Use these notes with the signed build once the two walkthroughs have passed on that build. The support contact for this draft is hello@roominthecart.com. Confirm that feedback reaches the support owner before inviting testers.
+Use these notes with the signed build once the walkthroughs below have passed on that build. The support contact for this draft is hello@roominthecart.com. Confirm that feedback reaches the support owner before inviting testers.
 
 ### English (US)
 
@@ -53,7 +53,8 @@ Use these notes with the signed build once the two walkthroughs have passed on t
 
 1. In Shop, tap Compare packs. Enter “Demo wraps” and a need of 12. Compare a pack of 8 for $3.20 with a pack of 6 for $2.70. Each option needs two packs. Look for totals of $6.40 and $5.40. Save, quit the app, and reopen the app. Find the saved comparison in Records.
 2. Open Settings from a tab’s main screen, then Support. Review the support summary and choose Copy in the share sheet. The copied text should match the preview. Your groceries, prices, and pickup name should stay private.
-3. If something differs, send feedback through TestFlight. Include the language, the step you reached, and what appeared. Use fictional groceries in any screenshot.
+3. In Shop, open My Pantry and complete setup if prompted. Tap Scan products. Type “Demo oats” as the product name and add it. Open that product and enter 1 unit per package and 2 packages received. If asked for a stock action, choose Add a separate physical batch. Return to the batch, enter “Demo Market” as the store, confirm receipt, review, and save. Quit and reopen My Pantry. Look for one Demo oats batch with 2 units.
+4. If something differs, send feedback through TestFlight. Include the language, the step you reached, and what appeared. Use fictional groceries in any screenshot.
 
 ### Spanish for the US storefront
 
@@ -63,7 +64,8 @@ Use these notes with the signed build once the two walkthroughs have passed on t
 
 1. En Compras, toca Comparar paquetes. Escribe «Demo wraps» e indica que necesitas 12 unidades. Compara un paquete de 8 por $3.20 con uno de 6 por $2.70. En ambos casos necesitas dos paquetes. Los totales deberían ser $6.40 y $5.40. Guarda la comparación, cierra la app y vuelve a abrirla. Busca la comparación guardada en Historial.
 2. Abre Configuración desde la pantalla principal de una pestaña y entra en Soporte. Revisa el resumen de soporte. Abre la hoja para compartir y elige Copiar. El texto copiado debería coincidir con el resumen. Los alimentos, los precios y el nombre de tu compra deben seguir siendo privados.
-3. Si algo sale distinto, envía tus comentarios por TestFlight. Indica el idioma, el paso en el que estabas y qué apareció. Usa alimentos ficticios en las capturas de pantalla.
+3. En Compras, abre Mi despensa y completa la configuración si se te pide. Toca Escanear productos. Escribe «Avena de prueba» como nombre del producto y agrégalo. Abre el producto e indica que recibiste 2 envases con 1 unidad cada uno. Si se te pide elegir cómo registrar las existencias, selecciona Añadir un lote físico aparte. Vuelve al lote, escribe «Mercado de prueba» como tienda, confirma que recibiste los productos, revisa los datos y guarda. Cierra la app y vuelve a abrir Mi despensa. Deberías ver un solo lote de Avena de prueba con 2 unidades.
+4. Si algo sale distinto, envía tus comentarios por TestFlight. Indica el idioma, el paso en el que estabas y qué apareció. Usa alimentos ficticios en las capturas de pantalla.
 
 ## Feature claim ledger
 
@@ -118,6 +120,8 @@ Start with [PRIVACY-DATA-INVENTORY](PRIVACY-DATA-INVENTORY.md) and the shipped [
 | Apple subscription identity/state | Purchase History in existing manifest. Apple handles payment-card credentials. | Real product/server setup, transaction retention and notification handling. Do not label card data as collected unless actual providers change that fact. |
 | Optional authenticated household measurement | Reviewed outcome/baseline/comparison codes and household/member/shop/week/consent linkage; verified subscription state is matched for consented retention measurement. Local feedback is separate. | The [bounded declaration correction](evidence/native/privacy-measurement-declaration-20261103.md) adds **Analytics alongside App Functionality to exactly three existing types: Other User Content, User ID and Purchase History**. That historical archive contained seven types, all linked=true/tracking=false. No new Product Interaction/usage type is inferred: no tap/scroll/launch/session analytics is collected by this path. Verify the rebuilt archive includes the correction, then mirror actual final behavior in the questionnaire; this is not published label approval. |
 | Guardian/KWS and child identity onboarding | Provider-confirmed guardian email, opaque attempt/proof/consent/pairing/session evidence; separate child own-request account; [implemented contract](../service/GUARDIAN-ENROLLMENT-PLAN.md). | Actual KWS method/hosted screens, partner collection, retention and bilingual notice must be reviewed before activation. Do not infer that no sensitive/provider data exists from a synthetic adapter test or that a provider receipt proves consent. |
+| Optional barcode lookup | When the shopper requests a lookup, Open Food Facts receives the GTIN, the app version, the operator contact and the source IP. Manual entry and local package recognition remain available. | Verify the provider and its data handling for the submitted build against the in-app disclosure. [iPhone catalog client](../ios/Features/Pantry/PantryProductCatalog.swift) |
+| Shared dinner recipes | Saving a recipe in Household Tonight sends ingredients, portions, selected pantry batches and reviewed restrictions or package details to the service. A suggestion can show the title and ingredients to other adults with pantry access. | Verify the editor and shopper views with two authorized adults on the submitted build. [Household Tonight service](../service/src/household-tonight.ts) |
 | Optional online capture and language help | Ordinary OCR and dictation run on the iPhone. An authorized adult can separately send reviewed text and displayed candidates, a selected crop or a previewed recording to OpenAI through the household service. | Compare enabled purposes and the Photos or Videos, Audio Data and Other User Content declarations with the submitted build. |
 | Diagnostics/support | Allowlisted support summary is user-shared; server operational/provider logs are separate. | Actual host/provider logging, crash reporting, retention and received support messages still need owner review. No automatic “data not collected” or “no analytics” answer. |
 
