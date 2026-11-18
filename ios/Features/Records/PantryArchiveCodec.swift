@@ -50,6 +50,7 @@ enum PantryArchiveCodec {
         case foodPending(PantryPendingStore.Entry)
         case packPending(PantryPackSelectionPendingStore.Entry)
         case projection(ProjectionEvidence)
+        case acquisition(originID: UUID, ReceiptAcquisition)
         case originalLot(InventoryLot)
         case originalObservation(originID: UUID, InventoryObservation)
         case originalEvent(InventoryEvent)
@@ -236,6 +237,18 @@ enum PantryArchiveCodec {
             try validateEvent(event, observations: observations)
         }
         try validateEventReplay(value, observations: observations)
+        var acquisitions: [UUID: [UUID: ReceiptAcquisition]] = [:]
+        for case .acquisition(let origin, let row) in value.history {
+            guard acquisitions[origin, default: [:]].updateValue(row, forKey: row.id) == nil else { throw Failure.invalid }
+        }
+        for (origin, rows) in acquisitions {
+            for row in rows.values {
+                if origin == value.descriptor.originID { try PantryAcquisitionCodec.validateLot(row, lot: lots[row.lotID]) }
+                if let id = row.supersedesID {
+                    guard let prior = rows[id], try prior.correctingPaidTotal(row.paidLineTotal) == row else { throw Failure.invalid }
+                }
+            }
+        }
         var evidence: Set<Data> = []
         for history in value.history {
             try validateHistory(history, at: value.descriptor.capturedAt)
@@ -346,6 +359,9 @@ enum PantryArchiveCodec {
     }
     static func validateHistory(_ history: History, at date: Date) throws {
         switch history {
+        case .acquisition(_, let fact):
+            try fact.validate()
+            guard fact.purchaseDate <= date else { throw Failure.invalid }
         case .migration(let value):
             let row = InventoryRecord(key: .init(.intent, value.id), revision: 1, payload: try ArchiveCodec.canonical(value))
             _ = try PantryMigrationPackage.provenance(row, migrationID: value.migrationID, originID: value.originID)

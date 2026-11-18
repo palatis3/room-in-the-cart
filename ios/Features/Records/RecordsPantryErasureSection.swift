@@ -108,6 +108,9 @@ private struct PantryErasureImpactView: View {
             }
         }
         rows(recordsText("Food batches to delete"), review.foodNames)
+        if review.receiptRevisionCount > 0 {
+            LabeledContent(pantryText("Receipt and paid-price revisions to delete"), value: review.receiptRevisionCount.formatted())
+        }
         pickupRows(recordsText("Pickups to delete"), review.pickups)
         if case .wholeOrigin = review.selection {
             rows(recordsText("Meal reservations to delete"), review.affectedReservationNames)
@@ -126,6 +129,9 @@ private struct PantryErasureImpactView: View {
             Section(recordsText("Deletion is blocked")) {
                 if review.blockers.contains(.collateralPickups) || !review.collateralPickups.isEmpty {
                     Text(recordsText("Other pickups contain related records. Your selection does not include those pickups."))
+                }
+                if review.blockers.contains(.retainedReceiptEvidence) {
+                    Text(pantryText("A retained food batch has receipt evidence from this pickup. Review that batch before deleting the pickup."))
                 }
                 if review.blockers.contains(.ledgerHistory) {
                     Text(recordsText("Related shopping ledger history must be resolved before these records can be deleted."))

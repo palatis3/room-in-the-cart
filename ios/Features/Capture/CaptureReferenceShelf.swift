@@ -5,6 +5,13 @@ import SwiftUI
     let target: CaptureTarget
     let initialLabel: String
     let authorize: @MainActor @Sendable () -> Bool
+    var makePantry: (@MainActor () -> PantryModel?)? = nil
+    private struct ReceiptReview: Identifiable {
+        let source: SourceMediaRecord
+        let pantry: PantryModel
+        var id: UUID { source.id }
+    }
+    @State private var receiptReview: ReceiptReview?
     @State private var entries: [SourceMediaRecord] = []
     @State private var mode: Mode?
     @State private var pending: SourceMediaRecord?
@@ -49,6 +56,12 @@ import SwiftUI
                             .accessibilityLabel(captureText("Saved reduced-size source reference"))
                     }
                     SourceReferenceWording(source: entry)
+                    if target.kind == .receiptEvidence, !entry.receiptLines.isEmpty, let makePantry {
+                        Button(pantryText("Review received food in My Pantry")) {
+                            guard authorize(), let pantry = makePantry() else { failed = true; return }
+                            receiptReview = ReceiptReview(source: entry, pantry: pantry)
+                        }.disabled(!authorize() || saving)
+                    }
                     if let barcode = entry.barcode {
                         Text(captureText("Manually matched code") + ": " + barcode.value).textSelection(.enabled)
                     }
@@ -67,6 +80,16 @@ import SwiftUI
             if failed { Section { Text(captureText("The reference could not be saved or opened. Typed planning still works. Remove an older reference if this workspace already has twelve.")) } }
         }
         .navigationTitle(captureText("Source references"))
+        .sheet(item: $receiptReview) { review in
+            if authorize() {
+                NavigationStack {
+                    PantryReceiptEntry(model: review.pantry, initialSource: review.source, verifySource: {
+                        let current = try await CaptureMediaStore.shared.read(review.source.reference, target: target, authorize: authorize)
+                        guard current == review.source else { throw ScanFailure.stale }
+                    })
+                }
+            }
+        }
         .sheet(item: $mode) { mode in
             NavigationStack {
                 ScanReviewView(kind: mode.kind, target: target, initialLabel: initialLabel, authorize: authorize) { reviewed in
