@@ -31,13 +31,9 @@ import XCTest
         XCTAssertTrue(duplicate.label.contains("Already in this batch"))
         XCTAssertFalse(app.buttons["productBatch.row.1"].exists)
         tap(app.buttons["productBatch.row.0"])
-        let name = app.textFields["productBatch.productName"]
-        tap(name); name.typeText("Rolled oats")
-        let size = app.textFields["productBatch.packSize"]
-        tap(size); size.typeText("1")
-        let count = app.textFields["productBatch.packCount"]
-        tap(count); count.typeText("2")
-        tap(app.buttons["productBatch.editorDone"])
+        fill("Rolled oats", into: "productBatch.productName", requireDone: true, control: app.textFields["productBatch.productName"])
+        fill("1", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
+        fill("2", into: "productBatch.packCount", requireDone: true, control: app.textFields["productBatch.packCount"])
         tap(app.navigationBars["Review product"].buttons.firstMatch)
         let store = app.textFields["productBatch.merchant"]
         tap(store); store.typeText("Market")
@@ -101,7 +97,7 @@ import XCTest
         let third = app.buttons["productBatch.row.2"]
         XCTAssertTrue(third.waitForExistence(timeout: 15))
         tap(third)
-        XCTAssertTrue(app.staticTexts["3017620422003"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Barcode, 3017620422003"].waitForExistence(timeout: 5))
         tap(app.navigationBars["Review product"].buttons.firstMatch)
         choose(day: 12)
         XCTAssertTrue(app.staticTexts["productBatch.inputStatus"].waitForExistence(timeout: 12))
