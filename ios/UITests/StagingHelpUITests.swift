@@ -53,20 +53,32 @@ final class StagingHelpUITests: XCTestCase {
 
     private func verifyPublicPage(_ heading: String, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 20), file: file, line: line)
+        let web = safari.webViews.firstMatch
+        let pageHeading = web.staticTexts[heading].firstMatch
         #if targetEnvironment(simulator)
-        for name in ["Continue", "Start Browsing", "Not Now"] {
-            let button = safari.buttons[name]
-            if button.exists && button.isHittable { button.tap() }
+        // Safari can dismiss its first-run sheet as the requested page opens.
+        // Give the page priority and avoid asking XCTest to re-find a vanished button during the tap.
+        if !pageHeading.waitForExistence(timeout: 5) {
+            for name in ["Continue", "Start Browsing", "Not Now"] {
+                let button = safari.buttons[name]
+                guard button.exists, button.isHittable, let snapshot = try? button.snapshot() else { continue }
+                if pageHeading.exists { break }
+                let frame = snapshot.frame
+                let point = CGPoint(x: frame.midX, y: frame.midY)
+                let bounds = safari.frame
+                guard !frame.isEmpty, bounds.contains(point) else { continue }
+                safari.coordinate(withNormalizedOffset: .zero)
+                    .withOffset(CGVector(dx: point.x - bounds.minX, dy: point.y - bounds.minY)).tap()
+            }
         }
         #endif
-        let web = safari.webViews.firstMatch
         XCTAssertTrue(web.waitForExistence(timeout: 30), file: file, line: line)
         XCTAssertTrue(web.links["Room in the Cart"].firstMatch.waitForExistence(timeout: 20), file: file, line: line)
         let capture = XCTAttachment(screenshot: safari.screenshot())
         capture.name = "Staging " + heading
         capture.lifetime = .keepAlways
         add(capture)
-        XCTAssertTrue(web.staticTexts[heading].firstMatch.exists, file: file, line: line)
+        XCTAssertTrue(pageHeading.exists, file: file, line: line)
     }
 }
 #endif
