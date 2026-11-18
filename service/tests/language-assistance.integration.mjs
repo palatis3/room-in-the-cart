@@ -55,7 +55,10 @@ test('all language purposes honor enrolled adult scope and share once-only admis
   const invite=await call(owner,base+'/invites',{kind:'adult_contributor'});assert.equal(invite.status,200);
   assert.equal((await call(guest,'/v1/invites/redeem',{token:invite.data.token,intent:'join',adultAttestation:true,alias:'Contributor'})).status,200);
   const enrolled=await call(guest,base+'/devices',{});assert.equal(enrolled.status,201);guest.device=enrolled.data.deviceToken;
-  const paths=languagePurposes.map(p=>'/language-assistance/'+p.kind);
+  const kinds = languagePurposes.map(route => route.kind).sort();
+  assert.deepEqual(kinds, ['foodkeeper-match', 'meal-explanations', 'meal-feedback', 'meal-preference',
+    'natural-list', 'receipt-alias', 'request-duplicate']);
+  const paths = kinds.map(kind => '/language-assistance/' + kind);
   for(const path of paths) {
     assert.deepEqual(await call(owner,base+path),{status:200,data:{version:1,available:true}});
     assert.equal((await call(guest,base+path)).status,404);

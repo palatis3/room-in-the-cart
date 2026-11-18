@@ -38,6 +38,20 @@ The private pickup list's item review offers online wording help to an enrolled 
 
 The synthetic English and Spanish fixtures require exact source IDs and wording, zero extra items or fields, rejection of missing consent and refusal after authority loss. They exercise the contract without a provider call. A live accuracy, correction-burden, latency and cost comparison with deterministic capture remains an activation evaluation.
 
+## Reviewing language suggestions
+
+Each purpose shares the natural-list endpoint shape, adult enrollment checks and daily budgets. The app shows the selected text and requests consent for that submission. An unavailable service or a cancelled request leaves the ordinary editor available in English and Spanish.
+
+| Purpose | Adult-reviewed result |
+| --- | --- |
+| `natural-list` | The adult reviews wording against its source line and confirms the regular list draft. |
+| `receipt-alias` | A proposed match selects an offered spelling in the existing private alias review. |
+| `request-duplicate` | A proposed basket line opens the ordinary link review. The service checks the assigned shopper, request and visible lines on each side of the provider call. |
+| `foodkeeper-match` | A proposed public catalog ID opens the selected entry for review. Its storage guidance comes from the local catalog. |
+| `meal-explanations` | Suggested reasons must be among those offered for that eligible dinner. The app displays the current stock and cost facts. |
+| `meal-preference` | A soft dislike or preferred brand can be added to the editable private preference draft. |
+| `meal-feedback` | A proposed reaction can be added to the editable private feedback draft. |
+
 ## Comparing a future model with the local editor
 
 Use paired, labeled English and Spanish cases before selecting a production model. The baseline is the same app build with local OCR, document extraction or on-device dictation. Give each path the same permitted source. Keep the answer key and resulting notes free of personal data. Score each language and source type separately.

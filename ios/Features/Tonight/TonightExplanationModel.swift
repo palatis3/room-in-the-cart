@@ -11,7 +11,7 @@ import HouseholdClient
         let reasons: [MealExplanationReason]
         var id: UUID { review.id }
     }
-    struct Snapshot {
+    @MainActor struct Snapshot {
         let input: TonightMealModel.Input
         let ledgerID: UUID
         let candidates: [Candidate]

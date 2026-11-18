@@ -1,6 +1,7 @@
 import DeviceSurfaces
 import CoreDomain
 import LocalStore
+import HouseholdClient
 import SwiftUI
 
 struct PantryReceiptEntry: View {
@@ -108,6 +109,13 @@ struct PantryReceiptEntry: View {
                 ForEach(displayed.lines) { line in
                     PantryReceiptLineEditor(line: captureDraftBinding(line, in: value.lines), lots: model.snapshot?.lots ?? [], purchases: model.recentPurchases, aliases: aliases.filter {
                         InventoryReceiptAlias.key($0.merchant) == InventoryReceiptAlias.key(displayed.merchant) && $0.language == displayed.language && ReceiptImportDraft.containsWording($0.wording, in: line.original)
+                    }, receiptLanguage: displayed.language, matchesCurrent: {
+                        model.permitsReceiptSource && draft?.draftID == displayed.draftID &&
+                            draft?.merchant == displayed.merchant && draft?.language == displayed.language &&
+                            draft?.lines.first(where: { $0.id == line.id }) == line
+                    }, verifyAlias: { alias in
+                        let current = try? await model.receiptAliases(merchant: displayed.merchant, language: displayed.language)
+                        return current?.contains(alias) == true
                     }, assist: {
                         if let state = model.snapshot?.state, model.permitsReceiptSource {
                             assistance = AssistanceReview(id: displayed.draftID, state: state, line: line)
@@ -244,6 +252,9 @@ private struct PantryReceiptLineEditor: View {
     let lots: [InventoryLot]
     let purchases: [PantryRecentPurchase]
     let aliases: [InventoryReceiptAlias]
+    let receiptLanguage: String
+    let matchesCurrent: @MainActor () -> Bool
+    let verifyAlias: @MainActor (InventoryReceiptAlias) async -> Bool
     let assist: () -> Void
     var field: FocusState<String?>.Binding
 
@@ -280,11 +291,21 @@ private struct PantryReceiptLineEditor: View {
             .onChange(of: line.treatment) { _, _ in line.clearAlias() }
             .accessibilityIdentifier("receipt.action.\(line.ordinal)")
             if line.treatment != .skip {
-                ForEach(aliases.filter { alias in
+                let visible = aliases.filter { alias in
                     if case .link(let lotID) = line.treatment { return lots.contains { $0.id == lotID && $0.foodID == alias.foodID } }
                     return true
-                }) { alias in
+                }
+                ForEach(visible) { alias in
                     Button(pantryFormat("Use saved product %@ for %@", alias.product, alias.wording)) { line.use(alias) }
+                }
+                if !visible.isEmpty {
+                    DuplicateAssistanceView(source: .init(id: line.id, text: line.original),
+                        candidates: visible.map { .init(id: $0.id, text: $0.wording + " · " + $0.product) },
+                        language: receiptLanguage, authorized: matchesCurrent) { id in
+                            guard let alias = visible.first(where: { $0.id == id }), matchesCurrent(),
+                                  await verifyAlias(alias), matchesCurrent() else { return }
+                            line.use(alias)
+                        }
                 }
                 if line.appliedAlias != nil {
                     Button(pantryText("Undo saved spelling")) { line.clearAlias() }

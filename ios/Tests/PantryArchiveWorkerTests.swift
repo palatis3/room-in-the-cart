@@ -531,7 +531,15 @@ import RecordArchive
         let anotherStore = try await repository.receiptAliases(merchant: "West market", language: "en")
         XCTAssertTrue(unrelated.isEmpty && spanish.isEmpty && anotherStore.isEmpty)
         draft.reference = "transaction-15"
-        draft.lines[0].use(alias)
+        let line = draft.lines[0]
+        let advice = try DuplicateAssistanceRequest(consentingTo: .init(id: line.id, text: line.original),
+            candidates: aliases.map { .init(id: $0.id, text: $0.wording + " · " + $0.product) }, locale: "en")
+        let suggested = try advice.fixtureCandidate(id: alias.id)
+        XCTAssertNil(draft.lines[0].appliedAlias)
+        let historyBeforeAcceptance = try await repository.acquisitionHistory()
+        XCTAssertEqual(historyBeforeAcceptance, [confirmed])
+        let currentAliases = try await repository.receiptAliases(merchant: draft.merchant, language: draft.language)
+        draft.lines[0].use(try XCTUnwrap(currentAliases.first { $0.id == suggested }))
         XCTAssertEqual(draft.lines[0].received, "3")
         XCTAssertEqual(draft.lines[0].usable, "2")
         XCTAssertEqual(draft.lines[0].paid, "")
