@@ -303,11 +303,11 @@ test('explicitly consented disconnected request is durably queued, never labeled
  const s={...session(),queueConsent:true};const {app,root,dom}=await setup(fakeAPI({session:async()=>s,command:async()=>{throw new ApiError('network',0);}}));
  const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
  type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
- assert.match(root.textContent,/Waiting to send from this browser/);assert.doesNotMatch(root.textContent,/Received by the shopper/);
+ assert.match(root.textContent,/Saved on this browser. Receipt unconfirmed./);assert.doesNotMatch(root.textContent,/Received by the shopper/);
  app.suspendForHistory();
- assert.doesNotMatch(root.textContent,/Waiting to send from this browser|Rice|Family A/);
+ assert.doesNotMatch(root.textContent,/Saved on this browser. Receipt unconfirmed.|Rice|Family A/);
  app.resumeFromHistory();await waitForIdle(root);
- assert.match(root.textContent,/Waiting to send from this browser/);
+ assert.match(root.textContent,/Saved on this browser. Receipt unconfirmed./);
  assert.match(root.textContent,/Rice/);
 });
 
@@ -324,7 +324,7 @@ test('a request reviewed after disconnect survives reload and retries only after
  type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
  const [pending]=await outbox.list(scopeFor(s));
  assert.equal(pending?.command.body.originalItem,'Rice');
- assert.match(root.textContent,/Waiting to send from this browser/);
+ assert.match(root.textContent,/Saved on this browser. Receipt unconfirmed./);
  assert.doesNotMatch(root.textContent,/Received by the shopper/);
  assert.equal(sent.length,0);
 
@@ -356,7 +356,7 @@ test('offline queueing still requires consent and an unexpired replay window',as
   type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
   assert.deepEqual(await outbox.list(scopeFor(s)),[]);
   assert.match(root.textContent,/Rice/);
-  assert.doesNotMatch(root.textContent,/Waiting to send from this browser|Received by the shopper/);
+  assert.doesNotMatch(root.textContent,/Saved on this browser. Receipt unconfirmed.|Received by the shopper/);
  }
 });
 
@@ -392,7 +392,7 @@ test('a command refusal hides private content even if the saved outbox cannot be
    authState:async()=>{duringRecovery=root.textContent;return {authenticated:false,available:true};}
   });
   const {root,dom}=await setup(api,'en',outbox);
-  outbox.clear=async()=>{duringRecovery=root.textContent;throw new DOMException('Storage denied','SecurityError');};
+  outbox.clearScope=async()=>{duringRecovery=root.textContent;throw new DOMException('Storage denied','SecurityError');};
   root.querySelector('input[type=checkbox]').click();
   type(dom,'item','Private test wording');submit(root,dom);submit(root,dom);await waitForIdle(root);
   assert.equal(puts,1);
@@ -413,7 +413,7 @@ test('an explicit access refusal cannot queue against the earlier session',async
  const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
  type(dom,'item','Private draft');submit(root,dom);revoked=true;submit(root,dom);await waitForIdle(root);
  assert.deepEqual(await outbox.list(scopeFor(s)),[]);
- assert.doesNotMatch(root.textContent,/Private draft|Waiting to send from this browser/);
+ assert.doesNotMatch(root.textContent,/Private draft|Saved on this browser. Receipt unconfirmed./);
  assert.match(root.textContent,/Access has ended/);
 });
 
@@ -432,11 +432,14 @@ test('authorized Refresh clears an old mutation access denial without discarding
   connected=false;submit(root,dom);await waitForIdle(root);
   assert.equal((await outbox.list(scopeFor(original))).length,1);
   current={...original,memberId:'member-b'};connected=true;
-  if(storageClearFails)outbox.clear=async()=>{throw new DOMException('Storage denied','SecurityError');};
+  const otherTab={id:'stable-key',scope:scopeFor(current),command:command(),createdAt:'2026-01-01T12:00:00Z'};
+  await outbox.put(otherTab,current,true);
+  if(storageClearFails)outbox.clearScope=async()=>{throw new DOMException('Storage denied','SecurityError');};
   click(root,'Retry');await waitForIdle(root);
   assert.match(root.textContent,/Access has ended/);
   assert.doesNotMatch(root.textContent,/Previous actor private request|Ask the shopper/);
   if(!storageClearFails)assert.deepEqual(await outbox.list(scopeFor(original)),[]);
+  assert.deepEqual(await outbox.list(scopeFor(current)),[otherTab]);
 
   current=null;click(root,'Refresh');await waitForIdle(root);
   assert.match(root.textContent,/Access has ended/,'Anonymous refresh must not dismiss the denial');
@@ -554,7 +557,7 @@ test('rejected queued edit survives reload for explicit review and stays linked 
  assert.equal(first.root.querySelector('#item').value,'Rice');assert.match(first.root.textContent,/Move correction to draft/);
  assert.deepEqual(commands,[old]);first.dom.window.close();
  const {root,dom}=await setup(api,'en',outbox);
- assert.doesNotMatch(root.textContent,/Waiting to send from this browser/);
+ assert.doesNotMatch(root.textContent,/Saved on this browser. Receipt unconfirmed./);
  click(root,'Move correction to draft');await waitForIdle(root);
  assert.deepEqual(await outbox.list(scopeFor(active)),[]);
  assert.equal(root.querySelector('#item').value,'Black beans');assert.equal(root.querySelector('#amount').value,'three cans');
@@ -624,7 +627,7 @@ test('storage quota errors never turn an offline request into saved or received'
  const denied={list:async()=>[],clear:async()=>{},put:async()=>{throw new Error('QuotaExceededError');}};
  const app=new WebApp(root,fakeAPI({session:async()=>({...session(),queueConsent:true}),command:async()=>{throw new ApiError('network',0);}}),denied);
  await app.start();const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
- type(dom,'item','Milk');submit(root,dom);submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/Not saved/);assert.match(root.textContent,/Milk/);assert.doesNotMatch(root.textContent,/Waiting to send from this browser|Received by the shopper/);
+ type(dom,'item','Milk');submit(root,dom);submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/Not saved/);assert.match(root.textContent,/Milk/);assert.doesNotMatch(root.textContent,/Saved on this browser. Receipt unconfirmed.|Received by the shopper/);
 });
 
 test('denying access to indexedDB itself still lets an invite open and a contributor send online',async(t)=>{
@@ -657,7 +660,7 @@ test('eviction during an open session replaces the waiting notice after refresh'
  const {dom,root,app}=await setup(api,'en',outbox);
  root.querySelector('input[type=checkbox]').click();
  type(dom,'item','Queued oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
- assert.match(root.textContent,/Waiting to send from this browser/);
+ assert.match(root.textContent,/Saved on this browser. Receipt unconfirmed./);
  const [database]=await factory.databases();
  await new Promise((resolve,reject)=>{
   const deletion=factory.deleteDatabase(database.name);
@@ -697,7 +700,7 @@ test('a confirmed queued retry keeps its receipt if browser storage fails during
  click(root,'Retry');await waitForIdle(root);
  assert.match(root.textContent,/Received by the shopper/);
  assert.match(root.textContent,/Received; local cleanup pending/);
- assert.doesNotMatch(root.textContent,/Not saved|Waiting to send from this browser/);
+ assert.doesNotMatch(root.textContent,/Not saved|Saved on this browser. Receipt unconfirmed./);
 });
 
 for(const scenario of ['live replay window','expired replay window','changed member']){
@@ -705,9 +708,9 @@ for(const scenario of ['live replay window','expired replay window','changed mem
   const original={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
   let current=original,posts=0,removals=0;
   const remove=outbox.remove.bind(outbox);
-  outbox.remove=async id=>{
+  outbox.remove=async (...args)=>{
    if(++removals===1)throw new DOMException('Storage denied','SecurityError');
-   await remove(id);
+   await remove(...args);
   };
   const api=fakeAPI({session:async()=>current,command:async()=>{posts++;}});
   const {dom,root}=await setup(api,'en',outbox);
@@ -1070,7 +1073,7 @@ test('confirmed receipt remains received when deleting a queued copy fails',asyn
  const app=new WebApp(root,fakeAPI({session:async()=>({...session(),queueConsent:true})}),outbox);await app.start();
  const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
  type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
- assert.match(root.textContent,/Received by the shopper/);assert.match(root.textContent,/Received; local cleanup pending/);assert.doesNotMatch(root.textContent,/Not saved|Waiting to send from this browser/);
+ assert.match(root.textContent,/Received by the shopper/);assert.match(root.textContent,/Received; local cleanup pending/);assert.doesNotMatch(root.textContent,/Not saved|Saved on this browser. Receipt unconfirmed./);
 });
 
 test('confirmed logout reports a local storage cleanup failure without exposing records',async()=>{
@@ -1424,4 +1427,63 @@ test('a carried request keeps its own source and later trip legible without disc
  assert.match(root.textContent,/De una compra anterior/);
  const malformed=new API(async()=>Response.json({requests:[{...source,ownActionAllowed:true}],nextCursor:null}));
  await assert.rejects(()=>malformed.requests(session()),ApiError);
+});
+
+test('request read times stay on their own pages, including older-server pages',async()=>{
+ const first='2026-01-02T01:00:00Z',second='2026-02-03T03:00:00Z';
+ const data=[first,second,undefined].map((asOf,i)=>({requests:[{...own(),requestId:'row-'+i}],asOf,nextCursor:i===2?null:'page-'+i}));
+ const api=new API(async(path,options)=>{
+   assert.equal(options.headers['X-CSRF-Token'],session().csrf);
+   return Response.json(data.shift());
+ });
+ let firstPage;
+ const rows=await api.requests(session(),value=>{firstPage=value;});
+ assert.equal(firstPage,first);
+ assert.deepEqual(rows.map(row=>row.serverReadAt),[first,second,undefined]);
+ const invalid=new API(async()=>Response.json({requests:[],nextCursor:null,asOf:'yesterday'}));
+ await assert.rejects(invalid.requests(session()),error=>error.code==='invalid_response');
+});
+
+test('a cached server read remains visible beside an unconfirmed correction in English and Spanish',async()=>{
+ for(const [language,checked,local,edit,retry] of [
+   ['en','Checked on server','Saved correction on this browser','Edit','Retry'],
+   ['es','Consultada en el servidor','Corrección guardada en este navegador','Editar','Reintentar']
+ ]){
+   const current={...session(),queueConsent:true};
+   let row={...own(),serverReadAt:'2026-01-03T12:00:00Z'};
+   const commands=[];
+   const api=fakeAPI({session:async()=>current,requests:async()=>[row],command:async(_,command)=>{
+     commands.push(command);
+     row={...row,originalItem:'Pinto beans',revision:2,serverReadAt:'2026-02-15T12:00:00Z'};
+     if(commands.length===1)throw new ApiError('network',0);
+     return row;
+   }});
+   const {root,dom}=await setup(api,language);
+   const article=()=>root.querySelector('[data-request-id]');
+   const checkedLine=()=>[...article().querySelectorAll('p')].find(p=>p.textContent.startsWith(checked))?.textContent;
+   const before=checkedLine();
+   assert.ok(before);
+   click(root,edit);type(dom,'item','Pinto beans');
+   root.querySelector('input[type=checkbox]').click();
+   submit(root,dom);submit(root,dom);await waitForIdle(root);
+   assert.ok(article().textContent.includes(checked));
+   assert.equal(checkedLine(),before);
+   assert.ok(article().textContent.includes(local));
+   click(root,retry);await waitForIdle(root);
+   assert.equal(commands.length,2);assert.deepEqual(commands[1],commands[0]);
+   assert.ok(article().textContent.includes('Pinto beans'));assert.notEqual(checkedLine(),before);
+   assert.ok(!article().textContent.includes(local));assert.ok(!article().textContent.includes('No-salt frijoles'));
+   dom.window.close();
+ }
+});
+
+test('late receipt cleanup for one scope preserves another scope’s queued command',async()=>{
+ const outbox=new Outbox(new IDBFactory());
+ const old={...session(),queueConsent:true},active={...old,memberId:'member-b'};
+ const queued={id:'stable-key',scope:scopeFor(active),command:command(),createdAt:'2026-01-01T12:00:00Z'};
+ await outbox.put(queued,active,true);
+ await outbox.remove(queued.id,scopeFor(old));
+ assert.deepEqual(await outbox.list(scopeFor(active)),[queued]);
+ await outbox.remove(queued.id,scopeFor(active));
+ assert.deepEqual(await outbox.list(scopeFor(active)),[]);
 });

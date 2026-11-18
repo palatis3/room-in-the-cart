@@ -19,43 +19,112 @@ struct RequestDuplicateGroupHeading: View {
     }
 }
 
-/// Read-only context inside the existing decision Form. The model remains the
-/// sole owner of the selected request; this view cannot edit or submit anything.
+/// Compare request evidence and prefill the existing shopper decision for explicit review.
 struct RequestDuplicateComparisonSection: View {
     @ObservedObject var model: HouseholdInboxModel
     let requestID: String
 
     var body: some View {
-        if model.authorized,
-           let group = model.duplicateRequestGroup(containing: requestID),
-           group.hasPossibleDuplicates || model.nextCursor != nil {
-            Section {
-                if group.hasPossibleDuplicates {
-                    Text(requestDuplicateText("Does one pack cover these uses, or is another needed? Compare the original requests, then decide each one separately."))
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text(requestDuplicateText("No matching name among the loaded requests yet. Other requests have not been checked."))
-                        .foregroundStyle(.secondary)
-                }
-                Text(requestDuplicateText("Comparing changes nothing. Quantities are not added together. Each requester keeps a separate outcome."))
-                    .font(.footnote).foregroundStyle(.secondary)
-                    .accessibilityIdentifier("household.duplicates.separateOutcomes")
-                ForEach(group.requests) { request in
-                    RequestDuplicateComparisonRow(request: request, isSelected: request.id == requestID)
-                }
-                if model.nextCursor != nil {
-                    Text(requestDuplicateText("Only the loaded requests are shown. Check more requests to inspect the remaining pages."))
-                        .font(.footnote).foregroundStyle(.secondary)
-                    Button(requestDuplicateText("Check more requests")) {
-                        Task { await model.load(more: true) }
-                    }
-                    .disabled(model.busy || model.pending != nil)
-                    .accessibilityIdentifier("household.duplicates.loadMore")
-                }
-            } header: {
-                Text(requestDuplicateText("Compare matching requests"))
-                    .accessibilityIdentifier("household.duplicates.comparison")
+        if model.authorized, let request = model.selected, request.id == requestID,
+           let group = model.duplicateRequestGroup(containing: requestID), let shop = model.shop {
+            if group.hasPossibleDuplicates || model.nextCursor != nil {
+                requestComparison(group)
             }
+            if model.canReadFood, model.pending == nil {
+                Section {
+                    if let needs = model.matchingMealNeeds {
+                        if needs.isEmpty {
+                            Text(requestDuplicateText("No matching need in the current meal plan."))
+                        }
+                        ForEach(needs) { need in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(need.fact.sourceLabel).font(.headline)
+                                Text(need.fact.originalText)
+                                if let amount = need.fact.originalQuantityText { Text(amount) }
+                                ForEach(need.fact.sourceExclusions.indices, id: \.self) { index in
+                                    Text(need.fact.sourceExclusions[index].label)
+                                }
+                                if let line = need.line, model.availableChoices.contains(.link) {
+                                    Button(requestDuplicateText("Use this basket line") + " · " + line.originalItem) {
+                                        model.selectDuplicateLine(line, for: request, shopRevision: shop.shopRevision)
+                                    }.disabled(model.busy)
+                                }
+                            }
+                        }
+                    } else {
+                        Button(requestDuplicateText("Check planned meal needs")) {
+                            Task { await model.checkMealNeeds(for: request) }
+                        }.disabled(model.busy)
+                    }
+                } header: {
+                    Text(requestDuplicateText("Planned meals"))
+                }
+            }
+            let lines = RequestDuplicateGrouping.basketCandidates(for: group, lines: shop.lines)
+            if !lines.isEmpty, model.availableChoices.contains(.link), model.pending == nil {
+                Section {
+                    ForEach(lines) { line in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(line.originalItem).font(.headline)
+                            LabeledContent(ht("Whole packs"), value: line.packs.formatted())
+                            Button(requestDuplicateText("Use this basket line")) {
+                                model.selectDuplicateLine(line, for: request, shopRevision: shop.shopRevision)
+                            }
+                            .disabled(model.busy || (model.choice == .link && model.linkedLineID == line.id))
+                        }
+                    }
+                    if let requestUUID = UUID(uuidString: request.id), let shopUUID = UUID(uuidString: shop.shopId) {
+                        DuplicateAssistanceView(source: .init(id: requestUUID, text: request.originalItem),
+                            candidates: lines.compactMap { line in
+                                UUID(uuidString: line.id).map { .init(id: $0, text: line.originalItem) }
+                            }, family: .init(shopID: shopUUID, shopRevision: shop.shopRevision,
+                                            authorityEpoch: shop.authorityEpoch, requestRevision: request.revision),
+                            authorized: {
+                                model.authorized && !model.busy && model.pending == nil && model.selected == request &&
+                                model.shop == shop && model.availableChoices.contains(.link)
+                            }, familyHouseholdID: model.householdID, familyMemberID: model.memberID) { id in
+                                guard let line = lines.first(where: { UUID(uuidString: $0.id) == id }) else { return }
+                                model.selectDuplicateLine(line, for: request, shopRevision: shop.shopRevision)
+                            }
+                    }
+                    Button(requestDuplicateText("Review additional packs")) {
+                        model.choice = .add
+                    }
+                    .disabled(model.busy || model.choice == .add)
+                } header: {
+                    Text(requestDuplicateText("Already in this basket"))
+                }
+            }
+        }
+    }
+
+    private func requestComparison(_ group: RequestDuplicateGroup) -> some View {
+        Section {
+            if group.hasPossibleDuplicates {
+                Text(requestDuplicateText("Does one pack cover these uses, or is another needed? Compare the original requests, then decide each one separately."))
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(requestDuplicateText("No matching name among the loaded requests yet. Other requests have not been checked."))
+                    .foregroundStyle(.secondary)
+            }
+            Text(requestDuplicateText("Comparing changes nothing. Quantities are not added together. Each requester keeps a separate outcome."))
+                .font(.footnote).foregroundStyle(.secondary)
+                .accessibilityIdentifier("household.duplicates.separateOutcomes")
+            ForEach(group.requests) { request in
+                RequestDuplicateComparisonRow(request: request, isSelected: request.id == requestID)
+            }
+            if model.nextCursor != nil {
+                Text(requestDuplicateText("Only the loaded requests are shown. Check more requests to inspect the remaining pages."))
+                    .font(.footnote).foregroundStyle(.secondary)
+                Button(requestDuplicateText("Check more requests")) {
+                    Task { await model.load(more: true) }
+                }
+                .disabled(model.busy || model.pending != nil)
+                .accessibilityIdentifier("household.duplicates.loadMore")
+            }
+        } header: {
+            Text(requestDuplicateText("Compare matching requests"))
+                .accessibilityIdentifier("household.duplicates.comparison")
         }
     }
 }
@@ -88,6 +157,10 @@ private struct RequestDuplicateComparisonRow: View {
             LabeledContent(requestDuplicateText("Received"), value: householdTime(request.receivedAt))
             LabeledContent(requestDuplicateText("This request's outcome"), value: shopperRequestStatus(request))
                 .accessibilityIdentifier("household.duplicates.outcome.\(request.id)")
+            if let outcome = request.purchaseOutcome {
+                Text(purchaseStatus(outcome))
+                    .accessibilityIdentifier("household.duplicates.purchase.\(request.id)")
+            }
             if let clarification = request.clarification {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(requestDuplicateText("Clarification for this requester")).font(.caption).foregroundStyle(.secondary)

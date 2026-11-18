@@ -84,6 +84,7 @@ private struct GroceryWindow: View {
             } else { root }
         }.modifier(PantryDigestRuntime(pickup: pickup, access: access, household: household, child: guardianChild))
             .environment(\.pickupLedger, ledger)
+            .environment(\.offersDuplicateAssistance, true)
             .environment(\.privatePantryRetry, pantryRetry)
             .environmentObject(model)
             .environmentObject(ledger).environmentObject(pickup)

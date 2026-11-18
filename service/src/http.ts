@@ -265,14 +265,14 @@ export function createHTTPServer(options:HTTPOptions) {
           if(res.destroyed)throw unavailable();
           await repository.authorized(householdId,auth,async ctx=>{
             await requireReceiptAdult(repository,ctx);
-            await request.checkScope(ctx);
+            await request.checkScope(ctx,repository);
             await reserveCaptureAssistance(ctx,auth.identity,request,transport.budget,transport.budget.maxLanguageMicros);
           });
           const result=await request.run(transport,cancellation.signal);
           cancellation.signal.throwIfAborted();
           await repository.authorized(householdId,auth,async ctx=>{
             await requireReceiptAdult(repository,ctx);
-            await request.checkScope(ctx);
+            await request.checkScope(ctx,repository);
           });
           send(200,result);
         } finally {res.off('close',stop);}
@@ -410,6 +410,10 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/bootstrap'&&method==='GET')return repository.bootstrap(ctx);
         if(path==='/replay-windows'&&method==='POST'){z.object({}).strict().parse(payload);return repository.window(ctx);}
         if(path==='/requests/mine'&&method==='GET') {
+          // A browsing context can switch accounts between pages. Bind newer clients'
+          // reads to the scoped session they verified before starting the list.
+          const readToken=req.headers['x-csrf-token'];
+          if(session && readToken!==undefined && (typeof readToken!=='string'||!equal(readToken,session.csrf)))throw accessEnded();
           const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);
           return repository.requests(ctx,cursor);
         }

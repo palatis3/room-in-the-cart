@@ -18,6 +18,23 @@
         }
       }
     },
+    "Already in this basket": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in this basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya en esta cesta"
+          }
+        }
+      }
+    },
     "Amount and use, as written": {
       "extractionState": "manual",
       "localizations": {
@@ -35,6 +52,23 @@
         }
       }
     },
+    "Cancel comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar la comparación"
+          }
+        }
+      }
+    },
     "Check more requests": {
       "extractionState": "manual",
       "localizations": {
@@ -48,6 +82,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar más solicitudes"
+          }
+        }
+      }
+    },
+    "Check planned meal needs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check planned meal needs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar los ingredientes del plan de comidas"
           }
         }
       }
@@ -188,6 +239,40 @@
         }
       }
     },
+    "Get help comparing these choices": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get help comparing these choices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener ayuda para comparar estas opciones"
+          }
+        }
+      }
+    },
+    "Meal needs could not be checked. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal needs could not be checked. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron consultar las necesidades de las comidas. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
     "Next shop": {
       "extractionState": "manual",
       "localizations": {
@@ -239,6 +324,57 @@
         }
       }
     },
+    "No matching need in the current meal plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching need in the current meal plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay necesidades coincidentes en el plan de comidas actual."
+          }
+        }
+      }
+    },
+    "No suggestion is available. You can compare the choices yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestion is available. You can compare the choices yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay sugerencias disponibles. Puedes comparar las opciones."
+          }
+        }
+      }
+    },
+    "Online matching is unavailable. You can compare the choices yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online matching is unavailable. You can compare the choices yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La comparación en línea no está disponible. Puedes comparar las opciones."
+          }
+        }
+      }
+    },
     "Only the loaded requests are shown. Check more requests to inspect the remaining pages.": {
       "extractionState": "manual",
       "localizations": {
@@ -252,6 +388,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solo se muestran las solicitudes cargadas. Revisa más solicitudes para consultar las páginas restantes."
+          }
+        }
+      }
+    },
+    "Only these words and candidate labels will be shared with OpenAI.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only these words and candidate labels will be shared with OpenAI."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se compartirán estas palabras y las etiquetas de estas opciones con OpenAI."
           }
         }
       }
@@ -286,6 +439,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Otra solicitud"
+          }
+        }
+      }
+    },
+    "Planned meals": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned meals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comidas planificadas"
           }
         }
       }
@@ -341,6 +511,57 @@
         }
       }
     },
+    "Review additional packs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review additional packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar paquetes adicionales"
+          }
+        }
+      }
+    },
+    "Send these words and compare": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send these words and compare"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar estas palabras y comparar"
+          }
+        }
+      }
+    },
+    "Suggested match": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coincidencia sugerida"
+          }
+        }
+      }
+    },
     "The names match. Check each person's amount and use before deciding.": {
       "extractionState": "manual",
       "localizations": {
@@ -388,6 +609,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta compra"
+          }
+        }
+      }
+    },
+    "Use this basket line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this basket line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este artículo de la cesta"
+          }
+        }
+      }
+    },
+    "Use this candidate in my review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this candidate in my review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta opción en mi revisión"
           }
         }
       }

@@ -27,6 +27,7 @@ struct DeviceReminderPersona: Equatable {
     @Published private(set) var sharedShop: HouseholdShopModel?
     @Published private(set) var lifecycle: HouseholdLifecycleModel?
     @Published private(set) var requests: [OwnRequest] = []
+    @Published private(set) var requestReadTimes = RequestReadTimes()
     @Published private(set) var nextRequestCursor: String?
     @Published private(set) var requestPickups: [RequestPickup] = []
     @Published private(set) var selectedRequestPickupID: UUID?
@@ -197,6 +198,8 @@ struct DeviceReminderPersona: Equatable {
             if value.capabilities.contains("own_requests") {
                 let page = try await service.ownRequests()
                 guard start == generation else { return }
+                requestReadTimes = RequestReadTimes()
+                requestReadTimes.include(page)
                 requests = page.requests; nextRequestCursor = page.nextCursor
                 reconcileContributorEdit()
                 try await prefetchContributorReplayWindow(service, start: start)
@@ -280,7 +283,13 @@ struct DeviceReminderPersona: Equatable {
                 } else {
                     cancelEdit()
                 }
+                if prior.memberId != fresh.memberId || prior.household.id != fresh.household.id ||
+                    fresh.grantId != nil || !fresh.capabilities.contains("own_requests") {
+                    pending = nil
+                    delivery = .localDraft
+                }
                 requests = []
+                requestReadTimes = RequestReadTimes()
                 nextRequestCursor = nil
             }
             // Revoke the old view as soon as authority is known, even if the request list cannot load.
@@ -298,10 +307,12 @@ struct DeviceReminderPersona: Equatable {
             if fresh.capabilities.contains("own_requests") {
                 let page = try await service.ownRequests()
                 guard start == generation else { return }
+                requestReadTimes = RequestReadTimes()
+                requestReadTimes.include(page)
                 requests = page.requests; nextRequestCursor = page.nextCursor
                 reconcileContributorEdit()
                 try await prefetchContributorReplayWindow(service, start: start)
-            } else { requests = []; nextRequestCursor = nil }
+            } else { requests = []; requestReadTimes = RequestReadTimes(); nextRequestCursor = nil }
         } catch { await show(error, start: start) }
     }
     var requiresRequestPickupChoice: Bool {
@@ -357,6 +368,7 @@ struct DeviceReminderPersona: Equatable {
         do {
             let page = try await service.ownRequests(cursor: cursor)
             guard start == generation else { return }
+            requestReadTimes.include(page)
             for request in page.requests { requests.removeAll { $0.id == request.id }; requests.append(request) }
             nextRequestCursor = page.nextCursor
             reconcileContributorEdit()
@@ -403,17 +415,22 @@ struct DeviceReminderPersona: Equatable {
         contributorReplayWindow = (window, expiresAt)
     }
     private func clearExpiredQueuedRequests(_ current: HouseholdBootstrap, permissionChanged: Bool = false) async throws {
+        let start = generation
         let stored = try await outbox.operations()
+        guard start == generation else { return }
         // A direct online attempt without permission lives only in this session. A changed
         // permission ends that retry, but older protected receipts still use their original key.
         if permissionChanged, let pending, pending.requestQueueGrant == nil, !stored.contains(where: { $0.id == pending.id }) {
             self.pending = nil; delivery = .localDraft
         }
-        for operation in stored where operation.householdID == current.household.id && operation.memberID == current.memberId {
-            guard let grant = operation.requestQueueGrant, !current.requestQueueEnabled || grant != current.requestQueueGrant else { continue }
-            try await outbox.remove(operation.id)
-            if pending?.id == operation.id { pending = nil; delivery = .localDraft }
+        let expired = stored.filter { operation in
+            guard operation.householdID == current.household.id, operation.memberID == current.memberId,
+                  operation.deviceID == contributorDeviceID, let grant = operation.requestQueueGrant else { return false }
+            return !current.requestQueueEnabled || grant != current.requestQueueGrant
         }
+        guard !expired.isEmpty else { return }
+        try await outbox.removeIfUnchanged(expired)
+        if start == generation, let pending, expired.contains(pending) { self.pending = nil; delivery = .localDraft }
     }
 
     func setRequestQueuePermission(_ enabled: Bool) async {
@@ -576,19 +593,42 @@ struct DeviceReminderPersona: Equatable {
             }
             delivery = .received(receipt)
             pending = nil
-            requests.removeAll { $0.id == receipt.request.id }; requests.insert(receipt.request, at: 0)
+            let requestID = receipt.request.id
+            // A retried command can return an older revision. Only a fresh read updates the list.
             if clearsDraft { cancelEdit() } else { reconcileContributorEdit() }
-            do { try await outbox.remove(operation.id) }
+            do { try await outbox.removeIfUnchanged([operation]) }
             catch { if start == generation { notice = ht("Received by the household. Local retry cleanup needs another attempt.") } }
+            guard start == generation else { return }
+            do {
+                let page = try await readOwnRequestPage(requestID, service: service, start: start)
+                guard start == generation else { return }
+                if let current = page.requests.first(where: { $0.id == requestID && $0.shopId == receipt.request.shopId }),
+                   current.revision >= receipt.request.revision {
+                    requestReadTimes.rows[requestID] = page.asOf
+                    requests.removeAll { $0.id == requestID }
+                    requests.insert(current, at: 0)
+                    reconcileContributorEdit()
+                } else if !page.requests.contains(where: { $0.id == requestID }) {
+                    requests.removeAll { $0.id == requestID }
+                    requestReadTimes.rows[requestID] = nil
+                }
+            } catch let error as ClientError where error == .accessEnded || error == .sessionNeeded {
+                await show(error, start: start)
+            } catch {
+                if start == generation, notice == nil {
+                    notice = ht("Request received. Refresh to check its current status.")
+                }
+            }
         } catch {
             guard start == generation else { return }
             if case .service(_, "queue_permission_ended", _, _) = error as? ClientError, let endedGrant = operation.requestQueueGrant {
                 contributorReplayWindow = nil
                 do {
-                    for queued in try await outbox.operations() where queued.householdID == operation.householdID &&
-                        queued.memberID == operation.memberID && queued.deviceID == operation.deviceID && queued.requestQueueGrant == endedGrant {
-                        try await outbox.remove(queued.id)
+                    let expired = try await outbox.operations().filter {
+                        $0.householdID == operation.householdID && $0.memberID == operation.memberID &&
+                            $0.deviceID == operation.deviceID && $0.requestQueueGrant == endedGrant
                     }
+                    try await outbox.removeIfUnchanged(expired)
                     guard start == generation else { return }
                     pending = nil; delivery = .localDraft
                     notice = ht("Enable offline requests while connected before saving a request offline.")
@@ -634,6 +674,28 @@ struct DeviceReminderPersona: Equatable {
         return DraftReplacement(operationID: pending.id, generation: generation, item: item, quantity: quantity,
                                 forNextShop: forNextShop, editingID: editing?.id, followupID: followingUp?.id)
     }
+    private func readOwnRequestPage(_ requestID: String, service: HouseholdService, start: UUID) async throws -> OwnRequestsPage {
+        var page = try await service.ownRequests()
+        var seen = Set<String>()
+        while !page.requests.contains(where: { $0.id == requestID }), let cursor = page.nextCursor {
+            guard generation == start else { throw ClientError.cancelled }
+            guard seen.insert(cursor).inserted else { throw ClientError.invalidResponse }
+            page = try await service.ownRequests(cursor: cursor)
+        }
+        return page
+    }
+
+    func pendingCorrection(for request: OwnRequest) -> String? {
+        guard let pending, let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes),
+              envelope.kind == "request.edit", envelope.shopId == request.shopId,
+              envelope.body["requestId"] == .string(request.id),
+              case .string(let proposed) = envelope.body["originalItem"] else { return nil }
+        if case .string(let quantity) = envelope.body["ownQuantity"], !quantity.isEmpty {
+            return proposed + " · " + quantity
+        }
+        return proposed
+    }
+
     func reviewRejectedCorrection(replacing replacement: DraftReplacement? = nil) async {
         guard correctionReplacingDraft == replacement else { return }
         guard canReviewRejectedCorrection, !busy, !locked, let service, let pending,
@@ -653,13 +715,7 @@ struct DeviceReminderPersona: Equatable {
             guard start == generation else { return }
             try await clearExpiredQueuedRequests(fresh, permissionChanged: prior.requestQueueGrant != fresh.requestQueueGrant)
             guard start == generation, self.pending?.id == pending.id else { return }
-            var page = try await service.ownRequests()
-            var seen = Set<String>()
-            while !page.requests.contains(where: { $0.requestId == requestID }), let cursor = page.nextCursor {
-                guard start == generation else { return }
-                guard seen.insert(cursor).inserted else { throw ClientError.invalidResponse }
-                page = try await service.ownRequests(cursor: cursor)
-            }
+            let page = try await readOwnRequestPage(requestID, service: service, start: start)
             guard start == generation else { return }
             guard let current = page.requests.first(where: { $0.requestId == requestID && $0.shopId == envelope.shopId }),
                   current.status != "withdrawn" else {
@@ -667,9 +723,10 @@ struct DeviceReminderPersona: Equatable {
                 return
             }
             guard self.pending?.id == pending.id, correctionReplacingDraft == replacement else { return }
-            try await outbox.remove(pending.id)
+            try await outbox.removeIfUnchanged([pending])
             guard start == generation else { return }
             self.pending = nil; delivery = .localDraft; attempts = 0
+            requestReadTimes.rows[current.id] = page.asOf
             requests.removeAll { $0.id == current.id }; requests.insert(current, at: 0)
             item = wording
             if case .string(let amount) = envelope.body["ownQuantity"] { quantity = amount } else { quantity = "" }
@@ -679,7 +736,7 @@ struct DeviceReminderPersona: Equatable {
     func discardPendingAfterReview() async {
         guard !busy, !locked, let pending else { return }
         busy = true; defer { busy = false }; let start = generation
-        do { try await outbox.remove(pending.id)
+        do { try await outbox.removeIfUnchanged([pending])
             guard start == generation else { return }
             self.pending = nil; delivery = .localDraft; attempts = 0; notice = nil }
         catch { if start == generation { notice = ht("Could not clear the local retry. Try again.") } }
@@ -849,7 +906,7 @@ struct DeviceReminderPersona: Equatable {
         lifecycle?.clearScope()
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
         clearRequestPickups()
-        projection = nil; contributorDeviceID = nil; requests = []; nextRequestCursor = nil; pending = nil
+        projection = nil; contributorDeviceID = nil; requests = []; requestReadTimes = RequestReadTimes(); nextRequestCursor = nil; pending = nil
         contributorReplayWindow = nil
         delivery = .localDraft; attempts = 0; retryAfter = .distantPast; cancelEdit()
     }

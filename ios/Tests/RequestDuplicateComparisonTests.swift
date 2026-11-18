@@ -56,7 +56,73 @@ final class RequestDuplicateComparisonTests: XCTestCase {
         XCTAssertEqual(before[0].id,after[0].id)
         XCTAssertEqual(after[0].requests.map(\.revision),[2,1])
     }
+    func testBasketCandidatesRequireExactWordingOrAReviewedLineID() throws {
+        let product = ShopperBasketLine(originalItem: "Milk", packs: 1, unitPriceMinor: nil, feeEligible: true)
+        let reviewed = ShopperBasketLine(originalItem: "Store-brand whole milk", packs: 2, unitPriceMinor: 375, feeEligible: true)
+        let variant = ShopperBasketLine(originalItem: "Lactose-free milk", packs: 1, unitPriceMinor: nil, feeEligible: true)
+        let unmatched = try request("first", item: " MILK ")
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(unmatched)) as? [String: Any])
+        object["requestId"] = "second"
+        object["draftBasketLineId"] = reviewed.id
+        let matched = try JSONDecoder().decode(OwnRequest.self, from: JSONSerialization.data(withJSONObject: object))
+        let group = try XCTUnwrap(RequestDuplicateGrouping.groups(requests: [unmatched, matched], shopID: "shop", authorized: true).first)
+        XCTAssertEqual(RequestDuplicateGrouping.basketCandidates(for: group, lines: [variant, reviewed, product]), [reviewed, product])
+    }
     #if DEBUG
+    @MainActor func testRepeatedLineIdentityCannotBecomeAShopperSuggestion() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let server = S23DuplicateFixtureServer(repeatsBasketLine: true)
+        let model = try await s23DuplicateFixtureModel(server: server, outboxURL: directory.appendingPathComponent("outbox.json"))
+        XCTAssertNil(model.shop)
+        XCTAssertTrue(model.requests.isEmpty)
+        XCTAssertEqual(server.commandCount, 0)
+    }
+    @MainActor func testBasketSuggestionRequiresCurrentReviewAndKeepsBothRequestOutcomesSeparate() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let server = S23DuplicateFixtureServer(basketName: "Cereal", mealNames: ["Rice cereal", "Cereal"])
+        let model = try await s23DuplicateFixtureModel(server: server, outboxURL: directory.appendingPathComponent("outbox.json"))
+        let sam = try XCTUnwrap(model.requests.first { $0.id == S23DuplicateFixtureServer.samID })
+        let lee = try XCTUnwrap(model.requests.first { $0.id == S23DuplicateFixtureServer.leeID })
+        let shop = try XCTUnwrap(model.shop)
+        let line = try XCTUnwrap(shop.lines.first)
+        model.select(sam)
+        await model.checkMealNeeds(for: sam)
+        XCTAssertEqual(model.matchingMealNeeds?.map(\.fact.originalText), ["Cereal"])
+        XCTAssertEqual(model.matchingMealNeeds?.first?.fact.originalQuantityText, "1 bowl")
+        XCTAssertNil(model.matchingMealNeeds?.first?.line)
+        model.select(lee)
+        XCTAssertNil(model.matchingMealNeeds)
+        model.select(sam)
+        let group = try XCTUnwrap(model.duplicateRequestGroup(containing: sam.id))
+        let visible = RequestDuplicateGrouping.basketCandidates(for: group, lines: shop.lines)
+        let scope = FamilyDuplicateBasis(shopID: try XCTUnwrap(UUID(uuidString: shop.shopId)), shopRevision: shop.shopRevision,
+            authorityEpoch: shop.authorityEpoch, requestRevision: sam.revision)
+        let source = LanguageSourceLine(id: try XCTUnwrap(UUID(uuidString: sam.id)), text: sam.originalItem)
+        let request = try DuplicateAssistanceRequest(consentingTo: source, candidates: try visible.map {
+            .init(id: try XCTUnwrap(UUID(uuidString: $0.id)), text: $0.originalItem)
+        }, locale: "en", family: scope)
+        let suggested = try request.fixtureCandidate(id: try XCTUnwrap(UUID(uuidString: line.id)))
+        XCTAssertEqual(model.linkedLineID, "")
+        XCTAssertNil(model.preview)
+        let suggestedLine = try XCTUnwrap(visible.first { UUID(uuidString: $0.id) == suggested })
+        model.selectDuplicateLine(suggestedLine, for: lee, shopRevision: shop.shopRevision)
+        model.selectDuplicateLine(line, for: sam, shopRevision: shop.shopRevision - 1)
+        XCTAssertEqual(model.linkedLineID, "")
+        model.selectDuplicateLine(suggestedLine, for: sam, shopRevision: shop.shopRevision)
+        XCTAssertEqual(model.choice, .link)
+        XCTAssertEqual(model.linkedLineID, line.id)
+        XCTAssertEqual(server.previewCount, 0)
+        XCTAssertEqual(server.commandCount, 0)
+        await model.review()
+        XCTAssertEqual(model.preview?.changeMinor, 0)
+        XCTAssertEqual(server.commandCount, 0)
+        await model.apply()
+        XCTAssertEqual(server.appliedRequestIDs, [sam.id])
+        XCTAssertEqual(model.requests.first { $0.id == lee.id }, lee)
+        XCTAssertEqual(model.shop?.lines, [line])
+    }
     func testFixtureInterceptsUnexpectedNetworkDestinations() throws {
         let unexpected = URLRequest(url:URL(string:"https://example.com/inbox")!)
         XCTAssertTrue(S23DuplicateFixtureProtocol.canInit(with:unexpected))
