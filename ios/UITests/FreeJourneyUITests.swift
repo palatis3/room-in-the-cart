@@ -1802,9 +1802,12 @@ import XCTest
         XCTAssertTrue(included.label.contains("Rice supper"), included.debugDescription)
         XCTAssertEqual(included.value as? String, "1")
         tap(element("repeatWeek.preview"))
-        XCTAssertTrue(app.buttons["dinnerApply"].waitForExistence(timeout: 10))
-        tap(app.buttons["dinnerApply"])
-        XCTAssertTrue(app.buttons["dinnerApply"].waitForNonExistence(timeout: 10))
+        let apply = app.buttons["dinnerApply"]
+        XCTAssertTrue(app.navigationBars["Dinner preview"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(apply.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(apply.isEnabled, app.debugDescription)
+        tapVisibleFormRow(apply, marker: "REPEAT_WEEK_APPLY")
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 10), app.debugDescription)
         tap(app.buttons["All chosen dinners, including earlier dates"])
         let meals = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
             "dinnerOccurrence-", "Rice supper"))
