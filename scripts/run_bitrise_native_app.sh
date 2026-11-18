@@ -42,11 +42,19 @@ PY
 device=$(xcrun simctl create "RITC native $lane ${BITRISE_BUILD_SLUG:?}" "$device_type" com.apple.CoreSimulator.SimRuntime.iOS-27-0)
 export SIMULATOR_ID="$device"
 trap 'xcrun simctl delete "$device" || true' EXIT
-python3 scripts/boot_ios_simulator.py "$device"
 flags=()
 while IFS= read -r method; do flags+=("-only-testing:$method"); done < ".build/test-plan/$lane.txt"
+# Compilation targets arm64 simulator products and can start while the owned iPhone boots.
+python3 scripts/boot_ios_simulator.py "$device" > .build/NativeBoot.log 2>&1 &
+boot_pid=$!
+build_status=0
 xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart -configuration Debug \
-    -destination "platform=iOS Simulator,id=$device" -derivedDataPath .build/DerivedData \
-    "${flags[@]}" -jobs 2 ONLY_ACTIVE_ARCH=YES CODE_SIGN_IDENTITY=- build-for-testing 2>&1 | tee .build/NativeBuild.log
+    -destination "generic/platform=iOS Simulator" -derivedDataPath .build/DerivedData \
+    "${flags[@]}" -jobs 2 ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGN_IDENTITY=- build-for-testing 2>&1 | tee .build/NativeBuild.log || build_status=$?
+boot_status=0
+wait "$boot_pid" || boot_status=$?
+cat .build/NativeBoot.log
+if ((build_status)); then exit "$build_status"; fi
+if ((boot_status)); then exit "$boot_status"; fi
 python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
 bash scripts/run_ios_test_shard.sh

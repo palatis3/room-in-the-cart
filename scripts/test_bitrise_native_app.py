@@ -62,7 +62,7 @@ class BitriseNativeAppTests(unittest.TestCase):
         shutil.copy(ROOT / 'scripts/run_bitrise_native_app.sh', self.path / 'scripts')
         shutil.copy(ROOT / 'bitrise.yml', self.path)
         stub = '''#!PYTHON
-import json,os,sys,subprocess
+import json,os,sys,subprocess,time
 from pathlib import Path
 name=Path(sys.argv[0]).name; args=sys.argv[1:]
 with open(os.environ['CALLS'],'a') as f: f.write(json.dumps([name,*args])+'\\n')
@@ -74,14 +74,32 @@ elif name=='uname': print('arm64')
 elif name=='xcode-select': print('/Applications/Reviewed.app/Contents/Developer')
 elif name=='xcodebuild':
  if args==['-version']: print('Xcode 27.1\\nBuild version '+os.environ.get('MOCK_XCODE','27A9275'))
- else: sys.exit(int(os.environ.get('MOCK_BUILD_EXIT','0')))
+ else:
+  if os.environ.get('CHECK_OVERLAP'):
+   Path('build-started').touch()
+   for _ in range(100):
+    if Path('boot-started').exists(): break
+    time.sleep(.02)
+   else: sys.exit(9)
+  sys.exit(int(os.environ.get('MOCK_BUILD_EXIT','0')))
 elif name=='xcrun':
  if args==['simctl','list','runtimes','--json']:
   print(json.dumps({'runtimes':[{'identifier':'com.apple.CoreSimulator.SimRuntime.iOS-27-0',
       'isAvailable':True,'buildversion':os.environ.get('MOCK_RUNTIME','24A434')}]}))
  elif args[:2]==['simctl','create']: print('11111111-1111-4111-8111-111111111111')
+elif name=='python3' and args[:1]==['scripts/boot_ios_simulator.py']:
+ if os.environ.get('CHECK_OVERLAP'):
+  Path('boot-started').touch()
+  for _ in range(100):
+   if Path('build-started').exists(): break
+   time.sleep(.02)
+  else: sys.exit(9)
+  Path('boot-complete').touch()
+ sys.exit(int(os.environ.get('MOCK_BOOT_EXIT','0')))
 elif name=='python3' and args==['-']: sys.exit(subprocess.run([sys.executable,'-'],input=sys.stdin.read(),text=True).returncode)
-elif name=='bash': sys.exit(int(os.environ.get('MOCK_TEST_EXIT','0')))
+elif name=='bash':
+ if os.environ.get('CHECK_OVERLAP') and not Path('boot-complete').exists(): sys.exit(8)
+ sys.exit(int(os.environ.get('MOCK_TEST_EXIT','0')))
 '''.replace('PYTHON', str(Path(sys.executable).resolve()))
         for name in ('git', 'uname', 'xcode-select', 'xcodebuild', 'xcrun', 'python3', 'bash'):
             executable = self.bin / name; executable.write_text(stub); executable.chmod(0o755)
@@ -110,6 +128,21 @@ elif name=='bash': sys.exit(int(os.environ.get('MOCK_TEST_EXIT','0')))
             builds = [c for c in calls if c[0]=='xcodebuild' and 'build-for-testing' in c]
             self.assertEqual(len([s for s in builds[-1] if s.startswith('-only-testing:')]),count)
             self.assertIn(SHA, (self.path / '.build/bitrise-native-receipt.txt').read_text())
+
+    def test_build_overlaps_boot_and_tests_require_both_to_succeed(self):
+        result, calls = self.run_lane(CHECK_OVERLAP='1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        build = next(c for c in calls if 'build-for-testing' in c)
+        self.assertEqual(build[build.index('-destination') + 1], 'generic/platform=iOS Simulator')
+        self.assertIn('ARCHS=arm64', build)
+        self.assertIn(['bash', 'scripts/run_ios_test_shard.sh'], calls)
+        for error in [{'MOCK_BOOT_EXIT': '7'}, {'MOCK_BUILD_EXIT': '65'}]:
+            with self.subTest(error=error):
+                (self.path / 'calls.jsonl').unlink()
+                result, calls = self.run_lane(**error)
+                self.assertEqual(result.returncode, int(next(iter(error.values()))))
+                self.assertNotIn(['bash', 'scripts/run_ios_test_shard.sh'], calls)
+                self.assertEqual(calls[-1][:3], ['xcrun', 'simctl', 'delete'])
 
     def test_rejects_wrong_commit_branch_pr_and_dirty_source_before_build(self):
         cases = [{'BITRISE_GIT_COMMIT':'main'}, {'MOCK_HEAD':'b'*40}, {'BITRISE_GIT_BRANCH':'outside'},

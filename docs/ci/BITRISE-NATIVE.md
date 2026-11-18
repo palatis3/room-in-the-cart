@@ -49,6 +49,13 @@ Each lane prints source SHA, device, selectors, expected count, Xcode version an
 script hashes in `.build/bitrise-native-receipt.txt`. Build output stays in
 `.build/NativeBuild.log`; the existing strict runner exports native summary/test
 details and verifies exact selectors/counts, native exit and runtime warnings.
+Both lanes start the simulator boot check and the arm64 simulator build together.
+XCTest starts after both succeed. The boot transcript is in `.build/NativeBoot.log`.
+Before this change the [SE build](https://app.bitrise.io/build/e37a6261-8377-4c19-8abd-03774e631f5b)
+spent 35 seconds booting before compilation and the
+[Pro Max build](https://app.bitrise.io/build/28f9df70-66fb-4d9c-9276-e09006970305) spent 38 seconds.
+Compare hosted elapsed times across revisions when assessing the saving.
+
 A bootstrap-only retry keeps the existing guard and cannot retry a started test.
 Results cannot be called passed from a build-only success.
 
