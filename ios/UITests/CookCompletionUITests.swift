@@ -83,7 +83,15 @@ import XCTest
         // The covered cooking screen also has Cancel. Dismiss the visible
         // resolution sheet so its onDismiss reload can publish the saved status.
         tap(app.navigationBars["Review unresolved ingredient use"].buttons["Cancel"])
-        let resolved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Inventory changes recorded."), object: app.staticTexts["cook.inventoryStatus"])
+        // On a compact phone the saved Form retains its previous scroll offset.
+        // Its status row can be virtualized above the viewport after dismissal.
+        let savedStatus = app.staticTexts["cook.inventoryStatus"]
+        for _ in 0..<8 {
+            if savedStatus.exists && savedStatus.isHittable { break }
+            app.collectionViews.firstMatch.swipeDown()
+        }
+        XCTAssertTrue(savedStatus.exists && savedStatus.isHittable, app.debugDescription)
+        let resolved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Inventory changes recorded."), object: savedStatus)
         XCTAssertEqual(XCTWaiter.wait(for: [resolved], timeout: 10), .completed, app.debugDescription)
         XCTAssertFalse(app.buttons["cook.resolution.open"].exists, "The original unresolved history must not appear as unfinished after resolution")
     }
