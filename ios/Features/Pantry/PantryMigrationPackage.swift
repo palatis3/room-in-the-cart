@@ -253,12 +253,10 @@ import LocalStore
         }
         var expectedDemands = Set<String>()
         for journey in journeys.values {
-            let demands: [StockNeed]
             if let history = journey.mealRecovery {
                 try history.validate(); try journey.validateRecoveryRawBasis(history)
-                demands = try MealRecoveryEngine.project(history.domain).demands
-            } else { demands = journey.rawPhysicalStockNeeds }
-            for need in demands where need.amount.amount > .zero {
+            }
+            for need in try journey.remainingPhysicalNeeds() where need.amount.amount > .zero {
                 expectedDemands.insert(demandKey(journey.id, need.id, need.foodID))
             }
             for pending in journey.awayCarryovers where pending.phase != .cancelled {

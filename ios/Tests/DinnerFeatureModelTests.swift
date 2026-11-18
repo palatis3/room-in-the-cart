@@ -20,6 +20,32 @@ import CoreDomain
     }
 }
 @MainActor final class DinnerFeatureModelTests: XCTestCase {
+    func testPrivateMealPreferenceSaveWithoutPickupReopensAndRejectsAnOlderEditor() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let origin = try XCTUnwrap(model.sourceWorkspaceID)
+        var settings = MealPreferenceSettings()
+        settings.exclusions = ["peanut"]
+        let denied = await model.saveMealPreferences(settings, expectedRevision: nil, workspaceID: origin, authorize: { false })
+        XCTAssertFalse(denied)
+        let saved = await model.saveMealPreferences(settings, expectedRevision: nil, workspaceID: origin, authorize: { true })
+        XCTAssertTrue(saved)
+        let reopened = LedgerModel(databaseURL: url)
+        await reopened.open()
+        XCTAssertNil(reopened.shop)
+        let profile = try XCTUnwrap(reopened.workspace.dinnerPlanning.privateMealPreferences)
+        XCTAssertEqual(profile.settings, settings)
+        let stale = await reopened.saveMealPreferences(.init(), expectedRevision: nil, workspaceID: origin, authorize: { true })
+        XCTAssertFalse(stale)
+        let removed = await reopened.saveMealPreferences(.init(), expectedRevision: profile.revision, workspaceID: origin, authorize: { true })
+        XCTAssertTrue(removed)
+        XCTAssertNotEqual(reopened.workspace.dinnerPlanning.privateMealPreferences?.revision, profile.revision)
+        XCTAssertNil(reopened.shop)
+    }
+
     let now = Date(timeIntervalSince1970: 1_800_000_000)
     private func fixture(paid: Bool = false, catalog: [MealTemplate] = []) -> (MemoryDinnerStore, DinnerFeatureModel) {
         let store = MemoryDinnerStore()

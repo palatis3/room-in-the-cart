@@ -39,7 +39,14 @@ extension DinnerWorkspaceStore {
     let accessProvider: AccessProvider
     let phaseProvider: (UUID) -> BasketPhase
     let ideaCatalog: [MealTemplate]
-    private let clock: () -> Date
+    let clock: () -> Date
+    private(set) weak var repeatWeekPickup: PickupModel?
+    private weak var swapPickup: PickupModel?
+    private var swapReview: DinnerSwapReview?
+    var currentSwapReview: DinnerSwapReview? {
+        guard let swapReview, canReviewPreview, swapReview.preview.proposal.id == preview?.proposal.id else { return nil }
+        return swapReview
+    }
     private var observation: AnyCancellable?
     private var runtimeObservation: AnyCancellable?
 
@@ -79,7 +86,12 @@ extension DinnerWorkspaceStore {
         guard let preview, shop?.id == preview.proposal.shopID, let access = try? access(for: preview.proposal.shopID) else { return false }
         let namespace: String
         switch access.scope { case .local(let id): namespace = "local:\(id.uuidString)"; case .household(let id): namespace = "household:\(id)" }
-        return namespace == preview.proposal.namespace && access.actorID == preview.proposal.authorID
+        if let repeated = preview.proposal.repeatWeek {
+            guard let identity = editorIdentity, canReadRepeatSources(repeated.sourceShopIDs, identity: identity),
+                  repeated.staples.isEmpty || access.hasPaidTools else { return false }
+        }
+        return namespace == preview.proposal.namespace && access.actorID == preview.proposal.authorID &&
+            preview.proposal.preferenceRevision == state.preferences(for: access)?.revision
     }
     var canApply: Bool {
         guard editable, canReviewPreview, let preview, !preview.needsPurchaseAmendment, !preview.proposal.isIsolatedPreview,
@@ -91,7 +103,7 @@ extension DinnerWorkspaceStore {
         guard let id = preview?.proposal.shopID, let access = try? access(for: id) else { return false }
         if case .household = access.scope { return true }; return false
     }
-    private func access(for shopID: UUID) throws -> DinnerAccessContext {
+    func access(for shopID: UUID) throws -> DinnerAccessContext {
         guard let access = accessProvider(shopID) else { throw DinnerPlanningError.forbidden }
         try access.validate(shopID: shopID, at: clock())
         if case .local(let id) = access.scope {
@@ -114,6 +126,100 @@ extension DinnerWorkspaceStore {
             error = nil; notice = nil; return true
         } catch { preview = nil; fail(error); return false }
     }
+    func installRepeatWeek(_ value: DinnerPreview, pantryBasis: DinnerPantrySupply.Basis?, pickup: PickupModel) {
+        repeatWeekPickup = pickup
+        preview = value
+        pantryPreviewReview = pantryBasis.map { (value.proposal.id, $0) }
+        error = nil
+        notice = nil
+    }
+    @discardableResult func installSwap(_ value: DinnerSwapReview, pickup: PickupModel) -> Bool {
+        let reviewed = value.preview.proposal
+        guard let shop, let id = reviewed.swapOriginalID, id == value.original.id,
+              shop.id == reviewed.shopID, shop.revisionID == reviewed.baseRevisionID,
+              state.revisionID == reviewed.planningRevisionID, phaseProvider(shop.id) == .draft,
+              Self.swapReadAllowed(pickup, store: store, affected: [id], shopID: shop.id) else { fail(DinnerPlanningError.stalePreview); return false }
+        swapPickup = pickup
+        swapReview = value
+        preview = value.preview
+        pantryPreviewReview = value.pantryBasis.map { (reviewed.id, $0) }
+        error = nil
+        notice = nil
+        return true
+    }
+
+    private static func swapReadAllowed(_ pickup: PickupModel, store: any DinnerWorkspaceStore, affected meals: Set<UUID>, shopID: UUID) -> Bool {
+        guard pickup.recoveryLedger === store, pickup.ready, !pickup.hasPendingSave, !pickup.saving,
+              !pickup.pantryIsActive || pickup.pantryReadIsCurrent else { return false }
+        guard let source = pickup.journeys.first(where: { $0.id == shopID }) else { return true }
+        return source.closedAt == nil && source.mealRecovery?.domain.events.contains(where: { meals.contains($0.request.target.id) }) != true &&
+            source.cookedMeals?.contains(where: { $0.isActive && meals.contains($0.draft.meal.id) }) != true
+    }
+
+    func latestUndoableSwap(occurrenceID: UUID) -> DinnerApplyReceipt? {
+        guard let shop, let access = try? access(for: shop.id), case .local(let workspaceID) = access.scope else { return nil }
+        let namespace = "local:\(workspaceID.uuidString)"
+        return state.applyReceipts.last { receipt in
+            receipt.proposal.namespace == namespace && receipt.proposal.shopID == shop.id && receipt.appliedBy == access.actorID && receipt.swapUndoRevisionID == nil &&
+                (receipt.swapEffect?.original.id == occurrenceID || receipt.swapEffect?.replacementID == occurrenceID)
+        }
+    }
+
+    private func swapAuthorization(_ proposal: DinnerProposal, pickup: PickupModel?, meals: Set<UUID>,
+                                   usesCanonicalStock: Bool) -> (@MainActor () -> Bool) {
+        let identity = editorIdentity
+        let accessProvider = accessProvider
+        let phase = phaseProvider
+        let clock = clock
+        return { [weak ledger = store as? LedgerModel, weak pickup] in
+            guard let identity, let pickup, let ledger, let access = accessProvider(proposal.shopID),
+                  ledger.workspace.selectedShopID == proposal.shopID,
+                  case .local(let origin) = access.scope, origin == ledger.sourceWorkspaceID,
+                  access.scope == identity.scope, access.actorID == identity.actorID, access.actorID == proposal.authorID,
+                  (try? access.validate(shopID: proposal.shopID, at: clock(), applying: true)) != nil,
+                  phase(proposal.shopID) == .draft, pickup.pantryIsActive == usesCanonicalStock else { return false }
+            return Self.swapReadAllowed(pickup, store: ledger, affected: meals, shopID: proposal.shopID)
+        }
+    }
+
+    @discardableResult func undoSwap(_ reviewed: DinnerApplyReceipt, pickup: PickupModel) async -> Bool {
+        guard let shop, let effect = reviewed.swapEffect, let workspaceID = localIdeaWorkspaceID else { return false }
+        do {
+            let actor = try access(for: shop.id)
+            if let saved = state.applyReceipts.first(where: { $0.id == reviewed.id && $0.swapUndoRevisionID != nil }) {
+                guard saved.proposal == reviewed.proposal, saved.swapEffect == effect, saved.appliedBy == actor.actorID,
+                      saved.proposal.shopID == shop.id, case .local(let origin) = actor.scope, origin == workspaceID
+                else { throw DinnerPlanningError.forbidden }
+                return true
+            }
+            let stock = try DinnerPantrySupply.read(pickup: pickup, workspaceID: workspaceID,
+                linkedWorkspaceID: pickup.recoveryLedger?.sourceWorkspaceID, shopID: shop.id)
+            let authorize = swapAuthorization(reviewed.proposal, pickup: pickup, meals: [effect.original.id, effect.replacementID],
+                                              usesCanonicalStock: stock != nil)
+            return await mutate(key: "undo-dinner-swap-\(reviewed.id)", shopID: shop.id, reviewedPantryBasis: stock?.basis,
+                                reauthorize: authorize) { workspace, index, access, now in
+                let current = workspace.shops[index]
+                let touched = Set(effect.original.ingredientContributionIDs + effect.replacement.ingredientContributionIDs)
+                if let journey = pickup.journeys.first(where: { $0.id == current.id }), let context = try pickup.pantryReviewContext() {
+                    // Undo removes the replacement's demand. Existing claims for the
+                    // surviving original groups retain their own need identities.
+                    let needs = Set(journey.needDetails.filter { $0.sourceOccurrenceID == effect.replacementID }.map(\.id))
+                    let reservations = Set(context.mapping.claimLinks.filter {
+                        $0.journeyIDs.contains(current.id) && needs.contains($0.legacyNeedID)
+                    }.map(\.reservationID))
+                    guard !context.snapshot.reservations.contains(where: { reservations.contains($0.id) && $0.state != .released })
+                    else { throw DinnerPlanningError.reviewRequired("reservedMeal") }
+                }
+                let lineIDs = Set(current.contributions.filter { touched.contains($0.id) }.map(\.lineID))
+                let later = Set(current.revisions.drop(while: { $0.id != reviewed.revisionID }).map(\.id))
+                guard !workspace.packSelections.contains(where: { $0.shopID == current.id && lineIDs.contains($0.lineID) && later.contains($0.shopRevisionID) })
+                else { throw DinnerPlanningError.stalePreview }
+                _ = try DinnerSwapEngine.undo(reviewed, ledger: &workspace.shops[index], state: &workspace.dinnerPlanning,
+                    access: access, phase: self.phaseProvider(shop.id), at: now)
+            }
+        } catch { fail(error); return false }
+    }
+
     func cancelPreview() { preview = nil; pantryPreviewReview = nil; error = nil }
     func endDecision(restoring previous: DinnerPreview?, pantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil) {
         cancelPreview()
@@ -125,11 +231,21 @@ extension DinnerWorkspaceStore {
     }
     @discardableResult func applyPreview() async -> Bool {
         guard canApply, let reviewed = preview else { fail(DinnerPlanningError.forbidden); return false }
+        var authorize = repeatWeekAuthorization(for: reviewed.proposal)
+        if let originalID = reviewed.proposal.swapOriginalID {
+            guard let detail = currentSwapReview, let pickup = swapPickup else { fail(DinnerPlanningError.stalePreview); return false }
+            authorize = swapAuthorization(reviewed.proposal, pickup: pickup, meals: [originalID], usesCanonicalStock: detail.pantryBasis != nil)
+        }
         let ok = await mutate(key: "dinner-apply-\(reviewed.proposal.id)", shopID: reviewed.proposal.shopID,
-            reviewedPantryBasis: reviewedPantryBasis) { workspace, index, access, now in
+            reviewedPantryBasis: reviewedPantryBasis,
+            reauthorize: authorize) { workspace, index, access, now in
             // The local adapter has no server commit binding. Even a caller-supplied
             // sharedCommitAuthorized bit cannot enable a shared authoritative write.
             guard case .local = access.scope else { throw DinnerPlanningError.forbidden }
+            if reviewed.proposal.repeatWeek != nil {
+                try self.applyRepeatWeek(reviewed.proposal, workspace: &workspace, access: access, at: now)
+                return
+            }
             _ = try DinnerPlanningEngine.apply(reviewed.proposal, ledger: &workspace.shops[index],
                 state: &workspace.dinnerPlanning, access: access, phase: self.phaseProvider(reviewed.proposal.shopID), at: now)
         }
@@ -218,15 +334,36 @@ extension DinnerWorkspaceStore {
             return previewGuests(occurrenceID: occurrenceID, servings: totals, isolated: !paid)
         } catch { preview = nil; fail(error); return false }
     }
+    var mealPreferences: MealPreferenceProfile? {
+        guard let shop, let context = try? access(for: shop.id) else { return nil }
+        return state.preferences(for: context)
+    }
+    var ideaPatterns: [MealTemplate] {
+        ideaCatalog.filter { MealEligibilityPolicy.evaluate(profile: mealPreferences, template: $0).blocked.isEmpty }.sorted {
+            let left = MealEligibilityPolicy.evaluate(profile: mealPreferences, template: $0)
+            let right = MealEligibilityPolicy.evaluate(profile: mealPreferences, template: $1)
+            if left.eligible != right.eligible { return left.eligible }
+            if left.softDifferences.count != right.softDifferences.count {
+                return left.softDifferences.count < right.softDifferences.count
+            }
+            return $0.id.uuidString < $1.id.uuidString
+        }
+    }
     func newIdea(seed: UInt64, exclusions: [String], manual: MealTemplate? = nil) throws -> DinnerIdeaDraft {
         guard let shop else { throw DinnerPlanningError.invalid("shop") }
         _ = try access(for: shop.id)
         if let manual {
-            return DinnerIdeaDraft(requestID: UUID(), catalogVersion: "manual-v1", template: manual,
+            var draft = DinnerIdeaDraft(requestID: UUID(), catalogVersion: "manual-v1", template: manual,
                 hardExclusions: exclusions, createdAt: clock())
+            draft.preferenceRevision = mealPreferences?.revision
+            return draft
         }
+        let patterns = ideaPatterns
+        guard !patterns.isEmpty else { throw DinnerPlanningError.reviewRequired("manualIdeaEntry") }
+        let selected = patterns[Int(seed % UInt64(patterns.count))]
         var draft = try DinnerIdeaEngine.draft(requestID: UUID(), draftID: UUID(), catalogVersion: "reviewed-catalog-v1",
-            catalog: ideaCatalog, seed: seed, householdExclusions: exclusions, at: clock())
+            catalog: [selected], seed: 0, householdExclusions: exclusions, at: clock())
+        draft.preferenceRevision = mealPreferences?.revision
         draft.assumptions = [dinnerText("Check which ingredients are available and how much usable food the recipe makes.")]
         return draft
     }
@@ -285,16 +422,24 @@ extension DinnerWorkspaceStore {
         } catch { preview = nil; fail(error); return false }
     }
     private func mutate(key: String, shopID: UUID, reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
+                        reauthorize: (@MainActor () -> Bool)? = nil,
                         edit: (inout LedgerWorkspace, Int, DinnerAccessContext, Date) throws -> Void) async -> Bool {
         guard editable else { return false }
         busy = true; defer { busy = false }
         var failure: Error?
-        let saved = await store.change(key: key, reviewedPantryBasis: reviewedPantryBasis) { workspace in
+        func update(_ workspace: inout LedgerWorkspace) throws {
             do {
                 let current = try self.access(for: shopID)
                 guard let index = workspace.shops.firstIndex(where: { $0.id == shopID }) else { throw DinnerPlanningError.notFound(shopID) }
                 try edit(&workspace, index, current, self.clock())
             } catch { failure = error; throw error }
+        }
+        let saved: Bool
+        if let reauthorize {
+            guard let ledger = store as? LedgerModel else { fail(DinnerPlanningError.forbidden); return false }
+            saved = await ledger.change(key: key, reviewedPantryBasis: reviewedPantryBasis, authorize: reauthorize, update)
+        } else {
+            saved = await store.change(key: key, reviewedPantryBasis: reviewedPantryBasis, update)
         }
         if saved { error = nil; objectWillChange.send() }
         else if let failure { fail(failure) }
@@ -312,6 +457,7 @@ extension DinnerWorkspaceStore {
         case DinnerPlanningError.paidAccessRequired: error = dinnerText("This assisted tool requires paid access. Manual dinner editing remains available.")
         case DinnerPlanningError.stalePreview: error = dinnerText("The pickup or dinner plan changed. Make a new preview before applying.")
         case DinnerPlanningError.lockedBasket: error = dinnerText("This basket is locked. Save a proposal for a purchase amendment.")
+        case DinnerPlanningError.reviewRequired("mealPreferences"): error = dinnerText("Review ingredient and appliance details against your meal preferences.")
         case DinnerPlanningError.reviewRequired: error = dinnerText("Review the ingredients, portion bindings, availability and quote basis before continuing.")
         case LedgerError.allocationExceedsQuantity: error = dinnerText("That quantity is already reserved or exceeds the available amount.")
         default: error = dinnerText("Check the entered amounts, dates and required fields. Nothing has been applied.")

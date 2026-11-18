@@ -6,6 +6,7 @@ import CoreDomain
 /// food/ingredient identities, stock, pack offers and the complete unchanged basket.
 struct DinnerScenarioReviewView: View {
     @ObservedObject var model: DinnerFeatureModel
+    @EnvironmentObject private var pickup: PickupModel
     @Environment(\.closeDinnerDecision) private var closeDecision
     let current: DinnerScenario
     let alternatives: [DinnerScenario]
@@ -57,8 +58,15 @@ struct DinnerScenarioReviewView: View {
                             if (try? library.replacement(for: candidate, shop: shop, state: model.state)) != nil {
                                 Button(dinnerText("Preview this exact dinner replacement")) {
                                     do {
-                                        let changes = try library.replacement(for: candidate, shop: shop, state: model.state)
-                                        showReplacement = model.prepare(changes, tool: .pairing, isolated: !model.paid, expectedRevision: library.shopRevision, reviewedPantryBasis: reviewedPantryBasis)
+                                        if model.paid && model.localIdeaWorkspaceID != nil {
+                                            let review = try model.prepareSwap(library: library, scenario: candidate,
+                                                reviewedPantryBasis: reviewedPantryBasis, pickup: pickup)
+                                            showReplacement = model.installSwap(review, pickup: pickup)
+                                        } else {
+                                            let changes = try library.replacement(for: candidate, shop: shop, state: model.state)
+                                            showReplacement = model.prepare(changes, tool: .pairing, isolated: !model.paid,
+                                                expectedRevision: library.shopRevision, reviewedPantryBasis: reviewedPantryBasis)
+                                        }
                                     } catch { model.report(error) }
                                 }
                                 .accessibilityLabel(dinnerFormat("Preview %@ for %@",library.candidates.first(where: { $0.id == candidate.id })?.title ?? dinnerText("Candidate plan"),
@@ -155,6 +163,9 @@ struct DinnerScenarioReviewView: View {
             }
             Text(result.foodCoverageComplete ? dinnerText("Reviewed food coverage is complete") : dinnerText("Food coverage is unresolved"))
             Text(result.timingFeasible == true ? dinnerText("Reviewed preparation fits the available time") : dinnerText("Preparation timing is unresolved or does not fit"))
+            ForEach(Array(result.preferenceResults.enumerated()), id: \.offset) { match in
+                MealPreferenceIssues(result: match.element)
+            }
             ForEach(result.issues, id: \.self) { Text(dinnerIssue($0)) }
         }.padding(.vertical, 6).accessibilityElement(children: .combine)
             .accessibilityIdentifier("dinnerCost-\(result.scenarioID)")

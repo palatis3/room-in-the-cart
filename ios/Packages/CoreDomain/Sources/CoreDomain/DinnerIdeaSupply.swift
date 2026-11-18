@@ -4,6 +4,8 @@ import Foundation
 /// Unmatched ingredients do not inherit stock or prices from similarly named food.
 public struct DinnerIdeaFoodEvidence: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
+    public var reviewedFoodLabel: String? = nil
+    public var foodDetails: MealEligibilityEvidence? = nil
     public let ingredientName: String
     public let workspaceID: UUID
     public let shopID: UUID
@@ -27,6 +29,8 @@ public struct DinnerIdeaFoodEvidence: Codable, Equatable, Sendable, Identifiable
     }
 
     func validate() throws {
+        if let reviewedFoodLabel { try dinnerText(reviewedFoodLabel) }
+        try foodDetails?.validate()
         try dinnerText(ingredientName)
         guard basisRevision >= 0, foodID != nil || pack != nil else { throw DinnerPlanningError.invalid("ideaSupply") }
         if let pack {

@@ -155,6 +155,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public var ingredients: [MealIngredient]
     public var notes: String
     public var sourceURL: String?
+    public var eligibilityEvidence: MealEligibilityEvidence? = nil
     public var sourceEvidence: RecipeSourceEvidence? = nil
     public var exclusions: [String]
     public var servingGroups: [ServingGroup]
@@ -175,6 +176,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public func validate() throws {
         try ledgerText(title, nonempty: true, maximum: 512); try ledgerText(notes)
         if let sourceURL { try ledgerText(sourceURL, maximum: 2048) }
+        try eligibilityEvidence?.validate()
         try sourceEvidence?.validate()
         try validateExclusions(exclusions)
         guard revision >= 0, servings > .zero, ingredients.count <= 200,
@@ -195,6 +197,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
 }
 
 public struct MealOccurrence: Codable, Equatable, Sendable, Identifiable {
+    public internal(set) var repeatedFrom: RepeatWeek.Source? = nil
     public var carryover: DinnerCarryoverLink? = nil
     public let id: UUID
     public let templateID: UUID?
@@ -595,12 +598,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func addManualLine(name: String, quantity: Quantity?, notes: String = "",
                                        exclusions: [String] = [], at: Date = Date()) throws -> UUID {
         try mutate("addManualLine", at: at) { next in
-            let lineID = next.appendLine(name: name, notes: notes)
-            next.contributions.append(LedgerContribution(id: UUID(), lineID: lineID, source: .manual,
-                productName: name, quantity: quantity, originalText: quantity?.originalLiteral ?? name,
-                notes: notes, exclusions: exclusions, removedAt: nil))
-            return lineID
+            next.appendManualFields(id: UUID(), contributionID: UUID(), name: name, quantity: quantity, notes: notes, exclusions: exclusions)
         }
+    }
+    private mutating func appendManualFields(id: UUID, contributionID: UUID, name: String, quantity: Quantity?, notes: String, exclusions: [String]) -> UUID {
+        let lineID = appendLine(id: id, name: name, notes: notes)
+        contributions.append(.init(id: contributionID, lineID: lineID, source: .manual, productName: name, quantity: quantity,
+                                   originalText: quantity?.originalLiteral ?? name, notes: notes, exclusions: exclusions, removedAt: nil))
+        return lineID
     }
 
     public mutating func approveStaple(lineID: UUID, purpose: String?, at date: Date = Date()) throws {
@@ -627,25 +632,28 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
     mutating func recordStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, exclusions: [String],
                                handledLine: HandledStapleLine?, at date: Date) throws {
-        var next = self
-        let newID: UUID?
+        let operation = choice == .needed ? "addManualLine" : (handledLine == nil ? "reviewPriorStaple" : "handle")
+        try mutate(operation, at: date) { next in
+            try next.applyStapleFields(review, choice: choice, quantity: quantity, exclusions: exclusions, handledLine: handledLine,
+                                       lineID: UUID(), contributionID: UUID(), at: date)
+        }
+    }
+
+    private mutating func applyStapleFields(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, exclusions: [String],
+                                            handledLine: HandledStapleLine?, lineID: UUID, contributionID: UUID, at date: Date) throws {
+        var newID: UUID?
         if choice == .needed {
             guard matchingStapleLine(named: review.line.name) == nil else { throw LedgerError.invalid("stapleAlreadyListed") }
-            newID = try next.addManualLine(name: review.line.name, quantity: quantity, notes: review.approval.purpose, exclusions: exclusions, at: date)
+            newID = appendManualFields(id: lineID, contributionID: contributionID, name: review.line.name, quantity: quantity,
+                                       notes: review.approval.purpose, exclusions: exclusions)
         } else if let handledLine {
             guard choice == .alreadyHandled, openStapleMatches(named: review.line.name).contains(where: { $0.id == handledLine.lineID })
             else { throw LedgerError.stalePreview }
-            try next.handle(lineID: handledLine.lineID, by: handledLine.boughtBy, at: date)
-            newID = nil
-        } else {
-            try next.mutate("reviewPriorStaple", at: date) { _ in }
-            newID = nil
+            try markHandled(handledLine.lineID, by: handledLine.boughtBy, at: date)
         }
-        var receipts = next.stapleReviews ?? []
+        var receipts = stapleReviews ?? []
         receipts.append(.init(source: review.source, choice: choice, handledLine: handledLine, newLineID: newID, quantity: quantity))
-        next.stapleReviews = receipts
-        try next.validate()
-        self = next
+        stapleReviews = receipts
     }
     /// External capture/inbox callers persist the returned preview before Apply.
     /// Reuse its full bytes for retries; re-staging a new preview with this ID is
@@ -844,11 +852,12 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
     public mutating func handle(lineID: UUID, by: String, at: Date = Date()) throws {
+        try mutate("handle", at: at) { next in try next.markHandled(lineID, by: by, at: at) }
+    }
+    private mutating func markHandled(_ lineID: UUID, by: String, at date: Date) throws {
         try ledgerText(by, nonempty: true, maximum: 512)
-        try mutate("handle", at: at) { next in
-            let index = try next.lineIndex(lineID)
-            next.lines[index].handledBy = by; next.lines[index].handledAt = at
-        }
+        let index = try self.lineIndex(lineID)
+        lines[index].handledBy = by; lines[index].handledAt = date
     }
     public mutating func reopen(lineID: UUID, at: Date = Date()) throws {
         try mutate("reopen", at: at) { next in
@@ -1130,13 +1139,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// Internal allowlisted transaction port. Runtime authorization and operation replay are
     /// owned by DinnerPlanningEngine; no public arbitrary workspace replacement is exposed.
     mutating func applyDinnerChanges(_ changes: [DinnerLedgerChange], expectedRevisionID: UUID,
-                                    revisionID: UUID, operationID: UUID, at: Date) throws {
+                                    revisionID: UUID, operationID: UUID, at: Date, repeatWeek: RepeatWeek.Plan? = nil,
+                                    staples: [RepeatWeek.PreparedStaple] = []) throws {
         guard self.revisionID == expectedRevisionID else { throw DinnerPlanningError.stalePreview }
-        guard !changes.isEmpty, changes.count <= 500 else { throw DinnerPlanningError.invalid("changes") }
+        guard (!changes.isEmpty || !staples.isEmpty), changes.count + staples.count <= 500 else { throw DinnerPlanningError.invalid("changes") }
         try mutate("dinner:\(operationID.uuidString)", at: at, revisionID: revisionID) { next in
             var touchedMeals = Set<UUID>()
             var adoptedBasis = false
-            for change in changes {
+            for (changeIndex, change) in changes.enumerated() {
                 switch change {
                 case .choose(let dinner):
                     try dinner.validate()
@@ -1150,7 +1160,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                             exclusions: dinner.template.exclusions + ingredient.exclusions, removedAt: nil))
                     }
                     let template = dinner.template
-                    next.mealOccurrences.append(MealOccurrence(id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
+                    next.mealOccurrences.append(MealOccurrence(repeatedFrom: repeatWeek?.meals[changeIndex].source, id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
                         title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
                         sourceEvidence: template.sourceEvidence, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
                         completedSteps: template.completedSteps, ingredientContributionIDs: dinner.contributionIDs,
@@ -1206,6 +1216,36 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     if basis != next.basis { next.basis = basis; next.basisRevision = try increment(next.basisRevision) }
                 }
             }
+            for row in staples {
+                try next.applyStapleFields(row.selection.review, choice: row.selection.choice, quantity: row.selection.quantity,
+                    exclusions: row.exclusions, handledLine: row.selection.handledLine, lineID: row.lineID, contributionID: row.contributionID, at: at)
+            }
+        }
+    }
+
+    mutating func restoreSwap(_ effect: DinnerSwapEffect, operationID: UUID, at date: Date) throws {
+        try mutate("undoDinnerSwap-\(operationID)", at: date) { next in
+            guard let originalIndex = next.mealOccurrences.firstIndex(where: { $0.id == effect.original.id }) else { throw LedgerError.notFound(effect.original.id) }
+            let replacementIndex = try next.mealIndex(effect.replacementID)
+            next.mealOccurrences[originalIndex] = effect.original
+            next.mealOccurrences[replacementIndex].removedAt = date
+            let oldSources = Dictionary(uniqueKeysWithValues: effect.before.ingredients.map { ($0.id, $0) })
+            let oldLines = Dictionary(uniqueKeysWithValues: effect.before.lines.map { ($0.id, $0) })
+            let createdSources = Set(effect.replacement.ingredientContributionIDs)
+            let createdLines = Set(effect.after.lines.map(\.id)).subtracting(oldLines.keys)
+            for index in next.contributions.indices {
+                let id = next.contributions[index].id
+                if let original = oldSources[id] { next.contributions[index] = original }
+                else if createdSources.contains(id) { next.contributions[index].removedAt = date }
+            }
+            for index in next.lines.indices {
+                let id = next.lines[index].id
+                if let original = oldLines[id] { next.lines[index] = original }
+                else if createdLines.contains(id) { next.lines[index].trashedAt = date }
+            }
+            let touchedEdges = Set(effect.after.edges.map(\.id))
+            next.allocations.removeAll { touchedEdges.contains($0.id) }
+            next.allocations += effect.before.edges
         }
     }
 
@@ -1477,7 +1517,7 @@ private func validateExclusions(_ exclusions: [String]) throws {
     guard exclusions.count <= 100 else { throw LedgerError.invalid("exclusions") }
     for exclusion in exclusions { try ledgerText(exclusion, nonempty: true, maximum: 512) }
 }
-private func permittedProduct(_ name: String, exclusions: [String]) throws {
+func permittedProduct(_ name: String, exclusions: [String]) throws {
     guard !exclusions.isEmpty else { return }
     let words = normalizedProduct(name).components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }
     let product = " " + words.joined(separator: " ") + " "

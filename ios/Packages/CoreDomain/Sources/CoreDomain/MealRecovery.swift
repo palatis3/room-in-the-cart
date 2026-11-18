@@ -160,6 +160,33 @@ public struct MealRecoveryReview: Equatable, Sendable {
 
 public enum MealRecoveryEngine {
     public static func project(_ state: MealRecoveryState) throws -> MealRecoveryProjection {
+        try project(state, verifyingReplacements: [])
+    }
+
+    /// Persisted cooking receipts can refer to a replacement that has since moved
+    /// or been replaced again. Verify all referenced versions during one replay.
+    public static func project(_ state: MealRecoveryState, verifyingReplacements recorded: [RecoveryMeal]) throws -> MealRecoveryProjection {
+        try replay(state, verifying: recorded) { _, _, _ in }
+    }
+
+    /// Read the original transaction's exact resulting demand/claim graph from its immutable proof.
+    public static func recordedResult(_ operation: UUID, in state: MealRecoveryState) throws -> (MealRecoveryProjection, [InventoryReservation]?) {
+        var result: (MealRecoveryProjection, [InventoryReservation]?)?
+        _ = try replay(state, verifying: []) { event, projection, claims in
+            if event.id == operation { result = (projection, claims) }
+        }
+        guard let result else { throw MealRecoveryError.stale }
+        return result
+    }
+
+    private static func replay(_ state: MealRecoveryState, verifying recorded: [RecoveryMeal],
+                               observe: (MealRecoveryEvent, MealRecoveryProjection, [InventoryReservation]?) -> Void) throws -> MealRecoveryProjection {
+        var pending: [UUID: RecoveryMeal] = [:]
+        for meal in recorded {
+            if let existing = pending[meal.revisionID], existing != meal { throw MealRecoveryError.invalid }
+            pending[meal.revisionID] = meal
+        }
+        var replaced = Set<UUID>()
         guard state.originalMeals.count <= 1_000, state.events.count <= 1_000,
               Set(state.originalMeals.map(\.id)).count == state.originalMeals.count,
               Set(state.originalMeals.map(\.revisionID)).count == state.originalMeals.count else { throw MealRecoveryError.invalid }
@@ -187,7 +214,9 @@ public enum MealRecoveryEngine {
                     knownTemplates: knownTemplates, evidence: event.stockEvidence, reservations: event.reservations,
                     canonicalAllocation: event.canonicalAllocation, at: event.appliedAt)
                 try consent(event.request, feasible: result.food && result.timing, repeats: result.repeats)
+                if !pending.isEmpty { replaced.insert(event.request.replacement.id) }
                 current = result.after
+                observe(event, current, result.afterClaims)
                 usedNeeds.formUnion(event.request.replacement.needs.map(\.id))
                 usedRevisions.insert(event.request.replacement.revisionID)
                 if let template = event.request.replacement.templateID { knownTemplates.insert(template) }
@@ -202,7 +231,11 @@ public enum MealRecoveryEngine {
                 priorInstant = event.appliedAt
                 remainingContexts.removeAll { $0.id == event.id }
             }
+            if let meal = pending.removeValue(forKey: current.revisionID) {
+                guard replaced.contains(meal.id), current.meals.contains(meal) else { throw MealRecoveryError.invalid }
+            }
         }
+        guard pending.isEmpty else { throw MealRecoveryError.invalid }
         return current
     }
 

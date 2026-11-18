@@ -1173,6 +1173,262 @@
           }
         }
       }
+    },
+    "Review Undo for this dinner swap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Undo for this dinner swap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cómo deshacer este cambio de cena"
+          }
+        }
+      }
+    },
+    "Current dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena actual"
+          }
+        }
+      }
+    },
+    "Dinner to restore": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner to restore"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena que se restaurará"
+          }
+        }
+      }
+    },
+    "This saves a new set of dinner instructions. Your original order, receipts and charges keep their recorded values.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saves a new set of dinner instructions. Your original order, receipts and charges keep their recorded values."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardarán nuevas instrucciones para la cena. El pedido original, los recibos y los cargos conservarán sus valores registrados."
+          }
+        }
+      }
+    },
+    "Food after Undo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food after Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos después de deshacer el cambio"
+          }
+        }
+      }
+    },
+    "Confirm Undo of this dinner swap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm Undo of this dinner swap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar que se deshaga este cambio de cena"
+          }
+        }
+      }
+    },
+    "This dinner or its food changed. Review its current instructions before undoing the swap.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This dinner or its food changed. Review its current instructions before undoing the swap."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cena o sus alimentos cambiaron. Revisa las instrucciones actuales antes de deshacer el cambio."
+          }
+        }
+      }
+    },
+    "Review the saved swap again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the saved swap again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a revisar el cambio guardado"
+          }
+        }
+      }
+    },
+    "Undo dinner swap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo dinner swap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer cambio de cena"
+          }
+        }
+      }
+    },
+    "Reopen the pickup in the same private workspace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the pickup in the same private workspace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir la recogida en el mismo espacio privado."
+          }
+        }
+      }
+    },
+    "The adult who saved this swap must review its Undo.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The adult who saved this swap must review its Undo."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El adulto que guardó este cambio debe revisar cómo deshacerlo."
+          }
+        }
+      }
+    },
+    "The food counts or reservations used by this swap changed. Review the current food before choosing another dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The food counts or reservations used by this swap changed. Review the current food before choosing another dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cantidades o reservas de alimentos de este cambio ya no son las mismas. Revisa los alimentos actuales antes de elegir otra cena."
+          }
+        }
+      }
+    },
+    "This dinner has a cooking record. Review what was cooked before replacing it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This dinner has a cooking record. Review what was cooked before replacing it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cena tiene un registro de cocina. Revisa lo que se cocinó antes de cambiarla."
+          }
+        }
+      }
+    },
+    "The earlier dinner does not meet the current reviewed meal requirements.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier dinner does not meet the current reviewed meal requirements."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cena anterior no cumple los requisitos actuales revisados para la comida."
+          }
+        }
+      }
+    },
+    "A separate repair instruction belongs to one of these dinners. Review it before choosing another dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A separate repair instruction belongs to one of these dinners. Review it before choosing another dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una de estas cenas tiene una instrucción de ajuste guardada por separado. Revísala antes de elegir otra cena."
+          }
+        }
+      }
+    },
+    "Restoring this dinner would change food already allocated to another need. Review the affected meals and reservations.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restoring this dinner would change food already allocated to another need. Review the affected meals and reservations."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar esta cena cambiaría los alimentos ya asignados a otra necesidad. Revisa las comidas y las reservas afectadas."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

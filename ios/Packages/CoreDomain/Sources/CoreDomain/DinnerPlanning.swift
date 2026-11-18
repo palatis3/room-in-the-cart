@@ -183,6 +183,9 @@ public struct DinnerQuoteSelection: Codable, Equatable, Sendable {
     public init(pairID: UUID, optionID: UUID) { self.pairID = pairID; self.optionID = optionID }
 }
 public struct DinnerProposal: Codable, Equatable, Sendable, Identifiable {
+    public fileprivate(set) var swapOriginalID: UUID? = nil
+    public internal(set) var repeatWeek: RepeatWeek.Plan? = nil
+    public fileprivate(set) var preferenceRevision: UUID? = nil
     public let id: UUID
     public let shopID: UUID
     public let baseRevisionID: UUID
@@ -198,6 +201,8 @@ public struct DinnerProposal: Codable, Equatable, Sendable, Identifiable {
     public let quoteSelection: DinnerQuoteSelection?
 }
 public struct DinnerApplyReceipt: Codable, Equatable, Sendable, Identifiable {
+    public fileprivate(set) var swapEffect: DinnerSwapEffect? = nil
+    public fileprivate(set) var swapUndoRevisionID: UUID? = nil
     public let proposal: DinnerProposal
     public let appliedBy: String
     public let appliedAt: Date
@@ -227,6 +232,7 @@ public struct DinnerMealWeek: Equatable, Sendable {
 }
 
 public struct DinnerIdeaDraft: Codable, Equatable, Sendable, Identifiable {
+    public var preferenceRevision: UUID? = nil
     public let id: UUID
     public let requestID: UUID
     public let catalogVersion: String
@@ -251,6 +257,21 @@ public struct DinnerIdeaReview: Equatable, Sendable {
 }
 
 public struct DinnerPlanningState: Codable, Equatable, Sendable {
+    public private(set) var privateMealPreferences: MealPreferenceProfile?
+
+    public mutating func updateMealPreferences(_ settings: MealPreferenceSettings, expectedRevision: UUID?) throws {
+        guard privateMealPreferences?.revision == expectedRevision else { throw DinnerPlanningError.stalePreview }
+        try settings.validate()
+        if settings != (privateMealPreferences?.settings ?? MealPreferenceSettings()) {
+            privateMealPreferences = MealPreferenceProfile(settings: settings)
+        }
+    }
+
+    public func preferences(for access: DinnerAccessContext) -> MealPreferenceProfile? {
+        guard case .local = access.scope else { return nil }
+        return privateMealPreferences
+    }
+
     public private(set) var revisionID: UUID
     public private(set) var acceptedDinners: [AcceptedDinner]
     public private(set) var freeReusableDinnerID: UUID?
@@ -267,6 +288,7 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         portionBindings = []; protectedDays = []; weekNotes = []; ideas = []; proposals = []; applyReceipts = []; quotePairs = []
     }
     public func validate() throws {
+        try privateMealPreferences?.settings.validate()
         guard acceptedDinners.count <= 500, rotations.count <= 100, portionBindings.count <= 20_000,
               protectedDays.count <= 10_000, weekNotes.count <= 2_000, ideas.count <= 500,
               proposals.count <= 2_000, applyReceipts.count <= 10_000, quotePairs.count <= 500 else { throw DinnerPlanningError.invalid("stateSize") }
@@ -295,13 +317,22 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         for proposal in proposals { try Self.validate(proposal) }
         for receipt in applyReceipts {
             try Self.validate(receipt.proposal); try dinnerText(receipt.appliedBy); try dinnerDate(receipt.appliedAt)
-            guard receipt.revisionID == receipt.proposal.proposedRevisionID else { throw DinnerPlanningError.invalid("receipt") }
+            if let swap = receipt.swapEffect { try swap.validate(receipt.proposal) }
+            guard (receipt.swapEffect != nil) == (receipt.proposal.swapOriginalID != nil),
+                  receipt.swapUndoRevisionID == nil || receipt.swapEffect != nil,
+                  receipt.revisionID == receipt.proposal.proposedRevisionID else { throw DinnerPlanningError.invalid("receipt") }
         }
         for pair in quotePairs { try pair.validate() }
     }
     static func validate(_ proposal: DinnerProposal) throws {
+        if proposal.swapOriginalID != nil { _ = try DinnerSwapEffect.shape(proposal) }
         try dinnerDate(proposal.createdAt); try dinnerText(proposal.authorID); try dinnerText(proposal.namespace)
-        guard proposal.basisRevision >= 0, !proposal.changes.isEmpty, proposal.changes.count <= 500 else { throw DinnerPlanningError.invalid("proposal") }
+        if let repeatWeek = proposal.repeatWeek {
+            try repeatWeek.validate()
+            guard proposal.tool == .manual, !proposal.isIsolatedPreview, repeatWeek.meals.count == proposal.changes.count,
+                  proposal.changes.allSatisfy({ if case .choose = $0 { true } else { false } }) else { throw DinnerPlanningError.invalid("repeatWeek") }
+        }
+        guard proposal.basisRevision >= 0, !proposal.changes.isEmpty || proposal.repeatWeek?.staples.isEmpty == false, proposal.changes.count <= 500 else { throw DinnerPlanningError.invalid("proposal") }
         if proposal.tool == .quoteAdoption {
             guard proposal.changes.count == 1, proposal.quoteSelection != nil,
                   case .adoptBasis = proposal.changes[0] else { throw DinnerPlanningError.invalid("quoteAdoption") }
@@ -348,12 +379,13 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         for note in weekNotes where !shops.contains(where: { $0.id == note.shopID }) { throw DinnerPlanningError.notFound(note.shopID) }
         for proposal in proposals where !shops.contains(where: { $0.id == proposal.shopID }) { throw DinnerPlanningError.notFound(proposal.shopID) }
         for receipt in applyReceipts {
-            guard let shop = shops.first(where: { $0.id == receipt.proposal.shopID }), shop.revisions.contains(where: { $0.id == receipt.revisionID })
+            guard let shop = shops.first(where: { $0.id == receipt.proposal.shopID }), shop.revisions.contains(where: { $0.id == receipt.revisionID }),
+                  receipt.swapUndoRevisionID.map({ undo in shop.revisions.contains { $0.id == undo && $0.operation == "undoDinnerSwap-\(receipt.id)" } }) ?? true
             else { throw DinnerPlanningError.invalid("receiptRevision") }
         }
     }
     private enum CodingKeys: String, CodingKey {
-        case revisionID, acceptedDinners, freeReusableDinnerID, rotations, portionBindings, protectedDays, weekNotes, ideas, proposals, applyReceipts, quotePairs
+        case privateMealPreferences, revisionID, acceptedDinners, freeReusableDinnerID, rotations, portionBindings, protectedDays, weekNotes, ideas, proposals, applyReceipts, quotePairs
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -368,6 +400,7 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         proposals = try c.decode([DinnerProposal].self, forKey: .proposals)
         applyReceipts = try c.decode([DinnerApplyReceipt].self, forKey: .applyReceipts)
         quotePairs = try c.decode([TwoStoreQuotePair].self, forKey: .quotePairs)
+        privateMealPreferences = try c.decodeIfPresent(MealPreferenceProfile.self, forKey: .privateMealPreferences)
         try validate()
     }
     public mutating func accept(_ dinner: AcceptedDinner, access: DinnerAccessContext, at now: Date) throws {
@@ -423,6 +456,11 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         if let old = acceptedDinners.first(where: { $0.sourceIdeaID == draft.id }) {
             guard old.id == acceptedID, old.template == acceptedTemplate else { throw DinnerPlanningError.operationConflict }; return old
         }
+        let profile = preferences(for: access)
+        guard draft.preferenceRevision == profile?.revision else { throw DinnerPlanningError.stalePreview }
+        guard MealEligibilityPolicy.evaluate(profile: profile, template: draft.template).eligible else {
+            throw DinnerPlanningError.reviewRequired("mealPreferences")
+        }
         guard DinnerIdeaEngine.review(draft).canAccept else { throw DinnerPlanningError.reviewRequired("idea") }
         let dinner = AcceptedDinner(id: acceptedID, template: acceptedTemplate, acceptedAt: now, sourceIdeaID: draft.id)
         var next = self; try next.saveIdea(draft, access: access, at: now); try next.accept(dinner, access: access, at: now); self = next
@@ -456,6 +494,18 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         if let i = next.quotePairs.firstIndex(where: { $0.id == pair.id }) { guard next.quotePairs[i] == pair else { throw DinnerPlanningError.operationConflict }; return }
         next.quotePairs.append(pair); try next.validate(); self = next
     }
+    fileprivate mutating func attachSwapReceipt(_ receipt: DinnerApplyReceipt) {
+        applyReceipts[applyReceipts.count - 1] = receipt
+    }
+
+    mutating func finishSwapUndo(_ id: UUID, effect: DinnerSwapEffect, revision: UUID) throws {
+        guard let index = applyReceipts.firstIndex(where: { $0.id == id }) else { throw DinnerPlanningError.notFound(id) }
+        portionBindings.removeAll { $0.occurrenceID == effect.original.id || $0.occurrenceID == effect.replacementID }
+        portionBindings += effect.before.bindings
+        applyReceipts[index].swapUndoRevisionID = revision
+        revisionID = UUID()
+    }
+
     mutating func applied(_ receipt: DinnerApplyReceipt) throws {
         applyReceipts.append(receipt)
         for change in receipt.proposal.changes {
@@ -489,26 +539,49 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
 public enum DinnerPlanningEngine {
     public static func preview(id: UUID = UUID(), changes: [DinnerLedgerChange], tool: DinnerPlanningTool,
                                ledger: ShoppingLedger, state: DinnerPlanningState, access: DinnerAccessContext,
-                               phase: BasketPhase, at now: Date, isolated: Bool = false, quoteSelection: DinnerQuoteSelection? = nil) throws -> DinnerPreview {
+                               phase: BasketPhase, at now: Date, isolated: Bool = false, quoteSelection: DinnerQuoteSelection? = nil, swapOriginalID: UUID? = nil) throws -> DinnerPreview {
+        try makePreview(id: id, changes: changes, tool: tool, ledger: ledger, state: state, access: access, phase: phase, at: now,
+                        isolated: isolated, quoteSelection: quoteSelection, repeatWeek: nil, staples: [], revisionID: UUID(), swapOriginalID: swapOriginalID)
+    }
+
+    static func makePreview(id: UUID, changes: [DinnerLedgerChange], tool: DinnerPlanningTool, ledger: ShoppingLedger, state: DinnerPlanningState,
+                            access: DinnerAccessContext, phase: BasketPhase, at now: Date, isolated: Bool, quoteSelection: DinnerQuoteSelection?,
+                            repeatWeek: RepeatWeek.Plan?, staples: [RepeatWeek.PreparedStaple], revisionID: UUID, swapOriginalID: UUID? = nil) throws -> DinnerPreview {
         try access.validate(shopID: ledger.id, at: now, budget: tool == .quoteAdoption)
         if tool.requiresPaidAccess && !access.hasPaidTools && !isolated { throw DinnerPlanningError.paidAccessRequired }
         try state.validate(); try ledger.validate()
-        let proposal = DinnerProposal(id: id, shopID: ledger.id, baseRevisionID: ledger.revisionID,
-            basisRevision: ledger.basisRevision, planningRevisionID: state.revisionID, proposedRevisionID: UUID(),
+        var proposal = DinnerProposal(id: id, shopID: ledger.id, baseRevisionID: ledger.revisionID,
+            basisRevision: ledger.basisRevision, planningRevisionID: state.revisionID, proposedRevisionID: revisionID,
             authorID: access.actorID, namespace: access.namespace, tool: tool, changes: changes, createdAt: now, isIsolatedPreview: isolated, quoteSelection: quoteSelection)
+        proposal.swapOriginalID = swapOriginalID
+        if swapOriginalID != nil {
+            guard phase == .draft, case .local = access.scope else { throw DinnerPlanningError.lockedBasket }
+            try DinnerSwapEffect.validateSlot(proposal, ledger: ledger, state: state)
+        }
+        proposal.repeatWeek = repeatWeek
+        proposal.preferenceRevision = state.preferences(for: access)?.revision
         try DinnerPlanningState.validate(proposal)
         try validateChosen(proposal, state: state, access: access)
         try validateProtectedAdjustments(proposal, ledger: ledger, state: state)
         var projected = ledger; try projected.applyDinnerChanges(changes, expectedRevisionID: ledger.revisionID,
-            revisionID: proposal.proposedRevisionID, operationID: proposal.id, at: now)
+            revisionID: proposal.proposedRevisionID, operationID: proposal.id, at: now, repeatWeek: proposal.repeatWeek, staples: staples)
         try validateManualBindings(proposal, ledger: ledger, projected: projected, state: state)
         let changedSources = projected.contributions.filter { source in ledger.contributions.first(where: { $0.id == source.id }) != source }.map(\.id)
         let changedMeals = projected.mealOccurrences.filter { meal in ledger.mealOccurrences.first(where: { $0.id == meal.id }) != meal }.map(\.id)
         return DinnerPreview(proposal: proposal, projectedLedger: projected, projectedMeals: projected.mealOccurrences,
             projectedContributions: projected.contributions, budgetBasis: access.canReadBudget ? projected.basis : nil, changedContributionIDs: changedSources,
-            changedOccurrenceIDs: changedMeals, needsPurchaseAmendment: phase != .draft && !changes.allSatisfy(\.isCalendarOnly))
+            changedOccurrenceIDs: changedMeals, needsPurchaseAmendment: phase != .draft && (!staples.isEmpty || !changes.allSatisfy(\.isCalendarOnly)))
     }
     static func validateChosen(_ proposal: DinnerProposal, state: DinnerPlanningState, access: DinnerAccessContext) throws {
+        let profile = state.preferences(for: access)
+        for change in proposal.changes {
+            if case .choose(let planned) = change {
+                guard MealEligibilityPolicy.evaluate(profile: profile, template: planned.template).eligible else {
+                    throw DinnerPlanningError.reviewRequired("mealPreferences")
+                }
+            }
+        }
+
         if let selection = proposal.quoteSelection {
             guard let pair = state.quotePairs.first(where: { $0.id == selection.pairID }),
                   pair.shopID == proposal.shopID, pair.baseRevisionID == proposal.baseRevisionID, pair.basisRevision == proposal.basisRevision,
@@ -658,6 +731,12 @@ public enum DinnerPlanningEngine {
     @discardableResult
     public static func apply(_ proposal: DinnerProposal, ledger: inout ShoppingLedger, state: inout DinnerPlanningState,
                              access: DinnerAccessContext, phase: BasketPhase, at now: Date) throws -> DinnerApplyReceipt {
+        guard proposal.repeatWeek == nil else { throw DinnerPlanningError.reviewRequired("repeatSources") }
+        return try applyValidated(proposal, ledger: &ledger, state: &state, access: access, phase: phase, at: now, staples: [])
+    }
+
+    static func applyValidated(_ proposal: DinnerProposal, ledger: inout ShoppingLedger, state: inout DinnerPlanningState,
+                               access: DinnerAccessContext, phase: BasketPhase, at now: Date, staples: [RepeatWeek.PreparedStaple]) throws -> DinnerApplyReceipt {
         try access.validate(shopID: ledger.id, at: now, applying: true, budget: proposal.tool == .quoteAdoption)
         guard proposal.shopID == ledger.id, proposal.namespace == access.namespace, !proposal.isIsolatedPreview else { throw DinnerPlanningError.forbidden }
         try DinnerPlanningState.validate(proposal); try ledger.validate(); try state.validate()
@@ -667,17 +746,27 @@ public enum DinnerPlanningEngine {
             return receipt
         }
         if proposal.tool.requiresPaidAccess && !access.hasPaidTools { throw DinnerPlanningError.paidAccessRequired }
-        guard phase == .draft || proposal.changes.allSatisfy(\.isCalendarOnly) else { throw DinnerPlanningError.lockedBasket }
-        guard proposal.baseRevisionID == ledger.revisionID, proposal.basisRevision == ledger.basisRevision,
+        guard phase == .draft || (staples.isEmpty && proposal.changes.allSatisfy(\.isCalendarOnly)) else { throw DinnerPlanningError.lockedBasket }
+        guard proposal.preferenceRevision == state.preferences(for: access)?.revision,
+              proposal.baseRevisionID == ledger.revisionID, proposal.basisRevision == ledger.basisRevision,
               proposal.planningRevisionID == state.revisionID else { throw DinnerPlanningError.stalePreview }
         try validateChosen(proposal, state: state, access: access)
+        if proposal.swapOriginalID != nil {
+            guard case .local = access.scope else { throw DinnerPlanningError.forbidden }
+            try DinnerSwapEffect.validateSlot(proposal, ledger: ledger, state: state)
+        }
         try validateProtectedAdjustments(proposal, ledger: ledger, state: state)
         var nextLedger = ledger, nextState = state
         try nextLedger.applyDinnerChanges(proposal.changes, expectedRevisionID: proposal.baseRevisionID,
-            revisionID: proposal.proposedRevisionID, operationID: proposal.id, at: now)
+            revisionID: proposal.proposedRevisionID, operationID: proposal.id, at: now, repeatWeek: proposal.repeatWeek, staples: staples)
         try validateManualBindings(proposal, ledger: ledger, projected: nextLedger, state: state)
-        let receipt = DinnerApplyReceipt(proposal: proposal, appliedBy: access.actorID, appliedAt: now, revisionID: nextLedger.revisionID)
-        try nextState.applied(receipt); try nextState.validate()
+        var receipt = DinnerApplyReceipt(proposal: proposal, appliedBy: access.actorID, appliedAt: now, revisionID: nextLedger.revisionID)
+        try nextState.applied(receipt)
+        if proposal.swapOriginalID != nil {
+            receipt.swapEffect = try DinnerSwapEffect.record(receipt, prior: ledger, planning: state, current: nextLedger, updated: nextState)
+            nextState.attachSwapReceipt(receipt)
+        }
+        try nextState.validate()
         ledger = nextLedger; state = nextState; return receipt
     }
     public static func previewRotation(rotationID: UUID, selectedEntryIDs: [UUID], weekStart: MealDay,

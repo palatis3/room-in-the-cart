@@ -1,0 +1,1808 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Tonight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta noche"
+          }
+        }
+      }
+    },
+    "Add ingredient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir ingrediente"
+          }
+        }
+      }
+    },
+    "Apply adds one dinner to this pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply adds one dinner to this pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar añade una cena a esta recogida."
+          }
+        }
+      }
+    },
+    "Apply creates a new pickup and one dinner. Cancel creates neither.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply creates a new pickup and one dinner. Cancel creates neither."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar crea una recogida y una cena. Cancelar no crea ninguna."
+          }
+        }
+      }
+    },
+    "Apply dinner choice": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply dinner choice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar la cena elegida"
+          }
+        }
+      }
+    },
+    "Brand details have not been reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brand details have not been reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se han revisado las marcas."
+          }
+        }
+      }
+    },
+    "Brand preferences differ.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brand preferences differ."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las marcas no coinciden con tus preferencias."
+          }
+        }
+      }
+    },
+    "Brands, one per line; empty means none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brands, one per line; empty means none"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcas, una por línea; vacío significa ninguna"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Cancel preview": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel preview"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar vista previa"
+          }
+        }
+      }
+    },
+    "Checkout cash estimate incomplete.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkout cash estimate incomplete."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La estimación del pago está incompleta."
+          }
+        }
+      }
+    },
+    "Checkout cash is incomplete until current packs, prices, fees, and minimums are reviewed. Pantry coverage is not a price estimate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkout cash is incomplete until current packs, prices, fees, and minimums are reviewed. Pantry coverage is not a price estimate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El pago está incompleto hasta revisar los paquetes, precios, cargos y mínimos actuales. La cobertura de la despensa no es una estimación de precio."
+          }
+        }
+      }
+    },
+    "Choose a destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un destino"
+          }
+        }
+      }
+    },
+    "Choose…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir…"
+          }
+        }
+      }
+    },
+    "Choosing records the full recipe need. It does not consume pantry food or reserve the matched batches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choosing records the full recipe need. It does not consume pantry food or reserve the matched batches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir registra todos los ingredientes necesarios. No consume alimentos ni reserva los lotes vinculados."
+          }
+        }
+      }
+    },
+    "Complete ingredient details, one per line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete ingredient details, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles completos de ingredientes, uno por línea"
+          }
+        }
+      }
+    },
+    "Covered by currently free pantry food.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covered by currently free pantry food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cubierto con alimentos disponibles de la despensa."
+          }
+        }
+      }
+    },
+    "Dinner was not confirmed. Review changed information or retry the pending save.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner was not confirmed. Review changed information or retry the pending save."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se confirmó la cena. Revisa los cambios o reintenta el guardado pendiente."
+          }
+        }
+      }
+    },
+    "Enter a title, positive servings and ingredient amounts, and valid reviewed details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a title, positive servings and ingredient amounts, and valid reviewed details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce un título, raciones y cantidades positivas, y detalles revisados válidos."
+          }
+        }
+      }
+    },
+    "Enter reviewed amounts below. Imported words do not establish a quantity or serving count.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter reviewed amounts below. Imported words do not establish a quantity or serving count."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce las cantidades revisadas. El texto importado no confirma cantidades ni raciones."
+          }
+        }
+      }
+    },
+    "Excluded ingredient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluded ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente excluido"
+          }
+        }
+      }
+    },
+    "I reviewed all ingredient details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed all ingredient details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé todos los detalles de ingredientes"
+          }
+        }
+      }
+    },
+    "I reviewed recipe brands": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed recipe brands"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé las marcas de la receta"
+          }
+        }
+      }
+    },
+    "I reviewed required appliances": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed required appliances"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé los electrodomésticos necesarios"
+          }
+        }
+      }
+    },
+    "Ingredient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente"
+          }
+        }
+      }
+    },
+    "Ingredient details need review for your restrictions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient details need review for your restrictions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los detalles de ingredientes según tus restricciones."
+          }
+        }
+      }
+    },
+    "Ingredients covered — review to choose": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredients covered — review to choose"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes cubiertos: revisa antes de elegir"
+          }
+        }
+      }
+    },
+    "Keep editing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep editing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir editando"
+          }
+        }
+      }
+    },
+    "Leave details unknown unless you reviewed them. Recipe details never confirm the ingredients or brand of a pantry product.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave details unknown unless you reviewed them. Recipe details never confirm the ingredients or brand of a pantry product."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deja como desconocido lo que no hayas revisado. La receta no confirma los ingredientes ni la marca de un producto de la despensa."
+          }
+        }
+      }
+    },
+    "Missing or not credited": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing or not credited"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta o no se ha contado"
+          }
+        }
+      }
+    },
+    "Missing or unresolved quantity — review before choosing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing or unresolved quantity — review before choosing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad pendiente o desconocida: revisa antes de elegir."
+          }
+        }
+      }
+    },
+    "Needs information or a pantry match": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs information or a pantry match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesita información o un alimento vinculado"
+          }
+        }
+      }
+    },
+    "New pickup name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New pickup name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la nueva recogida"
+          }
+        }
+      }
+    },
+    "No private preference profile is saved. Restrictions have not been checked.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No private preference profile is saved. Restrictions have not been checked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay preferencias privadas guardadas. No se han comprobado las restricciones."
+          }
+        }
+      }
+    },
+    "No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay recetas revisadas. Añade una receta conocida o revisa las raciones y cantidades de una importación guardada. Explorar no inicia una recogida."
+          }
+        }
+      }
+    },
+    "Not matched": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not matched"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin vincular"
+          }
+        }
+      }
+    },
+    "One dinner was added to your pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One dinner was added to your pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añadió una cena a tu recogida."
+          }
+        }
+      }
+    },
+    "Open My Pantry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open My Pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Mi despensa"
+          }
+        }
+      }
+    },
+    "Original saved source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original saved source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente original guardada"
+          }
+        }
+      }
+    },
+    "Pantry matches to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry matches to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coincidencias de despensa para revisar"
+          }
+        }
+      }
+    },
+    "Pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recogida"
+          }
+        }
+      }
+    },
+    "Preference difference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preference difference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diferencia de preferencia"
+          }
+        }
+      }
+    },
+    "Preparation effort": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esfuerzo de preparación"
+          }
+        }
+      }
+    },
+    "Preparation effort exceeds your preference.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation effort exceeds your preference."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El esfuerzo de preparación supera tu preferencia."
+          }
+        }
+      }
+    },
+    "Preparation effort has not been reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation effort has not been reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha revisado el esfuerzo de preparación."
+          }
+        }
+      }
+    },
+    "Preparation minutes, unknown if blank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation minutes, unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de preparación; vacío si se desconocen"
+          }
+        }
+      }
+    },
+    "Preparation time has not been reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation time has not been reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha revisado el tiempo de preparación."
+          }
+        }
+      }
+    },
+    "Preview dinner choice": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview dinner choice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver vista previa de la cena"
+          }
+        }
+      }
+    },
+    "Recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receta"
+          }
+        }
+      }
+    },
+    "Recipe library": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe library"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca de recetas"
+          }
+        }
+      }
+    },
+    "Recipe was not confirmed. Review changed information or the pending save.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe was not confirmed. Review changed information or the pending save."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se confirmó la receta. Revisa los cambios o el guardado pendiente."
+          }
+        }
+      }
+    },
+    "Recipes or pantry changed or could not be read. Refresh before reviewing a meal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes or pantry changed or could not be read. Refresh before reviewing a meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las recetas o la despensa cambiaron o no se pudieron leer. Actualiza antes de revisar una comida."
+          }
+        }
+      }
+    },
+    "Refresh before reviewing this match.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh before reviewing this match."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza antes de revisar este vínculo."
+          }
+        }
+      }
+    },
+    "Refresh recipes and pantry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh recipes and pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar recetas y despensa"
+          }
+        }
+      }
+    },
+    "Refreshing recipes and pantry…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshing recipes and pantry…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizando recetas y despensa…"
+          }
+        }
+      }
+    },
+    "Required appliances have not been reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required appliances have not been reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se han revisado los electrodomésticos necesarios."
+          }
+        }
+      }
+    },
+    "Required appliances, one per line; empty means none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required appliances, one per line; empty means none"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Electrodomésticos necesarios, uno por línea; vacío significa ninguno"
+          }
+        }
+      }
+    },
+    "Review a recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una receta"
+          }
+        }
+      }
+    },
+    "Review a recipe by hand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a recipe by hand"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una receta manualmente"
+          }
+        }
+      }
+    },
+    "Review dinner choice": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review dinner choice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la cena elegida"
+          }
+        }
+      }
+    },
+    "Review ingredient matches and missing amounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review ingredient matches and missing amounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar vínculos de ingredientes y cantidades que faltan"
+          }
+        }
+      }
+    },
+    "Review recipe facts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review recipe facts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los datos de la receta"
+          }
+        }
+      }
+    },
+    "Review restrictions and missing information": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review restrictions and missing information"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar restricciones e información pendiente"
+          }
+        }
+      }
+    },
+    "Review this food’s ingredient and brand details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this food’s ingredient and brand details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los ingredientes y la marca de este alimento"
+          }
+        }
+      }
+    },
+    "Review your private preferences first, then match recipe ingredients to pantry food. Food reserved for other plans is already excluded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review your private preferences first, then match recipe ingredients to pantry food. Food reserved for other plans is already excluded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa primero tus preferencias privadas y luego vincula los ingredientes con alimentos de la despensa. Se excluyen los alimentos reservados para otros planes."
+          }
+        }
+      }
+    },
+    "Reviewed pantry match": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed pantry match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento de despensa revisado"
+          }
+        }
+      }
+    },
+    "Reviewed preparation minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed preparation minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de preparación revisados"
+          }
+        }
+      }
+    },
+    "Reviewed restriction details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed restriction details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles revisados de restricciones"
+          }
+        }
+      }
+    },
+    "Save a reviewed recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a reviewed recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar una receta revisada"
+          }
+        }
+      }
+    },
+    "Save reviewed recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar receta revisada"
+          }
+        }
+      }
+    },
+    "Saved source — review servings and ingredient amounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved source — review servings and ingredient amounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente guardada: revisa raciones y cantidades"
+          }
+        }
+      }
+    },
+    "Saving creates your Free reusable dinner. It does not start a pickup or add groceries.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving creates your Free reusable dinner. It does not start a pickup or add groceries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar crea tu cena reutilizable del plan Free. No inicia una recogida ni añade compras."
+          }
+        }
+      }
+    },
+    "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar reemplaza tu cena reutilizable del plan Free. No cambia las cenas ya elegidas ni la importación original de Registros."
+          }
+        }
+      }
+    },
+    "Set up My Pantry to review recipes against food available at home.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up My Pantry to review recipes against food available at home."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configura Mi despensa para revisar recetas según los alimentos disponibles en casa."
+          }
+        }
+      }
+    },
+    "Similar names are not a match until you review them. Unknown quantities do not count as available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Similar names are not a match until you review them. Unknown quantities do not count as available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los nombres parecidos no son un vínculo hasta que los revises. Las cantidades desconocidas no se cuentan como disponibles."
+          }
+        }
+      }
+    },
+    "Start a new pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a new pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar una nueva recogida"
+          }
+        }
+      }
+    },
+    "Stock count or reservation needs review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock count or reservation needs review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad o la reserva necesita revisión."
+          }
+        }
+      }
+    },
+    "The recipe, preferences, pantry or destination changed. Review the current information again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipe, preferences, pantry or destination changed. Review the current information again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La receta, las preferencias, la despensa o el destino cambiaron. Revisa otra vez la información actual."
+          }
+        }
+      }
+    },
+    "The saved source or private workspace changed. Open the review again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved source or private workspace changed. Open the review again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fuente guardada o el espacio privado cambiaron. Abre otra vez la revisión."
+          }
+        }
+      }
+    },
+    "This source exceeds the supported recipe size. Review a smaller recipe in Records before continuing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This source exceeds the supported recipe size. Review a smaller recipe in Records before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta fuente supera el tamaño de receta admitido. Revisa una receta más pequeña en Registros antes de continuar."
+          }
+        }
+      }
+    },
+    "This view is private. It does not use a household pantry or change a shopping list while you browse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This view is private. It does not use a household pantry or change a shopping list while you browse."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta vista es privada. No usa una despensa compartida ni cambia listas mientras exploras."
+          }
+        }
+      }
+    },
+    "Unavailable appliances": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable appliances"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Electrodomésticos no disponibles"
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconocido"
+          }
+        }
+      }
+    },
+    "Unlock your private workspace to review tonight’s meals.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock your private workspace to review tonight’s meals."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea tu espacio privado para revisar las comidas de esta noche."
+          }
+        }
+      }
+    },
+    "Review the actual pantry product labels. If several batches share this food, review every batch. Recipe text does not establish these facts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the actual pantry product labels. If several batches share this food, review every batch. Recipe text does not establish these facts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las etiquetas de los productos de la despensa. Si hay varios lotes del alimento, revísalos todos. El texto de la receta no confirma estos datos."
+          }
+        }
+      }
+    },
+    "I reviewed the brands of these batches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the brands of these batches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé las marcas de estos lotes"
+          }
+        }
+      }
+    },
+    "This evidence is used only for this pantry review. Refreshing changed stock clears it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This evidence is used only for this pantry review. Refreshing changed stock clears it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos datos solo se usan en esta revisión. Se borran al actualizar existencias que hayan cambiado."
+          }
+        }
+      }
+    },
+    "Use reviewed food details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use reviewed food details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar los detalles revisados del alimento"
+          }
+        }
+      }
+    },
+    "The pantry or review changed. Close this sheet and refresh.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pantry or review changed. Close this sheet and refresh."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La despensa o la revisión cambió. Cierra esta hoja y actualiza."
+          }
+        }
+      }
+    },
+    "Review pantry food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pantry food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar alimento de despensa"
+          }
+        }
+      }
+    },
+    "low": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "low"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajo"
+          }
+        }
+      }
+    },
+    "medium": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "medium"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medio"
+          }
+        }
+      }
+    },
+    "high": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "high"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alto"
+          }
+        }
+      }
+    },
+    "Private meal preferences": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private meal preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferencias privadas de comidas"
+          }
+        }
+      }
+    },
+    "Estimated additional groceries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated additional groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo estimado de los alimentos que faltan"
+          }
+        }
+      }
+    },
+    "Priced groceries so far": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priced groceries so far"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal de alimentos con precio"
+          }
+        }
+      }
+    },
+    "Confirmed pantry food covers these recipe amounts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed pantry food covers these recipe amounts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos confirmados en la despensa cubren estas cantidades."
+          }
+        }
+      }
+    },
+    "Based on observed package prices. Check current prices, fees and taxes at checkout.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on observed package prices. Check current prices, fees and taxes at checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La estimación usa precios observados. Revisa los precios, los cargos y los impuestos al pagar."
+          }
+        }
+      }
+    },
+    "Some amounts or package prices still need review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some amounts or package prices still need review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún quedan cantidades o precios de paquetes por revisar."
+          }
+        }
+      }
+    },
+    "Choose the saved recipe version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the saved recipe version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir la versión guardada de la receta"
+          }
+        }
+      }
+    },
+    "These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas copias comparten una identidad de receta, pero tienen datos distintos. Selecciona la fuente exacta antes de revisar la despensa."
+          }
+        }
+      }
+    },
+    "Accepted dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena aceptada"
+          }
+        }
+      }
+    },
+    "Free reusable dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free reusable dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena reutilizable del plan Free"
+          }
+        }
+      }
+    },
+    "Recipe revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de receta"
+          }
+        }
+      }
+    },
+    "Use this saved version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this saved version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta versión guardada"
+          }
+        }
+      }
+    },
+    "This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guarda una copia revisada del plan Free. La receta aceptada y las cenas ya elegidas conservan sus datos originales."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

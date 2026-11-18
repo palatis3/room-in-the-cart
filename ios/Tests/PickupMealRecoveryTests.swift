@@ -19,7 +19,7 @@ import LocalStore
         let authority: PickupRecoveryAuthority
         let inventory: ComparisonStore?
     }
-    private func fixture(canonical: Bool = false) async throws -> Fixture {
+    private func fixture(canonical: Bool = false, usableWraps: Int64 = 6) async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(directory, test: self)
@@ -62,8 +62,8 @@ import LocalStore
         let frozen = await model.freeze(); XCTAssertTrue(frozen)
         let placed = await model.reportPlaced(); XCTAssertTrue(placed)
         let key = ReceiptKey(sourceEventID: "wrap-delivery", orderLineID: line, branchID: "Main", segmentID: "one")
-        let received = await model.receive(.init(key: key, itemName: "Wraps", received: q(8), disposition: .partial, receivedAt: now),
-            usable: .init(id: UUID(), receipt: key, usable: q(6), confirmedAt: now, confirmedMatchToOrderLine: true))
+        let received = await model.receive(.init(key: key, itemName: "Wraps", received: q(max(8, usableWraps)), disposition: .partial, receivedAt: now),
+            usable: .init(id: UUID(), receipt: key, usable: q(usableWraps), confirmedAt: now, confirmedMatchToOrderLine: true))
         XCTAssertTrue(received)
         let beans = UUID()
         let stocked = await model.change { $0.stockLots.append(.init(id: UUID(), foodID: beans, name: "Beans", usable: q(4), confirmedAt: now, source: .freezer)) }
@@ -71,7 +71,7 @@ import LocalStore
         var inventory: ComparisonStore?
         if canonical {
             let store = try ComparisonStore(url: directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
-            let ledgerStore = try LedgerStore(url: directory.appendingPathComponent("ledger.sqlite"), inventoryProjectionsEnabled: true)
+            let ledgerStore = try XCTUnwrap(ledger.pantryBackingStore(gate: gate))
             cleanup.track(store, ledgerStore)
             let mapping = try PantryLegacyMigration.map(originID: store.workspaceID,
                 heads: try await store.list().map(PantryLegacyMigration.SourceHead.init), ledger: .unavailable, at: now)
@@ -141,6 +141,194 @@ import LocalStore
         XCTAssertTrue(replayed, "Read-authorized acknowledgment of a saved event does not need the old action grant.")
         XCTAssertEqual(f.model.journey, actual)
         XCTAssertEqual(f.model.allocation?.demands.first { $0.id == reviewed.definition.meal.needs[0].id }?.allocated, .zero)
+    }
+
+    func testPlacedSwapUndoCommitsOneSQLiteCompensationAndPreservesPurchasesLunchAndUnrelatedEdits() async throws {
+        let f = try await fixture(canonical: true, usableWraps: 12)
+        let initial = try XCTUnwrap(f.model.journey)
+        let original = try XCTUnwrap(f.model.recoveryDefinitions().first { $0.meal.id == f.wednesday })
+        let tuesday = try XCTUnwrap(f.model.recoveryDefinitions().first { $0.meal.id == f.tuesday })
+        let forward = try review(f)
+        let applied = await f.model.applyMealRecovery(forward, currentAuthority: { f.authority })
+        XCTAssertTrue(applied, f.model.error ?? "")
+        let otherAdult = PickupRecoveryAuthority(presentation: .init(workspaceID: f.model.sourceWorkspaceID,
+            localActorID: UUID(), workspaceUnlocked: true, sceneActive: true, childPresented: false,
+            guardianChildOnly: false, accountSubject: nil, householdLocked: false, projection: nil),
+            ledgerWorkspaceID: f.authority.ledgerWorkspaceID, ledgerRevisionID: f.authority.ledgerRevisionID,
+            selectedPickupID: initial.id, leaseID: UUID())
+        XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: forward.id, authority: otherAdult)) {
+            XCTAssertEqual($0 as? PickupRecoveryUndoError, .actor)
+        }
+        let library = MealTemplate(title: "Unrelated soup")
+        let edited = await f.ledger.change(key: "another-recipe") { $0.mealTemplates.append(library) }
+        XCTAssertTrue(edited)
+        var inverse = try f.model.prepareRecoveryUndo(forward: forward.id, authority: f.authority)
+        XCTAssertEqual(inverse.definition.meal.title, original.meal.title)
+        XCTAssertEqual(inverse.definition.notes, original.notes)
+        XCTAssertEqual(inverse.definition.meal.ingredients.map(\.need.amount), original.meal.ingredients.map(\.need.amount))
+        let before = try XCTUnwrap(f.model.journey)
+        inverse.domain = inverse.domain.confirming(repeatMeal: true, extraTrip: false, unresolved: true)
+        let denied = await f.model.applyMealRecovery(inverse, currentAuthority: { nil })
+        XCTAssertFalse(denied)
+        XCTAssertEqual(f.model.journey, before)
+        let saved = await f.model.applyMealRecovery(inverse, currentAuthority: { f.authority })
+        XCTAssertTrue(saved, f.model.error ?? "")
+        let replayed = await f.model.applyMealRecovery(inverse, currentAuthority: { f.authority })
+        XCTAssertTrue(replayed, f.model.error ?? "")
+        let store = try XCTUnwrap(f.inventory)
+        let record = try await store.load(id: initial.id)
+        let persisted = try JSONDecoder().decode(PickupJourney.self, from: XCTUnwrap(record?.payload))
+        try PickupModel.validate(persisted)
+        XCTAssertEqual(persisted, f.model.journey)
+        XCTAssertEqual(persisted.basket, initial.basket)
+        XCTAssertEqual(persisted.pickup, initial.pickup)
+        XCTAssertEqual(persisted.mealRecovery?.domain.events.map(\.id), [forward.id,inverse.id])
+        XCTAssertEqual(persisted.mealRecovery?.definitions.last?.undoOf, forward.id)
+        XCTAssertEqual(try persisted.mealRecovery?.definition(for: f.tuesday), tuesday)
+        XCTAssertEqual(try persisted.mealRecovery?.definition(for: f.wednesday), inverse.definition)
+        XCTAssertEqual(persisted.needs.first { $0.id == f.lunch }, initial.needs.first { $0.id == f.lunch })
+        XCTAssertTrue(f.ledger.workspace.mealTemplates.contains(library))
+        XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: forward.id, authority: f.authority))
+    }
+
+    func testPlacedSwapUndoRejectsRecountAndNewHardExclusionWithoutRewritingSavedSwap() async throws {
+        let f = try await fixture(canonical: true, usableWraps: 12)
+        let forward = try review(f)
+        let applied = await f.model.applyMealRecovery(forward, currentAuthority: { f.authority })
+        XCTAssertTrue(applied)
+        var inverse = try f.model.prepareRecoveryUndo(forward: forward.id, authority: f.authority)
+        inverse.domain = inverse.domain.confirming(repeatMeal: true, extraTrip: false, unresolved: true)
+        var settings = MealPreferenceSettings()
+        settings.exclusions = ["wraps"]
+        let preferences = await f.ledger.saveMealPreferences(settings, expectedRevision: nil,
+            workspaceID: f.authority.ledgerWorkspaceID, authorize: { true })
+        XCTAssertTrue(preferences)
+        XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: forward.id, authority: f.authority))
+        let denied = await f.model.applyMealRecovery(inverse, currentAuthority: { f.authority })
+        XCTAssertFalse(denied)
+        let cleared = await f.ledger.saveMealPreferences(.init(), expectedRevision: f.ledger.workspace.dinnerPlanning.privateMealPreferences?.revision,
+            workspaceID: f.authority.ledgerWorkspaceID, authorize: { true })
+        XCTAssertTrue(cleared)
+        let current = try f.model.prepareRecoveryUndo(forward: forward.id, authority: f.authority)
+        try await recountCanonicalBeans(f, count: .exact(q(2)))
+        let refreshed = await f.model.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: forward.id, authority: f.authority))
+        let stale = await f.model.applyMealRecovery(current, currentAuthority: { f.authority })
+        XCTAssertFalse(stale)
+        XCTAssertEqual(f.model.journey?.mealRecovery?.domain.events.map(\.id), [forward.id])
+    }
+
+    func testCookingReplacementConsumesBeansOnceAndUndoRestoresOnlyItsOwnReservation() async throws {
+        let f = try await fixture(canonical: true)
+        let shop = try XCTUnwrap(f.ledger.shop)
+        let session = PantryCookSession(ledger: f.ledger, pickup: f.model, authorize: { true })
+        let original = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        let oldDraft = CookCompletionDraft(inventoryID: original.inventory.state.workspaceID,
+            inventoryRevision: original.inventory.state.revision, ledgerID: original.ledgerID, shop: shop, meal: original.meal,
+            cookedAt: now, servingsMade: .one, parts: original.meal.ingredientContributionIDs.map {
+                .init(contributionID: $0, use: .notUsed)
+            }, leftovers: [])
+        let oldReview = try await session.review(oldDraft)
+        let replacement = try review(f)
+        let replaced = await f.model.applyMealRecovery(replacement, currentAuthority: { f.authority })
+        XCTAssertTrue(replaced, f.model.error ?? "")
+        do { try await session.apply(oldReview); XCTFail("A preview for quesadillas cannot record the replacement beans") }
+        catch {}
+        let fresh = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        let recovered = try XCTUnwrap(fresh.recovery?.meal)
+        let row = try XCTUnwrap(recovered.ingredients.first)
+        let beans = try XCTUnwrap(fresh.inventory.lots.first { $0.foodID == f.beans })
+        let draft = CookCompletionDraft(inventoryID: fresh.inventory.state.workspaceID,
+            inventoryRevision: fresh.inventory.state.revision, ledgerID: fresh.ledgerID, shop: fresh.shop, meal: fresh.meal,
+            cookedAt: now, servingsMade: recovered.servings,
+            parts: [.init(contributionID: row.need.id, use: .lot(id: beans.id, revision: beans.revision, amount: q(4)))],
+            leftovers: [], recoveredMeal: recovered)
+        let checked = try await session.review(draft)
+        XCTAssertEqual(checked.draft.cookedTitle, "Wednesday beans")
+        XCTAssertEqual(checked.reservations.count, 1)
+        try await session.apply(checked)
+        XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: replacement.id, authority: f.authority))
+        try await session.apply(checked)
+        let after = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        XCTAssertEqual(after.completed, draft)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == beans.id }?.count.quantity?.amount, .zero)
+        XCTAssertEqual(f.model.journey?.physicalStockNeeds.first { $0.id == row.need.id }?.amount.amount, .zero)
+        let untouched = fresh.inventory.reservations.filter { $0.id != checked.reservations.first?.id }
+        for claim in untouched { XCTAssertTrue(after.inventory.reservations.contains(claim)) }
+        let undo = try await session.reviewUndo(shopID: shop.id, mealID: f.wednesday)
+        XCTAssertEqual(undo.restoredHoldCount, 1)
+        try await session.applyUndo(undo)
+        let restored = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        XCTAssertNil(restored.completed)
+        XCTAssertEqual(restored.inventory.lots.first { $0.id == beans.id }?.count, beans.count)
+        XCTAssertEqual(f.model.journey?.physicalStockNeeds.first { $0.id == row.need.id }?.amount, row.need.amount)
+    }
+
+    func testRepeatWeekUsesRecoveredWednesdayAndRejectsChangedStockBeforeApplyingOnce() async throws {
+        let f = try await fixture(canonical: true)
+        let replacement = try review(f)
+        let changed = await f.model.applyMealRecovery(replacement, currentAuthority: { f.authority })
+        XCTAssertTrue(changed, f.model.error ?? "")
+        let prior = try XCTUnwrap(f.ledger.shop)
+        let target = ShoppingLedger(title: "Next pickup", basis: prior.basis)
+        let opened = await f.ledger.change(key: "next-week") { workspace in
+            workspace.shops.append(target)
+            workspace.selectedShopID = target.id
+        }
+        XCTAssertTrue(opened)
+        let port = try f.model.makePantryPackSelectionPort()
+        try await f.ledger.configurePantryPackRecovery(port)
+        let workspaceID = try XCTUnwrap(f.ledger.sourceWorkspaceID)
+        var instant = now
+        // Live grants are issued when requested. Keep issuance and validation
+        // ordered in this test even when they happen in a single main-actor turn.
+        func tick() -> Date {
+            instant = instant.addingTimeInterval(0.001)
+            return instant
+        }
+        var readableShops = Set([prior.id, target.id])
+        let dinners = DinnerFeatureModel(store: f.ledger, access: { id in
+            guard readableShops.contains(id) else { return nil }
+            let issued = tick()
+            return DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "adult", shopID: id,
+                assignedShopperID: "adult", canPlan: true, canReadBudget: true, hasPaidTools: false,
+                roleRevision: 0, verifiedAt: issued, validUntil: issued.addingTimeInterval(300))
+        }, phase: { _ in .draft }, clock: tick)
+        let start = try MealDay(year: 2026, month: 11, day: 16, timeZoneIdentifier: prior.basis.timeZoneIdentifier)
+        func prepare() throws -> DinnerPreview {
+            let page = try dinners.repeatWeekReview(start: start, pickup: f.model)
+            let beans = try XCTUnwrap(page.meals.first { $0.id.occurrenceID == f.wednesday })
+            XCTAssertEqual(beans.title, "Wednesday beans")
+            XCTAssertEqual(beans.candidate.template.ingredients.first?.exclusions, ["garlic"])
+            XCTAssertTrue(page.stock.contains { $0.id == f.beans })
+            XCTAssertTrue(dinners.prepareRepeatWeek(page, choices: [beans], staples: [:], pickup: f.model), dinners.error ?? "")
+            return try XCTUnwrap(dinners.preview)
+        }
+        _ = try prepare()
+        readableShops.remove(prior.id)
+        XCTAssertFalse(dinners.canReviewPreview)
+        let revoked = await dinners.applyPreview()
+        XCTAssertFalse(revoked)
+        XCTAssertTrue(f.ledger.shop?.mealOccurrences.isEmpty == true)
+        readableShops.insert(prior.id)
+        _ = try prepare()
+        try await recountCanonicalBeans(f, count: .someLeft)
+        let refreshed = await f.model.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        let stale = await dinners.applyPreview()
+        XCTAssertFalse(stale)
+        XCTAssertTrue(f.ledger.shop?.mealOccurrences.isEmpty == true)
+        let final = try prepare()
+        let saved = await dinners.applyPreview()
+        XCTAssertTrue(saved, dinners.error ?? "")
+        let copy = try XCTUnwrap(f.ledger.shop?.mealOccurrences.first)
+        XCTAssertEqual(copy.title, "Wednesday beans")
+        XCTAssertEqual(copy.scheduledDay?.iso8601, "2026-11-18")
+        XCTAssertNotEqual(copy.id, f.wednesday)
+        XCTAssertEqual(f.ledger.workspace.shops.first { $0.id == prior.id }, prior)
+        XCTAssertEqual(f.ledger.workspace.dinnerPlanning.applyReceipts.last?.id, final.proposal.id)
+        XCTAssertEqual(f.ledger.shop?.mealOccurrences.count, 1)
     }
 
     func testCanonicalRecountRejectsOldRecoveryPreviewAndFreshUnknownStaysUnresolved() async throws {
@@ -213,6 +401,9 @@ import LocalStore
         let stale = await f.model.change { try $0.recordRepair(instruction("Old dinner", for: previousNeed)) }
         XCTAssertFalse(stale)
         XCTAssertEqual(f.model.journey, after)
+        XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: reviewed.id, authority: f.authority)) {
+            XCTAssertEqual($0 as? PickupRecoveryUndoError, .repair)
+        }
         let current = instruction("Heat the bean portions separately", for: currentNeed)
         let saved = await f.model.change { try $0.recordRepair(current) }
         XCTAssertTrue(saved)
