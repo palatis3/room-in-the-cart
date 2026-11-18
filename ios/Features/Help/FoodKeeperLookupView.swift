@@ -61,7 +61,7 @@ struct FoodKeeperLookupView: View {
 
     private var searchResults: some View {
         let query = Query(text: search, language: language)
-        List {
+        return List {
             if let result, result.query == query {
                 if let context, let lot = context.matchLot {
                     NavigationLink(pantryText("Get help matching this label")) {
