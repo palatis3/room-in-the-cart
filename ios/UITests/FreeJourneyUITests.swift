@@ -77,6 +77,11 @@ import XCTest
             fill("Tortillas", into: "tonight.recipe.ingredient")
             // Two tortillas remain after the first meal. The third needs a purchase.
             fill("3", into: "Amount, unknown if blank")
+            if app.keyboards.firstMatch.exists {
+                app.typeText(XCUIKeyboardKey.return.rawValue)
+                XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+            }
+            XCTAssertEqual(app.textFields["Amount, unknown if blank"].value as? String, "3")
             enableSwitch("I reviewed required appliances")
             tap(element("tonight.recipe.review"))
             tap(element("tonight.recipe.save"))
