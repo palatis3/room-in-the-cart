@@ -1397,6 +1397,22 @@
           }
         }
       }
+    },
+    "A separate repair instruction belongs to one of these dinners. Review it before choosing another dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A separate repair instruction belongs to one of these dinners. Review it before choosing another dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una de estas cenas tiene una instrucción de ajuste guardada por separado. Revísala antes de elegir otra cena."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -151,6 +151,14 @@ import LocalStore
         let forward = try review(f)
         let applied = await f.model.applyMealRecovery(forward, currentAuthority: { f.authority })
         XCTAssertTrue(applied, f.model.error ?? "")
+        let otherAdult = PickupRecoveryAuthority(presentation: .init(workspaceID: f.model.sourceWorkspaceID,
+            localActorID: UUID(), workspaceUnlocked: true, sceneActive: true, childPresented: false,
+            guardianChildOnly: false, accountSubject: nil, householdLocked: false, projection: nil),
+            ledgerWorkspaceID: f.authority.ledgerWorkspaceID, ledgerRevisionID: f.authority.ledgerRevisionID,
+            selectedPickupID: initial.id, leaseID: UUID())
+        XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: forward.id, authority: otherAdult)) {
+            XCTAssertEqual($0 as? PickupRecoveryUndoError, .actor)
+        }
         let library = MealTemplate(title: "Unrelated soup")
         let edited = await f.ledger.change(key: "another-recipe") { $0.mealTemplates.append(library) }
         XCTAssertTrue(edited)
@@ -384,6 +392,9 @@ import LocalStore
         let stale = await f.model.change { try $0.recordRepair(instruction("Old dinner", for: previousNeed)) }
         XCTAssertFalse(stale)
         XCTAssertEqual(f.model.journey, after)
+        XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: reviewed.id, authority: f.authority)) {
+            XCTAssertEqual($0 as? PickupRecoveryUndoError, .repair)
+        }
         let current = instruction("Heat the bean portions separately", for: currentNeed)
         let saved = await f.model.change { try $0.recordRepair(current) }
         XCTAssertTrue(saved)

@@ -3,7 +3,7 @@ import CryptoKit
 import Foundation
 
 enum PickupRecoveryUndoError: Error {
-    case actor, laterMeal, stock, cooked, constraints
+    case actor, laterMeal, stock, cooked, repair, constraints
 }
 
 extension PickupRecoveryAuthority {
@@ -65,7 +65,14 @@ extension PickupMealRecoveryHistory {
         guard !(current.cookedMeals ?? []).contains(where: { $0.draft.meal.id == definition.meal.id && $0.isActive })
         else { throw PickupRecoveryUndoError.cooked }
 
-        let foods = Set((event.request.target.needs + event.request.replacement.needs).map(\.foodID))
+        let swappedNeeds = event.request.target.needs + event.request.replacement.needs
+        let replacedIDs = Set(swappedNeeds.filter { $0.priority != .protected }.map(\.id))
+        // A compensating instruction uses fresh demand IDs. A repair on either dinner
+        // would otherwise disappear from the cook's current instructions.
+        guard !current.repairs.contains(where: { replacedIDs.contains($0.needID) }) else {
+            throw PickupRecoveryUndoError.repair
+        }
+        let foods = Set(swappedNeeds.map(\.foodID))
         let (previous, afterClaims) = try MealRecoveryEngine.recordedResult(forward, in: domain)
         guard previous.demands.filter({ foods.contains($0.foodID) }) == currentProjection.demands.filter({ foods.contains($0.foodID) })
         else { throw PickupRecoveryUndoError.stock }
