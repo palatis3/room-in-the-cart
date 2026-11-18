@@ -467,9 +467,23 @@ import XCTest
 
     private func optInToHomeSummary(_ identifier: String) {
         let setting = app.switches[identifier]
-        reveal(setting, initiallyUpward: false)
+        let knob = CGVector(dx: 0.92, dy: 0.5)
+        reveal(setting, initiallyUpward: false, requiredHit: knob)
+        // A lazy switch can already be hittable while its list is still moving under the navigation bar.
+        var previous: CGRect?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard setting.exists, setting.isEnabled, setting.isHittable,
+                  let frame = try? setting.snapshot().frame, !frame.isEmpty,
+                  self.scrollableArea().contains(setting.coordinate(withNormalizedOffset: knob).screenPoint) else {
+                previous = nil
+                return false
+            }
+            defer { previous = frame }
+            return previous == frame
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 4), .completed, setting.debugDescription)
         XCTAssertEqual(setting.value as? String, "0")
-        setting.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        setting.coordinate(withNormalizedOffset: knob).tap()
         XCTAssertEqual(setting.value as? String, "1")
     }
 
@@ -4043,20 +4057,24 @@ import XCTest
             geometry.name = evidence.name + "-geometry"; geometry.lifetime = .keepAlways; add(geometry)
         }
     }
-    private func reveal(_ target: XCUIElement, initiallyUpward: Bool = true) {
+    private func reveal(_ target: XCUIElement, initiallyUpward: Bool = true, requiredHit: CGVector? = nil) {
         for attempt in 0..<24 {
             // Offscreen lazy rows can be absent from the accessibility tree.
             // Check once before asking for hittability, which otherwise makes
             // XCTest retry the missing element before each bounded scroll.
             let exists = target.exists
-            if exists && target.isHittable { return }
+            if exists && target.isHittable {
+                if let requiredHit {
+                    if scrollableArea().contains(target.coordinate(withNormalizedOffset: requiredHit).screenPoint) { return }
+                } else { return }
+            }
             let area = scrollableArea()
             let upward: Bool
             if exists {
                 let frame = target.frame
                 upward = frame.isEmpty ? (attempt < 16 ? initiallyUpward : !initiallyUpward) : frame.midY > area.midY
             } else { upward = attempt < 16 ? initiallyUpward : !initiallyUpward }
-            scrollContent(upward: upward, area: area)
+            scrollContent(upward: upward, area: area, positioningDistance: requiredHit == nil ? nil : area.height * 0.6)
         }
         XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
