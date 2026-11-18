@@ -14,7 +14,7 @@ original release obligations or certify unimplemented features. PR #29 merged af
 in [PR #60](https://github.com/palatis3/room-in-the-cart/pull/60).
 [Current handoff](CURRENT-HANDOFF.md) tracks its qualification and staging revision.
 
-Xcode produced an unsigned arm64 iPhone Release archive at `1f3e5c75`.
+Xcode produced an unsigned arm64 iPhone Release archive at `417802d9`.
 The app and both extensions matched their crash symbols. Package checks verified
 the embedded extensions, assets and privacy manifests. Signed distribution still
 requires the production subscription product ID, Supabase URL and publishable
