@@ -38,5 +38,4 @@ export const naturalListRoute=languageRoute('natural-list',languageRequest,async
   }
   return {version:1,requestID:input.requestID,suggestions:checked.data.suggestions};
 });
-export const languagePurposes=[naturalListRoute];
 

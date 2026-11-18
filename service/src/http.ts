@@ -1,4 +1,4 @@
-import {languagePurposes} from './language-assistance.js';
+import {languagePurposes} from './language-purposes.js';
 import { ReceiptAssistance, receiptAssistanceInput, requireReceiptAdult, reserveCaptureAssistance, reserveReceiptAssistance } from './receipt-assistance.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
