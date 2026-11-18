@@ -6,8 +6,8 @@ Room in the Cart has its own Supabase organization and project. Its Vercel team 
 - Project: `uwjxrotnocxxomqdetzk` (Room in the Cart Staging), US West Oregon.
 - Auth URL: `https://uwjxrotnocxxomqdetzk.supabase.co`.
 - PostgreSQL transaction pooler: `aws-1-us-west-2.pooler.supabase.com:6543/postgres`, verified in the project dashboard.
-- Staging runs migrations 001–058. The 049→058 upgrade preserved the original data and added 17 tables with forced row-level security. The service and its scheduled worker use separate staging logins. The previous deployment’s logins are disabled. [Deployment evidence](evidence/b11/staging-058-20261118/deployment.json)
-- Once the new pantry records exist, the 049 service can read lots outside their intended scope. Recover with an 058-compatible service or reconcile subsequent writes and erasures as part of a coordinated restore.
+- Staging runs migrations 001–062. The service at `21df1581` and its daily worker reopened on schema 062 after the upgrade preserved all 144 existing rows across 168 tables. The service and worker use separate logins. The previous deployment’s credentials are retired. [Deployment receipt](evidence/b11/staging-062-request-pairs-and-buyers-20261118/deployment.json)
+- After a shopper compares two open requests or records a purchaser, recovery must preserve those writes. Service 060 hides both details and cannot undo a comparison or accept a named-buyer retry. Keep affected workflows closed until a compatible service is serving them. A database restore requires reconciliation of intervening writes and erasures. See the older [058 pantry access boundary](evidence/b11/staging-058-20261118/deployment.json) before considering an earlier service.
 
 The public client configuration in `config/staging.json` contains a publishable key, never the database password or a service-role key. Debug and Staging builds receive this configuration; Release requires its own production configuration.
 
