@@ -214,8 +214,8 @@ export const publicPages = {
       "es": "Privacidad y datos"
     },
     "lead": {
-      "en": "Implementation disclosures · updated November 17, 2026.",
-      "es": "Información de la implementación · actualizada el 17 de noviembre de 2026."
+      "en": "Implementation disclosures · updated November 18, 2026.",
+      "es": "Información de la implementación · actualizada el 18 de noviembre de 2026."
     },
     "notice": {
       "en": "Operator policy review and production retention details are still pending. This implementation guide is not a complete operator-approved release privacy policy. The Support page has the supplied support email address.",
@@ -257,6 +257,10 @@ export const publicPages = {
             "es": "Al confirmar un recibo para la despensa del hogar, los adultos con acceso a la despensa pueden ver la tienda, la fecha de compra, la referencia que ingreses y, de cada renglón seleccionado, el texto original, el alimento, las cantidades, el lugar de almacenamiento y el precio si lo ingresaste. El archivo original se queda en este iPhone."
           },
           {
+            "en": "When you save a recipe in Household Tonight, adults with access to that pantry can read its ingredients, portions, reviewed restrictions and any package labels you include. You choose the household batches to link to the recipe.",
+            "es": "Cuando guardas una receta en «Esta noche en casa», los adultos con acceso a esa despensa pueden leer sus ingredientes, porciones, restricciones revisadas y los datos de las etiquetas que incluyas. Tú eliges qué lotes del hogar vincular con la receta."
+          },
+          {
             "en": "If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place.",
             "es": "Si no se confirma que se guardó el recibo del hogar, este iPhone conserva una copia protegida de los datos revisados. Comprueba la despensa del hogar antes de reintentar el mismo cambio. Borrar el reintento conserva cualquier recibo ya guardado en el hogar."
           },
@@ -283,6 +287,10 @@ export const publicPages = {
           {
             "en": "When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor.",
             "es": "Cuando la asistencia en línea está disponible, un adulto autorizado puede revisar y enviar un fragmento de texto, una imagen recortada o una grabación de voz independiente a OpenAI a través de Room in the Cart. Escucha la grabación o revisa el recorte antes de enviarlo. También puedes seguir usando el editor local."
+          },
+          {
+            "en": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself.",
+            "es": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
           },
           {
             "en": "For optional online language help, review what will go to OpenAI through Room in the Cart. Depending on the task, this can include your wording, possible matches, or selected meal titles and reasons. For a FoodKeeper match, you share the label wording and the names and IDs of the guide entries shown. You choose whether to use a suggestion.",

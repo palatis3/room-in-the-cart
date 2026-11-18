@@ -1949,6 +1949,38 @@
           }
         }
       }
+    },
+    "When you save a recipe in Household Tonight, adults with access to that pantry can read its ingredients, portions, reviewed restrictions and any package labels you include. You choose the household batches to link to the recipe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you save a recipe in Household Tonight, adults with access to that pantry can read its ingredients, portions, reviewed restrictions and any package labels you include. You choose the household batches to link to the recipe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando guardas una receta en «Esta noche en casa», los adultos con acceso a esa despensa pueden leer sus ingredientes, porciones, restricciones revisadas y los datos de las etiquetas que incluyas. Tú eliges qué lotes del hogar vincular con la receta."
+          }
+        }
+      }
+    },
+    "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

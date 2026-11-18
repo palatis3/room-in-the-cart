@@ -114,6 +114,7 @@ struct HelpPrivacyView: View {
             Section(helpText("When you connect or share")) {
                 Text(helpText("Account sign-in sends account information to the identity provider. Explicit household actions send the account, request, shop, budget or instruction fields needed for that action. The service checks the household, role and shop permissions."))
                 Text(helpText("When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone."))
+                Text(helpText("When you save a recipe in Household Tonight, adults with access to that pantry can read its ingredients, portions, reviewed restrictions and any package labels you include. You choose the household batches to link to the recipe."))
                 Text(helpText("If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place."))
                 Text(helpText("A cook link exposes only its granted fields. A static message or exported file is a separate copy under the recipient’s control. Review the destination and private fields before sharing."))
                 Text(helpText("Apple handles subscription payment credentials. The app and household service use transaction evidence to deliver and restore membership; they do not receive your payment card or bank account number."))
@@ -121,6 +122,7 @@ struct HelpPrivacyView: View {
             Section(helpText("Photos and speech")) {
                 Text(helpText("Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file."))
                 Text(helpText("When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor."))
+                Text(helpText("Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself."))
                 Text(helpText("For optional online language help, review what will go to OpenAI through Room in the Cart. Depending on the task, this can include your wording, possible matches, or selected meal titles and reasons. For a FoodKeeper match, you share the label wording and the names and IDs of the guide entries shown. You choose whether to use a suggestion."))
             }
             Section(helpText("Export and deletion")) {
