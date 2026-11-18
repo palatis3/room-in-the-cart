@@ -198,7 +198,7 @@ private struct PantryProductCandidateEditor: View {
                     }
                     if let code = row.barcode, code.validGTIN {
                         Section(pantryText("Public product lookup")) {
-                            Text(pantryText("A lookup sends only this barcode to Open Food Facts. You can enter all details yourself."))
+                            Text(pantryText("Open Food Facts receives the barcode, the app version and your IP address. You can also enter the package details yourself."))
                             Button(pantryText("Look up this barcode")) { lookup(code) }
                                 .disabled(looking).accessibilityIdentifier("productBatch.lookup")
                             if let proposal = row.catalog {

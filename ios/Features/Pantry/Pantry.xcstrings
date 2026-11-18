@@ -4690,18 +4690,18 @@
         }
       }
     },
-    "A lookup sends only this barcode to Open Food Facts. You can enter all details yourself.": {
+    "Open Food Facts receives the barcode, the app version and your IP address. You can also enter the package details yourself.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A lookup sends only this barcode to Open Food Facts. You can enter all details yourself."
+            "value": "Open Food Facts receives the barcode, the app version and your IP address. You can also enter the package details yourself."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La consulta envía solo este código de barras a Open Food Facts. Puedes ingresar todos los datos por tu cuenta."
+            "value": "Open Food Facts recibe el código de barras, la versión de la app y tu dirección IP. También puedes ingresar los datos del paquete a mano."
           }
         }
       }
