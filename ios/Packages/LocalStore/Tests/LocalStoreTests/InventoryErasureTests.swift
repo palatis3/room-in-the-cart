@@ -189,6 +189,10 @@ final class InventoryErasureTests: XCTestCase {
     let saved = try await old.save(id: UUID(), title: "private", payload: Data([9]), savedAt: now)
     let store = try ComparisonStore(url: url, inventoryEnabled: true)
     try await activate(store)
+    let price = InventoryPriceRow(id: UUID(), revision: 1, lotID: nil, payload: Data([7]))
+    _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(),
+      expectedRevision: 1, request: price.payload, price: price))
+    try await store.setStaplePrompts(true, persona: UUID(), expectedRevision: nil)
     let values = (0..<700).map { record(.intent, payload: "pending \($0)") }
     try await append(store, values)
     let state = try await store.inventoryState()
@@ -200,8 +204,10 @@ final class InventoryErasureTests: XCTestCase {
     XCTAssertEqual(receipt.erasedComparisonCount, 1)
     for table in [
       "inventory_heads", "inventory_revisions", "comparison_revisions", "comparisons",
-      "inventory_staged_records", "inventory_erasure_entries",
+      "inventory_staged_records", "inventory_erasure_entries", "inventory_prices",
+      "inventory_staple_preferences", "inventory_staple_answers",
     ] { XCTAssertEqual(try scalar("SELECT count(*) FROM \(table)"), 0) }
+    XCTAssertEqual(try scalar("SELECT count(*) FROM inventory_retired_prices"), 1)
     do {
       _ = try await old.save(id: UUID(), title: "resurrect", payload: Data([1]), savedAt: now)
       XCTFail("old generic writer")
@@ -213,7 +219,7 @@ final class InventoryErasureTests: XCTestCase {
     try await old.close()
     try await store.close()
     XCTAssertThrowsError(try ComparisonStore(url: url)) {
-      XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(7))
+      XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(8))
     }
     let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
     let proof = try await reopened.inventoryOriginRetirement()
@@ -319,7 +325,7 @@ final class InventoryErasureTests: XCTestCase {
     XCTAssertEqual(try raw.integer("PRAGMA user_version"), 3)
     try raw.close()
     let store = try ComparisonStore(url: url, inventoryEnabled: true)
-    XCTAssertEqual(try scalar("PRAGMA user_version"), 7)
+    XCTAssertEqual(try scalar("PRAGMA user_version"), 8)
     let claim = record(.reservation, payload: "private old history")
     try await activate(store)
     let batch = InventoryBatch(

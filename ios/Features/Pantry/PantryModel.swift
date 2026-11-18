@@ -177,6 +177,48 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
 
     var permitsReceiptSource: Bool { canEdit && repository.permitsReceiptSource }
 
+    struct StapleReview {
+        let state: InventoryState
+        let preferences: StaplePromptPreferences
+        let prompts: [StaplePrompt]
+    }
+
+    func reviewStaples(openFoodIDs: Set<UUID>, openLineNames: [String], calendar: Calendar) async throws -> StapleReview {
+        guard canEdit, let snapshot else { throw PantryReceiptError.stale }
+        let token = generation, now = clock()
+        let preferences = try await repository.staplePreferences()
+        let purchases = preferences.enabled ? try await repository.staplePurchases(expected: snapshot.state) : []
+        let due = try await Self.dueStaples(purchases, lots: snapshot.lots, openFoodIDs: openFoodIDs,
+            openLineNames: openLineNames, now: now, calendar: calendar)
+        let prompts = due.filter { prompt in
+            switch preferences.answers[prompt.latestAcquisitionID] {
+            case nil: return true
+            case .snooze(let until): return now >= until
+            case .stillHave, .dismiss: return false
+            }
+        }
+        guard token == generation, canEdit, self.snapshot?.state == snapshot.state else { throw PantryReceiptError.stale }
+        return StapleReview(state: snapshot.state, preferences: preferences, prompts: prompts)
+    }
+
+    @concurrent private static func dueStaples(_ purchases: [ReceiptAcquisition], lots: [InventoryLot], openFoodIDs: Set<UUID>,
+                                               openLineNames: [String], now: Date, calendar: Calendar) async throws -> [StaplePrompt] {
+        try Task.checkCancellation()
+        return try StaplePrompt.due(purchases: purchases, lots: lots, openFoodIDs: openFoodIDs,
+                                    openLineNames: openLineNames, on: now, calendar: calendar)
+    }
+
+    func setStaplePrompts(_ enabled: Bool, review: StapleReview) async throws {
+        guard canEdit, snapshot?.state == review.state else { throw PantryReceiptError.stale }
+        try await repository.setStaplePrompts(enabled, expected: review.preferences.revision)
+    }
+
+    func answerStaple(_ answer: StaplePromptAnswer, prompt: StaplePrompt, review: StapleReview) async throws {
+        guard canEdit, snapshot?.state == review.state, review.prompts.contains(prompt),
+              let revision = review.preferences.revision else { throw PantryReceiptError.stale }
+        try await repository.answerStaple(answer, prompt: prompt, revision: revision, expected: review.state)
+    }
+
     var supportsReceiptAliases: Bool { repository.aliasPersonaID != nil }
 
     func receiptAliases(merchant: String? = nil, language: String? = nil) async throws -> [InventoryReceiptAlias] {

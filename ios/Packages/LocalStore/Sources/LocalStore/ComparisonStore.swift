@@ -72,7 +72,7 @@ public actor ComparisonStore {
             // metadata, journal mode, or schema version.
             let version = try database.transaction(immediate: false) {
                 let version = try database.integer("PRAGMA user_version")
-                guard version <= (inventoryEnabled ? 7 : 2) else { throw ComparisonStoreError.unsupportedSchema(version) }
+                guard version <= (inventoryEnabled ? ComparisonDatabase.inventorySchemaVersion : 2) else { throw ComparisonStoreError.unsupportedSchema(version) }
                 guard version >= 0 else { throw ComparisonStoreError.unrecognizedSchema }
                 if version == 0 {
                     guard try database.integer("SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'") == 0
@@ -83,8 +83,10 @@ public actor ComparisonStore {
                     if version >= 3 { try database.validateInventory() }
                     if version >= 4 { try database.validateInventoryErasure() }
                     if version >= 5 { try database.validateAcquisitions() }
-                    if version >= 6 { try database.validateReceiptAliases() }
-                    if version >= 7 { try database.validatePrices() }
+                    if version >= 6 {
+                        try database.validateReceiptAliases()
+                        _ = try database.inventoryExtensionLayout(version: version)
+                    }
                 }
                 return version
             }
@@ -99,10 +101,10 @@ public actor ComparisonStore {
                 try database.migrateInventoryErasure()
                 try database.migrateAcquisitions()
                 try database.migrateReceiptAliases()
-                try database.migratePrices()
+                try database.migratePricesAndStaples()
             }
             let finalVersion = try database.integer("PRAGMA user_version")
-            guard finalVersion <= (inventoryEnabled ? 7 : 2) else { throw ComparisonStoreError.unsupportedSchema(finalVersion) }
+            guard finalVersion <= (inventoryEnabled ? ComparisonDatabase.inventorySchemaVersion : 2) else { throw ComparisonStoreError.unsupportedSchema(finalVersion) }
             guard try database.integer("SELECT count(*) FROM workspace") == 1,
                   let id = UUID(uuidString: try database.string("SELECT id FROM workspace WHERE singleton = 1"))
             else { throw ComparisonStoreError.corruptRecord }
@@ -264,6 +266,8 @@ enum ComparisonSQLValue {
 
 /// This connection is exclusively owned by one actor after initialization.
 final class ComparisonDatabase: @unchecked Sendable {
+    static let inventorySchemaVersion: Int64 = 8
+
     private var handle: OpaquePointer?
     private let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
@@ -303,6 +307,35 @@ final class ComparisonDatabase: @unchecked Sendable {
         } catch {
             try? execute("ROLLBACK")
             throw error
+        }
+    }
+
+    // Version seven was used independently with either the price tables or the staple tables.
+    // Inspect before changing journal settings and again under the migration write lock.
+    func inventoryExtensionLayout(version: Int64) throws -> (prices: Bool, staples: Bool) {
+        let prices = try hasPricesSchema()
+        let staples = try hasStaplePromptsSchema()
+        switch version {
+        case 6 where !prices && !staples,
+             7 where prices || staples,
+             Self.inventorySchemaVersion where prices && staples:
+            return (prices, staples)
+        case 6, 7, Self.inventorySchemaVersion:
+            throw ComparisonStoreError.corruptRecord
+        default:
+            throw ComparisonStoreError.unsupportedSchema(version)
+        }
+    }
+
+    func migratePricesAndStaples() throws {
+        try transaction {
+            let version = try integer("PRAGMA user_version")
+            let layout = try inventoryExtensionLayout(version: version)
+            guard version != Self.inventorySchemaVersion else { return }
+            if !layout.prices { try createPricesSchema() }
+            if !layout.staples { try createStaplePromptsSchema() }
+            _ = try inventoryExtensionLayout(version: Self.inventorySchemaVersion)
+            try execute("PRAGMA user_version=\(Self.inventorySchemaVersion)")
         }
     }
 

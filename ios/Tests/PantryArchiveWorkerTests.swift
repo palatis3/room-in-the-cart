@@ -332,6 +332,59 @@ import RecordArchive
         XCTAssertEqual(afterPricing.state, current.state)
     }
 
+    func testStapleRemindersReadThreeReviewedPurchasesAndRespectPrivateResponses() async throws {
+        let f = try await fixture(), persona = UUID()
+        let repository = PantryRepository(store: f.store, aliasPersonaID: persona, authorize: { true })
+        f.cleanup.track(repository)
+        let model = PantryModel(repository: repository, clock: { self.now })
+        let calendar = Calendar(identifier: .gregorian)
+        var alias: InventoryReceiptAlias?
+        for weeks in [3, 2, 1] {
+            var draft = try receiptDraft(f.store)
+            draft.reference = "rice-week-\(weeks)"
+            draft.language = "en"
+            draft.purchaseDate = try XCTUnwrap(calendar.date(byAdding: .day, value: -7 * weeks, to: now))
+            if let alias { draft.lines[0].use(alias) }
+            let state = try await f.store.inventoryState()
+            let receipt = try await repository.reviewReceipt(draft, expected: state, at: now)
+            try await repository.applyReceipt(receipt, at: now)
+            if alias == nil {
+                let fact = try XCTUnwrap(receipt.facts.first)
+                try await repository.rememberReceiptAlias(fact, wording: "rice", language: "en", expected: f.store.inventoryState(), at: now)
+                let aliases = try await repository.receiptAliases(merchant: draft.merchant, language: "en")
+                alias = try XCTUnwrap(aliases.first)
+            }
+        }
+        await model.load()
+        let start = try await model.reviewStaples(openFoodIDs: [], openLineNames: [], calendar: calendar)
+        XCTAssertFalse(start.preferences.enabled)
+        XCTAssertTrue(start.prompts.isEmpty)
+        try await model.setStaplePrompts(true, review: start)
+        let suppressed = try await model.reviewStaples(openFoodIDs: [], openLineNames: ["Rice"], calendar: calendar)
+        XCTAssertTrue(suppressed.prompts.isEmpty)
+        let current = try await model.reviewStaples(openFoodIDs: [], openLineNames: [], calendar: calendar)
+        let question = try XCTUnwrap(current.prompts.first)
+        XCTAssertEqual(question.id, alias?.foodID)
+        XCTAssertEqual(question.comparablePurchaseDays, 3)
+        try await model.answerStaple(.stillHave, prompt: question, review: current)
+        let fresh = try await model.reviewStaples(openFoodIDs: [], openLineNames: [], calendar: calendar)
+        XCTAssertTrue(fresh.prompts.isEmpty)
+        XCTAssertEqual(fresh.state, current.state)
+        let purchases = try await repository.acquisitionHistory()
+        let anchor = try XCTUnwrap(purchases.first { $0.id == question.latestAcquisitionID })
+        let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("staple-registry.json"))
+        let coordinator = eraser(f, registry, cleanup: { _, _ in })
+        let erase = try await coordinator.prepare(.lot(anchor.lotID, revision: 1))
+        XCTAssertTrue(erase.canCommit)
+        _ = try await coordinator.commit(erase)
+        let afterErase = try await f.store.staplePreferences(persona: persona)
+        XCTAssertTrue(afterErase.enabled)
+        XCTAssertTrue(afterErase.answers.isEmpty, "Removing this receipt also removes its reminder answer")
+        model.accessLost()
+        do { _ = try await model.reviewStaples(openFoodIDs: [], openLineNames: [], calendar: calendar); XCTFail("Revoked read") }
+        catch PantryReceiptError.stale {}
+    }
+
     func testReceiptAliasRequiresConsentScopedAcceptanceAndCurrentReview() async throws {
         let f = try await fixture(), persona = UUID()
         let repository = PantryRepository(store: f.store, aliasPersonaID: persona, authorize: { true })

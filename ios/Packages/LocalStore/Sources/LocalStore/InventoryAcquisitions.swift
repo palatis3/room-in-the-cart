@@ -82,7 +82,7 @@ extension ComparisonDatabase {
     func migrateAcquisitions() throws {
         try transaction {
             let version = try integer("PRAGMA user_version")
-            if (5...7).contains(version) { try validateAcquisitions(); return }
+            if (5...Self.inventorySchemaVersion).contains(version) { try validateAcquisitions(); return }
             guard version == 4 else { throw ComparisonStoreError.unsupportedSchema(version) }
             try execute("""
               CREATE TABLE inventory_acquisitions (

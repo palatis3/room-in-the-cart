@@ -108,7 +108,7 @@ extension ComparisonDatabase {
     func migrateReceiptAliases() throws {
         try transaction {
             let version = try integer("PRAGMA user_version")
-            if (6...7).contains(version) { try validateReceiptAliases(); return }
+            if (6...Self.inventorySchemaVersion).contains(version) { try validateReceiptAliases(); return }
             guard version == 5 else { throw ComparisonStoreError.unsupportedSchema(version) }
             try execute("""
                 CREATE TABLE inventory_receipt_aliases (

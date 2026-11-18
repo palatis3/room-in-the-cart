@@ -111,50 +111,45 @@ extension ComparisonStore {
 }
 
 extension ComparisonDatabase {
-    func migratePrices() throws {
-        try transaction {
-            let version = try integer("PRAGMA user_version")
-            if version == 7 { try validatePrices(); return }
-            guard version == 6 else { throw ComparisonStoreError.unsupportedSchema(version) }
-            try execute("""
-                CREATE TABLE inventory_prices(
-                    id TEXT NOT NULL CHECK(length(id)=36), revision INTEGER NOT NULL CHECK(typeof(revision)='integer' AND revision>0),
-                    parent_kind TEXT NOT NULL DEFAULT 'lot' CHECK(parent_kind='lot'), lot_id TEXT, adjusts TEXT CHECK(adjusts IS NULL OR length(adjusts)=36),
-                    payload BLOB NOT NULL CHECK(typeof(payload)='blob' AND length(payload) BETWEEN 1 AND 65536),
-                    digest BLOB NOT NULL CHECK(typeof(digest)='blob' AND length(digest)=32),
-                    PRIMARY KEY(id,revision), FOREIGN KEY(parent_kind,lot_id) REFERENCES inventory_heads(kind,id) ON DELETE CASCADE);
-                CREATE INDEX inventory_prices_lot ON inventory_prices(lot_id);
-                CREATE INDEX inventory_price_adjustments ON inventory_prices(adjusts,id,revision);
-                CREATE TABLE inventory_staged_prices(
-                    migration_id TEXT NOT NULL REFERENCES inventory_migrations(id), id TEXT NOT NULL, revision INTEGER NOT NULL,
-                    chunk_index INTEGER NOT NULL, ordinal INTEGER NOT NULL, row BLOB NOT NULL,
-                    PRIMARY KEY(migration_id,id,revision), UNIQUE(migration_id,chunk_index,ordinal),
-                    FOREIGN KEY(migration_id,chunk_index) REFERENCES inventory_migration_chunks(migration_id,chunk_index) DEFERRABLE INITIALLY DEFERRED);
-                CREATE INDEX inventory_staged_price_order ON inventory_staged_prices(migration_id,revision,id);
-                CREATE TABLE inventory_retired_prices(id TEXT PRIMARY KEY NOT NULL CHECK(length(id)=36));
-                CREATE TRIGGER inventory_price_insert BEFORE INSERT ON inventory_prices
-                WHEN EXISTS(SELECT 1 FROM inventory_retired_prices WHERE id=NEW.id)
-                    OR EXISTS(SELECT 1 FROM inventory_origin_retirement)
-                    OR (NEW.revision>1 AND NOT EXISTS(SELECT 1 FROM inventory_prices p
-                        WHERE p.id=NEW.id AND p.revision=NEW.revision-1 AND p.lot_id IS NEW.lot_id AND p.adjusts IS NEW.adjusts))
-                BEGIN SELECT RAISE(ABORT,'invalid price revision'); END;
-                CREATE TRIGGER inventory_price_update BEFORE UPDATE ON inventory_prices
-                BEGIN SELECT RAISE(ABORT,'immutable price'); END;
-                CREATE TRIGGER inventory_price_retire BEFORE DELETE ON inventory_prices
-                BEGIN INSERT OR IGNORE INTO inventory_retired_prices(id) VALUES(OLD.id); END;
-                PRAGMA user_version=7;
-                """)
-            try validatePrices()
-        }
+    func createPricesSchema() throws {
+        try execute("""
+            CREATE TABLE inventory_prices(
+                id TEXT NOT NULL CHECK(length(id)=36), revision INTEGER NOT NULL CHECK(typeof(revision)='integer' AND revision>0),
+                parent_kind TEXT NOT NULL DEFAULT 'lot' CHECK(parent_kind='lot'), lot_id TEXT, adjusts TEXT CHECK(adjusts IS NULL OR length(adjusts)=36),
+                payload BLOB NOT NULL CHECK(typeof(payload)='blob' AND length(payload) BETWEEN 1 AND 65536),
+                digest BLOB NOT NULL CHECK(typeof(digest)='blob' AND length(digest)=32),
+                PRIMARY KEY(id,revision), FOREIGN KEY(parent_kind,lot_id) REFERENCES inventory_heads(kind,id) ON DELETE CASCADE);
+            CREATE INDEX inventory_prices_lot ON inventory_prices(lot_id);
+            CREATE INDEX inventory_price_adjustments ON inventory_prices(adjusts,id,revision);
+            CREATE TABLE inventory_staged_prices(
+                migration_id TEXT NOT NULL REFERENCES inventory_migrations(id), id TEXT NOT NULL, revision INTEGER NOT NULL,
+                chunk_index INTEGER NOT NULL, ordinal INTEGER NOT NULL, row BLOB NOT NULL,
+                PRIMARY KEY(migration_id,id,revision), UNIQUE(migration_id,chunk_index,ordinal),
+                FOREIGN KEY(migration_id,chunk_index) REFERENCES inventory_migration_chunks(migration_id,chunk_index) DEFERRABLE INITIALLY DEFERRED);
+            CREATE INDEX inventory_staged_price_order ON inventory_staged_prices(migration_id,revision,id);
+            CREATE TABLE inventory_retired_prices(id TEXT PRIMARY KEY NOT NULL CHECK(length(id)=36));
+            CREATE TRIGGER inventory_price_insert BEFORE INSERT ON inventory_prices
+            WHEN EXISTS(SELECT 1 FROM inventory_retired_prices WHERE id=NEW.id)
+                OR EXISTS(SELECT 1 FROM inventory_origin_retirement)
+                OR (NEW.revision>1 AND NOT EXISTS(SELECT 1 FROM inventory_prices p
+                    WHERE p.id=NEW.id AND p.revision=NEW.revision-1 AND p.lot_id IS NEW.lot_id AND p.adjusts IS NEW.adjusts))
+            BEGIN SELECT RAISE(ABORT,'invalid price revision'); END;
+            CREATE TRIGGER inventory_price_update BEFORE UPDATE ON inventory_prices
+            BEGIN SELECT RAISE(ABORT,'immutable price'); END;
+            CREATE TRIGGER inventory_price_retire BEFORE DELETE ON inventory_prices
+            BEGIN INSERT OR IGNORE INTO inventory_retired_prices(id) VALUES(OLD.id); END;
+            """)
     }
 
-    func validatePrices() throws {
-        guard try integer("""
+    func hasPricesSchema() throws -> Bool {
+        let count = try integer("""
             SELECT count(*) FROM sqlite_master WHERE
             (type='table' AND name IN ('inventory_prices','inventory_retired_prices','inventory_staged_prices')) OR
             (type='index' AND name IN ('inventory_prices_lot','inventory_price_adjustments','inventory_staged_price_order')) OR
             (type='trigger' AND name IN ('inventory_price_insert','inventory_price_update','inventory_price_retire'))
-            """) == 9 else { throw ComparisonStoreError.corruptRecord }
+            """)
+        guard count == 0 || count == 9 else { throw ComparisonStoreError.corruptRecord }
+        return count == 9
     }
 
     func priceWasErased(_ id: UUID) throws -> Bool {
