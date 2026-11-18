@@ -93,7 +93,10 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 94)
+                             for shard in plan["shards"].values()), 95)
+        foodkeeper = f"{UI_TARGET}/MeasurementUITests/testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange"
+        measurement_shard = plans["contributor"]["shards"]["contributor-balanced-02"]["test_identifiers"]
+        self.assertEqual([value.removesuffix("()") for value in measurement_shard].count(foodkeeper), 1)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
