@@ -21,6 +21,7 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let measure = #/(?i)\b([0-9]{1,5}(?:[.,][0-9]{1,3})?)\s*(fl\.?\s*oz|kg|kgs|kilogramos?|kilograms?|gramos?|grams?|gr|g|lb[s.]?|pounds?|libras?|ounces?|onzas?|oz|liters?|litros?|ml|l|count|ct|ea|each|unidades|uds)\b/#
     private static let adjustment = #/(?i)^\s*(?:service fee|bottle deposit|sales tax|tax|impuesto|iva|subtotal|sub total|total|change|cambio|cash|efectivo|tender|visa|mastercard|payment|pago|discount|descuento|coupon|cup[oó]n|deposit|dep[oó]sito|fee|cargo|delivery fee|shipping|env[ií]o|tip|propina|refund|reembolso|return|devoluci[oó]n|promotion|promoci[oó]n)\b/#
     private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|MXN|AUD|BOGO|gratis|was|ahorra|save|oferta|coupon|cup[oó]n)\b|\b(?:buy|compra)\s+\w+\s+(?:get|recibe)\b|\b[0-9]+\s*(?:for|por)\s*[$0-9]|\d+\s*%|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
+    private static let signedValue = #/(?:^|\s)[−–-]\s*[$0-9]|\(\s*\$?\d+[.,]\d{2}\s*\)/#
     private static let otherNumbers = #/(?:[$€£@]|[0-9][.,][0-9]|[0-9]\s*[x×]|\s-\s*\d)/#
     private static let freezer = #/(?i)\b(?:keep frozen|frozen|mantener congelad[oa]s?|congelad[oa]s?)\b/#
     private static let fridge = #/(?i)\b(?:keep refrigerated|refrigerated|mantener refrigerad[oa]s?|refrigerad[oa]s?)\b/#
@@ -34,7 +35,7 @@ struct ReceiptPrintedEvidence: Equatable {
         guard !text.isEmpty, text.count <= 512, text.contains(where: \.isLetter),
               !text.contains("?"), !text.contains("�"), row.uncertainOCR != true else { kind = .unclear; uncertain = true; return }
         kind = .item
-        guard !text.contains(Self.mixed) else { uncertain = true; return }
+        guard !text.contains(Self.mixed), !text.contains(Self.signedValue) else { uncertain = true; return }
         var candidate = text
         if let total = candidate.firstMatch(of: Self.price) {
             let before = candidate[..<total.range.lowerBound].trimmingCharacters(in: .whitespaces)
