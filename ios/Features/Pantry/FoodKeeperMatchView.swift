@@ -64,7 +64,7 @@ struct FoodKeeperMatchLot {
                 Section(pantryText("Selected wording")) {
                     TextField(pantryText("Wording to send"), text: $selected, axis: .vertical)
                         .focused($editing).accessibilityIdentifier("foodKeeper.assistance.wording")
-                    Text(pantryText("Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service."))
+                    Text(pantryText("If you send, OpenAI receives your selected wording, the language, the FoodKeeper edition and the names and IDs of the guide entries shown here through Room in the Cart."))
                 }
                 Section(pantryText("USDA FoodKeeper entries to consider")) {
                     ForEach(choices) { choice in

@@ -81,18 +81,18 @@
         }
       }
     },
-    "Adults with pantry access can see the selected receipt wording, amounts and prices. The original file stays on this device.": {
+    "Adults with pantry access can see the store, date, any receipt reference you enter and the selected food lines, including original wording, quantities, storage location and any prices you enter. The original file stays on this device.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adults with pantry access can see the selected receipt wording, amounts and prices. The original file stays on this device."
+            "value": "Adults with pantry access can see the store, date, any receipt reference you enter and the selected food lines, including original wording, quantities, storage location and any prices you enter. The original file stays on this device."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los adultos con acceso a la despensa pueden ver el texto, las cantidades y los precios seleccionados. El archivo original permanece en este dispositivo."
+            "value": "Los adultos con acceso a la despensa pueden ver la tienda, la fecha, la referencia del recibo que ingreses y los renglones de alimentos seleccionados, con el texto original, las cantidades, el lugar de almacenamiento y los precios que ingreses. El archivo original se queda en este dispositivo."
           }
         }
       }

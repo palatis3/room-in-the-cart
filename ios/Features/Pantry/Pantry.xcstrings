@@ -8380,18 +8380,18 @@
         }
       }
     },
-    "Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service.": {
+    "If you send, OpenAI receives your selected wording, the language, the FoodKeeper edition and the names and IDs of the guide entries shown here through Room in the Cart.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service."
+            "value": "If you send, OpenAI receives your selected wording, the language, the FoodKeeper edition and the names and IDs of the guide entries shown here through Room in the Cart."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El servicio de la app enviará a OpenAI solo el texto que se muestra aquí y los nombres e identificadores de estas entradas públicas del USDA."
+            "value": "Si eliges enviar, OpenAI recibirá a través de Room in the Cart el texto seleccionado, el idioma, la edición de FoodKeeper y los nombres e identificadores de las entradas que se muestran aquí."
           }
         }
       }

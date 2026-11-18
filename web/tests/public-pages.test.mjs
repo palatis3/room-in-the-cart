@@ -91,6 +91,25 @@ test('privacy and terms disclose remaining operator gates and support uses the s
   assert.equal(unconfigured.querySelector('.public-contact'), null);
 });
 
+test('native and public privacy explain reviewed household and online actions in each language', () => {
+  const catalog = JSON.parse(readFileSync(new URL('../../ios/Features/Help/Help.xcstrings', import.meta.url), 'utf8')).strings;
+  const native = readFileSync(new URL('../../ios/Features/Help/HelpView.swift', import.meta.url), 'utf8');
+  const privacy = native.slice(native.indexOf('struct HelpPrivacyView'), native.indexOf('struct HelpSupportView'));
+  const scopes = ['When you confirm a receipt', 'If the household receipt save', 'For optional online language help',
+    'You can search the USDA FoodKeeper', 'When online assistance is available'];
+  for (const language of ['en', 'es']) {
+    const text = setup('/privacy?lang=' + language).root.textContent;
+    for (const scope of scopes) {
+      const key = Object.keys(catalog).find(value => value.startsWith(scope));
+      assert.ok(key && privacy.includes('helpText("' + key + '")'), scope);
+      const unit = catalog[key].localizations[language].stringUnit;
+      assert.equal(unit.state, 'translated');
+      assert.ok(text.includes(unit.value), language + ' ' + scope);
+    }
+    assert.doesNotMatch(text, /Raw voice recordings are not retained or uploaded|no conserva ni sube las grabaciones/i);
+  }
+});
+
 test('only a configured public HTTPS contact appears and unsafe configuration is never made clickable', () => {
   for (const raw of [null, '', 'http://support.grocery-app.com', 'javascript:alert(1)', 'https://person:secret@support.grocery-app.com', 'https://support.invalid', 'https://example.com', '$(SUPPORT_URL)', ' https://support.grocery-app.com']) {
     assert.equal(operatorSupportURL(raw), null);
