@@ -305,7 +305,9 @@ struct DinnerSwapReview {
             guard let value = try quantity.converted(to: needed.unit, using: offer?.confirmedConversion) else { return nil }
             amount = try amount.adding(value)
         }
-        let remaining = max(.zero, try needed.amount.subtracting(amount))
+        // Rational rejects negatives before max could clamp them. A fully
+        // covered need is a known zero, including when free stock exceeds it.
+        let remaining = try needed.amount.subtractingClampedToZero(amount)
         if remaining == .zero { return 0 }
         guard let offer, let yield = try offer.usableQuantity?.converted(to: needed.unit, using: offer.confirmedConversion), yield > .zero else { return nil }
         return try remaining.divided(by: yield).roundedUp()
