@@ -119,7 +119,16 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-tonight-fixture", "--tonight-assigned-shop",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        tap(app.tabBars.buttons["Dinners"])
+        func tapTab(_ title: String, sideRailImage: String) {
+            let barButton = app.tabBars.buttons[title]
+            // On the Duo side rail, the label belongs to the button and the symbol to its image.
+            let button = barButton.exists ? barButton : app.buttons
+                .matching(NSPredicate(format: "label == %@", title))
+                .containing(.image, identifier: sideRailImage).element
+            XCTAssertTrue(button.waitForExistence(timeout: 10) && button.isHittable, app.debugDescription)
+            button.tap()
+        }
+        tapTab("Dinners", sideRailImage: "fork.knife")
         tap(app.buttons["household.tonight"])
         let choose = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.choose.")).firstMatch
         tap(choose)
@@ -132,8 +141,12 @@ import XCTest
         let saved = app.staticTexts["householdTonight.notice"]
         XCTAssertTrue(saved.waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertEqual(saved.label, "Dinner added to the shared shop.")
-        tap(app.navigationBars["Household Tonight"].buttons.element(boundBy: 0))
-        tap(app.tabBars.buttons["Shop"])
+        let reviewBar = app.navigationBars["Household Tonight"]
+        XCTAssertTrue(reviewBar.exists, app.debugDescription)
+        let inlineBack = reviewBar.buttons["BackButton"]
+        tap(inlineBack.exists ? inlineBack : app.buttons["BackButton"])
+        XCTAssertTrue(reviewBar.waitForNonExistence(timeout: 8), app.debugDescription)
+        tapTab("Shop", sideRailImage: "cart.fill")
         tap(app.buttons["settings"])
         tap(app.buttons["Household requests"])
         tap(app.buttons["Open shared household shop"])
