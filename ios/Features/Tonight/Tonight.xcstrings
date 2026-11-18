@@ -2006,6 +2006,550 @@
           }
         }
       }
+    },
+    "Amount, unknown if blank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount, unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad, déjala en blanco si se desconoce"
+          }
+        }
+      }
+    },
+    "Ask a household organizer to review a recipe or update its ingredient details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask a household organizer to review a recipe or update its ingredient details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pide a un organizador del hogar que revise una receta o actualice sus ingredientes."
+          }
+        }
+      }
+    },
+    "Available quantity needs review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available quantity needs review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay que revisar la cantidad disponible"
+          }
+        }
+      }
+    },
+    "Check the recipe title, servings and ingredient amounts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the recipe title, servings and ingredient amounts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el título, las porciones y las cantidades de los ingredientes."
+          }
+        }
+      }
+    },
+    "Choose a current draft shop and resolve any saved change first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a current draft shop and resolve any saved change first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un borrador de compra vigente y resuelve primero los cambios pendientes."
+          }
+        }
+      }
+    },
+    "Choose a shared dinner destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shared dinner destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir dónde planificar la cena compartida"
+          }
+        }
+      }
+    },
+    "Confirm shared dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm shared dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar cena compartida"
+          }
+        }
+      }
+    },
+    "Confirm to add one dinner to this shared shop. Pantry quantities and shopping items stay as reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm to add one dinner to this shared shop. Pantry quantities and shopping items stay as reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma para añadir una cena a esta compra compartida. Se conservarán las cantidades de la despensa y los artículos de la compra."
+          }
+        }
+      }
+    },
+    "Could not confirm the shared recipe. Check your connection and retry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not confirm the shared recipe. Check your connection and retry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo confirmar la receta compartida. Comprueba la conexión y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Covered by available household food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covered by available household food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cubierto por los alimentos disponibles en el hogar"
+          }
+        }
+      }
+    },
+    "Dinner added to the shared shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner added to the shared shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena añadida a la compra compartida."
+          }
+        }
+      }
+    },
+    "Edit household recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit household recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar receta del hogar"
+          }
+        }
+      }
+    },
+    "Household Tonight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household Tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta noche en casa"
+          }
+        }
+      }
+    },
+    "Household recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receta del hogar"
+          }
+        }
+      }
+    },
+    "Household stock, the recipe or planning access changed. Refresh before choosing again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household stock, the recipe or planning access changed. Refresh before choosing again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiaron las existencias del hogar, la receta o el acceso al plan. Actualiza antes de volver a elegir."
+          }
+        }
+      }
+    },
+    "Match household batches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match household batches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular lotes del hogar"
+          }
+        }
+      }
+    },
+    "No household recipes are available for tonight.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No household recipes are available for tonight."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay recetas del hogar disponibles para esta noche."
+          }
+        }
+      }
+    },
+    "Only recipes reviewed for this household and food available after reservations are shown here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only recipes reviewed for this household and food available after reservations are shown here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí aparecen las recetas revisadas para este hogar y los alimentos disponibles después de descontar las reservas."
+          }
+        }
+      }
+    },
+    "Only the assigned shopper can add a dinner to a draft shared shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the assigned shopper can add a dinner to a draft shared shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo la persona encargada de la compra puede añadir una cena a un borrador de compra compartida."
+          }
+        }
+      }
+    },
+    "Preparation minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de preparación"
+          }
+        }
+      }
+    },
+    "Recipes excluded by household restrictions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes excluded by household restrictions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recetas excluidas por las restricciones del hogar"
+          }
+        }
+      }
+    },
+    "Review a household recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a household recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una receta del hogar"
+          }
+        }
+      }
+    },
+    "Review a new shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a new shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una compra compartida nueva"
+          }
+        }
+      }
+    },
+    "Review household restrictions and recipe details before choosing this meal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review household restrictions and recipe details before choosing this meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las restricciones del hogar y los detalles de la receta antes de elegir esta comida."
+          }
+        }
+      }
+    },
+    "Review this shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta compra compartida"
+          }
+        }
+      }
+    },
+    "Save recipe to household": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save recipe to household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la receta en el hogar"
+          }
+        }
+      }
+    },
+    "Select only batches you reviewed for this ingredient. Similar names alone do not match food.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select only batches you reviewed for this ingredient. Similar names alone do not match food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona solo los lotes que revisaste para este ingrediente. Los nombres parecidos no vinculan los alimentos."
+          }
+        }
+      }
+    },
+    "Still needed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún falta"
+          }
+        }
+      }
+    },
+    "The adults with access to this household pantry can read this recipe.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The adults with access to this household pantry can read this recipe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los adultos con acceso a esta despensa compartida pueden ver esta receta."
+          }
+        }
+      }
+    },
+    "The result could not be confirmed. Check the shared shop for a saved change before retrying.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result could not be confirmed. Check the shared shop for a saved change before retrying."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo confirmar el resultado. Comprueba si el cambio aparece en la compra compartida antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "You can browse the shared recipes and available food. Ask the assigned shopper to plan this dinner, or choose a draft shop assigned to you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can browse the shared recipes and available food. Ask the assigned shopper to plan this dinner, or choose a draft shop assigned to you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes consultar las recetas compartidas y los alimentos disponibles. Pide a la persona encargada de la compra que planifique esta cena o elige un borrador de compra que tengas asignado."
+          }
+        }
+      }
+    },
+    "Your recipes excluded from Tonight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your recipes excluded from Tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus recetas excluidas para esta noche"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

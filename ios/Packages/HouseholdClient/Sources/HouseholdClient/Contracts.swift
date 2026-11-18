@@ -22,6 +22,10 @@ public struct HouseholdBootstrap: Codable, Equatable, Sendable {
               let expiry = HistoryValidation.date(requestQueueUntil) else { return false }
         return expiry > Date()
     }
+    public var canBrowseHouseholdTonight: Bool {
+        enrolled && grantId == nil && ["organizer", "shopper", "contributor"].contains(role) &&
+            capabilities.contains("household_pantry") && capabilities.contains("household_tonight")
+    }
     public let capabilities: [String]
 }
 public enum ConfirmedRequestPurchase: String, Codable, Sendable { case bought, notBought }
@@ -142,7 +146,7 @@ public struct PendingOperation: Codable, Equatable, Identifiable, Sendable {
     public func targetsShop(_ shopID: String?, includeCreation: Bool = false) -> Bool {
         guard let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: bytes) else { return false }
         if includeCreation, envelope.kind == "shop.create" { return true }
-        guard let shopID else { return envelope.kind != "request.carry" && envelope.kind != "request.confirmPurchase" && !envelope.kind.hasPrefix("cook.") && !envelope.kind.hasPrefix("cookCopy.") && !envelope.kind.hasPrefix("pantry.") && envelope.kind != "mealRecovery.apply" }
+        guard let shopID else { return envelope.kind != "request.carry" && envelope.kind != "request.confirmPurchase" && !envelope.kind.hasPrefix("cook.") && !envelope.kind.hasPrefix("cookCopy.") && !envelope.kind.hasPrefix("pantry.") && envelope.kind != "mealRecovery.apply" && envelope.kind != "meal.chooseTonight" }
         return envelope.shopId.caseInsensitiveCompare(shopID) == .orderedSame
     }
     public init(envelope: CommandEnvelope, householdID: String, memberID: String, deviceID: String, requestQueueGrant: UUID? = nil, sharedDemandBinding: SharedDemandOperationBinding? = nil, sharedTrackingBinding: SharedTrackingOperationBinding? = nil, sharedRequestUndoBinding: SharedRequestUndoOperationBinding? = nil) throws {

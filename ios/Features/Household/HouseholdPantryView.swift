@@ -36,6 +36,7 @@ private struct HouseholdPantryView: View {
                 List {
                     if let page = model.page {
                         Section(household.projection?.household.label ?? householdPantryText("Household pantry")) {
+                            HouseholdTonightLink(household: household)
                             if model.pending == nil {
                                 Button(ht("Add food to storage")) { sheet = .addition(page) }
                                     .accessibilityIdentifier("householdPantry.add")

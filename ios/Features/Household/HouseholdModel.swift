@@ -84,6 +84,8 @@ struct DeviceReminderPersona: Equatable {
     }
     private var attempts = 0
     private var retryAfter = Date.distantPast
+    // Brief continuation through the existing shop picker. Never cache a title, stock facts, or review token.
+    var tonightDestinationReturn: HouseholdTonightReturn?
     private(set) var generation = UUID()
     // An explicit OTP from private Settings may continue on the protected root for this session.
     @Published private var verifiedHouseholdSubject: String?
@@ -154,6 +156,7 @@ struct DeviceReminderPersona: Equatable {
     func dismissVerifiedHousehold() { verifiedHouseholdSubject = nil }
 
     private func invalidateSessionActions() {
+        tonightDestinationReturn = nil
         generation = UUID()
         dismissVerifiedHousehold()
     }

@@ -22,6 +22,7 @@ struct DinnerSharedPlanningEntry: View {
     private func sheetClosed() { if pendingShopReview { pendingShopReview = false; reviewingShop = true } }
     var body: some View {
         List {
+            HouseholdTonightLink(household: household)
             if household.canOpenSharedDinnerPlanning {
                 Section(ht("Shared meal plan")) {
                     NavigationLink(ht("Shared meal ideas")) { SharedMealIdeasView(household: household) }

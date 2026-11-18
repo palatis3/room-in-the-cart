@@ -73,6 +73,90 @@ import XCTest
         XCTAssertTrue(app.staticTexts["3 reviewed purchases"].exists)
     }
 
+    func testHouseholdTonightReviewsARecipeWithoutAShopAndCancelKeepsItUnscheduled() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-tonight-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["settings"])
+        tap(app.buttons["household.pantry"])
+        tap(app.buttons["household.tonight"])
+        XCTAssertTrue(app.staticTexts["No household recipes are available for tonight."].waitForExistence(timeout: 10), app.debugDescription)
+        tap(app.buttons["householdTonight.recipe.new"])
+        fill("Family rice", into: "householdTonight.recipe.title")
+        fill("2", into: "householdTonight.recipe.servings")
+        fill("Rice", into: "householdTonight.recipe.ingredient")
+        fill("3", into: "householdTonight.recipe.amount")
+        tap(app.buttons["Match household batches"])
+        let lot = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.recipe.lot.")).firstMatch
+        XCTAssertTrue(lot.waitForExistence(timeout: 5), app.debugDescription)
+        enableSwitch(lot.identifier)
+        tap(app.buttons["householdTonight.recipe.review"])
+        tap(app.buttons["householdTonight.recipe.save"])
+        XCTAssertTrue(app.staticTexts["Family rice"].waitForExistence(timeout: 10), app.debugDescription)
+        tap(app.buttons["Edit household recipe"])
+        fill("Family rice bowls", into: "householdTonight.recipe.title", replacing: true)
+        tap(app.buttons["householdTonight.recipe.review"])
+        tap(app.buttons["householdTonight.recipe.save"])
+        let title = app.staticTexts["Family rice bowls"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10), app.debugDescription)
+        tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.choose.")).firstMatch)
+        XCTAssertTrue(app.buttons["Review a new shared shop"].exists)
+        XCTAssertFalse(app.buttons["householdTonight.confirm"].exists)
+        tap(app.buttons["householdTonight.cancel"])
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        tap(app.navigationBars["Household Tonight"].buttons.element(boundBy: 0))
+        tap(app.navigationBars["Household pantry"].buttons.element(boundBy: 0))
+        tap(app.navigationBars["Settings"].buttons["Done"])
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["household.tonight"])
+        XCTAssertTrue(title.waitForExistence(timeout: 8), app.debugDescription)
+        tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.choose.")).firstMatch)
+        XCTAssertTrue(app.buttons["Review a new shared shop"].exists)
+        XCTAssertFalse(app.buttons["householdTonight.destination"].exists)
+    }
+
+    func testAssignedShopperChoosesOneHouseholdDinnerAfterCancelingPreview() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-tonight-fixture", "--tonight-assigned-shop",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["household.tonight"])
+        let choose = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.choose.")).firstMatch
+        tap(choose)
+        tap(app.buttons["householdTonight.destination"])
+        XCTAssertTrue(app.buttons["householdTonight.confirm"].waitForExistence(timeout: 10), app.debugDescription)
+        tap(app.buttons["householdTonight.cancel"])
+        tap(choose)
+        tap(app.buttons["householdTonight.destination"])
+        tap(app.buttons["householdTonight.confirm"])
+        let saved = app.staticTexts["householdTonight.notice"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertEqual(saved.label, "Dinner added to the shared shop.")
+        tap(app.navigationBars["Household Tonight"].buttons.element(boundBy: 0))
+        tap(app.tabBars.buttons["Shop"])
+        tap(app.buttons["settings"])
+        tap(app.buttons["Household requests"])
+        tap(app.buttons["Open shared household shop"])
+        reveal(app.staticTexts["Household bean bowls"], fullyVisible: true)
+        XCTAssertTrue(app.staticTexts["Household bean bowls"].exists, app.debugDescription)
+        XCTAssertEqual(app.staticTexts.matching(identifier: "Household bean bowls").count, 1)
+    }
+
+    func testHouseholdTonightRefusesConfirmationAfterStockChanges() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-tonight-fixture", "--tonight-assigned-shop",
+                               "--tonight-stock-changed", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["household.tonight"])
+        tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.choose.")).firstMatch)
+        tap(app.buttons["householdTonight.destination"])
+        tap(app.buttons["householdTonight.confirm"])
+        let notice = app.staticTexts["householdTonight.notice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(notice.label, "Household stock, the recipe or planning access changed. Refresh before choosing again.")
+        XCTAssertFalse(app.buttons["householdTonight.confirm"].exists)
+    }
+
     func testEnrolledAdultReviewsTwoReceiptLinesAndReopensOnlyHouseholdEvidence() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-receipt-fixture",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
