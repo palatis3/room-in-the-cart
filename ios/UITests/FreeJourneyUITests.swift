@@ -802,10 +802,15 @@ import XCTest
         if app.buttons["receipt.document.keyboardDone"].exists { app.buttons["receipt.document.keyboardDone"].tap() }
         enableSwitch("I checked these printed lines and physically received food from this purchase.")
         tap(app.buttons["receipt.document.accept"])
-        let action = app.buttons["receipt.action.0"]
-        XCTAssertTrue(action.waitForExistence(timeout: 10))
+        let purchaseDate = app.switches["I checked the purchase date."]
+        XCTAssertTrue(purchaseDate.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(purchaseDate.value as? String, "0")
+        reveal(app.staticTexts["OATS"])
+        reveal(app.buttons["receipt.action.0"])
+        let review = app.buttons["receipt.review"]
+        reveal(review)
+        XCTAssertFalse(review.isEnabled)
         XCTAssertFalse(app.buttons["receipt.action.1"].exists)
-        XCTAssertEqual(app.switches["I checked the purchase date."].value as? String, "0")
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
