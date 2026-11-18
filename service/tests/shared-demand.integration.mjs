@@ -677,6 +677,24 @@ async function mealUndoPatch(f,occurrenceId,meal,{change=empty(),lines,quote,pro
   packs:(lines??shop.lines).map(l=>({lineId:l.lineId,usablePerPack:q(6),acceptUnresolved:false}))};
  const p=ok(await preview(f,input)),accepted=await apply(f,input,p);return {...accepted,receipt:ok(accepted.response),input};
 }
+test('a draft dinner swap appears in supported operation history and restores the exact dinner once',async()=>{
+ const {f,m}=await mealUndoFixture(),previous=ok(await call(f.owner,f.path));
+ const next={...m.meal,title:'Wraps with lime'};
+ const target=await mealUndoPatch(f,m.occurrenceId,next,{proposal:{dinnerSwap:true}});
+ const page=ok(await call(f.owner,f.path+'/demand'));
+ const candidate=ok(await foodCandidate(f,target.receipt.operationId,page));
+ assert.equal(candidate.mealUndo.occurrenceId,m.occurrenceId);
+ assert.deepEqual(candidate.mealUndo.touchedFields,['title']);
+ assert.deepEqual(candidate.action.body.mealEdit.meal,m.meal);
+ const packs=candidate.packReviewLineIds.map(lineId=>({lineId,usablePerPack:q(6),acceptUnresolved:false}));
+ const p=ok(await foodPreview(f,candidate,packs)),inverse=await apply(f,{action:p.action,base:candidate.base},p);
+ const final=ok(inverse.response);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',inverse.command)),final);
+ const restored=ok(await call(f.owner,f.path));
+ assert.deepEqual(restored.meals.find(r=>r.occurrenceId===m.occurrenceId).meal,m.meal);
+ assert.deepEqual(restored.lines,previous.lines);assert.deepEqual(restored.quote,previous.quote);
+});
+
 test('meal complete Undo restores a skipped dinner, original source and packs while later meal, staple and protected lunch survive',async()=>{
  const f=await fixture(),m=await mealGraph(f),lunchId=randomUUID(),ingredientId=randomUUID();
  const lunch={title:'Protected lunch',day:'2026-11-11',kind:'lunch',portions:2,protected:true,
