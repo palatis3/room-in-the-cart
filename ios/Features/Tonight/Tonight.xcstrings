@@ -2533,6 +2533,23 @@
           }
         }
       }
+    },
+    "Your recipes excluded from Tonight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your recipes excluded from Tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus recetas excluidas para esta noche"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

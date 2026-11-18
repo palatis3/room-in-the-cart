@@ -284,7 +284,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             if tonightFixture, path.hasSuffix("/bootstrap") {
                 var projection: [String: Any] = ["household": ["id": household, "label": "Fixture home"], "memberId": member,
                     "role": tonightHasShop ? "shopper" : "organizer", "enrolled": true, "queueConsent": false,
-                    "capabilities": ["household_pantry", "household_pantry_grants", "household_admin"] +
+                    "capabilities": ["household_pantry", "household_tonight", "household_pantry_grants", "household_admin"] +
                         (tonightHasShop ? ["shopper_commands", "shopper_inbox", "request_preview"] : [])]
                 if tonightHasShop { projection["shopId"] = shop }
                 return try response(projection)
@@ -298,15 +298,15 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                       let title = recipe["title"], let portions = recipe["portions"], json["reviewed"] as? Bool == true,
                       let rows = recipe["ingredients"] as? [[String: Any]], rows.count == 1,
                       let line = rows.first, let name = line["name"], let ingredient = line["id"],
-                      line["reviewedLotIds"] as? [String] == [] else { return try response([:], 400) }
+                      (line["reviewedLotIds"] as? [String])?.map({ $0.lowercased() }) == [pantryLot.lowercased()] else { return try response([:], 400) }
                 let previous = savedTonight?["recipeRevision"] as? Int
                 guard (json["baseRevision"] as? Int) == previous, savedTonight == nil || savedTonight?["recipeId"] as? String == id else {
                     return try response([:], 409)
                 }
                 let revision = (previous ?? 0) + 1
                 savedTonight = ["recipeId": id, "recipeRevision": revision, "title": title, "portions": portions, "reviewedRecipe": recipe,
-                    "status": "eligible", "ingredients": [["id": ingredient, "name": name, "status": "unknown", "useSoon": false]],
-                    "reviewToken": String(repeating: "a", count: 64), "checkoutEstimate": "incomplete"]
+                    "status": "eligible", "ingredients": [["id": ingredient, "name": name, "status": "covered", "useSoon": false]],
+                    "reviewToken": String(repeating: "a", count: 64), "checkoutEstimate": "noPurchaseNeeded"]
                 return try response(["recipeId": id, "recipeRevision": revision])
             }
             if tonightFixture, path.hasSuffix("/pantry/tonight") {
@@ -369,6 +369,13 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                 }
                 return try response(["v": 1, "householdId": household, "memberId": member, "grantEpoch": 0, "pantryRevision": 0,
                                      "today": String(today), "zone": zone, "revision": stapleRevision, "enabled": true, "groups": groups])
+            }
+            if tonightFixture && path.hasSuffix("/pantry") {
+                let amount: [String: Any] = ["unit": "count", "originalLiteral": "3", "amount": ["numerator": 3, "denominator": 1]]
+                let lot: [String: Any] = ["lotId": pantryLot, "foodName": "Rice", "location": "pantry", "origin": "manual", "exclusionTags": [],
+                    "observation": ["confirmedAt": "2026-11-17T10:00:00Z", "observationId": extraHead, "quantity": amount]]
+                return try response(["v": 1, "householdId": household, "grantEpoch": 0, "pantryRevision": 0,
+                    "asOf": "2026-11-17T10:00:00Z", "lots": [lot], "nextCursor": NSNull()])
             }
             if stapleFixture && path.hasSuffix("/pantry") {
                 let amount: [String: Any] = ["unit": "count", "originalLiteral": "2", "amount": ["numerator": 2, "denominator": 1]]

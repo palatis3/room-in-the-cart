@@ -8,6 +8,7 @@ extension HouseholdClientTests {
             auth: auth, deviceVault: MemoryVault(), transport: transport())
         let device = UUID(), lot = UUID(), ingredient = UUID()
         var writes = [Data](), reads = 0
+        var supportsTonight = true
         let lock = MockURLProtocol.installHandlerWithStateLock { request in
             if let auth = self.authResponse(request) { return auth }
             func reply(_ body: [String: Any]) throws -> (Int, Data) { (200, try JSONSerialization.data(withJSONObject: body)) }
@@ -16,7 +17,7 @@ extension HouseholdClientTests {
             if path == "bootstrap" {
                 return try reply(["household": ["id": self.household, "label": "Home"], "memberId": self.member,
                     "role": "organizer", "enrolled": true, "queueConsent": false,
-                    "shopId": request.value(forHTTPHeaderField: "X-Shop-ID") as Any, "capabilities": ["household_pantry"]])
+                    "shopId": request.value(forHTTPHeaderField: "X-Shop-ID") as Any, "capabilities": supportsTonight ? ["household_pantry", "household_tonight"] : ["household_pantry"]])
             }
             XCTAssertNil(request.value(forHTTPHeaderField: "X-Shop-ID"))
             XCTAssertNil(request.value(forHTTPHeaderField: "X-View-Grant-ID"))
@@ -54,6 +55,15 @@ extension HouseholdClientTests {
         let saved = try await service.prepareTonightRecipe(meal, evidence: nil, reviewedLots: [ingredient: [lot]], page: page, session: actor)
         do { try await service.saveTonightRecipe(saved); XCTFail("Lost result must be retryable") } catch { XCTAssertEqual(error as? ClientError, .transport) }
         try await service.saveTonightRecipe(saved)
+        lock.withLock { supportsTonight = false }
+        let olderServer = try await service.bootstrap()
+        XCTAssertFalse(olderServer.canBrowseHouseholdTonight)
+        let pantryStillAvailable = try await service.householdPantrySession(for: olderServer)
+        XCTAssertEqual(pantryStillAvailable, actor)
+        do { _ = try await service.householdTonight(for: actor); XCTFail("Older pantry service offered Tonight") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        do { try await service.saveTonightRecipe(saved); XCTFail("Older service received recipe write") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         let result = lock.withLock { (reads, writes) }
         XCTAssertEqual(result.0, 1)
         XCTAssertEqual(result.1.count, 2)
@@ -63,7 +73,8 @@ extension HouseholdClientTests {
     func testHouseholdTonightRejectsUnsafeCoverageAndBuildsChoiceOnlyForReviewedEligibleRecipe() throws {
         let session = HouseholdPantrySession(householdID: UUID(), memberID: UUID(), deviceID: UUID())
         let recipeID = UUID(), occurrence = UUID()
-        let row: [String: Any] = ["id": UUID().uuidString, "name": "Beans", "status": "unknown", "useSoon": false]
+        let row: [String: Any] = ["id": UUID().uuidString, "name": "Beans", "status": "missing",
+            "missing": ["amount": ["numerator": 1, "denominator": 1], "unit": "count", "originalLiteral": "1"], "useSoon": false]
         var recipe: [String: Any] = ["recipeId": recipeID.uuidString, "recipeRevision": 2, "title": "Beans",
             "portions": 2, "minutes": 15, "ingredients": [row], "status": "eligible", "reviewToken": String(repeating: "b", count: 64),
             "checkoutEstimate": "incomplete"]
@@ -88,4 +99,27 @@ extension HouseholdClientTests {
         let unresolved = try read(recipe)
         XCTAssertThrowsError(try unresolved.choiceBody(for: unresolved.recipes[0], day: nil, occurrence: occurrence))
     }
+    func testHouseholdTonightKeepsExcludedRecipeEditableOnlyForItsOrganizerWithoutMakingItChoosable() throws {
+        let session = HouseholdPantrySession(householdID: UUID(), memberID: UUID(), deviceID: UUID())
+        let recipe = UUID(), ingredient = UUID()
+        let restricted: [String: Any] = ["recipeId": recipe.uuidString, "recipeRevision": 2,
+            "reviewedRecipe": ["title": "Recipe to correct", "portions": 1, "ingredients": [
+                ["id": ingredient.uuidString, "name": "Sesame", "quantity": NSNull(), "reviewedLotIds": []] as [String: Any]
+            ]]]
+        var body: [String: Any] = ["v": 1, "householdId": session.householdID.uuidString, "grantEpoch": 0, "pantryRevision": 1,
+            "asOf": "2026-11-18T02:00:00Z", "canReviewRecipes": true, "recipes": [], "excludedCount": 1, "excludedReviewedRecipes": [restricted]]
+        let page: HouseholdTonightPage = try TrackingWriteFixture.decode(body)
+        try page.validate(session: session)
+        XCTAssertTrue(page.recipes.isEmpty)
+        XCTAssertEqual(page.excludedReviewedRecipes?.first?.id, recipe)
+        body["canReviewRecipes"] = false
+        let exposed: HouseholdTonightPage = try TrackingWriteFixture.decode(body)
+        XCTAssertThrowsError(try exposed.validate(session: session))
+        body.removeValue(forKey: "excludedReviewedRecipes")
+        let reader: HouseholdTonightPage = try TrackingWriteFixture.decode(body)
+        try reader.validate(session: session)
+        XCTAssertEqual(reader.excludedCount, 1)
+        XCTAssertNil(reader.excludedReviewedRecipes)
+    }
+
 }

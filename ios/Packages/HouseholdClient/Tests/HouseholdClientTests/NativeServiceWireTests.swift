@@ -109,6 +109,7 @@ final class NativeServiceWireTests: XCTestCase {
         let reloaded = try await service.householdPantryPage(for: actor)
         XCTAssertEqual(reloaded.pantryRevision, reopened.pantryRevision + 1)
         XCTAssertEqual(reloaded.lots.compactMap(\.receiptEvidence).map(\.line).sorted { $0.ordinal < $1.ordinal }, receiptLines)
+        XCTAssertTrue(scope.canBrowseHouseholdTonight)
         let tonight = try await service.householdTonight(for: actor)
         XCTAssertEqual(tonight.pantryRevision, reloaded.pantryRevision)
         let ingredient = UUID()
@@ -123,6 +124,19 @@ final class NativeServiceWireTests: XCTestCase {
         let saved = try XCTUnwrap(menu.recipes.first { $0.id == recipe.recipeId })
         XCTAssertEqual(saved.ingredients.first?.status, .covered)
         XCTAssertEqual(saved.checkoutEstimate, .noPurchaseNeeded)
+        let editable = try XCTUnwrap(saved.editable)
+        XCTAssertEqual(editable.reviewedRecipe.ingredients.first?.reviewedLotIds, [chosenLot.id])
+        var amended = meal
+        amended.title = "Reviewed lentil dinner"
+        let update = try await service.prepareTonightRecipe(amended, evidence: nil, reviewedLots: [ingredient: [chosenLot.id]],
+            page: menu, session: actor, replacing: editable)
+        try await service.saveTonightRecipe(update)
+        try await service.saveTonightRecipe(update)
+        let updatedMenu = try await service.householdTonight(for: actor)
+        let rechecked = try XCTUnwrap(updatedMenu.recipes.first { $0.id == saved.id })
+        XCTAssertEqual(rechecked.recipeRevision, saved.recipeRevision + 1)
+        XCTAssertEqual(rechecked.title, amended.title)
+        XCTAssertEqual(updatedMenu.pantryRevision, reloaded.pantryRevision)
         let reminders = try await service.householdStaples(for: actor, zone: "America/New_York")
         XCTAssertFalse(reminders.enabled)
         XCTAssertTrue(reminders.groups.isEmpty)

@@ -930,7 +930,7 @@ struct SharedShopTransfer: Equatable {
     func chooseTonight(_ recipe: HouseholdTonightPage.Recipe, from page: HouseholdTonightPage,
                        destination: ShopperShop, day: String?, occurrence: UUID) async throws {
         let actor = scope, start = generation
-        guard !busy, !editing, pending == nil, canManage, scope.capabilities.contains("household_pantry"),
+        guard !busy, !editing, pending == nil, canManage, scope.canBrowseHouseholdTonight,
               scope.shopId == destination.shopId, shop == destination, destination.phase == "draft" else { throw ClientError.accessEnded }
         busy = true
         defer { busy = false }
@@ -945,7 +945,7 @@ struct SharedShopTransfer: Equatable {
             base: .init(shopRevision: destination.shopRevision, authorityEpoch: destination.authorityEpoch),
             body: try live.choiceBody(for: recipe, day: day, occurrence: occurrence))
         try await queueAndDeliver(envelope, start: start)
-        guard generation == start, scope.shopId == destination.shopId, scope.capabilities.contains("household_pantry") else { throw ClientError.accessEnded }
+        guard generation == start, scope.shopId == destination.shopId, scope.canBrowseHouseholdTonight else { throw ClientError.accessEnded }
         if delivery == .needsReview {
             throw ClientError.service(status: 409, code: "stale_review", correlationID: nil, retryAfter: nil)
         }
@@ -966,7 +966,7 @@ struct SharedShopTransfer: Equatable {
     func retry() async {
         guard authorized, !busy, let pending, delivery == .waiting else { return }
         if pendingEnvelope?.kind == "amendment.recordResponse" && (!canReadConfirmedOrder || pendingEnvelope?.shopId != scope.shopId) { return }
-        if pendingTonight && (!canManage || !scope.capabilities.contains("household_pantry") || pendingEnvelope?.shopId != scope.shopId) { return }
+        if pendingTonight && (!canManage || !scope.canBrowseHouseholdTonight || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingDelivery && (!canReadDelivery || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingSharedCook && (!canCompleteCook || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingMealRecovery && (!canReadMealRecovery || pendingEnvelope?.shopId != scope.shopId) { return }
@@ -992,7 +992,7 @@ struct SharedShopTransfer: Equatable {
             if operation.sharedDemandBinding != nil { receipt = try await service.executeSharedDemand(operation) }
             else { receipt = try await service.executeSharedShop(operation) }
             guard start == generation else { return }
-            if envelope.kind == "meal.chooseTonight", pending != operation || !canManage || !scope.capabilities.contains("household_pantry") || scope.shopId != envelope.shopId { return }
+            if envelope.kind == "meal.chooseTonight", pending != operation || !canManage || !scope.canBrowseHouseholdTonight || scope.shopId != envelope.shopId { return }
             if operation.sharedDemandBinding != nil, pending != operation || !canManage || scope.shopId != envelope.shopId { return }
             let cookCopy = envelope.kind.hasPrefix("cookCopy."), pantryEdit = envelope.kind.hasPrefix("pantry.")
             let recovering = envelope.kind == "mealRecovery.apply"

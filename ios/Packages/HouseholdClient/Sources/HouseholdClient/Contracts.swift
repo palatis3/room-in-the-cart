@@ -22,6 +22,10 @@ public struct HouseholdBootstrap: Codable, Equatable, Sendable {
               let expiry = HistoryValidation.date(requestQueueUntil) else { return false }
         return expiry > Date()
     }
+    public var canBrowseHouseholdTonight: Bool {
+        enrolled && grantId == nil && ["organizer", "shopper", "contributor"].contains(role) &&
+            capabilities.contains("household_pantry") && capabilities.contains("household_tonight")
+    }
     public let capabilities: [String]
 }
 public enum ConfirmedRequestPurchase: String, Codable, Sendable { case bought, notBought }

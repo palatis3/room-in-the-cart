@@ -12,6 +12,7 @@ public actor HouseholdService {
     private var householdID: String?
     private var subject: String?
     private var memberID: String?
+    private(set) var authorizedTonightSession: HouseholdPantrySession?
     private var selectedShopID: UUID?
     private var selectedGrantID: String?
     // A helper uses the grant header, never the ordinary shop-selection header.
@@ -26,7 +27,7 @@ public actor HouseholdService {
         guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         guard UUID(uuidString: householdID) != nil else { throw ClientError.configuration }
         if let grantID, UUID(uuidString: grantID) == nil { throw ClientError.configuration }
-        generation = UUID(); enrollment = nil; enrollmentSessionID = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
+        generation = UUID(); authorizedTonightSession = nil; enrollment = nil; enrollmentSessionID = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
         selectedGrantID = grantID; selectedShopID = nil; helperAccess = nil
         let start = generation
         let access = try await auth.access()
@@ -171,6 +172,7 @@ public actor HouseholdService {
                   value.canSelectShop != true else { throw ClientError.accessEnded }
         }
         memberID = value.memberId
+        authorizedTonightSession = value.canBrowseHouseholdTonight ? try currentHouseholdPantrySession() : nil
         if let enrollment, let householdID, let subject {
             let stored = StoredEnrollment(householdID: householdID, subject: subject, device: enrollment, grantID: selectedGrantID, shopID: selectedShopID,
                                           childMemberID: childAdoptionBinding == nil ? nil : memberID, childBinding: childAdoptionBinding, sessionID: enrollmentSessionID)
@@ -715,7 +717,7 @@ public actor HouseholdService {
         } else {
             let capability = envelope.kind == "amendment.recordResponse" ? "confirmed_order" : envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
             let live = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
-            if envelope.kind == "meal.chooseTonight", !live.capabilities.contains("household_pantry") { throw ClientError.accessEnded }
+            if envelope.kind == "meal.chooseTonight", !live.canBrowseHouseholdTonight { throw ClientError.accessEnded }
             if envelope.kind.hasPrefix("cook."), !live.capabilities.contains("cook_completion") { throw ClientError.accessEnded }
             if envelope.kind == "cookCopy.save", envelope.body["factIndex"] != nil,
                !live.capabilities.contains("cook_corrections") { throw ClientError.accessEnded }
@@ -1234,7 +1236,7 @@ public actor HouseholdService {
     /// Synchronous within the actor so a server denial can prove which new
     /// cleared generation it created before any re-enrollment can interleave.
     private func clearLocalScope() -> UUID {
-        generation = UUID(); enrollment = nil; enrollmentSessionID = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; helperAccess = nil; childAdoptionBinding = nil
+        generation = UUID(); authorizedTonightSession = nil; enrollment = nil; enrollmentSessionID = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; helperAccess = nil; childAdoptionBinding = nil
         try? deviceVault.clear()
         return generation
     }

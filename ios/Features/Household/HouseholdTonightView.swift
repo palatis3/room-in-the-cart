@@ -13,7 +13,7 @@ struct HouseholdTonightReturn {
 struct HouseholdTonightLink: View {
     @ObservedObject var household: HouseholdModel
     var body: some View {
-        if let scope = household.householdPantryScope {
+        if household.projection?.canBrowseHouseholdTonight == true, let scope = household.householdPantryScope {
             NavigationLink(tonightText("Household Tonight")) {
                 HouseholdTonightView(household: household, scope: scope)
             }.accessibilityIdentifier("household.tonight")
@@ -35,7 +35,7 @@ private struct HouseholdTonightView: View {
     @State private var generation = UUID()
     @State private var recipeLots: [HouseholdPantryPage.Lot] = []
     @State private var editingRecipe = false
-    @State private var originalRecipe: HouseholdTonightPage.Recipe?
+    @State private var originalRecipe: HouseholdTonightPage.EditableRecipe?
     @State private var recipeWrite: HouseholdTonightRecipeWrite?
     @State private var managingShop = false
     @State private var choosingShop = false
@@ -49,7 +49,7 @@ private struct HouseholdTonightView: View {
     }
 
     private var live: Bool {
-        scene == .active && UIApplication.shared.isProtectedDataAvailable && household.householdPantryScope == scope
+        scene == .active && UIApplication.shared.isProtectedDataAvailable && household.projection?.canBrowseHouseholdTonight == true && household.householdPantryScope == scope
     }
     var body: some View {
         Group {
@@ -106,11 +106,25 @@ private struct HouseholdTonightView: View {
             }
             Button(tonightText("Refresh recipes and pantry")) { Task { await load() } }.disabled(busy)
         }
+        if page.canReviewRecipes, let excluded = page.excludedReviewedRecipes, !excluded.isEmpty {
+            Section(tonightText("Your recipes excluded from Tonight")) {
+                ForEach(excluded) { record in
+                    Button {
+                        Task { await openRecipe(page, original: record) }
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(verbatim: record.reviewedRecipe.title)
+                            Text(tonightText("Edit household recipe")).font(.caption)
+                        }
+                    }.disabled(busy)
+                }
+            }
+        }
         ForEach(page.recipes) { recipe in
             Section {
                 Text(verbatim: recipe.title).font(.headline)
-                if page.canReviewRecipes, recipe.reviewedRecipe != nil {
-                    Button(tonightText("Edit household recipe")) { Task { await openRecipe(page, original: recipe) } }
+                if page.canReviewRecipes, let editable = recipe.editable {
+                    Button(tonightText("Edit household recipe")) { Task { await openRecipe(page, original: editable) } }
                         .disabled(busy)
                 }
                 LabeledContent(ledgerText("Servings"), value: recipe.portions.formatted())
@@ -211,7 +225,7 @@ private struct HouseholdTonightView: View {
         } catch { if current(start) { await fail(error) } }
     }
 
-    @MainActor private func openRecipe(_ reviewed: HouseholdTonightPage, original: HouseholdTonightPage.Recipe? = nil) async {
+    @MainActor private func openRecipe(_ reviewed: HouseholdTonightPage, original: HouseholdTonightPage.EditableRecipe? = nil) async {
         guard live, !busy, page == reviewed, reviewed.canReviewRecipes, let service = household.service, let session else { return }
         let start = generation
         busy = true

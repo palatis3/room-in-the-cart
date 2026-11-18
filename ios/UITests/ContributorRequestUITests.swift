@@ -86,6 +86,10 @@ import XCTest
         fill("2", into: "householdTonight.recipe.servings")
         fill("Rice", into: "householdTonight.recipe.ingredient")
         fill("3", into: "householdTonight.recipe.amount")
+        tap(app.buttons["Match household batches"])
+        let lot = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.recipe.lot.")).firstMatch
+        XCTAssertTrue(lot.waitForExistence(timeout: 5), app.debugDescription)
+        enableSwitch(lot.identifier)
         tap(app.buttons["householdTonight.recipe.review"])
         tap(app.buttons["householdTonight.recipe.save"])
         XCTAssertTrue(app.staticTexts["Family rice"].waitForExistence(timeout: 10), app.debugDescription)
@@ -133,7 +137,8 @@ import XCTest
         tap(app.buttons["settings"])
         tap(app.buttons["Household requests"])
         tap(app.buttons["Open shared household shop"])
-        XCTAssertTrue(app.staticTexts["Household bean bowls"].waitForExistence(timeout: 10), app.debugDescription)
+        reveal(app.staticTexts["Household bean bowls"], fullyVisible: true)
+        XCTAssertTrue(app.staticTexts["Household bean bowls"].exists, app.debugDescription)
         XCTAssertEqual(app.staticTexts.matching(identifier: "Household bean bowls").count, 1)
     }
 
