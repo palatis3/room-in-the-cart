@@ -1,4 +1,5 @@
-import { ReceiptAssistance, receiptAssistanceInput, requireReceiptAdult, reserveReceiptAssistance } from './receipt-assistance.js';
+import {languagePurposes} from './language-assistance.js';
+import { ReceiptAssistance, receiptAssistanceInput, requireReceiptAdult, reserveCaptureAssistance, reserveReceiptAssistance } from './receipt-assistance.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -247,6 +248,30 @@ export function createHTTPServer(options:HTTPOptions) {
       if(path==='/devices'&&method==='POST') {
         z.object({}).strict().parse(await body(req));
         send(201,await repository.enroll(householdId,auth.identity));return;
+      }
+      const language=languagePurposes.find(route=>path==='/language-assistance/'+route.kind);
+      if(language && (method==='GET'||method==='POST')) {
+        const transport=options.receiptAssistance;
+        const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
+        await authorize();
+        if(method==='GET') {send(200,{version:1,available:!!transport?.budget.maxLanguageMicros});return;}
+        if(!transport?.budget.maxLanguageMicros) throw new ServiceError(503,'language_assistance_unavailable','Continue editing on this device.');
+        const request=language.parse(await body(req,16_384));
+        const cancellation=new AbortController();
+        const stop=()=>cancellation.abort();
+        res.once('close',stop);
+        try {
+          if(res.destroyed)throw unavailable();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await reserveCaptureAssistance(ctx,auth.identity,request,transport.budget,transport.budget.maxLanguageMicros);
+          });
+          const result=await request.run(transport,cancellation.signal);
+          cancellation.signal.throwIfAborted();
+          await authorize();
+          send(200,result);
+        } finally {res.off('close',stop);}
+        return;
       }
       const visual = /^\/capture-assistance\/(recipe|shelf|checkout)-line$/.exec(path);
       if((path==='/receipt-assistance' && (method==='GET'||method==='POST')) || (visual && method==='POST')) {
