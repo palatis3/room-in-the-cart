@@ -826,12 +826,27 @@ import XCTest
         tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
         tap(app.buttons["Choose a receipt from Photos"])
-        let photoName = NSPredicate(format: "label BEGINSWITH[c] %@", "Photo,")
-        let images = app.images.matching(photoName).firstMatch
-        let cells = app.cells.matching(photoName).firstMatch
-        let pickerAsset = images.waitForExistence(timeout: 5) ? images : cells
-        XCTAssertTrue(pickerAsset.waitForExistence(timeout: 12), app.debugDescription)
-        pickerAsset.tap()
+        // The system picker can group its thumbnails in one accessible grid.
+        // Its snapshot still exposes each photo's label and actual tap target.
+        func firstPhoto(in node: any XCUIElementSnapshot) -> CGRect? {
+            if (node.elementType == .image || node.elementType == .cell),
+               node.label.hasPrefix("Photo,"), !node.frame.isEmpty { return node.frame }
+            for child in node.children {
+                if let frame = firstPhoto(in: child) { return frame }
+            }
+            return nil
+        }
+        var thumbnail: CGRect?
+        let loaded = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let screen = try? self.app.snapshot() else { return false }
+            thumbnail = firstPhoto(in: screen)
+            return thumbnail != nil
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [loaded], timeout: 12), .completed)
+        let frame = try XCTUnwrap(thumbnail, app.debugDescription)
+        let origin = app.frame.origin
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: frame.midX - origin.x, dy: frame.midY - origin.y)).tap()
         let oats = app.switches["receipt.document.line.1.1"]
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
