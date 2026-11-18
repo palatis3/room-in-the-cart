@@ -275,6 +275,9 @@ private struct PantryLotView: View {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
                 }
+                if let access = digestAccess, access.scope.origin == model.snapshot?.state.workspaceID, access.authorized() {
+                    PantryPackageDateSection(model: model, lot: lot, access: access, store: PantryDigestStore.shared.packageDates)
+                }
                 PantryLotFoodKeeperSection(model: model, lot: lot, accessAllowed: accessAllowed)
                 if let digestAccess, digestAccess.scope.origin == model.snapshot?.state.workspaceID, lot.count.quantity?.amount != .zero {
                     NavigationLink(pantryText("Batch check date")) { PantryDigestDayEditor(model: model, access: digestAccess, lot: lot) }
