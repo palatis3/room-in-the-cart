@@ -651,6 +651,12 @@ import XCTest
     }
 
     private func verifyLotFoodKeeper(spanish: Bool) {
+        func openCannedChickenGuide() {
+            tapVisibleFormRow(app.buttons["pantry.foodKeeper"], marker: "FOOD_KEEPER_GUIDE_TAP")
+            let title = spanish ? "Guía de conservación de alimentos" : "Food storage guide"
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 8), app.debugDescription)
+            tap(app.buttons["foodKeeper.product.142"])
+        }
         let name = spanish ? "Pollo enlatado" : "Canned chicken"
         launch(reset: true, spanish: spanish)
         tap(app.buttons["shop.myPantry"])
@@ -668,9 +674,10 @@ import XCTest
         tap(app.buttons["pantry.move.fridge"])
         tap(app.buttons["pantry.confirm"])
         tap(app.buttons["pantry.opened"])
-        tap(app.buttons["pantry.confirm"])
-        tap(app.buttons["pantry.foodKeeper"])
-        tap(app.buttons["foodKeeper.product.142"])
+        let confirmOpened = app.buttons["pantry.confirm"]
+        tap(confirmOpened)
+        XCTAssertTrue(confirmOpened.waitForNonExistence(timeout: 8), app.debugDescription)
+        openCannedChickenGuide()
         let unknown = spanish ? "No hay recomendaciones correspondientes a esta condición de almacenamiento." : "No matching guidance for this storage condition."
         XCTAssertTrue(app.staticTexts[unknown].firstMatch.waitForExistence(timeout: 8))
         tap(app.buttons["foodKeeper.review.refrigerate_after_opening"])
@@ -700,8 +707,7 @@ import XCTest
         reveal(staleRange, initiallyUpward: false)
         XCTAssertTrue(staleRange.label.contains(spanish ? "Vuelve a revisar" : "Review its current storage"))
         XCTAssertFalse(element("pantry.foodKeeper.range").exists)
-        tap(app.buttons["pantry.foodKeeper"])
-        tap(app.buttons["foodKeeper.product.142"])
+        openCannedChickenGuide()
         XCTAssertTrue(app.staticTexts[unknown].firstMatch.waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "foodKeeper.review.")).firstMatch.exists)
         app.terminate()
