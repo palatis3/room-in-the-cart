@@ -109,6 +109,9 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual([selector.removesuffix("()") for selector in contributor].count(preferences), 1)
         staples = f"{UI_TARGET}/ContributorRequestUITests/testAdultReviewsHouseholdStaplePurchaseAndAnswersQuestionAcrossReopen"
         self.assertEqual([selector.removesuffix("()") for selector in contributor].count(staples), 1)
+        foodkeeper = f"{UI_TARGET}/MeasurementUITests/testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange"
+        measurement_shard = plans["contributor"]["shards"]["contributor-balanced-02"]["test_identifiers"]
+        self.assertEqual([value.removesuffix("()") for value in measurement_shard].count(foodkeeper), 1)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
