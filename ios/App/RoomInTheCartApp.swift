@@ -21,6 +21,16 @@ private extension EnvironmentValues {
         #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
         RITCAppCaptureProbe.install()
         #endif
+        #if DEBUG && targetEnvironment(simulator)
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("--ui-testing"), args.contains("--test-shopping-add-intent") {
+            Task { @MainActor in
+                let intent = AddGroceryItemIntent()
+                intent.wording = "2 kg rice"
+                _ = try? await intent.perform()
+            }
+        }
+        #endif
         // Keep inactive navigation labels legible against both system bar appearances.
         UITabBar.appearance().unselectedItemTintColor = UIColor(named: "secondary") ?? .secondaryLabel
     }
@@ -74,7 +84,7 @@ private struct GroceryWindow: View {
             if scenePhase != .active && access.isProtected {
                 Theme.canvas.ignoresSafeArea()
             } else { root }
-        }.modifier(PantryDigestRuntime(pickup: pickup, access: access, household: household, child: guardianChild))
+        }.modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
             .environment(\.pickupLedger, ledger)
             .environment(\.privatePantryRetry, pantryRetry)
             .environmentObject(model)
@@ -113,6 +123,8 @@ private struct GroceryWindow: View {
                     DeviceSurfacesDestination(composition: surfaces, destination: destination,
                                               ledger: ledger, pickup: pickup, household: household)
                 }.environment(\.pickupLedger, ledger)
+                    .environment(\.guardianChildCoordinator, guardianChild)
+                    .environmentObject(model)
                     .environmentObject(ledger).environmentObject(pickup)
                     .environmentObject(household).environmentObject(access)
                     .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
@@ -283,22 +295,31 @@ struct ShopView: View {
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var ledger: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var navigation: NavigationRestorationModel
+    @State private var showingFirstList = false
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
-        GeometryReader { viewport in
-            VStack(spacing: 0) {
-                shopContent
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
-                // Keep scrolling text inside the actual content viewport. The
-                // footer occupies the boundary above bottom navigation.
-                Theme.canvas.frame(height: 8)
-                    .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
-                    .accessibilityHidden(true)
-            }
-            .fittingViewport(viewport.size)
+        VStack(spacing: 0) {
+            shopContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+            // Reserve space above bottom navigation while the scroll view
+            // takes its size directly from the available navigation content.
+            Theme.canvas.frame(height: 8)
+                .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
+                .accessibilityHidden(true)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
+            .sheet(isPresented: $showingFirstList) {
+                NavigationStack {
+                    FirstListEntry(model: ledger) { id in
+                        guard access.unlocked, ledger.shop?.id == id, let workspace = ledger.sourceWorkspaceID else { return }
+                        showingFirstList = false
+                        navigation.setPath([.shoppingList(actorID: access.localActorID, workspaceID: workspace, shopID: id)], for: .shop)
+                    }
+                }
+            }
     }
     private func pickupDestination<Content: View>(_ id: UUID, @ViewBuilder content: () -> Content) -> some View {
         Group {
@@ -354,6 +375,10 @@ struct ShopView: View {
                         }
                     } else {
                         comparePacks.buttonStyle(PrimaryAction())
+                        Button { showingFirstList = true } label: {
+                            Label(ledgerText("Add a list"), systemImage: "list.bullet")
+                                .font(.headline).frame(minHeight: 44)
+                        }.disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("shop.addFirstList")
                         Text(tr("Works offline. No account needed.")).font(.footnote).foregroundStyle(Theme.secondary)
                     }
                     RestorableShoppingListLink {
@@ -406,6 +431,7 @@ struct ShopView: View {
                         }.foregroundStyle(Theme.action).accessibilityIdentifier("shop.checkOneChange")
                     }
                     if ledger.shop != nil {
+                        FirstListResumeButton(model: ledger, showingEditor: showingFirstList) { showingFirstList = true }
                         comparePacks.foregroundStyle(Theme.action)
                     }
                     NavigationLink {

@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreDomain
 import RecordArchive
+import DeviceSurfaces
 
 func tonightText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Tonight") }
 
@@ -27,6 +28,27 @@ struct TonightEntry: View {
     @State private var preview: TonightPlanChoice.Review?
     @State private var message: String?
     @State private var applying = false
+    @ObservedObject private var home = AdultHomeSummaryStore.shared
+    private var homeAccess: PantryDigestAccess? {
+        guard model.batch == nil, scope != nil, let child else { return nil }
+        return .current(pickup: pickup, access: access, household: household, child: child)
+    }
+    private func refreshHome() {
+        guard let current = homeAccess, home.enabled(.tonight, scope: current.scope),
+              let ledgerID = ledger.sourceWorkspaceID, let input = model.input else { return }
+        do {
+            let basis = try TonightHomeBasis(ledger: ledgerID, revision: input.ledgerRevision, stock: input.basis)
+            guard let live = try? TonightHomeBasis.current(ledger: ledger, pickup: pickup), basis == live else {
+                try home.invalidate(.tonight, origin: current.scope.origin, forget: false); return
+            }
+            let choices = model.homeScreenChoices
+            guard let first = choices.first else {
+                try home.invalidate(.tonight, origin: current.scope.origin, forget: false); return
+            }
+            let title = String(first.recipe.title.prefix(64))
+            try home.update(.tonight, access: current, count: choices.count, reviewedTitle: title, tonightBasis: basis)
+        } catch { try? home.invalidate(.tonight, origin: current.scope.origin, forget: false) }
+    }
     private struct Scope: Equatable {
         let adult: CapturePrivateIdentity
         let inventory: UUID
@@ -63,6 +85,8 @@ struct TonightEntry: View {
             model.invalidate(); preview = nil; choosing = nil; sourceToReview = nil; manual = false; foodToReview = nil; recipeToReview = nil
             if scope != nil && pickup.pantryIsActive { await refresh() }
         }
+        .onChange(of: model.reviews) { _, _ in refreshHome() }
+        .onChange(of: home.generation) { _, _ in refreshHome() }
         .onChange(of: ledger.workspace.dinnerPlanning.privateMealPreferences?.revision) { _, _ in
             model.invalidate(); preview = nil; choosing = nil
             Task { await refresh() }
@@ -102,6 +126,7 @@ struct TonightEntry: View {
                     }
                 }
             }
+            if let current = homeAccess { AdultHomeSummaryPreference(kind: .tonight, access: current, ledgerID: ledger.sourceWorkspaceID) }
             Section {
                 NavigationLink(tonightText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: ledger) }
                     .accessibilityIdentifier("tonight.preferences")
@@ -216,7 +241,7 @@ struct TonightEntry: View {
                     })) {
                         Text(tonightText("Not matched")).tag(UUID?.none)
                         ForEach(model.input?.foods ?? []) { food in Text(food.name).tag(Optional(food.id)) }
-                    }
+                    }.accessibilityIdentifier("tonight.match." + ingredient.id.uuidString)
                     if let foodID, let food = model.input?.foods.first(where: { $0.id == foodID }) {
                         Text(food.detail).font(.caption)
                         Button(tonightText("Review this food’s ingredient and brand details")) { foodToReview = food }
@@ -264,6 +289,8 @@ struct TonightEntry: View {
                     review.allIngredientsCovered ? "Ingredients covered — review to choose" : "Review ingredient matches and missing amounts"))
                     .font(.caption)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("tonight.result." + review.id.uuidString)
         }
     }
     @ViewBuilder private var followingMeals: some View {

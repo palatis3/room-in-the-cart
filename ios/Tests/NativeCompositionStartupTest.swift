@@ -120,6 +120,103 @@ import CoreDomain
         XCTAssertFalse(requests.pending)
         XCTAssertNil(f.composition.destination)
     }
+    func testAdultHomeConsentAndColdRouteRequireCurrentOwnerAndFreshPrivateReceipt() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let group = root.appendingPathComponent("group")
+        let directory = root.appendingPathComponent("private")
+        func makeStore() -> AdultHomeSummaryStore {
+            AdultHomeSummaryStore(directory: directory, widgetDirectory: { group }, reload: { _ in })
+        }
+        let store = makeStore()
+        let identity = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: identity)
+        var unlocked = true
+        let access = PantryDigestAccess(scope: scope, authorized: { unlocked })
+        let file = try AdultFoodSummaryFile(directory: group, kind: .useSoon)
+        try store.update(.useSoon, access: access, count: 2)
+        XCTAssertThrowsError(try file.read())
+        try store.setEnabled(true, kind: .useSoon, access: access)
+        try store.update(.useSoon, access: access, count: 2)
+        let value = try file.read()
+        XCTAssertEqual(value.count, 2)
+        let cold = makeStore()
+        XCTAssertTrue(cold.permits(value.route, kind: .useSoon, access: access))
+        unlocked = false
+        XCTAssertFalse(cold.permits(value.route, kind: .useSoon, access: access))
+        unlocked = true
+        let other = PantryDigestAccess(scope: PantryDigestScope(origin: UUID(), identity: identity), authorized: { true })
+        XCTAssertFalse(cold.permits(value.route, kind: .useSoon, access: other))
+        XCTAssertNil(cold.publishedKind(for: value.route, now: value.expiresAt))
+        try cold.invalidate(.useSoon, origin: scope.origin, forget: false)
+        XCTAssertThrowsError(try file.read())
+        XCTAssertFalse(cold.permits(value.route, kind: .useSoon, access: access))
+        try cold.update(.useSoon, access: access, count: 1)
+        XCTAssertNotEqual(try file.read().route, value.route)
+        try cold.invalidate(.useSoon, origin: scope.origin, forget: true)
+        XCTAssertFalse(cold.enabled(.useSoon, scope: scope))
+        XCTAssertThrowsError(try file.read())
+        try cold.setEnabled(true, kind: .useSoon, access: access)
+        try cold.update(.useSoon, access: access, count: 1)
+        try cold.reconcileOwner(other)
+        XCTAssertThrowsError(try file.read())
+        XCTAssertFalse(cold.enabled(.useSoon, scope: scope))
+    }
+    func testShoppingShortcutsOpenDistinctReviewedDestinationsWithoutWriting() async throws {
+        let requests = SurfaceCaptureRequests()
+        let f = try await coldURLFixture(captureRequests: requests)
+        let initial = f.ledger.workspace, revision = f.ledger.revision
+        requests.requestShopping(.openList)
+        await waitForSurfaceDestination(f.composition)
+        guard case .shopping(let list) = f.composition.destination, case .openList = list.request.action else {
+            return XCTFail("Open list must reach the current authorized list")
+        }
+        XCTAssertEqual(list.binding.shop, f.ledger.shop?.id)
+        XCTAssertTrue(f.composition.allows(list))
+        f.composition.destination = nil
+        requests.requestShopping(.addItem("Milk, no nuts"))
+        await waitForSurfaceDestination(f.composition)
+        guard case .shopping(let item) = f.composition.destination, case .addItem(let words) = item.request.action else {
+            return XCTFail("Add item must reach an editable draft")
+        }
+        XCTAssertEqual(words, "Milk, no nuts")
+        XCTAssertEqual(f.ledger.workspace, initial)
+        XCTAssertEqual(f.ledger.revision, revision)
+        f.composition.scopeChanged()
+        XCTAssertFalse(f.composition.allows(item))
+        XCTAssertNil(f.composition.destination)
+        let target = try XCTUnwrap(item.binding.shop)
+        let committed = await f.ledger.editShop(key: "expired-shortcut-preview", shopID: target,
+            authorize: { f.composition.allows(item) }) { _ in XCTFail("Stale wording must not edit a pickup") }
+        XCTAssertFalse(committed)
+        XCTAssertEqual(f.ledger.revision, revision)
+    }
+
+    func testSleepingShoppingIntentRequiresTheOriginalPickupOnForeground() async throws {
+        let requests = SurfaceCaptureRequests()
+        let f = try await coldURLFixture(captureRequests: requests)
+        f.composition.background()
+        requests.requestShopping(.addItem("Private wording"))
+        for _ in 0..<100 where requests.pending { try await Task.sleep(for: .milliseconds(10)) }
+        XCTAssertNil(f.composition.destination)
+        let saved = await f.ledger.startShop(title: "Other pickup")
+        XCTAssertTrue(saved)
+        await f.composition.foreground()
+        await waitForSurfaceDestination(f.composition)
+        guard case .unavailable = f.composition.destination else { return XCTFail("A shortcut must not carry food text to a different pickup") }
+        XCTAssertTrue(f.ledger.shop?.lines.isEmpty == true)
+    }
+    func testShoppingIntentRejectsExpiredWording() async throws {
+        let requests = SurfaceCaptureRequests()
+        let f = try await coldURLFixture(captureRequests: requests)
+        let expected = f.ledger.workspace
+        let now = requests.now()
+        requests.now = { now.addingTimeInterval(-601) }
+        requests.requestShopping(.addItem("Stale wording"))
+        await waitForSurfaceDestination(f.composition)
+        guard case .unavailable = f.composition.destination else { return XCTFail("Expired draft must be withheld") }
+        XCTAssertEqual(f.ledger.workspace, expected)
+    }
     func testColdCurrentURLWaitsForActiveAndReadyModels() async throws {
         let f = try await coldURLFixture()
         let coldLedger = LedgerModel(databaseURL: f.base.appendingPathComponent("ledger.sqlite"))

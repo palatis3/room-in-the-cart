@@ -165,6 +165,22 @@ struct DeviceSurfacesDestination: View {
             case .ownRequest:
                 if household.projection?.role == "contributor", !household.locked { HouseholdSettingsView(model: household) } else { SurfaceUnavailableView() }
             case .unavailable: SurfaceUnavailableView()
+            case .adultSummary(_, let kind, let handle):
+                AdultHomeSummaryDestination(kind: kind, handle: handle, pickup: pickup, household: household)
+            case .shopping(let review):
+                if composition.allows(review) {
+                    switch review.request.action {
+                    case .openList: LedgerHomeView(model: ledger)
+                    case .addItem(let wording):
+                        if let shop = review.binding.shop {
+                            LedgerImportView(model: ledger, shopID: shop, prefill: wording,
+                                authorizeEntry: { composition.allows(review) })
+                        } else {
+                            FirstListEntry(model: ledger, prefill: wording, authorizeEntry: { composition.allows(review) },
+                                onSaved: { _ in composition.destination = nil })
+                        }
+                    }
+                } else { SurfaceUnavailableView() }
             case .capture:
                 if composition.privateAuthorized, let shop = ledger.shop { LedgerImportView(model: ledger, shopID: shop.id) }
                 else if composition.privateAuthorized { LedgerHomeView(model: ledger) }
@@ -192,6 +208,15 @@ struct DeviceSurfacesDestination: View {
                 } else { SurfaceUnavailableView() }
             }
         }.modifier(PickupNextShopRoute(model: pickup, requested: $nextShopRequested) { nextShopFocused = true })
+        .task(id: destination.id) {
+            if case .shopping(let review) = destination {
+                let delay = max(0, review.request.expiresAt.timeIntervalSinceNow)
+                try? await Task.sleep(for: .seconds(delay))
+                if !Task.isCancelled, composition.destination?.id == review.id {
+                    composition.destination = .unavailable(UUID())
+                }
+            }
+        }
         .task {
             if await prepareForPresentation() { selected = true }
         }

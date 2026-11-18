@@ -16,6 +16,73 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testColdAddItemShortcutOpensEditableFirstDraftWithoutCreatingPickup() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--test-shopping-add-intent",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let editor = app.textViews["ledgerImportText"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 30))
+        XCTAssertEqual(editor.value as? String, "2 kg rice")
+        tap(editor)
+        editor.typeText(" noodles")
+        let edited = editor.value as? String
+        XCTAssertTrue(edited?.contains("noodles") == true)
+        XCTAssertTrue(edited?.contains("2 kg rice") == true)
+        let done = app.buttons["Done"]
+        if done.exists, done.isHittable { done.tap() }
+        tap(app.buttons["Close"])
+        XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12))
+        tap(app.buttons["shop.addFirstList"])
+        XCTAssertTrue(editor.waitForExistence(timeout: 10))
+        XCTAssertEqual(editor.value as? String, edited)
+    }
+
+    func testFirstListResumesAfterRelaunchAndCreatesOneUndoablePickupOnConfirmation() {
+        for language in ["en", "es"] {
+            launch(language: language, largeDark: language == "es")
+            let add = app.buttons["shop.addFirstList"]
+            tap(add)
+            let close = app.buttons[language == "en" ? "Close" : "Cerrar"]
+            tap(close)
+            XCTAssertTrue(add.waitForExistence(timeout: 5))
+            tap(add)
+            let field = app.textViews["ledgerImportText"]
+            let wording = language == "en" ? "2 kg rice" : "2 kg arroz"
+            tap(field)
+            field.typeText(wording)
+            let done = language == "en" ? "Done" : "Listo"
+            let doneButton = app.buttons[done]
+            XCTAssertTrue(doneButton.waitForExistence(timeout: 5) && doneButton.isHittable)
+            doneButton.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+            let saved = app.staticTexts["firstList.draftStatus"]
+            // At accessibility sizes the focused editor scrolls the status row
+            // above the visible part of the Form. Bring it back before reading it.
+            let form = app.collectionViews["ledgerImportForm"]
+            for _ in 0..<5 {
+                if saved.exists && saved.isHittable { break }
+                form.swipeDown(velocity: .slow)
+            }
+            XCTAssertTrue(saved.exists && saved.isHittable)
+            let label = language == "en" ? "Private draft saved on this device. It expires 7 days after your last edit." :
+                "Borrador privado guardado en este dispositivo. Caduca 7 días después del último cambio."
+            expectation(for: NSPredicate(format: "label == %@", label), evaluatedWith: saved)
+            waitForExpectations(timeout: 10)
+            app.terminate()
+            launch(language: language, reset: false, largeDark: language == "es")
+            tap(app.buttons["shop.addFirstList"])
+            XCTAssertTrue(form.waitForExistence(timeout: 5))
+            reveal(field)
+            XCTAssertEqual(field.value as? String, wording)
+            tap(app.buttons["ledgerReviewImport"])
+            tap(app.buttons["ledgerCommitImport"])
+            let undo = app.buttons["ledgerUndoImport"]
+            tap(undo)
+            XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
+            app.terminate()
+        }
+    }
+
     func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {
         for language in ["en", "es"] {
             launch(language: language)

@@ -119,6 +119,7 @@ private enum LedgerDeletionJournal {
     var pendingLedgerDeletionReview: WholeLedgerDeletionReview? { pendingLedgerDeletion?.review }
     private var deletionJournalURL: URL? { resolvedDatabaseURL?.appendingPathExtension("erase-intent.json") }
     private struct PendingSave {
+        var firstListDraft: FirstListDraftVersion? = nil
         let onShopSelected: ((UUID) -> Void)?
         let key: String
         let workspace: LedgerWorkspace
@@ -284,6 +285,7 @@ private enum LedgerDeletionJournal {
     }
 
     private func change(key: String, onShopSelected: ((UUID) -> Void)?,
+                        firstListDraft: FirstListDraftVersion? = nil,
                         reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
                         authorize: (@MainActor () -> Bool)? = nil,
                         _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
@@ -320,8 +322,8 @@ private enum LedgerDeletionJournal {
             }
             if let basis = reviewedPantryBasis { try await verifyPantryBasis(basis) }
             guard actionAccess?() != false else { throw LedgerModelError.notReady }
-            let change = PendingSave(onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
-                                     operationID: UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis, authorize: actionAccess)
+            let change = PendingSave(firstListDraft: firstListDraft, onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
+                                     operationID: firstListDraft?.token ?? UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis, authorize: actionAccess)
             pending = change
             hasPendingSave = true
             return await commit(change, to: store)
@@ -379,8 +381,9 @@ private enum LedgerDeletionJournal {
     }
 
     @discardableResult
-    func editShop(key: String, shopID: UUID, _ edit: (inout ShoppingLedger) throws -> Void) async -> Bool {
-        await change(key: key) { workspace in
+    func editShop(key: String, shopID: UUID, authorize: (@MainActor () -> Bool)? = nil,
+                  _ edit: (inout ShoppingLedger) throws -> Void) async -> Bool {
+        await change(key: key, onShopSelected: nil, authorize: authorize) { workspace in
             guard let index = workspace.shops.firstIndex(where: { $0.id == shopID }) else { throw LedgerModelError.noShop }
             try edit(&workspace.shops[index])
         }
@@ -435,8 +438,9 @@ private enum LedgerDeletionJournal {
                 if pending.reviewedPantryBasis != nil, pantryPackPort?.hasReadAccess != true { throw LedgerModelError.notReady }
             }
             guard privatePantryWritable else { throw LedgerModelError.notReady }
+            try AdultHomeSummaryStore.shared.invalidateLedger(store.workspaceID, forget: false)
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
-                                              operationID: pending.operationID, savedAt: pending.savedAt)
+                                              operationID: pending.operationID, savedAt: pending.savedAt, consuming: pending.firstListDraft)
             // No other mutation can start while saving, including during actor suspension.
             // Another store instance may have advanced after this operation's receipt.
             let current = try await store.load() ?? record
@@ -464,6 +468,11 @@ private enum LedgerDeletionJournal {
             clearRetiredState()
             await open()
             self.error = recordsText("This ledger was deleted. Unsaved edits from its old workspace were discarded.")
+            return false
+        } catch LedgerStoreError.operationConflict where pending.firstListDraft != nil {
+            self.pending = nil
+            hasPendingSave = false
+            error = ledgerText("This draft changed or expired. Reopen it to review the saved version.")
             return false
         } catch LedgerStoreError.staleRevision(expected: _, actual: _) {
             self.error = ledgerText("A newer pickup is saved. Discard the pending save to reload it, then review your entries again.")
@@ -778,6 +787,23 @@ private enum LedgerDeletionJournal {
         workspace = LedgerWorkspace(); committedPayload = nil; revision = 0; savedAt = nil
         pendingPantryPack = nil; pantryPackWasCommitted = false
         pending = nil; hasPendingSave = false; ready = false; search = ""
+    }
+
+    var firstListStore: LedgerStore? {
+        guard privatePantryWritable, ready, !hasPendingLedgerDeletion else { return nil }
+        return store
+    }
+
+    func commitFirstList(_ preview: StagedListImport, decisions: [UUID: ImportResolution], draft: FirstListDraftVersion,
+                         title: String, authorize: @escaping @MainActor () -> Bool) async -> Bool {
+        await change(key: "first-list-\(preview.id)", onShopSelected: nil, firstListDraft: draft, authorize: authorize) { candidate in
+            guard !candidate.shops.contains(where: { $0.id == preview.shopID }), sourceWorkspaceID == draft.workspaceID, revision == draft.baseRevision,
+                  preview.lines.contains(where: { decisions[$0.id] != nil && decisions[$0.id] != .skip }) else { throw LedgerError.stalePreview }
+            var shop = ShoppingLedger(id: preview.shopID, title: title)
+            try shop.commitImport(preview, decisions: decisions)
+            candidate.shops.append(shop)
+            candidate.selectedShopID = shop.id
+        }
     }
 
     func startShop(title: String, onSelected: ((UUID) -> Void)? = nil) async -> Bool {

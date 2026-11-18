@@ -223,18 +223,24 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let isolation = SurfaceRuntimeIsolation(directory: nil, launchArguments: ProcessInfo.processInfo.arguments, applicationSupport: support)
         return PantryDigestStore(folder: isolation.directory.deletingLastPathComponent().appendingPathComponent("PantryDigests"),
-                                scheduler: PantryDigestNotifications(isolated: isolation.isUITesting))
+                                scheduler: PantryDigestNotifications(isolated: isolation.isUITesting),
+                                invalidateHome: { kind, origin, forget in
+                                    try AdultHomeSummaryStore.shared.invalidate(kind, origin: origin, forget: forget)
+                                })
     }()
     let packageDates: PantryPackageDateStore
     private let folder: URL
     private let scheduler: any PantryDigestScheduling
     private let now: () -> Date
+    private let invalidateHome: (AdultFoodSummaryKind, UUID, Bool) throws -> Void
     private var last: Task<Void, Error>?
     @Published private(set) var generation = UUID()
     @Published var tapped: UUID?
     @Published private(set) var notificationsUnavailable = false
 
-    init(folder: URL, scheduler: any PantryDigestScheduling, now: @escaping () -> Date = Date.init) {
+    init(folder: URL, scheduler: any PantryDigestScheduling, now: @escaping () -> Date = Date.init,
+         invalidateHome: @escaping (AdultFoodSummaryKind, UUID, Bool) throws -> Void = { _, _, _ in }) {
+        self.invalidateHome = invalidateHome
         self.folder = folder; self.scheduler = scheduler; self.now = now
         packageDates = PantryPackageDateStore(folder: folder.appendingPathComponent("PrintedDates", isDirectory: true))
     }
@@ -256,6 +262,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     }
     private func write(_ doc: PantryDigestDocument, to url: URL) throws {
         try doc.validate()
+        try invalidateHome(.useSoon, doc.origin, false)
         try PantryArchiveFiles.directory(folder, create: true)
         let data = try JSONEncoder().encode(doc)
         try data.write(to: url, options: [.atomic, .completeFileProtection])
@@ -354,7 +361,9 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     func beforeLotCommit(_ batch: InventoryBatch) async throws {
         let ids = Set(batch.writes.filter { $0.record.key.kind == .lot && $0.expectedRevision > 0 }.map(\.record.key.id) +
                       batch.erasures.filter { $0.key.kind == .lot }.map(\.key.id))
+        if !batch.writes.isEmpty || !batch.erasures.isEmpty { try invalidateHome(.tonight, batch.workspaceID, false) }
         guard !ids.isEmpty else { return }
+        try invalidateHome(.useSoon, batch.workspaceID, false)
         for url in try documents(for: batch.workspaceID) {
             let doc = try read(url)
             guard doc.origin == batch.workspaceID else { throw PantryDigestFailure.invalid }
@@ -368,6 +377,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
 
     /// Called from the receipt-bound erasure cleanup, including recovery after process death.
     func erase(origin: UUID, whole: Bool, inventory: ComparisonStore) async throws {
+        for kind in AdultFoodSummaryKind.allCases { try invalidateHome(kind, origin, whole) }
         try await packageDates.erase(origin: origin, whole: whole) { lot in
             try await inventory.inventoryRecord(.init(.lot, lot)) != nil
         }

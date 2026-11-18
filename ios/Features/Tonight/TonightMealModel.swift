@@ -97,6 +97,16 @@ import RecordArchive
         }
         return PantryMealMatcher.ranked(reviews, feedback: feedback)
     }
+    var homeScreenChoices: [PantryMealMatcher.Review] {
+        guard let input, !failed, let profile = input.workspace.dinnerPlanning.privateMealPreferences,
+              profile.settings.availableAppliances != nil else { return [] }
+        // Reactions personalize the private Tonight screen. Widget consent
+        // covers the reviewed meal title and count without that preference signal.
+        return PantryMealMatcher.ranked(reviews).filter {
+            $0.preferenceRevision == profile.revision && $0.recipe.eligibilityEvidence?.requiredAppliances != nil &&
+                $0.allIngredientsCovered && Self.canChoose($0)
+        }
+    }
     var needsReview: [PantryMealMatcher.Review] {
         let suggestions = Set(suggestions.map(\.id))
         return reviews.filter { !suggestions.contains($0.id) }
