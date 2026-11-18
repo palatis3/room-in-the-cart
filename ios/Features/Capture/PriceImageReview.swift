@@ -12,6 +12,7 @@ struct PriceImageReview: View {
     @Environment(\.locale) private var locale
     @State private var photo: PhotosPickerItem?
     @State private var lines: [PriceImageLine] = []
+    @FocusState private var focusedAmount: ReviewedCheckoutImage.Field?
     @State private var loading = false
     @State private var notice: String?
     @State private var selections: [ReviewedCheckoutImage.Field: Int] = [:]
@@ -41,7 +42,12 @@ struct PriceImageReview: View {
                     ForEach(ReviewedCheckoutImage.Field.allCases, id: \.self) { field in
                         Section(priceImageField(field)) {
                             Picker(pantryText("Printed wording"), selection: Binding(
-                                get: { selections[field] ?? -1 }, set: { selections[field] = $0; amounts[field] = "" }
+                                get: { selections[field] ?? -1 }, set: { index in
+                                    guard selections[field] != index else { return }
+                                    selections[field] = index
+                                    amounts[field] = nil
+                                    inclusions[field] = nil
+                                }
                             )) {
                                 Text(pantryText("Not shown")).tag(-1)
                                 ForEach(lines, id: \.ordinal) { line in Text(verbatim: line.wording).tag(line.ordinal) }
@@ -50,6 +56,7 @@ struct PriceImageReview: View {
                                 if lines[index].uncertain { Text(pantryText("Uncertain image wording")).font(.caption) }
                                 TextField(pantryText("Shown USD amount, blank if unknown"), text: Binding(
                                     get: { amounts[field] ?? "" }, set: { amounts[field] = $0 })).keyboardType(.decimalPad)
+                                    .focused($focusedAmount, equals: field)
                                 if field != .total {
                                     Picker(pantryText("Relation to displayed total"), selection: Binding(
                                         get: { inclusions[field] ?? .unknown }, set: { inclusions[field] = $0 }
@@ -77,10 +84,11 @@ struct PriceImageReview: View {
         }
         .navigationTitle(purpose == .shelf ? pantryText("Shelf label") : pantryText("Checkout screenshot"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() } } }
+        .keyboardDoneAction(visible: focusedAmount != nil, title: pantryText("Done"), identifier: "priceImage.done") { focusedAmount = nil }
         .privacySensitive()
         .task(id: photo) {
             lines = []; selections = [:]; amounts = [:]; inclusions = [:]; notice = nil
-            guard let photo else { return }
+            guard let photo else { loading = false; return }
             loading = true
             defer { if !Task.isCancelled { loading = false } }
             do {

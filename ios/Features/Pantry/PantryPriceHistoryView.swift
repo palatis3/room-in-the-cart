@@ -444,6 +444,17 @@ private struct PantryPriceEditor: View {
                 }.accessibilityIdentifier("prices.review")
             }
         }
+        .onChange(of: paid) { _, isPaid in
+            guard isPaid, printed != nil else { return }
+            printed = nil
+            priceBasis = .unknown
+            currency = "USD"
+            amount = ""
+            packages = "1"
+            quantity = ""
+            eligibility = ""
+            source = ""
+        }
         .sheet(isPresented: $selectingImage) {
             NavigationStack {
                 PriceImageReview(purpose: .shelf, acceptShelf: { line in
