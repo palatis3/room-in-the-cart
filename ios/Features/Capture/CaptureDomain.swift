@@ -1,7 +1,7 @@
 import Foundation
 import CoreDomain
 
-enum CaptureSource: String, Sendable { case typed, paste, speech, photoOCR }
+enum CaptureSource: String, Sendable { case typed, paste, speech, assistedSpeech, photoOCR }
 enum CaptureFailure: Error, Equatable { case notConfigured, permissionDenied, onDeviceUnavailable, audioUnavailable, recognitionFailed, imageUnavailable, inputTooLarge, noText }
 
 struct CaptureEvidence: Equatable, Sendable {

@@ -186,6 +186,14 @@ struct TonightEntry: View {
                     ForEach(model.suggestions) { review in recipeRow(review) }
                 }
             }
+            if let original = scope, let ledgerID = ledger.sourceWorkspaceID {
+                TonightExplanationEntry(meals: model, ledgerID: ledgerID,
+                    authorize: { scope == original && !ledger.saving && !ledger.hasPendingSave },
+                    refresh: { await refresh() }, choose: { recipe in
+                        guard scope == original else { return }
+                        choosing = recipe; destination = ledger.workspace.selectedShopID; preview = nil; message = nil
+                    })
+            }
             if !model.needsReview.isEmpty {
                 Section(tonightText("Needs information or a pantry match")) {
                     ForEach(model.needsReview) { review in recipeRow(review) }

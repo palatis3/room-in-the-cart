@@ -35,7 +35,15 @@ private extension EnvironmentValues {
         UITabBar.appearance().unselectedItemTintColor = UIColor(named: "secondary") ?? .secondaryLabel
     }
     var body: some Scene {
-        WindowGroup { GroceryWindow(notificationDelegate: notificationDelegate) }
+        WindowGroup {
+            #if DEBUG && targetEnvironment(simulator)
+            if Set(["--ui-testing", "--meal-language-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
+                MealLanguageFixture()
+            } else { GroceryWindow(notificationDelegate: notificationDelegate) }
+            #else
+            GroceryWindow(notificationDelegate: notificationDelegate)
+            #endif
+        }
     }
 }
 

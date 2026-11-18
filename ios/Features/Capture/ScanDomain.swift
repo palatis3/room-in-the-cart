@@ -42,6 +42,7 @@ struct ScannedSource: Equatable, Sendable {
 struct ScanReceiptLine: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let originalText: String
+    var uncertainOCR: Bool?
     var documentLine: ReceiptAcquisition.DocumentLine?
     var reviewedText: String
     var quantityNote: String
@@ -66,12 +67,21 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
     let receiptLines: [ScanReceiptLine]
     let capturedAt: Date
     var documentDigest: Data? = nil
+    var reviewedImageLines: [Int: ReviewedImageWording]? = nil
     var reference: SourceMediaReference { .init(workspaceID: target.workspaceID, mediaID: id) }
     func validate() throws {
         guard target.revision >= 0, capturedAt.timeIntervalSinceReferenceDate.isFinite,
               !reviewedLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               reviewedLabel.utf8.count <= 512, !reviewedLabel.contains("\0"),
               receiptLines.count <= 200, Set(receiptLines.map(\.id)).count == receiptLines.count else { throw ScanFailure.invalidText }
+        if let reviewedImageLines {
+            let lines = (reviewedText ?? originalText).components(separatedBy: "\n")
+            guard target.kind == .recipeSource, imageJPEG != nil, reviewedImageLines.count <= CaptureLimits.lines else { throw ScanFailure.invalidText }
+            for (index, reading) in reviewedImageLines {
+                try reading.validate()
+                guard lines.indices.contains(index), lines[index] == reading.text else { throw ScanFailure.invalidText }
+            }
+        }
         if let documentDigest {
             guard documentDigest.count == 32, imageJPEG == nil, !receiptLines.isEmpty,
                   receiptLines.allSatisfy({ $0.documentLine != nil }) else { throw ScanFailure.invalidText }
@@ -100,9 +110,13 @@ enum ScanLimits {
     static func text(_ value: String) throws {
         guard value.utf8.count <= 20_000, !value.contains("\0"), value.split(whereSeparator: \.isNewline).count <= 200 else { throw ScanFailure.tooLarge }
     }
-    static func receiptLines(_ original: String) throws -> [ScanReceiptLine] {
+    static func receiptLines(_ original: String, uncertain: Set<String> = []) throws -> [ScanReceiptLine] {
         try text(original)
-        return original.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.map { .init(originalText: $0) }
+        return original.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.map { wording in
+            var row = ScanReceiptLine(originalText: wording)
+            if uncertain.contains(wording) { row.uncertainOCR = true }
+            return row
+        }
     }
 }
 protocol LocalScanService: Sendable { func scan(_ data: Data) async throws -> ScannedSource }

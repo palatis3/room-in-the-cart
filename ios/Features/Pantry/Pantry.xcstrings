@@ -7415,6 +7415,1334 @@
           }
         }
       }
+    },
+    "Help with this line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help with this line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda con esta línea"
+          }
+        }
+      }
+    },
+    "Original receipt wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original receipt wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original del recibo"
+          }
+        }
+      }
+    },
+    "For optional online help, open an authorized adult account. You can keep editing the receipt here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For optional online help, open an authorized adult account. You can keep editing the receipt here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para obtener ayuda en línea, abre una cuenta de adulto autorizada. Puedes seguir editando el recibo aquí."
+          }
+        }
+      }
+    },
+    "Online receipt help is unavailable. You can keep editing the receipt on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online receipt help is unavailable. You can keep editing the receipt on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ayuda en línea no está disponible. Puedes seguir editando el recibo en este iPhone."
+          }
+        }
+      }
+    },
+    "Text to share with OpenAI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text to share with OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto que se compartirá con OpenAI"
+          }
+        }
+      }
+    },
+    "Edit or remove personal details. Your chosen text and its page and line numbers go to OpenAI through Room in the Cart.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit or remove personal details. Your chosen text and its page and line numbers go to OpenAI through Room in the Cart."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edita o elimina los datos personales. Room in the Cart enviará a OpenAI el texto elegido y sus números de página y línea."
+          }
+        }
+      }
+    },
+    "Selected receipt wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected receipt wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto seleccionado del recibo"
+          }
+        }
+      }
+    },
+    "Page %lld · line %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %lld · line %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página %lld · línea %lld"
+          }
+        }
+      }
+    },
+    "Send this text for a suggestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this text for a suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar este texto para recibir una sugerencia"
+          }
+        }
+      }
+    },
+    "Reading selected wording…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading selected wording…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo el texto seleccionado…"
+          }
+        }
+      }
+    },
+    "Review the suggestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la sugerencia"
+          }
+        }
+      }
+    },
+    "Suggested food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento sugerido"
+          }
+        }
+      }
+    },
+    "Printed quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad impresa"
+          }
+        }
+      }
+    },
+    "I received this quantity and want to use it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I received this quantity and want to use it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibí esta cantidad y quiero usarla."
+          }
+        }
+      }
+    },
+    "No food or quantity could be identified.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No food or quantity could be identified."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo identificar el alimento ni la cantidad."
+          }
+        }
+      }
+    },
+    "Use in my receipt draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use in my receipt draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar en el borrador del recibo"
+          }
+        }
+      }
+    },
+    "The receipt changed. Reopen the line to review it again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receipt changed. Reopen the line to review it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El recibo ha cambiado. Vuelve a abrir la línea para revisarla."
+          }
+        }
+      }
+    },
+    "No suggestion was received. Your local receipt is ready to edit.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestion was received. Your local receipt is ready to edit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se recibió ninguna sugerencia. Puedes seguir editando el recibo en tu dispositivo."
+          }
+        }
+      }
+    },
+    "Receipt photo with selected rectangle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt photo with selected rectangle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto del recibo con el rectángulo seleccionado"
+          }
+        }
+      }
+    },
+    "Frame only the printed line. Leave out personal details and nearby lines.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frame only the printed line. Leave out personal details and nearby lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encuadra solo la línea impresa. Deja fuera los datos personales y las líneas cercanas."
+          }
+        }
+      }
+    },
+    "Top edge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top edge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borde superior"
+          }
+        }
+      }
+    },
+    "Bottom edge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottom edge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borde inferior"
+          }
+        }
+      }
+    },
+    "Left edge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left edge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borde izquierdo"
+          }
+        }
+      }
+    },
+    "Right edge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right edge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borde derecho"
+          }
+        }
+      }
+    },
+    "Preview this crop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview this crop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa del recorte"
+          }
+        }
+      }
+    },
+    "Choose a smaller box around a legible receipt line.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a smaller box around a legible receipt line."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona un recuadro más pequeño alrededor de una línea legible del recibo."
+          }
+        }
+      }
+    },
+    "Choose the receipt line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the receipt line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir la línea del recibo"
+          }
+        }
+      }
+    },
+    "Send this crop and selected text to OpenAI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this crop and selected text to OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar este recorte y el texto seleccionado a OpenAI"
+          }
+        }
+      }
+    },
+    "Could not open this photo. You can send selected text instead.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not open this photo. You can send selected text instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir la foto. Puedes enviar el texto seleccionado."
+          }
+        }
+      }
+    },
+    "Exact image crop to share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact image crop to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorte exacto de la imagen que se compartirá"
+          }
+        }
+      }
+    },
+    "This grayscale crop is the image OpenAI will receive. Check that it contains only the line you chose.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This grayscale crop is the image OpenAI will receive. Check that it contains only the line you chose."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI recibirá este recorte en escala de grises. Comprueba que solo incluya la línea elegida."
+          }
+        }
+      }
+    },
+    "Use this local text instead of sharing the crop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this local text instead of sharing the crop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este texto local en lugar de compartir el recorte"
+          }
+        }
+      }
+    },
+    "Remove the crop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the crop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el recorte"
+          }
+        }
+      }
+    },
+    "Crop the reviewed receipt photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crop the reviewed receipt photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recortar la foto revisada del recibo"
+          }
+        }
+      }
+    },
+    "Choose a photo to crop on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a photo to crop on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una foto para recortarla en este iPhone"
+          }
+        }
+      }
+    },
+    "Original source wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original source wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original de la fuente"
+          }
+        }
+      }
+    },
+    "Online image reading requires an authorized adult account. Continue with the local source editor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online image reading requires an authorized adult account. Continue with the local source editor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para leer imágenes en línea se necesita una cuenta de adulto autorizada. Puedes seguir editando la fuente en este iPhone."
+          }
+        }
+      }
+    },
+    "Online image reading is unavailable. Continue with the local source editor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online image reading is unavailable. Continue with the local source editor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La lectura de imágenes en línea no está disponible. Puedes seguir editando la fuente en este iPhone."
+          }
+        }
+      }
+    },
+    "Optional text to share with this crop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional text to share with this crop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto opcional para compartir con este recorte"
+          }
+        }
+      }
+    },
+    "Compare this reading with the image": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare this reading with the image"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara esta lectura con la imagen"
+          }
+        }
+      }
+    },
+    "Use this reviewed wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this reviewed wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este texto revisado"
+          }
+        }
+      }
+    },
+    "The source changed. Open the line again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source changed. Open the line again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fuente cambió. Vuelve a abrir la línea."
+          }
+        }
+      }
+    },
+    "This line could not be read. You can type the wording in the source editor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This line could not be read. You can type the wording in the source editor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer esta línea. Puedes escribir el texto al editar la fuente."
+          }
+        }
+      }
+    },
+    "Crop the selected source image": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crop the selected source image"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recortar la imagen seleccionada"
+          }
+        }
+      }
+    },
+    "Source image with selected rectangle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source image with selected rectangle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen con el rectángulo seleccionado"
+          }
+        }
+      }
+    },
+    "Choose a smaller box around a legible line.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a smaller box around a legible line."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona un rectángulo más pequeño alrededor de una línea legible."
+          }
+        }
+      }
+    },
+    "Choose the printed line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the printed line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir la línea impresa"
+          }
+        }
+      }
+    },
+    "Read an unclear image line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read an unclear image line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer una línea poco clara de la imagen"
+          }
+        }
+      }
+    },
+    "Choose a line from the source photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a line from the source photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una línea de la foto original"
+          }
+        }
+      }
+    },
+    "Reviewed online image reading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed online image reading"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la imagen leído en línea y revisado"
+          }
+        }
+      }
+    },
+    "Reviewed on-device image reading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed on-device image reading"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la imagen leído en el dispositivo y revisado"
+          }
+        }
+      }
+    },
+    "Choose a line from the source photo or enter the wording manually.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a line from the source photo or enter the wording manually."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una línea de la foto original o escribe el texto manualmente."
+          }
+        }
+      }
+    },
+    "Get help matching this label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get help matching this label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener ayuda para identificar esta etiqueta"
+          }
+        }
+      }
+    },
+    "An adult household sign-in is needed for optional label matching. You can search the guide on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An adult household sign-in is needed for optional label matching. You can search the guide on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para pedir ayuda con la etiqueta, inicia sesión con una cuenta adulta del hogar. Puedes buscar en la guía en este dispositivo."
+          }
+        }
+      }
+    },
+    "Search the guide for a food or category to choose possible entries.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search the guide for a food or category to choose possible entries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca un alimento o una categoría en la guía para ver posibles entradas."
+          }
+        }
+      }
+    },
+    "Selected wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto seleccionado"
+          }
+        }
+      }
+    },
+    "Wording to send": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wording to send"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto que se enviará"
+          }
+        }
+      }
+    },
+    "Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio de la app enviará a OpenAI solo el texto que se muestra aquí y los nombres e identificadores de estas entradas públicas del USDA."
+          }
+        }
+      }
+    },
+    "USDA FoodKeeper entries to consider": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USDA FoodKeeper entries to consider"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posibles entradas de FoodKeeper del USDA"
+          }
+        }
+      }
+    },
+    "Send selected wording for a match": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send selected wording for a match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar el texto seleccionado para buscar una coincidencia"
+          }
+        }
+      }
+    },
+    "Remote matching is unavailable. You can still search the guide on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote matching is unavailable. You can still search the guide on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La búsqueda remota no está disponible. Puedes buscar en la guía en este dispositivo."
+          }
+        }
+      }
+    },
+    "Suggested USDA entry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested USDA entry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrada sugerida del USDA"
+          }
+        }
+      }
+    },
+    "Confirm this entry and review storage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this entry and review storage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar esta entrada y revisar la conservación"
+          }
+        }
+      }
+    },
+    "Match a food label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match a food label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificar una etiqueta de alimento"
+          }
+        }
+      }
+    },
+    "No matching entry was proposed. Search the guide or keep your own check date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching entry was proposed. Search the guide or keep your own check date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se propuso ninguna coincidencia. Busca en la guía o conserva tu propia fecha de revisión."
+          }
+        }
+      }
+    },
+    "Review the selected wording again before sending it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the selected wording again before sending it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a revisar el texto seleccionado antes de enviarlo."
+          }
+        }
+      }
+    },
+    "The batch changed. Return to the guide and review it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The batch changed. Return to the guide and review it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El lote cambió. Regresa a la guía para revisarlo de nuevo."
+          }
+        }
+      }
+    },
+    "Date wording on the receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date wording on the receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la fecha en el recibo"
+          }
+        }
+      }
+    },
+    "Choose the purchase date from your receipt. An unclear date needs your review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the purchase date from your receipt. An unclear date needs your review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la fecha de compra que aparece en tu recibo. Si la fecha no está clara, revísala."
+          }
+        }
+      }
+    },
+    "Charge, credit or receipt summary. This line starts skipped.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charge, credit or receipt summary. This line starts skipped."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo, crédito o resumen del recibo. Esta línea se omite inicialmente."
+          }
+        }
+      }
+    },
+    "Receipt date wording. This line starts skipped.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt date wording. This line starts skipped."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la fecha del recibo. Esta línea se omite inicialmente."
+          }
+        }
+      }
+    },
+    "Unclear printed line. Check the original wording before using it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unclear printed line. Check the original wording before using it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La línea impresa no está clara. Revisa el texto original antes de usarla."
+          }
+        }
+      }
+    },
+    "Some printed fields are unclear. Review them or leave the price unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some printed fields are unclear. Review them or leave the price unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos datos impresos no están claros. Revísalos o deja el precio sin especificar."
+          }
+        }
+      }
+    },
+    "I received the printed quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I received the printed quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibí la cantidad impresa"
+          }
+        }
+      }
+    },
+    "Suggested storage to check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested storage to check"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lugar de almacenamiento sugerido para revisar"
+          }
+        }
+      }
+    },
+    "Choose where you put this food. The initial selection is cupboard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose where you put this food. The initial selection is cupboard."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige dónde guardaste este alimento. La alacena está seleccionada inicialmente."
+          }
+        }
+      }
+    },
+    "Possible printed line total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Possible printed line total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posible total impreso de la línea"
+          }
+        }
+      }
+    },
+    "I paid this line total in USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I paid this line total in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagué este total de línea en dólares estadounidenses"
+          }
+        }
+      }
+    },
+    "Select food lines and the printed purchase date to review. You will confirm received and usable quantities separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select food lines and the printed purchase date to review. You will confirm received and usable quantities separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona las líneas de alimentos y la fecha de compra impresa para revisarlas. Confirmarás por separado las cantidades recibidas y aprovechables."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

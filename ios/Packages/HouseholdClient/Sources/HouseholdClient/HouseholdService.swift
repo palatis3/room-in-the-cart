@@ -87,6 +87,12 @@ public actor HouseholdService {
     public func matches(_ operation: PendingOperation, memberID: String) -> Bool {
         operation.householdID == householdID && operation.memberID == memberID && operation.deviceID == enrollment?.deviceId
     }
+    func verifyReceiptAssistanceScope(_ scope: ReceiptAssistanceScope) throws {
+        guard subject == scope.subject, householdID == scope.householdID, memberID == scope.memberID,
+              selectedGrantID == nil, childAdoptionBinding == nil,
+              selectedShopID == nil || selectedShopID == scope.shopID.flatMap(UUID.init(uuidString:)) else { throw ClientError.accessEnded }
+    }
+
     private func accountRequest(subject: String, path: String, body: Data? = nil) async throws -> URLRequest {
         let start = generation
         guard selectedGrantID == nil, childAdoptionBinding == nil else { throw ClientError.accessEnded }

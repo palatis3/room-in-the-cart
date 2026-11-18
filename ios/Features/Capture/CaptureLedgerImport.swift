@@ -31,6 +31,7 @@ enum CaptureLedgerImport {
         case .typed: source = .typed
         case .paste: source = .paste
         case .speech: source = .voice
+        case .assistedSpeech: source = .assistedVoice
         case .photoOCR: source = .photoOCR
         }
         let candidate = try shop.stageCaptureImport(id: capture.id, originalText: capture.originalText, source: source, lines: lines)

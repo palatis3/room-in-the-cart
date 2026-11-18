@@ -84,7 +84,7 @@ struct DeviceReminderPersona: Equatable {
     }
     private var attempts = 0
     private var retryAfter = Date.distantPast
-    private var generation = UUID()
+    private(set) var generation = UUID()
     // An explicit OTP from private Settings may continue on the protected root for this session.
     @Published private var verifiedHouseholdSubject: String?
     private var contributorEnrollmentRevision = UUID()

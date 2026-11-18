@@ -563,6 +563,56 @@ import XCTest
     }
     #endif
 
+#if CONTRIBUTOR_CAPTURE_UI_FIXTURE
+    func testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange() {
+        app.launchArguments = ["--ui-testing", "--measurement-fixture", "--foodkeeper-match-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_WORKSPACE"] = UUID().uuidString
+        app.launch()
+        let guide = app.buttons["pantry.foodKeeper"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 20), app.debugDescription)
+        tap(guide)
+        tap(app.buttons["foodKeeper.assistance"])
+        XCTAssertFalse(app.buttons["foodKeeper.assistance.confirm"].exists)
+        fill("chicken from an opened can", into: "foodKeeper.assistance.wording", replacing: true)
+        tap(app.buttons["foodKeeper.assistance.send"])
+        let confirm = app.buttons["foodKeeper.assistance.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertFalse(app.buttons["foodKeeper.review.refrigerate_after_opening"].exists)
+        capture("Adult reviews suggested USDA entry before confirming")
+        tap(confirm)
+        tap(app.buttons["foodKeeper.review.refrigerate_after_opening"])
+        XCTAssertFalse(element("foodKeeper.rangeStart").exists)
+        enableSwitch("foodKeeper.confirmStorage")
+        XCTAssertTrue(element("foodKeeper.rangeStart").waitForExistence(timeout: 8))
+        XCTAssertTrue(element("foodKeeper.rangeEnd").exists)
+        tap(app.buttons["foodKeeper.saveRange"])
+        XCTAssertTrue(element("foodKeeper.savedStatus").waitForExistence(timeout: 8))
+        capture("Deterministic FoodKeeper range after separate storage confirmation")
+    }
+#endif
+
+    func testOptionalFoodKeeperMatchingKeepsTheSignedOutManualGuideAvailable() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill("Canned chicken", into: "pantry.foodName")
+        fill("2", into: "pantry.amount")
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Canned chicken")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.foodKeeper"])
+        tap(app.buttons["foodKeeper.assistance"])
+        XCTAssertTrue(element("foodKeeper.assistance.signedOut").waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["foodKeeper.assistance.send"].exists)
+        tap(app.navigationBars["Match a food label"].buttons.firstMatch)
+        tap(app.buttons["foodKeeper.product.142"])
+        XCTAssertTrue(app.navigationBars.firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Batch storage"].exists)
+        XCTAssertFalse(element("pantry.foodKeeper.range").exists)
+    }
+
     func testEnglishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
         verifyLotFoodKeeper(spanish: false)
     }
@@ -859,7 +909,7 @@ import XCTest
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         receiptTap(wording)
-        wording.typeText("Oats")
+        wording.typeText("Oats 3 count USD 4.20")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
         let label = app.textFields["Source reference label"]
         receiptTap(label)
@@ -870,12 +920,18 @@ import XCTest
         printed.tap()
         check("I reviewed these lines as source evidence only.")
         receiptTap(app.buttons["scan.receipt.review"])
+        receiptTap(app.buttons["receipt.assistance.0"])
+        let offline = app.staticTexts["For optional online help, open an authorized adult account. You can keep editing the receipt here."]
+        XCTAssertTrue(offline.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["receipt.assistance.send"].exists)
+        receiptTap(app.navigationBars["Help with this line"].buttons["Close"])
         check("I checked the purchase date.")
         receiptTap(app.buttons["receipt.action.0"])
         receiptTap(app.buttons["Add a separate physical batch"])
         let received = app.textFields["receipt.received.0"]
-        receiptTap(received)
-        received.typeText("3")
+        receiptTap(app.buttons["receipt.printedQuantity.0"])
+        XCTAssertEqual(received.value as? String, "3")
+        XCTAssertTrue(app.buttons["receipt.printedPrice.0"].exists)
         let usable = app.textFields["receipt.usable.0"]
         receiptTap(usable)
         usable.typeText("2")
@@ -3155,6 +3211,12 @@ import XCTest
             reveal(editor)
             XCTAssertEqual(editor.value as? String, "2 Wraps")
             if attempt == 0 {
+                tap(element("capture.onlineVoice"))
+                assertText("Online transcription is unavailable. Return to your list to dictate on this iPhone or type.")
+                let online = app.navigationBars["Optional online transcription"]
+                tap(online.buttons["Cancel"])
+                reveal(editor)
+                XCTAssertEqual(editor.value as? String, "2 Wraps")
                 let paste = app.buttons["Paste selected text for review"]
                 reveal(paste)
                 XCTAssertTrue(paste.isEnabled)

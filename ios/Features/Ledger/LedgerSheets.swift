@@ -788,7 +788,8 @@ struct LedgerFactsView: View {
         ForEach(screenshot.charges, id: \.field) { charge in
             VStack(alignment: .leading) {
                 LabeledContent(priceImageField(charge.field), value: charge.amount.map(moneyText) ?? ledgerText("Unknown"))
-                Text(verbatim: charge.line.wording)
+                if !charge.line.wording.isEmpty { Text(verbatim: charge.line.wording) }
+                if let reading = charge.line.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
                 if charge.field != .total { Text(priceImageInclusion(charge.inclusion)).font(.caption) }
             }
         }

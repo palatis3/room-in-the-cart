@@ -10,6 +10,7 @@ struct ReceiptImportDraft {
         let ordinal: Int
         let original: String
         var documentLine: ReceiptAcquisition.DocumentLine?
+        var printed: ReceiptPrintedEvidence?
         var sourceName: String?
         var nameBeforeAlias: String?
         var appliedAlias: InventoryReceiptAlias?
@@ -24,6 +25,11 @@ struct ReceiptImportDraft {
             if let nameBeforeAlias { name = nameBeforeAlias }
             self.nameBeforeAlias = nil
             appliedAlias = nil
+        }
+        mutating func usePrintedQuantity() {
+            guard let quantity = printed?.quantity, let printedUnit = printed?.unit else { return }
+            if unit != printedUnit { usable = "" }
+            unit = printedUnit; received = quantity
         }
         var name: String
         var treatment: Treatment = .skip
@@ -42,10 +48,11 @@ struct ReceiptImportDraft {
     var language = Bundle.main.preferredLocalizations.first?.hasPrefix("es") == true ? "es" : "en"
     var reference = ""
     var purchaseDate = Calendar.current.startOfDay(for: Date())
+    var printedDate: ReceiptPrintedDate?
     var dateConfirmed = false
     var lines: [Line]
 
-    init(source: SourceMediaRecord, fromSavedPickup: Bool = false) throws {
+    init(source: SourceMediaRecord, fromSavedPickup: Bool = false, lots: [InventoryLot] = [], now: Date = Date()) throws {
         try source.validate()
         guard source.target.kind == .receiptEvidence, !source.receiptLines.isEmpty else { throw ScanFailure.needsReview }
         savedPickup = fromSavedPickup ? .init(originID: source.target.workspaceID, id: source.target.containerID) : nil
@@ -53,9 +60,15 @@ struct ReceiptImportDraft {
         workspaceID = source.target.workspaceID
         imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
         merchant = source.reviewedLabel
+        printedDate = ReceiptPrintedDate.unique(in: source.receiptLines, now: now)
+        if let printedDate { purchaseDate = printedDate.day }
+        var knownStorage: [String:Set<InventoryLocation>] = [:]
+        for lot in lots { knownStorage[InventoryReceiptAlias.key(lot.name), default: []].insert(lot.location) }
         lines = source.receiptLines.enumerated().map { ordinal, line in
-            Line(id: line.id, ordinal: line.documentLine?.ordinal ?? ordinal, original: line.originalText, documentLine: line.documentLine,
-                 sourceName: line.reviewedText, name: line.reviewedText)
+            let printed = ReceiptPrintedEvidence(line, knownStorage: knownStorage)
+            let name = printed.name ?? line.reviewedText
+            return Line(id: line.id, ordinal: line.documentLine?.ordinal ?? ordinal, original: line.originalText, documentLine: line.documentLine,
+                printed: printed, sourceName: name, name: name, location: printed.storage ?? .cupboard)
         }
     }
 

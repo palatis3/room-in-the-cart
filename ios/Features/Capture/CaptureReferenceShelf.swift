@@ -148,6 +148,11 @@ struct SourceReferenceWording: View {
             Text(reviewed.isEmpty ? recordsText("Not entered") : reviewed).textSelection(.enabled)
             Text(ledgerText("Original wording")).font(.headline)
         }
+        if let readings = source.reviewedImageLines {
+            ForEach(readings.keys.sorted(), id: \.self) { index in
+                if let reading = readings[index] { ReviewedImageWordingLabel(reading: reading) }
+            }
+        }
         let original = Text(source.originalText).textSelection(.enabled)
         if let originalIdentifier {
             original.accessibilityIdentifier(originalIdentifier)

@@ -69,6 +69,7 @@ struct ReceiptDocumentPage: Identifiable, Sendable {
     struct Line: Identifiable, Sendable {
         let id: Int
         let text: String
+        var uncertain = false
     }
     let lines: [Line]
     var skipped: ReceiptDocumentFailure? = nil
@@ -88,6 +89,7 @@ struct ExtractedReceiptDocument: Sendable {
             for line in page.lines where selection.contains(.init(page: page.id, line: line.id)) {
                 let place = ReceiptAcquisition.DocumentLine(method: page.method, stage: stage, page: page.id, line: line.id)
                 var row = ScanReceiptLine(id: ReceiptAcquisition.lineID(receiptID: id, ordinal: place.ordinal), originalText: line.text)
+                if line.uncertain { row.uncertainOCR = true }
                 row.documentLine = place
                 rows.append(row)
             }
@@ -103,7 +105,14 @@ struct ExtractedReceiptDocument: Sendable {
 
 struct ReceiptDocumentReader: Sendable {
     typealias Recognize = @Sendable (Data) async throws -> String
-    var recognize: Recognize = { try await OnDeviceTextCapture().recognize($0).text }
+    private var recognize: @Sendable (Data) async throws -> (String, Set<String>) = { data in
+        let reading = try await OnDeviceTextCapture().recognize(data)
+        return (reading.text, Set(reading.uncertainLines))
+    }
+    init() {}
+    init(recognize: @escaping Recognize) {
+        self.recognize = { data in (try await recognize(data), []) }
+    }
 
     func extract(_ input: ReceiptDocumentBytes) async throws -> ExtractedReceiptDocument {
         guard !input.data.isEmpty, input.data.count <= ReceiptDocumentBytes.maximumBytes else { throw ReceiptDocumentFailure.size }
@@ -125,14 +134,14 @@ struct ReceiptDocumentReader: Sendable {
 
     private func readPages(_ input: ReceiptDocumentBytes) async throws -> [ReceiptDocumentPage] {
         var characterCount = 0
-        func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, text: String) throws -> ReceiptDocumentPage {
+        func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, text: String, uncertain: Set<String> = []) throws -> ReceiptDocumentPage {
             characterCount += text.count
             guard characterCount <= 100_000, !text.contains("\0") else { throw ReceiptDocumentFailure.characters }
             var lines: [ReceiptDocumentPage.Line] = []
             for (index, row) in text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated() {
                 guard !row.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
                 guard index < 200 else { throw ReceiptDocumentFailure.lineLimit }
-                lines.append(.init(id: index + 1, text: String(row)))
+                lines.append(.init(id: index + 1, text: String(row), uncertain: uncertain.contains(String(row))))
             }
             return .init(id: number, method: method, lines: lines)
         }
@@ -143,7 +152,8 @@ struct ReceiptDocumentReader: Sendable {
         case .image:
             try Self.checkPixels(input.data)
             let jpeg = try ScanImageNormalizer.normalize(input.data)
-            return [try await page(1, method: .imageOCR, text: readImage(jpeg))]
+            let (text, uncertain) = try await readImage(jpeg)
+            return [try page(1, method: .imageOCR, text: text, uncertain: uncertain)]
         case .pdf:
             guard let pdf = PDFDocument(data: input.data) else { throw ReceiptDocumentFailure.unsupported }
             guard !pdf.isLocked else { throw ReceiptDocumentFailure.locked }
@@ -159,7 +169,8 @@ struct ReceiptDocumentReader: Sendable {
                 } else {
                     do {
                         let bytes = try autoreleasepool { try Self.raster(original) }
-                        result.append(try await page(index + 1, method: .pdfOCR, text: readImage(bytes)))
+                        let (text, uncertain) = try await readImage(bytes)
+                        result.append(try page(index + 1, method: .pdfOCR, text: text, uncertain: uncertain))
                     } catch is CancellationError { throw CancellationError() }
                     catch let failure as ReceiptDocumentFailure {
                         switch failure {
@@ -177,9 +188,9 @@ struct ReceiptDocumentReader: Sendable {
         }
     }
 
-    private func readImage(_ data: Data) async throws -> String {
+    private func readImage(_ data: Data) async throws -> (String, Set<String>) {
         do { return try await recognize(data) }
-        catch CaptureFailure.noText { return "" }
+        catch CaptureFailure.noText { return ("", []) }
         catch CaptureFailure.inputTooLarge { throw ReceiptDocumentFailure.lineLimit }
     }
 

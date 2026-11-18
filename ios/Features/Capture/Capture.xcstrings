@@ -4544,6 +4544,499 @@
           }
         }
       }
+    },
+    "Online transcription is unavailable. Return to your list to dictate on this iPhone or type.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online transcription is unavailable. Return to your list to dictate on this iPhone or type."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La transcripción en línea no está disponible. Vuelve a la lista para dictar en este iPhone o escribir."
+          }
+        }
+      }
+    },
+    "Record up to 30 seconds on this iPhone. You can listen, replace or discard the recording before sharing it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record up to 30 seconds on this iPhone. You can listen, replace or discard the recording before sharing it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graba hasta 30 segundos en este iPhone. Puedes escuchar, reemplazar o descartar la grabación antes de compartirla."
+          }
+        }
+      }
+    },
+    "Stop this recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop this recording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detener esta grabación"
+          }
+        }
+      }
+    },
+    "Record a new list on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record a new list on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabar una lista nueva en este iPhone"
+          }
+        }
+      }
+    },
+    "Recording length": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording length"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duración de la grabación"
+          }
+        }
+      }
+    },
+    "Listen to this recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen to this recording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escuchar esta grabación"
+          }
+        }
+      }
+    },
+    "Discard recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard recording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar la grabación"
+          }
+        }
+      }
+    },
+    "OpenAI will receive this entire recording and the selected language through Room in the Cart.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI will receive this entire recording and the selected language through Room in the Cart."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI recibirá la grabación completa y el idioma seleccionado a través de Room in the Cart."
+          }
+        }
+      }
+    },
+    "Transcription language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma de la transcripción"
+          }
+        }
+      }
+    },
+    "Spanish": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spanish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Español"
+          }
+        }
+      }
+    },
+    "English": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inglés"
+          }
+        }
+      }
+    },
+    "Send this recording to OpenAI for transcription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this recording to OpenAI for transcription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar esta grabación a OpenAI para transcribirla"
+          }
+        }
+      }
+    },
+    "This recording could not be used. You can record again, dictate on this iPhone or type.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This recording could not be used. You can record again, dictate on this iPhone or type."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo usar esta grabación. Puedes volver a grabar, dictar en este iPhone o escribir."
+          }
+        }
+      }
+    },
+    "Review the online transcript": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the online transcript"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la transcripción en línea"
+          }
+        }
+      }
+    },
+    "Use this transcript in list review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this transcript in list review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta transcripción al revisar la lista"
+          }
+        }
+      }
+    },
+    "Optional online transcription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional online transcription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcripción en línea opcional"
+          }
+        }
+      }
+    },
+    "Source: reviewed online transcript": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: reviewed online transcript"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente: transcripción en línea revisada"
+          }
+        }
+      }
+    },
+    "On-device dictation is unavailable for this language or device. You can type or paste your list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On-device dictation is unavailable for this language or device. You can type or paste your list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado en el dispositivo no está disponible para este idioma o dispositivo. Puedes escribir o pegar tu lista."
+          }
+        }
+      }
+    },
+    "Get online help with item wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get online help with item wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener ayuda en línea con el texto de los artículos"
+          }
+        }
+      }
+    },
+    "Use selected wording in editable items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use selected wording in editable items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el texto seleccionado en los artículos editables"
+          }
+        }
+      }
+    },
+    "Select up to eight items. Edit each excerpt to remove personal details. Sending shares just those excerpts, their reference IDs and the selected language.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select up to eight items. Edit each excerpt to remove personal details. Sending shares just those excerpts, their reference IDs and the selected language."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona hasta ocho artículos. Edita cada fragmento para quitar los datos personales. Al enviar, solo se comparten esos fragmentos, sus identificadores de referencia y el idioma seleccionado."
+          }
+        }
+      }
+    },
+    "Wording to share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wording to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto para compartir"
+          }
+        }
+      }
+    },
+    "Send selected wording for suggestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send selected wording for suggestions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar el texto seleccionado para recibir sugerencias"
+          }
+        }
+      }
+    },
+    "No item wording was suggested.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No item wording was suggested."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se sugirió texto para los artículos."
+          }
+        }
+      }
+    },
+    "The suggestion could not be read. Keep editing your local items or try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestion could not be read. Keep editing your local items or try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer la sugerencia. Sigue editando tus artículos en este dispositivo o inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Online help is unavailable. You can review every item on this device.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online help is unavailable. You can review every item on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ayuda en línea no está disponible. Puedes revisar cada artículo en este dispositivo."
+          }
+        }
+      }
+    },
+    "Review proposed wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review proposed wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el texto propuesto"
+          }
+        }
+      }
+    },
+    "Choose wording to share with OpenAI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose wording to share with OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el texto que quieras compartir con OpenAI"
+          }
+        }
+      }
+    },
+    "Item wording suggestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item wording suggestions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerencias de texto para los artículos"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -3,6 +3,9 @@ import {readMealFeedback,updateMealFeedback,reviewMyFeedbackWithdrawal,withdrawM
 import {cookReview} from './shared-cook-completion.js';
 import { changeHouseholdStaples, householdStaples } from './household-staples.js';
 import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
+import {languagePurposes} from './language-purposes.js';
+import { ReceiptAssistance, receiptAssistanceInput, requireReceiptAdult, reserveCaptureAssistance } from './receipt-assistance.js';
+import { VoiceAssistance, voiceAssistanceInput } from './voice-assistance.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -43,7 +46,7 @@ import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
-export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -251,6 +254,76 @@ export function createHTTPServer(options:HTTPOptions) {
       if(path==='/devices'&&method==='POST') {
         z.object({}).strict().parse(await body(req));
         send(201,await repository.enroll(householdId,auth.identity));return;
+      }
+      const language=languagePurposes.find(route=>path==='/language-assistance/'+route.kind);
+      if(language && (method==='GET'||method==='POST')) {
+        const transport=options.receiptAssistance;
+        const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
+        await authorize();
+        if(method==='GET') {send(200,{version:1,available:!!transport?.budget.maxLanguageMicros});return;}
+        if(!transport?.budget.maxLanguageMicros) throw new ServiceError(503,'language_assistance_unavailable','Continue editing on this device.');
+        const request=language.parse(await body(req,16_384));
+        const cancellation=new AbortController();
+        const stop=()=>cancellation.abort();
+        res.once('close',stop);
+        try {
+          if(res.destroyed)throw unavailable();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await request.checkScope(ctx);
+            await reserveCaptureAssistance(ctx,auth.identity,request,transport.budget,transport.budget.maxLanguageMicros);
+          });
+          const result=await request.run(transport,cancellation.signal);
+          cancellation.signal.throwIfAborted();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await request.checkScope(ctx);
+          });
+          send(200,result);
+        } finally {res.off('close',stop);}
+        return;
+      }
+      const visual = /^\/capture-assistance\/(recipe|shelf|checkout)-line$/.exec(path);
+      const voice = path === '/capture-assistance/transcription';
+      if(((path==='/receipt-assistance' || voice) && (method==='GET'||method==='POST')) || (visual && method==='POST')) {
+        const assistance=options.receiptAssistance;
+        const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
+        await authorize();
+        if(method==='GET'){
+          send(200,voice ? {version:1,available:!!assistance && !!options.voiceAssistance}
+            : {version:1,available:!!assistance,allowsCrop:!!assistance?.budget.maxCropMicros});
+          return;
+        }
+        if(!assistance)throw new ServiceError(503,'receipt_assistance_unavailable','Keep editing this receipt on your device.');
+        const prepare = async () => {
+          if (voice) {
+            const adapter = options.voiceAssistance;
+            if (!adapter) throw new ServiceError(503,'voice_transcription_unavailable','Continue with on-device dictation.');
+            const input = voiceAssistanceInput.parse(await body(req,1_281_024));
+            return {input,cost:adapter.maximumCost,run:(signal:AbortSignal)=>adapter.transcribe(input,signal)};
+          }
+          const input = receiptAssistanceInput.parse(await body(req,assistance.budget.maxCropMicros ? 251_000 : 2048));
+          if (visual && (!input.crop || !assistance.budget.maxCropMicros)) throw invalid();
+          const cost = input.crop ? assistance.budget.maxCropMicros : assistance.budget.maxRequestMicros;
+          return {input,cost,run:(signal:AbortSignal)=>visual
+            ? assistance.visibleLine(input,signal,z.enum(['recipe','shelf','checkout']).parse(visual[1]))
+            : assistance.extract(input,signal)};
+        };
+        const prepared = await prepare();
+        const cancellation=new AbortController();
+        const stop=()=>cancellation.abort();
+        res.once('close',stop);
+        try {
+          if(res.destroyed)throw unavailable();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await reserveCaptureAssistance(ctx,auth.identity,prepared.input,assistance.budget,prepared.cost);
+          });
+          const result=await prepared.run(cancellation.signal);
+          await authorize();
+          send(200,result);
+        } finally { res.off('close',stop); }
+        return;
       }
       const verificationRoute=/^\/guardian\/enrollments\/([^/]+)\/verification$/.exec(path);
       if(verificationRoute&&method==='POST'){send(200,await guardian.verification(householdId,auth,uuid.parse(verificationRoute[1]),guardianActionSchema.parse(await body(req,4096))));return;}

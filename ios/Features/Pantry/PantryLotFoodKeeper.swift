@@ -65,11 +65,22 @@ private struct PantryLotStorageReference: View {
         if accessAllowed, model.phase == .ready, let lot = model.snapshot?.lots.first(where: { $0.id == lotID }) {
             let day = lot.openedAt.flatMap { try? MealDay(date: $0, timeZoneIdentifier: TimeZone.current.identifier) }
             FoodKeeperLookupView(context: .init(foodName: lot.name, storage: lot.location.foodKeeperStorage,
-                                                 openedDay: day, saveRange: saveAction(for: lot)))
+                                                 openedDay: day, matchLot: matchAction(for: lot), saveRange: saveAction(for: lot)))
                 .id(lot.revision)
         } else {
             Text(pantryText("Unlock the authorized private workspace to view pantry food."))
         }
+    }
+
+    private func matchAction(for lot: InventoryLot) -> FoodKeeperMatchLot? {
+        guard let access, access.authorized(), model.snapshot?.state.workspaceID == access.scope.origin else { return nil }
+        return .init(id: lot.id, revision: lot.revision, scope: access.scope, current: {
+            access.authorized() && model.canEdit && model.snapshot?.lots.first(where: { $0.id == lot.id }) == lot
+        }, verify: {
+            guard access.authorized() else { throw PantryDigestFailure.changed }
+            try await model.verifyDigestLot(lot, origin: access.scope.origin)
+            guard access.authorized() else { throw PantryDigestFailure.changed }
+        })
     }
 
     private func saveAction(for lot: InventoryLot) -> ((FoodKeeperReviewedRange) async throws -> Void)? {

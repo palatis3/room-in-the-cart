@@ -7,6 +7,7 @@ struct FoodKeeperLookupContext {
     let foodName: String
     let storage: FoodKeeperStorage
     let openedDay: MealDay?
+    var matchLot: FoodKeeperMatchLot? = nil
     var saveRange: ((FoodKeeperReviewedRange) async throws -> Void)? = nil
 }
 
@@ -22,6 +23,7 @@ struct FoodKeeperLookupView: View {
         let reference: FoodKeeperReference
         let products: [FoodKeeperProduct]
         let suggestedTerms: [String]
+        let matchChoices: [FoodKeeperMatchChoice]
     }
     @State private var result: SearchResult?
     @State private var failed = false
@@ -38,6 +40,12 @@ struct FoodKeeperLookupView: View {
         let query = Query(text: search, language: language)
         List {
             if let result, result.query == query {
+                if let context, let lot = context.matchLot {
+                    NavigationLink(pantryText("Get help matching this label")) {
+                        FoodKeeperMatchView(lot: lot, reference: result.reference, context: context, language: language,
+                                            choices: result.matchChoices, initialText: search)
+                    }.accessibilityIdentifier("foodKeeper.assistance")
+                }
                 if result.products.isEmpty {
                     Text(helpText("No matching FoodKeeper entry. Try another food name or category."))
                     if !result.suggestedTerms.isEmpty {
@@ -71,7 +79,18 @@ struct FoodKeeperLookupView: View {
                     let reference = try loaded ?? FoodKeeperReference.bundled()
                     let products = reference.search(query.text, language: query.language)
                     let terms = products.isEmpty ? reference.suggestedTerms(for: query.text) : []
-                    return SearchResult(query: query, reference: reference, products: products, suggestedTerms: terms)
+                    var offered = query.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? [] : Array(products.prefix(8))
+                    if offered.isEmpty {
+                        for term in terms.prefix(4) {
+                            for product in reference.search(term, language: query.language) where !offered.contains(where: { $0.id == product.id }) {
+                                offered.append(product)
+                                if offered.count == 8 { break }
+                            }
+                            if offered.count == 8 { break }
+                        }
+                    }
+                    let choices = offered.map { FoodKeeperMatchChoice(id: $0.id, label: $0.name(query.language)) }
+                    return SearchResult(query: query, reference: reference, products: products, suggestedTerms: terms, matchChoices: choices)
                 }.value
                 try Task.checkCancellation()
                 result = found
@@ -83,7 +102,7 @@ struct FoodKeeperLookupView: View {
     }
 }
 
-private struct FoodKeeperDetail: View {
+struct FoodKeeperDetail: View {
     let reference: FoodKeeperReference
     let product: FoodKeeperProduct
     let language: FoodKeeperLanguage
