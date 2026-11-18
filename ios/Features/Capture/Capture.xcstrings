@@ -2875,18 +2875,18 @@
         }
       }
     },
-    "Recognition stays on this device. Saved photo references are reduced in size and omit location metadata; the app does not save them to your photo library.": {
+    "Saved photo references are smaller copies without location metadata. The app keeps them separate from your photo library.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recognition stays on this device. Saved photo references are reduced in size and omit location metadata; the app does not save them to your photo library."
+            "value": "Saved photo references are smaller copies without location metadata. The app keeps them separate from your photo library."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El reconocimiento se realiza en este dispositivo. Las fotos de referencia guardadas tienen un tamaño reducido y no incluyen metadatos de ubicación; la app no las guarda en tu fototeca."
+            "value": "Las fotos de referencia se guardan como copias más pequeñas, sin datos de ubicación y fuera de tu fototeca."
           }
         }
       }
@@ -3297,19 +3297,19 @@
         }
       }
     },
-    "The app does not upload photos or source text. Choosing an iCloud photo may download it through Apple. You can continue by typing without enabling photos.": {
+    "This iPhone reads the photo. Choosing an iCloud photo may download it through Apple. If you use online help, you choose which text or image crop to send.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The app does not upload photos or source text. Choosing an iCloud photo may download it through Apple. You can continue by typing without enabling photos."
+            "value": "This iPhone reads the photo. Choosing an iCloud photo may download it through Apple. If you use online help, you choose which text or image crop to send."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La app no sube fotos ni texto de origen. Si eliges una foto de iCloud, Apple puede descargarla. Puedes seguir escribiendo sin habilitar las fotos."
+            "value": "Este iPhone lee la foto. Si eliges una foto de iCloud, puede que se descargue a través de Apple. Si usas la ayuda en línea, tú eliges qué texto o recorte enviar."
           }
         }
       }

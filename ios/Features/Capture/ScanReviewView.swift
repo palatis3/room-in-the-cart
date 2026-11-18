@@ -192,7 +192,7 @@ import CoreDomain
                 .accessibilityIdentifier("scan.localConsent")
             Text(captureText("Turning off photo processing discards text from the photo and edits to it. Your earlier typed or pasted text returns."))
                 .font(.footnote)
-            Text(captureText("The app does not upload photos or source text. Choosing an iCloud photo may download it through Apple. You can continue by typing without enabling photos."))
+            Text(captureText("This iPhone reads the photo. Choosing an iCloud photo may download it through Apple. If you use online help, you choose which text or image crop to send."))
                 .font(.footnote)
             Button(captureText("Take a photo for review")) { requestCamera() }.disabled(!canReview || !localPhotoConsent)
                 .accessibilityIdentifier("scan.camera")
@@ -207,7 +207,7 @@ import CoreDomain
             }.disabled(!canReview)
                 .accessibilityLabel(captureText("Paste source text"))
             if model.busy || loadingPhoto || requestingCamera { ProgressView(captureText("Preparing source for review…")) }
-            Text(captureText("Recognition stays on this device. Saved photo references are reduced in size and omit location metadata; the app does not save them to your photo library."))
+            Text(captureText("Saved photo references are smaller copies without location metadata. The app keeps them separate from your photo library."))
                 .font(.footnote)
         }
     }

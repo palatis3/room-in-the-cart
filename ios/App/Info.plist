@@ -102,10 +102,10 @@
 		</dict>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Use the microphone to dictate grocery text for your review on this iPhone.</string>
+	<string>Dictate your list on this iPhone or record a separate clip to review and send for online transcription.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Turn dictated words into text on this iPhone so you can review them before adding anything.</string>
 <key>NSCameraUsageDescription</key>
-<string>Use the camera to review package, recipe or receipt photos on this iPhone. Photos are not uploaded.</string>
+<string>Scan a package, recipe or receipt on this iPhone. You can choose to share a cropped image for online help.</string>
 </dict>
 </plist>
