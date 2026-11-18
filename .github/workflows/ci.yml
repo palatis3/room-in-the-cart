@@ -732,6 +732,22 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  ios-model-results:
+    name: iPhone model test results
+    needs: ios-build
+    runs-on: ubuntu-24.04
+    permissions: {}
+    timeout-minutes: 2
+    steps:
+      - name: Check the model outcome from the iPhone build
+        env:
+          MODEL_OUTCOME: ${{ needs.ios-build.outputs.model_result }}
+        run: |
+          if [[ "$MODEL_OUTCOME" != success ]]; then
+            echo "::error::iPhone model tests did not pass. See the ios-build model step and its iphone-results-models artifact."
+            exit 1
+          fi
+
   ios-tests:
     name: ios-tests (${{ matrix.shard }}, ${{ matrix.expected_count }})
     # Ask for the next available machine in the assigned pool as soon as the build is ready.

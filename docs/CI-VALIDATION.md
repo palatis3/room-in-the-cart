@@ -631,11 +631,12 @@ run on the existing build producer after enumeration and product packaging.
 As of the November 16 producer correction, upload follows model execution,
 runtime verification and owned-device cleanup. The consumer matrix retains
 all ten UI rows and their original slots. The complete
-compiled plan and model selectors remain unchanged. A failed model step allows
-UI consumers to proceed, but the required CI gate checks its raw outcome and
-rejects failed, skipped, cancelled or missing model results. The producer's outer
-cap is75minutes, replacing separate35-minute build and55-minute model jobs; the
-model step keeps its40-minute limit. UI admission now waits for this model step,
+compiled plan includes all model selectors. When the producer finishes,
+the **iPhone model test results** check publishes its raw model outcome on the PR.
+It runs on Linux and uses the result the Mac already collected. UI shards can run
+after a model failure, and the final CI gate rejects failed, skipped, cancelled or
+missing model results. The producer has a 75-minute limit and its model step has
+a 40-minute limit. UI admission now waits for this model step,
 and producer infrastructure failure can block the UI consumers. Hosted elapsed
 time remains to be measured.
 
