@@ -114,7 +114,8 @@ struct HelpPrivacyView: View {
                 Text(helpText("Apple handles subscription payment credentials. The app and household service use transaction evidence to deliver and restore membership; they do not receive your payment card or bank account number."))
             }
             Section(helpText("Photos and speech")) {
-                Text(helpText("The app’s capture tools process speech and images on this iPhone. Raw voice recordings are not retained or uploaded by the app. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a photo you select from iCloud before delivering it to the app."))
+                Text(helpText("Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file."))
+                Text(helpText("When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor."))
             }
             Section(helpText("Export and deletion")) {
                 Text(helpText("Open Records, then Recovery, exports and saved records to preview an export, recover a file or review local deletion. Removing local work does not remove copies you already saved or sent."))
