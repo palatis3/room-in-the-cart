@@ -1,0 +1,24 @@
+name: Bitrise M4 pool 123 check
+
+on:
+  push:
+    branches: [codex/bitrise-m4-123]
+
+permissions: {}
+
+jobs:
+  runner:
+    name: Identify the M4 and Xcode
+    runs-on: bitrise-runner-123
+    timeout-minutes: 4
+    steps:
+      - name: Verify machine and installed compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          chip="$(sysctl -n machdep.cpu.brand_string)"
+          echo "Processor: $chip"
+          echo "Cores visible: $(sysctl -n hw.ncpu)"
+          sw_vers
+          xcodebuild -version
+          [[ "$chip" == *M4* ]]
