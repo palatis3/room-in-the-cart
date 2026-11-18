@@ -28,6 +28,9 @@ struct DinnerQuotesView: View {
                     quoteMoneyChange("Checkout plus trip cash, second minus first: %@", result.tripCashChange)
                     if let minutes = result.extraMinutesChange { Text(dinnerFormat("Extra minutes change: %d", minutes)) }
                     if let breakEven = result.secondTripCashBreakEven { Text(dinnerFormat("Second trip cash break-even: %@", dinnerMoney(breakEven))) }
+                    if let preferred = result.preferredByTotalCash {
+                        LabeledContent(dinnerText("Lower confirmed total cash"), value: preferred == pair.first.id ? pair.first.label : pair.second.label)
+                    }
                     ForEach(result.issues, id: \.self) { Text(dinnerIssue($0)) }
                     Button(dinnerText("Save reviewed comparison")) { Task { _ = await model.saveQuotePair(pair) } }.disabled(!model.editable)
                     if model.state.quotePairs.contains(pair) {
@@ -49,8 +52,8 @@ struct DinnerQuotesView: View {
                 } else {
                     commitmentFields(dinnerText("Same commitments at both stores"), rows: $draft.commitments)
                 }
-                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $draft.first, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier)
-                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $draft.second, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier)
+                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $draft.first, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier, commitmentRows: draft.commitments.map { ($0.id, $0.name) })
+                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $draft.second, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier, commitmentRows: (draft.hasSeparateCommitments ? draft.secondCommitments : draft.commitments).map { ($0.id, $0.name) })
                 Section {
                     Button(dinnerText("Review two complete trips")) {
                         do {
@@ -149,6 +152,8 @@ struct DinnerQuotesView: View {
             } else {
                 Text(dinnerFormat("Checkout: %@", dinnerMoney(value.checkout.total.exact)))
             }
+            QuoteOrderEvidenceSummary(status: value.minimumStatus, rows: option.supplies ?? [],
+                names: Dictionary(uniqueKeysWithValues: option.commitments.commitments.map { ($0.id, $0.name) }))
             Text(dinnerCap(value.checkout.cap))
             switch option.trip.incrementalCash {
             case .exact(let amount): Text(dinnerFormat("Incremental trip cash: %@", dinnerMoney(amount)))
@@ -168,6 +173,8 @@ struct DinnerStoreFields: View {
     @Binding var draft: DinnerStoreDraft
     let focus: FocusState<String?>.Binding
     var shopZone: String? = nil
+    var commitmentRows: [(id: UUID, title: String)] = []
+    var showsEligibilityReview = true
     var body: some View {
         Section(title) {
             textField(dinnerText("Store label"), value: $draft.label, key: "label")
@@ -209,6 +216,33 @@ struct DinnerStoreFields: View {
             }
             Toggle(dinnerText("All required quantities match the commitments"), isOn: $draft.quantitiesMatched).accessibilityIdentifier(prefix + "quantitiesMatched")
             Toggle(dinnerText("This is one complete store plan"), isOn: $draft.singleStore).accessibilityIdentifier(prefix + "singleStore")
+            if showsEligibilityReview {
+                Toggle(dinnerText("Offer eligibility reviewed"), isOn: $draft.eligibilityReviewed).accessibilityIdentifier(prefix + "eligibility")
+            }
+            Picker(dinnerText("Purchase minimum"), selection: $draft.orderMinimumKind) {
+                Text(dinnerText("Minimum unknown")).tag(StoreOrderMinimum.Kind.unknown)
+                Text(dinnerText("No purchase minimum")).tag(StoreOrderMinimum.Kind.noneRequired)
+                Text(dinnerText("Minimum applies")).tag(StoreOrderMinimum.Kind.required)
+            }.accessibilityIdentifier(prefix + "purchaseMinimum")
+            if draft.orderMinimumKind == .required {
+                EnteredQuoteValueField(title: dinnerText("Required merchandise subtotal"), value: $draft.minimumAmount,
+                    identifier: prefix + "minimumAmount", focus: focus)
+                EnteredQuoteValueField(title: dinnerText("Eligible merchandise subtotal"), value: $draft.eligibleSubtotal,
+                    identifier: prefix + "eligibleSubtotal", focus: focus)
+            }
+            Toggle(dinnerText("Review packages by commitment"), isOn: $draft.detailSupply)
+            if draft.detailSupply {
+                ForEach(commitmentRows, id: \.id) { id, title in
+                    let row = Binding(get: { draft.supply[id] ?? StoreSupplyDraft() }, set: { draft.supply[id] = $0 })
+                    Text(verbatim: title).font(.headline)
+                    textField(dinnerText("Units needed"), value: row.needed, key: id.uuidString + ".need")
+                    textField(dinnerText("Usable units per package"), value: row.usable, key: id.uuidString + ".usable")
+                    textField(dinnerText("Packages in this quote"), value: row.packs, key: id.uuidString + ".packs")
+                    Picker(dinnerText("Unit"), selection: row.unit) {
+                        ForEach([UnitOfMeasure.count, .gram, .milliliter], id: \.self) { unit in Text(dinnerUnit(unit)).tag(unit) }
+                    }
+                }
+            }
             Picker(dinnerText("Required product availability"), selection: $draft.availability) {
                 Text(dinnerText("Unknown")).tag(0)
                 Text(dinnerText("Reviewed available")).tag(1)
@@ -228,6 +262,30 @@ struct DinnerStoreFields: View {
     private func textField(_ title: String, value: Binding<String>, key: String) -> some View {
         let identifier = prefix + key
         return TextField(title, text: value).focused(focus, equals: identifier).accessibilityIdentifier(identifier)
+    }
+}
+
+struct QuoteOrderEvidenceSummary: View {
+    let status: StoreOrderMinimum.Status
+    let rows: [StoreCommitmentSupply]
+    let names: [UUID: String]
+    var body: some View {
+        switch status {
+        case .unknown: Text(dinnerText("Purchase minimum or eligible subtotal is unknown"))
+        case .noneRequired: Text(dinnerText("No purchase minimum"))
+        case .met: Text(dinnerText("Purchase minimum met"))
+        case .notMet: Text(dinnerText("Purchase minimum not met"))
+        }
+        ForEach(rows) { row in
+            if let surplus = try? row.surplus() {
+                VStack(alignment: .leading) {
+                    Text(verbatim: names[row.id] ?? row.id.uuidString)
+                    Text(verbatim: String(row.packages) + " × " + String(row.usableUnitsPerPackage) + " " + dinnerUnit(row.unit))
+                    LabeledContent(surplus >= 0 ? dinnerText("Excess usable quantity") : dinnerText("Missing usable quantity"),
+                                   value: String(abs(surplus)) + " " + dinnerUnit(row.unit))
+                }
+            }
+        }
     }
 }
 

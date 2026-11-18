@@ -494,12 +494,17 @@ public struct StoreQuoteOption: Codable, Equatable, Sendable, Identifiable {
     public let cap: CheckoutCap?
     public let observedItemSubtotal: Money?
     public let eligibilityTerms: String?
+    public let orderMinimum: StoreOrderMinimum?
+    public let supplies: [StoreCommitmentSupply]?
+    public let eligibilityReviewed: Bool?
     /// Entered total whose included charges have not been reviewed. It is never used to price the quote.
     public let unreviewedInclusiveTotal: Money?
     public let adoptionBasis: ShopBasis?
     public init(id: UUID = UUID(), label: String, commitments: DinnerCommitmentSet, quote: CheckoutQuote,
         available: Bool?, quantitiesMatched: Bool, singleStore: Bool = true, trip: StoreTripEvidence, cap: CheckoutCap? = nil, adoptionBasis: ShopBasis? = nil,
-        observedItemSubtotal: Money? = nil, eligibilityTerms: String? = nil, unreviewedInclusiveTotal: Money? = nil) {
+        observedItemSubtotal: Money? = nil, eligibilityTerms: String? = nil, unreviewedInclusiveTotal: Money? = nil,
+        orderMinimum: StoreOrderMinimum? = nil, supplies: [StoreCommitmentSupply]? = nil, eligibilityReviewed: Bool? = nil) {
+        self.orderMinimum = orderMinimum; self.supplies = supplies; self.eligibilityReviewed = eligibilityReviewed
         self.unreviewedInclusiveTotal = unreviewedInclusiveTotal
         self.observedItemSubtotal = observedItemSubtotal
         self.eligibilityTerms = eligibilityTerms
@@ -524,6 +529,14 @@ public struct TwoStoreQuotePair: Codable, Equatable, Sendable, Identifiable {
             try dinnerText(option.label); try option.commitments.validate()
             guard option.quote.context.commitmentsID == option.commitments.id,
                   option.trip.extraMinutes.map({ (0...525_600).contains($0) }) ?? true else { throw DinnerPlanningError.invalid("quoteOption") }
+            _ = try option.orderMinimum?.status()
+            if let rows = option.supplies {
+                let ids = Set(option.commitments.commitments.map(\.id))
+                guard rows.count <= ids.count, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ ids.contains($0.id) }) else {
+                    throw DinnerPlanningError.invalid("commitmentSupply")
+                }
+                for row in rows { _ = try row.surplus() }
+            }
             if let terms = option.eligibilityTerms { try dinnerText(terms) }
             if let entered = option.unreviewedInclusiveTotal {
                 guard case .inclusiveTotal(.unknown) = option.quote.pricing, entered >= .zero else { throw DinnerPlanningError.invalid("unreviewedInclusiveTotal") }
@@ -546,6 +559,7 @@ public struct StoreQuoteResult: Equatable, Sendable {
     public let tripInclusive: CheckoutResult
     public let extraMinutes: Int?
     public let coverageConfirmed: Bool
+    public let minimumStatus: StoreOrderMinimum.Status
 }
 public struct TwoStoreQuoteResult: Equatable, Sendable {
     public let first: StoreQuoteResult
@@ -559,6 +573,11 @@ public struct TwoStoreQuoteResult: Equatable, Sendable {
     /// Maximum B incremental trip cash to equal A's known total, not a saving claim.
     public let secondTripCashBreakEven: Money?
     public let issues: [String]
+
+    public func canSelect(_ optionID: UUID) -> Bool {
+        comparable && ((first.optionID == optionID && first.coverageConfirmed) ||
+            (second.optionID == optionID && second.coverageConfirmed))
+    }
 }
 public enum TwoStoreQuoteEngine {
     public static func itemSubtotal(_ option: StoreQuoteOption) throws -> Money? {
@@ -612,11 +631,27 @@ public enum TwoStoreQuoteEngine {
     public static func evaluateEnteredQuotes(_ pair: TwoStoreQuotePair) throws -> TwoStoreQuoteResult {
         try pair.validate()
         let a = pair.first, b = pair.second
-        let comparable = a.commitments == b.commitments && a.quote.scope == b.quote.scope
+        let minimumA = try a.orderMinimum?.status() ?? .unknown, minimumB = try b.orderMinimum?.status() ?? .unknown
+        func eligible(_ option: StoreQuoteOption, _ status: StoreOrderMinimum.Status) throws -> Bool {
+            guard option.available == true, option.eligibilityReviewed == true, [.noneRequired, .met].contains(status) else { return false }
+            if let rows = option.supplies {
+                guard rows.count == option.commitments.commitments.count else { return false }
+                return try rows.allSatisfy { try $0.surplus() >= 0 }
+            }
+            return true
+        }
+        let eligibleA = try eligible(a, minimumA), eligibleB = try eligible(b, minimumB)
+        let equivalent: Bool
+        if let left = a.supplies, let right = b.supplies {
+            let needs = Dictionary(uniqueKeysWithValues: left.map { ($0.id, $0) })
+            equivalent = left.count == right.count && left.count == a.commitments.commitments.count &&
+                right.allSatisfy { needs[$0.id]?.unit == $0.unit && needs[$0.id]?.requiredUnits == $0.requiredUnits }
+        } else { equivalent = a.supplies == nil && b.supplies == nil }
+        let comparable = equivalent && a.commitments == b.commitments && a.quote.scope == b.quote.scope
             && a.quantitiesMatched && b.quantitiesMatched && a.singleStore && b.singleStore
         let ar = try CheckoutEngine.evaluate(a.quote, cap: a.cap), br = try CheckoutEngine.evaluate(b.quote, cap: b.cap)
         let at = try tripTotal(a), bt = try tripTotal(b)
-        let coverage = a.available == true && b.available == true
+        let coverage = eligibleA && eligibleB
         let items = try comparable ? itemSubtotal(a).flatMap { first in
             try itemSubtotal(b).map { try $0.subtracting(first) }
         } : nil
@@ -630,11 +665,18 @@ public enum TwoStoreQuoteEngine {
         } else { breakEven = nil }
         var issues: [String] = []
         if !comparable { issues.append("Compare complete single-store plans for the same commitments and scope") }
-        if !coverage { issues.append("Required product availability is unknown or unavailable") }
+        if a.available != true || b.available != true { issues.append("Required product availability is unknown or unavailable") }
+        if try [a,b].contains(where: { option in
+            guard let rows = option.supplies else { return false }
+            return try rows.count != option.commitments.commitments.count || rows.contains { try $0.surplus() < 0 }
+        }) { issues.append("Some packages do not cover the required quantities") }
+        if a.eligibilityReviewed != true || b.eligibilityReviewed != true { issues.append("Offer eligibility needs review") }
+        if [minimumA, minimumB].contains(.unknown) { issues.append("Purchase minimum or eligible subtotal is unknown") }
+        if [minimumA, minimumB].contains(.notMet) { issues.append("An option does not meet its purchase minimum") }
         if ar.total.exact == nil || br.total.exact == nil { issues.append("Checkout terms are incomplete") }
         if at.total.exact == nil || bt.total.exact == nil { issues.append("Total trip cash is unresolved") }
-        return TwoStoreQuoteResult(first: .init(optionID: a.id, checkout: ar, tripInclusive: at, extraMinutes: a.trip.extraMinutes, coverageConfirmed: a.available == true),
-            second: .init(optionID: b.id, checkout: br, tripInclusive: bt, extraMinutes: b.trip.extraMinutes, coverageConfirmed: b.available == true),
+        return TwoStoreQuoteResult(first: .init(optionID: a.id, checkout: ar, tripInclusive: at, extraMinutes: a.trip.extraMinutes, coverageConfirmed: eligibleA, minimumStatus: minimumA),
+            second: .init(optionID: b.id, checkout: br, tripInclusive: bt, extraMinutes: b.trip.extraMinutes, coverageConfirmed: eligibleB, minimumStatus: minimumB),
             comparable: comparable, itemSubtotalChange: items, checkoutChange: checkoutDelta, tripCashChange: tripDelta, extraMinutesChange: minutes,
             preferredByTotalCash: preferred, secondTripCashBreakEven: breakEven, issues: issues)
     }
@@ -644,7 +686,7 @@ public enum TwoStoreQuoteEngine {
         guard pair.shopID == ledger.id, pair.baseRevisionID == ledger.revisionID, pair.basisRevision == ledger.basisRevision else { throw DinnerPlanningError.stalePreview }
         guard phase == .draft else { throw DinnerPlanningError.lockedBasket }
         let result = try compare(pair, access: access, at: now)
-        guard result.comparable, let option = [pair.first, pair.second].first(where: { $0.id == optionID }), option.available == true else { throw DinnerPlanningError.reviewRequired("quoteCoverage") }
+        guard result.canSelect(optionID), let option = [pair.first, pair.second].first(where: { $0.id == optionID }) else { throw DinnerPlanningError.reviewRequired("quoteCoverage") }
         guard let reviewedBasis = option.adoptionBasis, reviewedBasis == basis else { throw DinnerPlanningError.reviewRequired("adoptionBasis") }
         guard state.quotePairs.contains(pair) else { throw DinnerPlanningError.reviewRequired("saveQuoteProof") }
         // Source proof stays in quotePairs. The basis change clears active store-specific evidence.

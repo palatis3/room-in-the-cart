@@ -504,10 +504,10 @@ public enum DinnerPlanningEngine {
         if let selection = proposal.quoteSelection {
             guard let pair = state.quotePairs.first(where: { $0.id == selection.pairID }),
                   pair.shopID == proposal.shopID, pair.baseRevisionID == proposal.baseRevisionID, pair.basisRevision == proposal.basisRevision,
-                  pair.first.commitments == pair.second.commitments, pair.first.quote.scope == pair.second.quote.scope,
-                  pair.first.singleStore, pair.second.singleStore, pair.first.quantitiesMatched, pair.second.quantitiesMatched,
-                  let option = [pair.first, pair.second].first(where: { $0.id == selection.optionID }), option.available == true,
+                  let option = [pair.first, pair.second].first(where: { $0.id == selection.optionID }),
                   let basis = option.adoptionBasis, case .adoptBasis(let proposed) = proposal.changes[0] else { throw DinnerPlanningError.reviewRequired("quoteProof") }
+            let result = try TwoStoreQuoteEngine.evaluateEnteredQuotes(pair)
+            guard result.canSelect(option.id) else { throw DinnerPlanningError.reviewRequired("quoteCoverage") }
             var expected = basis; expected.retailerPreview = nil
             guard proposed == expected else { throw DinnerPlanningError.reviewRequired("quoteBasis") }
         }

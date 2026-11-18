@@ -115,13 +115,13 @@ private struct SharedStoreQuotesContent: View {
                             if pair.own {
                                 ForEach(StoreQuoteChoice.allCases, id: \.self) { choice in
                                     Button(selectionLabel(pair.options[choice], shopper: page.shopper)) { Task { acknowledgedReviewID = nil; await model.prepareSelection(pair: pair, choice: choice) } }
-                                        .disabled(!selectionAllowed(pair, choice: choice, page: page))
+                                        .disabled(!model.selectionAllowed(pair, choice: choice))
                                         .accessibilityIdentifier("sharedQuotes.select." + choice.rawValue)
                                 }
                             } else if page.shopper {
                                 ForEach(pair.proposals) { proposal in
                                     Button(selectionLabel(pair.options[proposal.choice], shopper: true)) { Task { acknowledgedReviewID = nil; await model.prepareSelection(pair: pair, choice: proposal.choice, proposalID: proposal.id) } }
-                                        .disabled(!selectionAllowed(pair, choice: proposal.choice, page: page))
+                                        .disabled(!model.selectionAllowed(pair, choice: proposal.choice))
                                         .accessibilityIdentifier("sharedQuotes.reviewProposal")
                                 }
                             }
@@ -204,14 +204,16 @@ private struct SharedStoreQuotesContent: View {
         }
     }
     @ViewBuilder private func editor(_ page: StoreQuotePage) -> some View {
-        DinnerStoreFields(title: dinnerText("First store"), prefix: "sharedQuotes.first.", draft: $first.store, focus: $inputFocus)
+        DinnerStoreFields(title: dinnerText("First store"), prefix: "sharedQuotes.first.", draft: $first.store, focus: $inputFocus,
+            commitmentRows: page.commitments.map { ($0.id, $0.label) }, showsEligibilityReview: false)
         termsAndCap(first: true)
-        DinnerStoreFields(title: dinnerText("Second store"), prefix: "sharedQuotes.second.", draft: $second.store, focus: $inputFocus)
+        DinnerStoreFields(title: dinnerText("Second store"), prefix: "sharedQuotes.second.", draft: $second.store, focus: $inputFocus,
+            commitmentRows: page.commitments.map { ($0.id, $0.label) }, showsEligibilityReview: false)
         termsAndCap(first: false)
         Section {
             Button(StoreQuoteCopy.text("Review private comparison save")) {
                 do {
-                    let options = EnteredStoreQuoteOptions(first: try entered(first), second: try entered(second))
+                    let options = try EnteredStoreQuoteOptions(first: entered(first, commitments: page.commitments), second: entered(second, commitments: page.commitments))
                     _ = try SharedStoreQuoteMath.compare(options, commitments: page.commitments, shopID: page.shopId)
                     acknowledgedReviewID = nil; entryNotice = nil
                     Task { await model.prepareSave(options) }
@@ -234,15 +236,23 @@ private struct SharedStoreQuotesContent: View {
             }
         }
     }
-    private func entered(_ entry: SharedStoreQuoteDraft) throws -> EnteredStoreQuote {
+    private func entered(_ entry: SharedStoreQuoteDraft, commitments: [StoreQuotePage.Commitment]) throws -> EnteredStoreQuote {
         let draft = entry.store
         func cents(_ text: String) throws -> Int? { try DinnerEntry.money(text).map { Int($0.minorUnits) } }
+        let minimum = try draft.orderMinimum()
+        let wireMinimum = EnteredOrderMinimum(kind: .init(rawValue: minimum.kind.rawValue) ?? .unknown,
+            minimumMinor: minimum.minimum.map { Int($0.minorUnits) }, eligibleSubtotalMinor: minimum.eligibleSubtotal.map { Int($0.minorUnits) })
+        let supplies = try draft.reviewedSupply(commitments.map(\.id))?.map {
+            EnteredCommitmentSupply(commitmentId: $0.id, unit: $0.unit.rawValue, requiredUnits: $0.requiredUnits,
+                usableUnitsPerPackage: $0.usableUnitsPerPackage, packages: $0.packages)
+        }
         let value = EnteredStoreQuote(label: draft.reviewedLabel, store: draft.storeID, branch: draft.branch, mode: draft.mode.rawValue,
             slot: ISO8601DateFormatter().string(from: draft.slot), observedAt: ISO8601DateFormatter().string(from: draft.observedAt), source: draft.source,
             terms: draft.eligibilityTerms, itemsMinor: try cents(draft.itemSubtotal), checkoutMinor: try cents(draft.total), allChargesIncluded: draft.allChargesIncluded,
             available: draft.availability == 0 ? nil : draft.availability == 1, quantitiesMatched: draft.quantitiesMatched, singleStore: draft.singleStore,
             tripAlreadyPlanned: draft.alreadyPlanned, tripMinor: try cents(draft.tripCash), extraMinutes: try DinnerEntry.minutes(draft.extraMinutes),
-            capMinor: try cents(entry.cap), capScope: entry.capScope, eligibilityConfirmed: entry.eligibilityReviewed)
+            capMinor: try cents(entry.cap), capScope: entry.capScope, eligibilityConfirmed: entry.eligibilityReviewed,
+            orderMinimum: wireMinimum, supplies: supplies)
         try value.validate(); return value
     }
     @ViewBuilder private func reviewFacts(_ review: StoreQuoteIntent, page: StoreQuotePage) -> some View {
@@ -258,9 +268,6 @@ private struct SharedStoreQuotesContent: View {
             LabeledContent(StoreQuoteCopy.text("Named adult"), value: adult.label)
             Text(review.request.enabled == true ? StoreQuoteCopy.text("Grant budget access for this shop and current shopper assignment") : StoreQuoteCopy.text("Revoke this adult's budget access and pending quote proposals"))
         }
-    }
-    private func selectionAllowed(_ pair: StoreQuotePage.Pair, choice: StoreQuoteChoice, page: StoreQuotePage) -> Bool {
-        model.canPrepare && pair.current(in: page) && pair.comparison.comparable && pair.options[choice].available == true && pair.options[choice].eligibilityConfirmed
     }
     private func selectionLabel(_ option: EnteredStoreQuote, shopper: Bool) -> String {
         String(format: StoreQuoteCopy.text(shopper ? "Review adopting %@" : "Review proposing %@"), option.label)
@@ -311,6 +318,11 @@ private struct SharedStoreQuoteFacts: View {
             Text(value.tripAlreadyPlanned ? dinnerText("Trip already planned") : dinnerText("Additional trip"))
             if let minutes = value.extraMinutes { Text(dinnerFormat("Extra minutes: %d", minutes)) }
             Text(result.coverageConfirmed ? dinnerText("Required availability reviewed") : dinnerText("Required availability unresolved"))
+            QuoteOrderEvidenceSummary(status: result.minimumStatus, rows: value.supplies?.compactMap { row in
+                guard let unit = UnitOfMeasure(rawValue: row.unit) else { return nil }
+                return StoreCommitmentSupply(commitmentID: row.commitmentId, unit: unit, requiredUnits: row.requiredUnits,
+                    usableUnitsPerPackage: row.usableUnitsPerPackage, packages: row.packages)
+            } ?? [], names: Dictionary(uniqueKeysWithValues: commitments.map { ($0.id, $0.label) }))
             cap(value)
         }.padding(.vertical, 6).accessibilityElement(children: .combine)
     }

@@ -78,6 +78,6 @@ final class StoreQuoteNativeWireTests: XCTestCase {
         return .init(label:label,store:label,branch:label == "Second" ? "West branch":"East branch",mode:"pickup",
             slot:f.string(from:now.addingTimeInterval(3600)),observedAt:f.string(from:now),source:"Manual reviewed checkout",itemsMinor:checkout,
             checkoutMinor:checkout,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:trip == 0,
-            tripMinor:trip,extraMinutes:minutes,capMinor:4000,eligibilityConfirmed:true)
+            tripMinor:trip,extraMinutes:minutes,capMinor:4000,eligibilityConfirmed:true,orderMinimum:.init(kind:.noneRequired))
     }
 }

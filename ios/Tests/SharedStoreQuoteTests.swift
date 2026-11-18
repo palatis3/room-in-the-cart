@@ -38,7 +38,7 @@ private actor StoreQuoteFixture: SharedStoreQuotesServing {
 @MainActor final class SharedStoreQuoteTests: XCTestCase {
     private func scope() -> StoreQuoteScope { .init(generation:UUID(),enrollmentRevision:UUID(),subject:"verified-adult",householdID:UUID().uuidString,memberID:UUID().uuidString,shopID:UUID(),authorityStamp:"contributor/store_quotes") }
     private func option(_ label: String = "First", checkout: Int? = 3800, trip: Int? = 0, minutes: Int? = 0) -> EnteredStoreQuote {
-        .init(label:label,store:label,branch:"Branch",mode:"pickup",slot:"2026-11-05T18:00:00Z",observedAt:"2026-11-03T12:00:00Z",source:"Entered checkout",itemsMinor:checkout,checkoutMinor:checkout,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:trip == 0,tripMinor:trip,extraMinutes:minutes,capMinor:3800,eligibilityConfirmed:true)
+        .init(label:label,store:label,branch:"Branch",mode:"pickup",slot:"2026-11-05T18:00:00Z",observedAt:"2026-11-03T12:00:00Z",source:"Entered checkout",itemsMinor:checkout,checkoutMinor:checkout,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:trip == 0,tripMinor:trip,extraMinutes:minutes,capMinor:3800,eligibilityConfirmed:true,orderMinimum:.init(kind:.noneRequired))
     }
     private func page(_ scope: StoreQuoteScope, shopper: Bool = false, revision: Int = 3, epoch: Int = 2, grant: Int = 1, phase: String = "draft", pairs: [Any] = [], adults: [Any] = []) throws -> StoreQuotePage {
         try JSONDecoder().decode(StoreQuotePage.self,from:JSONSerialization.data(withJSONObject:["shopId":scope.shopID.uuidString,"shopRevision":revision,"authorityEpoch":epoch,"grantRevision":shopper ? 0 : grant,"shopper":shopper,"phase":phase,"adults":adults,"commitments":[["id":"11111111-1111-4111-8111-111111111111","label":"Wraps for dinner and lunch","packs":2]],"currentBasis":NSNull(),"pairs":pairs,"nextCursor":NSNull()]))
@@ -57,6 +57,32 @@ private actor StoreQuoteFixture: SharedStoreQuotesServing {
         default: XCTFail("Expected checkout headroom")
         }
     }
+    func testSharedQuotePreservesReviewedPackageAndMinimumEvidenceAcrossWireRoundTrip() throws {
+        let scope = scope(), page = try page(scope)
+        let wraps = try XCTUnwrap(page.commitments.first)
+        func supply(_ size: Int64, packs: Int64) -> EnteredCommitmentSupply {
+            .init(commitmentId: wraps.id, unit: "count", requiredUnits: 9, usableUnitsPerPackage: size, packages: packs)
+        }
+        var first = option(), second = option("Second", checkout: 3500, trip: 400, minutes: 18)
+        first.supplies = [supply(6, packs: 2)]
+        second.supplies = [supply(8, packs: 2)]
+        second.orderMinimum = .init(kind: .required, minimumMinor: 3500, eligibleSubtotalMinor: 3400)
+        let entered = EnteredStoreQuoteOptions(first: first, second: second)
+        let reopened = try JSONDecoder().decode(EnteredStoreQuoteOptions.self, from: JSONEncoder().encode(entered))
+        XCTAssertEqual(entered, reopened)
+        let blocked = try SharedStoreQuoteMath.compare(reopened, commitments: page.commitments, shopID: scope.shopID)
+        XCTAssertEqual(blocked.second.minimumStatus, .notMet)
+        XCTAssertFalse(blocked.canSelect(SharedStoreQuoteMath.secondID))
+        XCTAssertTrue(blocked.canSelect(SharedStoreQuoteMath.firstID))
+        XCTAssertNil(blocked.preferredByTotalCash)
+        second.orderMinimum = .init(kind: .required, minimumMinor: 3200, eligibleSubtotalMinor: 3200)
+        let covered = try SharedStoreQuoteMath.compare(.init(first: first, second: second), commitments: page.commitments, shopID: scope.shopID)
+        XCTAssertEqual(covered.preferredByTotalCash, SharedStoreQuoteMath.firstID)
+        second.supplies = [supply(8, packs: 1)]
+        let short = try SharedStoreQuoteMath.compare(.init(first: first, second: second), commitments: page.commitments, shopID: scope.shopID)
+        XCTAssertFalse(short.canSelect(SharedStoreQuoteMath.secondID))
+    }
+
     func testMissingChargesUnavailableAndUnreviewedEligibilityCannotCrownWinner() throws {
         let scope = scope(), page = try page(scope), first = option()
         for index in 0..<5 {

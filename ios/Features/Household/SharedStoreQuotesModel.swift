@@ -73,9 +73,14 @@ extension HouseholdService: SharedStoreQuotesServing {}
         guard canPrepare, let page, !page.commitments.isEmpty else { return }
         await prepare(.pairs, request: .init(page: page, options: options))
     }
+    func selectionAllowed(_ pair: StoreQuotePage.Pair, choice: StoreQuoteChoice) -> Bool {
+        guard canPrepare, let page, pair.current(in: page), pair.comparison.comparable,
+              let result = try? SharedStoreQuoteMath.compare(pair.options, commitments: pair.commitments, shopID: scope.shopID) else { return false }
+        return result.canSelect(choice == .first ? SharedStoreQuoteMath.firstID : SharedStoreQuoteMath.secondID)
+    }
+
     func prepareSelection(pair: StoreQuotePage.Pair, choice: StoreQuoteChoice, proposalID: UUID? = nil) async {
-        guard canPrepare, let page, pairs.contains(pair), pair.current(in: page), pair.comparison.comparable,
-              pair.options[choice].available == true, pair.options[choice].eligibilityConfirmed else { return }
+        guard selectionAllowed(pair, choice: choice), let page, pairs.contains(pair) else { return }
         if page.shopper {
             guard pair.own || pair.proposals.contains(where: { $0.id == proposalID && $0.choice == choice }) else { return }
         } else { guard pair.own, proposalID == nil else { return } }
@@ -169,11 +174,22 @@ enum SharedStoreQuoteMath {
             let context = CheckoutContext(storeID: source.store, branchID: source.branch, mode: ShoppingMode(rawValue: source.mode)!, slot: source.slot,
                 commitmentsID: same.id, observedAt: serviceDate(source.observedAt)!, source: source.source)
             let evidence = source.allChargesIncluded ? source.checkoutMinor.map { CostEvidence.exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Checkout total is unknown") : .unknown(reason: "Checkout charges are unreviewed")
+            let minimum = source.orderMinimum.map { entry in
+                StoreOrderMinimum(StoreOrderMinimum.Kind(rawValue: entry.kind.rawValue) ?? .unknown,
+                    minimum: entry.minimumMinor.map { Money(minorUnits: Int64($0)) },
+                    eligibleSubtotal: entry.eligibleSubtotalMinor.map { Money(minorUnits: Int64($0)) })
+            }
+            let supplies = try source.supplies?.map { row in
+                guard let unit = UnitOfMeasure(rawValue: row.unit) else { throw ClientError.configuration }
+                return StoreCommitmentSupply(commitmentID: row.commitmentId, unit: unit, requiredUnits: row.requiredUnits,
+                    usableUnitsPerPackage: row.usableUnitsPerPackage, packages: row.packages)
+            }
             return StoreQuoteOption(id: id, label: source.label, commitments: same,
                 quote: CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(evidence)),
-                available: source.eligibilityConfirmed ? source.available : nil, quantitiesMatched: source.quantitiesMatched, singleStore: source.singleStore,
+                available: source.available, quantitiesMatched: source.quantitiesMatched, singleStore: source.singleStore,
                 trip: StoreTripEvidence(incrementalCash: source.tripMinor.map { .exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Trip cash is unknown"), extraMinutes: source.extraMinutes, tripAlreadyPlanned: source.tripAlreadyPlanned),
-                observedItemSubtotal: source.itemsMinor.map { Money(minorUnits: Int64($0)) }, eligibilityTerms: source.terms.isEmpty ? nil : source.terms)
+                observedItemSubtotal: source.itemsMinor.map { Money(minorUnits: Int64($0)) }, eligibilityTerms: source.terms.isEmpty ? nil : source.terms,
+                orderMinimum: minimum, supplies: supplies, eligibilityReviewed: source.eligibilityConfirmed)
         }
         let pair = TwoStoreQuotePair(shopID: shopID, baseRevisionID: shopID, basisRevision: 0, first: try option(options.first,id: firstID), second: try option(options.second,id: secondID))
         return try TwoStoreQuoteEngine.evaluateEnteredQuotes(pair)
