@@ -20,10 +20,11 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let unitPrice = #/(?i)\s+(?:@|at|a)\s*(?:US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]{1,2})?\s*(?:\/|per|por)\s*[a-z.]+\s*$/#
     private static let measure = #/(?i)\b([0-9]{1,5}(?:[.,][0-9]{1,3})?)\s*(fl\.?\s*oz|kg|kgs|kilogramos?|kilograms?|gramos?|grams?|gr|g|lb[s.]?|pounds?|libras?|ounces?|onzas?|oz|liters?|litros?|ml|l|count|ct|ea|each|unidades|uds)\b/#
     private static let adjustment = #/(?i)^\s*(?:service fee|bottle deposit|sales tax|tax|impuesto|iva|subtotal|sub total|total|change|cambio|cash|efectivo|tender|visa|mastercard|payment|pago|discount|descuento|coupon|cup[oó]n|deposit|dep[oó]sito|fee|cargo|delivery fee|shipping|env[ií]o|tip|propina|refund|reembolso|return|devoluci[oó]n|promotion|promoci[oó]n)\b/#
-    private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|MXN|AUD|BOGO|free|gratis|off|was|ahorra|save|reg\.?|regular)\b|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
+    private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|MXN|AUD|BOGO|gratis|was|ahorra|save|oferta|coupon|cup[oó]n)\b|\b(?:buy|compra)\s+\w+\s+(?:get|recibe)\b|\b[0-9]+\s*(?:for|por)\s*[$0-9]|\d+\s*%|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
     private static let otherNumbers = #/(?:[$€£@]|[0-9][.,][0-9]|[0-9]\s*[x×]|\s-\s*\d)/#
     private static let freezer = #/(?i)\b(?:keep frozen|frozen|mantener congelad[oa]s?|congelad[oa]s?)\b/#
     private static let fridge = #/(?i)\b(?:keep refrigerated|refrigerated|mantener refrigerad[oa]s?|refrigerad[oa]s?)\b/#
+    private static let storageConflict = #/(?i)\b(?:never|not|do not|previously|thawed|after opening|no congelar|no refrigerar|descongelad[oa]s?|despu[eé]s de abrir)\b/#
     private static let cupboard = #/(?i)\b(?:shelf stable|shelf-stable|store in (?:a )?cool dry place|conservar en lugar fresco y seco)\b/#
 
     init(_ row: ScanReceiptLine, knownStorage: [String:Set<InventoryLocation>]) {
@@ -85,13 +86,15 @@ struct ReceiptPrintedEvidence: Equatable {
         }
         let history = knownStorage[InventoryReceiptAlias.key(name ?? text)] ?? []
         let places = history.union(labels)
-        if places.count == 1 { storage = places.first }
+        if places.count == 1, !text.contains(Self.storageConflict) { storage = places.first }
         uncertain = quantity == nil || amount == nil || name == nil
     }
     private static func measurement(_ number: String, unit: String) -> (String,UnitOfMeasure)? {
         let token = unit.lowercased(), normalized = number.replacingOccurrences(of: ",", with: ".")
         var tokens = ListQuantityParser.itemTokens(token)
         let parsed: UnitOfMeasure? = ["ea","each","ct","count","unidades","uds"].contains(token) ? .count : ListQuantityParser.takeUnit(from: &tokens)
+        let parts = normalized.split(separator: ".")
+        if parts.count == 2, parts[1].count == 3, parts[0] != "0", parts[0].count <= 3 { return nil }
         guard let parsed, let value = try? ListQuantityParser.numericAmount(normalized), value > .zero else { return nil }
         return (normalized,parsed)
     }
