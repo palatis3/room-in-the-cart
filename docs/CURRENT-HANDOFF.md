@@ -6,7 +6,7 @@ Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](produc
 
 ## Expansion integration
 
-PR #29 merged into main at `bcca63b0` after all 61 checks passed. Its tree matches qualified head `500c1937`. Draft PR #60 now targets main and contains the combined receipts, pantry, pricing, dinners, cooking, household access and Home widgets. [PR #29](https://github.com/palatis3/room-in-the-cart/pull/29) · [PR #60](https://github.com/palatis3/room-in-the-cart/pull/60)
+PR #29 merged into main at `bcca63b0` after all 61 checks passed. Its tree matches qualified head `500c1937`. PR #60 merged at `0fd1b656` after all 63 checks passed. Its tree matches qualified head `75abd20c` and includes the combined receipts, pantry, pricing, dinners, cooking, household access and Home widgets. [PR #29](https://github.com/palatis3/room-in-the-cart/pull/29) · [PR #60](https://github.com/palatis3/room-in-the-cart/pull/60)
 
 The full [postmerge build and tests](https://github.com/palatis3/room-in-the-cart/actions/runs/44256035116) and [security checks](https://github.com/palatis3/room-in-the-cart/actions/runs/44256035117) also passed on main at `bcca63b0`. PR #60 at `417802d9` produced an unsigned arm64 iPhone Release archive. Its app, widget and share binaries matched their crash symbols, and all three App Shortcuts included English and Spanish phrases. Signing, production configuration and on-device invocation remain open.
 
