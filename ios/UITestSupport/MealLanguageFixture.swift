@@ -102,6 +102,7 @@ struct MealLanguageFixture: View {
     @State private var swap: DinnerFeatureModel?
     @State private var pickup: PickupModel?
 
+    @State private var showingPickupDetails = false
     @State private var failed = false
     private let directory: URL
     init() {
@@ -116,8 +117,8 @@ struct MealLanguageFixture: View {
             if let household {
                 NavigationStack {
                     List {
-                        if ProcessInfo.processInfo.arguments.contains("--checkout-crop-fixture"), let shop = ledger.shop {
-                            NavigationLink("Pickup details") { LedgerFactsView(model: ledger, shop: shop).environmentObject(household).environmentObject(access) }
+                        if ProcessInfo.processInfo.arguments.contains("--checkout-crop-fixture"), ledger.shop != nil {
+                            Button("Pickup details") { showingPickupDetails = true }
                                 .accessibilityIdentifier("fixture.checkout.details")
                         }
                         if let swap, let pickup, let original = ledger.shop?.mealOccurrences.first {
@@ -130,7 +131,13 @@ struct MealLanguageFixture: View {
                         NavigationLink("Feedback") { MealFeedbackEntry(ledger: ledger, source: .recipe(id: recipe.id, revision: recipe.revision),
                             title: recipe.title).environmentObject(household).environmentObject(access) }.accessibilityIdentifier("mealFixture.feedback")
                     }
-                }.environmentObject(household).environmentObject(access)
+                }
+                .sheet(isPresented: $showingPickupDetails) {
+                    NavigationStack {
+                        if let shop = ledger.shop { LedgerFactsView(model: ledger, shop: shop) }
+                    }
+                }
+                .environmentObject(household).environmentObject(access)
             } else if failed { Text("Fixture unavailable") }
             else { ProgressView() }
         }.task {

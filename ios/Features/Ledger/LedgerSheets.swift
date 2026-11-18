@@ -570,6 +570,11 @@ struct LedgerFactsView: View {
     @State private var cap: String
     @State private var reserve: String
     @State private var fees: String
+    private struct ScreenshotRequest: Identifiable {
+        let id = UUID()
+        let terms: ShopBasis.RetailerTerms
+    }
+    @State private var screenshotRequest: ScreenshotRequest?
     @State private var screenshot: ReviewedCheckoutImage?
     @State private var hasRetailerPreview: Bool
     @State private var retailerTotal: String
@@ -683,9 +688,9 @@ struct LedgerFactsView: View {
                             retailerDate = Date(); includedCharges = ""; evidenceTerms = currentTerms; screenshot = nil
                         }
                     } else {
-                        let terms = currentTerms
-                        NavigationLink(pantryText("Read a checkout screenshot")) { checkoutImage(for: terms) }
-                            .accessibilityIdentifier("priceImage.readCheckout")
+                        Button(pantryText("Read a checkout screenshot")) {
+                            screenshotRequest = ScreenshotRequest(terms: currentTerms)
+                        }.accessibilityIdentifier("priceImage.readCheckout")
                         Toggle(ledgerText("Record a retailer preview"), isOn: $hasRetailerPreview)
                     }
                     if hasRetailerPreview && !needsFreshEvidence {
@@ -730,6 +735,9 @@ struct LedgerFactsView: View {
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Describe this pickup"))
+            .sheet(item: $screenshotRequest) { request in
+                NavigationStack { checkoutImage(for: request.terms) }
+            }
             .onChange(of: currentTerms) { old, new in
                 if old == evidenceTerms, !hasRetailerPreview, fees.isEmpty, retailerSource.isEmpty, retailerTotal.isEmpty, includedCharges.isEmpty {
                     evidenceTerms = new; retailerDate = Date()

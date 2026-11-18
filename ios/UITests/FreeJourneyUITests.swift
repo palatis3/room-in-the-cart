@@ -839,9 +839,7 @@ import XCTest
         XCTAssertFalse(app.buttons["assistance.useWording"].exists)
         tap(app.buttons["receipt.assistance.send"])
         tap(app.buttons["assistance.useWording"])
-        let back = app.navigationBars["Choose the printed line"].buttons.element(boundBy: 0)
-        XCTAssertTrue(back.waitForExistence(timeout: 6), app.debugDescription)
-        back.tap()
+        tap(app.buttons["capture.doneChoosingLine"])
         let cleared = app.buttons["priceImage.line.subtotal"]
         reveal(cleared)
         XCTAssertTrue(cleared.label.contains("Not shown") || (cleared.value as? String) == "Not shown", cleared.debugDescription)
@@ -896,8 +894,15 @@ import XCTest
         XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
         add.tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let allow = springboard.alerts.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
-        if allow.waitForExistence(timeout: 6) { allow.tap() }
+        let prompt = springboard.alerts.firstMatch
+        if prompt.waitForExistence(timeout: 6) {
+            let allow = prompt.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
+            if allow.exists {
+                allow.tap()
+            } else if prompt.label.contains("Room in the Cart"), prompt.label.contains("Add to Your Photos") {
+                prompt.buttons["OK"].tap()
+            }
+        }
         let saved = app.staticTexts["fixture.receipt.photoResult"]
         XCTAssertTrue(saved.waitForExistence(timeout: 12), app.debugDescription)
         XCTAssertEqual(saved.label, "Test photo saved")
