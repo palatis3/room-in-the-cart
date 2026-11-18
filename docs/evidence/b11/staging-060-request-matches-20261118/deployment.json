@@ -1,0 +1,35 @@
+{
+  "verifiedUTC": "2026-11-18T15:26:08.279329+00:00",
+  "source": "167b378521cb0967ebc98df5af8cf59c5f771345",
+  "stagingAlias": "room-in-the-cart-staging.vercel.app",
+  "deploymentId": "dpl_5zCR9sEy86tqTkweFiJtHrAD6deL",
+  "previousDeployment": "dpl_8FR8yKw95pA9ZMTRXhbsWGNV26gL",
+  "manifestSHA256": "2f3a7c587d1af5ef5e39c0ae95dedb9929231dab7fae7bc4ef472875a9a323d6",
+  "migration": 60,
+  "migrationSHA256": "6897380b75bbdd2d9e626549325b19215fdb9a166b02cac774a08687b3166435",
+  "preservedTables": 167,
+  "preservedRows": 143,
+  "authTablesVerifiedAfterCommit": 27,
+  "protectedChecks": {
+    "api": 12,
+    "webRoutesAndAssets": 21,
+    "databaseHttp": 4
+  },
+  "publicChecks": {
+    "api": 12,
+    "webRoutesAndAssets": 21,
+    "databaseHttp": 4
+  },
+  "scheduledMaintenance": [
+    {
+      "path": "/internal/maintenance",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "scheduledDeployment": "dpl_5zCR9sEy86tqTkweFiJtHrAD6deL",
+  "workerAttentionRequired": false,
+  "recoveryImagesDetached": true,
+  "maintenanceVerifiedUTC": "2026-11-18T15:21:57.369910+00:00",
+  "reopenedVerifiedUTC": "2026-11-18T15:25:58.403645+00:00",
+  "recoveryAfterNewMatches": "Preserve new writes and use a compatible service or coordinated recovery. The previous service omits Undo for these matches."
+}

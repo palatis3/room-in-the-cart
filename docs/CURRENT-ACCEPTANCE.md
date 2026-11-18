@@ -215,6 +215,5 @@ billing; and final B11 acceptance and release authorization. Follow the checklis
 specific evidence and owner-deferred boundaries for each item.
 
 Apple paid membership/signing, SMTP and actual KWS activation remain owner deferred.
-The November 18 staging deployment verified all 59 migration checksums. The deployment
-and rollback identifiers are in the [staging receipt](evidence/b11/staging-059-feedback-20261118/deployment.json).
+On November 18, Staging reopened on schema 060 with request matching and the staple reminder fix. The migration preserved all 143 prior rows in 167 checked tables. The public API, web routes, maintenance schedule and worker passed verification. After a new match is saved, recovery requires a service that supports Undo for that match or a coordinated restore. [Staging receipt](evidence/b11/staging-060-request-matches-20261118/deployment.json)
 Direct retailer integration (E05) remains deferred. X01–X06 remain product boundaries.
