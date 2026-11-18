@@ -72,7 +72,10 @@ import XCTest
                                   ("prices.store", "South Market"), ("prices.total", amount), ("prices.quantity", "2")] {
                 let input = app.textFields[field]
                 tap(input); input.typeText(text)
-                if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+                let done = app.buttons["prices.done"]
+                XCTAssertTrue(done.waitForExistence(timeout: 4))
+                done.tap()
+                XCTAssertTrue(done.waitForNonExistence(timeout: 4))
             }
             tap(app.buttons["prices.review"])
             tap(app.buttons["prices.confirm"])
