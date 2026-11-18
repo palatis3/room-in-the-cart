@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from check_ci_workflows import (A1_LABEL, A2_LABEL, A2_RUNNER, CORE_BUILD_JOB, RELEASE_BUILD_JOB,
-                                STOREKIT_JOB, FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, ROUTED_NATIVE_JOBS,
+                                STOREKIT_JOB, PRODUCER_JOBS, FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, ROUTED_NATIVE_JOBS,
                                 POLICY, QUEUE_ERROR, bitrise_group, lint_workflows, parse_workflow, validate_workflows)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,10 +32,10 @@ QUEUE_BLOCK = """    concurrency:
 GITHUB_TEXT = TEXT.replace(QUEUE_BLOCK, '')
 GITHUB_POLICY = {('probe.yml', 'native'): None}
 FIXTURE_JOB = ('ios-fixtures.yml', 'build-contributor')
-FIXTURE_GROUP = bitrise_group(FIXTURE_JOB, 0)
+FIXTURE_GROUP = bitrise_group(FIXTURE_JOB, 'provider')
 FIXTURE_TEXT = TEXT.replace('  native:', '  build-contributor:').replace(
     'runs-on: macos-15', 'runs-on: ' + FIXTURE_RUNNER).replace('ritc-macos-slot-0', FIXTURE_GROUP)
-FIXTURE_POLICY = {FIXTURE_JOB: 0}
+FIXTURE_POLICY = {FIXTURE_JOB: 'provider'}
 
 
 class WorkflowGuardTests(unittest.TestCase):
@@ -68,9 +68,9 @@ class WorkflowGuardTests(unittest.TestCase):
         canonical = 'palatis3/room-in-the-cart'
         fixture = ('ios-fixtures.yml', 'contributor-tests')
         core = ('ci.yml', 'ios-tests')
-        fixed_groups = {FIXTURE_JOB: 'ritc-bitrise-a1-slot-0', ('ios-fixtures.yml', 'build-dinner'): 'ritc-bitrise-a1-slot-1',
-                        CORE_BUILD_JOB: 'ritc-bitrise-a2-slot-0', RELEASE_BUILD_JOB: 'ritc-bitrise-a2-slot-1',
-                        STOREKIT_JOB: 'ritc-bitrise-a2-slot-2'}
+        fixed_groups = {identity: f'ritc-bitrise-producer-{identity[0][:-4]}-{identity[1]}-1635-2'
+                        for identity in PRODUCER_JOBS}
+        fixed_groups[STOREKIT_JOB] = 'ritc-bitrise-a2-slot-2'
         # Exercise canonical PRs, forks, outage mode, and every allowed/denied event.
         cases = [(canonical, event, canonical, '') for event in
                  ('push', 'schedule', 'workflow_dispatch', 'workflow_call', 'pull_request')]
@@ -116,6 +116,27 @@ class WorkflowGuardTests(unittest.TestCase):
                     fallbacks = [value.casefold() for value in groups.values() if value.startswith('ritc-github-job-')]
                     self.assertEqual(len(fallbacks), len(set(fallbacks)))
 
+    def test_product_jobs_seek_pool_capacity_without_cross_run_slot_blocking(self):
+        groups = set()
+        for run in (100, 101):
+            for attempt in (1, 2):
+                for identity in PRODUCER_JOBS:
+                    self.assertEqual(POLICY[identity], 'provider')
+                    expression = bitrise_group(identity, POLICY[identity])
+                    context = {'github.event.pull_request.head.repo.full_name': 'palatis3/room-in-the-cart',
+                               'github.event_name': 'push', 'vars.RITC_GITHUB_MAC_ONLY': '',
+                               'github.repository': 'palatis3/room-in-the-cart',
+                               'github.run_id': run, 'github.run_attempt': attempt}
+                    for token, value in context.items(): expression = expression.replace(token, repr(value))
+                    expression = expression.removeprefix('${{ ').removesuffix(' }}').replace('&&', 'and').replace('||', 'or')
+                    group = eval(expression, {'__builtins__': {}}, {'format': str.format})
+                    self.assertEqual(group, f'ritc-bitrise-producer-{identity[0][:-4]}-{identity[1]}-{run}-{attempt}')
+                    self.assertNotIn('-slot-', group)
+                    groups.add(group)
+        self.assertEqual(len(groups), 16)
+        # Product admission never changes the consumers' twelve shared lanes.
+        self.assertEqual(POLICY[STOREKIT_JOB], 2)
+
     def test_twelve_lanes_are_shared_across_workflows_and_disjoint_between_pools(self):
         context = {'github.event.pull_request.head.repo.full_name': 'palatis3/room-in-the-cart',
                    'github.event_name': 'push', 'vars.RITC_GITHUB_MAC_ONLY': '',
@@ -144,12 +165,12 @@ class WorkflowGuardTests(unittest.TestCase):
         self.assertEqual(len(self.validate(FIXTURE_TEXT, FIXTURE_POLICY)), 1)
         for changed in (FIXTURE_TEXT.replace(FIXTURE_RUNNER, "'" + A1_LABEL + "'"),
                         FIXTURE_TEXT.replace(FIXTURE_GROUP, 'ritc-macos-slot-0'),
-                        FIXTURE_TEXT.replace('ritc-bitrise-a1-slot-0', 'ritc-bitrise-a1-slot-3'),
+                        FIXTURE_TEXT.replace(FIXTURE_GROUP, "${{ 'ritc-bitrise-a1-slot-0' }}"),
                         FIXTURE_TEXT.replace("github.repository == 'palatis3/room-in-the-cart'", 'true'),
                         FIXTURE_TEXT.replace('bitrise-runner-A1', 'bitrise-runner-other'),
                         FIXTURE_TEXT.replace('bitrise-runner-A1', 'bitrise-runner-room in cart'),
                         FIXTURE_TEXT.replace('bitrise-runner-A1', 'bitrise-runner-ci 2'),
-                        FIXTURE_TEXT.replace('ritc-bitrise-a1-slot-0', 'ritc-bitrise-slot-0')):
+                        FIXTURE_TEXT.replace('ritc-bitrise-producer-', 'ritc-bitrise-slot-')):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 self.validate(changed, FIXTURE_POLICY)
         core = ('ci.yml', 'ios-tests')
@@ -186,7 +207,7 @@ class WorkflowGuardTests(unittest.TestCase):
             producer_policy = {identity: POLICY[identity]}
             self.assertEqual(len(self.validate(producer, producer_policy)), 1)
             for changed in (producer.replace(group, slot),
-                            producer.replace(slot, wrong_slot),
+                            producer.replace('github.run_attempt', '0'),
                             producer.replace('github.run_id', 'github.ref'),
                             producer.replace(runner, FIXTURE_CONSUMER_RUNNER),
                             producer.replace(runner, FIXTURE_RUNNER),

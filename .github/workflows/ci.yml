@@ -250,7 +250,7 @@ jobs:
   ios-release:
     needs: source-checks
     concurrency:
-      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-a2-slot-1' || format('ritc-github-job-ci-ios-release-{0}-{1}', github.run_id, github.run_attempt) }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && format('ritc-bitrise-producer-ci-ios-release-{0}-{1}', github.run_id, github.run_attempt) || format('ritc-github-job-ci-ios-release-{0}-{1}', github.run_id, github.run_attempt) }}
       queue: max
       cancel-in-progress: false
     runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-A2' || 'xcode-27' }}
@@ -492,7 +492,7 @@ jobs:
   ios-build:
     needs: source-checks
     concurrency:
-      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-a2-slot-0' || format('ritc-github-job-ci-ios-build-{0}-{1}', github.run_id, github.run_attempt) }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && format('ritc-bitrise-producer-ci-ios-build-{0}-{1}', github.run_id, github.run_attempt) || format('ritc-github-job-ci-ios-build-{0}-{1}', github.run_id, github.run_attempt) }}
       queue: max
       cancel-in-progress: false
     runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-A2' || 'xcode-27' }}

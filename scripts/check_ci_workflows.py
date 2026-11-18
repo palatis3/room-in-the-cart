@@ -24,6 +24,8 @@ CORE_BUILD_JOB = ('ci.yml', 'ios-build')
 RELEASE_BUILD_JOB = ('ci.yml', 'ios-release')
 STOREKIT_JOB = ('ios-deep.yml', 'storekit')
 A2_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB, STOREKIT_JOB}
+PRODUCER_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB,
+                 ('ios-fixtures.yml', 'build-contributor'), ('ios-fixtures.yml', 'build-dinner')}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
 FIXTURE_TRUSTED = ("vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && "
@@ -37,17 +39,18 @@ FIXTURE_CONSUMER_RUNNER = ("${{ " + FIXTURE_TRUSTED +
     "' || matrix.provider == 'bitrise-A1' && '" + A1_LABEL + "') || 'xcode-27' }}")
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
-# Integers pin Bitrise producer slots. Matrices retain their reviewed identities
+# Provider admission lets four product jobs use any free machine in their pool.
+# Integers retain fixed consumer lanes. Matrices retain their reviewed identities
 # and producers. GitHub-only leaves use the platform's five macOS slots directly.
 POLICY = {
     ('ci.yml', 'swift-packages'): None,
-    RELEASE_BUILD_JOB: 1,
+    RELEASE_BUILD_JOB: 'provider',
     ('release-checks.yml', 'staging-iphone'): None,
     ('ci.yml', 'ios-swift-codeql'): None,
-    CORE_BUILD_JOB: 0,
+    CORE_BUILD_JOB: 'provider',
     ('ci.yml', 'ios-tests'): ('${{ fromJSON(needs.ios-build.outputs.test_matrix) }}', ('shard',)),
-    ('ios-fixtures.yml', 'build-contributor'): 0,
-    ('ios-fixtures.yml', 'build-dinner'): 1,
+    ('ios-fixtures.yml', 'build-contributor'): 'provider',
+    ('ios-fixtures.yml', 'build-dinner'): 'provider',
     ('ios-fixtures.yml', 'contributor-tests'): ('${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}', ('profile', 'shard')),
     ('ios-fixtures.yml', 'dinner-tests'): ('${{ fromJSON(needs.fixture-plan.outputs.dinner_matrix) }}', ('profile', 'shard')),
     ('ios-performance.yml', 'performance-build'): None,
@@ -72,7 +75,12 @@ def github_job_group(identity, matrix_fields=()):
 
 
 def bitrise_group(identity, expected):
-    if type(expected) is int:
+    if expected == 'provider':
+        workflow, job = identity
+        route = (f"format('ritc-bitrise-producer-{workflow.removesuffix('.yml')}-{job}-{{0}}-{{1}}', "
+                 "github.run_id, github.run_attempt)")
+        fields = ()
+    elif type(expected) is int:
         prefix = A2_SLOT_PREFIX if identity in A2_JOBS else A1_SLOT_PREFIX
         route = f"'{prefix}{expected}'"
         fields = ('locale',) if identity == STOREKIT_JOB else ()
@@ -233,7 +241,7 @@ def validate_workflows(paths, policy=POLICY):
                 require(job.get('runs-on') in GITHUB_RUNNERS, f'Expected standard GitHub runner: {identity}')
                 require('concurrency' not in job, f'GitHub native job must use provider admission: {identity}')
                 continue
-            runner = A2_RUNNER if identity in A2_JOBS else FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
+            runner = A2_RUNNER if identity in A2_JOBS else FIXTURE_RUNNER if identity in PRODUCER_JOBS else FIXTURE_CONSUMER_RUNNER
             require(job.get('runs-on') == runner, f'Unreviewed native provider routing: {identity}')
             require(isinstance(concurrency, dict) and set(concurrency) == {'group', 'queue', 'cancel-in-progress'},
                     f'Bitrise job needs exactly group, queue and cancel-in-progress: {identity}')
