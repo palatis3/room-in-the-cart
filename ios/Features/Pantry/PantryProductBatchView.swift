@@ -91,19 +91,8 @@ struct PantryProductBatchView: View {
                 if !batch.candidates.isEmpty {
                     Section(pantryText("Products to review")) {
                         ForEach(batch.candidates) { row in
-                            Button {
-                                focus = nil
-                                editingProduct = row
-                            } label: {
-                                VStack(alignment: .leading) {
-                                    Text(row.name.isEmpty ? (row.barcode?.value ?? pantryText("Product photo")) : row.name)
-                                    if !row.included { Text(pantryText("Skipped")).font(.caption) }
-                                    else if let total = row.total { Text(total.description + " " + pantryUnit(row.unit)).font(.caption) }
-                                    else { Text(pantryText("Choose a package size and count.")).font(.caption) }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(Rectangle())
-                            }.buttonStyle(.plain).accessibilityIdentifier("productBatch.row." + String(row.ordinal))
+                            productRow(row)
+                                .accessibilityIdentifier("productBatch.row." + String(row.ordinal))
                         }
                     }
                     Section(pantryText("Confirm receipt")) {
@@ -150,6 +139,30 @@ struct PantryProductBatchView: View {
                 let scope = catalogScope.id
                 Task { await PantryProductCatalog.shared.close(scope: scope) }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func productRow(_ row: PantryProductBatch.Candidate) -> some View {
+        let label = VStack(alignment: .leading) {
+            Text(row.name.isEmpty ? (row.barcode?.value ?? pantryText("Product photo")) : row.name)
+            if !row.included { Text(pantryText("Skipped")).font(.caption) }
+            else if let total = row.total { Text(total.description + " " + pantryUnit(row.unit)).font(.caption) }
+            else { Text(pantryText("Choose a package size and count.")).font(.caption) }
+        }
+        if #available(iOS 18, *) {
+            NavigationLink {
+                PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
+                    deliveries: model.productDeliveries, scope: catalogScope.id, authorized: { authorized })
+            } label: { label }
+        } else {
+            // A link attached to this mutable form row can stall the iOS 17 navigation stack.
+            Button {
+                focus = nil
+                editingProduct = row
+            } label: {
+                label.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+            }.buttonStyle(.plain)
         }
     }
 

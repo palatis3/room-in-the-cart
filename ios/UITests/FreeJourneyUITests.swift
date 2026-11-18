@@ -3817,7 +3817,7 @@ import XCTest
     }
 
     private func closeReviewedProduct() {
-        let close = app.navigationBars["Review product"].buttons["productBatch.finishEditing"]
+        let close = app.navigationBars["Review product"].buttons.firstMatch
         // Let the native stock menu dismiss before interacting with the sheet's toolbar.
         guard close.wait(for: \.isHittable, toEqual: true, timeout: 5) else {
             XCTFail("The reviewed product must be closable")
