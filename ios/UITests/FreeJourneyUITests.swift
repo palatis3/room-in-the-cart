@@ -739,6 +739,15 @@ import XCTest
         XCTAssertTrue(source.label.contains("v128 · #142"))
         XCTAssertTrue(element("pantry.foodKeeper.range").exists)
         capture(spanish ? "Intervalo de calidad guardado en el lote" : "Saved USDA range on the ordinary lot after relaunch")
+        tapVisibleFormRow(app.buttons["pantry.foodKeeper"])
+        let chooseAnother = app.buttons["foodKeeper.chooseAnother"]
+        XCTAssertTrue(chooseAnother.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["foodKeeper.review.refrigerate_after_opening"].exists)
+        tap(chooseAnother)
+        let guideBar = app.navigationBars[spanish ? "Guía de conservación de alimentos" : "Food storage guide"]
+        XCTAssertTrue(guideBar.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["foodKeeper.product.142"].waitForExistence(timeout: 8))
+        tap(guideBar.buttons.firstMatch)
         tap(app.buttons["pantry.move.freezer"])
         let commit = app.buttons["pantry.confirm"]
         tap(commit)

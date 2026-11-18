@@ -68,6 +68,10 @@ struct PantryDigestDocument: Codable, Equatable {
     var foodKeeper: [PantryFoodKeeperSelection]?
     var selections: [PantryFoodKeeperSelection] { foodKeeper ?? [] }
 
+    func currentGuideRange(for lot: InventoryLot) -> FoodKeeperReviewedRange? {
+        selections.first(where: { $0.applies(to: lot) })?.range
+    }
+
     init(_ scope: PantryDigestScope) { version = 1; origin = scope.origin; owner = scope.owner }
 
     func validate() throws {

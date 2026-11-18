@@ -56,6 +56,7 @@ struct PantryLotFoodKeeperSection: View {
 }
 
 struct PantryLotStorageReference: View {
+    @ObservedObject private var store = PantryDigestStore.shared
     @ObservedObject var model: PantryModel
     let lotID: UUID
     let accessAllowed: Bool
@@ -64,8 +65,10 @@ struct PantryLotStorageReference: View {
     var body: some View {
         if accessAllowed, model.phase == .ready, let lot = model.snapshot?.lots.first(where: { $0.id == lotID }) {
             let day = lot.openedAt.flatMap { try? MealDay(date: $0, timeZoneIdentifier: TimeZone.current.identifier) }
+            let match = matchAction(for: lot)
+            let range = match.flatMap { try? store.document($0.scope).currentGuideRange(for: lot) }
             FoodKeeperLookupView(context: .init(foodName: lot.name, storage: lot.location.foodKeeperStorage,
-                                                 openedDay: day, matchLot: matchAction(for: lot), saveRange: saveAction(for: lot)))
+                                                 openedDay: day, reviewedRange: range, matchLot: match, saveRange: saveAction(for: lot)))
                 .id(lot.revision)
         } else {
             Text(pantryText("Unlock the authorized private workspace to view pantry food."))

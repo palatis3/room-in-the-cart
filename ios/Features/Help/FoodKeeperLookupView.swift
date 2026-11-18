@@ -1,14 +1,23 @@
 import CoreDomain
 import SwiftUI
 
-/// Pantry callers supply the current storage location and an explicitly recorded opening day.
+/// Pantry callers supply current storage and previously reviewed evidence for this batch.
 /// A recount, receipt timestamp or move between locations is never an opening date.
 struct FoodKeeperLookupContext {
     let foodName: String
     let storage: FoodKeeperStorage
     let openedDay: MealDay?
+    var reviewedRange: FoodKeeperReviewedRange? = nil
     var matchLot: FoodKeeperMatchLot? = nil
     var saveRange: ((FoodKeeperReviewedRange) async throws -> Void)? = nil
+
+    func recordedStart(productID: Int, condition: FoodKeeperCondition) -> MealDay? {
+        if let reviewedRange, reviewedRange.productID == productID,
+           reviewedRange.storage == storage, reviewedRange.condition == condition {
+            return reviewedRange.start
+        }
+        return condition.startingEvent == .opened ? openedDay : nil
+    }
 }
 
 struct FoodKeeperLookupView: View {
@@ -28,15 +37,29 @@ struct FoodKeeperLookupView: View {
     @State private var result: SearchResult?
     @State private var failed = false
     @State private var search = ""
+    @State private var savedProductID: Int?
 
     init(context: FoodKeeperLookupContext? = nil) {
         self.context = context
+        // A range saved while browsing should leave the current navigation stack in place.
+        _savedProductID = State(initialValue: context?.reviewedRange?.productID)
         _search = State(initialValue: context?.foodName ?? "")
     }
 
     private var language: FoodKeeperLanguage { locale.language.languageCode?.identifier == "es" ? .spanish : .english }
 
     var body: some View {
+        if let savedProductID, context?.reviewedRange?.productID == savedProductID,
+           let reference = PantryFoodKeeperSelection.reference,
+           let product = reference.products.first(where: { $0.id == savedProductID }) {
+            FoodKeeperDetail(reference: reference, product: product, language: language, context: context,
+                             chooseAnother: { self.savedProductID = nil })
+        } else {
+            searchResults
+        }
+    }
+
+    private var searchResults: some View {
         let query = Query(text: search, language: language)
         List {
             if let result, result.query == query {
@@ -107,9 +130,12 @@ struct FoodKeeperDetail: View {
     let product: FoodKeeperProduct
     let language: FoodKeeperLanguage
     let context: FoodKeeperLookupContext?
+    let chooseAnother: (() -> Void)?
     @State private var storage: FoodKeeperStorage
 
-    init(reference: FoodKeeperReference, product: FoodKeeperProduct, language: FoodKeeperLanguage, context: FoodKeeperLookupContext?) {
+    init(reference: FoodKeeperReference, product: FoodKeeperProduct, language: FoodKeeperLanguage, context: FoodKeeperLookupContext?,
+         chooseAnother: (() -> Void)? = nil) {
+        self.chooseAnother = chooseAnother
         self.reference = reference
         self.product = product; self.language = language; self.context = context
         _storage = State(initialValue: context?.storage ?? .refrigerator)
@@ -118,6 +144,10 @@ struct FoodKeeperDetail: View {
     var body: some View {
         List {
             Section {
+                if let chooseAnother {
+                    Button(helpText("Choose a different guide entry"), action: chooseAnother)
+                        .accessibilityIdentifier("foodKeeper.chooseAnother")
+                }
                 Text(verbatim: product.categoryName(language))
                 if context != nil { LabeledContent(helpText("Batch storage"), value: storage.title) }
                 else {
@@ -134,7 +164,7 @@ struct FoodKeeperDetail: View {
                         if product.supportsDateWindow(for: condition) {
                             NavigationLink(helpText("Review a date range")) {
                                 FoodKeeperDates(reference: reference, product: product, language: language, condition: condition,
-                                    recordedDay: condition.startingEvent == .opened ? context?.openedDay : nil, save: context?.saveRange)
+                                    recordedDay: context?.recordedStart(productID: product.id, condition: condition), save: context?.saveRange)
                             }.accessibilityIdentifier("foodKeeper.review." + condition.rawValue)
                         }
                     } else { Text(helpText("No matching guidance for this storage condition.")) }
