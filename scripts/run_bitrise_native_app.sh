@@ -7,7 +7,7 @@ case "$lane" in
     large-tonight) device_type=com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro-Max; expected=2;;
     *) fail 'Unknown native lane';;
 esac
-case "${BITRISE_GIT_BRANCH:-}" in main|codex/dinner-shopping-integration) ;; *) fail 'Unreviewed branch';; esac
+case "${BITRISE_GIT_BRANCH:-}" in main|codex/dinner-shopping-integration|codex/first-version-followup) ;; *) fail 'Unreviewed branch';; esac
 [[ -z ${BITRISE_PULL_REQUEST:-} && -z ${BITRISEIO_PULL_REQUEST_REPOSITORY_URL:-} ]] || fail 'No PR builds'
 [[ ${BITRISE_GIT_COMMIT:-} =~ ^[0-9a-f]{40}$ ]] || fail 'Require exact event commit'
 [[ $(git rev-parse HEAD) == "$BITRISE_GIT_COMMIT" ]] || fail 'Source commit differs from event'

@@ -10,6 +10,7 @@ pipelines:
       push:
         - branch: main
         - branch: codex/dinner-shopping-integration
+        - branch: codex/first-version-followup
     workflows:
       compact-cooking: {}
       large-tonight: {}
@@ -34,7 +35,7 @@ step_bundles:
             - content: |-
                 #!/bin/bash
                 set -euo pipefail
-                case "${BITRISE_GIT_BRANCH:-}" in main|codex/dinner-shopping-integration) ;; *) exit 2;; esac
+                case "${BITRISE_GIT_BRANCH:-}" in main|codex/dinner-shopping-integration|codex/first-version-followup) ;; *) exit 2;; esac
                 test -z "${BITRISE_PULL_REQUEST:-}"
                 test -z "${BITRISEIO_PULL_REQUEST_REPOSITORY_URL:-}"
                 [[ "${BITRISE_GIT_COMMIT:-}" =~ ^[0-9a-f]{40}$ ]]

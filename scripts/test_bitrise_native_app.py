@@ -14,13 +14,14 @@ CONFIG = yaml.safe_load((ROOT / 'bitrise.yml').read_text())
 
 
 class BitriseNativeAppTests(unittest.TestCase):
-    def test_one_pipeline_two_push_branches_and_no_duplicate_workflow_triggers(self):
+    def test_one_pipeline_named_push_branches_and_no_duplicate_workflow_triggers(self):
         self.assertEqual(CONFIG['format_version'], '25')
         self.assertNotIn('trigger_map', CONFIG)
         self.assertEqual(set(CONFIG['pipelines']), {'app-pair'})
         pipeline = CONFIG['pipelines']['app-pair']
         self.assertEqual(pipeline['triggers'], {'push': [
-            {'branch': 'main'}, {'branch': 'codex/dinner-shopping-integration'}]})
+            {'branch': 'main'}, {'branch': 'codex/dinner-shopping-integration'},
+            {'branch': 'codex/first-version-followup'}]})
         self.assertEqual(pipeline['workflows'], {'compact-cooking': {}, 'large-tonight': {}})
         self.assertEqual(set(CONFIG['workflows']), set(pipeline['workflows']))
         for lane, workflow in CONFIG['workflows'].items():
@@ -105,7 +106,7 @@ elif name=='bash':
             executable = self.bin / name; executable.write_text(stub); executable.chmod(0o755)
         self.env = {**os.environ, 'PATH': str(self.bin) + ':' + os.environ['PATH'],
                     'CALLS': str(self.path / 'calls.jsonl'), 'MOCK_HEAD': SHA,
-                    'BITRISE_GIT_COMMIT': SHA, 'BITRISE_GIT_BRANCH': 'codex/dinner-shopping-integration',
+                    'BITRISE_GIT_COMMIT': SHA, 'BITRISE_GIT_BRANCH': 'codex/first-version-followup',
                     'BITRISE_BUILD_SLUG': 'test-build', 'BITRISE_PULL_REQUEST': '',
                     'BITRISEIO_PULL_REQUEST_REPOSITORY_URL': ''}
 

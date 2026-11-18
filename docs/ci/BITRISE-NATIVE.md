@@ -1,8 +1,7 @@
 # Native Bitrise app pair
 
 `bitrise.yml` adds one supplemental native Bitrise pipeline, `app-pair`, on
-pushes to `main` and `codex/dinner-shopping-integration`. It has no pull-request,
-tag, wildcard branch or schedule trigger. Disable any old dashboard trigger
+pushes to `main`, `codex/dinner-shopping-integration`, and `codex/first-version-followup`. Disable any old dashboard trigger
 mapping so it cannot duplicate these repository-defined triggers. Both parallel
 workflows use the same event `BITRISE_GIT_COMMIT`, anonymously fetch that exact
 object from the canonical public repository, and refuse a different checkout.
