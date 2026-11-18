@@ -192,9 +192,17 @@ import XCTest
     }
 
     func testProductBatchManualBarcodeRepeatNeedsTwoPackagesAndConfirmedFoodSurvivesRelaunch() {
-        launch(reset: true)
+        launch(reset: true, privateRecovery: true)
         tap(app.buttons["shop.myPantry"])
         tap(app.buttons["pantry.setup.apply"])
+        let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
+        let wraps = lots.matching(NSPredicate(format: "label BEGINSWITH %@", "Wraps"))
+        reveal(wraps.firstMatch)
+        XCTAssertEqual(wraps.count, 1)
+        let originalWrapsID = wraps.firstMatch.identifier
+        let originalWrapsLabel = wraps.firstMatch.label
+        XCTAssertTrue(originalWrapsLabel.components(separatedBy: "Batch ").first?.contains("6 units") == true,
+                      originalWrapsLabel)
         tap(app.buttons["pantry.productBatch"])
         let code = app.textFields["productBatch.code"]
         tap(code); code.typeText("LOCAL-OATS")
@@ -209,6 +217,22 @@ import XCTest
         fill("Rolled oats", into: "productBatch.productName", requireDone: true, control: app.textFields["productBatch.productName"])
         fill("1", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
         fill("2", into: "productBatch.packCount", requireDone: true, control: app.textFields["productBatch.packCount"])
+        tap(app.buttons["productBatch.stockAction"])
+        tap(app.buttons["Add a separate physical batch"])
+        tap(app.navigationBars["Review product"].buttons.firstMatch)
+
+        let label = app.textFields["productBatch.label"]
+        tap(label); label.typeText("Wraps")
+        tap(app.buttons["productBatch.add"])
+        tap(app.buttons["productBatch.row.1"])
+        fill("8", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
+        fill("1", into: "productBatch.packCount", requireDone: true, control: app.textFields["productBatch.packCount"])
+        fill("6", into: "productBatch.usable", requireDone: true, control: app.textFields["productBatch.usable"])
+        tap(app.buttons["productBatch.stockAction"])
+        let deliveredWraps = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Link delivery: Wraps")).firstMatch
+        XCTAssertTrue(deliveredWraps.waitForExistence(timeout: 5))
+        XCTAssertTrue(deliveredWraps.label.contains("8 units"), deliveredWraps.label)
+        tap(deliveredWraps)
         tap(app.navigationBars["Review product"].buttons.firstMatch)
         let store = app.textFields["productBatch.merchant"]
         tap(store); store.typeText("Market")
@@ -216,6 +240,10 @@ import XCTest
         enableSwitch("productBatch.received")
         tap(app.buttons["productBatch.review"])
         XCTAssertTrue(app.buttons["productBatch.commit"].waitForExistence(timeout: 8))
+        let linkReview = app.descendants(matching: .any).matching(NSPredicate(format:
+            "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@",
+            "Link evidence to the delivered batch", "Received 8 units", "Usable 6 units")).firstMatch
+        reveal(linkReview)
         tap(app.buttons["Edit batch"])
         XCTAssertTrue(app.buttons["productBatch.row.0"].exists)
         tap(app.buttons["productBatch.review"])
@@ -224,10 +252,16 @@ import XCTest
         app.terminate()
         launch(reset: false)
         tap(app.buttons["shop.myPantry"])
-        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Rolled oats")).firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 8))
-        XCTAssertTrue(row.label.contains("2"))
-        capture("Two deliberately received packages on one pantry batch")
+        let oats = lots.matching(NSPredicate(format: "label BEGINSWITH %@", "Rolled oats"))
+        reveal(oats.firstMatch)
+        XCTAssertEqual(oats.count, 1)
+        XCTAssertTrue(oats.firstMatch.label.components(separatedBy: "Batch ").first?.contains("2 units") == true,
+                      oats.firstMatch.label)
+        reveal(wraps.firstMatch)
+        XCTAssertEqual(wraps.count, 1)
+        XCTAssertEqual(wraps.firstMatch.identifier, originalWrapsID)
+        XCTAssertEqual(wraps.firstMatch.label, originalWrapsLabel)
+        capture("Two new oats packages and the original six usable wraps after relaunch")
     }
 
 #if NATIVE_PRODUCT_BATCH_PHOTOS
