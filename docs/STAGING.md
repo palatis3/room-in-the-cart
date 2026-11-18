@@ -6,12 +6,12 @@ Room in the Cart has its own Supabase organization and project. Its Vercel team 
 - Project: `uwjxrotnocxxomqdetzk` (Room in the Cart Staging), US West Oregon.
 - Auth URL: `https://uwjxrotnocxxomqdetzk.supabase.co`.
 - PostgreSQL transaction pooler: `aws-1-us-west-2.pooler.supabase.com:6543/postgres`, verified in the project dashboard.
-- Migrations 001–041 are live. All 41 hosted migration checksums matched the reviewed source. The upgrade preserved the 128 existing non-registry tables and began with zero device grants. [Deployment evidence](evidence/b11/staging-041-preparation-20261107/deployed.json)
-- Runtime role `ritc_runtime` inherits `ritc_app`, is not a table owner, superuser or RLS bypass role. It has no tenant scope by default.
+- Staging runs migrations 001–058. The 049→058 upgrade preserved the original data and added 17 tables with forced row-level security. The service and its scheduled worker use separate staging logins. The previous deployment’s logins are disabled. [Deployment evidence](evidence/b11/staging-058-20261118/deployment.json)
+- Once the new pantry records exist, the 049 service can read lots outside their intended scope. Recover with an 058-compatible service or reconcile subsequent writes and erasures as part of a coordinated restore.
 
 The public client configuration in `config/staging.json` contains a publishable key, never the database password or a service-role key. Debug and Staging builds receive this configuration; Release requires its own production configuration.
 
-The runtime password is stored only in the ignored, owner-readable `.tools/staging-runtime.json` on this development Mac. It must be provisioned as a sensitive deployment variable, never copied to the app, browser bundle, repository, logs, or a diagnostic export. The migration owner is not an application credential.
+The current staging credentials are held in the Mac login Keychain and provisioned as sensitive deployment variables. Application builds and browser assets use the public client configuration. Database migrations use a separate identity.
 
 Remote PostgreSQL connections verify the server certificate and hostname. `config/supabase-ca.crt` is the public CA downloaded from the project's Database Settings certificate link. SHA-256: `807025ad50d4ed219d2c9c7d299c004f824eb00cf7f65afef607d07b72e6cafa`. Supply its PEM as `DATABASE_CA_PEM`; do not disable certificate verification. The shared runtime strips connection-string SSL overrides.
 
