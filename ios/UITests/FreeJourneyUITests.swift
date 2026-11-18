@@ -54,6 +54,51 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
+    func testPrivateRecordsReopenManualPaidAndShelfPricesWithoutCreatingFood() throws {
+        launch(reset: true)
+        func openHistory() {
+            tap(app.tabBars.buttons["Records"])
+            tap(app.buttons["records.privatePrices"])
+        }
+        openHistory()
+        tap(app.buttons["pantry.setup.apply"])
+        func record(_ name: String, shelf: Bool, amount: String) {
+            tap(app.buttons["prices.add"])
+            if shelf {
+                tap(app.buttons["prices.source"])
+                tap(app.buttons["Shelf observation"])
+            }
+            for (field, text) in [("prices.name", name), ("prices.variant", "Unsalted"),
+                                  ("prices.store", "South Market"), ("prices.total", amount), ("prices.quantity", "2")] {
+                let input = app.textFields[field]
+                tap(input); input.typeText(text)
+                if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+            }
+            tap(app.buttons["prices.review"])
+            tap(app.buttons["prices.confirm"])
+            XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch.waitForExistence(timeout: 8))
+        }
+        record("Paid cashews", shelf: false, amount: "5.60")
+        record("Shelf cashews", shelf: true, amount: "5.00")
+        app.terminate()
+        launch(reset: false)
+        openHistory()
+        let paid = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Paid cashews")).firstMatch
+        let shelf = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Shelf cashews")).firstMatch
+        XCTAssertTrue(paid.waitForExistence(timeout: 8))
+        XCTAssertTrue(shelf.exists)
+        let filter = app.switches["prices.onlyPaid"]
+        reveal(filter)
+        filter.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertTrue(shelf.waitForNonExistence(timeout: 5))
+        tap(paid)
+        XCTAssertTrue(app.staticTexts["Manually confirmed paid price"].waitForExistence(timeout: 5))
+        tap(app.tabBars.buttons["Shop"])
+        tap(app.buttons["shop.myPantry"])
+        XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 8))
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'pantry.lot.'")).count, 0)
+    }
+
     func testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock() throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

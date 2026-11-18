@@ -84,6 +84,69 @@ import RecordArchive
         return draft
     }
 
+    func testReviewedPrivatePriceCorrectionsRestoreAndErasureFencesEarlierExports() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
+        f.cleanup.track(repository)
+        let id = UUID()
+        let unit = Quantity(amount: try Rational(500), unit: .gram, originalLiteral: "500 g")
+        func manual(_ revision: Int64, _ minor: Int64) -> PrivatePriceEvidence {
+            .init(id: id, revision: revision, source: .paidManual, name: "Rice", variant: "Brown", store: "East market",
+                branch: "South", date: now, currencyCode: "USD", amountMinor: minor, pack: .init(count: 2, perPackage: unit),
+                sourceText: "Reviewed at the till")
+        }
+        let original = manual(1, 500), corrected = manual(2, 460)
+        try await repository.savePrice(original, expected: f.store.inventoryState(), at: now)
+        try await repository.savePrice(corrected, expected: f.store.inventoryState(), at: now)
+        let credit = PrivatePriceEvidence(id: UUID(), source: .adjustment(target: id, revision: 2, kind: .refund),
+            name: "Rice", store: "East market", date: now, currencyCode: "USD", amountMinor: 40, pack: nil, sourceText: "Damaged bag")
+        try await repository.savePrice(credit, expected: f.store.inventoryState(), at: now)
+        let page = try await repository.pricePage()
+        XCTAssertEqual(Set(page.standalone.map(\.id)), [id, credit.id])
+        let adjustments = try await repository.priceAdjustments(for: id, expected: page.state)
+        XCTAssertEqual(try corrected.unitPrice(in: .kilogram, adjustments: adjustments), try Rational(420))
+        let lots = try await f.store.inventoryRecords(kind: .lot)
+        let ledger = try await f.ledger.load()
+        XCTAssertEqual(lots.count, 1)
+        XCTAssertNil(ledger)
+        let handle = try await f.capture.captureHandle(worker: f.worker, at: now)
+        let key = Data(repeating: 0x41, count: 32).base64EncodedString()
+        let bundle = try await f.worker.encryptedExport(handle, key: key)
+        let reader = try PantryArchiveWorker(root: f.directory.appendingPathComponent("price-reader"))
+        let imported = try await reader.prepareImport(url: bundle.url, key: key)
+        let target = try ComparisonStore(url: f.directory.appendingPathComponent("other-price.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(target)
+        let restored = try await reader.prepareRestoration(source: imported.handle, context: .init(version: 1,
+            copyID: UUID(), reference: imported.handle.reference, workspaceID: target.workspaceID,
+            restorationID: UUID(), preparedAt: now), sourceToken: target.inventorySourceToken())
+        _ = try await target.beginInventoryMigration(restored.plan)
+        for index in 0..<restored.plan.expectedChunkCount {
+            let chunk = try await reader.restorationChunk(restored, index: index)
+            _ = try await target.stageInventoryMigration(id: restored.plan.migrationID, chunk: chunk)
+        }
+        _ = try await target.finishInventoryMigration(id: restored.plan.migrationID, at: now)
+        let priceHistory = try await target.priceRows(id: id, latestOnly: false)
+        XCTAssertEqual(try priceHistory.map(PantryPriceCodec.evidence), [original, corrected])
+        let credits = try await target.priceRows(adjustmentsFor: id)
+        XCTAssertEqual(try credits.map(PantryPriceCodec.evidence), [credit])
+        let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("price-registry.json"))
+        let coordinator = eraser(f, registry, cleanup: { _, _ in })
+        let reviewed = try await coordinator.prepare(.price(id, revision: 2))
+        XCTAssertTrue(reviewed.canCommit)
+        XCTAssertEqual(reviewed.priceRevisionCount, 3)
+        _ = try await coordinator.commit(reviewed)
+        let after = try await repository.pricePage()
+        XCTAssertTrue(after.standalone.isEmpty)
+        do {
+            try await PantryArchivePrivacyValidator.validate(imported.handle, worker: reader, inventory: f.store,
+                ledger: f.ledger, gate: f.gate, authorize: { true })
+            XCTFail("Reimport must honor a price and its credits erased at the original store")
+        } catch PantryArchivePrivacyValidator.Failure.retired {}
+        try await reader.discardRestoration(restored)
+        try await reader.discardImport(imported, registry: registry)
+        try await f.worker.discardExport(bundle)
+    }
+
     func testReceiptPartialReviewRetryPriceCorrectionRecoveryAndErasure() async throws {
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })

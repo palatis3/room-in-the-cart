@@ -15,6 +15,7 @@ import Foundation
             switch selection {
             case .lot(let id, _): return "lot." + id.uuidString
             case .pickup(let id, _, _): return "pickup." + id.uuidString
+            case .price(let id, _): return "price." + id.uuidString
             case .wholeOrigin: return "whole"
             }
         }
@@ -30,6 +31,7 @@ import Foundation
         let selection: Selection
         var aliasCount: Int = 0
         var receiptRevisionCount: Int = 0
+        var priceRevisionCount: Int = 0
         let foodNames: [String]
         let pickups: [Pickup]
         let collateralPickups: [Pickup]
@@ -81,7 +83,7 @@ import Foundation
                       value.collateralPickupIDs.count == value.collateralPickupTitles.count else {
                     throw PantryErasureCoordinator.Failure.invalid
                 }
-                return Review(id: value.id, selection: value.selection, aliasCount: value.aliasCount, receiptRevisionCount: value.receiptRevisionCount, foodNames: value.foodNames,
+                return Review(id: value.id, selection: value.selection, aliasCount: value.aliasCount, receiptRevisionCount: value.receiptRevisionCount, priceRevisionCount: value.priceRevisionCount, foodNames: value.foodNames,
                     pickups: zip(value.pickupIDs, value.pickupTitles).map(Pickup.init),
                     collateralPickups: zip(value.collateralPickupIDs, value.collateralPickupTitles).map(Pickup.init),
                     retainedReceiptFoodNames: value.retainedReceiptFoodNames, affectedReservationNames: value.affectedReservationNames,

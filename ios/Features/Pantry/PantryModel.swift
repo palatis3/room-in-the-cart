@@ -85,6 +85,28 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         await didSave?()
     }
 
+    func priceHistory(after page: PantryPricePage? = nil) async throws -> PantryPricePage {
+        guard phase != .accessDenied else { throw PantryReceiptError.stale }
+        let token = generation
+        let next = try await repository.pricePage(after: page)
+        guard token == generation, phase != .accessDenied else { throw PantryReceiptError.stale }
+        return next
+    }
+
+    func writePrice(_ evidence: PrivatePriceEvidence, expected: InventoryState) async throws {
+        try await changeReceipt(expected) {
+            try await repository.savePrice(evidence, expected: expected, at: clock())
+        }
+    }
+
+    func priceAdjustments(for id: UUID, expected: InventoryState) async throws -> [PrivatePriceEvidence] {
+        let token = generation
+        guard canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        let adjustments = try await repository.priceAdjustments(for: id, expected: expected)
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+        return adjustments
+    }
+
     func receiptHistory(after: UUID? = nil) async throws -> [ReceiptAcquisition] {
         guard canEdit else { throw PantryReceiptError.stale }
         let token = generation
