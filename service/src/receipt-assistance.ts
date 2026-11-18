@@ -44,7 +44,7 @@ export async function requireReceiptAdult(repository: HouseholdRepository, ctx: 
   repository.requireShopper(ctx, await repository.shop(ctx, ctx.selectedShopId));
 }
 
-export interface AssistanceBudget { dailyAccountRequests:number; dailyMicros:number; maxRequestMicros:number; maxCropMicros?:number }
+export interface AssistanceBudget { dailyAccountRequests:number; dailyMicros:number; maxRequestMicros:number; maxCropMicros?:number; maxLanguageMicros?:number }
 
 // The existing account-rate table scopes each opaque key with RLS and purges expired windows.
 // Reserve the full operator-priced worst-case request in one transaction, before any provider call.
@@ -87,22 +87,33 @@ export class ReceiptAssistance {
         .every(n => Number.isSafeInteger(n) && n >= 1 && n <= 2_147_483_647) || dailyMicros < maxRequestMicros) return;
     const crop = Number(env.RECEIPT_ASSISTANCE_MAX_CROP_USD_MICROS);
     const maxCropMicros = Number.isSafeInteger(crop) && crop > 0 && crop <= dailyMicros ? crop : undefined;
-    return new ReceiptAssistance({dailyAccountRequests,dailyMicros,maxRequestMicros,...(maxCropMicros ? {maxCropMicros} : {})}, model, key);
+    const language = Number(env.LANGUAGE_ASSISTANCE_MAX_REQUEST_USD_MICROS);
+    const maxLanguageMicros = Number.isSafeInteger(language) && language > 0 && language <= dailyMicros ? language : undefined;
+    return new ReceiptAssistance({dailyAccountRequests,dailyMicros,maxRequestMicros,...(maxLanguageMicros ? {maxLanguageMicros} : {}),...(maxCropMicros ? {maxCropMicros} : {})}, model, key);
   }
 
   private async structured(input: Input, cancellation: AbortSignal, instructions: string, name: string, outputSchema: object): Promise<unknown> {
+    if (input.crop && !this.budget.maxCropMicros) throw failure();
+    const reference = JSON.stringify({page:input.page,line:input.line,text:input.text});
+    const content = input.crop ? [{role:'user',content:[{type:'input_text',text:reference},
+      {type:'input_image',image_url:receiptCropURL(input.crop),detail:'high'}]}] : reference;
+    return this.request(content,cancellation,instructions,name,outputSchema,384);
+  }
+
+  async structuredText(content:string, cancellation:AbortSignal, instructions:string, name:string, outputSchema:object) {
+    if (!this.budget.maxLanguageMicros || Buffer.byteLength(content)>16_384) throw failure();
+    return this.request(content,cancellation,instructions,name,outputSchema,1536);
+  }
+
+  private async request(content:unknown, cancellation:AbortSignal, instructions:string, name:string, outputSchema:object, tokens:number) {
     const signal = AbortSignal.any([cancellation, AbortSignal.timeout(10_000)]);
     try {
       signal.throwIfAborted();
-      if (input.crop && !this.budget.maxCropMicros) throw failure();
-      const reference = JSON.stringify({page:input.page,line:input.line,text:input.text});
-      const content = input.crop ? [{role:'user',content:[{type:'input_text',text:reference},
-        {type:'input_image',image_url:receiptCropURL(input.crop),detail:'high'}]}] : reference;
       const response = await this.transport('https://api.openai.com/v1/responses', {
         method:'POST', redirect:'error', signal,
         headers:{Authorization:'Bearer '+this.key,'Content-Type':'application/json'},
         body:JSON.stringify({
-          model:this.model, store:false, tools:[], max_output_tokens:384,
+          model:this.model, store:false, tools:[], max_output_tokens:tokens,
           instructions,
           input: content,
           text:{format:{type:'json_schema',name,strict:true,schema:outputSchema}}
