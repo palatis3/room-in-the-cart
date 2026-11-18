@@ -3,18 +3,33 @@ import CoreDomain
 
 private struct PreferenceTermsField: View {
     let title: String
+    let identifier: String?
     @Binding var terms: [String]
     @State private var text: String
     @FocusState.Binding var focus: String?
-    init(_ title: String, terms: Binding<[String]>, focus: FocusState<String?>.Binding) {
+    init(_ title: String, terms: Binding<[String]>, focus: FocusState<String?>.Binding, identifier: String? = nil) {
         self.title = title
+        self.identifier = identifier
         _terms = terms
         _focus = focus
         _text = State(initialValue: terms.wrappedValue.joined(separator: "\n"))
     }
     var body: some View {
-        workingTextField(title, text: $text, axis: .vertical)
-            .focused($focus, equals: title)
+        Group {
+            if let identifier {
+                VStack(alignment: .leading) {
+                    Text(title).font(.caption)
+                    TextEditor(text: $text)
+                        .frame(minHeight: 58)
+                        .focused($focus, equals: title)
+                        .accessibilityLabel(title)
+                        .accessibilityIdentifier(identifier)
+                }
+            } else {
+                workingTextField(title, text: $text, axis: .vertical)
+                    .focused($focus, equals: title)
+            }
+        }
             .onChange(of: text) { _, next in terms = DinnerEntry.list(next) }
             .onChange(of: terms) { _, next in
                 if DinnerEntry.list(text) != next { text = next.joined(separator: "\n") }
@@ -39,10 +54,8 @@ private struct ReviewedTermsField: View {
     var body: some View {
         Toggle(title, isOn: Binding(get: { value != nil }, set: { value = $0 ? [] : nil }))
         if value != nil {
-            let input = PreferenceTermsField(field, terms: Binding(get: { value ?? [] }, set: { value = $0 }), focus: focus ?? $localFocus)
-            if let identifier {
-                input.accessibilityLabel(field).accessibilityIdentifier(identifier)
-            } else { input }
+            PreferenceTermsField(field, terms: Binding(get: { value ?? [] }, set: { value = $0 }),
+                                 focus: focus ?? $localFocus, identifier: identifier)
         }
     }
 }

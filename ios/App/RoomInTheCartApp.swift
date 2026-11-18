@@ -312,6 +312,7 @@ struct ShopView: View {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var navigation: NavigationRestorationModel
     @State private var showingFirstList = false
+    @State private var showingPantry = false
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
         VStack(spacing: 0) {
@@ -325,6 +326,16 @@ struct ShopView: View {
                 .accessibilityHidden(true)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
+            .sheet(isPresented: $showingPantry) {
+                NavigationStack {
+                    PantrySetupView(pickup: pickup, ledger: ledger)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(ht("Close")) { showingPantry = false }
+                            }
+                        }
+                }
+            }
             .sheet(isPresented: $showingFirstList) {
                 NavigationStack {
                     FirstListEntry(model: ledger) { id in
@@ -355,6 +366,10 @@ struct ShopView: View {
             Label(tr("Compare packs"), systemImage: "arrow.left.arrow.right")
                 .frame(minHeight: 44)
         }.accessibilityIdentifier("newComparison")
+    }
+
+    private var pantryLabel: some View {
+        Label(pantryText("My Pantry"), systemImage: "cabinet").frame(minHeight: 44)
     }
 
     private var shopContent: some View {
@@ -401,12 +416,13 @@ struct ShopView: View {
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
                     if pickup.pantryRouteAvailable {
-                        NavigationLink {
-                            PantrySetupView(pickup: pickup, ledger: ledger)
-                        } label: {
-                            Label(pantryText("My Pantry"), systemImage: "cabinet")
-                                .frame(minHeight: 44)
-                        }.accessibilityIdentifier("shop.myPantry")
+                        if household.projection?.canBrowseHouseholdTonight == true {
+                            Button { showingPantry = true } label: { pantryLabel }
+                                .accessibilityIdentifier("shop.myPantry")
+                        } else {
+                            NavigationLink { PantrySetupView(pickup: pickup, ledger: ledger) } label: { pantryLabel }
+                                .accessibilityIdentifier("shop.myPantry")
+                        }
                     } else if pickup.pantryRestartAvailable {
                         PantryRestartButton(pickup: pickup)
                     }

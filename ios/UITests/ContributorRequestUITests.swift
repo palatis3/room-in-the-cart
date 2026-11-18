@@ -176,7 +176,10 @@ import XCTest
         XCTAssertFalse(app.buttons["householdTonight.label.apply"].isEnabled)
         enableSwitch("Package ingredients reviewed")
         enableSwitch("Package brands reviewed")
-        fill("North Farm", into: "householdTonight.label.brands")
+        let brandID = "householdTonight.label.brands"
+        let brandInput = app.textViews[brandID]
+        XCTAssertTrue(brandInput.waitForExistence(timeout: 5), app.debugDescription)
+        fill("North Farm", into: brandID, input: brandInput)
         tap(app.buttons["householdTonight.label.apply"])
         tap(app.buttons["householdTonight.recipe.review"])
         assertText("North Farm")
@@ -186,7 +189,7 @@ import XCTest
         tap(app.buttons["Edit household recipe"])
         tap(label)
         XCTAssertEqual(app.switches["Package ingredients reviewed"].value as? String, "1")
-        XCTAssertEqual(app.textFields["householdTonight.label.brands"].value as? String, "North Farm")
+        XCTAssertEqual(brandInput.value as? String, "North Farm")
     }
 
     func testEnrolledAdultReviewsTwoReceiptLinesAndReopensOnlyHouseholdEvidence() {
@@ -639,10 +642,10 @@ import XCTest
         }
         XCTFail("No visible switch tap point after 24 reveal attempts: \(label)")
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
+    private func fill(_ text: String, into id: String, replacing: Bool = false, input: XCUIElement? = nil) {
         // A Form can expose both its StaticText label and its input with the
         // same name. Never let a label become the typing target.
-        let field = id == "capture.editor" ? app.textViews[id] : app.textFields[id]
+        let field = input ?? (id == "capture.editor" ? app.textViews[id] : app.textFields[id])
         tap(field)
         dismissBilingualKeyboardCardIfPresent()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "The input must have a software keyboard before typing")
