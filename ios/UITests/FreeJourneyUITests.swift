@@ -3397,7 +3397,7 @@ import XCTest
                 let servings = app.textFields["Reviewed servings"]
                 reveal(servings, initiallyUpward: false)
                 XCTAssertEqual(servings.value as? String, "2 1/2")
-                fill("3", into: "Reviewed servings", replacing: true, requireDone: true, control: servings)
+                fill("3", into: "Reviewed servings", replacing: true, requireDone: true, useVisibleCenter: true, control: servings)
                 XCTAssertEqual(servings.value as? String, "3")
                 let notes = app.descendants(matching: .any).matching(NSPredicate(format: "value == %@", "Servings: 1")).firstMatch
                 reveal(notes)
