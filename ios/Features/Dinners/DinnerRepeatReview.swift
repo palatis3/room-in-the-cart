@@ -191,11 +191,10 @@ extension DinnerFeatureModel {
                   pickup.pantryIsActive == usesCanonicalStock,
                   usesCanonicalStock ? pickup.pantryReadIsCurrent : pickup.sourceHeads(for: requiredShops) == legacyHeads
             else { return false }
-            let now = clock()
             return requiredShops.allSatisfy { id in
                 guard let access = accessProvider(id), access.scope == identity.scope,
                       access.actorID == identity.actorID, plan.staples.isEmpty || id != proposal.shopID || access.hasPaidTools,
-                      (try? access.validate(shopID: id, at: now, applying: id == proposal.shopID)) != nil
+                      (try? access.validate(shopID: id, at: clock(), applying: id == proposal.shopID)) != nil
                 else { return false }
                 return true
             }
