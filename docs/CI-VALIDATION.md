@@ -438,18 +438,27 @@ vCPU budgets. Five standard GitHub macOS jobs remain available for GitHub-only
 jobs and trusted-outage/untrusted fallback. Configured limits are not proof of
 live availability or seventeen simultaneous executions.
 
-The contributor and Dinner producers use A1 slots 0 and 1. The app/model
-producer, unsigned Release producer and StoreKit use A2 slots 0, 1 and 2.
+The contributor and Dinner producers use A1 provider admission; the app/model
+and unsigned Release producers use A2 provider admission. Their concurrency
+keys contain the workflow, job, run and attempt, so another candidate's producer
+or consumer cannot block them behind an artificial slot 0/1 while a machine is
+free. The real provider pools still limit total execution to six machines each.
+StoreKit retains A2 slot 2.
 Core and fixture consumers use their existing duration estimates to assign
 whole shards longest-first to the least-loaded of twelve lanes, preserving
 selector membership and matrix order. Ties alternate pools, starting with A2
 for core and A1 for fixtures. This spreads estimated long work without claiming
 a measured speed ratio between the different CPUs. Plans are generated per
-workflow; the shared queue names enforce the combined six-per-pool cap even
-when separate matrices choose the same lane. Queue admission remains `max`
+workflow; consumer queue names remain shared when separate matrices choose the
+same lane. Producers bypass those consumer queues, but remain in the same
+six-machine provider pool. GitHub fallback remains independent provider admission
+within its existing five-job platform limit. Queue admission remains `max`
 with job cancellation disabled, and superseded workflow cancellation remains
 unchanged. Collect actual queue, execution and final-gate timings before
-claiming improvement or changing the estimates.
+claiming improvement or changing the estimates. The producer-only change follows
+observed idle A1/A2 machines while products from separate candidate runs waited
+behind shared slots 0/1; it makes no throughput claim until the next grouped run.
+It does not change selectors, test groups, cache gates or required checks.
 
 Both pools retain gated compilation caching on the four build producers.
 The source migration does not enable provider settings or establish a cache
