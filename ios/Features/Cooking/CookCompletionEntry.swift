@@ -136,6 +136,12 @@ private struct CookCompletionForm: View {
     }
 }
 
+func cookBatchLabel(_ lot: InventoryLot) -> String {
+    let location = pantryLocationName(lot.location)
+    let identifier = lot.id.uuidString.suffix(6)
+    return "\(lot.name) · \(location) · \(identifier)"
+}
+
 private struct CookCompletionPartView: View {
     @ObservedObject var model: CookCompletionEditorModel
     let ingredientID: UUID
@@ -144,46 +150,58 @@ private struct CookCompletionPartView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Divider()
-            Picker(cookCompletionText("How was this part recorded?"), selection: $part.use) {
-                Text(cookCompletionText("Choose a record type")).tag(CookCompletionEditorModel.PartUse.undecided)
-                Text(cookCompletionText("Known amount from a pantry batch")).tag(CookCompletionEditorModel.PartUse.measured)
-                Text(cookCompletionText("Unmeasured amount from a pantry batch")).tag(CookCompletionEditorModel.PartUse.unmeasured)
-                Text(cookCompletionText("Food not tracked in this pantry")).tag(CookCompletionEditorModel.PartUse.untracked)
-            }.pickerStyle(.menu).accessibilityIdentifier("cook.part.\(part.id)")
+            recordTypePicker
             if part.use == .measured || part.use == .unmeasured {
-                Picker(cookCompletionText("Actual batch used"), selection: $part.lotID) {
-                    Text(cookCompletionText("Choose a batch")).tag(UUID?.none)
-                    ForEach(model.context?.inventory.lots ?? []) { lot in
-                        Text(lot.name + " · " + pantryLocationName(lot.location) + " · " + String(lot.id.uuidString.suffix(6))).tag(Optional(lot.id))
-                    }
-                }.onChange(of: part.lotID) { _, id in
-                    if let lot = model.context?.inventory.lots.first(where: { $0.id == id }) { part.unit = lot.unit }
-                }
-                if let lot = model.context?.inventory.lots.first(where: { $0.id == part.lotID }) {
-                    Text(pantryCount(lot.count))
-                    Text(lot.confirmedAt.formatted(date: .abbreviated, time: .shortened)).font(.caption)
-                }
-                if part.use == .measured { LedgerQuantityFields(amount: $part.amount, unit: $part.unit) }
-                else { Text(cookCompletionText("The selected batch’s remaining quantity will become unknown. Existing holds are retained for review.")) }
+                batchFields
             } else if part.use == .untracked {
                 Text(cookCompletionText("This records unresolved use without changing a pantry count. It does not mean nothing was used."))
             }
             if part.use != .undecided {
-                Picker(cookCompletionText("Ingredient or substitution"), selection: $part.relation) {
-                    Text(cookCompletionText("Review the food used")).tag(CookCompletionEditorModel.Relation.undecided)
-                    Text(cookCompletionText("The planned ingredient")).tag(CookCompletionEditorModel.Relation.ingredient)
-                    Text(cookCompletionText("A substitution")).tag(CookCompletionEditorModel.Relation.substitution)
-                }.pickerStyle(.menu).accessibilityIdentifier("cook.relation.\(part.id)")
-                if part.relation == .substitution {
-                    TextField(cookCompletionText("Actual substituted food"), text: $part.substitution)
-                    Text(cookCompletionText("Record what actually happened even if it differed from your preferences. This is not an eligibility recommendation."))
-                }
+                substitutionFields
             }
             Button(cookCompletionText("Review possible substitutions")) { selectingSubstitute = true }
             Button(cookCompletionText("Remove this part"), role: .destructive) { model.removePart(ingredientID: ingredientID, partID: part.id) }
         }
         .sheet(isPresented: $selectingSubstitute) {
             NavigationStack { CookSubstitutionReview(model: model, ingredientID: ingredientID, partID: part.id) }
+        }
+    }
+
+    private var recordTypePicker: some View {
+        Picker(cookCompletionText("How was this part recorded?"), selection: $part.use) {
+            Text(cookCompletionText("Choose a record type")).tag(CookCompletionEditorModel.PartUse.undecided)
+            Text(cookCompletionText("Known amount from a pantry batch")).tag(CookCompletionEditorModel.PartUse.measured)
+            Text(cookCompletionText("Unmeasured amount from a pantry batch")).tag(CookCompletionEditorModel.PartUse.unmeasured)
+            Text(cookCompletionText("Food not tracked in this pantry")).tag(CookCompletionEditorModel.PartUse.untracked)
+        }.pickerStyle(.menu).accessibilityIdentifier("cook.part.\(part.id)")
+    }
+
+    @ViewBuilder private var batchFields: some View {
+        Picker(cookCompletionText("Actual batch used"), selection: $part.lotID) {
+            Text(cookCompletionText("Choose a batch")).tag(UUID?.none)
+            ForEach(model.context?.inventory.lots ?? []) { lot in
+                Text(cookBatchLabel(lot)).tag(Optional(lot.id))
+            }
+        }.onChange(of: part.lotID) { _, id in
+            if let lot = model.context?.inventory.lots.first(where: { $0.id == id }) { part.unit = lot.unit }
+        }
+        if let lot = model.context?.inventory.lots.first(where: { $0.id == part.lotID }) {
+            Text(pantryCount(lot.count))
+            Text(lot.confirmedAt.formatted(date: .abbreviated, time: .shortened)).font(.caption)
+        }
+        if part.use == .measured { LedgerQuantityFields(amount: $part.amount, unit: $part.unit) }
+        else { Text(cookCompletionText("The selected batch’s remaining quantity will become unknown. Existing holds are retained for review.")) }
+    }
+
+    @ViewBuilder private var substitutionFields: some View {
+        Picker(cookCompletionText("Ingredient or substitution"), selection: $part.relation) {
+            Text(cookCompletionText("Review the food used")).tag(CookCompletionEditorModel.Relation.undecided)
+            Text(cookCompletionText("The planned ingredient")).tag(CookCompletionEditorModel.Relation.ingredient)
+            Text(cookCompletionText("A substitution")).tag(CookCompletionEditorModel.Relation.substitution)
+        }.pickerStyle(.menu).accessibilityIdentifier("cook.relation.\(part.id)")
+        if part.relation == .substitution {
+            TextField(cookCompletionText("Actual substituted food"), text: $part.substitution)
+            Text(cookCompletionText("Record what actually happened even if it differed from your preferences. This is not an eligibility recommendation."))
         }
     }
 }

@@ -57,51 +57,8 @@ struct CookResolutionEntry: View {
                 }
             }
             if !context.remainingEventIDs.isEmpty {
-                Section(cookCompletionText("Ingredient use to review")) {
-                    Picker(cookCompletionText("Ingredient use"), selection: Binding(get: { model.eventID }, set: { model.selectEvent($0) })) {
-                        ForEach(context.remainingEventIDs, id: \.self) { id in Text(eventName(id, in: context)).tag(Optional(id)) }
-                    }.pickerStyle(.menu)
-                    if let part = model.selectedPart {
-                        if let name = part.substitution { Text(cookCompletionText("Actual substitution") + ": " + name) }
-                        switch part.use {
-                        case .untracked: Text(cookCompletionText("This use was not linked to a pantry batch."))
-                        case .lot: Text(cookCompletionText("This use was unmeasured and belongs to the original selected batch."))
-                        case .notUsed: EmptyView()
-                        }
-                    }
-                    Picker(cookCompletionText("Batch to reconcile"), selection: Binding(get: { model.lotID }, set: { model.selectLot($0) })) {
-                        Text(cookCompletionText("Choose a batch")).tag(UUID?.none)
-                        ForEach(context.lots) { lot in
-                            Text(lot.name + " · " + pantryLocationName(lot.location) + " · " + String(lot.id.uuidString.suffix(6))).tag(Optional(lot.id))
-                        }
-                    }.pickerStyle(.menu).disabled(model.batchIsFixed)
-                    if let lot = model.selectedLot {
-                        LabeledContent(cookCompletionText("Current pantry count"), value: pantryCount(lot.count))
-                        Text(lot.confirmedAt.formatted(date: .abbreviated, time: .shortened)).font(.caption)
-                    }
-                }
-                Section(cookCompletionText("What can you confirm?")) {
-                    Picker(cookCompletionText("Choose a correction"), selection: $model.action) {
-                        Text(cookCompletionText("Choose a correction")).tag(PantryCookResolution.Action?.none)
-                        ForEach([PantryCookResolution.Action.outsidePantry, .alreadyIncluded, .deduct, .recount], id: \.self) { action in
-                            if model.actions.contains(action) { Text(cookResolutionAction(action)).tag(Optional(action)) }
-                        }
-                    }.pickerStyle(.menu).accessibilityIdentifier("cook.resolution.action")
-                    if let action = model.action {
-                        Text(cookResolutionExplanation(action))
-                        if action == .recount {
-                            Text(cookCompletionText("Remaining quantity checked now"))
-                            LedgerQuantityFields(amount: $model.remainingAmount, unit: $model.unit)
-                        }
-                        if action != .outsidePantry {
-                            if action != .deduct { Toggle(cookCompletionText("I also know how much was used"), isOn: $model.usedKnown) }
-                            if action == .deduct || model.usedKnown {
-                                Text(cookCompletionText("Actual amount used"))
-                                LedgerQuantityFields(amount: $model.usedAmount, unit: $model.unit)
-                            }
-                        }
-                    }
-                }
+                ingredientSection(context)
+                correctionSection
                 Section {
                     Button(cookCompletionText("Review this ingredient-use correction")) { Task { await model.prepare() } }
                         .accessibilityIdentifier("cook.resolution.review")
@@ -111,6 +68,58 @@ struct CookResolutionEntry: View {
             CookResolutionNotice(model: model)
         }.disabled(!model.canEdit)
     }
+
+    private func ingredientSection(_ context: PantryCookResolution.Context) -> some View {
+        Section(cookCompletionText("Ingredient use to review")) {
+            Picker(cookCompletionText("Ingredient use"), selection: Binding<UUID?>(get: { model.eventID }, set: { model.selectEvent($0) })) {
+                ForEach(context.remainingEventIDs, id: \.self) { id in Text(eventName(id, in: context)).tag(Optional(id)) }
+            }.pickerStyle(.menu)
+            if let part = model.selectedPart {
+                if let name = part.substitution { Text(cookCompletionText("Actual substitution") + ": " + name) }
+                switch part.use {
+                case .untracked: Text(cookCompletionText("This use was not linked to a pantry batch."))
+                case .lot: Text(cookCompletionText("This use was unmeasured and belongs to the original selected batch."))
+                case .notUsed: EmptyView()
+                }
+            }
+            Picker(cookCompletionText("Batch to reconcile"), selection: Binding<UUID?>(get: { model.lotID }, set: { model.selectLot($0) })) {
+                Text(cookCompletionText("Choose a batch")).tag(UUID?.none)
+                ForEach(context.lots) { lot in
+                    Text(cookBatchLabel(lot)).tag(Optional(lot.id))
+                }
+            }.pickerStyle(.menu).disabled(model.batchIsFixed)
+            if let lot = model.selectedLot {
+                LabeledContent(cookCompletionText("Current pantry count"), value: pantryCount(lot.count))
+                Text(lot.confirmedAt.formatted(date: .abbreviated, time: .shortened)).font(.caption)
+            }
+        }
+    }
+
+    private var correctionSection: some View {
+        Section(cookCompletionText("What can you confirm?")) {
+            Picker(cookCompletionText("Choose a correction"), selection: $model.action) {
+                Text(cookCompletionText("Choose a correction")).tag(PantryCookResolution.Action?.none)
+                ForEach([PantryCookResolution.Action.outsidePantry, .alreadyIncluded, .deduct, .recount], id: \.self) { action in
+                    if model.actions.contains(action) { Text(cookResolutionAction(action)).tag(Optional(action)) }
+                }
+            }.pickerStyle(.menu).accessibilityIdentifier("cook.resolution.action")
+            if let action = model.action {
+                Text(cookResolutionExplanation(action))
+                if action == .recount {
+                    Text(cookCompletionText("Remaining quantity checked now"))
+                    LedgerQuantityFields(amount: $model.remainingAmount, unit: $model.unit)
+                }
+                if action != .outsidePantry {
+                    if action != .deduct { Toggle(cookCompletionText("I also know how much was used"), isOn: $model.usedKnown) }
+                    if action == .deduct || model.usedKnown {
+                        Text(cookCompletionText("Actual amount used"))
+                        LedgerQuantityFields(amount: $model.usedAmount, unit: $model.unit)
+                    }
+                }
+            }
+        }
+    }
+
     private func resolutionReview(_ review: PantryCookResolution.Review) -> some View {
         List {
             Section(cookCompletionText("Review ingredient-use correction")) {
