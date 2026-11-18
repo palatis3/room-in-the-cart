@@ -73,6 +73,113 @@ import XCTest
         XCTAssertTrue(app.staticTexts["3 reviewed purchases"].exists)
     }
 
+    func testEnrolledAdultReviewsTwoReceiptLinesAndReopensOnlyHouseholdEvidence() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-receipt-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let shop = app.tabBars.buttons["Shop"]
+        XCTAssertTrue(shop.waitForExistence(timeout: 30), app.debugDescription)
+        func dismissReceiptKeyboard(_ identifier: String) {
+            let tip = app.staticTexts["Speed up your typing by sliding your finger across the letters to compose a word."]
+            if tip.exists {
+                tap(app.buttons["Continue"])
+                XCTAssertTrue(tip.waitForNonExistence(timeout: 5))
+            }
+            tap(app.buttons[identifier])
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: identifier), app.debugDescription)
+        }
+        func allBatchIDs(prefix: String) -> Set<String> {
+            // SwiftUI creates the remaining stock and correction rows as the list scrolls.
+            let list = app.collectionViews.firstMatch
+            let batches = list.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix))
+            list.swipeDown()
+            list.swipeDown()
+            var ids = Set(batches.allElementsBoundByIndex.map(\.identifier))
+            for _ in 0..<3 {
+                list.swipeUp()
+                ids.formUnion(batches.allElementsBoundByIndex.map(\.identifier))
+            }
+            return ids
+        }
+        func back(from title: String) { tap(app.navigationBars[title].buttons.element(boundBy: 0)) }
+        func privateHistoryIsEmpty() {
+            tap(app.buttons["pantry.receiptHistory"])
+            XCTAssertTrue(app.staticTexts["No confirmed receipt lines yet."].waitForExistence(timeout: 8), app.debugDescription)
+            tap(app.buttons["Done"])
+        }
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill("Private lentils", into: "pantry.foodName")
+        fill("7", into: "pantry.amount")
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let privateLot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                                                         "pantry.lot.", "Private lentils")).firstMatch
+        reveal(privateLot)
+        let privateID = privateLot.identifier, privateLabel = privateLot.label
+        privateHistoryIsEmpty()
+        back(from: "My Pantry")
+        tap(app.buttons["settings"])
+        let entry = app.buttons["household.pantry"]
+        tap(entry)
+        XCTAssertTrue(app.staticTexts["No household batches recorded."].waitForExistence(timeout: 8))
+        tap(app.buttons["householdPantry.receipt"])
+        tap(app.buttons["householdReceipt.scan"])
+        let wording = app.textViews["scan.sourceEditor"]
+        tap(wording)
+        wording.typeText("Oats 3 count USD 4.20\nBeans 5 count USD 6.10\nPaper bag fee")
+        dismissReceiptKeyboard("scan.sourceDone")
+        let merchant = app.textFields["Source reference label"]
+        tap(merchant)
+        merchant.typeText("Corner Market")
+        dismissReceiptKeyboard("scan.sourceDone")
+        tap(app.buttons["Review printed lines"])
+        enableSwitch("I reviewed these lines as source evidence only.")
+        tap(app.buttons["scan.receipt.review"])
+        enableSwitch("I checked the purchase date.")
+        for (ordinal, usable) in [(0, "2"), (1, "4")] {
+            tap(app.buttons["receipt.action.\(ordinal)"])
+            tap(app.buttons["Add a separate physical batch"])
+            tap(app.buttons["receipt.printedQuantity.\(ordinal)"])
+            fill(usable, into: "receipt.usable.\(ordinal)")
+            if ordinal == 0 {
+                let paid = app.buttons["receipt.printedPrice.0"]
+                reveal(paid, fullyVisible: true)
+                paid.tap()
+                let entered = app.textFields["Confirmed paid line total in USD, optional"].firstMatch
+                reveal(entered, fullyVisible: true)
+                XCTAssertEqual(entered.value as? String, "4.20", app.debugDescription)
+            }
+        }
+        tap(app.buttons["householdReceipt.review"])
+        let confirm = app.buttons["householdReceipt.confirm"]
+        tap(confirm)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 10), app.debugDescription)
+        back(from: "Household pantry")
+        tap(entry)
+        for (original, received, usable, price) in [
+            ("Oats 3 count USD 4.20", "3 units", "2 units", "$4.20"),
+            ("Beans 5 count USD 6.10", "5 units", "4 units", "Paid price unknown")
+        ] {
+            let lot = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@",
+                                                                           original, "Corner Market")).firstMatch
+            reveal(lot)
+            XCTAssertTrue(lot.label.contains("Received " + received), lot.label)
+            XCTAssertTrue(lot.label.contains("Usable " + usable), lot.label)
+            XCTAssertTrue(lot.label.contains(price), lot.label)
+        }
+        XCTAssertEqual(allBatchIDs(prefix: "householdPantry.correct.").count, 2)
+        back(from: "Household pantry")
+        tap(app.navigationBars["Settings"].buttons["Done"])
+        tap(app.buttons["shop.myPantry"])
+        let samePrivateLot = app.buttons[privateID]
+        reveal(samePrivateLot)
+        XCTAssertEqual(samePrivateLot.label, privateLabel)
+        XCTAssertEqual(allBatchIDs(prefix: "pantry.lot."), [privateID])
+        privateHistoryIsEmpty()
+    }
+
     func testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen() {
         app.launchArguments = ["--ui-testing", "--household-pantry-correction", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

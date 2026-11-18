@@ -47,6 +47,8 @@ private extension EnvironmentValues {
     }
 }
 
+#endif
+
 @MainActor private final class PrivatePantryRuntime: ObservableObject {
     static let mutationGate = PantryMutationGate()
     private var identity: CapturePrivateIdentity?
@@ -68,12 +70,17 @@ private extension EnvironmentValues {
 }
 
 /// Observe activation in the window that receives widget and shortcut URLs.
-private struct GroceryWindow: View {
+struct GroceryWindow: View {
     let notificationDelegate: SurfaceNotificationDelegate
     @StateObject private var model = AppModel()
     @StateObject private var ledger = LedgerModel(inventoryProjectionsEnabled: true, mutationGate: PrivatePantryRuntime.mutationGate, usesLivePantry: true)
     @StateObject private var pickup = PickupModel(mutationGate: PrivatePantryRuntime.mutationGate, usesLivePantry: true)
-    @StateObject private var household = HouseholdModel()
+    @StateObject private var household: HouseholdModel
+
+    init(notificationDelegate: SurfaceNotificationDelegate, household: HouseholdModel? = nil) {
+        self.notificationDelegate = notificationDelegate
+        _household = StateObject(wrappedValue: household ?? HouseholdModel())
+    }
     @StateObject private var access = WorkspaceAccess()
     @StateObject private var membership = MembershipCoordinator()
     @StateObject private var surfaces = DeviceSurfacesComposition()
@@ -266,8 +273,6 @@ private struct GroceryWindow: View {
         await surfaces.foreground()
     }
 }
-
-#endif
 
 struct RootView: View {
     @EnvironmentObject private var ledger: LedgerModel

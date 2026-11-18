@@ -140,6 +140,18 @@ import HouseholdClient
 struct ContributorRequestUIFixtureRoot: View {
     @StateObject private var fixture = ContributorRequestUIFixtureState()
     var body: some View {
+        if ProcessInfo.processInfo.arguments.contains("--household-receipt-fixture") {
+            if let household = fixture.household {
+                GroceryWindow(notificationDelegate: SurfaceNotificationDelegate(), household: household)
+            } else {
+                Group {
+                    if fixture.setupFailure { Text("Fixture setup failed") }
+                    else { ProgressView() }
+                }.task { await fixture.start() }
+            }
+        } else { contributorContent }
+    }
+    private var contributorContent: some View {
         VStack(spacing: 0) {
             Text("Fixture request POSTs: \(fixture.requestPosts)").accessibilityIdentifier("fixture.requestPosts")
             Text("Fixture saved requests: \(fixture.persistedRequests)").accessibilityIdentifier("fixture.requestRows")
@@ -185,8 +197,10 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     private var profile: [String: Any]?
     private let reader = UUID().uuidString.lowercased()
     private var readerEnabled = false
-    let pantryCorrection = ProcessInfo.processInfo.arguments.contains("--household-pantry-correction") ||
-        ProcessInfo.processInfo.arguments.contains("--household-staple-reminders")
+    private let receiptFixture = ProcessInfo.processInfo.arguments.contains("--household-receipt-fixture")
+    private var receiptLots: [[String: Any]] = []
+    var pantryCorrection: Bool { receiptFixture || ProcessInfo.processInfo.arguments.contains("--household-pantry-correction") ||
+        ProcessInfo.processInfo.arguments.contains("--household-staple-reminders") }
     private let stapleFixture = ProcessInfo.processInfo.arguments.contains("--household-staple-reminders")
     private var stapleRevision = UUID().uuidString
     private let stapleGroup = UUID().uuidString
@@ -249,6 +263,13 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
         }
         if pantryCorrection {
+            if receiptFixture, path.contains("/pantry") {
+                guard path.hasPrefix("/v1/households/" + household + "/pantry"),
+                      request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-sam",
+                      request.value(forHTTPHeaderField: "X-Device-Token") == "fixture-token" else {
+                    return try response([:], 403)
+                }
+            }
             if path == "/v1/me/workspaces" {
                 return try response(["workspaces": [["householdId": household, "label": "Fixture home", "role": "organizer"]]])
             }
@@ -301,11 +322,34 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
             if path.hasSuffix("/pantry") {
                 return try response(["v": 1, "householdId": household, "grantEpoch": 0, "pantryRevision": pantryReceipts.count,
-                                     "asOf": "2026-11-17T10:00:00Z", "lots": pantryRow.map { [$0] } ?? [], "nextCursor": NSNull()])
+                                     "asOf": "2026-11-17T10:00:00Z", "lots": receiptFixture ? receiptLots : (pantryRow.map { [$0] } ?? []), "nextCursor": NSNull()])
             }
             if path.hasSuffix("/pantry/commands"), let kind = json["kind"] as? String, let key = json["clientKey"] as? String,
                let body = json["body"] as? [String: Any] {
                 if let existing = pantryReceipts[key] { return try response(existing) }
+                if receiptFixture && kind == "pantry.acquireReceipt" {
+                    guard json["pantryRevision"] as? Int == pantryReceipts.count, pantryReceipts.isEmpty,
+                          let lines = body["lines"] as? [[String: Any]] else { return try response([:], 409) }
+                    let acquisition = try JSONDecoder().decode(HouseholdReceiptAcquisition.self, from: JSONSerialization.data(withJSONObject: body))
+                    try acquisition.validate()
+                    var lots: [[String: Any]] = []
+                    var saved: [[String: Any]] = []
+                    for (line, rawLine) in zip(acquisition.lines, lines) {
+                        guard line.delivery == nil, let quantity = rawLine["usable"] else { return try response([:], 400) }
+                        let id = UUID().uuidString
+                        lots.append(["lotId": id, "foodName": line.foodName, "location": line.location.rawValue,
+                                     "origin": "manual", "exclusionTags": [], "observation": ["observationId": id,
+                                         "quantity": quantity, "confirmedAt": "2026-11-17T10:00:00Z"],
+                                     "receiptEvidence": ["merchant": acquisition.merchant, "purchaseDay": acquisition.purchaseDay,
+                                                         "line": rawLine]])
+                        saved.append(["ordinal": line.ordinal, "lotId": id])
+                    }
+                    let receipt: [String: Any] = ["v": 1, "kind": kind, "householdId": household, "operationId": UUID().uuidString,
+                        "grantEpoch": 0, "pantryRevision": 1, "receiptId": acquisition.receiptId.uuidString, "savedCount": saved.count, "receiptLines": saved]
+                    receiptLots = lots.sorted { ($0["lotId"] as? String ?? "") < ($1["lotId"] as? String ?? "") }
+                    pantryReceipts[key] = receipt
+                    return try response(receipt)
+                }
                 guard json["pantryRevision"] as? Int == pantryReceipts.count, let quantity = body["quantity"],
                       let time = body["confirmedAt"] as? String else { throw URLError(.badServerResponse) }
                 let operation: String
