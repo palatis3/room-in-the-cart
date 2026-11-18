@@ -161,7 +161,7 @@ struct DinnerQuotesView: View {
             case .unknown: Text(dinnerFormat("Incremental trip cash: %@", dinnerMoney(nil)))
             }
             Text(dinnerFormat("Checkout plus incremental trip cash: %@", dinnerMoney(value.tripInclusive.total.exact)))
-            Text(value.coverageConfirmed ? dinnerText("Required availability reviewed") : dinnerText("Required availability unresolved"))
+            Text(option.available == true ? dinnerText("Required availability reviewed") : dinnerText("Required availability unresolved"))
             if let minutes = value.extraMinutes { Text(dinnerFormat("Extra minutes: %d", minutes)) }
             Text(option.trip.tripAlreadyPlanned ? dinnerText("Trip already planned") : dinnerText("Additional trip"))
         }.padding(.vertical, 6).accessibilityElement(children: .combine)

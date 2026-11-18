@@ -317,7 +317,7 @@ private struct SharedStoreQuoteFacts: View {
             Text(dinnerFormat("Checkout plus incremental trip cash: %@", dinnerMoney(result.tripInclusive.total.exact)))
             Text(value.tripAlreadyPlanned ? dinnerText("Trip already planned") : dinnerText("Additional trip"))
             if let minutes = value.extraMinutes { Text(dinnerFormat("Extra minutes: %d", minutes)) }
-            Text(result.coverageConfirmed ? dinnerText("Required availability reviewed") : dinnerText("Required availability unresolved"))
+            Text(value.available == true ? dinnerText("Required availability reviewed") : dinnerText("Required availability unresolved"))
             QuoteOrderEvidenceSummary(status: result.minimumStatus, rows: value.supplies?.compactMap { row in
                 guard let unit = UnitOfMeasure(rawValue: row.unit) else { return nil }
                 return StoreCommitmentSupply(commitmentID: row.commitmentId, unit: unit, requiredUnits: row.requiredUnits,
