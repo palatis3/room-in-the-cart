@@ -1695,3 +1695,68 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift source removal pr
  assert.equal(reader.lines,undefined);assert.equal(reader.quote,undefined);assert.equal((await call(planner,path)).status,404);
  assert.deepEqual(await history(),finalHistory);assert.deepEqual(await snapshots(),finalSnapshots);assert.deepEqual(await operations(),finalOperations);
 });
+
+test('standalone pantry freezer enters the legacy shared allocator once while fridge stays outside the old wire',async()=>{
+ const f=await reservationFixture(),p=pantryHarness(f),q=f.quantity;
+ ok(await f.write('delivery.match',{...f.match,supplyRevision:4,matched:false}));
+ async function add(location,quantity) {
+   const current=ok(await call(f.owner,f.base+'/pantry'));
+   const c={v:1,kind:'pantry.addLot',replayWindow:f.owner.window,clientKey:randomUUID(),grantEpoch:current.grantEpoch,pantryRevision:current.pantryRevision,
+     body:{foodName:'Frozen wraps',location,storedAt:p.time,useFirstAt:null,exclusionTags:[],confirmedAt:p.time,quantity}};
+   const receipt=ok(await call(f.owner,f.base+'/pantry/commands','POST',c));
+   return {c,receipt};
+ }
+ const fridge=await add('fridge',q(0)),freezer=await add('freezer',q(5)),lotId=freezer.receipt.lotId;
+ assert.deepEqual((await p.stock()).lots.map(l=>l.lotId),[lotId]);
+ assert.equal((await p.send(p.envelope('pantry.select',{...await p.scope(),lotId:fridge.receipt.lotId,selected:true}))).status,404);
+ const old=p.envelope('pantry.select',{...await p.scope(),lotId,selected:true});
+ const collision=await p.send({...old,clientKey:freezer.c.clientKey});assert.equal(collision.data.error.code,'key_reused');
+ ok(await p.send(old));
+ const reverseCollision=await call(f.owner,f.base+'/pantry/commands','POST',{...freezer.c,clientKey:old.clientKey});
+ assert.equal(reverseCollision.data.error.code,'key_reused');
+ await p.edit('pantry.match',{lotId,...p.match,matched:true});
+ const pin=await p.edit('pantry.reserve',{lotId,...p.match,groupId:f.lunch.id,predecessorId:null,quantity:q(2)});
+ const held=(await p.joint()).needs.filter(n=>n.occurrenceId===p.match.occurrenceId);
+ assert.deepEqual(held.map(n=>n.freezer.numerator),['3','2']);
+ assert.equal(held[1].reservations[0].reservationId,pin.operationId);
+ const basis=await realRecoveryRead(f);
+ assert.equal(basis.basis.sources.find(s=>s.id===lotId).shopId,null);
+ const fromHouse=ok(await call(f.owner,f.base+'/pantry')).lots.find(l=>l.lotId===lotId);
+ assert.deepEqual(fromHouse.observation.quantity,q(5));assert(!('reservations' in fromHouse));
+ const householdPage=ok(await call(f.owner,f.base+'/pantry'));
+ const correction={...freezer.c,kind:'pantry.correctCount',clientKey:randomUUID(),pantryRevision:householdPage.pantryRevision,
+   body:{lotId,predecessorId:fromHouse.observation.observationId,confirmedAt:p.time,quantity:q(1)}};
+ const corrected=ok(await call(f.owner,f.base+'/pantry/commands','POST',correction));
+ assert.equal(corrected.lotId,lotId);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/pantry/commands','POST',correction)),corrected);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/pantry')).lots.find(l=>l.lotId===lotId).observation.quantity,q(1));
+ assert.equal((await p.joint()).needs.flatMap(n=>n.reservations).find(r=>r.reservationId===pin.operationId).backed.numerator,'1');
+ // A separate shop shares an ordinary lot but never selected the standalone
+ // count. Its shopper can keep using the joint allocator without a pantry grant.
+ const common=(await p.create('Legacy pantry source')).lotId;
+ await p.edit('pantry.select',{lotId:common,selected:true});
+ const secondShop=await f.shop(),secondBase={shopRevision:1,authorityEpoch:1},other=pantryHarness(f,secondShop,secondBase);
+ ok(await other.send(other.envelope('shop.reportPlaced',{occurredAt:p.time})));secondBase.shopRevision++;
+ await other.edit('pantry.select',{lotId:common,selected:true});
+ ok(await other.send(other.envelope('shop.transferAuthority',{newShopperId:f.planner.id})));
+ const separateCoverage=ok(await call(f.planner,other.path+'/coverage'));
+ assert(!JSON.stringify(separateCoverage).includes(lotId));
+ ok(await f.write('shop.transferAuthority',{newShopperId:f.planner.id}));
+ assert.deepEqual(ok(await call(f.owner,f.base+'/pantry/commands','POST',freezer.c)),freezer.receipt);
+ const ungranted=ok(await call(f.planner,p.path));assert.equal(ungranted.lots.some(l=>l.lotId===lotId),false);
+ assert.equal((await call(f.planner,p.path+'/coverage')).status,404);
+ const grant=async(enabled,expectedGrantEpoch)=>ok(await call(f.owner,f.base+'/pantry/grants','POST',{v:1,memberId:f.planner.id,enabled,expectedGrantEpoch}));
+ await grant(true,0);
+ const page=ok(await call(f.planner,p.path));
+ const row={pantryRevision:page.pantryRevision,supplyRevision:page.supplyRevision,lotId,
+   predecessorId:page.lots.find(l=>l.lotId===lotId).observation.observationId,confirmedAt:p.time,quantity:q(1)};
+ const {previewDigest}=ok(await call(f.planner,p.path+'/observation-preview','POST',row));
+ const cmd={v:1,replayWindow:f.planner.window,clientKey:randomUUID(),shopId:f.shopId,kind:'pantry.observe',
+   base:{shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch},body:{...row,previewDigest}};
+ const observe=()=>call(f.planner,f.base+'/commands','POST',cmd);
+ const accepted=ok(await observe()); assert.deepEqual(ok(await observe()),accepted);
+ await grant(false,1);assert.equal((await observe()).status,409);
+ await grant(true,2);assert.equal((await observe()).data.error.code,'refresh_required');
+ const coverage=ok(await call(f.planner,p.path+'/coverage'));
+ assert.equal(coverage.needs.flatMap(n=>n.reservations).find(r=>r.reservationId===pin.operationId).backed.numerator,'1');
+});

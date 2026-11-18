@@ -72,7 +72,7 @@ function validateBasis(input:unknown):RecoveryBasis {
    requireThat(b.foods.some(f => f.id === source.foodId), 'unknown_food');
    if (source.origin.kind === 'sharedStock') requireThat(source.id === source.origin.batchId, 'invalid_physical_id');
    if (carry.has(source.id) && source.origin.kind !== 'sharedStock')
-     requireThat(source.origin.kind === 'delivery' && foreignRevisions.has(source.shopId), 'wrong_scope');
+     requireThat(source.origin.kind === 'delivery' && source.shopId!==null && foreignRevisions.has(source.shopId), 'wrong_scope');
  }
  const pantryRows = b.pantryObservations ?? [];
  unique([...b.arrivals, ...b.usable].map(row => row.shopId + "/" + row.id));

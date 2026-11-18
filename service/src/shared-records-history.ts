@@ -1,3 +1,4 @@
+import { householdPantryEpoch } from './pantry-lots.js';
 /** Independent, bounded historical record. Invoke only inside authorized's
  * household-locked transaction. This document grants no live authority. */
 import {z} from 'zod';
@@ -171,8 +172,8 @@ export async function readSharedRecordHistory(repo:HouseholdRepository,ctx:Conte
  // Stock scope is selected-shop origin or an explicit historical use in this
  // shop. No household-wide dump or other shops' meal commitments are exported.
  const lotScope=`l.household_id=$1 AND (l.origin_shop_id=$2 OR EXISTS(SELECT 1 FROM ritc.pantry_event e WHERE e.household_id=l.household_id AND e.lot_id=l.lot_id AND e.shop_id=$2))`;
- const stockMetadata=await ctx.db.query(`SELECT l.lot_id,l.origin_shop_id,l.delivery_source_id,l.actor_id,s.history_retired_at FROM ritc.pantry_lot l JOIN ritc.shop s ON (s.household_id,s.shop_id)=(l.household_id,l.origin_shop_id) WHERE ${lotScope} ORDER BY l.lot_id LIMIT 2001`,scope);
- check(stockMetadata.rows.length<=2000&&stockMetadata.rows.every(l=>!l.history_retired_at));
+ const stockMetadata=await ctx.db.query(`SELECT l.lot_id,l.origin_shop_id,l.delivery_source_id,l.actor_id,s.history_retired_at FROM ritc.pantry_lot l LEFT JOIN ritc.shop s ON (s.household_id,s.shop_id)=(l.household_id,l.origin_shop_id) WHERE ${lotScope} ORDER BY l.lot_id LIMIT 2001`,scope);
+ check(stockMetadata.rows.length<=2000&&stockMetadata.rows.every(l=>!l.history_retired_at&&(l.origin_shop_id!==null||householdPantryEpoch(ctx)!==null)));
  const stockIds=stockMetadata.rows.map(l=>l.lot_id);
  const carriedIds=stockMetadata.rows.filter(l=>l.delivery_source_id!==null&&l.origin_shop_id!==shop.shop_id).map(l=>l.delivery_source_id);
  // Existing household stock reads permit physical evidence across shops. Only
@@ -187,7 +188,7 @@ export async function readSharedRecordHistory(repo:HouseholdRepository,ctx:Conte
   UNION SELECT p.member_id FROM ritc.delivery_source d JOIN ritc.shared_tracking_basket_origin p ON (p.household_id,p.shop_id,p.line_id)=(d.household_id,d.shop_id,d.line_id) WHERE d.household_id=$1 AND d.source_id=ANY($2::uuid[])
   UNION SELECT r.author_id FROM ritc.delivery_source d JOIN ritc.request_link l ON (l.household_id,l.shop_id,l.line_id)=(d.household_id,d.shop_id,d.line_id) JOIN ritc.request r ON (r.household_id,r.shop_id,r.request_id)=(l.household_id,l.shop_id,l.request_id) WHERE d.household_id=$1 AND d.source_id=ANY($2::uuid[])
  ) retained_sources WHERE member_id IS NOT NULL LIMIT 2001`,[ctx.householdId,carriedIds]);check(carriedAuthors.rows.length<=2000);
- const stockAuthors=await ctx.db.query(`SELECT DISTINCT e.actor_id,s.history_retired_at FROM ritc.pantry_event e JOIN ritc.shop s ON (s.household_id,s.shop_id)=(e.household_id,e.shop_id) WHERE e.household_id=$1 AND e.lot_id=ANY($3::uuid[]) AND (e.shop_id=$2 OR e.kind='observe') LIMIT 2001`,[...scope,stockIds]);
+ const stockAuthors=await ctx.db.query(`SELECT DISTINCT e.actor_id,s.history_retired_at FROM ritc.pantry_event e LEFT JOIN ritc.shop s ON (s.household_id,s.shop_id)=(e.household_id,e.shop_id) WHERE e.household_id=$1 AND e.lot_id=ANY($3::uuid[]) AND (e.shop_id=$2 OR e.kind='observe') LIMIT 2001`,[...scope,stockIds]);
  check(stockAuthors.rows.length<=2000&&stockAuthors.rows.every(r=>!r.history_retired_at));
  // Recheck retained contributors before reading payloads. This deliberately
  // fails closed for an ended source instead of trusting historical authority.

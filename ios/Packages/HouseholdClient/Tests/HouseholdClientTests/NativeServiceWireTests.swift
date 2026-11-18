@@ -23,6 +23,44 @@ private final class LoopbackTrust: NSObject, URLSessionDelegate, @unchecked Send
 }
 
 final class NativeServiceWireTests: XCTestCase {
+    private func exerciseHouseholdPantry(_ service: HouseholdService, scope: HouseholdBootstrap) async throws {
+        let actor = try await service.householdPantrySession(for: scope)
+        let firstPage = try await service.householdPantryPage(for: actor)
+        XCTAssertTrue(firstPage.lots.isEmpty)
+        let addition = HouseholdPantryAddition(foodName: "Frijoles", location: .fridge,
+                                              confirmedAt: firstPage.asOf, quantity: nil)
+        let intent = try await service.prepareHouseholdPantryAddition(addition, reviewed: firstPage, session: actor)
+        let receipt = try await service.submitHouseholdPantryAddition(intent, session: actor)
+        let retry = try JSONDecoder().decode(HouseholdPantryIntent.self, from: encoded(intent))
+        let replay = try await service.submitHouseholdPantryAddition(retry, session: actor)
+        XCTAssertEqual(receipt, replay)
+        let current = try await service.householdPantryPage(for: actor)
+        XCTAssertEqual(current.lots.map(\.id), [receipt.lotId])
+        XCTAssertEqual(current.pantryRevision, firstPage.pantryRevision + 1)
+        let lot = try XCTUnwrap(current.lots.first)
+        XCTAssertEqual(lot.location, .fridge)
+        XCTAssertEqual(lot.foodName, addition.foodName)
+        let observation = try XCTUnwrap(lot.observation)
+        XCTAssertNil(observation.quantity)
+        let zero = SharedMealQuantity(amount: .init(numerator: 0, denominator: 1), unit: "count", originalLiteral: "0")
+        let correction = try HouseholdPantryCountCorrection(lot: lot, confirmedAt: addition.confirmedAt, quantity: zero)
+        let edit = try await service.prepareHouseholdPantryChange(.correction(correction), reviewed: current, session: actor)
+        let response = try await service.submitHouseholdPantryChange(edit, session: actor)
+        XCTAssertEqual(response.lotId, lot.id)
+        let after = try await service.householdPantryPage(for: actor)
+        XCTAssertEqual(after.lots.count, 1)
+        XCTAssertEqual(after.lots.first?.observation?.quantity, zero)
+        XCTAssertEqual(after.lots.first?.observation?.observationId, response.operationId)
+        let recovered = try JSONDecoder().decode(HouseholdPantryIntent.self, from: JSONEncoder().encode(edit))
+        let recoveredReceipt = try await service.submitHouseholdPantryChange(recovered, session: actor)
+        XCTAssertEqual(recoveredReceipt, response)
+        let reopened = try await service.householdPantryPage(for: actor)
+        XCTAssertEqual(reopened.pantryRevision, after.pantryRevision)
+        XCTAssertEqual(reopened.lots, after.lots)
+        let grants = try await service.householdPantryGrants(for: actor)
+        XCTAssertTrue(grants.adults.isEmpty)
+    }
+
     func testNativeClientAgainstPostgres() async throws {
         let env = ProcessInfo.processInfo.environment
         guard let rawPort = env["RITC_WIRE_PORT"] else { throw XCTSkip("Run the PostgreSQL integration suite with RITC_TEST_NATIVE_WIRE=1.") }
@@ -63,6 +101,9 @@ final class NativeServiceWireTests: XCTestCase {
                 try await exercisePurchaseConfirmation(service, scope: scope, shopID: shop, requestID: request)
             }
             return
+        }
+        if env["RITC_WIRE_PAID"] == "0" {
+            try await exerciseHouseholdPantry(service, scope: scope)
         }
         let other = try XCTUnwrap(env["RITC_WIRE_OTHER"])
         let mealPlan = try await service.mealPlan(shopID: XCTUnwrap(UUID(uuidString: shop)))

@@ -82,13 +82,13 @@ export const importApprovalSchema = z.object({v:z.literal(1),clientKey:id,replay
 }).strict();
 
 const scoped = {householdId:id,shopId:id};
-export const sourceSchema = z.object({...scoped,id,foodId:id,identityRevision:revision.min(1),
+export const sourceSchema = z.object({...scoped,shopId:id.nullable(),id,foodId:id,identityRevision:revision.min(1),
   origin:z.discriminatedUnion('kind',[
     z.object({kind:z.literal('delivery'),sealedOrderRevision:revision,orderLineId:id,segmentKey:id}).strict(),
     z.object({kind:z.literal('sharedStock'),batchId:id,location:z.enum(['pantry','freezer'])}).strict(),
     z.object({kind:z.literal('reviewedImport'),originBindingId:id,reviewId:id,disclosureDigest:hash}).strict(),
   ]),
-}).strict();
+}).strict().refine(s=>s.shopId!==null || s.origin.kind==='sharedStock');
 // Identity revision is captured by the server when it admits an observation.
 // A request cannot relabel historical evidence by supplying this field.
 const observation = {...scoped,id,sourceId:id,identityRevision:revision.min(1),revision:revision,predecessorId:id.nullable(),recordedAt:time,actorId:id,operationId:id};

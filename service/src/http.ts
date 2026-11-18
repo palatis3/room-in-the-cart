@@ -1,3 +1,4 @@
+import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -254,7 +255,10 @@ export function createHTTPServer(options:HTTPOptions) {
       const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
       const placementRead=method==='GET'?/^\/shops\/([^/]+)\/placement-reports(?:\/[^/]+)?$/.exec(path):null;
       const historicalReportShopId=placementCommand?.shopId??(ownPlacement&&method==='GET'?uuid.parse(ownPlacement[1]):placementRead?uuid.parse(placementRead[1]):undefined);
-      const scopedAuth=historicalReportShopId?{...auth,historicalReportShopId}:auth;
+      // A selected shop is a navigation preference on the explicit household pantry surface.
+      // The authenticated household, device and any restricted grant still apply.
+      const {selectedShopId: _selectedShop,...householdAuth}=auth;
+      const scopedAuth=('/pantry'===path||path.startsWith('/pantry/'))?householdAuth:historicalReportShopId?{...auth,historicalReportShopId}:auth;
       const output=await repository.authorized(householdId,scopedAuth,async ctx=>{
         if(path==='/devices/current/request-queue' && method==='PUT'){
           const {enabled}=z.object({enabled:z.boolean()}).strict().parse(payload);
@@ -271,6 +275,13 @@ export function createHTTPServer(options:HTTPOptions) {
           if(path==='/billing/purchase-context'&&method==='POST'){z.object({}).strict().parse(payload);return options.billing.prepare(ctx);}
           if(path==='/billing/seats'&&method==='PUT')return options.billing.replaceSeats(ctx,billingSeatsSchema.parse(payload));
         }
+        if(path==='/pantry' && method==='GET') {
+          const cursor=url.searchParams.get('cursor');
+          return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));
+        }
+        if(path==='/pantry/commands' && method==='POST')return recordHouseholdPantryCommand(ctx,payload);
+        if(path==='/pantry/grants' && method==='GET')return pantryGrants(ctx);
+        if(path==='/pantry/grants' && method==='POST')return changePantryGrant(ctx,payload);
         if(path==='/members'&&method==='GET')return lifecycle.members(ctx);
         if(path==='/invites'&&method==='GET')return lifecycle.invites(ctx);
         if(path==='/views'&&method==='GET')return lifecycle.views(ctx);

@@ -1,6 +1,20 @@
 import XCTest
 @testable import HouseholdClient
 
+func mockRequestBody(_ request: URLRequest) -> Data {
+    if let body = request.httpBody { return body }
+    guard let stream = request.httpBodyStream else { return Data() }
+    stream.open()
+    defer { stream.close() }
+    var body = Data()
+    var buffer = [UInt8](repeating: 0, count: 4096)
+    while true {
+        let count = stream.read(&buffer, maxLength: buffer.count)
+        guard count > 0 else { return body }
+        body.append(contentsOf: buffer.prefix(count))
+    }
+}
+
 final class MockURLProtocol: URLProtocol, @unchecked Sendable {
     typealias Handler = (URLRequest) throws -> (Int, Data)
     typealias Interceptor = (MockURLProtocol) -> Bool

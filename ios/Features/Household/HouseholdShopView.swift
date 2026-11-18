@@ -22,6 +22,7 @@ private struct SharedShopContent: View {
                 Section {
                     Text(model.scope.household.label).font(.headline)
                     Text(ht("This is the household service's shared shop. Private lists, meals and records on this phone are not uploaded."))
+                    if model.scope.shopId == nil { HouseholdPantryLink(household: household) }
                     Button(ht("Refresh shared shop")) { Task { await model.load() } }
                     if household.storeQuoteScope != nil {
                         NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: household) }

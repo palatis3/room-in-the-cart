@@ -9,7 +9,7 @@ import {recordCurrentDelivery,recordCurrentPantry} from './shared-recovery-basis
 import {loadRecoveryPublication,recordSharedRecovery} from './shared-recovery-publication.js';
 import { sharedMealSchema, moveSharedMeal, preserveProtectedMeal } from './shared-meal-planning.js';
 import { cookCopyStillExists, recordCookCopy } from './cook-copy.js';
-import { isPantryCommand, pantryOperationExists } from './pantry-lots.js';
+import { isPantryCommand, pantryOperationExists, householdPantryEpoch } from './pantry-lots.js';
 import { consumeSharedMealChange } from './shared-meal-changes.js';
 import {requireMealMove} from './meal-moves.js';
 import { randomBytes, randomUUID } from 'node:crypto';
@@ -20,7 +20,7 @@ import { accessEnded,unavailable,invalid,refresh,ServiceError } from './errors.j
 import { type Envelope,type Decision,type PreviewInput,bodySchemas,decisionSchema } from './contracts.js';
 import { checkout } from './checkout.js';
 export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;ownRequestsOnly?:boolean;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
-export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
+export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; pantry_editor?:boolean; pantry_grant_epoch?:number; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;ownRequestsOnly?:boolean;viewGrantId?:string;selectedShopId?:string }
 export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean;confirmed_order_erased?:boolean;demand_revision?:number|null;demand_review_required?:boolean }
 interface RequestRow { carried_forward?:boolean;from_previous_shop?:boolean; purchase_outcome?:RequestPurchaseOutcome|null;request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
@@ -65,7 +65,7 @@ export class HouseholdRepository {
     }catch(error) {await db.query('ROLLBACK');throw error;}finally{db.release();}
   }
   async member(db:Transaction,householdId:string,identity:VerifiedIdentity):Promise<Member> {
-    const member=(await db.query<Member>('SELECT member_id,kind,organizer,can_contribute,alias,state FROM ritc.member WHERE household_id=$1 AND issuer=$2 AND subject=$3',[householdId,identity.issuer,identity.subject])).rows[0];
+    const member=(await db.query<Member>('SELECT member_id,kind,organizer,can_contribute,pantry_editor,pantry_grant_epoch,alias,state FROM ritc.member WHERE household_id=$1 AND issuer=$2 AND subject=$3',[householdId,identity.issuer,identity.subject])).rows[0];
     if(!member)throw unavailable();
     if(member.state!=='active')throw accessEnded();
     await this.consent(db,householdId,member);
@@ -182,7 +182,8 @@ export class HouseholdRepository {
         JOIN ritc.shop s USING(household_id,shop_id,authority_epoch)
         WHERE g.household_id=$1 AND g.member_id=$2 AND g.enabled AND s.phase<>'closed' LIMIT 1`,
         [ctx.householdId,ctx.member.member_id])).rowCount ?? 0) > 0;
-    const helperRole=!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&!hasBudgetAccess&&helper;
+    const pantryAccess=householdPantryEpoch(ctx)!==null;
+    const helperRole=!pantryAccess&&!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&!hasBudgetAccess&&helper;
     const queueEligible = !ctx.viewGrantId && !helperRole && ctx.member.kind === 'adult' && ctx.member.can_contribute;
     const grant = queueEligible ? (await ctx.db.query<{request_queue_grant:string,request_queue_until:Date}>(
       'SELECT grant_id AS request_queue_grant,expires_at AS request_queue_until FROM ritc.request_queue_permission WHERE household_id=$1 AND member_id=$2 AND device_id=$3 AND enabled_at<=$4 AND expires_at>$4',
@@ -195,7 +196,7 @@ export class HouseholdRepository {
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:false,
       ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'} : {}),
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
-      capabilities:[...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      capabilities:[...(pantryAccess?['household_pantry']:[]),...(pantryAccess&&ctx.member.organizer?['household_pantry_grants']:[]),...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned'|'history-owned'|'requests',after:string|null){
     if(ctx.viewGrantId)throw unavailable();
@@ -379,6 +380,7 @@ export class HouseholdRepository {
       WHERE o.household_id=$1 AND o.actor_id=$2 AND o.client_key=$3`,[ctx.householdId,ctx.member.member_id,command.clientKey])).rows[0];
     if(prior) {
       // Reauthorize the original scope before returning anything about a prior result.
+      if(prior.pantry_grant_epoch!=null && householdPantryEpoch(ctx)!==prior.pantry_grant_epoch) throw refresh();
       if(prior.response_scope==='shopper'){
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
         await assertDemandReplay(this,ctx,shop,prior.operation_id);
@@ -456,8 +458,9 @@ export class HouseholdRepository {
         response=await this.shopperCommand(ctx,shop,command,operationId,billing,internalPriceOnly);
       }
     }
-    await ctx.db.query(`INSERT INTO ritc.operation(household_id,operation_id,actor_id,device_id,client_key,window_id,kind,shop_id,payload_digest,response_scope)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,[ctx.householdId,operationId,ctx.member.member_id,ctx.deviceId,command.clientKey,command.replayWindow,command.kind,command.shopId,payloadDigest,scope]);
+    await ctx.db.query(`INSERT INTO ritc.operation(household_id,operation_id,actor_id,device_id,client_key,window_id,kind,shop_id,payload_digest,response_scope,pantry_grant_epoch)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,(SELECT $11::integer FROM ritc.pantry_lot
+        WHERE household_id=$1 AND lot_id=$12 AND origin_shop_id IS NULL))`,[ctx.householdId,operationId,ctx.member.member_id,ctx.deviceId,command.clientKey,command.replayWindow,command.kind,command.shopId,payloadDigest,scope,householdPantryEpoch(ctx),isPantryCommand(command.kind)?command.body.lotId??null:null]);
     await ctx.db.query('INSERT INTO ritc.operation_response(household_id,operation_id,response) VALUES($1,$2,$3)',[ctx.householdId,operationId,response]);
     await ctx.db.query('INSERT INTO ritc.event(household_id,operation_id,shop_id,kind) VALUES($1,$2,$3,$4)',[ctx.householdId,operationId,command.shopId,command.kind]);
     return response;

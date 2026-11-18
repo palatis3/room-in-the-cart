@@ -82,3 +82,20 @@ When the bootstrap advertises `cook_corrections`, the app may attach a versioned
 The shopper can request a comparison by posting `{occurrenceId,copyId,previousCopyId,previousSendId,recipient,destinationConfirmed:true}` to the shop’s `/cook-copies/correction`. A live named adult seat, current shopper, newest copy, source revisions and exact recipient baseline are required. The app verifies current usable-food facts again before showing or sharing changes. The comparison includes changed coverage scope and unresolved requirements. Different languages, an unknown destination or missing reviewed facts use the editable full copy. Share and mark sent remain explicit, separate actions.
 
 Saved instructions and recipient baselines outlive ordinary operation-response expiry. Account erasure removes affected authored or source-dependent instructions and their sends. Erasing the latest send clears its baseline, including when an older send still exists. Recovery from an older backup uses the existing erasure replay.
+
+## Household pantry without a shop
+
+The household endpoints below use the normal live session and enrolled device. An active organizer or an explicitly granted adult receives the `household_pantry` capability. The organizer also receives `household_pantry_grants`. A selected shop has no bearing on these grants. Helper-view and own-requests sessions cannot use these endpoints.
+
+| Method | Path under `/v1/households/{householdId}` | Result |
+| --- | --- | --- |
+| GET | `/pantry?cursor={lotId}` | A version 1 page with `householdId`, `grantEpoch`, `pantryRevision`, `asOf`, up to 50 `lots`, and `nextCursor`. |
+| POST | `/pantry/commands` | A version 1 receipt with `kind`, `householdId`, `operationId`, `lotId`, `grantEpoch`, and committed `pantryRevision`. |
+| GET | `/pantry/grants` | The organizer’s version 1 `adults` list. Each active non-organizer adult has `memberId`, `label`, `enabled`, and `grantEpoch`. |
+| POST | `/pantry/grants` | Send `{v:1, memberId, enabled, expectedGrantEpoch}` and receive the current grants list. |
+
+Each lot includes its physical `observation` (observation ID, confirmation time and quantity), `foodName`, `origin`, `location`, `storedAt`, `useFirstAt`, and `exclusionTags`. A missing or unquantified observation means the physical quantity is unknown. Zero is an explicit count. A placed shop’s separate coverage projection accounts for meal commitments.
+
+To add a lot, submit `{v:1, kind:"pantry.addLot", clientKey, replayWindow, grantEpoch, pantryRevision, body}`. The body contains `foodName`, `location` (`pantry`, `fridge` or `freezer`), nullable `storedAt` and `useFirstAt`, `exclusionTags`, `confirmedAt`, and nullable `quantity`. A quantity uses the existing exact rational amount, unit and original literal. The server commits one lot and its initial observation together under the household stock revision. A retry from the same device with the original live grant and replay window returns the original receipt. A changed intent needs a new client key. After a grant changes or a stock review goes stale, read the current page before submitting a new intent.
+
+The placed-shop pantry endpoint retains its pantry/freezer location vocabulary. A shopper with standalone pantry authority can select compatible standalone lots through the existing shop commands. The joint allocator uses those same physical observations for reservations and shortfalls.
