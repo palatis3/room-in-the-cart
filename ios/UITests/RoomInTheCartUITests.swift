@@ -411,7 +411,9 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(shopViewport.contains(startPickup.frame))
         XCTAssertLessThan(compare.frame.midY, shortcuts.frame.minY)
         XCTAssertLessThan(startPickup.frame.midY, shortcuts.frame.minY)
-        XCTAssertGreaterThanOrEqual(shortcuts.frame.height, 44)
+        // Accessibility can report the 44-point frame as 43.99999999999994.
+        let frameRoundingTolerance: CGFloat = 1e-9
+        XCTAssertGreaterThanOrEqual(shortcuts.frame.height, 44 - frameRoundingTolerance)
         XCTAssertTrue(shopViewport.contains(shortcuts.frame))
         shortcuts.tap()
         let destination = app.navigationBars["Device shortcuts"]
