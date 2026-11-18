@@ -253,6 +253,14 @@ export const publicPages = {
             "es": "Las funciones conectadas opcionales usan la información necesaria para la acción que revisas: correo e identidad de la cuenta, alias de miembros, identificadores de dispositivo o sesión inscritos, solicitudes e instrucciones del hogar, presupuesto y pruebas de precios de compras compartidas, y pruebas de transacciones de membresía de Apple. Los permisos limitan lo que cada persona puede leer o cambiar."
           },
           {
+            "en": "If you report household content, the service records your reason, which item and version you reported, your member ID and the sender’s ID when known. You can submit the report without sharing the wording, or choose up to 1,000 characters for the review team to read. Reports expire after the period the operator sets for review. Blocking a sender in your household sends no message text.",
+            "es": "Si reportas contenido del hogar, el servicio guarda el motivo, qué elemento y versión reportaste, tu identificador de miembro y el de quien lo envió, si se conoce. Puedes enviar el reporte sin compartir el texto o elegir hasta 1,000 caracteres para que los lea el equipo de revisión. Los reportes vencen al terminar el plazo de revisión que establece el operador. Al bloquear en tu hogar a quien lo envió, no se comparte el texto del mensaje."
+          },
+          {
+            "en": "If you request a private review of your authority to delete a child’s account, the service uses the details you provide to verify your request. It keeps a case number, account or enrollment references, status and dates. You can check the case and its expiry in Guardian controls. A separate deletion receipt confirms when the account has been erased.",
+            "es": "Si solicitas una revisión privada para verificar que tienes autoridad para eliminar la cuenta de un menor, el servicio usa los datos que proporcionas para verificar la solicitud. Guarda un número de caso, referencias de la cuenta o de la inscripción, el estado y las fechas. En los controles del tutor puedes consultar el caso y su fecha de vencimiento. Un comprobante de eliminación por separado confirma cuándo se eliminó la cuenta."
+          },
+          {
             "en": "The household service saves a shopper’s question with the contributor’s request. When you save shared instructions for a cook, it stores the wording and your member ID. If you mark the instructions as sent, it also saves the recipient you entered and the time.",
             "es": "El servicio del hogar guarda la pregunta de quien hace la compra junto con la solicitud de quien la envió. Cuando guardas instrucciones compartidas para quien cocina, el servicio guarda el texto y tu identificador de miembro. Si marcas las instrucciones como enviadas, también guarda el destinatario que indicaste y la hora."
           },

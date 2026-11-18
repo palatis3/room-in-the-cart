@@ -97,8 +97,8 @@ export async function inboxPairs(ctx:Context,shop:Shop,ids:string[],notice:strin
   const pairs=new Map<string,RequestPairReference[]>();
   if (shop.phase!=='draft'||!ids.length) return pairs;
   const {rows}=await ctx.db.query<Pair>(`SELECT p.* FROM ritc.request_pair_review p
-    JOIN ritc.request_origin a ON (a.household_id,a.shop_id,a.request_id,a.revision)=(p.household_id,p.shop_id,p.request_id,p.request_revision)
-    JOIN ritc.request_origin b ON (b.household_id,b.shop_id,b.request_id,b.revision)=(p.household_id,p.shop_id,p.other_id,p.other_revision)
+    JOIN ritc.visible_request_origin a ON (a.household_id,a.shop_id,a.request_id,a.revision)=(p.household_id,p.shop_id,p.request_id,p.request_revision)
+    JOIN ritc.visible_request_origin b ON (b.household_id,b.shop_id,b.request_id,b.revision)=(p.household_id,p.shop_id,p.other_id,p.other_revision)
     WHERE p.household_id=$1 AND p.shop_id=$2 AND (p.request_id=ANY($3::uuid[]) OR p.other_id=ANY($3::uuid[]))
     AND p.operation_id IS NOT NULL AND p.undo_operation_id IS NULL AND NOT p.invalidated
     AND a.author_active AND (a.author_kind='adult' OR a.live_notice=$4) AND b.author_active AND (b.author_kind='adult' OR b.live_notice=$4)

@@ -1,12 +1,12 @@
 import type { Language } from './i18n.js';
 import type { OwnRequest, CommandEnvelope } from '../../shared/contracts/service-v1.js';
 export type { OwnRequest };
-export interface ReadRequest extends OwnRequest { serverReadAt?:string }
+export interface ReadRequest extends OwnRequest { serverReadAt?:string; canReportClarification?:true }
 export type Command = CommandEnvelope;
 export interface Session {
   authenticated: true; role: string; household: { id: string; label: string }; memberId: string;
   shopId: string | null; replayWindow: { id: string; expiresAt: string }; csrf: string;
-  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; nextShopOnly?:boolean; selectionRequired?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
+  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; canModerate?:boolean; nextShopOnly?:boolean; selectionRequired?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
 }
 export interface RequestPickup {shopId:string;createdAt:string;nextShopOnly:boolean}
 export interface BrowserAuthState { available:boolean; authenticated:boolean; csrf:string|null }
@@ -15,9 +15,20 @@ export interface InviteRedemption {
 }
 export interface CookView {
   grantId: string; shopId: string; shopLabel: string; revision: number; asOf: string;
-  expiresAt: string; canPropose: boolean;
-  instructions: { item: string; amount: string | null; action: string; basis?: string }[];
+  expiresAt: string; canPropose: boolean; canReportContent?:true;
+  instructions: { item: string; amount: string | null; rawAmount?:string|null; unit?:string|null; action: string; basis?: string }[];
 }
+export interface ReportField {
+  kind:'clarification'|'instruction';
+  id:string;
+  revision:number;
+  field:'question'|'shopLabel'|'label'|'amount'|'unit'|'action';
+  index?:number;
+}
+export type ReportReason = 'harassment'|'unsafe'|'other';
+export type SafetyAction = {clientKey:string;source:ReportField} & (
+  {action:'report';reason:ReportReason;text?:string} | {action:'block'}
+);
 export interface ProposalIntent {
   readonly householdId:string; readonly memberId:string; readonly shopId:string; readonly grantId:string;
   readonly baseRevision:number; readonly correction:string; readonly clientKey:string; readonly expiresAt:string;
@@ -101,7 +112,7 @@ export function validateOwnCommand(command: Command): void {
   if (c.kind !== 'request.withdraw') { text(body.originalItem, 240); optionalText(body.ownQuantity, 80); }
 }
 
-function ownRequest(value: unknown): OwnRequest {
+function ownRequest(value: unknown): ReadRequest {
   const r = record(value);
   const route = r.route, status = r.status;
   if (route !== 'current' && route !== 'next') return invalid();
@@ -116,6 +127,7 @@ function ownRequest(value: unknown): OwnRequest {
   return {requestId:identity(r.requestId), shopId:identity(r.shopId), revision:integer(r.revision, 1),
     originalItem:text(r.originalItem, 240), ownQuantity:optionalText(r.ownQuantity, 80),
     authoredAt:timestamp(r.authoredAt), receivedAt:timestamp(r.receivedAt), route, status:status as OwnRequest['status'], ownActionAllowed,
+    ...(r.canReportClarification===true?{canReportClarification:true}:{}),
     ...(r.carriedForward === true ? {carriedForward:true} : {}),
     ...(r.fromPreviousShop === true ? {fromPreviousShop:true} : {}),
     ...(purchaseOutcome === undefined ? {} : {purchaseOutcome}),
@@ -152,6 +164,7 @@ function parseSession(value: unknown): Session | null {
     ...(d.selectionRequired===undefined?{}:{selectionRequired:boolean(d.selectionRequired)}),
     ...(d.nextShopOnly===undefined?{}:{nextShopOnly:boolean(d.nextShopOnly)}),
     ...(Array.isArray(d.capabilities)?{canContribute:d.capabilities.includes('own_requests')}:{}),
+    ...(Array.isArray(d.capabilities)&&d.capabilities.includes('shared_content_safety')?{canModerate:true}:{}),
     ...(grantId ? { grantId } : {}) };
 }
 
@@ -165,6 +178,7 @@ export class API {
   constructor(private readonly fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init)) {}
   private async call(path: string, method = 'GET', body?: unknown, csrf?: string, encodedBody?:string, extraHeaders: Record<string,string> = {}): Promise<unknown> {
     const headers: Record<string, string> = { Accept: 'application/json', ...extraHeaders };
+    if(!path.startsWith('/v1/auth/'))headers['X-Shared-Content-Safety']='1';
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (csrf) headers['X-CSRF-Token'] = csrf;
     let response: Response;
@@ -271,9 +285,16 @@ export class API {
     const expiresAt = timestamp(d.expiresAt);
     if (Date.parse(expiresAt) <= Date.now()) throw new ApiError('access_ended', 403);
     return {grantId:identity(d.grantId), shopId:identity(d.shopId), shopLabel:text(d.shopLabel, 512), revision:integer(d.revision, 1),
-      asOf:timestamp(d.asOf), expiresAt, canPropose:boolean(d.canPropose) && session.role === 'editor' && d.mode === 'edit',
+      asOf:timestamp(d.asOf), expiresAt, ...(d.canReportContent===true?{canReportContent:true}:{}), canPropose:boolean(d.canPropose) && session.role === 'editor' && d.mode === 'edit',
       instructions:d.items.map(value => { const i = record(value), amount = optionalText(i.amount, 80), unit = optionalText(i.unit, 80);
-        return {item:text(i.label, 240), amount:amount === null ? null : [amount, unit].filter(Boolean).join(' '), action:text(i.action, 500)}; })};
+        return {item:text(i.label, 240), amount:amount === null ? null : [amount, unit].filter(Boolean).join(' '), action:text(i.action, 500),rawAmount:amount,unit}; })};
+  }
+  async moderate(session:Session,action:SafetyAction):Promise<void> {
+    if(!session.enrolled||!session.canModerate)throw new ApiError('access_ended',403);
+    const data=record(await this.call(`/v1/households/${segment(session.household.id)}/moderation/actions`,
+      'POST',action,session.csrf));
+    if(!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(identity(data.receiptId)))invalid();
+    if(data.status!==(action.action==='report'?'received':'blocked'))invalid();
   }
   async propose(session: Session, view: CookView, correction: string, clientKey: string): Promise<ProposalReceipt> {
     return this.sendProposal(session,prepareProposal(session,view,correction,clientKey));

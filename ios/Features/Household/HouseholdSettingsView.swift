@@ -120,7 +120,12 @@ struct HouseholdSettingsView: View {
                                     if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                                     Text(status(request)).foregroundStyle(.secondary)
                                     if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
-                                    if let clarification = request.clarification { Text(clarification) }
+                                    if let clarification = request.clarification {
+                                        Text(verbatim: clarification)
+                                        if request.canReportClarification == true, let field = SharedMessageField(.clarification, request.id, request.revision, .question, clarification) {
+                                            SharedSafetyButton(channel: model.sharedSafetyChannel(), fields: [field])
+                                        }
+                                    }
                                     if request.ownActionAllowed {
                                         HStack {
                                             Button(ht("Edit request")) { model.edit(request) }.buttonStyle(.borderless)
@@ -129,7 +134,7 @@ struct HouseholdSettingsView: View {
                                     } else if request.status != "withdrawn" {
                                         Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
                                     }
-                                }.accessibilityElement(children: .combine)
+                                }.accessibilityElement(children: projection.supportsSharedContentSafety ? .contain : .combine)
                                 .accessibilityIdentifier("household.ownRequest." + request.id)
                             }
                             if model.requests.isEmpty {

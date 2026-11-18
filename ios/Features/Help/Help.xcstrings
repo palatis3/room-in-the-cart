@@ -1966,6 +1966,38 @@
         }
       }
     },
+    "If you report household content, the service records your reason, which item and version you reported, your member ID and the sender’s ID when known. You can submit the report without sharing the wording, or choose up to 1,000 characters for the review team to read. Reports expire after the period the operator sets for review. Blocking a sender in your household sends no message text.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you report household content, the service records your reason, which item and version you reported, your member ID and the sender’s ID when known. You can submit the report without sharing the wording, or choose up to 1,000 characters for the review team to read. Reports expire after the period the operator sets for review. Blocking a sender in your household sends no message text."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si reportas contenido del hogar, el servicio guarda el motivo, qué elemento y versión reportaste, tu identificador de miembro y el de quien lo envió, si se conoce. Puedes enviar el reporte sin compartir el texto o elegir hasta 1,000 caracteres para que los lea el equipo de revisión. Los reportes vencen al terminar el plazo de revisión que establece el operador. Al bloquear en tu hogar a quien lo envió, no se comparte el texto del mensaje."
+          }
+        }
+      }
+    },
+    "If you request a private review of your authority to delete a child’s account, the service uses the details you provide to verify your request. It keeps a case number, account or enrollment references, status and dates. You can check the case and its expiry in Guardian controls. A separate deletion receipt confirms when the account has been erased.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you request a private review of your authority to delete a child’s account, the service uses the details you provide to verify your request. It keeps a case number, account or enrollment references, status and dates. You can check the case and its expiry in Guardian controls. A separate deletion receipt confirms when the account has been erased."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si solicitas una revisión privada para verificar que tienes autoridad para eliminar la cuenta de un menor, el servicio usa los datos que proporcionas para verificar la solicitud. Guarda un número de caso, referencias de la cuenta o de la inscripción, el estado y las fechas. En los controles del tutor puedes consultar el caso y su fecha de vencimiento. Un comprobante de eliminación por separado confirma cuándo se eliminó la cuenta."
+          }
+        }
+      }
+    },
     "The household service saves a shopper’s question with the contributor’s request. When you save shared instructions for a cook, it stores the wording and your member ID. If you mark the instructions as sent, it also saves the recipient you entered and the time.": {
       "localizations": {
         "en": {

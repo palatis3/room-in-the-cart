@@ -78,6 +78,19 @@ enum ShopperDelivery: Equatable {
         shopID = bootstrap.shopId ?? ""; self.service = service; self.outbox = outbox; self.onAccessEnded = onAccessEnded
         authorized = bootstrap.role == "shopper" && bootstrap.shopId != nil
     }
+    private let safetyReviews = SharedSafetyReviews()
+    var sharedSafetyChannel: SharedSafetyChannel? {
+        let session = generation
+        return SharedSafetyChannel(reviews: safetyReviews, generation: session, scope: bootstrap, service: service,
+            current: { [weak self] in self?.authorized == true && self?.generation == session },
+            afterBlock: { [weak self] in
+                guard let self else { return }
+                requests = []
+                deferredRequests = []
+                cancelReview()
+                await load()
+            })
+    }
     var supportsPurchaseConfirmation: Bool {
         authorized && bootstrap.grantId == nil && bootstrap.capabilities.contains("request_purchase_confirmation")
     }
@@ -563,6 +576,17 @@ enum ShopperDelivery: Equatable {
             catch { await handleConfirmedRefresh(error, start: start) }
         } catch {
             guard start == generation else { return }
+            if let publicationNotice = sharedPublicationNotice(error), pending == operation {
+                do {
+                    try await outbox.removeIfUnchanged([operation])
+                    guard start == generation, pending == operation else { return }
+                    pending = nil
+                    delivery = .none
+                    invalidatePreview()
+                    notice = publicationNotice
+                } catch { if start == generation { notice = ht("Could not clear the local retry. Try again.") } }
+                return
+            }
             if pending != nil {
                 if let failure = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: failure) {
                     retryAfter = Date().addingTimeInterval(delay)
@@ -581,6 +605,7 @@ enum ShopperDelivery: Equatable {
         } catch { await handle(error, start: start) }
     }
     func clear() {
+        safetyReviews.clear()
         forgetDeferred()
         generation = UUID(); authorized = false; shop = nil; requests = []; requestReadTimes = RequestReadTimes(); selected = nil; nextCursor = nil
         pending = nil; delivery = .none; notice = nil; clarification = ""; lineItem = ""; price = ""; linkedLineID = ""; invalidatePreview()
@@ -597,6 +622,7 @@ enum ShopperDelivery: Equatable {
     private func handle(_ error: Error, start: UUID) async {
         guard start == generation else { return }
         if let input = error as? ShopperInputError { notice = input.message; return }
+        if let publicationNotice = sharedPublicationNotice(error) { invalidatePreview(); notice = publicationNotice; return }
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
             clear(); await onAccessEnded()

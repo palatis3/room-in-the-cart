@@ -110,7 +110,7 @@ export async function readSharedRecordSnapshot(repo:HouseholdRepository,ctx:Cont
  repo.requireShopper(ctx,shop);
  const page=await readDemand(repo,ctx,shop),lines=await repo.lines(ctx,shop.shop_id),meals=await repo.meals(ctx,shop.shop_id);
  const linked=await ctx.db.query<{request_id:string;line_id:string;reviewed_revision:number;original_item:string;own_quantity:string|null}>(`SELECT l.request_id,l.line_id,l.reviewed_revision,r.original_item,r.own_quantity
-  FROM ritc.request_link l JOIN ritc.request r ON (r.household_id,r.shop_id,r.request_id)=(l.household_id,l.shop_id,l.request_id)
+  FROM ritc.request_link l JOIN ritc.visible_request_origin r ON (r.household_id,r.shop_id,r.request_id)=(l.household_id,l.shop_id,l.request_id)
   WHERE l.household_id=$1 AND l.shop_id=$2 ORDER BY l.request_id LIMIT 2001`,[ctx.householdId,shop.shop_id]);
  requireThat(linked.rows.length<=2000);
  const requestSources=linked.rows.map(r=>({requestId:r.request_id,lineId:r.line_id,reviewedRevision:r.reviewed_revision,originalItem:r.original_item,originalQuantityText:r.own_quantity}));

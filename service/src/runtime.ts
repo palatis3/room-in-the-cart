@@ -1,3 +1,4 @@
+import {moderationConfiguration} from './moderation.js';
 import { VoiceAssistance } from './voice-assistance.js';
 import { ReceiptAssistance } from './receipt-assistance.js';
 import type { PoolConfig } from 'pg';
@@ -69,6 +70,7 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
       // Current clients review shared food through v2; apply migrations before
       // deploying this runtime. Repository authorization still governs access.
       trackingV2: true,
+      ...moderationConfiguration(environment),
       // Enable only when provider-backed guardian verification and revocation are
       // integrated. An environment flag cannot substitute for that authority.
       allowChildNetwork: false,

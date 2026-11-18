@@ -1,6 +1,422 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Posting shared messages is unavailable for this account. You can still read messages and use the safety controls.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posting shared messages is unavailable for this account. You can still read messages and use the safety controls."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cuenta no puede publicar mensajes compartidos. Aún puedes leer los mensajes y usar las opciones de seguridad."
+          }
+        }
+      }
+    },
+    "Action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción"
+          }
+        }
+      }
+    },
+    "Another reason": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another reason"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otro motivo"
+          }
+        }
+      }
+    },
+    "Block sender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block sender"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear a quien envió el mensaje"
+          }
+        }
+      }
+    },
+    "Block this sender’s shared messages from your view. The block sends a message reference without an excerpt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block this sender’s shared messages from your view. The block sends a message reference without an excerpt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los mensajes compartidos por esta persona se ocultarán en tu vista. Al bloquearla se envía una referencia al mensaje sin incluir su texto."
+          }
+        }
+      }
+    },
+    "Choose a reason": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a reason"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un motivo"
+          }
+        }
+      }
+    },
+    "Choose the excerpt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the excerpt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el fragmento"
+          }
+        }
+      }
+    },
+    "Confirm block": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm block"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar bloqueo"
+          }
+        }
+      }
+    },
+    "Delivery is unconfirmed. Retry the same action to check its result.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivery is unconfirmed. Retry the same action to check its result."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se ha confirmado el envío. Vuelve a intentar la misma acción para consultar el resultado."
+          }
+        }
+      }
+    },
+    "Exact excerpt to send": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact excerpt to send"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragmento exacto que se enviará"
+          }
+        }
+      }
+    },
+    "Harassment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harassment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acoso"
+          }
+        }
+      }
+    },
+    "Include an excerpt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include an excerpt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir un fragmento"
+          }
+        }
+      }
+    },
+    "Reason for reporting": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason for reporting"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motivo del reporte"
+          }
+        }
+      }
+    },
+    "Report or block": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report or block"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportar o bloquear"
+          }
+        }
+      }
+    },
+    "Report privately": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report privately"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportar en privado"
+          }
+        }
+      }
+    },
+    "Retry the same action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a intentar la misma acción"
+          }
+        }
+      }
+    },
+    "Send private report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send private report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar reporte privado"
+          }
+        }
+      }
+    },
+    "Sender blocked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender blocked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se bloqueó a quien envió el mensaje."
+          }
+        }
+      }
+    },
+    "Sending…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviando…"
+          }
+        }
+      }
+    },
+    "The sender of this message could not be verified for blocking.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sender of this message could not be verified for blocking."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar quién envió este mensaje para bloquearlo."
+          }
+        }
+      }
+    },
+    "This action is unavailable for the current household access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action is unavailable for the current household access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta acción no está disponible con tu acceso actual al hogar."
+          }
+        }
+      }
+    },
+    "This message changed or is no longer available. Refresh before reviewing it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This message changed or is no longer available. Refresh before reviewing it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este mensaje cambió o ya no está disponible. Actualiza la vista antes de volver a revisarlo."
+          }
+        }
+      }
+    },
+    "This wording could not be shared. Edit it and review it again before sending.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This wording could not be shared. Edit it and review it again before sending."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo compartir este texto. Edítalo y vuelve a revisarlo antes de enviarlo."
+          }
+        }
+      }
+    },
+    "Unsafe content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsafe content"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenido peligroso"
+          }
+        }
+      }
+    },
+    "Your private report was received.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private report was received."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se recibió tu reporte privado."
+          }
+        }
+      }
+    },
+    "Your report goes to the safety team with the reason and a reference to this message.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your report goes to the safety team with the reason and a reference to this message."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El equipo de seguridad recibirá tu reporte con el motivo y una referencia a este mensaje."
+          }
+        }
+      }
+    },
     "Bought by": {
       "localizations": {
         "en": {

@@ -16,6 +16,7 @@ public struct SharedCookCopy: Decodable, Equatable, Identifiable, Sendable {
     public let version: Int
     public let language: String
     public let text: String
+    public internal(set) var canReportContent: Bool? = nil
     public let createdAt: String
 
     func validate(occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) throws {

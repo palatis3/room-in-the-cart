@@ -58,6 +58,9 @@ struct ShopperInboxContent: View {
                                     }.disabled(model.busy || model.pending != nil)
                                         .accessibilityIdentifier("household.request.\(request.id)")
                                         .accessibilityFocused($focusedRequest, equals: request.id)
+                                    if request.canReportContent == true {
+                                        SharedSafetyButton(channel: model.sharedSafetyChannel, fields: SharedMessageField.request(request))
+                                    }
                                     Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
                                         .accessibilityIdentifier("household.request.outcome.\(request.id)")
                                         .accessibilityFocused($focusedOutcome, equals: request.id)

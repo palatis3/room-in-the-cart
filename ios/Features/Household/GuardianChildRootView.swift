@@ -163,7 +163,12 @@ struct GuardianChildRequestsView: View {
                             if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                             Text(requestStatus(request)).foregroundStyle(.secondary)
                             if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
-                            if let clarification = request.clarification { Text(clarification) }
+                            if let clarification = request.clarification {
+                                Text(verbatim: clarification)
+                                if request.canReportClarification == true, let field = SharedMessageField(.clarification, request.id, request.revision, .question, clarification) {
+                                    SharedSafetyButton(channel: household.sharedSafetyChannel(), fields: [field])
+                                }
+                            }
                             if request.ownActionAllowed {
                                 HStack {
                                     Button(ht("Edit request")) { household.edit(request) }.buttonStyle(.borderless)

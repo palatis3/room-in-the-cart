@@ -139,6 +139,20 @@ struct DeviceReminderPersona: Equatable {
             service: namespace + "." + serviceURL.absoluteString, account: "deletion-receipts"))
         configured = true
     }
+    private let safetyReviews = SharedSafetyReviews()
+    func sharedSafetyChannel(afterBlock: (() async -> Void)? = nil) -> SharedSafetyChannel? {
+        guard !locked, let scope = projection else { return nil }
+        let session = generation
+        return SharedSafetyChannel(reviews: safetyReviews, generation: session, scope: scope, service: service,
+            current: { [weak self] in self?.generation == session && self?.locked == false && self?.projection == scope },
+            afterBlock: { [weak self] in
+                if let afterBlock { await afterBlock() }
+                else if let self {
+                    self.requests = []
+                    await self.refresh()
+                }
+            })
+    }
     func sendCode() async {
         guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is unavailable. You can still use your private shopping tools."); return }
         guard let auth, !busy else { return }
@@ -279,6 +293,7 @@ struct DeviceReminderPersona: Equatable {
                 prior.role != fresh.role || prior.grantId != fresh.grantId || Set(prior.capabilities) != Set(fresh.capabilities)
             let destinationChanged = prior.shopId != fresh.shopId
             if actorChanged || destinationChanged {
+                safetyReviews.clear()
                 contributorReplayWindow = nil
                 onScopeChange?()
                 if guardianChildOnly && !actorChanged && editing == nil && followingUp == nil {
@@ -630,6 +645,40 @@ struct DeviceReminderPersona: Equatable {
             }
         } catch {
             guard start == generation else { return }
+            if let publicationNotice = sharedPublicationNotice(error), pending == operation,
+               case .service(_, let code, _, _) = error as? ClientError {
+                let draft = currentContributorRequestScope()
+                guard let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes),
+                      case .string(let wording) = envelope.body["originalItem"], draft?.targetShopID == envelope.shopId else {
+                    delivery = .needsReview(operationID: operation.id, code: code)
+                    notice = publicationNotice
+                    return
+                }
+                let firstDraft = submittedDraft != nil && draft == submittedDraft
+                let restoredNewRequest = submittedDraft == nil && item.isEmpty && quantity.isEmpty && editing == nil &&
+                    followingUp == nil && envelope.kind == "request.send" && envelope.body["followupTo"] == nil
+                guard firstDraft || restoredNewRequest else {
+                    // A different edit or destination needs explicit review before replacing the draft.
+                    delivery = .needsReview(operationID: operation.id, code: code)
+                    notice = publicationNotice
+                    return
+                }
+                do {
+                    try await outbox.removeIfUnchanged([operation])
+                    guard start == generation, pending == operation else { return }
+                    pending = nil
+                    delivery = .localDraft
+                    if currentContributorRequestScope() == draft {
+                        item = wording
+                        if case .string(let amount) = envelope.body["ownQuantity"] { quantity = amount } else { quantity = "" }
+                        if envelope.kind == "request.send" { forNextShop = envelope.body["route"] == .string("next") }
+                    }
+                    notice = publicationNotice
+                } catch {
+                    if start == generation { notice = ht("Could not clear the local retry. Try again.") }
+                }
+                return
+            }
             if case .service(_, "queue_permission_ended", _, _) = error as? ClientError, let endedGrant = operation.requestQueueGrant {
                 contributorReplayWindow = nil
                 do {
@@ -663,7 +712,7 @@ struct DeviceReminderPersona: Equatable {
     }
     var canReviewRejectedCorrection: Bool {
         guard case .needsReview(let id, let code) = delivery, let pending, pending.id == id,
-              code == "followup_required" || code == "stale_base",
+              ["followup_required", "stale_base", "content_review_required", "shared_posting_unavailable"].contains(code),
               let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes) else { return false }
         return envelope.kind == "request.edit"
     }
@@ -910,6 +959,7 @@ struct DeviceReminderPersona: Equatable {
         return token
     }
     private func clearProjection(preservePlacementEvidence: Bool = false) {
+        safetyReviews.clear()
         if !preservePlacementEvidence {
             placementEvidenceIdentity = nil; placementEvidenceUnlocked = false; placementEvidenceNotice = nil
             suspendedReminderPersona = nil
@@ -924,7 +974,7 @@ struct DeviceReminderPersona: Equatable {
     private func validateGuardianChildProjection(_ value: HouseholdBootstrap) throws {
         guard guardianChildOnly else { return }
         guard value.enrolled, value.role == "contributor", value.grantId == nil,
-              value.capabilities == ["own_requests"], value.canSelectShop != true,
+              value.hasOnlyChildRequestCapabilities, value.canSelectShop != true,
               (value.selectionRequired != true || value.shopId == nil) else { throw ClientError.accessEnded }
     }
     /// Dedicated child composition only: this adopts the exact server-issued credential without calling generic enrollment.

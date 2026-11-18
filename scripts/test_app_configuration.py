@@ -309,11 +309,13 @@ class BuiltAppVerificationTests(unittest.TestCase):
         with (self.app / "PrivacyInfo.xcprivacy").open("rb") as handle:
             manifest = plistlib.load(handle)
         declared = {row["NSPrivacyCollectedDataType"]: row for row in manifest["NSPrivacyCollectedDataTypes"]}
-        messages = declared["NSPrivacyCollectedDataTypeEmailsOrTextMessages"]
-        self.assertTrue(messages["NSPrivacyCollectedDataTypeLinked"])
-        self.assertFalse(messages["NSPrivacyCollectedDataTypeTracking"])
-        self.assertEqual(messages["NSPrivacyCollectedDataTypePurposes"],
-                         ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])
+        for kind in ("EmailsOrTextMessages", "CustomerSupport"):
+            with self.subTest(kind=kind):
+                row = declared["NSPrivacyCollectedDataType" + kind]
+                self.assertTrue(row["NSPrivacyCollectedDataTypeLinked"])
+                self.assertFalse(row["NSPrivacyCollectedDataTypeTracking"])
+                self.assertEqual(row["NSPrivacyCollectedDataTypePurposes"],
+                                 ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])
         for kind in ("UserID", "OtherUserContent"):
             with self.subTest(kind=kind):
                 row = declared["NSPrivacyCollectedDataType" + kind]

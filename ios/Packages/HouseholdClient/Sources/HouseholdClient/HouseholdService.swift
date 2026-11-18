@@ -157,7 +157,7 @@ public actor HouseholdService {
             guard value.household.id == householdID, value.enrolled, value.grantId == selectedGrantID,
                   let shopID = value.shopId.flatMap(UUID.init(uuidString:)),
                   ["helper", "editor"].contains(value.role),
-                  value.capabilities.allSatisfy({ ["helper_view", "helper_propose"].contains($0) }),
+                  value.capabilities.allSatisfy({ ["helper_view", "helper_propose", "shared_content_safety"].contains($0) }),
                   value.capabilities.contains("helper_view") else { _ = clearLocalScope(); throw ClientError.accessEnded }
             helperAccess = (shopID, value.role == "editor" && value.capabilities.contains("helper_propose"))
         }
@@ -168,7 +168,7 @@ public actor HouseholdService {
             let fresh = try await auth.childInvitationAccess()
             guard generation == start else { throw ClientError.cancelled }
             guard fresh.binding == childBinding, value.household.id == householdID, value.memberId == memberID,
-                  value.role == "contributor", value.capabilities == ["own_requests"], value.grantId == nil,
+                  value.role == "contributor", value.hasOnlyChildRequestCapabilities, value.grantId == nil,
                   value.canSelectShop != true else { throw ClientError.accessEnded }
         }
         memberID = value.memberId
@@ -265,6 +265,7 @@ public actor HouseholdService {
         guard current.binding == expectedAccess.binding else { throw ClientError.accessEnded }
         var req = request(base: configuration.baseURL, path: "v1/households/\(receipt.householdId)/bootstrap",
                           method: "GET", token: current.accessToken)
+        req.setValue("1", forHTTPHeaderField: "X-Shared-Content-Safety")
         req.setValue(receipt.deviceToken, forHTTPHeaderField: "X-Device-Token")
         req.setValue(receipt.householdId, forHTTPHeaderField: "X-Household-ID")
         let value: HouseholdBootstrap = try await transport.json(req)
@@ -273,7 +274,7 @@ public actor HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         guard fresh.binding == expectedAccess.binding else { throw ClientError.accessEnded }
         guard value.enrolled, value.household.id == receipt.householdId, value.memberId == receipt.memberId,
-              value.role == "contributor", value.grantId == nil, value.capabilities == ["own_requests"],
+              value.role == "contributor", value.grantId == nil, value.hasOnlyChildRequestCapabilities,
               value.canSelectShop != true,
               value.shopId.map({ UUID(uuidString: $0) != nil }) ?? true else { throw ClientError.invalidResponse }
         guard try deviceVault.read() == saved else { throw ClientError.cancelled }
@@ -1250,17 +1251,30 @@ public actor HouseholdService {
         try? deviceVault.clear()
         return generation
     }
+    public func submitSharedContentAction(_ action: SharedContentAction, reviewed scope: HouseholdBootstrap) async throws -> SharedContentReceipt {
+        guard scope.supportsSharedContentSafety, scope.household.id == householdID, scope.memberId == memberID,
+              scope.grantId == selectedGrantID, selectedShopID == nil || scope.shopId.flatMap(UUID.init(uuidString:)) == selectedShopID else { throw ClientError.accessEnded }
+        if selectedGrantID != nil {
+            guard action.source.kind == .instruction, action.source.id == selectedGrantID?.lowercased() else { throw ClientError.accessEnded }
+        }
+        if childAdoptionBinding != nil, action.source.kind != .clarification { throw ClientError.accessEnded }
+        let receipt: SharedContentReceipt = try await perform("moderation/actions", method: "POST", body: encoded(action))
+        guard receipt.status == (action.action == .report ? .received : .blocked) else { throw ClientError.invalidResponse }
+        return receipt
+    }
     func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
                                                  query: [URLQueryItem] = [], absolutePath: Bool = false, omitSelectedShop: Bool = false, reportingShopID: String? = nil, requestQueueGrant: UUID? = nil, maximumResponseBytes: Int? = nil, trackingLease: SharedTrackingTransportLease? = nil) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }
-        if let selectedGrantID, path != "bootstrap",
+        if let selectedGrantID, path != "bootstrap", (method != "POST" || path != "moderation/actions"),
            path != "v1/views/\(selectedGrantID)/current", path != "v1/views/\(selectedGrantID)/proposals" { throw ClientError.accessEnded }
         if childAdoptionBinding != nil {
             guard !absolutePath, selectedGrantID == nil, selectedShopID == nil, reportingShopID == nil, requestQueueGrant == nil else {
                 throw ClientError.accessEnded
             }
             switch (method, path) {
+            case ("POST", "moderation/actions"):
+                guard let body, let source = try? JSONDecoder().decode(ChildSafetySource.self, from: body), source.source.kind == .clarification else { throw ClientError.accessEnded }
             case ("GET", "bootstrap"), ("GET", "requests/mine"), ("GET", "requests/pickups"), ("POST", "replay-windows"):
                 break
             case ("POST", "commands"):
@@ -1275,6 +1289,7 @@ public actor HouseholdService {
         if let child = childAdoptionBinding, access.providerSessionID != child.sessionID { throw ClientError.accessEnded }
         var req = request(base: configuration.baseURL, path: "v1/households/\(householdID)/\(path)",
                           method: method, token: access.accessToken, body: body)
+        req.setValue("1", forHTTPHeaderField: "X-Shared-Content-Safety")
         if absolutePath { req.url = configuration.baseURL.appendingPathComponent(path) }
         req.setValue(enrollment.deviceToken, forHTTPHeaderField: "X-Device-Token")
         req.setValue(householdID, forHTTPHeaderField: "X-Household-ID")
@@ -1431,3 +1446,5 @@ extension HouseholdService {
         return record
     }
 }
+
+private struct ChildSafetySource: Decodable { let source: SharedMessageSource }

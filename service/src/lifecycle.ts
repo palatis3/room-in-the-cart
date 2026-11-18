@@ -1,3 +1,4 @@
+import {checkPublishingMember,reviewInstruction,reviewSharedWording} from './shared-content-filter.js';
 import {randomBytes,randomUUID} from 'node:crypto';
 import {proposalDTO} from './helper-review.js';
 import type {z} from 'zod';
@@ -5,7 +6,7 @@ import type {VerifiedIdentity} from './auth.js';
 import {HouseholdRepository,type Context} from './repository.js';
 import {digest,tokenHash} from './database.js';
 import {ServiceError,unavailable,accessEnded} from './errors.js';
-import {householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema} from './contracts.js';
+import {householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,viewProjectionSchema,proposalSchema,revocationSchema} from './contracts.js';
 const consentUnavailable=()=>new ServiceError(503,'consent_unavailable','Child enrollment is unavailable until verified guardian consent is configured.');
 export class HouseholdLifecycle {
   constructor(readonly repo:HouseholdRepository){}
@@ -90,7 +91,7 @@ export class HouseholdLifecycle {
   async views(ctx:Context){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
     const rows=(await ctx.db.query(`SELECT g.grant_id,g.shop_id,g.mode,g.revision,g.projection->>'shopLabel' AS shop_label,g.expires_at,g.revoked_at,m.alias AS recipient_alias
-      FROM ritc.view_grant g JOIN ritc.shop s ON s.household_id=g.household_id AND s.shop_id=g.shop_id LEFT JOIN ritc.member m ON m.household_id=g.household_id AND m.member_id=g.recipient_id
+      FROM ritc.visible_view_grant g JOIN ritc.shop s ON s.household_id=g.household_id AND s.shop_id=g.shop_id LEFT JOIN ritc.member m ON m.household_id=g.household_id AND m.member_id=g.recipient_id
       WHERE g.household_id=$1 AND ($2::boolean OR s.shopper_id=$3) ORDER BY g.expires_at DESC,g.grant_id LIMIT 200`,[ctx.householdId,ctx.member.organizer,ctx.member.member_id])).rows;
     return{views:rows.map(g=>({grantId:g.grant_id,shopId:g.shop_id,mode:g.mode,revision:g.revision,shopLabel:g.shop_label,expiresAt:g.expires_at.toISOString(),revokedAt:g.revoked_at?.toISOString()??null,recipientAlias:g.recipient_alias,status:g.revoked_at?'revoked':g.expires_at<=ctx.now?'expired':g.recipient_alias?'active':'available'}))};
   }
@@ -98,13 +99,14 @@ export class HouseholdLifecycle {
     this.repo.requireShopper(ctx,await this.repo.shop(ctx,input.shopId));
     const grantId=randomUUID(),expiresAt=new Date(ctx.now.getTime()+input.expiresInHours*3_600_000);
     const projection={shopLabel:input.shopLabel,language:input.language,items:input.items};
-    await ctx.db.query('INSERT INTO ritc.view_grant(household_id,grant_id,shop_id,created_by,mode,projection,as_of,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[ctx.householdId,grantId,input.shopId,ctx.member.member_id,input.mode,projection,ctx.now,expiresAt]);
+    await reviewInstruction(ctx,projection);
+    await ctx.db.query('INSERT INTO ritc.view_grant(household_id,grant_id,shop_id,created_by,mode,projection,as_of,expires_at,projection_author_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$4)',[ctx.householdId,grantId,input.shopId,ctx.member.member_id,input.mode,projection,ctx.now,expiresAt]);
     const invitation=await this.issue(ctx,input.mode==='edit'?'helper_edit':'helper_read',input.expiresInHours,grantId);
     return{grantId,...invitation};
   }
   async grant(ctx:Context,grantId:string,management=false){
     if(ctx.viewGrantId&&ctx.viewGrantId!==grantId)throw unavailable();
-    const g=(await ctx.db.query(`SELECT g.* FROM ritc.view_grant g JOIN ritc.member m ON m.household_id=g.household_id AND m.member_id=g.created_by
+    const g=(await ctx.db.query(`SELECT g.* FROM ritc.visible_view_grant g JOIN ritc.member m ON m.household_id=g.household_id AND m.member_id=g.created_by
       WHERE g.household_id=$1 AND g.grant_id=$2 AND g.revoked_at IS NULL AND g.expires_at>$3 AND m.state='active'`,[ctx.householdId,grantId,ctx.now])).rows[0];
     if(!g)throw unavailable();
     if(management)this.repo.requireShopper(ctx,await this.repo.shop(ctx,g.shop_id));
@@ -113,29 +115,41 @@ export class HouseholdLifecycle {
   }
   async currentView(ctx:Context,grantId:string){
     const g=await this.grant(ctx,grantId);
-    return{grantId,shopId:g.shop_id,revision:g.revision,asOf:g.as_of.toISOString(),expiresAt:g.expires_at.toISOString(),mode:g.mode,canPropose:g.mode==='edit',shopLabel:g.projection.shopLabel,language:g.projection.language,items:g.projection.items};
+    return{grantId,shopId:g.shop_id,revision:g.revision,asOf:g.as_of.toISOString(),expiresAt:g.expires_at.toISOString(),mode:g.mode,canPropose:g.mode==='edit',...(ctx.sharedContentSafety&&g.projection_author_id!==ctx.member.member_id?{canReportContent:true}:{}),shopLabel:g.projection.shopLabel,language:g.projection.language,items:g.projection.items};
+  }
+  async replaceProjection(ctx:Context,grantId:string,baseRevision:number,projection:z.infer<typeof viewProjectionSchema>){
+    await reviewInstruction(ctx,projection);
+    const updated=await ctx.db.query(`UPDATE ritc.view_grant SET
+      projection_wording_revision=CASE WHEN projection IS DISTINCT FROM $3::jsonb THEN revision+1 ELSE projection_wording_revision END,
+      projection_author_id=CASE WHEN projection IS DISTINCT FROM $3::jsonb THEN $5::uuid ELSE projection_author_id END,
+      projection=$3,revision=revision+1,as_of=$4
+      WHERE household_id=$1 AND grant_id=$2 AND revision=$6`,
+      [ctx.householdId,grantId,projection,ctx.now,ctx.member.member_id,baseRevision]);
+    if(updated.rowCount!==1)throw new ServiceError(409,'stale_base','Review the current cook instructions before replacing them.');
   }
   async updateView(ctx:Context,grantId:string,input:z.infer<typeof viewUpdateSchema>){
     const g=await this.grant(ctx,grantId,true);if(g.revision!==input.baseRevision)throw new ServiceError(409,'stale_base','Review the current cook instructions before replacing them.');
     const projection={shopLabel:input.shopLabel,language:input.language,items:input.items};
-    await ctx.db.query('UPDATE ritc.view_grant SET revision=revision+1,projection=$3,as_of=$4 WHERE household_id=$1 AND grant_id=$2',[ctx.householdId,grantId,projection,ctx.now]);
+    await this.replaceProjection(ctx,grantId,g.revision,projection);
     return{grantId,revision:g.revision+1,asOf:ctx.now.toISOString()};
   }
   async propose(ctx:Context,grantId:string,input:z.infer<typeof proposalSchema>){
     const g=await this.grant(ctx,grantId);if(g.mode!=='edit')throw unavailable();
     const fingerprint=digest({grantId,...input});
-    const old=(await ctx.db.query('SELECT proposal_id,grant_id,base_revision,payload_digest,status FROM ritc.helper_proposal WHERE household_id=$1 AND actor_id=$2 AND client_key=$3',[ctx.householdId,ctx.member.member_id,input.clientKey])).rows[0];
+    const old=(await ctx.db.query('SELECT proposal_id,grant_id,base_revision,payload_digest,status FROM ritc.visible_helper_proposal WHERE household_id=$1 AND actor_id=$2 AND client_key=$3',[ctx.householdId,ctx.member.member_id,input.clientKey])).rows[0];
     if(old){if(old.payload_digest!==fingerprint)throw new ServiceError(409,'key_reused','Use a fresh key for a changed suggestion.');return{proposalId:old.proposal_id,grantId:old.grant_id,baseRevision:old.base_revision,status:'pending' as const};}
     if(g.revision!==input.baseRevision)throw new ServiceError(409,'stale_base','Read the current instructions before proposing a correction.');
+    await checkPublishingMember(ctx);
+    reviewSharedWording(input.correction);
     const proposalId=randomUUID();
     await ctx.db.query('INSERT INTO ritc.helper_proposal(household_id,proposal_id,grant_id,actor_id,client_key,base_revision,correction,payload_digest) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[ctx.householdId,proposalId,grantId,ctx.member.member_id,input.clientKey,input.baseRevision,input.correction,fingerprint]);
     return{proposalId,grantId,baseRevision:input.baseRevision,status:'pending' as const};
   }
   async proposals(ctx:Context,grantId:string,cursor:string|null=null){
     await this.grant(ctx,grantId,true);let after:string|undefined;
-    if(cursor){after=(await ctx.db.query('SELECT created_at::text AS created_at FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 AND proposal_id=$3',[ctx.householdId,grantId,cursor])).rows[0]?.created_at;if(!after)throw unavailable();}
-    const rows=(await ctx.db.query('SELECT * FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 AND ($3::timestamptz IS NULL OR (created_at,proposal_id)>($3,$4::uuid)) ORDER BY created_at,proposal_id LIMIT 101',[ctx.householdId,grantId,after??null,cursor])).rows;
-    return{proposals:rows.slice(0,100).map(p=>proposalDTO(grantId,p)),nextCursor:rows.length>100?rows[99].proposal_id:null};
+    if(cursor){after=(await ctx.db.query('SELECT created_at::text AS created_at FROM ritc.visible_helper_proposal WHERE household_id=$1 AND grant_id=$2 AND proposal_id=$3',[ctx.householdId,grantId,cursor])).rows[0]?.created_at;if(!after)throw unavailable();}
+    const rows=(await ctx.db.query('SELECT * FROM ritc.visible_helper_proposal WHERE household_id=$1 AND grant_id=$2 AND ($3::timestamptz IS NULL OR (created_at,proposal_id)>($3,$4::uuid)) ORDER BY created_at,proposal_id LIMIT 101',[ctx.householdId,grantId,after??null,cursor])).rows;
+    return{proposals:rows.slice(0,100).map(p=>proposalDTO(grantId,p,ctx)),nextCursor:rows.length>100?rows[99].proposal_id:null};
   }
 
   async revoke(ctx:Context,input:z.infer<typeof revocationSchema>){

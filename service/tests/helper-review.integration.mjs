@@ -232,3 +232,22 @@ test('a cook report reaches the shopper once and leaves stock, reservations, bas
  assert.deepEqual(await stock(),original);
  assert.deepEqual(ok(await call(f.owner,f.managed)),before);
 });
+
+test('helper suggestions and replacements require reviewed wording and a block hides earlier proposals',async()=>{
+  const f=await fixture();
+  const send=correction=>call(f.helper,f.recipient+'/proposals','POST',{clientKey:randomUUID(),baseRevision:1,correction},f.headers);
+  const rejected=await send('Te voy a pegar');
+  assert.equal(rejected.status,422);
+  assert.equal(rejected.data.error.code,'content_review_required');
+  assert.deepEqual(ok(await call(f.owner,f.managed+'/proposals')).proposals,[]);
+  const prior=ok(await send('Use the rice in the blue tin'));
+  const replacement=projection();
+  replacement.items[0].action="I'll hurt you";
+  const failed=await call(f.owner,f.managed+'/replacements','POST',{clientKey:randomUUID(),baseRevision:1,projection:replacement});
+  assert.equal(failed.status,422);
+  assert.equal(ok(await call(f.helper,f.recipient+'/current','GET',undefined,f.headers)).revision,1);
+  await admin.query('INSERT INTO ritc.moderation_block(household_id,viewer_id,author_id) VALUES($1,$2,$3)',[f.h,f.owner.id,f.helper.id]);
+  assert.deepEqual(ok(await call(f.owner,f.managed+'/proposals')).proposals,[]);
+  assert.equal((await call(f.owner,f.managed+'/proposals/'+prior.proposalId)).status,404);
+  assert.equal(ok(await call(f.helper,f.recipient+'/proposals','GET',undefined,f.headers)).proposals[0].correction,'Use the rice in the blue tin');
+});

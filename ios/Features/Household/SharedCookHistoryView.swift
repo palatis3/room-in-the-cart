@@ -37,7 +37,10 @@ struct SharedCookHistoryView: View {
                             if copies.isEmpty { Text(ht("No dated copies saved for this meal.")) }
                             ForEach(copies) { copy in
                                 NavigationLink {
-                                    SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy, latest: copies.first?.id == copy.id)
+                                    SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy, latest: copies.first?.id == copy.id, afterBlock: {
+                                        self.copies = nil
+                                        await load()
+                                    })
                                 } label: {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(ht("Copy version") + " " + copy.version.formatted())
@@ -82,6 +85,8 @@ private struct SharedCookSavedView: View {
     let occurrence: SharedMealOccurrence
     let copy: SharedCookCopy
     let latest: Bool
+    let afterBlock: () async -> Void
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @State private var recipient = ""
     @State private var reviewed: RecipientReview?
@@ -137,6 +142,13 @@ private struct SharedCookSavedView: View {
                 Section(occurrence.meal.title) {
                     LabeledContent(ht("Copy version"), value: copy.version.formatted())
                     Text(verbatim: copy.text).textSelection(.enabled).accessibilityIdentifier("delivery.cook.savedText")
+                    if copy.canReportContent == true {
+                        SharedSafetyButton(channel: household.sharedSafetyChannel(afterBlock: {
+                            guard allowed else { return }
+                            dismiss()
+                            await afterBlock()
+                        }), fields: SharedMessageField.cookCopy(copy))
+                    }
                     Button {
                         guard allowed, scenePhase == .active else { return }
                         enteringName = false

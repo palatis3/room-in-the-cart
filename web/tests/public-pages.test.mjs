@@ -95,7 +95,7 @@ test('native and public privacy explain reviewed household and online actions in
   const catalog = JSON.parse(readFileSync(new URL('../../ios/Features/Help/Help.xcstrings', import.meta.url), 'utf8')).strings;
   const native = readFileSync(new URL('../../ios/Features/Help/HelpView.swift', import.meta.url), 'utf8');
   const privacy = native.slice(native.indexOf('struct HelpPrivacyView'), native.indexOf('struct HelpSupportView'));
-  const scopes = ['The household service saves a shopper', 'When you confirm a receipt', 'If the household receipt save', 'For optional online language help',
+  const scopes = ['If you report household content', 'If you request a private review', 'The household service saves a shopper', 'When you confirm a receipt', 'If the household receipt save', 'For optional online language help',
     'You can search the USDA FoodKeeper', 'When online assistance is available',
     'When you save a recipe in Household Tonight', 'When you share a reaction to a meal', 'Looking up a barcode in Open Food Facts'];
   for (const language of ['en', 'es']) {

@@ -77,7 +77,7 @@ export async function householdStaples(ctx:Context,zone:string) {
   // Names are used only to suppress a question. They never create a purchase link.
   // Nothing about the originating request, shop, member or financial records leaves this endpoint.
   const open=(await ctx.db.query<{name:string}>(`SELECT DISTINCT name FROM (
-    SELECT original_item AS name FROM ritc.request WHERE household_id=$1 AND status IN ('pending','clarified','deferred')
+    SELECT original_item AS name FROM ritc.visible_request_origin WHERE household_id=$1 AND status IN ('pending','clarified','deferred')
     UNION ALL SELECT b.original_item FROM ritc.basket_line b JOIN ritc.shop s USING(household_id,shop_id)
     WHERE b.household_id=$1 AND s.phase IN ('draft','frozen')) demand LIMIT 2001`,[ctx.householdId])).rows;
   const aliases=new Map<string,Set<string>>();

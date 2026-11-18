@@ -196,6 +196,9 @@ struct HouseholdHelperView: View {
                             .accessibilityIdentifier("helper.instructions.asOf")
                         LabeledContent(ht("Access expires"), value: householdTime(view.expiresAt))
                         ForEach(Array(view.items.enumerated()), id: \.offset) { _, item in helperInstruction(item) }
+                        if view.canReportContent == true {
+                            SharedSafetyButton(channel: model.sharedSafetyChannel(for: view.grantId), fields: SharedMessageField.instruction(view))
+                        }
                     }
                     if let receipt = model.proposalReceipt {
                         Section {
@@ -345,6 +348,9 @@ private struct HouseholdHelperProposalsView: View {
                     ForEach(model.proposals) { proposal in
                         Section {
                             Text(proposal.correction)
+                            if proposal.canReportContent == true, let field = SharedMessageField(.suggestion, proposal.id, proposal.proposalRevision, .correction, proposal.correction) {
+                                SharedSafetyButton(channel: model.sharedSafetyChannel(for: grantID), fields: [field])
+                            }
                             LabeledContent(ht("Received"), value: householdTime(proposal.createdAt))
                             LabeledContent(ht("Instruction revision reviewed"), value: proposal.baseRevision.formatted())
                             switch proposal.status {

@@ -72,6 +72,7 @@ public struct HelperProjection: Codable, Equatable, Sendable {
     }
 }
 public struct HelperView: Codable, Equatable, Sendable {
+    public private(set) var canReportContent: Bool? = nil
     public let grantId: String; public let shopId: String; public let revision: Int; public let asOf: String; public let expiresAt: String
     public let mode: String; public let canPropose: Bool; public let shopLabel: String; public let language: String; public let items: [HelperInstruction]
 }
@@ -79,14 +80,16 @@ public struct HelperProposalReceipt: Codable, Equatable, Sendable {
     public let proposalId: String; public let grantId: String; public let baseRevision: Int; public let status: String
 }
 public struct HelperProposal: Codable, Equatable, Identifiable, Sendable {
+    public let canReportContent: Bool?
     public var id: String { proposalId }
     public let proposalId: String; public let grantId: String; public let baseRevision: Int; public let correction: String
     public let status: String; public let createdAt: String
     public let proposalRevision: Int
     public let resolution: HelperProposalResolution?
-    private enum CodingKeys: String, CodingKey { case proposalId, grantId, baseRevision, correction, status, createdAt, proposalRevision, resolution }
+    private enum CodingKeys: String, CodingKey { case proposalId, grantId, baseRevision, correction, status, createdAt, proposalRevision, resolution, canReportContent }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
+        canReportContent = try values.decodeIfPresent(Bool.self, forKey: .canReportContent)
         proposalId = try values.decode(String.self, forKey: .proposalId); grantId = try values.decode(String.self, forKey: .grantId)
         baseRevision = try values.decode(Int.self, forKey: .baseRevision); correction = try values.decode(String.self, forKey: .correction)
         status = try values.decode(String.self, forKey: .status); createdAt = try values.decode(String.self, forKey: .createdAt)

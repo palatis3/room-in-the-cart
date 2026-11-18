@@ -1,3 +1,4 @@
+import {checkPublishingMember,reviewSharedWording} from './shared-content-filter.js';
 import {pantryRevision,trackCookStockProvenance} from './pantry-lots.js';
 import type {Context,Shop} from './repository.js';
 import {cookCorrectionBody,cookCopyBaselineBody,cookCopySaveBody,cookCopySendBody} from './contracts.js';
@@ -13,9 +14,10 @@ function placedRevision(shop:Shop):number {
 
 const copyFields=`c.copy_id AS "copyId",c.shop_id AS "shopId",c.shop_revision AS "shopRevision",
   c.placed_revision AS "placedRevision",c.authority_epoch AS "authorityEpoch",c.supply_revision AS "supplyRevision",
-  c.pantry_revision AS "pantryRevision",c.recovery_revision AS "recoveryRevision",c.recovery_meal_id AS "revisionId",c.occurrence_id AS "occurrenceId",c.meal_revision AS "mealRevision",c.version,c.language,c.reviewed_text AS text,c.created_at AS "createdAt"`;
+  c.pantry_revision AS "pantryRevision",c.recovery_revision AS "recoveryRevision",c.recovery_meal_id AS "revisionId",c.occurrence_id AS "occurrenceId",c.meal_revision AS "mealRevision",c.version,c.language,(c.actor_id<>ritc.content_viewer()) AS "canReportContent",c.reviewed_text AS text,c.created_at AS "createdAt"`;
 
-function omitAbsentSeals(row:Record<string,unknown>) {
+function omitAbsentSeals(row:Record<string,unknown>,ctx:Context) {
+  if(!ctx.sharedContentSafety||row.canReportContent!==true) delete row.canReportContent;
   for(const field of ['pantryRevision','recoveryRevision','revisionId']) if(row[field]===null) delete row[field];
 }
 
@@ -24,16 +26,16 @@ export async function cookCopyHistory(ctx:Context,shop:Shop,occurrenceId:string,
   const scope=[ctx.householdId,shop.shop_id,occurrenceId];
   let before:number|null=null;
   if(cursor!==null) {
-    const row=(await ctx.db.query('SELECT version FROM ritc.dated_cook_copy WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 AND copy_id=$4',
+    const row=(await ctx.db.query('SELECT version FROM ritc.visible_dated_cook_copy WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 AND copy_id=$4',
       [...scope,cursor])).rows[0];
     if(!row) throw unavailable();
     before=row.version;
   }
-  const result=await ctx.db.query(`SELECT ${copyFields} FROM ritc.dated_cook_copy c
+  const result=await ctx.db.query(`SELECT ${copyFields} FROM ritc.visible_dated_cook_copy c
     WHERE c.household_id=$1 AND c.shop_id=$2 AND c.occurrence_id=$3 AND ($4::int IS NULL OR c.version<$4)
     ORDER BY c.version DESC LIMIT 21`,[...scope,before]);
   const copies=result.rows.slice(0,20);
-  for(const copy of copies) omitAbsentSeals(copy);
+  for(const copy of copies) omitAbsentSeals(copy,ctx);
   return {copies,nextCursor:result.rows.length>20?copies.at(-1)!.copyId:null};
 }
 
@@ -42,12 +44,12 @@ export async function cookCopyBaseline(ctx:Context,shop:Shop,input:unknown) {
   const {occurrenceId,recipient}=cookCopyBaselineBody.parse(input);
   const row=(await ctx.db.query(`SELECT ${copyFields},s.send_id AS "sendId",s.recipient,s.sent_at AS "sentAt"
     FROM ritc.cook_copy_baseline b JOIN ritc.cook_copy_send s USING(household_id,send_id)
-    JOIN ritc.dated_cook_copy c ON (c.household_id,c.copy_id)=(s.household_id,s.copy_id)
+    JOIN ritc.visible_dated_cook_copy c ON (c.household_id,c.copy_id)=(s.household_id,s.copy_id)
     WHERE b.household_id=$1 AND b.shop_id=$2 AND b.occurrence_id=$3 AND b.recipient=$4`,
     [ctx.householdId,shop.shop_id,occurrenceId,recipient])).rows[0];
   if(!row) return {baseline:null};
   const {sendId,sentAt,recipient:name,...copy}=row;
-  omitAbsentSeals(copy);
+  omitAbsentSeals(copy,ctx);
   return {baseline:{copy,send:{sendId,sentAt,recipient:name,copyId:copy.copyId}}};
 }
 
@@ -59,10 +61,10 @@ export async function cookCorrectionFacts(ctx:Context,shop:Shop,input:unknown) {
   const row=(await ctx.db.query(`SELECT cur.fact_index AS current_facts,prev.fact_index AS previous_facts,
       cur.pantry_revision,cur.recovery_revision,
       (cur.language=prev.language AND cur.version>=prev.version) AS compatible
-    FROM ritc.dated_cook_copy cur JOIN ritc.cook_copy_series series USING(household_id,shop_id,occurrence_id)
+    FROM ritc.visible_dated_cook_copy cur JOIN ritc.cook_copy_series series USING(household_id,shop_id,occurrence_id)
     JOIN ritc.cook_copy_baseline b USING(household_id,shop_id,occurrence_id)
     JOIN ritc.cook_copy_send send ON (send.household_id,send.send_id)=(b.household_id,b.send_id)
-    JOIN ritc.dated_cook_copy prev ON (prev.household_id,prev.shop_id,prev.occurrence_id,prev.copy_id)=
+    JOIN ritc.visible_dated_cook_copy prev ON (prev.household_id,prev.shop_id,prev.occurrence_id,prev.copy_id)=
       (b.household_id,b.shop_id,b.occurrence_id,send.copy_id)
     WHERE (cur.household_id,cur.shop_id,cur.occurrence_id,cur.copy_id)=($1,$2,$3,$4)
       AND prev.copy_id=$5 AND b.send_id=$6 AND b.recipient=$7 AND send.recipient=b.recipient
@@ -80,8 +82,8 @@ export async function cookCorrectionFacts(ctx:Context,shop:Shop,input:unknown) {
 
 export async function cookCopyStillExists(ctx:Context,shop:Shop,kind:Kind,operationId:string) {
   const result=kind==='cookCopy.save'
-    ? await ctx.db.query('SELECT 1 FROM ritc.dated_cook_copy WHERE household_id=$1 AND shop_id=$2 AND copy_id=$3',[ctx.householdId,shop.shop_id,operationId])
-    : await ctx.db.query(`SELECT 1 FROM ritc.cook_copy_send s JOIN ritc.dated_cook_copy c USING(household_id,copy_id)
+    ? await ctx.db.query('SELECT 1 FROM ritc.visible_dated_cook_copy WHERE household_id=$1 AND shop_id=$2 AND copy_id=$3',[ctx.householdId,shop.shop_id,operationId])
+    : await ctx.db.query(`SELECT 1 FROM ritc.cook_copy_send s JOIN ritc.visible_dated_cook_copy c USING(household_id,copy_id)
         WHERE c.household_id=$1 AND c.shop_id=$2 AND s.send_id=$3`,[ctx.householdId,shop.shop_id,operationId]);
   return result.rowCount===1;
 }
@@ -92,6 +94,8 @@ export async function recordCookCopy(ctx:Context,shop:Shop,kind:Kind,input:unkno
   const placed=placedRevision(shop), scope=[ctx.householdId,shop.shop_id];
   if(kind==='cookCopy.save') {
     const row=cookCopySaveBody.parse(input);
+    await checkPublishingMember(ctx);
+    reviewSharedWording(row.text);
     if(placed!==row.placedRevision || shop.supply_revision!==row.supplyRevision ||
       row.pantryRevision!==undefined && row.pantryRevision!==await pantryRevision(ctx)) {
       throw new ServiceError(409,'stale_supply','Review the currently placed meal and delivery facts.');
@@ -118,7 +122,9 @@ export async function recordCookCopy(ctx:Context,shop:Shop,kind:Kind,input:unkno
     return operationId;
   }
   const mark=cookCopySendBody.parse(input);
-  const copy=(await ctx.db.query('SELECT occurrence_id FROM ritc.dated_cook_copy WHERE household_id=$1 AND shop_id=$2 AND copy_id=$3',
+  await checkPublishingMember(ctx);
+  reviewSharedWording(mark.recipient);
+  const copy=(await ctx.db.query('SELECT occurrence_id FROM ritc.visible_dated_cook_copy WHERE household_id=$1 AND shop_id=$2 AND copy_id=$3',
     [...scope,mark.copyId])).rows[0];
   if(!copy) throw unavailable();
   const recipientScope=[...scope,copy.occurrence_id,mark.recipient];
