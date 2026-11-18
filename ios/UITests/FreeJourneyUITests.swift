@@ -1168,6 +1168,7 @@ import XCTest
         receiptTap(guide)
         let guideBar = app.navigationBars["Food storage guide"]
         XCTAssertTrue(guideBar.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["foodKeeper.product.585"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons["foodKeeper.saveRange"].exists)
         receiptTap(guideBar.buttons.firstMatch)
         receiptTap(app.buttons["Done"])
