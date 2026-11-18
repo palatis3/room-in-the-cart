@@ -54,6 +54,7 @@ DELIVERY_SHARDS = {
         "testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown",
         "testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",
         "testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase",
+        "testShopperAttributesBoughtRequestToAnotherVisibleAdultAndCanClearAttribution",
         "testShopperReviewsOnlyConfirmedPlacedPurchaseForAnotherRequestAndCanUndo",
     ),
     "SharedDeliveryUITests-recovery-cook-and-closeout": (
