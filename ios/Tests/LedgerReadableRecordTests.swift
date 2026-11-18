@@ -124,23 +124,40 @@ final class LedgerReadableRecordTests: XCTestCase {
         first.observedAt = date; first.writtenSlot = "Friday at noon"; first.source = "Paper quote"
         first.total = "38"; first.allChargesIncluded = true; first.quantitiesMatched = true
         first.availability = 1; first.singleStore = true; first.tripCash = "0"; first.extraMinutes = "0"; first.alreadyPlanned = true
+        first.eligibilityReviewed = true; first.orderMinimumKind = .noneRequired
         draft.first = first
         var second = first
         second.id = UUID(); second.label = "Market West"; second.branch = "West"; second.total = "35"
         second.eligibilityTerms = "Loyalty card"; second.tripCash = ""; second.extraMinutes = "18"; second.alreadyPlanned = false
         draft.second = second
-        var plan = DinnerPlanningState()
-        try plan.saveQuotePair(draft.pair(for: shop), access: access, at: date)
-        let workspace = LedgerWorkspace(shops: [shop], dinnerPlanning: plan)
-        let text = try LedgerReadableRecord.text(RecordsNativeCodec.canonical(Document(workspace: RecordsNativeCodec.ledgerScope(workspace, shop: shop))))
+        func record(_ draft: DinnerQuoteEditDraft) throws -> String {
+            var plan = DinnerPlanningState()
+            try plan.saveQuotePair(draft.pair(for: shop), access: access, at: date)
+            let workspace = LedgerWorkspace(shops: [shop], dinnerPlanning: plan)
+            return try LedgerReadableRecord.text(RecordsNativeCodec.canonical(Document(workspace: RecordsNativeCodec.ledgerScope(workspace, shop: shop))))
+        }
+        let text = try record(draft)
+        let breakEven = dinnerFormat("Second trip cash break-even: %@", dinnerMoney(Money(minorUnits: 300)))
         for fact in ["Market East", "Market West", "Paper quote", "Friday at noon", "Friday lunches", ledgerText("Protected"),
                      pTr("Whole checkout"), "Loyalty card", dinnerText("Reviewed available"), dinnerFormat("Extra minutes: %d", 18),
                      dinnerFormat("Checkout change, second minus first: %@", dinnerMoney(Money(minorUnits: -300))),
                      dinnerFormat("Checkout plus trip cash, second minus first: %@", dinnerMoney(nil)),
-                     dinnerFormat("Second trip cash break-even: %@", dinnerMoney(Money(minorUnits: 300)))] {
+                     dinnerText("These are entered observations, not live prices or stock."), breakEven] {
             XCTAssertTrue(text.contains(fact), fact)
         }
         XCTAssertFalse(text.contains(ledgerText("Applied by")))
+
+        var unreviewed = draft
+        unreviewed.second.eligibilityReviewed = false
+        let pendingEligibility = try record(unreviewed)
+        XCTAssertTrue(pendingEligibility.contains(dinnerText("Offer eligibility needs review")))
+        XCTAssertFalse(pendingEligibility.contains(breakEven))
+
+        var unknownMinimum = draft
+        unknownMinimum.first.orderMinimumKind = .unknown
+        let pendingMinimum = try record(unknownMinimum)
+        XCTAssertTrue(pendingMinimum.contains(dinnerText("Purchase minimum or eligible subtotal is unknown")))
+        XCTAssertFalse(pendingMinimum.contains(breakEven))
     }
 
     @MainActor func testLibraryKeepsTemplateAcceptedVersionRotationAndDraftDistinctFromShop() throws {
