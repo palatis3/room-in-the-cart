@@ -3250,7 +3250,8 @@ import XCTest
                 reveal(editor)
                 XCTAssertEqual(editor.value as? String, "2 Wraps")
                 let paste = app.buttons["Paste selected text for review"]
-                reveal(paste)
+                // A sliver of the native Paste control can be hittable below the sheet's visible content.
+                revealScrollableContent(paste, entireRow: true)
                 XCTAssertTrue(paste.isEnabled)
                 // On iOS 17 the accessibility frame spans the row around the leading paste control.
                 paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
