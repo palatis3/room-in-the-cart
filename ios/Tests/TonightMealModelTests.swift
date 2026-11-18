@@ -177,6 +177,12 @@ import RecordArchive
         XCTAssertEqual(next.ingredients.first?.coverage?.shortfall, .one)
         XCTAssertEqual(next.ingredients.last?.ingredient, sauce)
         XCTAssertEqual(model.input?.freeLots.first?.usable, q(2))
+        var chosen: PantryMealMatcher.Review?
+        let offered = try MealChoiceSource.tonight(model, ledgerID: store.workspaceID, following: true, authorized: { true }) { chosen = $0 }
+        XCTAssertEqual(offered.options.map(\.id), [second.id])
+        XCTAssertThrowsError(try offered.select(first.id))
+        try offered.select(second.id)
+        XCTAssertEqual(chosen, next)
         let unchanged = try await repository.load(at: now)
         XCTAssertEqual(unchanged.state.revision, before.state.revision)
         XCTAssertEqual(unchanged.reservations, before.reservations)
@@ -191,6 +197,8 @@ import RecordArchive
         let changed = try TonightMealModel.input(workspace: library, ledgerRevision: 0,
             context: .init(snapshot: after, mapping: mapping, asOf: now), sources: [])
         await model.refresh(authorize: { true }, load: { changed })
+        XCTAssertFalse(offered.isCurrent())
+        XCTAssertThrowsError(try offered.select(second.id))
         XCTAssertNil(model.firstRecipeID)
         XCTAssertTrue(model.followingMeals.isEmpty)
         XCTAssertTrue(model.suggestions.isEmpty)

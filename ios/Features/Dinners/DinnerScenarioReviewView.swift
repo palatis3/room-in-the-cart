@@ -16,6 +16,7 @@ struct DinnerScenarioReviewView: View {
     var library: DinnerLibraryPairings?
     var reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
     @State private var showReplacement = false
+    @State private var suggestedPair: UUID?
     @State private var pairing: DinnerPairingResult?
     @State private var recovery: DinnerRecoveryResult?
     @State private var acceptsExtraTrip = false
@@ -40,7 +41,16 @@ struct DinnerScenarioReviewView: View {
                     if !excludedByRules.isEmpty { Text(dinnerFormat("Excluded by the reviewed food rules: %@",excludedByRules.joined(separator: ", "))) }
                     if pairing.untestedCount > 0 { Text(dinnerFormat("Untested alternatives: %d", pairing.untestedCount)) }
                     scenario(pairing.baseline)
-                    ForEach(pairing.alternatives, id: \.scenarioID) { result in
+                    if model.paid, model.localIdeaWorkspaceID != nil, let library,
+                       pairing.alternatives.contains(where: { $0.feasible && $0.checkout.total.exact != nil }) {
+                        MealChoiceWordingLink(refresh: {
+                            if pickup.pantryIsActive { return await pickup.refreshPantryStock() }
+                            return pickup.ready
+                        }, makeSource: { try wordingPairings(library, pairing: pairing) })
+                    }
+                    let ordered = pairing.alternatives.sorted { $0.scenarioID == suggestedPair && $1.scenarioID != suggestedPair }
+                    ForEach(ordered, id: \.scenarioID) { result in
+                        if result.scenarioID == suggestedPair { Text(mealExplanationText("Selected for local review")) }
                         scenario(result)
                         if let library, result.feasible, result.checkout.total.exact != nil, let shop = model.shop,
                            let candidate = alternatives.first(where: { $0.id == result.scenarioID }) {
@@ -91,6 +101,31 @@ struct DinnerScenarioReviewView: View {
             }
             .dinnerApplyPresentation(model, presented: $showReplacement)
     }
+    private func wordingPairings(_ library: DinnerLibraryPairings, pairing evidence: DinnerPairingResult) throws -> MealChoiceSource {
+        guard model.paid, let owner = model.editorIdentity, let workspaceID = model.localIdeaWorkspaceID else {
+            throw DinnerPlanningError.forbidden
+        }
+        let workspace = model.workspace, inventory = pickup.pantrySnapshot?.state, selectedPickup = pickup.journey
+        func candidates() throws -> [MealChoiceWording.Option] {
+            guard model.editorIdentity == owner, model.paid, model.localIdeaWorkspaceID == workspaceID, model.workspace == workspace,
+                  pickup.journey == selectedPickup, pickup.pantrySnapshot?.state == inventory,
+                  try model.pair(current: current, alternatives: alternatives, selected: selectedAcceptedDinnerIDs, cap: cap) == evidence
+            else { throw DinnerPlanningError.stalePreview }
+            return evidence.alternatives.compactMap { result in
+                guard result.feasible, result.checkout.total.exact != nil,
+                      let scenario = alternatives.first(where: { $0.id == result.scenarioID }),
+                      let review = try? model.prepareSwap(library: library, scenario: scenario, reviewedPantryBasis: reviewedPantryBasis, pickup: pickup)
+                else { return nil }
+                return .init(id: scenario.id, title: review.replacement.title)
+            }
+        }
+        let options = try candidates()
+        return .init(options: options, isCurrent: { (try? candidates()) == options }) { id in
+            guard try candidates() == options, options.contains(where: { $0.id == id }) else { throw DinnerPlanningError.stalePreview }
+            suggestedPair = id
+        }
+    }
+
     private func scenario(_ result: DinnerScenarioResult) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             let source = ([current] + alternatives).first { $0.id == result.scenarioID }

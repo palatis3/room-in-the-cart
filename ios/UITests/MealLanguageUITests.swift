@@ -2,6 +2,37 @@ import XCTest
 
 #if DEBUG && targetEnvironment(simulator)
 @MainActor final class MealLanguageUITests: XCTestCase {
+    func testCustomerWordsSelectOnlyAReviewedReplacementInTheOrdinarySwapEditor() {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
+        defer { app.terminate() }
+        app.launchArguments = ["--ui-testing", "--meal-language-fixture", "--meal-choice-fixture",
+            "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
+        app.launch()
+        let swap = app.buttons["mealFixture.swap"]
+        XCTAssertTrue(swap.waitForExistence(timeout: 12))
+        swap.tap()
+        let open = app.buttons["mealChoice.open"]
+        XCTAssertTrue(open.waitForExistence(timeout: 8))
+        open.tap()
+        let field = app.textFields["mealChoice.words"]
+        XCTAssertTrue(field.waitForExistence(timeout: 8))
+        field.tap(); field.typeText("Prefiero el arroz" + XCUIKeyboardKey.return.rawValue)
+        let send = app.buttons["mealChoice.send"]
+        XCTAssertFalse(send.isEnabled)
+        let title = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@", "mealChoice.title.")).firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        title.coordinate(withNormalizedOffset: CGVector(dx:0.93,dy:0.5)).tap()
+        XCTAssertTrue(send.isEnabled); send.tap()
+        let proposal = app.staticTexts["mealChoice.proposed"]
+        XCTAssertTrue(proposal.waitForExistence(timeout: 8)); XCTAssertEqual(proposal.label, "Arroz con tomates")
+        app.buttons["mealChoice.use"].tap()
+        let option = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "swap.option.")).firstMatch
+        XCTAssertTrue(option.waitForExistence(timeout: 8)); XCTAssertTrue(option.isSelected)
+        XCTAssertTrue(app.buttons["swap.preview"].exists, "The ordinary local preview is still required.")
+        XCTAssertTrue(app.staticTexts["Original dinner"].exists)
+    }
+
     func testOptedInAdultReviewsSoftPreferenceAndFeedbackInBothLanguagesBeforeSaving() throws {
         continueAfterFailure = false
         let app = XCUIApplication(bundleIdentifier:"dev.roominthecart.app.debug")

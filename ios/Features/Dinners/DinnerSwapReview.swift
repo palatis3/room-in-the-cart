@@ -1,7 +1,7 @@
 import Foundation
 import CoreDomain
 
-struct DinnerSwapOption: Identifiable {
+struct DinnerSwapOption: Identifiable, Equatable {
     enum Issue: Equatable { case servingsMismatch, protectedTarget, targetNeedsGroup, linkedTarget, unavailableRecipe, paidAccessRequired }
     let id: UUID
     let title: String

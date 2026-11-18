@@ -25,7 +25,7 @@ test('all language purposes honor enrolled adult scope and share once-only admis
       const payload=JSON.parse(options.body);
       assert.equal(payload.store,false);assert.deepEqual(payload.tools,[]);
       if(revokeSession) await admin.query('DELETE FROM auth.sessions WHERE id=$1',[revokeSession]);
-      const fields=payload.text.format.name==='receipt_line_v1'?{page:1,line:1,foodName:'Rice',quantity:null,unit:null}:{suggestions:[]};
+      const fields=payload.text.format.name==='private_meal_choice_v1'?{candidateID:JSON.parse(payload.input).candidates[0].id}:payload.text.format.name==='receipt_line_v1'?{page:1,line:1,foodName:'Rice',quantity:null,unit:null}:{suggestions:[]};
       return Response.json({status:'completed',output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify(fields)}]}]});
     });
   const voiceAssistance=new VoiceAssistance(10,'fixture','fixture-only',async()=>{throw new Error('Duplicate voice admission reached the provider');});
@@ -56,7 +56,7 @@ test('all language purposes honor enrolled adult scope and share once-only admis
   assert.equal((await call(guest,'/v1/invites/redeem',{token:invite.data.token,intent:'join',adultAttestation:true,alias:'Contributor'})).status,200);
   const enrolled=await call(guest,base+'/devices',{});assert.equal(enrolled.status,201);guest.device=enrolled.data.deviceToken;
   const kinds = languagePurposes.map(route => route.kind).sort();
-  assert.deepEqual(kinds, ['foodkeeper-match', 'meal-explanations', 'meal-feedback', 'meal-preference',
+  assert.deepEqual(kinds, ['foodkeeper-match', 'meal-choice', 'meal-explanations', 'meal-feedback', 'meal-preference',
     'natural-list', 'receipt-alias', 'request-duplicate']);
   const paths = kinds.map(kind => '/language-assistance/' + kind);
   for(const path of paths) {
@@ -77,7 +77,12 @@ test('all language purposes honor enrolled adult scope and share once-only admis
   assert.equal((await call(owner,base+'/receipt-assistance',receipt)).status,200);
   assert.equal((await call(owner,base+natural,{...list,requestID:randomUUID()})).status,429);assert.equal(calls,2);
   const next=await actor(),separate=await household(next);
+  const pick = {...common(),locale:'es',sourceLines:[{id:randomUUID(),text:'Prefiero la sopa'}],candidates:[{id:randomUUID(), title:'Sopa de arroz'}]};
+  assert.equal((await call(guest,base+'/language-assistance/meal-choice',pick)).status,404);
+  const selected = await call(next,separate+'/language-assistance/meal-choice',pick);
+  assert.equal(selected.status,200);assert.deepEqual(selected.data,{version:1,requestID:pick.requestID,candidateID:pick.candidates[0].id});
+  assert.equal((await call(next,separate+natural,{...list,requestID:pick.requestID})).status,429);
   revokeSession=next.session;
   const cancelled=await call(next,separate+natural,{...list,requestID:randomUUID()});
-  assert.equal(cancelled.status,401);assert.equal(cancelled.data.error.code,'session_needed');assert.equal(calls,3);
+  assert.equal(cancelled.status,401);assert.equal(cancelled.data.error.code,'session_needed');assert.equal(calls,4);
 });
