@@ -217,7 +217,7 @@ struct TonightEntry: View {
                     })) {
                         Text(tonightText("Not matched")).tag(UUID?.none)
                         ForEach(model.input?.foods ?? []) { food in Text(food.name).tag(Optional(food.id)) }
-                    }
+                    }.accessibilityIdentifier("tonight.match." + ingredient.id.uuidString)
                     if let foodID, let food = model.input?.foods.first(where: { $0.id == foodID }) {
                         Text(food.detail).font(.caption)
                         Button(tonightText("Review this food’s ingredient and brand details")) { foodToReview = food }
@@ -250,6 +250,8 @@ struct TonightEntry: View {
                     review.allIngredientsCovered ? "Ingredients covered — review to choose" : "Review ingredient matches and missing amounts"))
                     .font(.caption)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("tonight.result." + review.id.uuidString)
         }
     }
     private func currentIdentity() -> CapturePrivateIdentity? { scope?.adult }

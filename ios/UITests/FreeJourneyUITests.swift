@@ -124,9 +124,11 @@ import XCTest
         requirements.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
-        let recipe = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
-        tap(recipe)
-        tap(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Reviewed pantry match")).firstMatch)
+        XCTAssertTrue(app.navigationBars["Review a recipe"].waitForNonExistence(timeout: 15), app.debugDescription)
+        let result = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.result.")).firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 15), app.debugDescription)
+        tap(result)
+        tap(app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.match.")).firstMatch)
         tap(app.buttons["Widget lentils"])
         let covered = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@",
             "Ingredients covered")).firstMatch
@@ -134,7 +136,8 @@ import XCTest
         optInToHomeSummary("adultHomeSummary.tonight")
         placeWidgetAndColdTap(widgetTitle: "Tonight", expectedCount: "Reviewed meal options: 1", reviewedTitle: title)
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 30))
-        reveal(recipe)
+        XCTAssertTrue(result.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(result.label.contains(title), result.debugDescription)
     }
 
     private func launchAndAddWidgetLentils() {
