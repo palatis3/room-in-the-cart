@@ -38,6 +38,9 @@ public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public let route: String; public let status: String; public let ownActionAllowed: Bool
     public let clarification: String?; public let followupTo: String?
     public let authorAlias: String?
+    public private(set) var canReportAuthorAsPurchaser: Bool? = nil
+    public private(set) var reportedPurchaser: String? = nil
+    public private(set) var purchaseRecordedBy: String? = nil
     public private(set) var purchaseOutcome: ConfirmedRequestPurchase? = nil
     public private(set) var linkedLineId: UUID? = nil
     public private(set) var sameItemOperationId: UUID? = nil

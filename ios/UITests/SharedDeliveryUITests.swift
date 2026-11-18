@@ -251,6 +251,32 @@ import XCTest
         XCTAssertFalse(play.exists)
     }
 
+    func testShopperAttributesBoughtRequestToAnotherVisibleAdultAndCanClearAttribution() {
+        app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "--request-purchase-fixture",
+                               "--reported-purchaser", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["sharedShop.deliveryEvidence"])
+        tap(app.buttons["delivery.requestPurchases"])
+        let row = app.buttons["purchase.request.aaaaaaaa-1111-4111-8111-111111111111"]
+        tap(row)
+        tap(app.buttons["purchase.choice.bought"])
+        tap(app.buttons["purchase.buyer"])
+        tap(app.buttons["Alex · Wraps for lunches"])
+        tap(app.buttons["purchase.save"])
+        let saved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Alex", "Mia"), object: row)
+        XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 10), .completed)
+        tap(row)
+        tap(app.buttons["purchase.choice.bought"])
+        let save = app.buttons["purchase.save"]
+        XCTAssertFalse(save.isEnabled)
+        tap(app.buttons["purchase.buyer"])
+        tap(app.buttons["Unknown"])
+        tap(save)
+        let cleared = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ AND NOT (label CONTAINS %@)", "Unknown", "Alex"), object: row)
+        XCTAssertEqual(XCTWaiter.wait(for: [cleared], timeout: 10), .completed)
+        XCTAssertTrue(row.label.contains("Shopper confirmed bought") && row.label.contains("Mia"))
+    }
+
     func testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase() {
         app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "--request-purchase-fixture",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]

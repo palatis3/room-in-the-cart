@@ -185,7 +185,8 @@ public actor HouseholdService {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
         let page: OwnRequestsPage = try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
         try page.validateReadTime()
-        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.draftBasketLineId == nil && $0.sameItemOperationId == nil && $0.authorAlias == nil }) else { throw ClientError.invalidResponse }
+        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.draftBasketLineId == nil && $0.sameItemOperationId == nil && $0.authorAlias == nil
+            && $0.reportedPurchaser == nil && $0.purchaseRecordedBy == nil && $0.canReportAuthorAsPurchaser == nil }) else { throw ClientError.invalidResponse }
         return page
     }
     public func requestPickups(cursor: UUID? = nil) async throws -> RequestPickupPage {
@@ -668,7 +669,10 @@ public actor HouseholdService {
         default: throw ClientError.configuration
         }
         guard envelope.clientKey == operation.clientKey else { throw ClientError.configuration }
-        try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+        let scope = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+        if confirming, envelope.body["reportedPurchaser"] != nil, !scope.capabilities.contains("request_purchase_attribution") {
+            throw ClientError.accessEnded
+        }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes)

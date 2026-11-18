@@ -13,7 +13,7 @@ export type RequestPurchaseOutcome=NonNullable<OwnRequest['purchaseOutcome']>|'u
 export type RequestPairRelationship = 'sameItem' | 'additionalQuantity';
 export interface RequestPairReference {otherRequestId:string;otherRequestRevision:number;relationship:RequestPairRelationship;operationId:string}
 export interface RequestPairEvidence {otherRequestId:string;otherRequestRevision:number;relationship:RequestPairRelationship;item:string;quantity:string|null;authorAlias:string}
-export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string;draftBasketLineId?:string;sameItemOperationId?:string;requestPairs?:RequestPairReference[]}
+export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string;draftBasketLineId?:string;sameItemOperationId?:string;requestPairs?:RequestPairReference[];canReportAuthorAsPurchaser?:true;reportedPurchaser?:string;purchaseRecordedBy?:string}
 export interface DeferredRequest {
   sourceShopId:string; sourceAuthorityEpoch:number; requestId:string; requestRevision:number;
   originalItem:string; ownQuantity:string|null; authorAlias:string; authoredAt:string; receivedAt:string;
@@ -25,7 +25,8 @@ export interface CarryRequestBody {sourceShopId:string;sourceAuthorityEpoch:numb
 export interface CarryRequestReceipt extends ShopperReceipt {
   kind:'request.carry';disposition:'recorded';requestId:string;requestRevision:1;sourceRequestId:string;
 }
-export interface ConfirmRequestPurchaseBody {requestId:string;lineId:string;placedRevision:number;outcome:RequestPurchaseOutcome}
+export type ReportedPurchaser = {kind:'self'|'unknown'} | {kind:'requestAuthor';requestId:string;requestRevision:number;expectedAlias:string};
+export interface ConfirmRequestPurchaseBody {requestId:string;lineId:string;placedRevision:number;outcome:RequestPurchaseOutcome;reportedPurchaser?:ReportedPurchaser}
 export interface ConfirmRequestPurchaseReceipt extends ShopperReceipt {
   kind:'request.confirmPurchase';disposition:'recorded';requestId:string;requestRevision:number;purchaseOutcome:RequestPurchaseOutcome;
 }

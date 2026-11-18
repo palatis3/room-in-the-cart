@@ -1435,3 +1435,39 @@ test('fifty long reviewed receipt lines remain one bounded household stock revis
  const counts=await admin.query('SELECT count(*)::int n,count(DISTINCT operation_id)::int ops,count(DISTINCT pantry_revision)::int revisions FROM ritc.pantry_event WHERE household_id=$1',[f.h]);
  assert.deepEqual(counts.rows[0],{n:50,ops:1,revisions:1});
 });
+
+test('a reported purchaser is separate from the recorder and private to the assigned shopper', async()=>{
+  const f=await purchaseFixture(), foreign=await purchaseFixture('Alex');
+  const other=(await f.send('Alex')).request;
+  const explicit={kind:'requestAuthor',requestId:other.requestId,requestRevision:other.revision,expectedAlias:'Alex'};
+  const inbox=async()=> (await f.http('Mia','GET','/shops/'+f.shopId+'/inbox')).data.requests;
+  const row=async()=> (await inbox()).find(r=>r.requestId===f.requestId);
+  const send=c=>f.http('Mia','POST','/commands',c);
+  function command(revision,outcome,reportedPurchaser){
+    return f.envelope('Mia','request.confirmPurchase',{requestId:f.requestId,lineId:f.lineId,placedRevision:f.placedRevision,
+      outcome,...(reportedPurchaser?{reportedPurchaser}:{})},{shopRevision:f.shopRevision,authorityEpoch:1,requestRevision:revision});
+  }
+  const rev=f.requestRevision;
+  assert.equal((await inbox()).find(r=>r.requestId===other.requestId).canReportAuthorAsPurchaser,true);
+  assert.equal((await row()).canReportAuthorAsPurchaser,undefined);
+  assert.equal((await send(command(rev,'notBought',explicit))).status,422);
+  assert.equal((await send(command(rev,'bought',{...explicit,requestId:foreign.requestId}))).status,404);
+  assert.equal((await send(command(rev,'bought',{...explicit,requestRevision:other.revision+1}))).status,409);
+  assert.equal((await send(command(rev,'bought',{...explicit,requestId:f.requestId,requestRevision:rev}))).status,404);
+  const legacy=await send(command(rev,'bought')); assert.equal(legacy.status,200);
+  let current=await row(); assert.equal(current.purchaseRecordedBy,'Mia'); assert.equal(current.reportedPurchaser,undefined);
+  const selected=command(current.revision,'bought',explicit);
+  const saved=await send(selected); assert.equal(saved.status,200,JSON.stringify(saved.data));
+  assert.deepEqual((await send(selected)).data,saved.data);
+  current=await row(); assert.equal(current.reportedPurchaser,'Alex'); assert.equal(current.purchaseRecordedBy,'Mia');
+  const own=(await f.http('Sam','GET','/requests/mine')).data.requests[0];
+  assert.equal(own.purchaseOutcome,'bought');
+  for(const field of ['purchaseRecordedBy','reportedPurchaser','canReportAuthorAsPurchaser']) assert.equal(own[field],undefined);
+  const corrected=await send(command(current.revision,'notBought')); assert.equal(corrected.status,200);
+  current=await row(); assert.equal(current.purchaseOutcome,'notBought'); assert.equal(current.reportedPurchaser,undefined);
+  const self=await send(command(current.revision,'bought',{kind:'self'})); assert.equal(self.status,200);
+  current=await row(); assert.equal(current.reportedPurchaser,'Mia');
+  assert.equal((await send(command(current.revision,'bought',{...explicit,expectedAlias:'Different adult'}))).status,409);
+  const unknown=await send(command(current.revision,'bought',{kind:'unknown'})); assert.equal(unknown.status,200);
+  current=await row(); assert.equal(current.purchaseOutcome,'bought'); assert.equal(current.reportedPurchaser,undefined);
+});

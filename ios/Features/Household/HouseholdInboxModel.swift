@@ -90,9 +90,21 @@ enum ShopperDelivery: Equatable {
               let request = requests.first(where: { $0.id == requestID }) else { return nil }
         return RequestPurchaseMatch(request: request, shop: shop, placed: placed)
     }
-    func confirmPurchase(_ match: RequestPurchaseMatch, outcome: ConfirmedRequestPurchase?, placed: SharedDeliveryPage) async {
-        guard purchaseMatch(match.request.id, placed: placed) == match, match.request.purchaseOutcome != outcome else { return }
-        await enqueue(kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome))
+    var supportsPurchaseAttribution: Bool {
+        supportsPurchaseConfirmation && bootstrap.capabilities.contains("request_purchase_attribution")
+    }
+    func confirmPurchase(_ match: RequestPurchaseMatch, outcome: ConfirmedRequestPurchase?, placed: SharedDeliveryPage,
+                         purchaser: ReportedPurchaser? = nil) async {
+        guard purchaseMatch(match.request.id, placed: placed) == match,
+              match.request.purchaseOutcome != outcome || purchaser != nil else { return }
+        if let purchaser {
+            guard supportsPurchaseAttribution, outcome == .bought else { return }
+            if case let .requestAuthor(id, revision, alias) = purchaser {
+                guard requests.contains(where: { $0.id == id && $0.revision == revision && $0.shopId == shopID
+                    && $0.authorAlias == alias && $0.canReportAuthorAsPurchaser == true }) else { return }
+            }
+        }
+        await enqueue(kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome, purchaser: purchaser))
     }
     var supportsDeferredRequests: Bool {
         authorized && bootstrap.grantId == nil && bootstrap.capabilities.contains("deferred_requests")

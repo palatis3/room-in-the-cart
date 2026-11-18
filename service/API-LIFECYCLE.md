@@ -82,6 +82,12 @@ Proposal receipts are durable and idempotent for the authenticated member/key/bo
 
 Both request-list endpoints return a page-level `asOf` timestamp from the authorized database read, including for empty pages. A client can show this time on the rows from that page. Paginating, saving a local edit or replaying a command leaves the timestamps of earlier rows unchanged. Earlier servers omit `asOf`. A web client can bind each `/requests/mine` page to its verified session by including that session's `X-CSRF-Token` header.
 
+## Reported purchaser
+
+For a placed shop, the assigned shopper can review `request.confirmPurchase` with the `request_purchase_attribution` capability. A bought command may include `reportedPurchaser` with kind `unknown`, `self`, or `requestAuthor`. The last choice requires the ID and revision of a visible request from this shop and its displayed adult alias in `requestId`, `requestRevision`, and `expectedAlias`. The service checks that the author is still an active adult contributor. The authenticated shopper remains the recorder of the observation.
+
+On the shopper inbox, `canReportAuthorAsPurchaser` marks eligible request authors. A current linked observation can show `purchaseRecordedBy`. A current bought observation with a retained explicit purchaser can also show `reportedPurchaser`. The requester sees only their purchase outcome. Older commands with an omitted purchaser and earlier records have an unknown purchaser. Each correction replaces the current observation. Erasing the reported purchaser retires their attribution and the attributed command replay. An independent bought observation recorded by a different member survives under the usual request and recorder erasure rules.
+
 ## Native helper context and management lists
 
 Bearer clients may send `X-View-Grant-ID: UUID` together with their enrolled device token. The service validates the exact live grant and recipient, then restricts the context to that helper view. An assigned shopper selecting a helper grant loses shopper, household-admin, contribution and billing routes in that context. Invalid UUIDs fail validation; a missing, expired or wrong-recipient grant ends access. The header is not a membership or invitation credential.

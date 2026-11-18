@@ -122,6 +122,7 @@ private final class S17FixtureServer: @unchecked Sendable {
                 if let purchases {
                     capabilities.append("request_purchase_confirmation")
                     if purchases.compare { capabilities.append("request_same_item") }
+                    if purchases.attribution { capabilities.append("request_purchase_attribution") }
                 }
                 if fallbacks != nil { capabilities.append("accepted_fallbacks") }
                 if deliveries.recovery != nil { capabilities.append("meal_recovery") }

@@ -114,7 +114,11 @@ export const bodySchemas = {
   'request.withdraw': z.object({ requestId: uuid }).strict(),
   'request.carry': z.object({sourceShopId:copyId,sourceAuthorityEpoch:copyRevision,requestId:copyId}).strict(),
   'request.confirmPurchase': z.object({requestId:uuid.toLowerCase(),lineId:uuid.toLowerCase(),placedRevision:copyRevision,
-    outcome:z.enum(['bought','notBought','unknown'])}).strict(),
+    outcome:z.enum(['bought','notBought','unknown']),
+    reportedPurchaser:z.discriminatedUnion('kind',[
+      z.object({kind:z.literal('unknown')}).strict(), z.object({kind:z.literal('self')}).strict(),
+      z.object({kind:z.literal('requestAuthor'),requestId:uuid.toLowerCase(),requestRevision:copyRevision,expectedAlias:z.string().min(1).max(240)}).strict()
+    ]).optional()}).strict().refine(body=>!body.reportedPurchaser||body.outcome==='bought'),
   'request.clarify': z.object({ requestId: uuid, question: z.string().trim().min(1).max(300) }).strict(),
   'request.undoAcceptance':z.object({targetOperationId:uuid.toLowerCase(),requestId:uuid.toLowerCase(),baseRequestRevision:copyRevision,lines:z.array(lineSchema.extend({originalItem:z.string().min(1).max(240).refine(x=>x===x.trim()),feeEligible:z.boolean()})).max(200),quote:quoteSchema,operationUndoReview:z.object({previewId:uuid.toLowerCase(),previewDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict()}).strict(),
   'request.apply': z.object({ requestId: uuid, previewId: uuid, acceptOverage: z.boolean(), acceptUnknown: z.boolean(), demandReview:demandReviewSchema.optional() }).strict(),

@@ -5,6 +5,8 @@ final class RequestPurchaseFixture {
     static let request = "aaaaaaaa-1111-4111-8111-111111111111"
     private static let secondRequest = "bbbbbbbb-1111-4111-8111-111111111111"
     let compare = ProcessInfo.processInfo.arguments.contains("--compare-placed-purchase")
+    let attribution = ProcessInfo.processInfo.arguments.contains("--reported-purchaser")
+    private var buyer: String?
     private let line = "66666666-6666-4666-8666-666666666666"
     private var revision = 2
     private var outcome: String?
@@ -31,6 +33,13 @@ final class RequestPurchaseFixture {
         unlinked["authorAlias"] = "Jo"
         unlinked["linkedLineId"] = nil
         unlinked["purchaseOutcome"] = nil
+        if attribution {
+            unlinked["authorAlias"] = "Alex"
+            unlinked["revision"] = secondRevision
+            unlinked["canReportAuthorAsPurchaser"] = true
+            if outcome != nil { row["purchaseRecordedBy"] = "Mia" }
+            if outcome == "bought" { row["reportedPurchaser"] = buyer }
+        }
         if compare {
             unlinked["revision"] = secondRevision
             unlinked["route"] = "next"
@@ -100,6 +109,19 @@ final class RequestPurchaseFixture {
               body["lineId"] as? String == line, body["placedRevision"] as? Int == 1,
               let choice = body["outcome"] as? String, ["bought", "notBought", "unknown"].contains(choice)
         else { throw SharedDeliveryFixtureRecords.CookFailure.staleBase }
+        if let purchaser = body["reportedPurchaser"] as? [String:Any] {
+            guard attribution, choice == "bought" else { throw SharedDeliveryFixtureRecords.CookFailure.invalid }
+            switch purchaser["kind"] as? String {
+            case "self": buyer = "Mia"
+            case "unknown": buyer = nil
+            case "requestAuthor":
+                guard purchaser["requestId"] as? String == Self.secondRequest,
+                      purchaser["requestRevision"] as? Int == secondRevision,
+                      purchaser["expectedAlias"] as? String == "Alex" else { throw SharedDeliveryFixtureRecords.CookFailure.staleBase }
+                buyer = "Alex"
+            default: throw SharedDeliveryFixtureRecords.CookFailure.invalid
+            }
+        } else { buyer = nil }
         revision += 1
         outcome = choice == "unknown" ? nil : choice
         let receipt: [String: Any] = ["requestId": Self.request, "requestRevision": revision, "shopId": shop,

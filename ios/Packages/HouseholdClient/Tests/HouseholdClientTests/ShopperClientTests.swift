@@ -173,6 +173,13 @@ extension HouseholdClientTests {
             kind: "request.confirmPurchase", base: .init(shopRevision: 7, authorityEpoch: 3, requestRevision: 2),
             body: ["requestId": .string(requestID), "lineId": .string(line), "placedRevision": .integer(5), "outcome": .string("bought")]),
             bootstrap: scope)
+        let attributed = try await service.prepare(envelope: .init(replayWindow: UUID().uuidString, shopId: shopID,
+            kind: "request.confirmPurchase", base: .init(shopRevision: 7, authorityEpoch: 3, requestRevision: 2),
+            body: ["requestId": .string(requestID), "lineId": .string(line), "placedRevision": .integer(5),
+                   "outcome": .string("bought"), "reportedPurchaser": .object(["kind": .string("self")])]), bootstrap: scope)
+        do { _ = try await service.executeShopper(attributed); XCTFail("Attributed command sent to an older service") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        XCTAssertTrue(stateLock.withLock { posts.isEmpty })
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: dir) }
         let file = dir.appendingPathComponent("shopper.json")
@@ -203,7 +210,7 @@ extension HouseholdClientTests {
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
                                       auth: auth, deviceVault: MemoryVault(), transport: transport())
-        var outcome: String?, privateLink = false
+        var outcome: String?, privateField: (String, Any)?
         let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             stateLock.lock(); defer { stateLock.unlock() }
@@ -215,7 +222,7 @@ extension HouseholdClientTests {
                 "ownQuantity": "a bag", "authoredAt": "2026-11-07T09:00:00Z", "receivedAt": "2026-11-07T09:01:00Z",
                 "status": "added", "route": "current", "ownActionAllowed": false]
             row["purchaseOutcome"] = outcome
-            if privateLink { row["linkedLineId"] = self.previewID }
+            if let (key, value) = privateField { row[key] = value }
             return (200, try JSONSerialization.data(withJSONObject: ["requests": [row]]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
@@ -227,9 +234,12 @@ extension HouseholdClientTests {
             XCTAssertEqual(page.requests[0].purchaseOutcome, known)
             XCTAssertEqual(page.requests[0].status, "added")
         }
-        stateLock.withLock { privateLink = true }
-        do { _ = try await service.ownRequests(); XCTFail("Own view accepted a private link") }
-        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        for field: (String, Any) in [("linkedLineId", previewID), ("reportedPurchaser", "Buyer"),
+                                     ("purchaseRecordedBy", "Recorder"), ("canReportAuthorAsPurchaser", true)] {
+            stateLock.withLock { privateField = field }
+            do { _ = try await service.ownRequests(); XCTFail("Own view accepted a private shopper field") }
+            catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        }
     }
 }
 

@@ -207,7 +207,7 @@ export class HouseholdRepository {
       ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'} : {}),
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
       capabilities:[...(preferenceAccess?['meal_preferences_read']:[]),
-        ...(preferenceAccess&&ctx.member.organizer?['meal_preferences_admin']:[]),...(pantryAccess?['household_pantry','household_tonight','my_feedback_withdrawal']:[]),...(pantryAccess && isShopper && shop?.placed_revision!=null?['cook_completion','meal_feedback']:[]),...(pantryAccess&&ctx.member.organizer?['household_pantry_grants']:[]),...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','request_same_item','request_pair_review','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+        ...(preferenceAccess&&ctx.member.organizer?['meal_preferences_admin']:[]),...(pantryAccess?['household_pantry','household_tonight','my_feedback_withdrawal']:[]),...(pantryAccess && isShopper && shop?.placed_revision!=null?['cook_completion','meal_feedback']:[]),...(pantryAccess&&ctx.member.organizer?['household_pantry_grants']:[]),...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation','request_purchase_attribution']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','request_same_item','request_pair_review','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned'|'history-owned'|'requests',after:string|null){
     if(ctx.viewGrantId)throw unavailable();
@@ -269,13 +269,16 @@ export class HouseholdRepository {
     }else if(shop){
       linkJoin='LEFT JOIN ritc.placed_request_link l ON (l.household_id,l.shop_id,l.request_id)=(r.household_id,r.shop_id,r.request_id)';
     }
-    const result=await ctx.db.query<RequestRow & {author_alias?:string;linked_line_id?:string;same_item_operation?:string}>(`SELECT r.*,p.outcome AS purchase_outcome
-      ${shopId?`,l.line_id AS linked_line_id,(SELECT e.operation_id FROM ritc.request_same_item e
+    const result=await ctx.db.query<RequestRow & {author_alias?:string;linked_line_id?:string;same_item_operation?:string;buyer_alias?:string;recorder_alias?:string}>(`SELECT r.*,p.outcome AS purchase_outcome
+      ${shopId?`,l.line_id AS linked_line_id,buyer.alias AS buyer_alias,recorder.alias AS recorder_alias,(SELECT e.operation_id FROM ritc.request_same_item e
         WHERE e.household_id=r.household_id AND e.request_id=r.request_id AND e.request_revision+1=r.revision
           AND r.status='handled' AND NOT e.invalidated AND e.undo_operation_id IS NULL AND e.operation_id IS NOT NULL) AS same_item_operation`:''}
       FROM ritc.request_origin r LEFT JOIN ritc.request_purchase_review p
         ON (p.household_id,p.request_id,p.request_revision)=(r.household_id,r.request_id,r.revision)
       ${linkJoin}
+      ${shopId?`LEFT JOIN ritc.request_purchase_buyer attributed ON (attributed.household_id,attributed.operation_id)=(p.household_id,p.operation_id)
+        LEFT JOIN ritc.member buyer ON (buyer.household_id,buyer.member_id)= (attributed.household_id,attributed.buyer_id) AND buyer.state='active'
+        LEFT JOIN ritc.member recorder ON (recorder.household_id,recorder.member_id)=(p.household_id,p.actor_id) AND recorder.state='active'` : ''}
       WHERE r.household_id=$1 AND r.${shopId?'shop_id':'author_id'}=$2 AND ($3::uuid IS NULL OR r.shop_id=$3)
       AND (NOT (r.carried_forward OR r.from_previous_shop) OR (r.author_active AND (r.author_kind='adult' OR r.live_notice=$4)))
       ${cursor?'AND (r.received_at,r.request_id)>($5,$6)':''} ORDER BY r.received_at,r.request_id LIMIT 51`,params);
@@ -285,6 +288,11 @@ export class HouseholdRepository {
       ...ownRequest(r),
       ...(shop ? {authorAlias:r.author_alias} : {}),
       ...(pairs?.has(r.request_id)?{requestPairs:pairs.get(r.request_id)}:{}),
+      ...(shop?.placed_revision && r.author_active && r.author_kind==='adult' && r.author_id!==ctx.member.member_id
+        ? {canReportAuthorAsPurchaser:true} : {}),
+      ...(shop && r.linked_line_id && r.purchase_outcome==='bought' && r.buyer_alias ? {reportedPurchaser:r.buyer_alias} : {}),
+      ...(shop && r.linked_line_id && (r.purchase_outcome==='bought'||r.purchase_outcome==='notBought') && r.recorder_alias
+        ? {purchaseRecordedBy:r.recorder_alias} : {}),
       ...(shop && r.same_item_operation ? {sameItemOperationId:r.same_item_operation} : {}),
       ...(shop && r.linked_line_id
         ? (shop.phase==='draft' ? {draftBasketLineId:r.linked_line_id} : {linkedLineId:r.linked_line_id})
@@ -640,7 +648,7 @@ export class HouseholdRepository {
     throw invalid();
   }
   private async confirmPurchase(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
-    const {requestId,lineId,placedRevision,outcome}=bodySchemas['request.confirmPurchase'].parse(c.body);
+    const {requestId,lineId,placedRevision,outcome,reportedPurchaser}=bodySchemas['request.confirmPurchase'].parse(c.body);
     if(!shop.placed_revision || !['placed','closed'].includes(shop.phase))
       throw new ServiceError(409,'placed_order_required','Open the placed order to review this purchase.');
     if(placedRevision!==shop.placed_revision) throw refresh();
@@ -648,6 +656,13 @@ export class HouseholdRepository {
     const linked=await ctx.db.query(`SELECT 1 FROM ritc.placed_request_link
       WHERE household_id=$1 AND request_id=$2 AND shop_id=$3 AND line_id=$4 AND placed_revision=$5`,[...scope,lineId,placedRevision]);
     if(!linked.rowCount) throw unavailable();
+    let buyerID = reportedPurchaser?.kind === 'self' ? ctx.member.member_id : null;
+    if (reportedPurchaser?.kind === 'requestAuthor') {
+      const source = await this.request(ctx,reportedPurchaser.requestId,shop.shop_id);
+      if (!source.author_active || source.author_kind !== 'adult' || source.author_id === ctx.member.member_id) throw unavailable();
+      if (source.revision !== reportedPurchaser.requestRevision || source.author_alias !== reportedPurchaser.expectedAlias) throw refresh();
+      buyerID = source.author_id;
+    }
     const changed=await ctx.db.query<{revision:number}>(`UPDATE ritc.request SET revision=revision+1
       WHERE household_id=$1 AND request_id=$2 AND shop_id=$3 AND status='added' AND revision=$4 RETURNING revision`,
       [...scope,c.base.requestRevision??null]);
@@ -655,6 +670,8 @@ export class HouseholdRepository {
     const revision=changed.rows[0]!.revision;
     await ctx.db.query(`INSERT INTO ritc.request_purchase_review(household_id,request_id,shop_id,placed_revision,request_revision,actor_id,operation_id,outcome)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,[...scope,placedRevision,revision,ctx.member.member_id,operationId,outcome]);
+    if (buyerID) await ctx.db.query('INSERT INTO ritc.request_purchase_buyer(household_id,operation_id,buyer_id) VALUES($1,$2,$3)',
+      [ctx.householdId,operationId,buyerID]);
     return {...await this.receipt(ctx,c,operationId,'recorded',{requestId,requestRevision:revision}),purchaseOutcome:outcome};
   }
   private async apply(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
