@@ -4,7 +4,8 @@ import Foundation
 enum PrintedPriceText {
     static let number = #"[0-9]{1,9}(?:[.,][0-9]{1,2})?"#
     static let markedPrice = try! NSRegularExpression(
-        pattern: #"(?<![\p{L}0-9])(?:US\$|USD\s*|CAD\s*|EUR\s*|GBP\s*|[$€£])\s*("# + number + #")(?![0-9.,])"#,
+        pattern: #"(?<![\p{L}0-9.,-])(?:(?:US\$|USD|CAD|EUR|GBP|[$€£])\s*("# + number
+            + #")(?![0-9]|[.,][0-9])(?:\s+(?:USD|CAD|EUR|GBP)\b)?|("# + number + #")\s+(?:USD|CAD|EUR|GBP)\b)"#,
         options: [.caseInsensitive])
     static let measureNumber = try! NSRegularExpression(
         pattern: #"(?<![\p{L}0-9$€£.,/–-])([0-9]{1,6}(?:[.,][0-9]{1,2})?)(?![0-9.,])"#)
@@ -47,7 +48,8 @@ enum PrintedPriceText {
 
     static func singlePrice(in wording: String) -> Money? {
         let matches = markedPrice.matches(in: wording, range: NSRange(wording.startIndex..., in: wording))
-        guard matches.count == 1, let range = Range(matches[0].range(at: 1), in: wording) else { return nil }
+        guard matches.count == 1, let match = matches.first,
+              let range = Range(match.range(at: 1), in: wording) ?? Range(match.range(at: 2), in: wording) else { return nil }
         return try? Money(decimal: wording[range].replacingOccurrences(of: ",", with: "."))
     }
 }
