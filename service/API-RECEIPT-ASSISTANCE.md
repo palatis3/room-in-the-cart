@@ -13,3 +13,9 @@ Assistance defaults to unavailable. The server reads `RECEIPT_ASSISTANCE_ENABLED
 Before live use, the operator must approve a specific model, verify its provider retention terms and set a conservative full-request reservation in millionths of a US dollar at that model’s applicable rates. The service transaction reserves this entire amount before submission. The daily ceiling applies to the reserved amount across accounts and instances. Separate per-account counts and a request identity prevent a retry from creating a second chargeable submission. These reservations use the existing PostgreSQL rate buckets and their cleanup. They contain only opaque keys, timestamps and counts. The application and service keep excerpts and suggestions in transient request state. Provider retention depends on the account and provider terms.
 
 The qualification suite injects a mock transport and uses a disposable local database. No live provider account is needed to run it.
+
+## Optional photo crop
+
+The receipt editor can also show a local grayscale preview of the selected rectangle. The shopper can use Vision’s text instead, remove the crop or explicitly send the preview with the redacted excerpt. A crop contains up to 768 × 240 grayscale pixels. The payload carries the dimensions and exactly one byte per pixel. The service encodes those pixels as a PNG, with no photo metadata, and attaches it to the fixed Responses request. Quantity read from the crop remains a proposal for comparison with the visible image. [OpenAI image inputs](https://developers.openai.com/api/docs/guides/images-vision).
+
+Image assistance requires a separately approved `RECEIPT_ASSISTANCE_MAX_CROP_USD_MICROS` reservation that includes image input cost. Without it the editor offers text only. Both formats share the same per-account and daily budgets.

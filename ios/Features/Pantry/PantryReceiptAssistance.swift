@@ -1,5 +1,6 @@
 import CoreDomain
 import HouseholdClient
+import PhotosUI
 import SwiftUI
 
 /// Accepting a suggestion only edits the existing row. It never selects an acquisition action or confirms usable stock.
@@ -29,6 +30,7 @@ extension ReceiptImportDraft.Line {
 
 @MainActor struct PantryReceiptAssistance: View {
     let line: ReceiptImportDraft.Line
+    let sourceImage: Data?
     let authorized: () -> Bool
     let checkSource: () async throws -> Void
     let apply: (ReceiptLineSuggestion, ReceiptLineAssistanceRequest, Bool) throws -> Void
@@ -40,6 +42,13 @@ extension ReceiptImportDraft.Line {
     @State private var basis: CapturePrivateIdentity?
     @State private var checked = false
     @State private var available = false
+    @State private var allowsCrop = false
+    @State private var pickedPhoto: PhotosPickerItem?
+    @State private var cropSource: CGImage?
+    @State private var cropEditor = false
+    @State private var crop: ReceiptLineCrop?
+    @State private var localWording: String?
+    @State private var preparingPhoto = false
     @State private var sending = false
     @State private var request: ReceiptLineAssistanceRequest?
     @State private var attempts = 0
@@ -50,11 +59,11 @@ extension ReceiptImportDraft.Line {
     @State private var operation = UUID()
 
     private var identity: CapturePrivateIdentity? {
-        guard scene == .active, authorized(), !household.guardianChildOnly,
+        guard authorized(), !household.guardianChildOnly,
               household.projection?.grantId == nil else { return nil }
         return CapturePrivateIdentity.current(access: access, household: household)
     }
-    private var current: Bool { basis?.subject != nil && identity == basis }
+    private var current: Bool { scene == .active && basis?.subject != nil && identity == basis }
     private var serviceScope: ReceiptAssistanceScope? {
         guard let identified = identity, let subject = identified.subject, let householdID = identified.householdID,
               let memberID = identified.memberID else { return nil }
@@ -63,7 +72,7 @@ extension ReceiptImportDraft.Line {
     var body: some View {
         NavigationStack {
             Form {
-                if identity != nil { Section(pantryText("Original receipt wording")) { Text(verbatim: line.original) } }
+                if scene == .active, identity != nil { Section(pantryText("Original receipt wording")) { Text(verbatim: line.original) } }
                 if !checked { ProgressView() }
                 else if !current {
                     Text(pantryText("For optional online help, open an authorized adult account. You can keep editing the receipt here."))
@@ -75,8 +84,9 @@ extension ReceiptImportDraft.Line {
                         TextField(pantryText("Selected receipt wording"), text: $selected, axis: .vertical)
                             .disabled(sending).accessibilityIdentifier("receipt.assistance.text")
                         Text(pantryFormat("Page %lld · line %lld", Int64(line.documentLine?.page ?? 1), Int64(line.documentLine?.line ?? line.ordinal + 1)))
-                        Button(pantryText("Send this text for a suggestion")) { send() }
-                            .disabled(!ReceiptLineAssistanceRequest.accepts(selected) || sending || result != nil || attempts >= 2)
+                        if allowsCrop { cropControls }
+                        Button(crop == nil ? pantryText("Send this text for a suggestion") : pantryText("Send this crop and selected text to OpenAI")) { send() }
+                            .disabled(!ReceiptLineAssistanceRequest.accepts(selected, crop: crop) || sending || preparingPhoto || result != nil || attempts >= 2)
                             .accessibilityIdentifier("receipt.assistance.send")
                     }
                     if sending { ProgressView(pantryText("Reading selected wording…")) }
@@ -112,21 +122,83 @@ extension ReceiptImportDraft.Line {
             basis = identity
             guard current, let scope = serviceScope, let service = household.service else { checked = true; return }
             let active = operation
-            let offered = (try? await service.receiptAssistanceAvailable(scope: scope)) == true
-            if !Task.isCancelled && operation == active && current && serviceScope == scope { available = offered }
+            let offered = try? await service.receiptAssistanceAvailability(scope: scope)
+            if !Task.isCancelled && operation == active && current && serviceScope == scope {
+                available = offered?.available == true
+                allowsCrop = offered?.allowsCrop == true
+            }
             checked = true
         }
-        .onChange(of: selected) { _, _ in request = nil; result = nil; received = false; attempts = 0; feedback = nil }
+        .onChange(of: selected) { _, _ in resetReview() }
+        .task(id: pickedPhoto) {
+            guard let item = pickedPhoto, current else { return }
+            preparingPhoto = true
+            defer { if pickedPhoto == item { preparingPhoto = false } }
+            do {
+                guard let transfer = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw ScanFailure.invalidImage }
+                let bytes = try transfer.data
+                let normalized = try await Task.detached(priority: .userInitiated) { try ScanImageNormalizer.normalize(bytes) }.value
+                guard !Task.isCancelled, current, pickedPhoto == item else { return }
+                openCrop(normalized)
+            } catch {
+                if !Task.isCancelled && current { feedback = pantryText("Could not open this photo. You can send selected text instead.") }
+            }
+        }
+        .sheet(isPresented: $cropEditor, onDismiss: { cropSource = nil; pickedPhoto = nil }) {
+            if let cropSource, current {
+                ReceiptLineCropEditor(image: cropSource) { value in
+                    guard current else { return }
+                    crop = value; localWording = nil; resetReview()
+                }
+            }
+        }
+        .task(id: crop) {
+            guard let crop, let picture = crop.previewImage, let data = UIImage(cgImage: picture).pngData() else { return }
+            let read = try? await OnDeviceTextCapture().recognize(data)
+            if !Task.isCancelled, current, self.crop == crop { localWording = read?.text.replacingOccurrences(of: "\n", with: " ") }
+        }
         .onChange(of: identity) { _, next in if basis != nil && next != basis { cancel(); dismiss() } }
+        .onChange(of: scene) { _, phase in if phase == .background { cancel(); dismiss() } }
         .onDisappear { cancel() }
     }
+    @ViewBuilder private var cropControls: some View {
+        if let crop, let preview = crop.previewImage {
+            Image(decorative: preview, scale: 1).resizable().scaledToFit().accessibilityLabel(pantryText("Exact image crop to share"))
+            Text(pantryText("This grayscale crop is the image OpenAI will receive. Check that it contains only the line you chose."))
+            if let localWording, !localWording.isEmpty {
+                Text(verbatim: localWording)
+                Button(pantryText("Use this local text instead of sharing the crop")) {
+                    selected = localWording; self.crop = nil; self.localWording = nil; resetReview()
+                }.disabled(sending)
+            }
+            Button(pantryText("Remove the crop")) { self.crop = nil; localWording = nil; resetReview() }.disabled(sending)
+        } else {
+            if let sourceImage {
+                Button(pantryText("Crop the reviewed receipt photo")) { openCrop(sourceImage) }.disabled(sending)
+            }
+            PhotosPicker(selection: $pickedPhoto, matching: .images, preferredItemEncoding: .current) {
+                Text(pantryText("Choose a photo to crop on this iPhone"))
+            }.disabled(sending || preparingPhoto)
+            if preparingPhoto { ProgressView() }
+        }
+    }
+    private func openCrop(_ data: Data) {
+        guard current, allowsCrop, let image = UIImage(data: data)?.cgImage else {
+            feedback = pantryText("Could not open this photo. You can send selected text instead.")
+            return
+        }
+        cropSource = image; cropEditor = true
+    }
+    private func resetReview() { request = nil; result = nil; received = false; attempts = 0; feedback = nil }
+
     private func cancel() {
         operation = UUID(); task?.cancel(); task = nil; sending = false; result = nil; request = nil
+        crop = nil; cropSource = nil; pickedPhoto = nil; localWording = nil
     }
     private func send() {
         guard current, available, !sending, attempts < 2, let scope = serviceScope, let service = household.service,
               let input = try? request ?? ReceiptLineAssistanceRequest(consentingTo: selected,
-                    page: line.documentLine?.page ?? 1, line: line.documentLine?.line ?? line.ordinal + 1) else { return }
+                    page: line.documentLine?.page ?? 1, line: line.documentLine?.line ?? line.ordinal + 1, crop: crop) else { return }
         request = input; attempts += 1; sending = true; feedback = nil
         let active = operation
         task = Task {

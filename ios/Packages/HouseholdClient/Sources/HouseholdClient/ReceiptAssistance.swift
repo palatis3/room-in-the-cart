@@ -10,6 +10,19 @@ public struct ReceiptAssistanceScope: Equatable, Sendable {
     }
 }
 
+public struct ReceiptLineCrop: Codable, Equatable, Sendable {
+    public let width: Int
+    public let height: Int
+    public let pixels: Data
+
+    public init(width: Int, height: Int, pixels: Data) throws {
+        guard (8...768).contains(width), (8...240).contains(height), pixels.count == width * height else {
+            throw ClientError.invalidResponse
+        }
+        self.width = width; self.height = height; self.pixels = pixels
+    }
+}
+
 public struct ReceiptLineAssistanceRequest: Codable, Equatable, Sendable {
     public let version: Int
     public let requestID: UUID
@@ -18,21 +31,28 @@ public struct ReceiptLineAssistanceRequest: Codable, Equatable, Sendable {
     public let page: Int
     public let line: Int
     public let text: String
+    public let crop: ReceiptLineCrop?
 
-    public static func accepts(_ text: String) -> Bool {
+    public static func accepts(_ text: String, crop: ReceiptLineCrop? = nil) -> Bool {
         let selected = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !selected.isEmpty && selected.utf8.count <= 512 && selected.count <= 500 &&
+        return (!selected.isEmpty || crop != nil) && selected.utf8.count <= 512 && selected.count <= 500 &&
             selected.rangeOfCharacter(from: .controlCharacters) == nil
     }
 
-    public init(consentingTo text: String, page: Int, line: Int, now: Date = Date()) throws {
+    public func wireData() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(self)
+    }
+
+    public init(consentingTo text: String, page: Int, line: Int, crop: ReceiptLineCrop? = nil, now: Date = Date()) throws {
         let selected = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard Self.accepts(selected), (1...20).contains(page), (1...200).contains(line) else { throw ClientError.invalidResponse }
+        guard Self.accepts(selected, crop: crop), (1...20).contains(page), (1...200).contains(line) else { throw ClientError.invalidResponse }
         self.version = 1
         self.requestID = UUID()
         self.issuedAt = Int64(now.timeIntervalSince1970 * 1_000)
         self.consent = true
-        self.page = page; self.line = line; self.text = selected
+        self.page = page; self.line = line; self.text = selected; self.crop = crop
     }
 }
 
@@ -62,18 +82,23 @@ public struct ReceiptLineSuggestion: Decodable, Equatable, Sendable {
     }
 }
 
+public struct ReceiptAssistanceAvailability: Decodable, Sendable {
+    public let version: Int
+    public let available: Bool
+    public let allowsCrop: Bool?
+}
+
 extension HouseholdService {
-    public func receiptAssistanceAvailable(scope: ReceiptAssistanceScope) async throws -> Bool {
+    public func receiptAssistanceAvailability(scope: ReceiptAssistanceScope) async throws -> ReceiptAssistanceAvailability {
         try verifyReceiptAssistanceScope(scope)
-        struct Availability: Decodable, Sendable { let version: Int; let available: Bool }
-        let result: Availability = try await perform("receipt-assistance", method: "GET", reportingShopID: scope.shopID, maximumResponseBytes: 1024)
+        let result: ReceiptAssistanceAvailability = try await perform("receipt-assistance", method: "GET", reportingShopID: scope.shopID, maximumResponseBytes: 1024)
         guard result.version == 1 else { throw ClientError.invalidResponse }
-        return result.available
+        return result
     }
 
     public func receiptLineSuggestion(_ input: ReceiptLineAssistanceRequest, scope: ReceiptAssistanceScope) async throws -> ReceiptLineSuggestion {
         try verifyReceiptAssistanceScope(scope)
-        let result: ReceiptLineSuggestion = try await perform("receipt-assistance", method: "POST", body: encoded(input),
+        let result: ReceiptLineSuggestion = try await perform("receipt-assistance", method: "POST", body: input.wireData(),
             reportingShopID: scope.shopID, maximumResponseBytes: 2048)
         try result.validate(for: input)
         return result

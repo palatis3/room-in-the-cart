@@ -252,9 +252,9 @@ export function createHTTPServer(options:HTTPOptions) {
         const assistance=options.receiptAssistance;
         const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
         await authorize();
-        if(method==='GET'){send(200,{version:1,available:!!assistance});return;}
+        if(method==='GET'){send(200,{version:1,available:!!assistance,allowsCrop:!!assistance?.budget.maxCropMicros});return;}
         if(!assistance)throw new ServiceError(503,'receipt_assistance_unavailable','Keep editing this receipt on your device.');
-        const input=receiptAssistanceInput.parse(await body(req,2048));
+        const input=receiptAssistanceInput.parse(await body(req,assistance.budget.maxCropMicros ? 251_000 : 2048));
         const cancellation=new AbortController();
         const stop=()=>cancellation.abort();
         res.once('close',stop);

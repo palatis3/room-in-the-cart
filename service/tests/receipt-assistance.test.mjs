@@ -81,7 +81,7 @@ test('the HTTP route rejects unauthorized scopes and limits admissions before su
   const endpoint = 'http://127.0.0.1:'+server.address().port+'/v1/households/'+household+'/receipt-assistance';
   const post = (value,headers={})=>fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer fixture','Content-Type':'application/json',...headers},body:JSON.stringify(value)});
   assert.equal((await fetch(endpoint)).status,401);
-  assert.deepEqual(await (await fetch(endpoint,{headers:{Authorization:'Bearer fixture'}})).json(),{version:1,available:true});
+  assert.deepEqual(await (await fetch(endpoint,{headers:{Authorization:'Bearer fixture'}})).json(),{version:1,available:true,allowsCrop:false});
   assert.equal((await post(input(),{'X-View-Grant-ID':randomUUID()})).status,404);
   persona='child'; assert.equal((await post(input())).status,404);
   persona='contributor'; assert.equal((await post(input())).status,404);
@@ -98,4 +98,47 @@ test('the HTTP route rejects unauthorized scopes and limits admissions before su
   persona='adult'; revokeBeforeReturn=false;
   assert.equal((await post(input())).status,429);
   assert.equal(calls,3);
+});
+
+test('a selected crop contains only the preview pixels and needs its own cost allowance', async () => {
+  const {inflateSync} = await import('node:zlib');
+  const pixels = Buffer.alloc(16 * 8,65);
+  const crop = {width:16,height:8,pixels:pixels.toString('base64')};
+  const sample = {...input(),text:'',crop};
+  assert.equal(receiptAssistanceInput.safeParse(sample).success,true);
+  for (const changed of [{...crop,width:20},{...crop,height:0},{...crop,photo:'EXIF'},{...crop,pixels:'not a photograph'}])
+    assert.equal(receiptAssistanceInput.safeParse({...sample,crop:changed}).success,false);
+  let calls = 0;
+  const mock = async (_url, options) => {
+    calls++;
+    const body = JSON.parse(options.body);
+    const [text,picture] = body.input[0].content;
+    assert.deepEqual(JSON.parse(text.text),{page:2,line:3,text:''});
+    assert.equal(picture.type,'input_image');
+    assert.equal(picture.detail,'high');
+    const png = Buffer.from(picture.image_url.split(',')[1],'base64');
+    assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+    let offset=8; const types=[];
+    while (offset<png.length) {
+      const length=png.readUInt32BE(offset);
+      const type=png.toString('ascii',offset+4,offset+8); types.push(type);
+      if(type==='IHDR') { assert.equal(png.readUInt32BE(offset+8),16); assert.equal(png.readUInt32BE(offset+12),8); }
+      if(type==='IDAT') {
+        const rows=inflateSync(png.subarray(offset+8,offset+8+length));
+        const expected=Buffer.alloc(17*8,65);
+        for(let row=0;row<8;row++) expected[row*17]=0;
+        assert.deepEqual(rows,expected);
+      }
+      offset+=12+length;
+    }
+    assert.deepEqual(types,['IHDR','IDAT','IEND']);
+    return Response.json(completed(suggested));
+  };
+  const off=new ReceiptAssistance(budget,'fixture','unused',mock);
+  await assert.rejects(off.extract(sample,new AbortController().signal));
+  assert.equal(calls,0);
+  const enabled=new ReceiptAssistance({...budget,maxCropMicros:30},'fixture','unused',mock);
+  const value=await enabled.extract(sample,new AbortController().signal);
+  assert.equal(value.foodName,'Avena');
+  assert.equal(calls,1);
 });

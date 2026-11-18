@@ -139,8 +139,8 @@ import RecordArchive
         }
         let scope = ReceiptAssistanceScope(subject: "fixture-adult", householdID: S24FixtureServer.household,
             memberID: S24FixtureServer.member, shopID: S24FixtureServer.shop)
-        let available = try await client.receiptAssistanceAvailable(scope: scope)
-        XCTAssertTrue(available)
+        let available = try await client.receiptAssistanceAvailability(scope: scope)
+        XCTAssertTrue(available.available)
         let changed = ReceiptAssistanceScope(subject: "another adult", householdID: scope.householdID, memberID: scope.memberID, shopID: scope.shopID)
         do {
             _ = try await client.receiptLineSuggestion(input, scope: changed)

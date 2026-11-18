@@ -21,6 +21,7 @@ struct PantryReceiptEntry: View {
         let line: ReceiptImportDraft.Line
     }
     @State private var assistance: AssistanceReview?
+    @State private var reviewedSourceImage: Data?
     @State private var fileSource = false
     @State private var scan = false
     @State private var draft: ReceiptImportDraft?
@@ -149,7 +150,7 @@ struct PantryReceiptEntry: View {
             }
         }
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
-            if origin == nil { draft = nil; review = nil; scan = false; fileSource = false }
+            if origin == nil { reviewedSourceImage = nil; draft = nil; review = nil; scan = false; fileSource = false }
         }
         .task(id: aliasScope) {
             let scope = aliasScope
@@ -160,7 +161,7 @@ struct PantryReceiptEntry: View {
             if !Task.isCancelled, scope == aliasScope { aliases = matches ?? [] }
         }
         .sheet(item: $assistance) { basis in
-            PantryReceiptAssistance(line: basis.line, authorized: { assistanceCurrent(basis) }, checkSource: verifySource) { suggestion, input, received in
+            PantryReceiptAssistance(line: basis.line, sourceImage: reviewedSourceImage, authorized: { assistanceCurrent(basis) }, checkSource: verifySource) { suggestion, input, received in
                 guard assistanceCurrent(basis), var current = draft,
                       let index = current.lines.firstIndex(where: { $0.id == basis.line.id }) else { throw PantryReceiptError.stale }
                 try current.lines[index].applyAssisted(suggestion, request: input, reviewedLine: basis.line, useReceived: received)
@@ -198,7 +199,11 @@ struct PantryReceiptEntry: View {
 
     private func accept(_ source: SourceMediaRecord, fromSavedPickup: Bool = false) {
         guard model.canEdit, model.snapshot?.state.workspaceID == source.target.workspaceID else { return }
-        do { draft = try ReceiptImportDraft(source: source, fromSavedPickup: fromSavedPickup); message = nil }
+        do {
+            draft = try ReceiptImportDraft(source: source, fromSavedPickup: fromSavedPickup)
+            reviewedSourceImage = source.imageJPEG
+            message = nil
+        }
         catch { message = receiptError(error) }
     }
     private func commit(_ value: PantryReceiptReview) {
@@ -208,7 +213,7 @@ struct PantryReceiptEntry: View {
             do {
                 try await verifySource()
                 try await model.saveReceipt(value)
-                review = nil; draft = nil; finished = true
+                review = nil; draft = nil; reviewedSourceImage = nil; finished = true
                 message = value.batch == nil ? pantryText("These lines were already saved.") : pantryText("Reviewed receipt lines saved.")
             } catch {
                 message = receiptError(error)

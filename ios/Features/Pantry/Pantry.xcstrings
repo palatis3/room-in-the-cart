@@ -4403,6 +4403,295 @@
           }
         }
       }
+    },
+    "Receipt photo with selected rectangle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt photo with selected rectangle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto del recibo con el rectángulo seleccionado"
+          }
+        }
+      }
+    },
+    "Frame only the printed line. Leave out personal details and nearby lines.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frame only the printed line. Leave out personal details and nearby lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encuadra solo la línea impresa. Deja fuera los datos personales y las líneas cercanas."
+          }
+        }
+      }
+    },
+    "Top edge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top edge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borde superior"
+          }
+        }
+      }
+    },
+    "Bottom edge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottom edge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borde inferior"
+          }
+        }
+      }
+    },
+    "Left edge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left edge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borde izquierdo"
+          }
+        }
+      }
+    },
+    "Right edge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right edge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borde derecho"
+          }
+        }
+      }
+    },
+    "Preview this crop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview this crop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa del recorte"
+          }
+        }
+      }
+    },
+    "Choose a smaller box around a legible receipt line.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a smaller box around a legible receipt line."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona un recuadro más pequeño alrededor de una línea legible del recibo."
+          }
+        }
+      }
+    },
+    "Choose the receipt line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the receipt line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir la línea del recibo"
+          }
+        }
+      }
+    },
+    "Send this crop and selected text to OpenAI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this crop and selected text to OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar este recorte y el texto seleccionado a OpenAI"
+          }
+        }
+      }
+    },
+    "Could not open this photo. You can send selected text instead.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not open this photo. You can send selected text instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir la foto. Puedes enviar el texto seleccionado."
+          }
+        }
+      }
+    },
+    "Exact image crop to share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact image crop to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorte exacto de la imagen que se compartirá"
+          }
+        }
+      }
+    },
+    "This grayscale crop is the image OpenAI will receive. Check that it contains only the line you chose.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This grayscale crop is the image OpenAI will receive. Check that it contains only the line you chose."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI recibirá este recorte en escala de grises. Comprueba que solo incluya la línea elegida."
+          }
+        }
+      }
+    },
+    "Use this local text instead of sharing the crop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this local text instead of sharing the crop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este texto local en lugar de compartir el recorte"
+          }
+        }
+      }
+    },
+    "Remove the crop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the crop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el recorte"
+          }
+        }
+      }
+    },
+    "Crop the reviewed receipt photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crop the reviewed receipt photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recortar la foto revisada del recibo"
+          }
+        }
+      }
+    },
+    "Choose a photo to crop on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a photo to crop on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una foto para recortarla en este iPhone"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
