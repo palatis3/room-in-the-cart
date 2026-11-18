@@ -48,8 +48,12 @@ import XCTest
         XCTAssertFalse(app.staticTexts["cook.saved"].exists, "Cancel must not record cooking")
         let editable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isEnabled == true"), object: app.textFields["cook.servings"])
         XCTAssertEqual(XCTWaiter.wait(for: [editable], timeout: 10), .completed, app.debugDescription)
-        tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.ingredient.'")).firstMatch)
-        tap(app.buttons["Used"])
+        let ingredientPicker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.ingredient.'")).element
+        let currentUse = ingredientPicker.staticTexts["Choose what happened"]
+        tapVisiblePickerValue(currentUse)
+        let used = app.buttons["Used"]
+        XCTAssertTrue(used.waitForExistence(timeout: 4) && used.isHittable, app.debugDescription)
+        used.tap()
         tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.part.'")).firstMatch)
         tap(app.buttons["Food not tracked in this pantry"])
         tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.relation.'")).firstMatch)
@@ -94,6 +98,25 @@ import XCTest
         let resolved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Inventory changes recorded."), object: savedStatus)
         XCTAssertEqual(XCTWaiter.wait(for: [resolved], timeout: 10), .completed, app.debugDescription)
         XCTAssertFalse(app.buttons["cook.resolution.open"].exists, "The original unresolved history must not appear as unfinished after resolution")
+    }
+    private func tapVisiblePickerValue(_ value: XCUIElement) {
+        // A compact Form can expose the picker while its value is still underneath the tab bar.
+        let form = app.collectionViews.firstMatch
+        let bar = app.navigationBars["Record cooking"]
+        let tabs = app.tabBars.firstMatch
+        for _ in 0..<8 {
+            let top = bar.frame.maxY
+            let bottom = tabs.frame.minY
+            let frame = value.exists ? value.frame : .zero
+            print("Actual use value frame: \(frame), visible form: \(top)...\(bottom)")
+            if !frame.isEmpty, frame.minY >= top, frame.maxY <= bottom, value.isHittable {
+                value.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                return
+            }
+            if !frame.isEmpty && frame.midY < top { form.swipeDown() }
+            else { form.swipeUp() }
+        }
+        XCTFail("The ingredient picker value was not visible between the navigation and tab bars. " + app.debugDescription)
     }
     private func tap(_ element: XCUIElement) {
         _ = element.waitForExistence(timeout: 4)
