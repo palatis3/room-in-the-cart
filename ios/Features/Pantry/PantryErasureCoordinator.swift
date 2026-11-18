@@ -316,6 +316,11 @@ import RecordArchive
                     retainedLots.insert(fact.lotID)
                 }
             }
+            let affected = Set(page.map(\.lotID).filter { lots?.contains($0) ?? true })
+            if !affected.isEmpty {
+                digests.formUnion(try await inventory.rescanDocumentDigests(for: Array(affected)))
+                try access()
+            }
             guard let last = page.last else { break }
             cursor = last.id
         }

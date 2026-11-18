@@ -273,6 +273,58 @@ final class InventoryPersistenceTests: XCTestCase {
         try await reopened.close()
     }
 
+    func testRescanBindingsArePrivateAtomicAndErasedWithTheirPhysicalLine() async throws {
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        try await activate(store)
+        let parent = lot(), receipt = UUID(), owner = UUID(), day = UUID(), wording = UUID(), doc = UUID()
+        let digest = String(repeating: "a", count: 64)
+        let row = InventoryAcquisitionRow(id: UUID(), receiptID: receipt, lineID: UUID(), lotID: parent.record.key.id,
+            revision: 1, supersedesID: nil, payload: Data([5]))
+        func binding(_ actor: UUID, document: UUID, ordinal: Int) -> InventoryReceiptBinding {
+            .init(owner: actor, merchantDay: day, wording: wording, document: document, ordinal: ordinal,
+                  sourceID: row.id, receiptID: receipt, lotID: row.lotID, fileDigest: digest)
+        }
+        let original = binding(owner, document: doc, ordinal: 4)
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 1,
+            request: Data([1]), writes: [parent], acquisitions: [row], receiptBindings: [original]))
+        let crop = UUID(), linked = binding(owner, document: crop, ordinal: 0)
+        let pending = InventoryBatch(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 2,
+            request: Data([2]), receiptBindings: [linked])
+        let committed = try await store.commitInventory(pending)
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        let replay = try await reopened.commitInventory(pending)
+        XCTAssertEqual(replay, committed)
+        let saved = try await reopened.rescanBindings(owner: owner, document: crop)
+        let mine = try await reopened.rescanCandidates(owner: owner, merchantDay: day, wording: [wording])
+        let other = try await reopened.rescanCandidates(owner: UUID(), merchantDay: day, wording: [wording])
+        let files = try await reopened.rescanDocumentDigests(for: [row.lotID])
+        XCTAssertEqual(saved, [linked]); XCTAssertEqual(mine, [receipt]); XCTAssertTrue(other.isEmpty); XCTAssertEqual(files, [digest])
+        do {
+            try await reopened.checkReceiptOwner(UUID(), receipt: UUID(), fileDigest: digest)
+            XCTFail("A binding-only attachment cannot become another actor's purchase")
+        } catch ComparisonStoreError.invalidInput {}
+        let third = UUID()
+        do {
+            _ = try await reopened.commitInventory(.init(workspaceID: reopened.workspaceID, operationID: UUID(), expectedRevision: 3,
+                request: Data([3]), receiptBindings: [binding(owner, document: third, ordinal: 0), binding(UUID(), document: third, ordinal: 1)]))
+            XCTFail("A conflicting actor cannot claim an existing receipt")
+        } catch ComparisonStoreError.invalidInput {}
+        let rolledBack = try await reopened.rescanBindings(owner: owner, document: third)
+        XCTAssertTrue(rolledBack.isEmpty)
+        _ = try await reopened.commitInventory(.init(workspaceID: reopened.workspaceID, operationID: UUID(), expectedRevision: 3,
+            request: Data([4]), erasures: [.init(key: parent.record.key, expectedRevision: 1)]))
+        let after = try await reopened.rescanCandidates(owner: owner, merchantDay: day, wording: [wording])
+        let erased = try await reopened.rescanDocumentDigests(for: [row.lotID])
+        XCTAssertTrue(after.isEmpty); XCTAssertTrue(erased.isEmpty)
+        do { _ = try await reopened.commitInventory(pending); XCTFail("Retired links cannot replay") }
+        catch ComparisonStoreError.erased {}
+        do { try await reopened.checkRescanLines(owner: owner, document: crop, ordinals: [0]); XCTFail("A cropped line cannot reappear after erasure") }
+        catch ComparisonStoreError.invalidInput {}
+        try await reopened.checkRescanLines(owner: owner, document: crop, ordinals: [1])
+        try await reopened.close()
+    }
+
     func testReceiptEvidenceIdentitiesAreAtomicAndRemainRetiredAcrossReopen() async throws {
         let store = try ComparisonStore(url: url, inventoryEnabled: true)
         _ = try await activate(store, writes: [])

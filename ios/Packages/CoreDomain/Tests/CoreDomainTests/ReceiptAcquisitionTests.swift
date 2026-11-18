@@ -15,6 +15,24 @@ final class ReceiptAcquisitionTests: XCTestCase {
         XCTAssertNotEqual(ReceiptAcquisition.lineID(receiptID: first, ordinal: 0), ReceiptAcquisition.lineID(receiptID: first, ordinal: 1))
     }
 
+    func testAdditionalPrintedDocumentRetainsItsOwnOrdinalAcrossArchivalAndPriceCorrection() throws {
+        let receipt = UUID(), firstDocument = UUID(), secondDocument = UUID()
+        let quantity = Quantity(amount: try Rational(1), unit: .count, originalLiteral: "1")
+        let row = ReceiptAcquisition(receiptID: receipt, ordinal: 0, lotID: UUID(), foodID: UUID(), merchant: "Market",
+            purchaseDate: Date(timeIntervalSince1970: 1_790_000_000), transactionReference: nil, imageDigest: Data(repeating: 1, count: 32),
+            originalLine: "Beans", name: "Beans", received: quantity, usable: quantity, paidLineTotal: nil, stock: .added(location: .cupboard),
+            documentLine: .init(method: .pdfText, stage: .finalInvoice, page: 1, line: 1), lineDocumentID: firstDocument)
+        try row.validate()
+        XCTAssertNotEqual(row.lineID, ReceiptAcquisition.lineID(receiptID: receipt, ordinal: 0))
+        XCTAssertNotEqual(row.lineID, ReceiptAcquisition.lineID(receiptID: receipt, ordinal: 0, document: secondDocument))
+        let decoded = try JSONDecoder().decode(ReceiptAcquisition.self, from: JSONEncoder().encode(row))
+        XCTAssertEqual(decoded, row)
+        let corrected = try decoded.correctingPaidTotal(Money(decimal: "1.25"))
+        XCTAssertEqual(corrected.lineID, row.lineID)
+        XCTAssertEqual(corrected.lineDocumentID, firstDocument)
+        XCTAssertEqual(corrected.supersedesID, row.id)
+    }
+
     func testWeightedFoodWithUnknownPricePreservesSourceAndImmutableCorrection() throws {
         let received = Quantity(amount: try Rational(3, 2), unit: .kilogram, originalLiteral: "1.5")
         let usable = Quantity(amount: try Rational(5, 4), unit: .kilogram, originalLiteral: "1.25")

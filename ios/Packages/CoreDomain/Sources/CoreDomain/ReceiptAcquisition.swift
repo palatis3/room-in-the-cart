@@ -32,6 +32,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
                   self.ordinal == ordinal else { throw InventoryError.invalid("receiptPage") }
         }
     }
+    public let lineDocumentID: UUID?
     public let documentLine: DocumentLine?
     public let savedPickup: SavedPickup?
     public let id: UUID
@@ -56,12 +57,13 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
     public init(receiptID: UUID, ordinal: Int, lotID: UUID, foodID: UUID, merchant: String, purchaseDate: Date,
                 transactionReference: String?, imageDigest: Data?, originalLine: String, name: String,
                 received: Quantity, usable: Quantity, paidLineTotal: Money?, stock: Stock,
-                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil) {
+                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil, lineDocumentID: UUID? = nil) {
+        self.lineDocumentID = lineDocumentID
         self.documentLine = documentLine
         self.savedPickup = savedPickup
         self.receiptID = receiptID
         self.ordinal = ordinal
-        lineID = Self.lineID(receiptID: receiptID, ordinal: ordinal)
+        lineID = Self.lineID(receiptID: receiptID, ordinal: ordinal, document: lineDocumentID)
         id = Self.identity(["observation", lineID.uuidString, String(revision)])
         self.lotID = lotID
         self.foodID = foodID
@@ -90,8 +92,9 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         return draftID
     }
 
-    public static func lineID(receiptID: UUID, ordinal: Int) -> UUID {
-        identity(["line", receiptID.uuidString, String(ordinal)])
+    public static func lineID(receiptID: UUID, ordinal: Int, document: UUID? = nil) -> UUID {
+        if let document { return identity(["additional-document-line", receiptID.uuidString, document.uuidString, String(ordinal)]) }
+        return identity(["line", receiptID.uuidString, String(ordinal)])
     }
 
     public static func identity(_ fields: [String]) -> UUID {
@@ -113,7 +116,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         let corrected = Self(receiptID: receiptID, ordinal: ordinal, lotID: lotID, foodID: foodID, merchant: merchant,
             purchaseDate: purchaseDate, transactionReference: transactionReference, imageDigest: imageDigest, originalLine: originalLine,
             name: name, received: received, usable: usable, paidLineTotal: total, stock: stock,
-            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine)
+            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine, lineDocumentID: lineDocumentID)
         try corrected.validate()
         return corrected
     }
@@ -126,7 +129,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         if let documentLine { try documentLine.validate(ordinal: ordinal, digest: imageDigest) }
         else if !(0..<200).contains(ordinal) { throw InventoryError.invalid("receiptLine") }
         guard revision >= 1,
-              lineID == Self.lineID(receiptID: receiptID, ordinal: ordinal),
+              lineID == Self.lineID(receiptID: receiptID, ordinal: ordinal, document: lineDocumentID),
               id == Self.identity(["observation", lineID.uuidString, String(revision)]),
               supersedesID == (revision == 1 ? nil : Self.identity(["observation", lineID.uuidString, String(revision - 1)])),
               imageDigest.map({ $0.count == 32 }) ?? true,
