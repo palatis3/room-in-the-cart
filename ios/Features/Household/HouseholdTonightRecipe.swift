@@ -65,7 +65,10 @@ struct HouseholdTonightRecipeEditor: View {
                     }
                     ForEach(selectedLots) { lot in
                         if let label = productReviews[lot.id] {
-                            Section(Text(verbatim: lot.foodName)) { HouseholdPackageFacts(review: label) }
+                            VStack(alignment: .leading) {
+                                Text(verbatim: lot.foodName).font(.headline)
+                                HouseholdPackageFacts(review: label)
+                            }
                         }
                     }
                     Button(tonightText("Save recipe to household")) { Task { await commit(reviewed) } }

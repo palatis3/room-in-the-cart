@@ -128,7 +128,7 @@ extension HouseholdClientTests {
         XCTAssertThrowsError(try HouseholdTonightProductReview(lotId: id, observationId: first, reviewedIngredientDetails: nil, brands: nil))
         func lot(_ observation: UUID) throws -> HouseholdPantryPage.Lot {
             try TrackingWriteFixture.decode(["lotId": id.uuidString, "origin": "manual", "location": "pantry",
-                "foodName": "Rice", "exclusionTags": [], "observation": ["observationId": observation.uuidString, "confirmedAt": "2026-11-17T00:00:00Z"]])
+                "foodName": "Rice", "exclusionTags": [], "observation": ["observationId": observation.uuidString, "confirmedAt": "2026-11-17T00:00:00Z", "quantity": NSNull()]])
         }
         XCTAssertTrue(label.matches(try lot(first)))
         XCTAssertFalse(label.matches(try lot(UUID())))
