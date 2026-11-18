@@ -50,7 +50,10 @@ final class SurfaceDatabase: @unchecked Sendable {
             if result == SQLITE_DONE { return output }
             guard result == SQLITE_ROW else { throw SurfaceError.corrupt }
             output.append((0..<sqlite3_column_count(statement)).map { column in
-                guard sqlite3_column_type(statement, column) != SQLITE_NULL, let pointer = sqlite3_column_text(statement, column) else { return nil }
+                let type = sqlite3_column_type(statement, column)
+                // SQLite's default text rendering on older systems can round a REAL timestamp.
+                if type == SQLITE_FLOAT { return String(sqlite3_column_double(statement, column)) }
+                guard type != SQLITE_NULL, let pointer = sqlite3_column_text(statement, column) else { return nil }
                 return String(cString: pointer)
             })
         }

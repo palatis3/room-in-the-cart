@@ -161,7 +161,7 @@ enum SurfaceImportDestinationConflict: Error {
         let previous = try journal.read(entry.id)
         if let reviewToReplace, previous != reviewToReplace { throw SurfaceError.stale }
         if let saved = previous {
-            guard saved.scope == scope, saved.inboxDigest == entry.receipt.digest, saved.expiresAt == entry.receipt.expiresAt else { throw SurfaceError.stale }
+            guard saved.scope == scope, saved.inboxDigest == entry.receipt.digest, entry.receipt.matchesRecordedExpiry(saved.expiresAt) else { throw SurfaceError.stale }
             if let receipt = port.shop(saved.preview.shopID)?.importBatches.first(where: { $0.id == entry.id }) {
                 try validate(receipt, draft: saved)
                 _ = try await inbox.acknowledgeCommitted(operationID: entry.id, digest: saved.inboxDigest, now: clock())

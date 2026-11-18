@@ -1,4 +1,5 @@
 import Foundation
+import CDeviceSQLite
 import CryptoKit
 import UniformTypeIdentifiers
 
@@ -9,6 +10,16 @@ public struct InboxReceipt: Equatable, Sendable {
     public let createdAt: Date
     public let expiresAt: Date
     public let disposition: InboxDisposition
+
+    /// Older app-private reviews saved SQLite's 15-significant-digit rendering of the deadline.
+    public func matchesRecordedExpiry(_ recorded: Date) -> Bool {
+        if recorded == expiresAt { return true }
+        let text = withVaList([expiresAt.timeIntervalSince1970]) { sqlite3_vmprintf("%!.15g", $0) }
+        guard let text else { return false }
+        defer { sqlite3_free(text) }
+        guard let seconds = Double(String(cString: text)) else { return false }
+        return recorded == Date(timeIntervalSince1970: seconds)
+    }
 }
 public struct SelectedTextEntry: Equatable, Sendable, Identifiable {
     public var id: UUID { receipt.operationID }
