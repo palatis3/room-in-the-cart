@@ -63,8 +63,11 @@ extension ReceiptImportDraft.Line {
     @State private var available = false
     @State private var allowsCrop = false
     @State private var pickedPhoto: PhotosPickerItem?
-    @State private var cropSource: CGImage?
-    @State private var cropEditor = false
+    private struct CropSource: Identifiable {
+        let id = UUID()
+        let image: CGImage
+    }
+    @State private var cropSource: CropSource?
     @State private var cropDigest: Data?
     @State private var crop: ReceiptLineCrop?
     @State private var localWording: String?
@@ -176,9 +179,9 @@ extension ReceiptImportDraft.Line {
                 if !Task.isCancelled && current { feedback = pantryText("Could not open this photo. You can send selected text instead.") }
             }
         }
-        .sheet(isPresented: $cropEditor, onDismiss: { cropSource = nil; pickedPhoto = nil }) {
-            if let cropSource, current {
-                ReceiptLineCropEditor(image: cropSource) { value, digest in
+        .sheet(item: $cropSource, onDismiss: { pickedPhoto = nil }) { source in
+            if current {
+                ReceiptLineCropEditor(image: source.image) { value, digest in
                     guard current else { return }
                     crop = value; cropDigest = digest; localWording = nil; resetReview()
                 }
@@ -191,7 +194,7 @@ extension ReceiptImportDraft.Line {
         }
         .onChange(of: identity) { _, next in if basis != nil && next != basis { cancel(); dismiss() } }
         .onChange(of: scene) { _, phase in if phase == .background { cancel(); dismiss() } }
-        .onDisappear { if !cropEditor { cancel() } }
+        .onDisappear { if cropSource == nil { cancel() } }
     }
     @ViewBuilder private var cropControls: some View {
         if let crop, let preview = crop.previewImage {
@@ -229,7 +232,7 @@ extension ReceiptImportDraft.Line {
             feedback = pantryText("Could not open this photo. You can send selected text instead.")
             return
         }
-        cropSource = image; cropEditor = true
+        cropSource = CropSource(image: image)
     }
     private func resetReview() { request = nil; result = nil; readLine = nil; received = false; attempts = 0; feedback = nil }
 
