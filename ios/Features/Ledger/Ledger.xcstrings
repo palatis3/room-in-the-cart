@@ -3971,18 +3971,18 @@
         }
       }
     },
-    "Type or paste a list": {
+    "Add an item or paste a list": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Type or paste a list"
+            "value": "Add an item or paste a list"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Escribe o pega una lista"
+            "value": "Añadir un artículo o pegar una lista"
           }
         }
       }

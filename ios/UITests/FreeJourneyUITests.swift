@@ -1084,7 +1084,11 @@ import XCTest
     private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil) {
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
-        receiptTap(wording)
+        XCTAssertTrue(wording.waitForExistence(timeout: 8))
+        XCTAssertTrue(wording.isHittable, app.debugDescription)
+        XCTAssertTrue(scrollableArea().contains(CGPoint(x: wording.frame.midX, y: wording.frame.midY)), app.debugDescription)
+        wording.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 4))
         wording.typeText("Oats 3 count USD 4.20")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
         let label = app.textFields["Source reference label"]
