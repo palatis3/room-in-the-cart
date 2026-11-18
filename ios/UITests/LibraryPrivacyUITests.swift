@@ -107,7 +107,9 @@ import XCTest
         tap(button("cooking.pause.0"), upward: true)
         XCTAssertTrue(element("cooking.paused.0").exists)
         app.terminate()
-        app.launchArguments = ["--ui-testing", "--recipe-library-fixture", "-AppleLanguages", "(es)",
+        // The diagnostic fixture toolbar is outside the app's navigation stack.
+        // Give the production Records and cooking screens the whole large-text viewport.
+        app.launchArguments = ["--ui-testing", "--recipe-library-fixture", "--recipe-full-screen", "-AppleLanguages", "(es)",
             "-AppleLocale", "es_US", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
         tap(button("records.recovered.Existing family soup"))
