@@ -1,0 +1,39 @@
+{
+  "appAndUITestCommit": "39cc7aa2e3b1e8b5d66e8298018d109e1964bd54",
+  "receiptAcquisitionBase": "452a9698989212fc997a30ef04fc61baad54bf52",
+  "configuration": "Debug + NATIVE_PRODUCT_BATCH_PHOTOS",
+  "runtime": {
+    "modelName": "iPhone 17e",
+    "osVersion": "27.0",
+    "osBuildNumber": "24A434",
+    "architecture": "arm64"
+  },
+  "result": {
+    "totalTestCount": 2,
+    "passedTests": 2,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  },
+  "tests": {
+    "testProductBatchManualBarcodeRepeatNeedsTwoPackagesAndConfirmedFoodSurvivesRelaunch": 94.218,
+    "testSelectedPhotosAndBarcodeAreEditedTogetherAndOnlyConfirmedPackagesPersist": 130.473
+  },
+  "systemPhotos": "Selected LENTILS, RICE and JAR through the real iOS Photos picker. Vision recognized two printed labels and the QR. Re-selecting JAR kept a single row. After corrected names/sizes and skipping rice, two lots reopened with 400 g and 750 g.",
+  "fixtureGenerator": "scripts/fixtures/pantry_product_photos.swift",
+  "fixtureSHA256": {
+    "JAR.jpg": "927a263958c5c238bff7a41b6af861af9792f2b1de56ae20e2d30851525081c1",
+    "LENTILS.jpg": "b69bcf0f9257af0733a908fbed8f197d16af7a7374272c77c38960ee465a5897",
+    "RICE.jpg": "a72e7ec8d6bd8e8341b0e4c9ef9fbccd01ebf7feed7368a6332ee020d63cb613"
+  },
+  "screenshotSHA256": {
+    "relaunch.png": "7f7e9c9ebc09c89318232a54d0b9d8a5f7384cd51e3f3066a607ae8a7f814f1d",
+    "review.png": "10b5e7c2aebe91e8c8d5f655288a4a3fd87cec474f4a43ada128901820e970d1"
+  },
+  "hostedModels": {
+    "source": "5584ae1af4f9f8116159c26146bab11aae7d9350",
+    "url": "https://buildkite.com/room-in-cart/room-in-the-cart-ios-qualification/builds/58",
+    "result": "Three of three model methods passed. A fourth method, the earlier keyboard-focus UI journey, failed there and passed at the final commit above. The application and model tests are identical between the two commits."
+  },
+  "boundaries": "English simulator, synthetic package images and injected Open Food Facts transport. Physical-camera, live catalog and human Spanish review remain outstanding. No external provider was activated."
+}

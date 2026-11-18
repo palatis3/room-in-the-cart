@@ -4689,6 +4689,662 @@
           }
         }
       }
+    },
+    "A lookup sends only this barcode to Open Food Facts. You can enter all details yourself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A lookup sends only this barcode to Open Food Facts. You can enter all details yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La consulta envía solo este código de barras a Open Food Facts. Puedes ingresar todos los datos por tu cuenta."
+          }
+        }
+      }
+    },
+    "Add a product": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a product"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar un producto"
+          }
+        }
+      }
+    },
+    "Add typed product": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add typed product"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar el producto escrito"
+          }
+        }
+      }
+    },
+    "Already in this batch. Change its package count to add another.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in this batch. Change its package count to add another."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya está en este lote. Cambia la cantidad de envases para agregar otro."
+          }
+        }
+      }
+    },
+    "Amount in each package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount in each package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad en cada envase"
+          }
+        }
+      }
+    },
+    "Barcode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barcode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de barras"
+          }
+        }
+      }
+    },
+    "Barcode, if available": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barcode, if available"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de barras, si está disponible"
+          }
+        }
+      }
+    },
+    "Check the name, amount per package and whole package count for every included product.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the name, amount per package and whole package count for every included product."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el nombre, la cantidad por envase y el número entero de envases de cada producto incluido."
+          }
+        }
+      }
+    },
+    "Check the package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el envase"
+          }
+        }
+      }
+    },
+    "Check the product wording and the 12-product batch limit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the product wording and the 12-product batch limit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el texto del producto y el límite de 12 productos por lote."
+          }
+        }
+      }
+    },
+    "Choose a package size and count.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a package size and count."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el tamaño y el número de envases."
+          }
+        }
+      }
+    },
+    "Choose a product photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a product photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una foto del producto"
+          }
+        }
+      }
+    },
+    "Confirm receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la recepción"
+          }
+        }
+      }
+    },
+    "Edit batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar el lote"
+          }
+        }
+      }
+    },
+    "I received these packages and checked the date and usable quantities.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I received these packages and checked the date and usable quantities."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibí estos envases y revisé la fecha y las cantidades utilizables."
+          }
+        }
+      }
+    },
+    "Include this product": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include this product"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir este producto"
+          }
+        }
+      }
+    },
+    "Look up this barcode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look up this barcode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar este código de barras"
+          }
+        }
+      }
+    },
+    "No catalog match. Enter the details from your package.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No catalog match. Enter the details from your package."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay coincidencias en el catálogo. Ingresa los datos de tu envase."
+          }
+        }
+      }
+    },
+    "Open Food Facts data and reuse terms": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts data and reuse terms"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos y condiciones de reutilización de Open Food Facts"
+          }
+        }
+      }
+    },
+    "The Open Food Facts database uses ODbL and its individual contents use DbCL. Check the package before using a proposal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Open Food Facts database uses ODbL and its individual contents use DbCL. Check the package before using a proposal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La base de datos de Open Food Facts usa ODbL y sus contenidos individuales usan DbCL. Revisa el envase antes de usar una sugerencia."
+          }
+        }
+      }
+    },
+    "Packages received": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packages received"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envases recibidos"
+          }
+        }
+      }
+    },
+    "Photograph a package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photograph a package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotografiar un envase"
+          }
+        }
+      }
+    },
+    "Product batch saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product batch saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el lote de productos."
+          }
+        }
+      }
+    },
+    "Product name or label text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product name or label text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del producto o texto de la etiqueta"
+          }
+        }
+      }
+    },
+    "Product photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto del producto"
+          }
+        }
+      }
+    },
+    "Products to review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Products to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Productos para revisar"
+          }
+        }
+      }
+    },
+    "Public product lookup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public product lookup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulta pública de productos"
+          }
+        }
+      }
+    },
+    "Read product photos on this device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read product photos on this device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer las fotos de productos en este dispositivo"
+          }
+        }
+      }
+    },
+    "Reading product photo…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading product photo…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo la foto del producto…"
+          }
+        }
+      }
+    },
+    "Retrieved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retrieved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de consulta"
+          }
+        }
+      }
+    },
+    "Review product": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review product"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar producto"
+          }
+        }
+      }
+    },
+    "Review received products": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review received products"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar productos recibidos"
+          }
+        }
+      }
+    },
+    "Save received products": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save received products"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar productos recibidos"
+          }
+        }
+      }
+    },
+    "Scan products": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan products"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear productos"
+          }
+        }
+      }
+    },
+    "Skipped": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitido"
+          }
+        }
+      }
+    },
+    "Source updated": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source updated"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualización de la fuente"
+          }
+        }
+      }
+    },
+    "The batch could not be saved. Review the current pantry and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The batch could not be saved. Review the current pantry and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar el lote. Revisa la despensa actual y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "The catalog is unavailable. Enter the details from your package.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The catalog is unavailable. Enter the details from your package."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El catálogo no está disponible. Ingresa los datos de tu envase."
+          }
+        }
+      }
+    },
+    "The photo could not be added. Try a smaller image or type the product.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The photo could not be added. Try a smaller image or type the product."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo agregar la foto. Prueba con una imagen más pequeña o escribe el producto."
+          }
+        }
+      }
+    },
+    "Use proposed details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use proposed details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar los datos sugeridos"
+          }
+        }
+      }
+    },
+    "Enter the size from the package for this wording.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the size from the package for this wording."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para este texto, ingresa el tamaño que aparece en el envase."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
