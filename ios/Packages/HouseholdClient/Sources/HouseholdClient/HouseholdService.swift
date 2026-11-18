@@ -185,7 +185,7 @@ public actor HouseholdService {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
         let page: OwnRequestsPage = try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
         try page.validateReadTime()
-        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.authorAlias == nil }) else { throw ClientError.invalidResponse }
+        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.draftBasketLineId == nil && $0.sameItemOperationId == nil && $0.authorAlias == nil }) else { throw ClientError.invalidResponse }
         return page
     }
     public func requestPickups(cursor: UUID? = nil) async throws -> RequestPickupPage {
@@ -638,7 +638,12 @@ public actor HouseholdService {
               (base.requestRevision ?? 0) > 0 else { throw ClientError.configuration }
         struct Input: Encodable { let requestId: String; let base: CommandBase; let decision: ShopperDecision }
         let start = generation
-        try await authorizeShopper(shopID: shopID)
+        let capability: String?
+        switch decision {
+        case .sameItem, .undoSameItem: capability = "request_same_item"
+        default: capability = nil
+        }
+        try await authorizeShopper(shopID: shopID, capability: capability)
         guard start == generation else { throw ClientError.cancelled }
         return try await perform("shops/\(shopID)/previews", method: "POST", body: encoded(Input(requestId: requestID, base: base, decision: decision)))
     }

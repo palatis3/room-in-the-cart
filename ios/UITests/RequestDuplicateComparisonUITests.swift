@@ -13,6 +13,22 @@ import XCTest
         capture(testRun?.failureCount ?? 0 > 0 ? "S23-duplicate-comparison-failure" : "S23-duplicate-comparison-completed")
         app.terminate()
     }
+    func testSameItemReviewsAnUnboundMealAndHandlesOnlyTheSelectedRequest() {
+        launch(language:"en",locale:"en_US",meal:true)
+        openRequest(element("household.request.a4444444-4444-4444-8444-444444444441"),step:"unbound-meal")
+        tap(app.buttons["Check planned meal needs"])
+        tap(app.buttons["household.duplicates.sameMeal.b0000000-0000-4000-8000-000000000000"])
+        assertVisible("Breakfast")
+        assertVisible("1 bowl")
+        assertVisible("Mark only this request as handled.",contains:true)
+        tap(app.buttons["household.decision.apply"])
+        XCTAssertTrue(cancelButton.waitForNonExistence(timeout:10))
+        expectsDecisionSheet = false
+        XCTAssertEqual(element("household.request.outcome.a4444444-4444-4444-8444-444444444441").label, "Handled")
+        XCTAssertEqual(element("fixture.s23.commands").label,"Fixture applied decisions: 1")
+        XCTAssertEqual(element("fixture.s23.lines").label,"Fixture saved lines: 1")
+    }
+
     func testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam() {
         launch(language:"en",locale:"en_US")
         let sam = element("household.request.a4444444-4444-4444-8444-444444444441")
@@ -123,8 +139,9 @@ import XCTest
         XCTAssertEqual(element("fixture.s23.commands").label,"Fixture applied decisions: 0")
         XCTAssertEqual(element("fixture.s23.lines").label,"Fixture saved lines: 1")
     }
-    private func launch(language:String,locale:String,largeType:Bool=false) {
+    private func launch(language:String,locale:String,largeType:Bool=false,meal:Bool=false) {
         app.launchArguments = ["--ui-testing","--request-duplicates-fixture","-AppleLanguages","(\(language))","-AppleLocale",locale]
+        if meal { app.launchArguments.append("--s23-same-meal") }
         if largeType { app.launchArguments += ["-UIPreferredContentSizeCategoryName","UICTContentSizeCategoryAccessibilityXXXL"] }
         app.launch()
         XCTAssertTrue(element("fixture.s23.loaded").waitForExistence(timeout:20))

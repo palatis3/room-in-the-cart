@@ -155,21 +155,55 @@ public struct ShopperShop: Codable, Equatable, Sendable {
     public let meals: [SharedMealOccurrence]?
     public let quote: ShopperQuote; public let lines: [ShopperBasketLine]; public let frozenRevision: Int?; public let placedRevision: Int?
 }
+public enum ReviewedSameItemTarget: Equatable, Sendable, Encodable {
+    case meal(factId: UUID, factRevision: Int)
+    case purchase(sourceRequestId: UUID, sourceRequestRevision: Int, lineId: UUID, placedRevision: Int)
+
+    private enum CodingKeys: String, CodingKey { case kind, factId, factRevision, sourceRequestId, sourceRequestRevision, lineId, placedRevision }
+    public func encode(to encoder: Encoder) throws {
+        var fields = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .meal(let id, let revision):
+            try fields.encode("meal", forKey: .kind)
+            try fields.encode(id.uuidString.lowercased(), forKey: .factId)
+            try fields.encode(revision, forKey: .factRevision)
+        case .purchase(let request, let revision, let line, let placed):
+            try fields.encode("purchase", forKey: .kind)
+            try fields.encode(request.uuidString.lowercased(), forKey: .sourceRequestId)
+            try fields.encode(revision, forKey: .sourceRequestRevision)
+            try fields.encode(line.uuidString.lowercased(), forKey: .lineId)
+            try fields.encode(placed, forKey: .placedRevision)
+        }
+    }
+}
+public struct SameItemEvidence: Equatable, Sendable, Codable {
+    public let item: String
+    public let quantity: String?
+    public let sourceLabel: String
+    public let exclusions: [String]
+    public let reservationPurpose: String?
+    public let lineName: String?
+    public let packs: Int?
+}
 public enum ShopperDecision: Equatable, Sendable, Encodable {
     case add(line: ShopperBasketLine, promote: Bool, reviewedPackEvidence: ReviewedRequestPackEvidence? = nil)
     case link(lineID: String, promote: Bool)
+    case sameItem(ReviewedSameItemTarget), undoSameItem(operationId: UUID)
     case deferRequest, dismiss, handled
     public var choice: String {
         switch self { case .add: return "add"; case .link: return "link"; case .deferRequest: return "defer"
-        case .dismiss: return "dismiss"; case .handled: return "handled" }
+        case .dismiss: return "dismiss"; case .handled: return "handled"
+        case .sameItem: return "sameItem"; case .undoSameItem: return "undoSameItem" }
     }
-    private enum CodingKeys: String, CodingKey { case choice, line, lineId, promote, reviewedPackEvidence }
+    private enum CodingKeys: String, CodingKey { case choice, line, lineId, promote, reviewedPackEvidence, target, operationId }
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: CodingKeys.self)
         try values.encode(choice, forKey: .choice)
         switch self {
         case .add(let line, let promote, let evidence): try values.encode(line, forKey: .line); try values.encode(promote, forKey: .promote); try values.encodeIfPresent(evidence, forKey: .reviewedPackEvidence)
         case .link(let id, let promote): try values.encode(id, forKey: .lineId); try values.encode(promote, forKey: .promote)
+        case .sameItem(let target): try values.encode(target, forKey: .target)
+        case .undoSameItem(let id): try values.encode(id.uuidString.lowercased(), forKey: .operationId)
         default: break
         }
     }
@@ -180,6 +214,7 @@ public struct ShopperBudget: Codable, Equatable, Sendable {
     public let lowerBoundMinor: Int; public let upperBoundMinor: Int?; public let wholeCheckoutWithinCap: Bool
 }
 public struct ShopperPreview: Codable, Equatable, Sendable {
+    public private(set) var sameItemEvidence: SameItemEvidence? = nil
     public let previewId: String; public let expiresAt: String; public let shopRevision: Int; public let authorityEpoch: Int
     public let requestRevision: Int; public let choice: String; public let before: ShopperBudget; public let after: ShopperBudget
     public let changeMinor: Int?; public let requiresOverageAcceptance: Bool; public let requiresUnknownAcceptance: Bool

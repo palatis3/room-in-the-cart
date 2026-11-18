@@ -20,9 +20,16 @@ export const quoteSchema = z.object({
   taxesMinor: minor.nullable(), depositsMinor: minor.nullable(), discountsMinor: minor.nullable(),
   observedAt: timestamp, expiresAt: timestamp,
 }).strict().refine(q => Date.parse(q.expiresAt)>Date.parse(q.observedAt), 'Quote expiry must follow observation');
+const sameItemTarget = z.discriminatedUnion('kind', [
+  z.object({kind:z.literal('meal'),factId:uuid.toLowerCase(),factRevision:z.int().positive()}).strict(),
+  z.object({kind:z.literal('purchase'),sourceRequestId:uuid.toLowerCase(),sourceRequestRevision:z.int().positive(),
+    lineId:uuid.toLowerCase(),placedRevision:z.int().positive()}).strict(),
+]);
 export const decisionSchema = z.discriminatedUnion('choice', [
   z.object({ choice: z.literal('add'), line: lineSchema, promote: z.boolean().default(false), reviewedPackEvidence: reviewedPackEvidenceSchema.optional() }).strict(),
   z.object({ choice: z.literal('link'), lineId: uuid, promote: z.boolean().default(false) }).strict(),
+  z.object({choice:z.literal('sameItem'),target:sameItemTarget}).strict(),
+  z.object({choice:z.literal('undoSameItem'),operationId:uuid.toLowerCase()}).strict(),
   z.object({ choice: z.enum(['defer','dismiss','handled']) }).strict(),
  ]).superRefine((decision,ctx)=>{
   if(decision.choice==='add'&&decision.reviewedPackEvidence&&!matchesReviewedPack(decision.line,decision.reviewedPackEvidence))ctx.addIssue({code:'custom',message:'Reviewed pack evidence must match the chosen sufficient available whole packs',path:['reviewedPackEvidence']});

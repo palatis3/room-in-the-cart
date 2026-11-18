@@ -23,12 +23,16 @@ struct RequestDuplicateGroupHeading: View {
 struct RequestDuplicateComparisonSection: View {
     @ObservedObject var model: HouseholdInboxModel
     let requestID: String
+    var sharedShop: HouseholdShopModel? = nil
 
     var body: some View {
         if model.authorized, let request = model.selected, request.id == requestID,
            let group = model.duplicateRequestGroup(containing: requestID), let shop = model.shop {
             if group.hasPossibleDuplicates || model.nextCursor != nil {
                 requestComparison(group)
+            }
+            if let sharedShop {
+                DuplicatePurchasedRequestSection(shop: sharedShop, inbox: model, request: request, group: group)
             }
             if model.canReadFood, model.pending == nil {
                 Section {
@@ -44,12 +48,21 @@ struct RequestDuplicateComparisonSection: View {
                                 ForEach(need.fact.sourceExclusions.indices, id: \.self) { index in
                                     Text(need.fact.sourceExclusions[index].label)
                                 }
+                                if shop.phase == "draft", model.canSelectSameItem(for: request),
+                                   RequestDuplicateGrouping.comparisonName(request.originalItem) == RequestDuplicateGrouping.comparisonName(need.fact.originalText) {
+                                    Button(requestDuplicateText("Same item as this meal need")) {
+                                        Task { await model.selectSameItem(.meal(factId: need.fact.id.uuid, factRevision: need.fact.revision), for: request) }
+                                    }.accessibilityIdentifier("household.duplicates.sameMeal." + need.id.string)
+                                    Button(requestDuplicateText("Review additional packs")) { model.choice = .add }
+                                        .disabled(model.choice == .add)
+                                }
                                 if let line = need.line, model.availableChoices.contains(.link) {
                                     Button(requestDuplicateText("Use this basket line") + " · " + line.originalItem) {
                                         model.selectDuplicateLine(line, for: request, shopRevision: shop.shopRevision)
                                     }.disabled(model.busy)
                                 }
                             }
+                            .buttonStyle(.borderless)
                         }
                     } else {
                         Button(requestDuplicateText("Check planned meal needs")) {
@@ -180,6 +193,6 @@ private struct RequestDuplicateComparisonRow: View {
     }
 }
 
-private func requestDuplicateText(_ key: String) -> String {
+func requestDuplicateText(_ key: String) -> String {
     String(localized: String.LocalizationValue(key), table: "RequestDuplicates")
 }

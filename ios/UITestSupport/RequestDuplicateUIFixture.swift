@@ -5,7 +5,7 @@ import SwiftUI
     @Published var model: HouseholdInboxModel?
     @Published var commands = 0
     @Published var failed = false
-    private let server = S23DuplicateFixtureServer(pageBoundary:true)
+    private let server = S23DuplicateFixtureServer(pageBoundary:true, mealNames: ProcessInfo.processInfo.arguments.contains("--s23-same-meal") ? ["Cereal"] : [])
     func start() async {
         guard model == nil, ProcessInfo.processInfo.arguments.contains("--ui-testing"),
               ProcessInfo.processInfo.arguments.contains("--request-duplicates-fixture") else { return }

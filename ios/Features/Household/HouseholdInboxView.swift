@@ -6,13 +6,14 @@ struct HouseholdInboxView: View {
     var body: some View {
         Group {
             if model.canReviewHouseholdRequests, let inbox = model.shopperInbox {
-                ShopperInboxContent(model: inbox)
+                ShopperInboxContent(model: inbox, sharedShop: model.sharedShop)
             } else { ContentUnavailableView(ht("Shopper access required"), systemImage: "lock", description: Text(ht("Only the assigned shopper can review these requests."))) }
         }.navigationTitle(ht("Family requests"))
     }
 }
 struct ShopperInboxContent: View {
     @ObservedObject var model: HouseholdInboxModel
+    var sharedShop: HouseholdShopModel? = nil
     @State private var decisionRequest: OwnRequest?
     @State private var lastRequestID: String?
     @State private var confirmedReturnID: String?
@@ -81,7 +82,7 @@ struct ShopperInboxContent: View {
                     focusedRequest = nil; focusedOutcome = id
                 } else { focusedRequest = lastRequestID }
             }) { request in
-                NavigationStack { HouseholdRequestDecisionView(model: model, request: request) }
+                NavigationStack { HouseholdRequestDecisionView(model: model, request: request, sharedShop: sharedShop) }
                     .presentationDetents([.large])
             }
             .onChange(of: model.confirmedDecisionRequestID) { _, id in
@@ -152,6 +153,7 @@ private struct DeferredRequestsView: View {
 struct HouseholdRequestDecisionView: View {
     @ObservedObject var model: HouseholdInboxModel
     let request: OwnRequest
+    var sharedShop: HouseholdShopModel? = nil
     @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -168,9 +170,13 @@ struct HouseholdRequestDecisionView: View {
                         LabeledContent(ht("Received"), value: householdTime(selected.receivedAt))
                         if let clarification = selected.clarification { Text(clarification) }
                     }
-                    RequestDuplicateComparisonSection(model: model, requestID: request.id)
+                    RequestDuplicateComparisonSection(model: model, requestID: request.id, sharedShop: sharedShop)
                     if model.pending == nil, let shop = model.shop {
-                        if !model.availableChoices.isEmpty {
+                        if model.preview?.choice == "sameItem" || model.preview?.choice == "undoSameItem" {
+                            Button(requestDuplicateText("Choose another outcome")) { model.invalidatePreview() }
+                        } else if model.supportsSameItem, selected.status == "handled", selected.sameItemOperationId != nil {
+                            Button(requestDuplicateText("Review undo for this match")) { Task { await model.reviewSameItemUndo() } }
+                        } else if !model.availableChoices.isEmpty {
                             Section(ht("Choose an outcome")) {
                                 Picker(ht("Outcome"), selection: $model.choice) {
                                     ForEach(model.availableChoices) { choice in Text(choice.title).tag(choice) }
@@ -210,7 +216,27 @@ struct HouseholdRequestDecisionView: View {
                         } else { Section { Text(ht("This request has a recorded outcome. Refresh to check for changes.")) } }
                         if let preview = model.preview {
                             Section(header: Text(ht("Review before applying")).foregroundStyle(Theme.secondary)) {
-                                Text(model.choice.title).font(.title2)
+                                if let evidence = preview.sameItemEvidence {
+                                    Text(requestDuplicateText("Same item")).font(.title2)
+                                    LabeledContent(requestDuplicateText("Deciding this request"), value: selected.originalItem)
+                                    LabeledContent(requestDuplicateText("Amount and use, as written"),
+                                                   value: selected.ownQuantity ?? requestDuplicateText("No amount or use supplied"))
+                                    Text(evidence.sourceLabel)
+                                    Text(evidence.item)
+                                    Text(evidence.quantity ?? requestDuplicateText("No amount or use supplied"))
+                                    ForEach(evidence.exclusions.indices, id: \.self) { Text(evidence.exclusions[$0]) }
+                                    if let purpose = evidence.reservationPurpose {
+                                        LabeledContent(requestDuplicateText("Protected for"), value: purpose)
+                                    }
+                                    if let name = evidence.lineName, let packs = evidence.packs {
+                                        LabeledContent(name, value: packs.formatted())
+                                    }
+                                    Text(requestDuplicateText("Mark only this request as handled. The meal, purchases and basket quantities stay as reviewed."))
+                                } else if preview.choice == "undoSameItem" {
+                                    Text(requestDuplicateText("Reopen this request for review")).font(.title2)
+                                } else {
+                                    Text(model.choice.title).font(.title2)
+                                }
                                 if let selection = model.packSelection { HouseholdChosenPackSummary(selection: selection) }
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text(ht("After this decision")).font(.title2)

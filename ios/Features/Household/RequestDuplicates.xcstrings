@@ -103,6 +103,23 @@
         }
       }
     },
+    "Choose another outcome": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another outcome"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir otro resultado"
+          }
+        }
+      }
+    },
     "Clarification for this requester": {
       "extractionState": "manual",
       "localizations": {
@@ -252,6 +269,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Obtener ayuda para comparar estas opciones"
+          }
+        }
+      }
+    },
+    "Mark only this request as handled. The meal, purchases and basket quantities stay as reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark only this request as handled. The meal, purchases and basket quantities stay as reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar solo esta solicitud como atendida. La comida, las compras y las cantidades de la cesta se mantienen tal como se revisaron."
           }
         }
       }
@@ -460,6 +494,23 @@
         }
       }
     },
+    "Protected for": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected for"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservado para"
+          }
+        }
+      }
+    },
     "Received": {
       "extractionState": "manual",
       "localizations": {
@@ -473,6 +524,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recibida"
+          }
+        }
+      }
+    },
+    "Reopen this request for review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen this request for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a abrir esta solicitud para revisarla"
           }
         }
       }
@@ -524,6 +592,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar paquetes adicionales"
+          }
+        }
+      }
+    },
+    "Review undo for this match": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review undo for this match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cómo deshacer esta coincidencia"
+          }
+        }
+      }
+    },
+    "Same item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mismo artículo"
+          }
+        }
+      }
+    },
+    "Same item as this meal need": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same item as this meal need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mismo artículo que necesita esta comida"
           }
         }
       }

@@ -61,8 +61,10 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
     private let pageBoundary: Bool
     private let basketName: String
     private let mealNames: [String]
+    private let supportsSameItem: Bool
     private let repeatsBasketLine: Bool
-    init(pageBoundary: Bool = false, basketName: String = "Cereal already in the basket", mealNames: [String] = [], repeatsBasketLine: Bool = false) {
+    init(pageBoundary: Bool = false, basketName: String = "Cereal already in the basket", mealNames: [String] = [], repeatsBasketLine: Bool = false, supportsSameItem: Bool = true) {
+        self.supportsSameItem = supportsSameItem
         self.repeatsBasketLine = repeatsBasketLine
         self.mealNames = mealNames
         self.pageBoundary = pageBoundary
@@ -92,7 +94,7 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
         if path == "/auth/v1/user" { return try json(["id":"s23-fictional-adult", "email_confirmed_at":"date"]) }
         if path.hasSuffix("/devices") { return try json(["deviceId":"fixture-device", "deviceToken":"fixture-device-token"]) }
         if path.hasSuffix("/bootstrap") {
-            return try json(["household":["id":Self.householdID, "label":"S23 Fictional Household"], "memberId":Self.memberID, "role":"shopper", "shopId":Self.shopID, "enrolled":true, "queueConsent":false, "capabilities":["shopper_inbox", "request_preview", "shopper_commands"]])
+            return try json(["household":["id":Self.householdID, "label":"S23 Fictional Household"], "memberId":Self.memberID, "role":"shopper", "shopId":Self.shopID, "enrolled":true, "queueConsent":false, "capabilities":["shopper_inbox", "request_preview", "shopper_commands"] + (supportsSameItem ? ["request_same_item"] : [])])
         }
         if path.hasSuffix("/inbox") {
             let cursor = URLComponents(url:request.url!,resolvingAgainstBaseURL:false)?.queryItems?.first { $0.name == "cursor" }?.value
@@ -137,8 +139,17 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
             let line = decision["line"] as? [String: Any]
             let delta: Int? = choice == "add" ? (line?["unitPriceMinor"] as? Int).map { $0 * (line?["packs"] as? Int ?? 1) } : 0
             let total = delta.map { 3720 + $0 }
-            return try json(["previewId":previewID, "expiresAt":"2099-01-01T00:00:00Z", "shopRevision":revision, "authorityEpoch":1, "requestRevision":revisions[requestID] ?? 1, "choice":choice,
-                "before":budget(3720), "after":budget(total), "changeMinor":delta as Any? ?? NSNull(), "requiresOverageAcceptance":total.map { $0 > 3800 } ?? false, "requiresUnknownAcceptance":total == nil])
+            var result: [String: Any] = ["previewId":previewID, "expiresAt":"2099-01-01T00:00:00Z", "shopRevision":revision, "authorityEpoch":1, "requestRevision":revisions[requestID] ?? 1, "choice":choice,
+                "before":budget(3720), "after":budget(total), "changeMinor":delta as Any? ?? NSNull(), "requiresOverageAcceptance":total.map { $0 > 3800 } ?? false, "requiresUnknownAcceptance":total == nil]
+            if choice == "sameItem" {
+                guard let target = decision["target"] as? [String: Any], target["kind"] as? String == "meal",
+                      target["factRevision"] as? Int == 1,
+                      let index = mealNames.indices.first(where: {
+                          String(format: "b0000000-0000-4000-8000-%012d", $0) == target["factId"] as? String
+                      }) else { throw URLError(.badServerResponse) }
+                result["sameItemEvidence"] = ["item":mealNames[index],"quantity":"1 bowl","sourceLabel":"Breakfast","exclusions":[]] as [String: Any]
+            }
+            return try json(result)
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"a6666666-6666-4666-8666-666666666666", "expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {
@@ -160,7 +171,7 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
                 disposition = "added"; revision += 1
             case "defer": disposition = "deferred"
             case "dismiss": disposition = "dismissed"
-            case "handled": disposition = "handled"
+            case "handled", "sameItem": disposition = "handled"
             default: throw URLError(.unsupportedURL)
             }
             return try json(record(key:key,kind:kind,requestID:requestID,disposition:disposition))

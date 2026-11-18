@@ -154,14 +154,14 @@ enum ShopperDelivery: Equatable {
     var confirmedDecisionRequestID: String? {
         guard authorized, !busy, pending == nil, case .confirmed(let receipt) = delivery,
               receipt.kind == "request.apply", receipt.shopId == shopID, receipt.shopRevision > 0,
-              ["added", "deferred", "dismissed", "handled"].contains(receipt.disposition),
+              ["added", "deferred", "dismissed", "handled", "pending", "clarified"].contains(receipt.disposition),
               let shop, shop.shopId == shopID, shop.authorityEpoch == receipt.authorityEpoch,
               shop.shopRevision >= receipt.shopRevision,
               let requestID = receipt.requestId, let revision = receipt.requestRevision, revision > 0,
               let request = requests.first(where: { $0.id == requestID && $0.shopId == shopID }),
               request.revision >= revision,
-              ["added", "deferred", "dismissed", "handled", "withdrawn"].contains(request.status),
-              request.revision > revision || request.status == receipt.disposition else { return nil }
+              request.status == receipt.disposition || (request.revision > revision &&
+                ["added", "deferred", "dismissed", "handled", "withdrawn"].contains(request.status)) else { return nil }
         return requestID
     }
     func hasPossibleDuplicate(_ request: OwnRequest) -> Bool {
@@ -293,16 +293,46 @@ enum ShopperDelivery: Equatable {
         if !preservePackSelection { packSelection = nil }
     }
     func cancelReview() { guard pending == nil else { return }; invalidatePreview(); selected = nil; clarification = "" }
+    var supportsSameItem: Bool {
+        authorized && bootstrap.grantId == nil && bootstrap.capabilities.contains("request_same_item")
+    }
+    func canSelectSameItem(for request: OwnRequest) -> Bool {
+        supportsSameItem && !busy && pending == nil && selected == request
+            && request.ownActionAllowed && request.carriedForward != true && request.shopId == shop?.shopId
+    }
+    func selectSameItem(_ target: ReviewedSameItemTarget, for request: OwnRequest) async {
+        guard canSelectSameItem(for: request) else { return }
+        switch target {
+        case .meal(let id, let revision):
+            guard canReadFood, shop?.phase == "draft", matchingMealNeeds?.contains(where: {
+                $0.fact.id.uuid == id && $0.fact.revision == revision
+            }) == true else { return }
+        case .purchase(let id, let revision, let line, let placed):
+            guard supportsPurchaseConfirmation, shop?.placedRevision == placed,
+                  let other = requests.first(where: { UUID(uuidString: $0.id) == id }),
+                  other.id != request.id, other.revision == revision, other.purchaseOutcome == .bought,
+                  other.linkedLineId == line else { return }
+        }
+        await review(decision: .sameItem(target))
+    }
+    func reviewSameItemUndo() async {
+        guard supportsSameItem, let selected, selected.status == "handled", let id = selected.sameItemOperationId else { return }
+        await review(decision: .undoSameItem(operationId: id))
+    }
     func review() async {
-        guard authorized, !busy, pending == nil, let selected, let shop, availableChoices.contains(choice) else { return }
+        guard availableChoices.contains(choice) else { return }
+        await review(decision: nil)
+    }
+    private func review(decision special: ShopperDecision?) async {
+        guard authorized, !busy, pending == nil, let selected, let shop else { return }
         invalidatePreview(preservePackSelection: true)
         busy = true; notice = nil; defer { busy = false }; let start = generation; let draft = draftGeneration
         do {
-            let decision = try makeDecision()
+            let decision = try special ?? makeDecision()
             let value = try await service.shopperPreview(shopID: shopID, requestID: selected.id,
                 base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch, requestRevision: selected.revision), decision: decision)
             guard start == generation, draft == draftGeneration else { return }
-            guard value.choice == decision.choice, value.shopRevision == shop.shopRevision,
+            guard (value.sameItemEvidence != nil) == (decision.choice == "sameItem"), value.choice == decision.choice, value.shopRevision == shop.shopRevision,
                   value.authorityEpoch == shop.authorityEpoch, value.requestRevision == selected.revision else { throw ClientError.invalidResponse }
             reviewedDecision = .init(request: selected, shop: shop, decision: decision, preview: value)
             preview = value

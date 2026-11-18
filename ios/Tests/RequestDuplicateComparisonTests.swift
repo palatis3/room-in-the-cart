@@ -69,6 +69,42 @@ final class RequestDuplicateComparisonTests: XCTestCase {
         XCTAssertEqual(RequestDuplicateGrouping.basketCandidates(for: group, lines: [variant, reviewed, product]), [reviewed, product])
     }
     #if DEBUG
+    @MainActor func testLegacyServiceCanCompareMealsButCannotPreviewSameItem() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let server = S23DuplicateFixtureServer(mealNames: ["Cereal"], supportsSameItem: false)
+        let model = try await s23DuplicateFixtureModel(server: server, outboxURL: directory.appendingPathComponent("outbox.json"))
+        let sam = try XCTUnwrap(model.requests.first { $0.id == S23DuplicateFixtureServer.samID })
+        model.select(sam)
+        await model.checkMealNeeds(for: sam)
+        let need = try XCTUnwrap(model.matchingMealNeeds?.first)
+        XCTAssertFalse(model.canSelectSameItem(for: sam))
+        await model.selectSameItem(.meal(factId: need.fact.id.uuid, factRevision: need.fact.revision), for: sam)
+        XCTAssertEqual(server.previewCount, 0)
+        XCTAssertEqual(server.commandCount, 0)
+    }
+    @MainActor func testSameMealReviewsExactFactBeforeHandlingOnlyTheSelectedRequest() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let server = S23DuplicateFixtureServer(mealNames: ["Cereal"])
+        let model = try await s23DuplicateFixtureModel(server: server, outboxURL: directory.appendingPathComponent("outbox.json"))
+        let sam = try XCTUnwrap(model.requests.first { $0.id == S23DuplicateFixtureServer.samID })
+        let lee = try XCTUnwrap(model.requests.first { $0.id == S23DuplicateFixtureServer.leeID })
+        let lines = model.shop?.lines
+        model.select(sam)
+        await model.checkMealNeeds(for: sam)
+        let need = try XCTUnwrap(model.matchingMealNeeds?.first)
+        XCTAssertNil(need.line)
+        await model.selectSameItem(.meal(factId: need.fact.id.uuid, factRevision: need.fact.revision), for: sam)
+        XCTAssertEqual(model.preview?.sameItemEvidence?.sourceLabel, "Breakfast", model.notice ?? "")
+        XCTAssertEqual(model.preview?.sameItemEvidence?.quantity, "1 bowl")
+        XCTAssertEqual(server.commandCount, 0)
+        await model.apply()
+        XCTAssertEqual(server.appliedRequestIDs, [sam.id])
+        XCTAssertEqual(model.requests.first { $0.id == sam.id }?.status, "handled")
+        XCTAssertEqual(model.requests.first { $0.id == lee.id }, lee)
+        XCTAssertEqual(model.shop?.lines, lines)
+    }
     @MainActor func testRepeatedLineIdentityCannotBecomeAShopperSuggestion() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
