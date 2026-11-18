@@ -329,7 +329,7 @@ extension ComparisonStore {
     private func validateInventoryBatch(_ batch: InventoryBatch, date: Date) throws {
         guard batch.workspaceID == workspaceID, batch.expectedRevision >= 0, date.timeIntervalSinceReferenceDate.isFinite,
               !batch.request.isEmpty, batch.request.count <= InventoryPersistenceLimits.requestBytes,
-              batch.writes.count + batch.erasures.count + batch.comparisons.count + (batch.acquisitions?.count ?? 0) + (batch.receiptBindings?.count ?? 0) <= InventoryPersistenceLimits.batchItems,
+              batch.writes.count + batch.erasures.count + batch.comparisons.count + (batch.acquisitions?.count ?? 0) <= InventoryPersistenceLimits.batchItems,
               batch.mode == .activate || batch.receiptBindings != nil || batch.price != nil || batch.aliasEdit != nil || batch.acquisitions?.isEmpty == false || !batch.writes.isEmpty || !batch.erasures.isEmpty || !batch.comparisons.isEmpty,
               (batch.mode == .activate) == (batch.sourceToken != nil),
               batch.sourceToken.map({ $0.workspaceID == workspaceID && $0.generation >= 0 && $0.digest.count == 32 }) ?? true,
@@ -352,6 +352,8 @@ extension ComparisonStore {
                 throw ComparisonStoreError.invalidInput
             }
         }
+        // Bindings annotate up to 50 reviewed lines. Charge their bytes separately so a full
+        // 50-line receipt can still contain its 200 inventory writes and 50 acquisitions.
         if let bindings = batch.receiptBindings {
             guard (1...50).contains(bindings.count), batch.mode == .mutate, batch.price == nil, batch.aliasEdit == nil,
                   batch.erasures.isEmpty, batch.comparisons.isEmpty,
