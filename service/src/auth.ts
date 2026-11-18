@@ -1,4 +1,4 @@
-import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
+import { createRemoteJWKSet, errors, jwtVerify, type JWTVerifyGetKey } from 'jose';
 import type { Transaction } from './database.js';
 import { ServiceError } from './errors.js';
 export interface VerifiedIdentity { readonly issuer:string; readonly subject:string; readonly sessionId:string; readonly expiresAt:Date; readonly authenticatedAt?:Date; readonly authenticatedMethod?:'otp'|'password'|'oauth'|'sso/saml'; readonly emailOTPAuthenticatedAt?:Date }
@@ -12,7 +12,16 @@ export class JWTIdentityVerifier implements IdentityVerifier {
   constructor(private readonly config:JWTConfiguration, trustedKey?:JWTVerifyGetKey) {
     const issuer=new URL(config.issuer), jwks=new URL(config.jwksUrl);
     if(issuer.protocol!=='https:' || jwks.protocol!=='https:' || jwks.username || jwks.password || !config.audience) throw new Error('HTTPS JWT issuer, audience and JWKS required');
-    this.key=trustedKey??createRemoteJWKSet(jwks,{ timeoutDuration:5000,cooldownDuration:30_000,cacheMaxAge:600_000 });
+    const resolveKey=trustedKey??createRemoteJWKSet(jwks,{ timeoutDuration:5000,cooldownDuration:30_000,cacheMaxAge:600_000 });
+    this.key=async (header, token) => {
+      try {
+        return await resolveKey(header, token);
+      } catch (error) {
+        if (error instanceof errors.JWKSNoMatchingKey || error instanceof errors.JWKSMultipleMatchingKeys || error instanceof errors.JOSENotSupported) throw error;
+        // The signing keys are unavailable. A failed lookup must not revoke the browser session.
+        throw new ServiceError(503, 'login_unavailable', 'Sign-in verification is temporarily unavailable. Try again shortly.');
+      }
+    };
   }
   async verify(token:string):Promise<VerifiedIdentity> {
     try {
@@ -26,7 +35,10 @@ export class JWTIdentityVerifier implements IdentityVerifier {
       const authenticatedAt=proof.length?new Date(Math.max(...proof.map(event=>event.timestamp))*1000):undefined;
       const authenticatedMethod=authenticatedAt?proof.find(event=>event.timestamp===authenticatedAt.getTime()/1000)!.method:undefined;
       return Object.freeze({issuer:this.config.issuer,subject:payload.sub,sessionId,expiresAt:new Date(payload.exp!*1000),...(authenticatedAt?{authenticatedAt,authenticatedMethod:authenticatedMethod!}:{}),...(emailOTPAuthenticatedAt?{emailOTPAuthenticatedAt}:{})});
-    }catch { throw new ServiceError(401,'session_needed','Authenticate again; keep private drafts on this device.'); }
+    } catch (error) {
+      if (error instanceof ServiceError) throw error;
+      throw new ServiceError(401,'session_needed','Authenticate again; keep private drafts on this device.');
+    }
   }
 }
 

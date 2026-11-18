@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import pg from 'pg';
-import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
+import {generateKeyPair,exportJWK,createLocalJWKSet,createRemoteJWKSet,customFetch,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {BrowserAuthService,SupabaseEmailOTPProvider} from '../dist/browser-auth.js';
@@ -84,6 +84,36 @@ test('email code login stores encrypted provider state and grants no household a
   assert.equal(logged.challenge.headers.get('set-cookie').includes('Domain='),false);
   const scoped=await createScope(logged);assert.equal((await logged.client.call('/v1/session')).data.household.id,scoped.householdId);
   const onlyScope=browser();onlyScope.jar.set('ritc_session',logged.client.jar.get('ritc_session'));assert.equal((await onlyScope.call('/v1/session')).status,401);
+});
+
+test('a signing-key outage preserves the authenticated browser and its selected household', async () => {
+  const logged = await signIn();
+  const { householdId } = await createScope(logged);
+  let available = false;
+  const jwksUrl = issuer + '/keys';
+  const resolver = createRemoteJWKSet(new URL(jwksUrl), {
+    [customFetch]: async () => available ? Response.json({ keys: [jwk] }) : new Response(null, { status: 503 }),
+  });
+  const checkingVerifier = new JWTIdentityVerifier({ issuer, audience, jwksUrl }, resolver);
+  const server = createHTTPServer({
+    repository: repo, webOrigin, verifier: checkingVerifier,
+    browserAuth: new BrowserAuthService(repo, checkingVerifier, provider(), { encryptionKey }),
+  });
+  const checkingOrigin = await listen(server);
+  try {
+    const client = browser(() => checkingOrigin);
+    for (const [name, value] of logged.client.jar) client.jar.set(name, value);
+    const state = await client.call('/v1/auth/session');
+    assert.equal(state.status, 503);
+    assert.equal(state.data.error.code, 'login_unavailable');
+    assert.deepEqual(client.jar, logged.client.jar);
+    assert.equal((await client.call('/v1/session')).status, 503);
+    available = true;
+    assert.equal((await client.call('/v1/auth/session')).data.authenticated, true);
+    assert.equal((await client.call('/v1/session')).data.household.id, householdId);
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+  }
 });
 
 test('pre-auth CSRF, exact origin, strict bodies and persistent attempt bounds guard email verification',async()=>{

@@ -497,6 +497,47 @@ for (const action of ['Edit', 'Follow up']) {
  });
 }
 
+for (const action of ['send', 'edit', 'withdraw']) {
+ test(`a confirmed ${action} receipt survives a disconnected refresh`, async t => {
+  const original = own();
+  let confirmed;
+  let writes = 0;
+  const {root, dom} = await setup(fakeAPI({
+   requests: async () => {
+    if (confirmed) throw new ApiError('network', 0);
+    return action === 'send' ? [] : [original];
+   },
+   command: async (_, command) => {
+    writes++;
+    confirmed = {...original, shopId: command.shopId, revision: 2,
+     originalItem: command.body.originalItem ?? original.originalItem,
+     status: action === 'withdraw' ? 'withdrawn' : 'pending',
+     ownActionAllowed: action !== 'withdraw'};
+    return confirmed;
+   }
+  }));
+  t.after(() => dom.window.close());
+  if (action === 'withdraw') {
+   click(root, 'Withdraw');
+   click(root, 'Confirm withdrawal');
+  } else {
+   if (action === 'edit') click(root, 'Edit');
+   type(dom, 'item', 'Two bags of rice');
+   submit(root, dom);
+   submit(root, dom);
+  }
+  await waitForIdle(root);
+  assert.equal(writes, 1);
+  assert.match(root.querySelector('[role="status"]').textContent, action === 'withdraw' ? /Withdrawn/ : /Received by the shopper/);
+  const card = root.querySelector('article[data-request-id]');
+  assert.equal(card?.querySelector('h3')?.textContent, confirmed.originalItem);
+  if (action === 'withdraw') {
+   assert.match(card.textContent, /Withdrawn/);
+   assert.equal(card.querySelector('button'), null);
+  }
+ });
+}
+
 test('withdrawal confirmation belongs to the reviewed revision after a refresh',async()=>{
  let row=own();const commands=[];
  const {root}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{commands.push(command);return row;}}));
