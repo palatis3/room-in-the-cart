@@ -1,3 +1,4 @@
+import {checkDraftDinnerSwap} from './shared-dinner-swap.js';
 import {checkIngredientChange} from './meal-preferences.js';
 import type {TrackingMealProtection} from './shared-demand-tracking-meal-protection.js';
 import {assertTrackingV1,assertTrackingPriceReset,applyTracking,trackingOperation,assertTrackingReplay,stageV1Tracking} from './shared-demand-tracking-repository.js';
@@ -76,6 +77,7 @@ export async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop
   assert(!('demandReview' in input.action.body),'nested_demand_review');body=bodySchemas['shop.patch'].parse(input.action.body);lines=body.lines;quote=body.quote;
   if(body.mealEdit){const e=body.mealEdit,old=meals.find(m=>m.occurrenceId===e.occurrenceId);assert((old?.revision??null)===e.baseMealRevision,'stale_meal');if(protectMeal)protectMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal,e.occurrenceId);else preserveProtectedMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal);
    assert(old||e.meal,'stale_meal');assert(old||meals.length<100,'meal_limit');
+   if(e.dinnerSwap)await checkDraftDinnerSwap(ctx,old?sharedMealSchema.parse(old.meal):undefined,e.meal,e.preferenceReview);
    if(e.changeProposalId)await requireSharedMealChange(ctx,shop,e.changeProposalId,e.occurrenceId,e.baseMealRevision,e.meal);
    else if(!derivedInverse)await checkIngredientChange(ctx,old?sharedMealSchema.parse(old.meal):undefined,e.meal,e.preferenceReview);
    if(e.proposalId)await requireMealMove(ctx,shop,e.proposalId,e.occurrenceId,old?sharedMealSchema.parse(old.meal):undefined,e.meal);

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import {mealEvidence} from './meal-preferences.js';
 import { mealQuantity, mealAmount } from './shared-meal-planning.js';
 
 const id = z.string().uuid().transform(s => s.toLowerCase());
@@ -40,7 +41,7 @@ export const fallbackOptionsSchema=z.object({v:z.literal(1),base:recoveryBaseSch
   reviews:z.array(fallbackReviewSchema).max(100),trip:fallbackTrip.nullable()}).strict();
 export type FallbackSelection=z.infer<typeof fallbackSelectionSchema>;
 export const recoveryIntentSchema = z.object({
-  occurrenceId:id,targetDigest:hash,replacement:recoveryMealSchema,reviewedAt:time,fallback:fallbackSelectionSchema.optional(),
+  occurrenceId:id,targetDigest:hash,replacement:recoveryMealSchema,reviewedAt:time,dinnerSwap:z.literal(true).optional(),undoesSwap:id.optional(),preferenceEvidence:mealEvidence.optional(),fallback:fallbackSelectionSchema.optional(),
   // Explicit manual repeat choice; not proof of an accepted recipe/template.
   repeatOfOccurrenceId:id.nullable(),
   agreesToRepeat:z.boolean(),proposesExtraTrip:z.boolean(),agreesToExtraTrip:z.boolean(),acceptsUnresolved:z.boolean(),

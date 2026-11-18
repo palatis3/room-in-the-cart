@@ -121,6 +121,23 @@ public struct SharedRecoveryPage: Decodable, Equatable, Sendable {
     public let asOf: String
     public let base: SharedRecoveryBase
     public let meals: [SharedRecoveryMeal]
+    public struct SwapUndo: Decodable, Equatable, Sendable {
+        public let operationId, occurrenceId: UUID
+        public let previous: SharedRecoveryMeal
+
+        public func intent(in page: SharedRecoveryPage) throws -> SharedRecoveryIntent {
+            guard page.undoOffers?.contains(self) == true, previous.id == occurrenceId,
+                  let target = page.meals.first(where: { $0.id == occurrenceId }) else { throw ClientError.configuration }
+            var meal = previous
+            meal.revisionId = UUID()
+            return .init(occurrenceId: occurrenceId, targetDigest: try target.targetDigest(), replacement: meal,
+                         reviewedAt: page.asOf, repeatOfOccurrenceId: nil, agreesToRepeat: false, proposesExtraTrip: false,
+                         agreesToExtraTrip: false, acceptsUnresolved: false, undoesSwap: operationId)
+        }
+    }
+    public let swapDonors: [UUID]?
+    public let reviewSwapEvidence: Bool?
+    public let undoOffers: [SwapUndo]?
     public let targetDigests: [TargetDigest]
     public let sourceOptions: [SourceOption]
     public let mealSources: [MealSource]
@@ -129,7 +146,7 @@ public struct SharedRecoveryPage: Decodable, Equatable, Sendable {
     var deliverySourceIDs: Set<UUID> = []
     var pinsByNeed: [UUID: [UUID: SharedDeliveryPage.Reservation]] = [:]
     private enum CodingKeys: CodingKey {
-        case shopId, placedRevision, asOf, base, meals, targetDigests, sourceOptions, mealSources, unplannedOccurrenceIds, commitmentInventoryComplete
+        case shopId, placedRevision, asOf, base, meals, swapDonors, reviewSwapEvidence, undoOffers, targetDigests, sourceOptions, mealSources, unplannedOccurrenceIds, commitmentInventoryComplete
     }
 }
 
@@ -137,19 +154,24 @@ public struct SharedRecoveryIntent: Codable, Equatable, Sendable {
     public let occurrenceId: UUID
     public let targetDigest: String
     public let replacement: SharedRecoveryMeal
+    public var preferenceEvidence: SharedMealPreferenceEvidence?
+    public var dinnerSwap: Bool?
+    public let undoesSwap: UUID?
     public let reviewedAt: String
     @RecoveryNullable public var repeatOfOccurrenceId: UUID?
     // A ranked dish can require agreement due to a prior accepted version with a different title.
     // Keep this witnessed requirement when opening and refreshing a preview. It is not a request field.
     var witnessedRepeatRequired: Bool?
     enum CodingKeys: String, CodingKey {
-        case occurrenceId, targetDigest, replacement, reviewedAt, repeatOfOccurrenceId, agreesToRepeat,
+        case occurrenceId, targetDigest, replacement, reviewedAt, preferenceEvidence, dinnerSwap, undoesSwap, repeatOfOccurrenceId, agreesToRepeat,
              proposesExtraTrip, agreesToExtraTrip, acceptsUnresolved, fallback
     }
     public let fallback: SharedFallbackSelection?
     public let agreesToRepeat, proposesExtraTrip, agreesToExtraTrip, acceptsUnresolved: Bool
     public init(occurrenceId: UUID, targetDigest: String, replacement: SharedRecoveryMeal, reviewedAt: String, repeatOfOccurrenceId: UUID?,
-                agreesToRepeat: Bool, proposesExtraTrip: Bool, agreesToExtraTrip: Bool, acceptsUnresolved: Bool, fallback: SharedFallbackSelection? = nil) {
+                agreesToRepeat: Bool, proposesExtraTrip: Bool, agreesToExtraTrip: Bool, acceptsUnresolved: Bool, fallback: SharedFallbackSelection? = nil,
+                dinnerSwap: Bool? = nil, undoesSwap: UUID? = nil) {
+        self.dinnerSwap = dinnerSwap; self.undoesSwap = undoesSwap
         self.occurrenceId = occurrenceId; self.targetDigest = targetDigest; self.replacement = replacement
         self.reviewedAt = reviewedAt; self.repeatOfOccurrenceId = repeatOfOccurrenceId
         self.agreesToRepeat = agreesToRepeat; self.proposesExtraTrip = proposesExtraTrip; self.agreesToExtraTrip = agreesToExtraTrip
@@ -160,7 +182,8 @@ public struct SharedRecoveryIntent: Codable, Equatable, Sendable {
     public func withFallbackAgreements(repeatMeal: Bool, extraTrip: Bool, unresolved: Bool) -> Self {
         var next = Self(occurrenceId: occurrenceId, targetDigest: targetDigest, replacement: replacement, reviewedAt: reviewedAt,
                         repeatOfOccurrenceId: repeatOfOccurrenceId, agreesToRepeat: repeatMeal, proposesExtraTrip: proposesExtraTrip,
-                        agreesToExtraTrip: extraTrip, acceptsUnresolved: unresolved, fallback: fallback)
+                        agreesToExtraTrip: extraTrip, acceptsUnresolved: unresolved, fallback: fallback, dinnerSwap: dinnerSwap, undoesSwap: undoesSwap)
+        next.preferenceEvidence = preferenceEvidence
         next.witnessedRepeatRequired = witnessedRepeatRequired
         return next
     }

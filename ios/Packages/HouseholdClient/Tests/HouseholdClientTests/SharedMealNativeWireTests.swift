@@ -618,7 +618,7 @@ final class SharedMealNativeWireTests: XCTestCase {
         }
         let intent = SharedRecoveryIntent(occurrenceId: occurrence.id, targetDigest: try original.targetDigest(), replacement: replacement,
             reviewedAt: desk.asOf, repeatOfOccurrenceId: nil, agreesToRepeat: false, proposesExtraTrip: false,
-            agreesToExtraTrip: false, acceptsUnresolved: true)
+            agreesToExtraTrip: false, acceptsUnresolved: true, dinnerSwap: true)
         let coverage = try await service.effectiveCoverage(reviewed: desk)
         XCTAssertEqual(Set(coverage.needs.map(\.needId)), Set(original.needs.map(\.id)))
         let preview = try await service.previewMealRecovery(intent, reviewed: desk)
@@ -645,6 +645,7 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(updated.page.base.pantryRevision, desk.base.pantryRevision + 1)
         XCTAssertEqual(updated.page.meals.first, replacement)
         XCTAssertEqual(updated.delivery.meals, delivery.meals)
+        XCTAssertEqual(updated.page.undoOffers?.first?.operationId.uuidString.lowercased(), first.operationId.lowercased())
         let current = try await service.effectiveCoverage(reviewed: updated.page)
         XCTAssertEqual(Set(current.needs.map(\.needId)), Set(replacement.needs.map(\.id)))
         XCTAssertEqual(current.needs.first(where: { $0.protected })?.reservations?.first?.backed.formatted, "2")
@@ -659,6 +660,35 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(history.first?.recoveryRevision, first.recoveryRevision)
         XCTAssertEqual(history.first?.text, replacement.notes)
         XCTAssertTrue(history.contains { $0.revisionId == nil && $0.text == "Keep five grams apart" })
+        let afterCopy = try await service.mealRecoveryFacts(shopID: id)
+        XCTAssertEqual(afterCopy.page.undoOffers?.count, 0)
+
+        // A different recipe can be changed and restored without undoing the previously distributed copy.
+        var next = replacement
+        next.title = "Sunday bean dish"
+        next.revisionId = UUID()
+        for index in next.needs.indices where next.needs[index].priority == "required" {
+            next.needs[index].id = UUID(); next.needs[index].ingredientId = UUID()
+        }
+        let swap = SharedRecoveryIntent(occurrenceId: occurrence.id, targetDigest: try replacement.targetDigest(), replacement: next,
+            reviewedAt: afterCopy.page.asOf, repeatOfOccurrenceId: nil, agreesToRepeat: false, proposesExtraTrip: false,
+            agreesToExtraTrip: false, acceptsUnresolved: true, dinnerSwap: true)
+        let reviewedSwap = try await service.previewMealRecovery(swap, reviewed: afterCopy.page)
+        let save = try await operation("mealRecovery.apply", swap.commandBody(reviewed: afterCopy.page, preview: reviewedSwap))
+        _ = try await service.executeSharedShop(save)
+        let changed = try await service.mealRecoveryFacts(shopID: id)
+        let undo = try XCTUnwrap(changed.page.undoOffers?.first).intent(in: changed.page)
+            .withFallbackAgreements(repeatMeal: false, extraTrip: false, unresolved: true)
+        let reviewedUndo = try await service.previewMealRecovery(undo, reviewed: changed.page)
+        let restore = try await operation("mealRecovery.apply", undo.commandBody(reviewed: changed.page, preview: reviewedUndo))
+        let restored = try await service.executeSharedShop(restore)
+        let replay = try await service.executeSharedShop(restore)
+        XCTAssertEqual(replay, restored)
+        let final = try await service.mealRecoveryFacts(shopID: id)
+        XCTAssertEqual(final.page.meals.first, undo.replacement)
+        XCTAssertEqual(final.page.meals.first?.needs, replacement.needs)
+        XCTAssertEqual(final.delivery.meals, delivery.meals)
+        XCTAssertEqual(final.page.undoOffers?.count, 0)
     }
 
     private func writeCookCopy(_ change: SharedCookCopyEdit, service: HouseholdService, scope: HouseholdBootstrap,

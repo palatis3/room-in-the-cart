@@ -16,6 +16,8 @@ struct SharedRecoveryReview: View {
     @State private var repeatAgreement = false
     @State private var tripAgreement = false
     @State private var unresolvedAgreement = false
+    @State private var extraPacks = ""
+    @State private var extraCharges = ""
     @State private var checking = false
     @State private var invalid = false
     @State private var message: String?
@@ -51,7 +53,23 @@ struct SharedRecoveryReview: View {
                     LabeledContent(sharedRecoveryText("Meal timing"), value: preview.timingConfirmed ? sharedRecoveryText("Confirmed") : sharedRecoveryText("Unresolved"))
                     if let date = serviceDate(preview.asOf) { LabeledContent(ht("Checked at"), value: date.formatted()) }
                 }
-                ForEach(preview.after.meals) { meal in
+                if (intent.dinnerSwap == true || intent.undoesSwap != nil), let shop = model.shop {
+                    if intent.proposesExtraTrip {
+                        Section(sharedRecoveryText("Optional top-up estimate")) {
+                            TextField(sharedRecoveryText("Price of all additional packs"), text: $extraPacks).keyboardType(.decimalPad)
+                            TextField(sharedRecoveryText("Additional checkout charges"), text: $extraCharges).keyboardType(.decimalPad)
+                            let packs = try? HouseholdInboxModel.priceMinor(extraPacks)
+                            let charges = try? HouseholdInboxModel.priceMinor(extraCharges)
+                            let extra = packs.flatMap { amount in charges.map { amount + $0 } }
+                            LabeledContent(sharedRecoveryText("Additional checkout estimate"), value: householdMoney(extra, currency: shop.quote.currency))
+                            Text(sharedRecoveryText("These entered prices estimate a separate purchase. Saving the dinner records the meal change only."))
+                        }
+                    }
+                    Section(OrderAmendmentCopy.text("Original checkout")) {
+                        SharedShopFields(quote: shop.quote, lines: shop.lines)
+                    }
+                }
+                ForEach(preview.after.meals.filter { $0.id == intent.occurrenceId } + preview.after.meals.filter { $0.id != intent.occurrenceId }) { meal in
                     Section {
                         if let before = preview.before.meals.first(where: { $0.id == meal.id }) {
                             DisclosureGroup(sharedRecoveryText("Before replacement")) {
@@ -78,7 +96,7 @@ struct SharedRecoveryReview: View {
                             .disabled(checking).accessibilityIdentifier("recovery.agreeUnresolved")
                     }
                     if agreementsReviewed {
-                        Button(sharedRecoveryText("Apply meal replacement")) { Task { await apply() } }
+                        Button(sharedRecoveryText(intent.undoesSwap == nil ? "Apply meal replacement" : "Restore this dinner")) { Task { await apply() } }
                             .disabled(!agreed || checking || model.pending != nil || model.busy)
                             .accessibilityIdentifier("recovery.apply")
                     } else {

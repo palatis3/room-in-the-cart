@@ -22,6 +22,8 @@ struct SharedRecoveryDeskView: View {
     @ObservedObject var model: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
     let shopID: UUID
+    var dinnerID: UUID? = nil
+    @State private var undoDecision: RecoveryDecision?
     private struct Selection: Identifiable {
         let id = UUID()
         let meal: SharedRecoveryMeal
@@ -55,13 +57,13 @@ struct SharedRecoveryDeskView: View {
                         SharedRecoveryCoverageView(model: model, household: household, delivery: delivery)
                     }.accessibilityIdentifier("recovery.currentCoverage")
                 }
-                if model.scope.capabilities.contains("accepted_fallbacks") {
+                if dinnerID == nil, model.scope.capabilities.contains("accepted_fallbacks") {
                     Button(fallbackText("Household fallback recipes")) {
                         applied = false
                         fallbackSession = FallbackSession(page: page)
                     }.accessibilityIdentifier("recovery.fallbackLibrary")
                 }
-                ForEach(page.meals) { meal in
+                ForEach(page.meals.filter { dinnerID == nil || $0.id == dinnerID }) { meal in
                     Button { selection = Selection(meal: meal, page: page); applied = false } label: {
                         VStack(alignment: .leading) {
                             Text(verbatim: meal.title).font(.headline)
@@ -70,6 +72,11 @@ struct SharedRecoveryDeskView: View {
                     }
                     .disabled(!meal.needs.contains { $0.priority == "required" } || model.pending != nil)
                     .accessibilityIdentifier("recovery.meal." + meal.id.uuidString)
+                    if let offer = page.undoOffers?.first(where: { $0.occurrenceId == meal.id }) {
+                        Button(sharedRecoveryText("Review Undo for this dinner")) {
+                            Task { await reviewUndo(offer, page: page) }
+                        }.disabled(model.busy || model.pending != nil)
+                    }
                 }
                 if page.meals.isEmpty { Text(sharedRecoveryText("No scheduled meals are available.")) }
             } else if allowed && model.busy { ProgressView() }
@@ -80,10 +87,10 @@ struct SharedRecoveryDeskView: View {
                 if let notice = model.notice { Text(verbatim: notice) }
             }
         }
-        .navigationTitle(sharedRecoveryText("Repair a scheduled meal"))
+        .navigationTitle(sharedRecoveryText(dinnerID == nil ? "Repair a scheduled meal" : "Swap this dinner"))
         .task(id: shopID) { if allowed { await model.loadMealRecovery() } }
         .onChange(of: allowed) { _, current in
-            if !current { selection = nil; fallbackSession = nil }
+            if !current { selection = nil; fallbackSession = nil; undoDecision = nil }
         }
         .onChange(of: model.recoveryRecord?.base) { _, current in
             if let current, let fallbackSession, current != fallbackSession.page.base {
@@ -106,7 +113,7 @@ struct SharedRecoveryDeskView: View {
         .sheet(item: $selection) { selected in
             if allowed {
                 NavigationStack {
-                    SharedRecoveryEditor(model: model, household: household, page: selected.page, target: selected.meal) { saved in
+                    SharedRecoveryEditor(model: model, household: household, page: selected.page, target: selected.meal, dinnerSwap: dinnerID != nil) { saved in
                         applied = saved
                         selection = nil
                     }
@@ -116,6 +123,26 @@ struct SharedRecoveryDeskView: View {
                     .onAppear { selection = nil }
             }
         }
+        .sheet(item: $undoDecision) { decision in
+            if allowed, let page = model.recoveryRecord, page.base == decision.preview.base {
+                NavigationStack {
+                    SharedRecoveryReview(model: model, household: household, page: page, initial: decision.preview, originalIntent: decision.intent) { saved in
+                        applied = saved
+                        undoDecision = nil
+                    }
+                }
+            }
+        }
+    }
+
+    @MainActor private func reviewUndo(_ offer: SharedRecoveryPage.SwapUndo, page: SharedRecoveryPage) async {
+        guard showsReviewedRecovery(page, model: model, household: household), model.pending == nil else { return }
+        do {
+            let intent = try offer.intent(in: page)
+            let preview = try await model.previewMealRecovery(intent, reviewed: page)
+            guard showsReviewedRecovery(page, model: model, household: household) else { return }
+            undoDecision = .init(intent: intent, preview: preview)
+        } catch { await model.loadMealRecovery() }
     }
 }
 
@@ -130,6 +157,7 @@ private struct SharedRecoveryEditor: View {
     @ObservedObject var household: HouseholdModel
     let page: SharedRecoveryPage
     let target: SharedRecoveryMeal
+    let dinnerSwap: Bool
     let finish: (Bool) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
@@ -138,14 +166,15 @@ private struct SharedRecoveryEditor: View {
         case ingredient(UUID), quantity(UUID)
     }
     @FocusState private var input: Input?
+    @State private var preferenceEvidence = MealEligibilityEvidence()
     @State private var draft: SharedRecoveryDraft
     @State private var decision: RecoveryDecision?
     @State private var checking = false
     @State private var message: String?
     @State private var generation = UUID()
 
-    init(model: HouseholdShopModel, household: HouseholdModel, page: SharedRecoveryPage, target: SharedRecoveryMeal, finish: @escaping (Bool) -> Void) {
-        self.model = model; self.household = household; self.page = page; self.target = target; self.finish = finish
+    init(model: HouseholdShopModel, household: HouseholdModel, page: SharedRecoveryPage, target: SharedRecoveryMeal, dinnerSwap: Bool, finish: @escaping (Bool) -> Void) {
+        self.model = model; self.household = household; self.page = page; self.target = target; self.dinnerSwap = dinnerSwap; self.finish = finish
         _draft = State(initialValue: .init(target: target))
     }
 
@@ -156,7 +185,7 @@ private struct SharedRecoveryEditor: View {
     private var donors: [SharedRecoveryMeal] {
         let dinners = model.deliveryRecord?.meals?.filter { $0.meal.kind == "dinner" } ?? []
         return page.meals.filter { candidate in
-            dinners.contains { $0.id == candidate.id && $0.revision == candidate.sourceMealRevision } &&
+            (!dinnerSwap || page.swapDonors?.contains(candidate.id) == true) && dinners.contains { $0.id == candidate.id && $0.revision == candidate.sourceMealRevision } &&
                 SharedRecoveryDraft.repeated(candidate, for: target) != nil
         }
     }
@@ -179,6 +208,7 @@ private struct SharedRecoveryEditor: View {
                     }
                     if !target.exclusions.isEmpty { LabeledContent(ht("Meal exclusions"), value: target.exclusions.joined(separator: ", ")) }
                 }
+                if dinnerSwap, page.reviewSwapEvidence == true { MealEvidenceFields(draft: $preferenceEvidence) }
                 Section {
                     Picker(sharedRecoveryText("Replacement"), selection: Binding(get: { draft.repeatID }, set: choose)) {
                         Text(sharedRecoveryText("Enter a replacement")).tag(UUID?.none)
@@ -229,7 +259,8 @@ private struct SharedRecoveryEditor: View {
         .navigationTitle(sharedRecoveryText("Replace meal"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { generation = UUID(); dismiss() } } }
-        .onChange(of: draft) { _, _ in generation = UUID(); decision = nil; message = nil }
+        .onChange(of: draft) { _, _ in generation = UUID(); decision = nil; message = nil; preferenceEvidence = .init() }
+        .onChange(of: preferenceEvidence) { _, _ in generation = UUID(); decision = nil }
         .onChange(of: allowed) { _, current in if !current { generation = UUID(); decision = nil } }
         .onChange(of: scene) { _, current in if current != .active { generation = UUID(); decision = nil } }
         .sheet(item: $decision) { reviewed in
@@ -296,7 +327,11 @@ private struct SharedRecoveryEditor: View {
         defer { checking = false }
         let request = generation
         do {
-            let intent = try draft.intent(page: page, target: target)
+            var intent = try draft.intent(page: page, target: target)
+            if dinnerSwap {
+                intent.dinnerSwap = true
+                if page.reviewSwapEvidence == true { intent.preferenceEvidence = preferenceEvidence.shared }
+            }
             let preview = try await model.previewMealRecovery(intent, reviewed: page)
             guard request == generation, allowed, scene == .active else { return }
             decision = .init(intent: intent, preview: preview)
