@@ -37,6 +37,11 @@ struct ReceiptFileSourceFixture: View {
             let bounds = CGRect(x: 0, y: 0, width: 400, height: 440)
             func draw() {
                 UIColor.white.setFill(); UIRectFill(bounds)
+                if ProcessInfo.processInfo.arguments.contains("--checkout-crop-photo") {
+                    ("Subtotal $12.50" as NSString).draw(at: .init(x: 40, y: 174), withAttributes: [
+                        .font: UIFont.systemFont(ofSize: 30), .foregroundColor: UIColor.black])
+                    return
+                }
                 for (i, text) in ["OATS", "SERVICE FEE"].enumerated() {
                     (text as NSString).draw(at: .init(x: 40, y: 60 + 70 * i), withAttributes: [.font: UIFont.systemFont(ofSize: 30), .foregroundColor: UIColor.black])
                 }

@@ -23,6 +23,24 @@ private final class MealNoteProtocol: URLProtocol {
             else if path.hasSuffix("/bootstrap") {
                 value = ["household":["id":Self.household,"label":"Fixture"], "memberId":"22222222-2222-4222-8222-222222222222",
                     "role":"organizer", "enrolled":true, "queueConsent":false, "capabilities":[]]
+            } else if ProcessInfo.processInfo.arguments.contains("--checkout-crop-fixture"),
+                      path.hasSuffix("/receipt-assistance") || path.hasSuffix("/capture-assistance/checkout-line") {
+                guard request.value(forHTTPHeaderField: "Authorization") == "Bearer test-note-token",
+                      request.value(forHTTPHeaderField: "X-Device-Token") == "note-device-token" else { throw URLError(.userAuthenticationRequired) }
+                if request.httpMethod == "GET", path.hasSuffix("/receipt-assistance") {
+                    value = ["version":1, "available":true, "allowsCrop":true]
+                } else {
+                    guard request.httpMethod == "POST", path.hasSuffix("/capture-assistance/checkout-line") else { throw URLError(.unsupportedURL) }
+                    var bytes = request.httpBody ?? Data()
+                    if bytes.isEmpty, let stream = request.httpBodyStream {
+                        stream.open(); defer { stream.close() }; bytes = try Data(reading: stream)
+                    }
+                    let input = try JSONDecoder().decode(ReceiptLineAssistanceRequest.self, from: bytes)
+                    guard input.consent, input.page == 1, input.line == 1, input.text.isEmpty,
+                          let crop = input.crop, crop.width * crop.height == crop.pixels.count,
+                          crop.pixels.contains(where: { $0 < 100 }) else { throw URLError(.cannotParseResponse) }
+                    value = ["version":1, "requestID":input.requestID.uuidString, "page":1, "line":1, "wording":"total $12.50"]
+                }
             } else if path.contains("/language-assistance/") {
                 guard request.value(forHTTPHeaderField: "Authorization") == "Bearer test-note-token",
                       request.value(forHTTPHeaderField: "X-Device-Token") == "note-device-token" else { throw URLError(.userAuthenticationRequired) }
@@ -97,6 +115,10 @@ struct MealLanguageFixture: View {
         NavigationStack {
             if let household {
                 List {
+                    if ProcessInfo.processInfo.arguments.contains("--checkout-crop-fixture"), let shop = ledger.shop {
+                        NavigationLink("Pickup details") { LedgerFactsView(model: ledger, shop: shop).environmentObject(household).environmentObject(access) }
+                            .accessibilityIdentifier("fixture.checkout.details")
+                    }
                     if let swap, let pickup, let original = ledger.shop?.mealOccurrences.first {
                         NavigationLink("Swap") {
                             DinnerSwapView(model: swap, meal: original)
@@ -126,6 +148,9 @@ struct MealLanguageFixture: View {
                 guard let first = model.workspaces.first else { throw ClientError.configuration }
                 model.keepLocalPrivate = true; await model.join(first)
                 guard model.projection?.enrolled == true else { throw ClientError.configuration }
+                if ProcessInfo.processInfo.arguments.contains("--checkout-crop-fixture") {
+                    guard await ledger.startShop(title: "Crop review") else { throw ClientError.configuration }
+                }
                 if ProcessInfo.processInfo.arguments.contains("--meal-choice-fixture") {
                     guard let origin = ledger.sourceWorkspaceID else { throw ClientError.configuration }
                     let instant = Date()
