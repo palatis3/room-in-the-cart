@@ -19,9 +19,9 @@ private struct HouseholdPantryView: View {
     @State private var sheet: Sheet?
     @State private var clearingRetry = false
     private enum Sheet: Identifiable {
-        case addition(HouseholdPantryPage), correction(HouseholdPantryPage, HouseholdPantryPage.Lot), grants, staples
+        case receipt(HouseholdPantryPage), addition(HouseholdPantryPage), correction(HouseholdPantryPage, HouseholdPantryPage.Lot), grants, staples
         var id: Int {
-            switch self { case .addition: 0; case .grants: 1; case .correction: 2; case .staples: 3 }
+            switch self { case .addition: 0; case .grants: 1; case .correction: 2; case .staples: 3; case .receipt: 4 }
         }
     }
     init(household: HouseholdModel, scope: HouseholdPantryRuntime, service: HouseholdService) {
@@ -39,6 +39,8 @@ private struct HouseholdPantryView: View {
                             if model.pending == nil {
                                 Button(ht("Add food to storage")) { sheet = .addition(page) }
                                     .accessibilityIdentifier("householdPantry.add")
+                                Button(householdPantryText("Add receipt to household pantry")) { sheet = .receipt(page) }
+                                    .accessibilityIdentifier("householdPantry.receipt")
                             }
                             if household.projection?.capabilities.contains("my_feedback_withdrawal") == true, let service = household.service {
                                 NavigationLink(cookingText("Review my shared meal feedback")) {
@@ -55,6 +57,8 @@ private struct HouseholdPantryView: View {
                         if let pending = model.pending {
                             Section(householdPantryText("Saved pantry change")) {
                                 switch pending.intent.change {
+                                case .receipt(let receipt):
+                                    HouseholdReceiptFacts(receipt: receipt)
                                 case .addition(let addition): PantryAdditionFacts(addition: addition)
                                 case .correction(let correction):
                                     if let lot = model.lots.first(where: { $0.id == correction.lotId }) { Text(lot.foodName) }
@@ -78,9 +82,13 @@ private struct HouseholdPantryView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(lot.foodName).font(.headline)
                                     Text(pantryLocation(lot.location.rawValue) + " · " + deliveryQuantityText(lot.observation?.quantity))
-                                    LabeledContent(ht("Food source"), value: lot.origin == .delivery ? sharedRecoveryText("Delivery") : ht("Food already at home"))
+                                    LabeledContent(ht("Food source"), value: lot.origin == .delivery ? sharedRecoveryText("Delivery") : (lot.receiptEvidence == nil ? ht("Food already at home") : pantryText("Purchase receipt")))
                                     if let checked = (lot.observation?.confirmedAt).flatMap(serviceDate) {
                                         LabeledContent(ht("Previously confirmed"), value: checked.formatted())
+                                    }
+                                    if let evidence = lot.receiptEvidence {
+                                        Text(evidence.merchant + " · " + evidence.purchaseDay)
+                                        HouseholdReceiptLineFacts(row: evidence.line)
                                     }
                                     PantryStorageFacts(storedAt: lot.storedAt, useFirstAt: lot.useFirstAt, tags: lot.exclusionTags)
                                 }.accessibilityElement(children: .combine)
@@ -114,6 +122,8 @@ private struct HouseholdPantryView: View {
             if household.householdPantryScope == model.scope, model.page != nil {
                 NavigationStack {
                     switch item {
+                    case .receipt(let reviewed): HouseholdReceiptEntry(model: model, page: reviewed,
+                        household: household.projection?.household.label ?? householdPantryText("Household pantry"))
                     case .addition(let reviewed): HouseholdPantryEditor(model: model, page: reviewed)
                     case .correction(let page, let lot): HouseholdPantryCountEditor(model: model, page: page, lot: lot)
                     case .staples: HouseholdStaplesView(model: model)

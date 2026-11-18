@@ -2190,3 +2190,24 @@ test('shared cooking records a mixed tortilla, salt and oil meal with refrigerat
  assert.equal(residual.reservations[0].backed.numerator,'1');assert.equal(residual.fridge.numerator,'2');
  const undo=f.command('cook.undo',{...(await f.body()).base,cookId:receipt.cookId});assert.equal((await f.send(undo)).data.error.code,'stale_supply');
 });
+
+test('reviewed household receipt can link an arrived delivery without adding its quantities or exposing its price to a shop',async()=>{
+ const f=await reviewedCookingFixture(),before=await f.stock();
+ const physical=before.lots.find(l=>l.lotId===f.sourceId);
+ const line={ordinal:0,original:'Printed tortillas',foodName:'Tortillas',received:f.quantity(5),usable:f.quantity(5),
+   paidUSDMinor:499,location:physical.location,delivery:{lotId:f.sourceId,observationId:physical.purchaseObservation.observationId}};
+ const receipt={v:1,kind:'pantry.acquireReceipt',grantEpoch:before.grantEpoch,pantryRevision:before.pantryRevision,
+   clientKey:randomUUID(),replayWindow:f.owner.window,body:{receiptId:randomUUID(),merchant:'Market',purchaseDay:'2026-01-05',zone:'UTC',lines:[line]}};
+ const send=c=>call(f.owner,f.base+'/pantry/commands','POST',c);
+ const stale=structuredClone(receipt);stale.body.lines[0].delivery.observationId=randomUUID();
+ assert.equal((await send(stale)).data.error.code,'refresh_required');
+ const saved=ok(await send(receipt));assert.equal(saved.receiptLines[0].lotId,f.sourceId);
+ const after=await f.stock();const linked=after.lots.find(l=>l.lotId===f.sourceId);
+ assert.deepEqual(linked.observation,physical.observation);assert.deepEqual(linked.purchaseObservation,physical.purchaseObservation);
+ assert.equal((await f.p.stock()).lots.some(l=>l.receiptEvidence!==undefined),false);
+ assert.equal(linked.receiptEvidence.line.paidUSDMinor,499);assert.equal(after.lots.length,before.lots.length);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.pantry_event WHERE household_id=$1 AND operation_id=$2',[f.h,saved.operationId])).rows[0].n,0);
+ assert.deepEqual(ok(await send(receipt)),saved);
+ const duplicate={...receipt,clientKey:randomUUID(),pantryRevision:after.pantryRevision,body:{...receipt.body,receiptId:randomUUID()}};
+ assert.equal((await send(duplicate)).data.error.code,'receipt_conflict');
+});

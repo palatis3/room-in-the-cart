@@ -69,7 +69,7 @@ final class NativeServiceWireTests: XCTestCase {
         let replay = try await service.submitHouseholdPantryAddition(retry, session: actor)
         XCTAssertEqual(receipt, replay)
         let current = try await service.householdPantryPage(for: actor)
-        XCTAssertEqual(current.lots.map(\.id), [receipt.lotId])
+        XCTAssertEqual(current.lots.map(\.id), [try XCTUnwrap(receipt.lotId)])
         XCTAssertEqual(current.pantryRevision, firstPage.pantryRevision + 1)
         let lot = try XCTUnwrap(current.lots.first)
         XCTAssertEqual(lot.location, .fridge)
@@ -91,6 +91,24 @@ final class NativeServiceWireTests: XCTestCase {
         let reopened = try await service.householdPantryPage(for: actor)
         XCTAssertEqual(reopened.pantryRevision, after.pantryRevision)
         XCTAssertEqual(reopened.lots, after.lots)
+        let received = SharedMealQuantity(amount: .init(numerator: 2), unit: "count", originalLiteral: "2")
+        let receiptLines = [
+            HouseholdReceiptLine(ordinal: 0, original: "2 LENTES", foodName: "Lentils", received: received, usable: received,
+                                 paidUSDMinor: 129, location: .pantry),
+            HouseholdReceiptLine(ordinal: 3, original: "Milk damaged", foodName: "Milk", received: received, usable: zero,
+                                 paidUSDMinor: nil, location: .fridge)
+        ]
+        let imported = HouseholdReceiptAcquisition(receiptId: UUID(), imageId: nil, merchant: "Fictional market",
+            purchaseDay: "2025-01-01", zone: "UTC", reference: "Fictional receipt 42", lines: receiptLines)
+        let batch = try await service.prepareHouseholdPantryChange(.receipt(imported), reviewed: reopened, session: actor)
+        let durable = try JSONDecoder().decode(HouseholdPantryIntent.self, from: JSONEncoder().encode(batch))
+        let committed = try await service.submitHouseholdPantryChange(batch, session: actor)
+        let confirmed = try await service.submitHouseholdPantryChange(durable, session: actor)
+        XCTAssertEqual(committed, confirmed)
+        XCTAssertEqual(committed.savedCount, 2)
+        let reloaded = try await service.householdPantryPage(for: actor)
+        XCTAssertEqual(reloaded.pantryRevision, reopened.pantryRevision + 1)
+        XCTAssertEqual(reloaded.lots.compactMap(\.receiptEvidence).map(\.line).sorted { $0.ordinal < $1.ordinal }, receiptLines)
         let reminders = try await service.householdStaples(for: actor, zone: "America/New_York")
         XCTAssertFalse(reminders.enabled)
         XCTAssertTrue(reminders.groups.isEmpty)

@@ -1,6 +1,7 @@
 import DeviceSurfaces
 import CoreDomain
 import LocalStore
+import HouseholdClient
 import SwiftUI
 
 struct PantryReceiptEntry: View {
@@ -206,11 +207,12 @@ struct PantryReceiptEntry: View {
     }
 }
 
-private struct PantryReceiptLineEditor: View {
+struct PantryReceiptLineEditor: View {
     @Binding var line: ReceiptImportDraft.Line
     let lots: [InventoryLot]
     let purchases: [PantryRecentPurchase]
     let aliases: [InventoryReceiptAlias]
+    var householdDeliveries: [HouseholdPantryPage.Lot] = []
     var field: FocusState<String?>.Binding
 
     private func label(_ lot: InventoryLot) -> String {
@@ -229,6 +231,10 @@ private struct PantryReceiptLineEditor: View {
                     return false
                 }) { lot in
                     Text(label(lot))
+                        .tag(ReceiptImportDraft.Treatment.link(lot.id))
+                }
+                ForEach(householdDeliveries) { lot in
+                    Text(pantryFormat("Link delivery: %@ · %@", lot.foodName, String(lot.id.uuidString.suffix(8))))
                         .tag(ReceiptImportDraft.Treatment.link(lot.id))
                 }
             }

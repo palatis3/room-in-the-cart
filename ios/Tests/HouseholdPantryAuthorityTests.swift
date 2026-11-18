@@ -16,6 +16,7 @@ private actor PantryTestService: HouseholdPantryServing {
     let initialObservation = UUID()
     var countedLot: UUID?
     var latestCorrection: (id: UUID, count: HouseholdPantryCountCorrection)?
+    var acquired: [UUID: HouseholdPantryReceipt] = [:]
     var correctionReceipts: [UUID: HouseholdPantryReceipt] = [:]
     func enableCorrections() { countedLot = UUID() }
     func lotID(_ n: Int) -> String { String(format: "30000000-0000-4000-8000-%012d", n) }
@@ -61,6 +62,7 @@ private actor PantryTestService: HouseholdPantryServing {
         let kind: String
         switch body {
         case .addition: kind = "pantry.addLot"
+        case .receipt: kind = "pantry.acquireReceipt"
         case .correction: kind = "pantry.correctCount"
         }
         return try pantryFixture(["session": JSONSerialization.jsonObject(with: JSONEncoder().encode(session)),
@@ -70,6 +72,16 @@ private actor PantryTestService: HouseholdPantryServing {
     }
     func submitHouseholdPantryChange(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) throws -> HouseholdPantryReceipt {
         sent.append(intent)
+        if case .receipt(let value) = intent.change {
+            if let previous = acquired[intent.id] { return previous }
+            let rows = value.lines.map { ["ordinal": $0.ordinal, "lotId": UUID().uuidString] as [String: Any] }
+            let result: HouseholdPantryReceipt = try pantryFixture(["v": 1, "kind": "pantry.acquireReceipt",
+                "householdId": session.householdID.uuidString, "grantEpoch": grantEpoch, "operationId": UUID().uuidString,
+                "receiptId": value.receiptId.uuidString, "receiptLines": rows, "savedCount": rows.count, "pantryRevision": 1])
+            acquired[intent.id] = result
+            if losesResponse { throw ClientError.transport }
+            return result
+        }
         if case .correction(let correction) = intent.change {
             if let receipt = correctionReceipts[intent.id] { return receipt }
             let operation = UUID()
@@ -266,6 +278,43 @@ private actor PantryTestService: HouseholdPantryServing {
         let receipts = await service.correctionReceipts, sent = await service.sent
         XCTAssertEqual(receipts.count, 1)
         XCTAssertEqual(sent, [pending, pending])
+    }
+
+    func testSelectedSharedReceiptSurvivesLostReplyAndRestoresOnlyTheAuthorizedScope() async throws {
+        let service = try PantryTestService(), url = temporaryURL()
+        let first = try makeModel(service: service, store: .init(url: url))
+        await first.load()
+        let page = try XCTUnwrap(first.page)
+        let doc = try await ReceiptDocumentReader().extract(.init(data: Data("BEANS\nFEE\nPERAS".utf8), kind: .text))
+        let target = CaptureTarget(workspaceID: page.householdId, containerID: UUID(), objectID: UUID(), revision: 0, kind: .receiptEvidence)
+        let source = try doc.source(target: target, merchant: "Mercado", stage: .receipt,
+            selection: Set((1...3).map { .init(page: 1, line: $0) }), at: Date())
+        var draft = try ReceiptImportDraft(source: source)
+        XCTAssertThrowsError(try draft.householdReceipt(for: page, deliveries: []))
+        draft.dateConfirmed = true
+        for index in [0, 2] {
+            draft.lines[index].treatment = .add; draft.lines[index].received = "2"; draft.lines[index].usable = index == 0 ? "1" : "0"
+        }
+        draft.lines[0].paid = "4.10"
+        let reviewed = try draft.householdReceipt(for: page, deliveries: [])
+        XCTAssertEqual(reviewed.lines.map(\.ordinal), [0, 2])
+        XCTAssertEqual(reviewed.lines.map(\.paidUSDMinor), [410, nil])
+        XCTAssertEqual(reviewed.lines.map(\.original), ["BEANS", "PERAS"])
+        await service.setLoss(true)
+        await first.confirmChange(.receipt(reviewed), reviewed: page)
+        first.dismiss()
+        let unrelated = try makeModel(service: service, store: .init(url: url), subject: "Other profile")
+        await unrelated.load()
+        XCTAssertNil(unrelated.pending)
+        let resumed = try makeModel(service: service, store: .init(url: url))
+        await resumed.load()
+        let intent = try XCTUnwrap(resumed.pending?.intent)
+        XCTAssertEqual(intent.change, .receipt(reviewed))
+        await service.setLoss(false)
+        await resumed.retry()
+        let sent = await service.sent, acquired = await service.acquired
+        XCTAssertEqual(sent, [intent, intent]); XCTAssertEqual(acquired.count, 1)
+        XCTAssertNil(resumed.pending)
     }
 
     func testExplicitZeroUnknownAndFractionReview() throws {

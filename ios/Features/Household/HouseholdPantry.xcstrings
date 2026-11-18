@@ -49,6 +49,22 @@
         }
       }
     },
+    "Add receipt to household pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add receipt to household pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir recibo a la despensa del hogar"
+          }
+        }
+      }
+    },
     "Adults with pantry access can see stored food, add food and correct counts.": {
       "localizations": {
         "en": {
@@ -61,6 +77,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Los adultos con acceso a la despensa pueden ver y añadir alimentos y corregir cantidades."
+          }
+        }
+      }
+    },
+    "Adults with pantry access can see the selected receipt wording, amounts and prices. The original file stays on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adults with pantry access can see the selected receipt wording, amounts and prices. The original file stays on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los adultos con acceso a la despensa pueden ver el texto, las cantidades y los precios seleccionados. El archivo original permanece en este dispositivo."
           }
         }
       }
@@ -221,6 +253,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirmar la cantidad corregida"
+          }
+        }
+      }
+    },
+    "Confirm receipt for this household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm receipt for this household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar el recibo para este hogar"
           }
         }
       }
@@ -721,6 +769,22 @@
         }
       }
     },
+    "Receipt saved. Reload to see the household food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt saved. Reload to see the household food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibo guardado. Vuelve a cargar para ver los alimentos del hogar."
+          }
+        }
+      }
+    },
     "Received usable quantity": {
       "localizations": {
         "en": {
@@ -961,6 +1025,22 @@
         }
       }
     },
+    "Reviewed receipt saved to household pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed receipt saved to household pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el recibo revisado en la despensa del hogar."
+          }
+        }
+      }
+    },
     "Saved pantry change": {
       "localizations": {
         "en": {
@@ -973,6 +1053,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambio guardado en la despensa"
+          }
+        }
+      }
+    },
+    "Shared pantry destination": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared pantry destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Despensa de destino"
           }
         }
       }

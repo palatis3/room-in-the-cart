@@ -23,7 +23,7 @@ private func receiptStage(_ stage: ReceiptAcquisition.DocumentLine.Stage) -> Str
 }
 
 struct PantryReceiptDocuments: View {
-    @ObservedObject var model: PantryModel
+    var model: PantryModel? = nil
     let target: CaptureTarget
     let authorize: @MainActor () -> Bool
     var initialInput: ReceiptDocumentBytes? = nil
@@ -94,7 +94,7 @@ struct PantryReceiptDocuments: View {
                     Button(pantryText("Choose another document")) { cancel() }
                 }
             } else {
-                if !inbox.isEmpty {
+                if let model, !inbox.isEmpty {
                     Section(pantryText("Shared receipt files")) {
                         ForEach(inbox) { item in
                             VStack(alignment: .leading) {
@@ -147,7 +147,7 @@ struct PantryReceiptDocuments: View {
                   message: Text(pantryText("This removes the staged file from this device.")),
                   primaryButton: .destructive(Text(pantryText("Discard"))) {
                     Task {
-                        do { try await model.finishSharedReceipt(item, committed: false); await loadInbox() }
+                        do { guard let model else { return }; try await model.finishSharedReceipt(item, committed: false); await loadInbox() }
                         catch { show(error) }
                     }
                   }, secondaryButton: .cancel(Text(pantryText("Cancel"))))
@@ -158,7 +158,7 @@ struct PantryReceiptDocuments: View {
     }
 
     private func loadInbox() async {
-        guard model.supportsReceiptAliases, authorize() else { inbox = []; return }
+        guard let model, model.supportsReceiptAliases, authorize() else { inbox = []; return }
         do {
             let rows = try await model.pendingSharedReceipts()
             guard !Task.isCancelled, authorize() else { return }

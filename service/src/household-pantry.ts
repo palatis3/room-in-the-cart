@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
+import { acquireHouseholdReceipt, householdReceiptBody } from './household-receipts.js';
 import { digest } from './database.js';
 import { invalid, refresh, ServiceError, unavailable } from './errors.js';
 import { householdPantryEpoch, pantryRevision, physicalPantryPage } from './pantry-lots.js';
@@ -17,7 +18,8 @@ const addCommand=z.object({v:z.literal(1),kind:z.literal('pantry.addLot'),client
 const correctionBody=z.object({lotId:id,predecessorId:id,confirmedAt:z.iso.datetime({offset:true}),
   quantity:usableQuantitySchema.nullable()}).strict().refine(b=>!b.quantity || validText(b.quantity.originalLiteral));
 const correctionCommand=addCommand.extend({kind:z.literal('pantry.correctCount'),body:correctionBody});
-const stockCommand=z.discriminatedUnion('kind',[addCommand,correctionCommand]);
+const receiptCommand=addCommand.extend({kind:z.literal('pantry.acquireReceipt'),body:householdReceiptBody});
+const stockCommand=z.discriminatedUnion('kind',[addCommand,correctionCommand,receiptCommand]);
 const changeGrant=z.object({v:z.literal(1),memberId:id,enabled:z.boolean(),expectedGrantEpoch:revision}).strict();
 
 function currentEpoch(ctx:Context) {
@@ -68,7 +70,8 @@ export async function recordHouseholdPantryCommand(ctx:Context,input:unknown) {
   if(!window.rowCount) throw refresh();
   const payloadDigest=digest({scope:'household_pantry',householdId:ctx.householdId,command});
   const prior=(await ctx.db.query(`SELECT o.authority_scope,o.pantry_grant_epoch,o.device_id,o.payload_digest,r.response,
-    EXISTS(SELECT 1 FROM ritc.pantry_event e WHERE (e.household_id,e.operation_id)=(o.household_id,o.operation_id)) AS retained
+    (CASE WHEN o.kind='pantry.acquireReceipt' THEN EXISTS(SELECT 1 FROM ritc.receipt_submission_line s WHERE (s.household_id,s.operation_id)=(o.household_id,o.operation_id))
+      ELSE EXISTS(SELECT 1 FROM ritc.pantry_event e WHERE (e.household_id,e.operation_id)=(o.household_id,o.operation_id)) END) AS retained
     FROM ritc.operation o LEFT JOIN ritc.operation_response r USING(household_id,operation_id)
     WHERE o.household_id=$1 AND o.actor_id=$2 AND o.client_key=$3`,[ctx.householdId,ctx.member.member_id,command.clientKey])).rows[0];
   if(prior) {
@@ -80,6 +83,16 @@ export async function recordHouseholdPantryCommand(ctx:Context,input:unknown) {
   }
   if(command.pantryRevision!==await pantryRevision(ctx)) throw new ServiceError(409,'stale_supply','Review the latest household stock.');
   const operationId=randomUUID(),next=command.pantryRevision+1;
+  await ctx.db.query(`INSERT INTO ritc.operation(household_id,operation_id,actor_id,device_id,client_key,window_id,kind,
+    shop_id,payload_digest,response_scope,authority_scope,pantry_grant_epoch)
+    VALUES($1,$2,$3,$4,$5,$6,$7,NULL,$8,'pantry','household_pantry',$9)`,
+    [ctx.householdId,operationId,ctx.member.member_id,ctx.deviceId,command.clientKey,command.replayWindow,command.kind,payloadDigest,epoch]);
+  if(command.kind==='pantry.acquireReceipt') {
+    const result=await acquireHouseholdReceipt(ctx,command.body,operationId,command.pantryRevision);
+    const receipt={v:1,kind:command.kind,householdId:ctx.householdId,operationId,grantEpoch:epoch,...result};
+    await ctx.db.query('INSERT INTO ritc.operation_response(household_id,operation_id,response) VALUES($1,$2,$3)',[ctx.householdId,operationId,receipt]);
+    return receipt;
+  }
   const correction=command.kind==='pantry.correctCount'?command.body:null;
   const lotId=correction?.lotId??operationId;
   if(Date.parse(command.body.confirmedAt)>ctx.now.getTime()) throw invalid();
@@ -93,10 +106,6 @@ export async function recordHouseholdPantryCommand(ctx:Context,input:unknown) {
     if(lot.observation_id!==correction.predecessorId) throw new ServiceError(409,'stale_supply','Review the latest household count.');
   }
   const receipt={v:1,kind:command.kind,householdId:ctx.householdId,operationId,lotId,grantEpoch:epoch,pantryRevision:next};
-  await ctx.db.query(`INSERT INTO ritc.operation(household_id,operation_id,actor_id,device_id,client_key,window_id,kind,
-    shop_id,payload_digest,response_scope,authority_scope,pantry_grant_epoch)
-    VALUES($1,$2,$3,$4,$5,$6,$7,NULL,$8,'pantry','household_pantry',$9)`,
-    [ctx.householdId,operationId,ctx.member.member_id,ctx.deviceId,command.clientKey,command.replayWindow,command.kind,payloadDigest,epoch]);
   if(command.kind==='pantry.addLot') {
     const b=command.body;
     if(b.storedAt && Date.parse(b.storedAt)>ctx.now.getTime()) throw invalid();

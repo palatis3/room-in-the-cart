@@ -30,7 +30,14 @@ public struct HouseholdPantryPage: Decodable, Equatable, Sendable {
         /// Missing on older servers; never infer a purchase from the live count.
         public let purchaseObservation: SharedPantryPage.Observation?
 
+        public let receiptEvidence: HouseholdReceiptEvidence?
+
         func validate() throws {
+            if let receiptEvidence {
+                guard householdReceiptText(receiptEvidence.merchant, 256), householdReceiptDay(receiptEvidence.purchaseDay),
+                      receiptEvidence.reference.map({ householdReceiptText($0, 256) }) != false else { throw ClientError.invalidResponse }
+                try receiptEvidence.line.validate()
+            }
             guard sharedMealText(foodName, 240), exclusionTags.count <= 20,
                   exclusionTags.allSatisfy({ sharedMealText($0, 240) }),
                   storedAt.map(validHelperTimestamp) != false,
@@ -155,14 +162,17 @@ public struct HouseholdPantryCountCorrection: Codable, Equatable, Sendable {
 public enum HouseholdPantryChange: Codable, Equatable, Sendable {
     case addition(HouseholdPantryAddition)
     case correction(HouseholdPantryCountCorrection)
+    case receipt(HouseholdReceiptAcquisition)
 
     var kind: String {
-        switch self { case .addition: "pantry.addLot"; case .correction: "pantry.correctCount" }
+        switch self { case .addition: "pantry.addLot"; case .correction: "pantry.correctCount"; case .receipt: "pantry.acquireReceipt" }
     }
 
-    private enum Keys: CodingKey { case lotId }
+    private enum Keys: CodingKey { case lotId, receiptId }
     public init(from decoder: Decoder) throws {
-        if try decoder.container(keyedBy: Keys.self).contains(.lotId) {
+        if try decoder.container(keyedBy: Keys.self).contains(.receiptId) {
+            self = .receipt(try HouseholdReceiptAcquisition(from: decoder))
+        } else if try decoder.container(keyedBy: Keys.self).contains(.lotId) {
             self = .correction(try HouseholdPantryCountCorrection(from: decoder))
         } else {
             self = .addition(try HouseholdPantryAddition(from: decoder))
@@ -172,6 +182,7 @@ public enum HouseholdPantryChange: Codable, Equatable, Sendable {
         switch self {
         case .addition(let addition): try addition.encode(to: encoder)
         case .correction(let correction): try correction.encode(to: encoder)
+        case .receipt(let receipt): try receipt.encode(to: encoder)
         }
     }
 
@@ -179,6 +190,7 @@ public enum HouseholdPantryChange: Codable, Equatable, Sendable {
         switch self {
         case .addition(let addition): try addition.validate()
         case .correction(let correction): try correction.validate()
+        case .receipt(let receipt): try receipt.validate()
         }
     }
 }
@@ -215,7 +227,13 @@ public struct HouseholdPantryReceipt: Decodable, Equatable, Sendable {
     public let householdId: UUID
     public let kind: String
     public let operationId: UUID
-    public let lotId: UUID
+    public struct SavedLine: Decodable, Equatable, Sendable {
+        public let ordinal: Int, lotId: UUID
+    }
+    public let lotId: UUID?
+    public let receiptId: UUID?
+    public let receiptLines: [SavedLine]?
+    public let savedCount: Int?
     public let grantEpoch: Int
     public let pantryRevision: Int
 
@@ -223,11 +241,17 @@ public struct HouseholdPantryReceipt: Decodable, Equatable, Sendable {
         let revision = intent.command.pantryRevision
         guard v == 1, kind == intent.command.kind, householdId == intent.session.householdID,
               grantEpoch == intent.grantEpoch, revision >= 0 && revision < Int.max,
-              pantryRevision == revision + 1 else { throw ClientError.invalidResponse }
+              pantryRevision == revision + (savedCount == 0 ? 0 : 1) else { throw ClientError.invalidResponse }
         switch intent.change {
-        case .addition: guard lotId == operationId else { throw ClientError.invalidResponse }
+        case .receipt(let receipt):
+            guard lotId == nil, receiptId != nil, let receiptLines, let savedCount, (0...receipt.lines.count).contains(savedCount),
+                  receiptLines.map(\.ordinal) == receipt.lines.map(\.ordinal),
+                  Set(receiptLines.map(\.lotId)).count == receiptLines.count,
+                  zip(receiptLines, receipt.lines).allSatisfy({ saved, line in line.delivery.map { $0.lotId == saved.lotId } ?? true })
+            else { throw ClientError.invalidResponse }
+        case .addition: guard savedCount == nil, receiptLines == nil, lotId == operationId else { throw ClientError.invalidResponse }
         case .correction(let correction):
-            guard lotId == correction.lotId, operationId != lotId, operationId != correction.predecessorId else {
+            guard savedCount == nil, receiptLines == nil, lotId == correction.lotId, operationId != lotId, operationId != correction.predecessorId else {
                 throw ClientError.invalidResponse
             }
         }

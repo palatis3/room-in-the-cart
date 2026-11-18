@@ -1202,7 +1202,7 @@ test('standalone household pantry checks a live adult grant and device before an
   assert.deepEqual([one.status,other.status].sort(),[200,409]);
   const observed=(await get('Mia')).data;
   assert.equal(observed.lots.length,1);assert.deepEqual(observed.lots[0].observation.quantity,data.body.quantity);
-  assert.deepEqual(Object.keys(observed.lots[0]).sort(),['exclusionTags','foodName','location','lotId','observation','origin','storedAt','useFirstAt'].sort());
+  assert.deepEqual(Object.keys(observed.lots[0]).sort(),['exclusionTags','foodName','location','lotId','observation','origin','purchaseObservation','storedAt','useFirstAt'].sort());
   assert.equal(observed.lots[0].location,'fridge');assert.equal(JSON.stringify(observed).includes(f.actors.Alex.id),false);
   const request={...data,pantryRevision:observed.pantryRevision,clientKey:randomUUID()};
   const committed=await write('Alex',request);assert.equal(committed.status,200,JSON.stringify(committed.data));
@@ -1323,4 +1323,68 @@ test('private household preference grants, reviewed updates and revoked retries 
   assert.equal((await write(command)).status,409);
   await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
   assert.equal((await write(command)).status,403);
+});
+
+test('reviewed shared receipt lines commit once, preserve partial selection and redact every replay after erasure',async()=>{
+  const f=await fixture({createShop:false}),foreign=await fixture({createShop:false});
+  const grant=(enabled,epoch)=>f.http('Mia','POST','/pantry/grants',{v:1,memberId:f.actors.Alex.id,enabled,expectedGrantEpoch:epoch});
+  const page=()=>f.http('Mia','GET','/pantry'), write=(actor,c,headers)=>f.http(actor,'POST','/pantry/commands',c,headers);
+  const q=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
+  const line=(ordinal,foodName)=>({ordinal,original:'Printed '+foodName,foodName,location:'pantry',received:q(3),usable:q(2),
+    paidUSDMinor:ordinal===0?129:null,delivery:null,printed:null});
+  const body={receiptId:randomUUID(),imageId:randomUUID(),merchant:'Market',reference:'Reviewed 123',zone:'UTC',
+    purchaseDay:'2026-01-10',lines:[line(0,'Beans'),line(2,'Pears')]};
+  const make=(base,body,actor='Alex',epoch=1)=>({v:1,kind:'pantry.acquireReceipt',replayWindow:f.actors[actor].window,
+    clientKey:randomUUID(),grantEpoch:epoch,pantryRevision:base,body});
+  assert.equal((await write('Alex',make(0,body))).status,404);
+  assert.equal((await grant(true,0)).status,200);
+  const base=(await page()).data.pantryRevision,command=make(base,body);
+  assert.equal((await write('Sam',command)).status,404);
+  assert.equal((await write('Alex',command,{'X-View-Grant-ID':randomUUID()})).status,404);
+  assert.equal((await write('Alex',{...command,body:{...body,lines:[body.lines[0],{...line(1,'Broken'),usable:q(4)}]}})).status,422);
+  const failed={...command,body:{...body,lines:[body.lines[0],{...body.lines[1],delivery:{lotId:randomUUID(),observationId:randomUUID()}}]}};
+  assert.equal((await write('Alex',failed)).status,409);
+  assert.equal((await page()).data.pantryRevision,base);
+  const [a,b]=await Promise.all([write('Alex',command),write('Alex',command)]);
+  assert.equal(a.status,200,JSON.stringify(a.data));assert.deepEqual(a,b);
+  assert.equal(a.data.pantryRevision,base+1);assert.equal(a.data.savedCount,2);
+  assert.deepEqual(a.data.receiptLines.map(l=>l.ordinal),[0,2]);assert.equal(new Set(a.data.receiptLines.map(l=>l.lotId)).size,2);
+  const lots=(await page()).data.lots;assert.equal(lots.length,2);
+  assert.deepEqual(lots.find(l=>l.foodName==='Beans').receiptEvidence.line.paidUSDMinor,129);
+  assert.deepEqual(lots.find(l=>l.foodName==='Pears').observation.quantity,q(2));
+  const extended=make(base+1,{...body,lines:[body.lines[0],line(4,'Milk')]});
+  const later=await write('Alex',extended);assert.equal(later.status,200,JSON.stringify(later.data));assert.equal(later.data.savedCount,1);
+  assert.equal(later.data.receiptLines[0].lotId,a.data.receiptLines[0].lotId);
+  assert.deepEqual((await write('Alex',command)).data,a.data);
+  assert.equal((await write('Alex',{...command,body:{...body,merchant:'Changed'}})).data.error.code,'key_reused');
+  const repeat=make(base+2,body);const noop=await write('Alex',repeat);
+  assert.equal(noop.data.savedCount,0);assert.equal(noop.data.pantryRevision,base+2);
+  const changed=make(base+2,{...body,lines:[line(7,'Rollback'),{...body.lines[0],usable:q(1)}]});
+  assert.equal((await write('Alex',changed)).data.error.code,'receipt_conflict');
+  assert.equal((await page()).data.lots.length,3);
+  assert.equal((await foreign.http('Mia','GET','/pantry')).data.lots.length,0);
+  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shop WHERE household_id=$1',[f.h])).rows[0].n,0);
+  await grant(false,1);assert.equal((await write('Alex',command)).status,404);
+  await grant(true,2);assert.equal((await write('Alex',command)).data.error.code,'refresh_required');
+  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.actors.Alex.id]);
+  assert.equal((await page()).data.lots.length,0);
+  const records=await admin.query('SELECT count(*)::int n FROM ritc.operation_response WHERE household_id=$1 AND operation_id=ANY($2::uuid[])',[f.h,[a.data.operationId,later.data.operationId,noop.data.operationId]]);
+  assert.equal(records.rows[0].n,0);
+  assert.equal((await write('Mia',make((await page()).data.pantryRevision,body,'Mia',0))).data.error.code,'refresh_required');
+});
+
+test('fifty long reviewed receipt lines remain one bounded household stock revision',async()=>{
+ const f=await fixture({createShop:false});
+ const quantity={amount:{numerator:1,denominator:1},unit:'count',originalLiteral:'1'};
+ const lines=Array.from({length:50},(_,ordinal)=>({ordinal,original:'Grocery '.repeat(215)+ordinal,foodName:'Food '+ordinal,
+   location:'pantry',received:quantity,usable:quantity}));
+ const body={receiptId:randomUUID(),merchant:'Market',purchaseDay:'2026-01-05',zone:'UTC',lines};
+ const command={v:1,kind:'pantry.acquireReceipt',grantEpoch:0,pantryRevision:0,clientKey:randomUUID(),replayWindow:f.owner.window,body};
+ const write=c=>f.http('Mia','POST','/pantry/commands',c);
+ assert(Buffer.byteLength(JSON.stringify(command))>65_536);
+ assert.equal((await write({...command,body:{...body,lines:[...lines,{...lines[0],ordinal:50}]}})).status,422);
+ const saved=await write(command);assert.equal(saved.status,200,JSON.stringify(saved.data));
+ assert.equal(saved.data.savedCount,50);assert.equal(saved.data.pantryRevision,1);
+ const counts=await admin.query('SELECT count(*)::int n,count(DISTINCT operation_id)::int ops,count(DISTINCT pantry_revision)::int revisions FROM ritc.pantry_event WHERE household_id=$1',[f.h]);
+ assert.deepEqual(counts.rows[0],{n:50,ops:1,revisions:1});
 });
