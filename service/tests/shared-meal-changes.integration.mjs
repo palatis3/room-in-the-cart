@@ -2374,23 +2374,32 @@ test('household Tonight ranks usable expiring food ahead of feedback and respect
  ok(await put(ids[0],'Earlier','Beans',beans));ok(await put(ids[1],'Later favorite','Beans',beans));ok(await put(ids[2],'Use peas first','Peas',peas));
  const order=async(actor=f.owner)=>(await read(actor)).recipes.map(r=>r.recipeId);
  assert.deepEqual(await order(),[ids[2],ids[0],ids[1]]);
- const chosen=(await read()).recipes.find(r=>r.recipeId===ids[1]),shopId=await f.shop(),occurrenceId=randomUUID();
- let shopRevision=1;
- const command=async(kind,body)=>ok(await call(f.owner,f.base+'/commands','POST',{v:1,shopId,kind,clientKey:randomUUID(),
-   replayWindow:f.owner.window,base:{shopRevision,authorityEpoch:1},body}));
- shopRevision=(await command('meal.chooseTonight',{v:1,grantEpoch:rank,recipeId:chosen.recipeId,
-   recipeRevision:1,reviewToken:chosen.reviewToken,occurrenceId,day:null})).shopRevision;
- shopRevision=(await command('shop.freeze',{})).shopRevision;
- shopRevision=(await command('shop.reportPlaced',{occurredAt:new Date().toISOString()})).shopRevision;
- const basePath=f.base+'/shops/'+shopId,cookPage=ok(await call(f.owner,basePath+'/cook-completion?occurrenceId='+occurrenceId));
- const {shopRevision:sr,authorityEpoch:ae,...base}=cookPage.base;shopRevision=sr;
- const cook=await command('cook.complete',{...base,servings:1,uses:cookPage.needs.map(n=>({rowId:randomUUID(),needId:n.id,kind:'notUsed'})),outputs:[]});
- const feedback=basePath+'/cook-feedback/'+occurrenceId;
- async function react(reactions) {
-   const review=ok(await call(f.owner,feedback));
-   ok(await call(f.owner,feedback,'PUT',{v:1,cookId:cook.cookId,grantEpoch:review.grantEpoch,authorityEpoch:review.authorityEpoch,
-     expectedRevision:review.revision,replayWindow:f.owner.window,clientKey:randomUUID(),reactions}));
+ async function cookedRecipe(recipeId) {
+   const shopId=await f.shop(),occurrenceId=randomUUID();
+   const chosen=(await read()).recipes.find(r=>r.recipeId===recipeId);
+   let shopRevision=1;
+   const command=async(kind,body)=>ok(await call(f.owner,f.base+'/commands','POST',{v:1,shopId,kind,clientKey:randomUUID(),
+     replayWindow:f.owner.window,base:{shopRevision,authorityEpoch:1},body}));
+   shopRevision=(await command('meal.chooseTonight',{v:1,grantEpoch:rank,recipeId,
+     recipeRevision:1,reviewToken:chosen.reviewToken,occurrenceId,day:null})).shopRevision;
+   shopRevision=(await command('shop.freeze',{})).shopRevision;
+   shopRevision=(await command('shop.reportPlaced',{occurredAt:new Date().toISOString()})).shopRevision;
+   const basePath=f.base+'/shops/'+shopId,cookPage=ok(await call(f.owner,basePath+'/cook-completion?occurrenceId='+occurrenceId));
+   const {shopRevision:sr,authorityEpoch:ae,...base}=cookPage.base;shopRevision=sr;
+   const cook=await command('cook.complete',{...base,servings:1,uses:cookPage.needs.map(n=>({rowId:randomUUID(),needId:n.id,kind:'notUsed'})),outputs:[]});
+   const feedback=basePath+'/cook-feedback/'+occurrenceId;
+   return {chosen,async react(reactions) {
+     const review=ok(await call(f.owner,feedback));
+     ok(await call(f.owner,feedback,'PUT',{v:1,cookId:cook.cookId,grantEpoch:review.grantEpoch,authorityEpoch:review.authorityEpoch,
+       expectedRevision:review.revision,replayWindow:f.owner.window,clientKey:randomUUID(),reactions}));
+   },async age(days) {
+     // Only the service writes feedback timestamps. Move this fixture's clocked row to exercise historical reads.
+     const result=await admin.query(`UPDATE ritc.household_meal_feedback SET updated_at=clock_timestamp()-$4*interval '24 hours'
+       WHERE household_id=$1 AND member_id=$2 AND cook_id=$3`,[f.h,f.owner.id,cook.cookId,days]);
+     assert.equal(result.rowCount,1);
+   }};
  }
+ const {chosen,react,age}=await cookedRecipe(ids[1]);
  await react(['childrenLikedIt']);
  assert.deepEqual(await order(),[ids[2],ids[1],ids[0]],'A child-liked reaction only breaks the equivalent bean recipe tie');
  const reader=await actor(),invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
@@ -2406,6 +2415,23 @@ test('household Tonight ranks usable expiring food ahead of feedback and respect
  assert.deepEqual(await order(),[ids[2],ids[0],ids[1]],'Withdrawing reactions restores the neutral ordering');
  await react(['makeAgain']);
  assert.deepEqual(await order(),[ids[2],ids[1],ids[0]]);
+ const earlier=await cookedRecipe(ids[0]);
+ await earlier.react(['makeAgain']);
+ await earlier.age(89);await age(1);
+ assert.deepEqual(await order(),[ids[2],ids[1],ids[0]],'A recent positive reaction outweighs an 89-day-old positive');
+ const latest=await cookedRecipe(ids[1]);
+ await latest.react(['tooManyLeftovers']);
+ assert.deepEqual(await order(),[ids[2],ids[0],ids[1]],'Latest portion-only feedback replaces the earlier ranking impression');
+ await latest.react([]);
+ assert.deepEqual(await order(),[ids[2],ids[1],ids[0]],'Removing that occurrence leaves the earlier explicit impression applicable');
+ await earlier.react([]);
+ await age(89);
+ assert.deepEqual(await order(),[ids[2],ids[1],ids[0]],'Feedback just inside the window contributes');
+ await age(90);
+ assert.deepEqual(await order(),[ids[2],ids[0],ids[1]],'Feedback expires at 90 days');
+ await age(-1);
+ assert.deepEqual(await order(),[ids[2],ids[0],ids[1]],'Future feedback is ignored');
+ await age(1);
  const updated=ok(await call(f.owner,path+'/recipes','POST',{v:1,recipeId:ids[1],baseRevision:1,grantEpoch:rank,reviewed:true,
    replayWindow:f.owner.window,clientKey:randomUUID(),recipe:{...chosen.reviewedRecipe,title:'Updated source'}}));
  assert.equal(updated.recipeRevision,2);assert.deepEqual(await order(),[ids[2],ids[0],ids[1]]);

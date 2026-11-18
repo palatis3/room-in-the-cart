@@ -276,10 +276,11 @@ async function shopperPriceBasis(ctx: Context) {
 async function recentFeedback(ctx: Context) {
   // Only this adult's opted-in reaction to this same recipe revision, cooked on
   // their own shop, can break a tie. Erasure, withdrawal or Undo removes the signal.
-  const { rows } = await ctx.db.query<{ recipe_id: string; score: number }>(
+  const windowMs = 90 * 86_400_000;
+  const { rows } = await ctx.db.query<{ recipe_id: string; direction: number; updated_at: Date }>(
     `
-    SELECT c.recipe_id,
-      sum((f.reactions && ARRAY['makeAgain','childrenLikedIt'])::int - ('tooMuchEffort'=ANY(f.reactions))::int)::int score
+    SELECT DISTINCT ON (c.recipe_id) c.recipe_id, f.updated_at,
+      (f.reactions && ARRAY['makeAgain','childrenLikedIt'])::int - ('tooMuchEffort'=ANY(f.reactions))::int AS direction
     FROM ritc.tonight_choice c
     JOIN ritc.tonight_recipe r ON (r.household_id,r.recipe_id,r.revision)=(c.household_id,c.recipe_id,c.recipe_revision)
     JOIN ritc.shop s ON (s.household_id,s.shop_id)=(c.household_id,c.shop_id)
@@ -287,11 +288,16 @@ async function recentFeedback(ctx: Context) {
     JOIN ritc.operation_response o ON (o.household_id,o.operation_id)=(c.household_id,c.operation_id)
     JOIN ritc.household_meal_feedback f ON (f.household_id,f.cook_id)=(k.household_id,k.operation_id)
     WHERE c.household_id=$1 AND s.shopper_id=$2 AND f.member_id=$2 AND k.undone_by IS NULL
-      AND k.meal_revision=(o.response->>'shopRevision')::integer AND f.updated_at>$3
-    GROUP BY c.recipe_id`,
-    [ctx.householdId, ctx.member.member_id, new Date(ctx.now.getTime() - 90 * 86400000)],
+      AND k.meal_revision=(o.response->>'shopRevision')::integer AND cardinality(f.reactions)>0
+      AND f.updated_at>$3 AND f.updated_at<=$4
+    ORDER BY c.recipe_id, f.updated_at DESC, f.revision DESC`,
+    [ctx.householdId, ctx.member.member_id, new Date(ctx.now.getTime() - windowMs), ctx.now],
   );
-  return new Map(rows.map((row) => [row.recipe_id, row.score]));
+  // Match private meal feedback: the latest impression replaces older ones and fades linearly to zero.
+  return new Map(rows.map((row) => {
+    const ageMs = ctx.now.getTime() - row.updated_at.getTime();
+    return [row.recipe_id, row.direction * (1 - ageMs / windowMs)];
+  }));
 }
 
 async function candidates(ctx: Context) {
