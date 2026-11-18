@@ -748,7 +748,7 @@ actor PantryArchiveWorker {
         guard consumedEvidence == header.evidenceChainDigest else { throw Failure.invalid }
     }
     struct Dependency: Codable, Equatable, Sendable {
-        enum Kind: String, Codable, Sendable { case lot, observation, event, reservation, sourceLink, sourceHead, intent, ledgerOrigin, inventoryOrigin }
+        enum Kind: String, Codable, Sendable { case lot, observation, event, reservation, sourceLink, sourceHead, intent, ledgerOrigin, inventoryOrigin, price }
         let originID: UUID
         let kind: Kind
         let id: UUID
@@ -802,6 +802,10 @@ actor PantryArchiveWorker {
         case .sourceLink(let value): return [entry(value.source.originID, .sourceLink, value.lotID), entry(value.source.originID, .lot, value.lotID)]
         case .historical(let value):
             switch value {
+            case .price(let origin, let price):
+                var dependencies = [entry(origin, .price, price.id, price.revision)]
+                if let lot = price.linkedLotID { dependencies.append(entry(origin, .lot, lot)) }
+                return dependencies
             case .acquisition(let origin, let row):
                 var dependencies = [entry(origin, .lot, row.lotID)]
                 if let pickup = row.savedPickup { dependencies.append(entry(pickup.originID, .sourceHead, pickup.id)) }
@@ -862,19 +866,20 @@ actor PantryArchiveWorker {
         let index = try PantryArchiveIndex(url: directory.appendingPathComponent("rows.sqlite"))
         defer { try? index.close() }
         try PantryArchiveFiles.protect(directory.appendingPathComponent("rows.sqlite"), permissions: 0o600)
+        var prices: [InventoryPriceRow] = []
         var acquisitions: [InventoryAcquisitionRow] = []
         var pending: [InventoryRecord] = [], size = 0, chunkIndex = 0, count = 0, hashes: [Data] = []
         var chain = InventoryMigrationManifest.initialDigest
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         func flush() throws {
-            guard !pending.isEmpty || !acquisitions.isEmpty else { return }
-            let chunk = InventoryMigrationChunk(index: chunkIndex, records: pending, acquisitions: acquisitions)
+            guard !pending.isEmpty || !acquisitions.isEmpty || !prices.isEmpty else { return }
+            let chunk = InventoryMigrationChunk(index: chunkIndex, records: pending, acquisitions: acquisitions, prices: prices)
             chain = try InventoryMigrationManifest.appending(chunk, to: chain)
             let bytes = try encoder.encode(chunk)
             guard bytes.count <= InventoryPersistenceLimits.batchBytes else { throw Failure.invalid }
             try PantryArchiveFiles.write(bytes, to: directory.appendingPathComponent("migration-\(chunkIndex).json"))
             hashes.append(Self.digest(bytes))
-            chunkIndex += 1; count += pending.count + acquisitions.count; pending = []; acquisitions = []; size = 0
+            chunkIndex += 1; count += pending.count + acquisitions.count + prices.count; pending = []; acquisitions = []; prices = []; size = 0
         }
         func append(_ record: InventoryRecord) throws {
             guard record.payload.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.invalid }
@@ -895,6 +900,9 @@ actor PantryArchiveWorker {
                 try Task.checkCancellation()
                 guard !(try Self.dependencies(item, originID: source.descriptor.originID)).contains(where: { $0.originID == context.workspaceID }) else { throw Failure.invalid }
                 switch item {
+                case .historical(.price(let origin, let fact)) where origin == source.descriptor.originID:
+                    let row = try PantryPriceCodec.row(fact)
+                    try index.putMetadata(kind: "priceRestoration", id: row.id.uuidString + "/" + String(row.revision), bytes: encoder.encode(row))
                 case .historical(.acquisition(let origin, let fact)) where origin == source.descriptor.originID:
                     let row = try PantryAcquisitionCodec.row(fact)
                     try index.putMetadata(kind: "receiptRestoration", id: row.id.uuidString, bytes: encoder.encode(row))
@@ -926,6 +934,12 @@ actor PantryArchiveWorker {
         try index.forEachMetadata(kind: "receiptRestoration") { _, bytes in
             if acquisitions.count == InventoryPersistenceLimits.batchItems || size + bytes.count + 2048 > InventoryPersistenceLimits.batchBytes { try flush() }
             acquisitions.append(try JSONDecoder().decode(InventoryAcquisitionRow.self, from: bytes))
+            size += bytes.count + 1
+        }
+        try flush()
+        try index.forEachMetadata(kind: "priceRestoration") { _, bytes in
+            if prices.count == InventoryPersistenceLimits.batchItems || size + bytes.count + 2048 > InventoryPersistenceLimits.batchBytes { try flush() }
+            prices.append(try JSONDecoder().decode(InventoryPriceRow.self, from: bytes))
             size += bytes.count + 1
         }
         try flush(); try Task.checkCancellation()

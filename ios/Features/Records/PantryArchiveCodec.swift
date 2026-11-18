@@ -51,6 +51,7 @@ enum PantryArchiveCodec {
         case packPending(PantryPackSelectionPendingStore.Entry)
         case projection(ProjectionEvidence)
         case acquisition(originID: UUID, ReceiptAcquisition)
+        case price(originID: UUID, PrivatePriceEvidence)
         case originalLot(InventoryLot)
         case originalObservation(originID: UUID, InventoryObservation)
         case originalEvent(InventoryEvent)
@@ -237,6 +238,19 @@ enum PantryArchiveCodec {
             try validateEvent(event, observations: observations)
         }
         try validateEventReplay(value, observations: observations)
+        var priceRevisions: [UUID: [UUID: [Int64: PrivatePriceEvidence]]] = [:]
+        for case .price(let origin, let price) in value.history {
+            guard priceRevisions[origin, default: [:]][price.id, default: [:]].updateValue(price, forKey: price.revision) == nil else { throw Failure.invalid }
+            if origin == value.descriptor.originID, let lot = price.linkedLotID {
+                guard let physical = lots[lot], physical.foodID == price.foodID else { throw Failure.invalid }
+            }
+        }
+        for origin in priceRevisions.values {
+            for revisions in origin.values {
+                guard let first = revisions[1], revisions.keys.max() == Int64(revisions.count),
+                      revisions.values.allSatisfy({ $0.source == first.source && $0.linkedLotID == first.linkedLotID && $0.foodID == first.foodID }) else { throw Failure.invalid }
+            }
+        }
         var acquisitions: [UUID: [UUID: ReceiptAcquisition]] = [:]
         for case .acquisition(let origin, let row) in value.history {
             guard acquisitions[origin, default: [:]].updateValue(row, forKey: row.id) == nil else { throw Failure.invalid }
@@ -246,6 +260,17 @@ enum PantryArchiveCodec {
                 if origin == value.descriptor.originID { try PantryAcquisitionCodec.validateLot(row, lot: lots[row.lotID]) }
                 if let id = row.supersedesID {
                     guard let prior = rows[id], try prior.correctingPaidTotal(row.paidLineTotal) == row else { throw Failure.invalid }
+                }
+            }
+        }
+        for (origin, prices) in priceRevisions {
+            for revisions in prices.values {
+                for adjustment in revisions.values {
+                    guard case .adjustment(let target, let version, _) = adjustment.source else { continue }
+                    let receiptID = ReceiptAcquisition.identity(["observation", target.uuidString, String(version)])
+                    let candidate = try prices[target]?[version] ?? acquisitions[origin]?[receiptID].map(PrivatePriceEvidence.init(receipt:))
+                    guard let candidate else { throw Failure.invalid }
+                    try adjustment.validateAdjustmentTarget(candidate)
                 }
             }
         }
@@ -359,6 +384,9 @@ enum PantryArchiveCodec {
     }
     static func validateHistory(_ history: History, at date: Date) throws {
         switch history {
+        case .price(_, let evidence):
+            _ = try PantryPriceCodec.row(evidence)
+            guard evidence.date <= date else { throw Failure.invalid }
         case .acquisition(_, let fact):
             try fact.validate()
             guard fact.purchaseDate <= date else { throw Failure.invalid }

@@ -5,7 +5,7 @@ extension ComparisonDatabase {
   func migrateInventoryErasure() throws {
     try transaction {
       let version = try integer("PRAGMA user_version")
-      if (4...6).contains(version) {
+      if (4...7).contains(version) {
         try validateInventoryErasure()
         return
       }
@@ -377,6 +377,7 @@ extension ComparisonStore {
     // bytes. Identity-only manifests remain and can never activate after cancellation.
     try database.run(
       "UPDATE inventory_migrations SET status='cancelled',plan=NULL WHERE status='staging'", [])
+    try database.run("DELETE FROM inventory_staged_prices WHERE migration_id IN (SELECT id FROM inventory_migrations WHERE status='cancelled')", [])
     try database.run("DELETE FROM inventory_staged_acquisitions WHERE migration_id IN (SELECT id FROM inventory_migrations WHERE status='cancelled')", [])
     try database.run(
       "DELETE FROM inventory_staged_records WHERE migration_id IN (SELECT id FROM inventory_migrations WHERE status='cancelled')",
@@ -392,7 +393,9 @@ extension ComparisonStore {
     try database.run(
       "DELETE FROM inventory_erasure_entries WHERE operation_id IN (SELECT id FROM inventory_erasures WHERE status='cancelled')",
       [])
+    if let price = plan.price { return (try database.erasePrice(price), 0, 0) }
     if plan.scope == .origin {
+      try database.run("DELETE FROM inventory_prices", [])
       let records = try database.integer("SELECT count(*) FROM inventory_heads")
       let comparisons = try database.integer("SELECT count(*) FROM comparisons")
       try database.run(

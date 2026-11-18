@@ -84,6 +84,17 @@ import RecordArchive
         var lots: [InventoryLot] = [], observations: [InventoryObservation] = [], events: [InventoryEvent] = []
         var claims: [InventoryReservation] = [], links: [PantryPersistenceCodec.SourceLink] = []
         var history: [PantryArchiveCodec.History] = [], intents: [InventoryRecord] = [], evidence: [Evidence] = []
+        var priceCursor: InventoryPriceRow?
+        while true {
+            let page = try await inventory.priceRows(after: priceCursor, latestOnly: false)
+            try access()
+            for row in page {
+                try account(row.payload.count)
+                history.append(.price(originID: inventory.workspaceID, try PantryPriceCodec.evidence(row)))
+            }
+            guard let last = page.last else { break }
+            priceCursor = last
+        }
         var acquisitionCursor: UUID?
         while true {
             let page = try await inventory.acquisitionRows(after: acquisitionCursor)
@@ -535,6 +546,18 @@ extension PantryArchiveCapture {
                 }
                 if page.count < 200 { break }; cursor = page.last?.key.id
             }
+        }
+        var priceCursor: InventoryPriceRow?
+        while true {
+            let page = try await store.priceRows(after: priceCursor, latestOnly: false)
+            try authorize()
+            for row in page {
+                let item = PantryArchiveCodec.Item.historical(.price(originID: store.workspaceID, try PantryPriceCodec.evidence(row)))
+                try await worker.append(ArchiveCodec.canonical(item), to: job)
+                try authorize()
+            }
+            guard let last = page.last else { break }
+            priceCursor = last
         }
         var acquisitionCursor: UUID?
         while true {

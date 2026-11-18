@@ -48,6 +48,13 @@ import RecordArchive
             try access()
             state = initial
             token = initialToken
+            var priceCursor: UUID?
+            repeat {
+                let page = try await inventory.retiredPriceIDs(after: priceCursor, limit: 100)
+                try access()
+                rules.prices.formUnion(page)
+                priceCursor = page.count == 100 ? page.last : nil
+            } while priceCursor != nil
             for kind in InventoryRecordKind.allCases {
                 var cursor: UUID?
                 repeat {
@@ -111,6 +118,7 @@ import RecordArchive
         let origin: UUID
         let retiredOrigin: Bool
         var keys = Set<InventoryRecordKey>()
+        var prices = Set<UUID>()
         var sources = [UUID: Set<String>]()
         var floors = [UUID: Int64]()
         var comparisons = Set<UUID>()
@@ -179,7 +187,7 @@ import RecordArchive
             }
         }
         var hasErasures: Bool {
-            retiredOrigin || !retiredInventoryOrigins.isEmpty || !keys.isEmpty || !sources.isEmpty || !floors.isEmpty || !comparisons.isEmpty || !ledgers.isEmpty
+            retiredOrigin || !retiredInventoryOrigins.isEmpty || !prices.isEmpty || !keys.isEmpty || !sources.isEmpty || !floors.isEmpty || !comparisons.isEmpty || !ledgers.isEmpty
         }
         func checkOrigin(_ id: UUID) throws {
             if (retiredOrigin && origin == id) || retiredInventoryOrigins.contains(id) { throw Failure.retired }
@@ -255,6 +263,13 @@ import RecordArchive
         }
         func check(_ history: PantryArchiveCodec.History) throws {
             switch history {
+            case .price(let namespace, let price):
+                try checkOrigin(namespace)
+                if namespace == origin {
+                    if prices.contains(price.id) { throw Failure.retired }
+                    if case .adjustment(let target, _, _) = price.source, prices.contains(target) { throw Failure.retired }
+                }
+                if let lot = price.linkedLotID { try key(.lot, lot, namespace) }
             case .acquisition(let origin, let row):
                 try key(.lot, row.lotID, origin)
                 if let pickup = row.savedPickup { try journeyID(pickup.id, pickup.originID) }

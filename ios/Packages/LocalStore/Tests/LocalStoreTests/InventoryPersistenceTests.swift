@@ -26,6 +26,44 @@ final class InventoryPersistenceTests: XCTestCase {
             expectedRevision: state.revision, request: Data([1]), mode: .activate, sourceToken: token, writes: writes))
     }
 
+    func testStandaloneReviewedPricesPreserveRevisionsAndEraseWithoutStockOrSettlement() async throws {
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        let initial = try await activate(store)
+        let id = UUID()
+        let first = InventoryPriceRow(id: id, revision: 1, lotID: nil, payload: Data([1]))
+        let firstWrite = InventoryBatch(workspaceID: store.workspaceID, operationID: UUID(),
+            expectedRevision: initial.revision, request: first.payload, price: first)
+        let saved = try await store.commitInventory(firstWrite)
+        let replay = try await store.commitInventory(firstWrite)
+        XCTAssertEqual(saved, replay)
+        let second = InventoryPriceRow(id: id, revision: 2, lotID: nil, payload: Data([2]))
+        let correction = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(),
+            expectedRevision: saved.revision, request: second.payload, price: second))
+        let current = try await store.priceRows()
+        let history = try await store.priceRows(id: id, latestOnly: false)
+        let lots = try await store.inventoryRecords(kind: .lot)
+        XCTAssertEqual(current, [second])
+        XCTAssertEqual(history, [first, second])
+        XCTAssertTrue(lots.isEmpty)
+        let operationID = UUID()
+        let token = try await store.inventorySourceToken()
+        _ = try await store.beginInventoryErasure(.init(workspaceID: store.workspaceID, operationID: operationID,
+            expectedRevision: correction.revision, sourceToken: token, price: .init(id: id, revision: 2),
+            chunkCount: 0, entryCount: 0, manifestDigest: InventoryErasureManifest.initialDigest))
+        _ = try await store.finishInventoryErasure(id: operationID)
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        let old = try await reopened.priceRows(id: id, latestOnly: false)
+        let erased = try await reopened.priceWasErased(id)
+        XCTAssertTrue(old.isEmpty)
+        XCTAssertTrue(erased)
+        do {
+            _ = try await reopened.commitInventory(firstWrite)
+            XCTFail("A saved price cannot be replayed after erasure")
+        } catch ComparisonStoreError.erased {}
+        try await reopened.close()
+    }
+
     func testOptInMigrationPreservesSourcesAndGenericDatabaseRemainsVersionTwo() async throws {
         let legacy = try ComparisonStore(url: url)
         let saved = try await legacy.save(id: UUID(), title: "Original", payload: Data([9, 8, 7]), savedAt: Date(timeIntervalSince1970: 123))
@@ -35,9 +73,9 @@ final class InventoryPersistenceTests: XCTestCase {
         XCTAssertEqual(store.workspaceID, workspace)
         let snapshot = try await store.inventoryCutoverSnapshot()
         XCTAssertEqual(snapshot.sources, [saved])
-        XCTAssertEqual(try scalar("PRAGMA user_version"), 6)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 7)
         try await store.close()
-        XCTAssertThrowsError(try ComparisonStore(url: url)) { XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(6)) }
+        XCTAssertThrowsError(try ComparisonStore(url: url)) { XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(7)) }
         let other = directory.appendingPathComponent("comparisons.sqlite")
         let generic = try ComparisonStore(url: other)
         _ = try await generic.save(id: UUID(), title: "Pack", payload: Data([1]), savedAt: Date())
@@ -56,12 +94,12 @@ final class InventoryPersistenceTests: XCTestCase {
         _ = try await original.commitInventory(.init(workspaceID: original.workspaceID, operationID: UUID(), expectedRevision: 1,
             request: Data([3]), writes: [parent], acquisitions: [row]))
         try await original.close()
-        try sql("DROP TABLE inventory_receipt_aliases; PRAGMA user_version=5;")
+        try sql("DROP TABLE inventory_prices; DROP TABLE inventory_staged_prices; DROP TABLE inventory_retired_prices; DROP TABLE inventory_receipt_aliases; PRAGMA user_version=5;")
         let migrated = try ComparisonStore(url: url, inventoryEnabled: true)
         let rows = try await migrated.acquisitionRows(), aliases = try await migrated.receiptAliasCount()
         XCTAssertEqual(rows, [row])
         XCTAssertEqual(aliases, 0)
-        XCTAssertEqual(try scalar("PRAGMA user_version"), 6)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 7)
         try await migrated.close()
     }
 

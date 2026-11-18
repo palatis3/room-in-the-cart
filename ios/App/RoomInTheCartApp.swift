@@ -503,6 +503,11 @@ struct RecordsView: View {
             }
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry() }
             RecordsRecoveryLink()
+            if pickup.pantryRouteAvailable {
+                NavigationLink(pantryText("Private price history")) {
+                    PantrySetupView(pickup: pickup, ledger: ledger, opensPriceHistory: true)
+                }.accessibilityIdentifier("records.privatePrices")
+            }
             NavigationLink(HistoryCopy.text("Prices and period budgets")) {
                 HistoryRecordsEntryView(household: household)
             }.accessibilityIdentifier("records.priceBudgetHistory")
