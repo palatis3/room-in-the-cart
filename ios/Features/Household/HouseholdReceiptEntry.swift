@@ -102,7 +102,7 @@ struct HouseholdReceiptEntry: View {
         Form {
             Section(householdPantryText("Shared pantry destination")) {
                 Text(household).font(.headline)
-                Text(householdPantryText("Adults with pantry access can see the selected receipt wording, amounts and prices. The original file stays on this device."))
+                Text(householdPantryText("Adults with pantry access can see the store, date, any receipt reference you enter and the selected food lines, including original wording, quantities, storage location and any prices you enter. The original file stays on this device."))
             }
             if let reviewed {
                 Section(pantryText("Confirm receipt lines")) {
