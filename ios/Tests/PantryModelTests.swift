@@ -57,17 +57,23 @@ final class PantryModelTests: XCTestCase {
             return try XCTUnwrap(batch.candidates.first)
         }
 
-        let firstLine = String(repeating: "A", count: 508) + "\n"
-        let clipped = try candidate(firstLine + "1 gallon")
-        XCTAssertTrue(clipped.original.hasSuffix("1 g"))
+        let firstLine = String(repeating: "A", count: 505) + "\n"
+        let clipped = try candidate(firstLine + "1 gallon of milk")
+        XCTAssertTrue(clipped.original.hasSuffix("1 g…"))
+        XCTAssertEqual(clipped.original.utf8.count, 512)
         XCTAssertTrue(clipped.perPack.isEmpty)
+        let oldBoundary = String(repeating: "A", count: 508) + "\n1 g"
+        XCTAssertTrue(try candidate(oldBoundary + "allon").perPack.isEmpty)
+        let exactLimit = try candidate(oldBoundary)
+        XCTAssertEqual(exactLimit.perPack, "1")
+        XCTAssertTrue(exactLimit.original.hasSuffix("1 g"))
         let complete = try candidate(firstLine + "1 g\nOther wording")
         XCTAssertEqual(complete.perPack, "1")
         XCTAssertEqual(complete.unit, .gram)
 
-        let spanishLabel = "Café\n" + String(repeating: "x", count: 505)
-        let unicode = try candidate(spanishLabel + "ñ")
-        XCTAssertEqual(unicode.original, spanishLabel)
+        let spanishLabel = "Café\n" + String(repeating: "x", count: 502)
+        let unicode = try candidate(spanishLabel + "ñandú")
+        XCTAssertEqual(unicode.original, spanishLabel + "…")
         XCTAssertEqual(unicode.name, "Café")
     }
 
