@@ -70,10 +70,13 @@ struct PantryLiveStockProjection {
 
     /// Already free after ALL shops' commitments. Feed these only to new-demand
     /// previews, without subtracting existing needs/pins from them a second time.
-    var globallyFreeLots: [ConfirmedStockLot] {
+    var globallyFreeLots: [ConfirmedStockLot] { freeLots(identifiedBy: \.readerID) }
+    var canonicalFreeLots: [ConfirmedStockLot] { freeLots(identifiedBy: \.id) }
+
+    private func freeLots(identifiedBy id: KeyPath<Lot, UUID>) -> [ConfirmedStockLot] {
         lots.compactMap { row in
             guard let free = row.free, free.amount > .zero else { return nil }
-            return ConfirmedStockLot(id: row.readerID, foodID: row.current.foodID, name: row.current.name,
+            return ConfirmedStockLot(id: row[keyPath: id], foodID: row.current.foodID, name: row.current.name,
                 usable: free, confirmedAt: row.current.confirmedAt,
                 source: row.current.location == .freezer ? .freezer : .pantry, useFirst: row.current.useFirst)
         }

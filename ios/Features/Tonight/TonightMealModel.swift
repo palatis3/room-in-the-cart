@@ -6,6 +6,18 @@ import RecordArchive
 /// A private, no-shop read. The source library and pantry basis are reloaded before
 /// opening a choice; reviewed names never allocate another shop's held stock.
 @MainActor final class TonightMealModel: ObservableObject {
+    struct Batch: Equatable {
+        let originID: UUID
+        let lotID: UUID
+    }
+    let batch: Batch?
+    init(batch: Batch? = nil) { self.batch = batch }
+
+    var selectedLot: ConfirmedStockLot? {
+        guard let batch, let input, batch.originID == input.basis.originID else { return nil }
+        return input.freeLots.first { $0.id == batch.lotID && !input.unresolvedFoods.contains($0.foodID) }
+    }
+
     struct Food: Identifiable, Equatable {
         let id: UUID
         let name: String
@@ -33,6 +45,8 @@ import RecordArchive
     enum Failure: Error { case unavailable, stale, recipeChanged }
     @Published private(set) var input: Input?
     @Published private(set) var reviews: [PantryMealMatcher.Review] = []
+    @Published private(set) var firstRecipeID: UUID?
+    @Published private(set) var followingMeals: [PantryMealMatcher.Review] = []
     @Published private(set) var matches: [UUID: [UUID: UUID]] = [:]
     @Published private(set) var busy = false
     @Published private(set) var failed = false
@@ -74,6 +88,10 @@ import RecordArchive
         try rebuild()
     }
     var suggestions: [PantryMealMatcher.Review] {
+        if let batch {
+            guard selectedLot != nil else { return [] }
+            return DinnerLibraryPairings.usingBatch(batch.lotID, reviews: reviews)
+        }
         guard let input, let owner = input.feedbackOwner else { return PantryMealMatcher.ranked(reviews) }
         return PantryMealMatcher.ranked(reviews, feedback: input.workspace.mealFeedbackSignals(owner: owner, at: Date()))
     }
@@ -82,6 +100,7 @@ import RecordArchive
         return reviews.filter { !suggestions.contains($0.id) }
     }
     func invalidate() {
+        clearPairing()
         generation = UUID(); input = nil; matches = [:]; foodEvidence = [:]; selectedVersions = [:]; reviews = []; busy = false; failed = false
     }
     func refresh(authorize: @escaping () -> Bool, load: () async throws -> Input) async {
@@ -94,6 +113,7 @@ import RecordArchive
             let next = try await load()
             guard token == generation, authorize() else { invalidate(); return }
             if let old = input, old.basis != next.basis || old.workspace.withoutMealFeedback() != next.workspace.withoutMealFeedback() || old.sources != next.sources {
+                clearPairing()
                 matches = [:]; foodEvidence = [:]; selectedVersions = [:]
             }
             input = next
@@ -101,6 +121,7 @@ import RecordArchive
             failed = false
         } catch {
             guard token == generation else { return }
+            clearPairing()
             input = nil; reviews = []; matches = [:]; foodEvidence = [:]; selectedVersions = [:]; failed = true
         }
     }
@@ -151,11 +172,32 @@ import RecordArchive
     }
     private func rebuild() throws {
         guard let input else { return }
-        reviews = try recipes.map {
+        reviews = try evaluate(recipes, lots: input.freeLots, input: input)
+        if let firstRecipeID { try showFollowingMeals(after: firstRecipeID) }
+    }
+    private func evaluate(_ recipes: [MealTemplate], lots: [ConfirmedStockLot], input: Input) throws -> [PantryMealMatcher.Review] {
+        try recipes.map {
             try PantryMealMatcher.review(recipe: $0, reviewedFoods: matches[$0.id, default: [:]],
-                globallyFreeLots: input.freeLots, unresolvedFoods: input.unresolvedFoods,
-                profile: input.workspace.dinnerPlanning.privateMealPreferences, foodEvidence: foodEvidence)
+                globallyFreeLots: lots, unresolvedFoods: input.unresolvedFoods,
+                profile: input.workspace.dinnerPlanning.privateMealPreferences, foodEvidence: foodEvidence, firstLotID: selectedLot?.id)
         }
+    }
+    func clearPairing() {
+        firstRecipeID = nil
+        followingMeals = []
+    }
+    func showFollowingMeals(after recipeID: UUID) throws {
+        clearPairing()
+        guard let input, let lot = selectedLot, let first = reviews.first(where: { $0.id == recipeID }),
+              first.batchUse?.lotID == lot.id, first.canProjectRemainder else { return }
+        let projected = try PantryMealMatcher.review(recipe: first.recipe, reviewedFoods: matches[first.id, default: [:]],
+            globallyFreeLots: input.freeLots, unresolvedFoods: input.unresolvedFoods,
+            profile: input.workspace.dinnerPlanning.privateMealPreferences, foodEvidence: foodEvidence,
+            firstLotID: lot.id, projectRemainder: true)
+        guard let remaining = projected.stockAfterMeal else { return }
+        let candidates = try evaluate(recipes.filter { $0.id != recipeID }, lots: remaining, input: input)
+        followingMeals = DinnerLibraryPairings.usingBatch(lot.id, reviews: candidates.filter { Self.canChoose($0) })
+        firstRecipeID = recipeID
     }
     static func input(workspace: LedgerWorkspace, ledgerRevision: Int64,
                       context: PantryPackStockReview.Context, sources: [Source]) throws -> Input {
@@ -185,6 +227,6 @@ import RecordArchive
         let unresolved = Set(live.lots.filter { $0.free == nil }.map(\.current.foodID)).subtracting(resolved)
             .union(context.snapshot.reservations.filter { $0.state == .unresolved }.map(\.foodID))
         return Input(workspace: workspace, ledgerRevision: ledgerRevision, basis: basis, foods: foods,
-                     freeLots: live.globallyFreeLots, unresolvedFoods: unresolved, sources: sources)
+                     freeLots: live.canonicalFreeLots, unresolvedFoods: unresolved, sources: sources)
     }
 }
