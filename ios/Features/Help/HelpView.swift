@@ -118,6 +118,7 @@ struct HelpPrivacyView: View {
             Section(helpText("Photos and speech")) {
                 Text(helpText("Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file."))
                 Text(helpText("When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor."))
+                Text(helpText("For online wording or match suggestions, review the selected wording and any choices shown for comparison before sending them to OpenAI. You decide which suggestion to use in the normal editor."))
             }
             Section(helpText("Export and deletion")) {
                 Text(helpText("Open Records, then Recovery, exports and saved records to preview an export, recover a file or review local deletion. Removing local work does not remove copies you already saved or sent."))

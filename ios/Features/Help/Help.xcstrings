@@ -1885,6 +1885,22 @@
           }
         }
       }
+    },
+    "For online wording or match suggestions, review the selected wording and any choices shown for comparison before sending them to OpenAI. You decide which suggestion to use in the normal editor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For online wording or match suggestions, review the selected wording and any choices shown for comparison before sending them to OpenAI. You decide which suggestion to use in the normal editor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para pedir sugerencias de texto o coincidencias en línea, revisa el texto seleccionado y las opciones de comparación antes de enviarlos a OpenAI. Tú decides qué sugerencia usar en el editor habitual."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
