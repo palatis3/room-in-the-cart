@@ -256,10 +256,14 @@ extension PickupJourney {
         Set(pickup?.receipts.filter { $0.receivedAt <= instant }.map(\.key.orderLineID) ?? [])
     }
 
-    func shouldResumeArrival(at instant: Date) -> Bool {
-        guard closedAt == nil, basket?.phase == .reportedPlaced else { return false }
+    func unobservedRetailerLines(at instant: Date) -> [PickupOrderLine] {
+        guard closedAt == nil, basket?.phase == .reportedPlaced else { return [] }
         let observed = observedArrivalLines(at: instant)
-        let outstanding = Set(retailerOrderLines.map(\.id)).subtracting(observed)
+        return retailerOrderLines.filter { !observed.contains($0.id) }
+    }
+
+    func shouldResumeArrival(at instant: Date) -> Bool {
+        let outstanding = Set(unobservedRetailerLines(at: instant).map(\.id))
         // The separate offer shortcut already resumes an outstanding line, including after its cutoff.
         return !outstanding.isEmpty && !offers.contains { outstanding.contains($0.lineID) }
     }

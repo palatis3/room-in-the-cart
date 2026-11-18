@@ -2198,10 +2198,10 @@ import XCTest
             ("Physical amount received", "4"), ("Confirmed usable amount (optional)", "4"),
         ], doneIdentifier: "arrival.keyboardDone")
         enableSwitch("I checked the identity, units and meal constraints")
-        try fillReviewedFields([("Segment ID (distinct for each split delivery)", "segment-1")],
-                               doneIdentifier: "arrival.keyboardDone")
         tap(app.buttons["Save observed arrival"])
-        assertText("segment-1")
+        let savedArrival = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Correct usable amount")).firstMatch
+        reveal(savedArrival)
+        XCTAssertTrue(savedArrival.exists)
         capture("Free-observed-short-fill")
         tap(app.buttons["Review protected portions and repair meals"])
         assertText("Lunch")

@@ -13097,6 +13097,134 @@
           }
         }
       }
+    },
+    "Delivery references (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivery references (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencias de la entrega (opcional)"
+          }
+        }
+      }
+    },
+    "Use the receipt number or a label for this part of a split delivery if you have one.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the receipt number or a label for this part of a split delivery if you have one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si tienes el número del recibo o una etiqueta para esta parte de una entrega dividida, puedes indicarlos aquí."
+          }
+        }
+      }
+    },
+    "Receipt or delivery reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt or delivery reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia del recibo o de la entrega"
+          }
+        }
+      }
+    },
+    "Split delivery reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split delivery reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de esta parte de la entrega"
+          }
+        }
+      }
+    },
+    "Start another delivery for this item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start another delivery for this item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar otra entrega de este artículo"
+          }
+        }
+      }
+    },
+    "An arrival is already saved for this item. Start another delivery to record more, or review the saved arrival below.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An arrival is already saved for this item. Start another delivery to record more, or review the saved arrival below."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay una llegada registrada para este artículo. Inicia otra entrega para registrar más unidades o consulta la llegada guardada más abajo."
+          }
+        }
+      }
+    },
+    "Saved delivery references": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved delivery references"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencias guardadas de la entrega"
+          }
+        }
+      }
+    },
+    "Choose an order line and enter the amount received. For no fill, enter zero.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an order line and enter the amount received. For no fill, enter zero."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un artículo del pedido e introduce la cantidad recibida. Si no se entregó, introduce cero."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
