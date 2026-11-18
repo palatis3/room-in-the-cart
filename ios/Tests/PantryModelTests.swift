@@ -2,6 +2,7 @@ import XCTest
 import CoreDomain
 import LocalStore
 import SQLite3
+import UIKit
 @testable import RoomInTheCart
 
 @MainActor
@@ -42,6 +43,66 @@ final class PantryModelTests: XCTestCase {
             writes: [InventoryWrite(record: InventoryRecord(key: .init(.reservation, claim.id), revision: 1,
                 payload: try JSONEncoder().encode(claim), lotID: lot.id), expectedRevision: 0)]), at: now)
         return claim
+    }
+
+    func testTwoLocalProductPhotosAndRepeatedBarcodeCommitOnlyReviewedPackagesOnce() async throws {
+        let (directory, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let pantry = model(db)
+        await pantry.load()
+        let reader = OnDeviceScanService()
+        func photo(_ text: String) throws -> Data {
+            let bounds = CGRect(x: 0, y: 0, width: 1000, height: 360)
+            let image = UIGraphicsImageRenderer(bounds: bounds).image { context in
+                UIColor.white.setFill(); context.fill(bounds)
+                (text as NSString).draw(in: bounds.insetBy(dx: 45, dy: 45),
+                    withAttributes: [.font: UIFont.systemFont(ofSize: 60), .foregroundColor: UIColor.black])
+            }
+            return try XCTUnwrap(image.jpegData(compressionQuality: 0.9))
+        }
+        let lentils = try await reader.scan(photo("LENTILS\n500 g"))
+        let rice = try await reader.scan(photo("RICE\n1 kg"))
+        XCTAssertTrue(lentils.barcodes.isEmpty && rice.barcodes.isEmpty)
+        XCTAssertTrue(lentils.originalText.localizedCaseInsensitiveContains("lentils"))
+        XCTAssertTrue(rice.originalText.localizedCaseInsensitiveContains("rice"))
+        var batch = PantryProductBatch(workspaceID: db.workspaceID)
+        XCTAssertEqual(try batch.addPhoto(lentils), 1)
+        XCTAssertEqual(try batch.addPhoto(rice), 1)
+        XCTAssertEqual(try batch.addPhoto(lentils), 0)
+        XCTAssertTrue(try batch.addManual(name: "", code: "3017620422003"))
+        XCTAssertFalse(try batch.addManual(name: "Repeat", code: "03017620422003"))
+        let package = ProductCatalogProposal(barcode: "3017620422003", name: "Proposed jar", quantity: "900 g", fetched: now, modified: nil)
+        batch.candidates[2].use(package)
+        XCTAssertEqual(batch.candidates[2].perPack, "900")
+        XCTAssertTrue(batch.candidates[2].packages.isEmpty)
+        XCTAssertThrowsError(try batch.draft(merchant: "Market", purchaseDate: now, confirmed: true))
+        batch.candidates[0].name = "Green lentils"
+        batch.candidates[0].perPack = "450"; batch.candidates[0].unit = .gram; batch.candidates[0].packages = "1"
+        batch.candidates[1].name = "Brown rice"; batch.candidates[1].perPack = "2"
+        batch.candidates[1].included = false
+        batch.candidates[2].name = "Reviewed bean jar"; batch.candidates[2].perPack = "375"
+        batch.candidates[2].unit = .gram; batch.candidates[2].packages = "2"
+        XCTAssertThrowsError(try batch.draft(merchant: "Market", purchaseDate: now, confirmed: false))
+        let initial = try await pantry.reviewReceipt(batch.draft(merchant: "Market", purchaseDate: now, confirmed: true))
+        XCTAssertEqual(initial.facts.count, 2)
+        XCTAssertEqual(pantry.snapshot?.lots.count, 0)
+        batch.candidates[0].perPack = "400"
+        let draft = try batch.draft(merchant: "Market", purchaseDate: now, confirmed: true)
+        let final = try await pantry.reviewReceipt(draft)
+        XCTAssertEqual(final.facts.map(\.received.amount), [try Rational(400), try Rational(750)])
+        XCTAssertTrue(final.facts[1].originalLine.contains("Open Food Facts"))
+        try await pantry.saveReceipt(final)
+        let replay = try await pantry.reviewReceipt(draft)
+        XCTAssertNil(replay.batch)
+        try await pantry.saveReceipt(replay)
+        try await db.close()
+        let reopened = try ComparisonStore(url: directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        let fresh = model(reopened); await fresh.load()
+        XCTAssertEqual(Set(try XCTUnwrap(fresh.snapshot).lots.map(\.name)), ["Green lentils", "Reviewed bean jar"])
+        let history = try await fresh.receiptHistory()
+        XCTAssertEqual(history.count, 2)
+        XCTAssertEqual(history.first(where: { $0.name == "Reviewed bean jar" })?.usable.amount, try Rational(750))
+        try await reopened.close()
     }
 
     func testReviewCancelAndExplicitFoodIdentityNeverMergeNames() async throws {

@@ -16,6 +16,47 @@ import XCTest
     }
 
 #if DEBUG && targetEnvironment(simulator)
+    func testProductBatchManualBarcodeRepeatNeedsTwoPackagesAndConfirmedFoodSurvivesRelaunch() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.productBatch"])
+        let code = app.textFields["productBatch.code"]
+        tap(code); code.typeText("LOCAL-OATS")
+        tap(app.buttons["productBatch.add"])
+        tap(code); code.typeText("LOCAL-OATS")
+        tap(app.buttons["productBatch.add"])
+        XCTAssertTrue(app.staticTexts["productBatch.status"].label.contains("Already in this batch"))
+        XCTAssertFalse(app.buttons["productBatch.row.1"].exists)
+        tap(app.buttons["productBatch.row.0"])
+        let name = app.textFields["productBatch.productName"]
+        tap(name); name.typeText("Rolled oats")
+        let size = app.textFields["productBatch.packSize"]
+        tap(size); size.typeText("1")
+        let count = app.textFields["productBatch.packCount"]
+        tap(count); count.typeText("2")
+        tap(app.buttons["productBatch.editorDone"])
+        tap(app.navigationBars["Review product"].buttons.firstMatch)
+        let store = app.textFields["productBatch.merchant"]
+        tap(store); store.typeText("Market")
+        tap(app.buttons["productBatch.keyboardDone"])
+        enableSwitch("productBatch.received")
+        tap(app.buttons["productBatch.review"])
+        XCTAssertTrue(app.buttons["productBatch.commit"].waitForExistence(timeout: 8))
+        tap(app.buttons["Edit batch"])
+        XCTAssertTrue(app.buttons["productBatch.row.0"].exists)
+        tap(app.buttons["productBatch.review"])
+        tap(app.buttons["productBatch.commit"])
+        XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
+        app.terminate()
+        launch(reset: false)
+        tap(app.buttons["shop.myPantry"])
+        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Rolled oats")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 8))
+        XCTAssertTrue(row.label.contains("2"))
+        capture("Two deliberately received packages on one pantry batch")
+    }
+
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
         launch(reset: true)
         let pantry = app.buttons["shop.myPantry"]
