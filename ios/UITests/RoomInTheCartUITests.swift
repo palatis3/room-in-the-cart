@@ -177,7 +177,9 @@ final class RoomInTheCartUITests: XCTestCase {
     func testConfirmedComparisonDeletionSurvivesRestart() throws {
         launch()
         openEmptyComparison()
-        type([("itemName", "Fictional record to delete"), ("needed", "2"), ("stock", "3")])
+        type([("itemName", "Fictional record to delete")])
+        type([("needed", "2")])
+        type([("stock", "3")])
         compare()
         assertContains("No packs needed for this item.")
         saveAndAssertDurableStatus()
@@ -185,7 +187,11 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["Recovery, exports and saved records"])
         tap(app.buttons["Delete this source"])
         tap(app.buttons["Delete from this iPhone"])
-        assertContains("The selected source was deleted from this iPhone.")
+        let status = app.staticTexts["records.status"]
+        let deletionCompleted = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND hittable == true AND label == %@",
+                                   "The selected source was deleted from this iPhone."), object: status)
+        XCTAssertEqual(XCTWaiter.wait(for: [deletionCompleted], timeout: 8), .completed)
         screenshot("Confirmed-fictional-source-deletion")
         app.terminate()
         launch(reset: false)
@@ -824,7 +830,7 @@ final class RoomInTheCartUITests: XCTestCase {
             XCTAssertTrue(keyboard.exists || keyboard.waitForExistence(timeout: 5))
             // For a standalone whole number, operate the displayed keys before
             // dismissing the numeric keyboard. The needed amount may have multiple digits.
-            let numericFields = ["needed", "aQuantity", "aPrice", "bQuantity", "bPrice", "itemCap"]
+            let numericFields = ["needed", "stock", "aQuantity", "aPrice", "bQuantity", "bPrice", "itemCap"]
             if fields.count == 1, numericFields.contains(id), !text.isEmpty,
                text.allSatisfy({ $0.isASCII && $0.isNumber }) {
                 for digit in text {
