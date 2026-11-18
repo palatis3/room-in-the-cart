@@ -21,3 +21,19 @@ Application rechecks the exact source, retained evidence, request and shop versi
 To undo, send a new ordinary preview with `{"choice":"undoSameItem","operationId":"<match operation UUID>"}` and apply its preview. This restores the prior pending or clarified status. A sealed shop routes the reopened request to the next shop. A changed selected-request revision prevents an older match from overwriting a later decision. Exact retries use the original envelope and replay identity.
 
 A later meal revision or corrected source purchase invalidates the old proof and reopens the dependent request when the match still owns its current revision. Historical source revisions remain private until their normal erasure. Erasure of a referenced meal revision, purchase observation or decision preview removes its match and replay material, and restores the remaining author's applicable request. Reopened requests can receive a fresh independent decision from the inbox.
+
+## Reviewing two open requests
+
+Migration 061 adds the separate shopper capability `request_pair_review`. A client can offer “Same item” and “Additional quantity” for two distinct, current pending or clarified requests in the same draft shop. Both request authors must still have access, and the original item names must match after Unicode normalization, whitespace folding and case folding. An author may have written both requests. Request IDs distinguish two requests even when their authors have the same display name. The flow needs no meal, purchase or basket line.
+
+Use the existing preview endpoint with the selected request’s normal base. Send one of these decisions.
+
+```json
+{"choice":"reviewRequestPair","otherRequestId":"<request UUID>","otherRequestRevision":1,"relationship":"sameItem"}
+{"choice":"reviewRequestPair","otherRequestId":"<request UUID>","otherRequestRevision":1,"relationship":"additionalQuantity"}
+{"choice":"undoRequestPair","operationId":"<pair operation UUID>"}
+```
+
+Each preview includes `requestPairEvidence` with the other request’s ID, revision, original item, nullable quantity, author alias and reviewed relationship. The checkout before and after is identical, and both purchase acceptance flags are false. Apply through `request.apply`. Its receipt carries the selected request’s original disposition and revision. Both authors keep their original wording, quantities, open statuses and ability to edit or withdraw. A shopper who wants to buy additional packs later uses the existing purchase and budget review.
+
+Each shopper inbox row with a current relationship contains a `requestPairs` array with `otherRequestId`, `otherRequestRevision`, `relationship` and `operationId`. Own-request projections omit this field. Either side may start Undo. Relationships concern just the selected two IDs. A later edit retires its affected pairs and a withdrawal or erasure removes the private preview and response material. Exact retries recheck current authority and both source authors. A client connected to a server without `request_pair_review` leaves the two requests separate.

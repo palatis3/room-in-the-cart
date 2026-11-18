@@ -29,6 +29,8 @@ export const decisionSchema = z.discriminatedUnion('choice', [
   z.object({ choice: z.literal('add'), line: lineSchema, promote: z.boolean().default(false), reviewedPackEvidence: reviewedPackEvidenceSchema.optional() }).strict(),
   z.object({ choice: z.literal('link'), lineId: uuid, promote: z.boolean().default(false) }).strict(),
   z.object({choice:z.literal('sameItem'),target:sameItemTarget}).strict(),
+  z.object({choice:z.literal('reviewRequestPair'),otherRequestId:uuid.toLowerCase(),otherRequestRevision:z.int().positive(),relationship:z.enum(['sameItem','additionalQuantity'])}).strict(),
+  z.object({choice:z.literal('undoRequestPair'),operationId:uuid.toLowerCase()}).strict(),
   z.object({choice:z.literal('undoSameItem'),operationId:uuid.toLowerCase()}).strict(),
   z.object({ choice: z.enum(['defer','dismiss','handled']) }).strict(),
  ]).superRefine((decision,ctx)=>{

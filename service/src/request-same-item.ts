@@ -14,12 +14,12 @@ interface Proof {
   purchaseOperation:string|null;
 }
 
-function requireLiveAuthor(repo:HouseholdRepository, request:RequestRow) {
+export function requireLiveAuthor(repo:HouseholdRepository, request:RequestRow) {
   // request_origin checks the actual consent that authorized this child's request.
   if (!request.author_active || request.author_kind !== 'adult' &&
       (!repo.options.allowChildNetwork || request.live_notice !== repo.options.noticeVersion)) throw unavailable();
 }
-const normalized = (value:string) => value.normalize('NFC').trim().replace(/\s+/gu,' ').toLowerCase();
+export const normalizedRequestItem = (value:string) => value.normalize('NFC').trim().replace(/\s+/gu,' ').toLowerCase();
 
 export async function proveSameItem(repo:HouseholdRepository, ctx:Context, shop:Shop, request:RequestRow, target:Target, mode:'review'|'replay'='review'):Promise<Proof> {
   repo.requireShopper(ctx, shop);
@@ -28,7 +28,7 @@ export async function proveSameItem(repo:HouseholdRepository, ctx:Context, shop:
     if (mode === 'review' && shop.phase !== 'draft') throw refresh();
     const page = await readTracking(repo,ctx,shop);
     const fact = page.state?.catalog.find(row => row.id === target.factId);
-    if (!fact || fact.revision !== target.factRevision || normalized(request.original_item) !== normalized(fact.originalText)) throw refresh();
+    if (!fact || fact.revision !== target.factRevision || normalizedRequestItem(request.original_item) !== normalizedRequestItem(fact.originalText)) throw refresh();
     const occurrence = fact.source.kind === 'meal' ? fact.source.occurrenceId :
       fact.source.kind === 'reservation' ? fact.source.originOccurrenceId : null;
     if (!occurrence) throw unavailable();
@@ -40,7 +40,7 @@ export async function proveSameItem(repo:HouseholdRepository, ctx:Context, shop:
       !['placed','closed'].includes(shop.phase)) throw unavailable();
   const source = await repo.request(ctx,target.sourceRequestId,shop.shop_id);
   if (source.status !== 'added' || source.revision !== target.sourceRequestRevision ||
-      normalized(request.original_item) !== normalized(source.original_item)) throw refresh();
+      normalizedRequestItem(request.original_item) !== normalizedRequestItem(source.original_item)) throw refresh();
   requireLiveAuthor(repo,source);
   const {rows} = await ctx.db.query(`SELECT p.operation_id, entry->>'originalItem' AS name, (entry->>'packs')::int AS packs
     FROM ritc.placed_request_link l JOIN ritc.request_purchase_review p USING(household_id,request_id,shop_id,placed_revision)

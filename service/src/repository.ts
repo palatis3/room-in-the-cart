@@ -1,3 +1,4 @@
+import {applyPair,checkPairReplay,inboxPairs,rememberPair,reviewPair} from './request-pair.js';
 import {proveSameItem,rememberSameItem,sameItemUndo,applySameItem,checkSameItemReplay} from './request-same-item.js';
 import {recordTonight,checkTonightReplay} from './household-tonight.js';
 import {checkDraftDinnerSwap} from './shared-dinner-swap.js';
@@ -206,7 +207,7 @@ export class HouseholdRepository {
       ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'} : {}),
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
       capabilities:[...(preferenceAccess?['meal_preferences_read']:[]),
-        ...(preferenceAccess&&ctx.member.organizer?['meal_preferences_admin']:[]),...(pantryAccess?['household_pantry','household_tonight','my_feedback_withdrawal']:[]),...(pantryAccess && isShopper && shop?.placed_revision!=null?['cook_completion','meal_feedback']:[]),...(pantryAccess&&ctx.member.organizer?['household_pantry_grants']:[]),...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','request_same_item','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+        ...(preferenceAccess&&ctx.member.organizer?['meal_preferences_admin']:[]),...(pantryAccess?['household_pantry','household_tonight','my_feedback_withdrawal']:[]),...(pantryAccess && isShopper && shop?.placed_revision!=null?['cook_completion','meal_feedback']:[]),...(pantryAccess&&ctx.member.organizer?['household_pantry_grants']:[]),...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','request_same_item','request_pair_review','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned'|'history-owned'|'requests',after:string|null){
     if(ctx.viewGrantId)throw unavailable();
@@ -279,9 +280,11 @@ export class HouseholdRepository {
       AND (NOT (r.carried_forward OR r.from_previous_shop) OR (r.author_active AND (r.author_kind='adult' OR r.live_notice=$4)))
       ${cursor?'AND (r.received_at,r.request_id)>($5,$6)':''} ORDER BY r.received_at,r.request_id LIMIT 51`,params);
     const rows=result.rows.slice(0,50);
+    const pairs=shop?await inboxPairs(ctx,shop,rows.map(r=>r.request_id),this.carryNotice):undefined;
     const requests=rows.map(r=>({
       ...ownRequest(r),
       ...(shop ? {authorAlias:r.author_alias} : {}),
+      ...(pairs?.has(r.request_id)?{requestPairs:pairs.get(r.request_id)}:{}),
       ...(shop && r.same_item_operation ? {sameItemOperationId:r.same_item_operation} : {}),
       ...(shop && r.linked_line_id
         ? (shop.phase==='draft' ? {draftBasketLineId:r.linked_line_id} : {linkedLineId:r.linked_line_id})
@@ -376,13 +379,15 @@ export class HouseholdRepository {
     const lines=await this.lines(ctx,shopId),previewId=randomUUID();
     const facts=this.previewFacts(shop,r,lines,input.decision);
     const expiresAt=new Date(ctx.now.getTime()+5*60_000);
+    const pair=input.decision.choice==='reviewRequestPair'||input.decision.choice==='undoRequestPair'?await reviewPair(this,ctx,shop,r,input.decision):null;
     const proof=input.decision.choice==='sameItem'?await proveSameItem(this,ctx,shop,r,input.decision.target):null;
     if(input.decision.choice==='undoSameItem')await sameItemUndo(this,ctx,shop,r,input.decision.operationId);
-    const fingerprint=digest({shop,r:ownRequest(r),lines,decision:input.decision,...(proof?{targetProof:proof.digest}:{})});
+    const fingerprint=digest({shop,r:ownRequest(r),lines,decision:input.decision,...(proof?{targetProof:proof.digest}:{}),...(pair?{pairProof:pair.fingerprint}:{})});
     await ctx.db.query(`INSERT INTO ritc.preview(household_id,preview_id,shop_id,actor_id,request_id,shop_revision,request_revision,authority_epoch,decision,fingerprint,expires_at)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[ctx.householdId,previewId,shopId,ctx.member.member_id,r.request_id,shop.revision,r.revision,shop.authority_epoch,input.decision,fingerprint,expiresAt]);
+    if(pair && input.decision.choice==='reviewRequestPair')await rememberPair(ctx,shop,r,previewId,pair.evidence);
     if(proof)await rememberSameItem(ctx,shop,r,previewId,proof);
-    return{...(proof?{sameItemEvidence:proof.evidence}:{}),previewId,expiresAt:expiresAt.toISOString(),shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,requestRevision:r.revision,choice:input.decision.choice,...facts};
+    return{...(pair?{requestPairEvidence:pair.evidence}:{}),...(proof?{sameItemEvidence:proof.evidence}:{}),previewId,expiresAt:expiresAt.toISOString(),shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,requestRevision:r.revision,choice:input.decision.choice,...facts};
   }
   async execute(ctx:Context,command:Envelope,billing?:BillingService,queueGrant?:string,internalPriceOnly=false):Promise<unknown> {
     if(ctx.selectedShopId && command.shopId!==ctx.selectedShopId) throw unavailable();
@@ -401,7 +406,10 @@ export class HouseholdRepository {
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
         await assertDemandReplay(this,ctx,shop,prior.operation_id);
         await assertRequestAcceptanceReplay(this,ctx,shop,prior,command);
-        if(prior.kind==='request.apply')await checkSameItemReplay(this,ctx,shop,prior.operation_id,prior.response?.authorityEpoch);
+        if(prior.kind==='request.apply'){
+          await checkSameItemReplay(this,ctx,shop,prior.operation_id,prior.response?.authorityEpoch);
+          await checkPairReplay(this,ctx,shop,prior.operation_id,prior.response?.authorityEpoch);
+        }
         if(prior.kind==='amendment.recordResponse' && (prior.response?.authorityEpoch!==shop.authority_epoch || shop.confirmed_order_erased || !(await ctx.db.query(
           'SELECT 1 FROM ritc.order_amendment WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,prior.operation_id])).rowCount)) throw refresh();
         if(prior.kind==='request.carry')await reauthorizeCarry(ctx,shop,this.carryNotice,prior.operation_id);
@@ -658,11 +666,16 @@ export class HouseholdRepository {
     if(r.carried_forward||decision.choice!=='undoSameItem'&&!editable(r)&&!(r.status==='deferred'&&('promote'in decision)&&decision.promote))throw new ServiceError(409,'already_handled','Review the current request.');
     if(r.revision!==c.base.requestRevision||p.request_revision!==r.revision||p.shop_revision!==shop.revision||p.authority_epoch!==shop.authority_epoch||p.expires_at<=ctx.now)throw new ServiceError(409,'stale_preview','Review a fresh preview.');
     const lines=await this.lines(ctx,shop.shop_id);
+    const pair=decision.choice==='reviewRequestPair'||decision.choice==='undoRequestPair'?await reviewPair(this,ctx,shop,r,decision):null;
     const proof=decision.choice==='sameItem'?await proveSameItem(this,ctx,shop,r,decision.target):null;
-    if(p.fingerprint!==digest({shop,r:ownRequest(r),lines,decision,...(proof?{targetProof:proof.digest}:{})}))throw new ServiceError(409,'stale_preview','Review a fresh preview.');
+    if(p.fingerprint!==digest({shop,r:ownRequest(r),lines,decision,...(proof?{targetProof:proof.digest}:{}),...(pair?{pairProof:pair.fingerprint}:{})}))throw new ServiceError(409,'stale_preview','Review a fresh preview.');
     const facts=this.previewFacts(shop,r,lines,decision);
     if(facts.requiresOverageAcceptance&&!b.acceptOverage)throw new ServiceError(409,'overage_acceptance_required','Explicitly accept the recomputed whole-checkout overage or defer.');
     if(facts.requiresUnknownAcceptance&&!b.acceptUnknown)throw new ServiceError(409,'unknown_acceptance_required','Review the missing costs or defer.');
+    if(decision.choice==='reviewRequestPair'||decision.choice==='undoRequestPair'){
+      await applyPair(ctx,shop,b.previewId,decision,operationId);
+      return this.receipt(ctx,c,operationId,r.status,{requestId:r.request_id,requestRevision:r.revision});
+    }
     if(decision.choice==='sameItem'||decision.choice==='undoSameItem'){
       const status=await applySameItem(this,ctx,shop,r,b.previewId,decision,operationId);
       return this.receipt(ctx,c,operationId,status,{requestId:r.request_id,requestRevision:r.revision+1});

@@ -10,7 +10,10 @@ export interface OwnRequest {
 /** asOf describes only the rows in this page, including an empty page. */
 export interface RequestPage<T extends OwnRequest = OwnRequest> {requests:T[];nextCursor:string|null;asOf?:string}
 export type RequestPurchaseOutcome=NonNullable<OwnRequest['purchaseOutcome']>|'unknown';
-export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string;draftBasketLineId?:string;sameItemOperationId?:string}
+export type RequestPairRelationship = 'sameItem' | 'additionalQuantity';
+export interface RequestPairReference {otherRequestId:string;otherRequestRevision:number;relationship:RequestPairRelationship;operationId:string}
+export interface RequestPairEvidence {otherRequestId:string;otherRequestRevision:number;relationship:RequestPairRelationship;item:string;quantity:string|null;authorAlias:string}
+export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string;draftBasketLineId?:string;sameItemOperationId?:string;requestPairs?:RequestPairReference[]}
 export interface DeferredRequest {
   sourceShopId:string; sourceAuthorityEpoch:number; requestId:string; requestRevision:number;
   originalItem:string; ownQuantity:string|null; authorAlias:string; authoredAt:string; receivedAt:string;
@@ -51,8 +54,9 @@ export interface BudgetResult {
 }
 export interface RequestPreview {
   previewId: string; expiresAt: string; shopRevision: number; authorityEpoch: number; requestRevision: number;
+  requestPairEvidence?:RequestPairEvidence;
   sameItemEvidence?: {item:string;quantity:string|null;sourceLabel:string;exclusions:string[];reservationPurpose?:string;lineName?:string;packs?:number};
-  choice: 'add' | 'link' | 'defer' | 'dismiss' | 'handled' | 'sameItem' | 'undoSameItem'; before: BudgetResult; after: BudgetResult;
+  choice: 'add' | 'link' | 'defer' | 'dismiss' | 'handled' | 'sameItem' | 'undoSameItem' | 'reviewRequestPair' | 'undoRequestPair'; before: BudgetResult; after: BudgetResult;
   changeMinor: number | null; requiresOverageAcceptance: boolean; requiresUnknownAcceptance: boolean;
 }
 export interface ServiceError { error: { code: string; correlationId: string; recovery: string } }
@@ -107,7 +111,7 @@ export interface ReviewedRequestPackEvidence {
   quoteSource:string; quoteObservedAt:string; reviewedAt:string;
 }
 export type ReviewedSameItemTarget = {kind:'meal';factId:string;factRevision:number}|{kind:'purchase';sourceRequestId:string;sourceRequestRevision:number;lineId:string;placedRevision:number};
-export type ShopperRequestDecision={choice:'sameItem';target:ReviewedSameItemTarget}|{choice:'undoSameItem';operationId:string}|{choice:'add';line:BasketLine;promote:boolean;reviewedPackEvidence?:ReviewedRequestPackEvidence}|{choice:'link';lineId:string;promote:boolean}|{choice:'defer'|'dismiss'|'handled'};
+export type ShopperRequestDecision={choice:'reviewRequestPair';otherRequestId:string;otherRequestRevision:number;relationship:RequestPairRelationship}|{choice:'undoRequestPair';operationId:string}|{choice:'sameItem';target:ReviewedSameItemTarget}|{choice:'undoSameItem';operationId:string}|{choice:'add';line:BasketLine;promote:boolean;reviewedPackEvidence?:ReviewedRequestPackEvidence}|{choice:'link';lineId:string;promote:boolean}|{choice:'defer'|'dismiss'|'handled'};
 
 /** Existing occurrence changes require positive baseMealRevision, an unchanged date, and the current named planning adult. */
 export interface SharedMealChangeRequest {
