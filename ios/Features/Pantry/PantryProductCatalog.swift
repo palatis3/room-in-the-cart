@@ -46,7 +46,7 @@ actor PantryProductCatalog {
 
     init(now: @escaping @Sendable () -> Date = { Date() }, read: Read? = nil) {
         self.now = now
-        self.read = read ?? Self.request
+        self.read = read ?? { @Sendable request in try await Self.request(request) }
     }
 
     func close(scope: UUID) {
