@@ -41,6 +41,18 @@ On November 13 the ordinary Release simulator build passed the pack comparison i
 
 The November 14 Release build at `ab33d6cd` also passed step 1 on an iPhone SE (2nd generation) simulator running iOS 17.0 in both languages. After clearing pack A’s usable amount, the tester saved again and reopened Records. Each installation kept one “Demo wraps” comparison with two revisions. The original stored 16 items for $6.40 and 12 for $5.40. The correction kept pack B at $5.40 and left pack A’s count and cost unresolved. Both simulator results and the independent database checks are in `.build/ReviewWrapsAb33Nov14`.
 
+### Review a receipt offline
+
+Open **Shop → My Pantry → Review a receipt**. If My Pantry asks for setup, review the proposed batches and reservations first. In **Scan or type receipt lines**, enter these three lines from a fictional receipt:
+
+```text
+Oats 3 count USD 4.20
+Beans 2 kg at USD 2.50
+Bag fee USD 0.10
+```
+
+Review the wording and choose a purchase date. For Oats, confirm 3 received, 2 usable and $4.20 paid. For Beans, confirm 2 kg received and usable. Its printed unit rate should leave the paid line total unknown. Leave the fee skipped. Check the quantities and amounts on the confirmation screen, save, then reopen My Pantry. Expect two new food batches and the original receipt wording.
+
 ## Verify an update on an existing installation
 
 Use a dedicated test device and fictional groceries. Install the previous distributed build, save an offline pack comparison, and record the entered quantities, prices, result and revision. Install the signed candidate over it using the distribution update path. Keep the existing app data throughout.
@@ -66,6 +78,8 @@ Run these steps with the submitted build and the isolated review household. The 
 5. Open **Settings → Household membership**. Inspect Apple's actual localized price/term, renewal disclosure, privacy/terms, **Restore Purchases**, **Manage Subscription** and the Free path. Test purchase, interrupted delivery, pending/cancelled/unverified outcomes, two named seats, restore with the original purchasing account, wrong-household denial, renewal, expiry and refund. A local StoreKit configuration is development evidence only. Record actual sandbox/TestFlight transaction and service reconciliation evidence separately.
 6. Review **Household requests → Account deletion**. Check its scope/status, offline retry, provider erasure and retained receipt behavior in the isolated environment. Check household exit separately. Deleting an account does not cancel its Apple subscription, and local deletion does not recall sent/exported copies.
 7. Test optional household measurement only after separate explicit consent. Review coded fields, submit one response, refresh after an uncertain result, then withdraw consent. Existing local pickup feedback must remain separate and must not upload automatically.
+
+8. With the enrolled adult, open **Settings → Household pantry → Add receipt to household pantry**. Add two fictional foods there, confirming a price for only one. Reopen the household pantry and check both quantities and the unknown price. Return to the adult’s private My Pantry and check that its original batches and receipt history are unchanged.
 
 ## Household walkthrough on the candidate build
 
