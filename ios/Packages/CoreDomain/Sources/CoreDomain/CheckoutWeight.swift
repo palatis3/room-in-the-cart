@@ -60,8 +60,7 @@ extension CheckoutEngine {
             let rawCharge = try stepCost.multiplied(by: Rational(steps))
             let cents: Int64
             if rounding == .nearestCent {
-                let adjusted = try rawCharge.adding(Rational(1, 2))
-                cents = adjusted.numerator / adjusted.denominator
+                cents = try rawCharge.roundedNearest()
             } else { cents = try rawCharge.roundedUp() }
             let charge = Money(minorUnits: cents)
             let priced = lines.map { item in

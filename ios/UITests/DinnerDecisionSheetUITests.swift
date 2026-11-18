@@ -9,6 +9,22 @@ final class DinnerDecisionSheetUITests: XCTestCase {
     func testEnglishGuestPackageBoundaryCheckoutAndCancel() { guestBoundary("en") }
     func testSpanishGuestPackageBoundaryCheckoutAndCancel() { guestBoundary("es") }
 
+    func testCurrentDinnerCostSeparatesServingValueFromPackagesAndCheckout() {
+        continueAfterFailure = false
+        app.launchArguments = ["--ui-testing", "--ui-testing-dinner-cost", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["dinnerPairings"])
+        tap(app.buttons["dinnerScenarioReview"])
+        tap(app.buttons["dinnerCurrentCost"])
+        let summary = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerCost-'")).firstMatch
+        XCTAssertTrue(summary.waitForExistence(timeout: 8))
+        XCTAssertTrue(summary.label.contains("Ingredient value per serving: $0.50"), summary.label)
+        XCTAssertTrue(summary.label.contains("Packs to buy: 2"), summary.label)
+        XCTAssertTrue(summary.label.contains("Pack purchase cost: $6.00"), summary.label)
+        XCTAssertTrue(summary.label.contains("Laundry soap · $4.50"), summary.label)
+        XCTAssertTrue(summary.label.contains("Checkout: $12.50"), summary.label)
+    }
+
     private func guestBoundary(_ language: String) {
         continueAfterFailure = false
         app.launchArguments = ["--ui-testing", "--ui-testing-guest-boundary", "-AppleLanguages", "(\(language))", "-AppleLocale", language == "es" ? "es_US" : "en_US"]

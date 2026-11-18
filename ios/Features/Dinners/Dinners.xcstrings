@@ -8552,6 +8552,227 @@
           }
         }
       }
+    },
+    "Household essential": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household essential"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo esencial del hogar"
+          }
+        }
+      }
+    },
+    "Essential cost in USD, optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essential cost in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo del artículo esencial en USD, opcional"
+          }
+        }
+      }
+    },
+    "Include a household essential": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include a household essential"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir un artículo esencial del hogar"
+          }
+        }
+      }
+    },
+    "This food uses confirmed free pantry stock. Its held portions are already excluded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This food uses confirmed free pantry stock. Its held portions are already excluded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este alimento usa la cantidad disponible confirmada de la despensa. Ya se excluyeron las porciones reservadas."
+          }
+        }
+      }
+    },
+    "Incomplete checkout · at least %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incomplete checkout · at least %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de compra incompleto · al menos %@"
+          }
+        }
+      }
+    },
+    "Ingredients used at reviewed pack prices: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredients used at reviewed pack prices: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes utilizados a los precios de paquete revisados: %@"
+          }
+        }
+      }
+    },
+    "Ingredient value per serving: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient value per serving: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valor de los ingredientes por porción: %@"
+          }
+        }
+      }
+    },
+    "Other basket item · %@ · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other basket item · %@ · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otro artículo de la compra · %@ · %@"
+          }
+        }
+      }
+    },
+    "Price the current dinner plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price the current dinner plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calcular el costo del plan de cenas actual"
+          }
+        }
+      }
+    },
+    "Price evidence: %@ · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price evidence: %@ · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos del precio: %@ · %@"
+          }
+        }
+      }
+    },
+    "Price a dinner plan or compare pairings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price a dinner plan or compare pairings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calcular el costo de un plan de cenas o comparar combinaciones"
+          }
+        }
+      }
+    },
+    "Estimated checkout range: %@ to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated checkout range: %@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de compra estimado: de %@ a %@"
+          }
+        }
+      }
+    },
+    "Ingredient values include food on hand at the reviewed pack prices. Each estimate is rounded to the nearest cent.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient values include food on hand at the reviewed pack prices. Each estimate is rounded to the nearest cent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El valor de los ingredientes incluye los alimentos que ya tienes, a los precios de paquete revisados. Cada estimación se redondea al centavo más cercano."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

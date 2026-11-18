@@ -121,11 +121,19 @@ public struct DinnerPackResult: Codable, Equatable, Sendable {
     public let result: OfferResult?
     public let availabilityConfirmed: Bool
 }
+/// Replacement-price value of the amounts used, including stocked ingredients.
+public struct DinnerIngredientValue: Equatable, Sendable {
+    public let total: Money
+    public let perServing: Money
+}
+
 public struct DinnerScenarioResult: Equatable, Sendable {
     public let scenarioID: UUID
     public let quote: CheckoutQuote
     public let checkout: CheckoutResult
     public let stockAllocation: StockAllocationResult
+    /// A missing entry means some ingredient, quantity, yield, or price was unconfirmed.
+    public let ingredientValues: [UUID: DinnerIngredientValue]
     public let packs: [DinnerPackResult]
     public let foodCoverageComplete: Bool
     public let timingFeasible: Bool?
@@ -339,25 +347,55 @@ public enum DinnerScenarioEngine {
             }
             if !available { issues.append("Required pack availability is unconfirmed or insufficient for \(demands[0].name)") }
             for issue in result.issues { issues.append("\(demands[0].name): \(issue.rawValue)") }
+            let cost = available ? result.totalCost.map(CostEvidence.exact) : nil
             lines.append(CheckoutLine(id: selection.id, name: demands[0].name,
-                cost: result.totalCost.map(CostEvidence.exact) ?? .unknown(reason: "Missing price or usable pack quantity"), thresholdEligible: selection.thresholdEligible))
+                cost: cost ?? .unknown(reason: "Required pack availability, price or usable quantity is unconfirmed"), thresholdEligible: selection.thresholdEligible))
             packResults.append(.init(foodID: foodID, selectionID: selection.id, result: result, availabilityConfirmed: available))
         }
         let foodComplete = issues.filter { !$0.contains("priceUnknown") }.isEmpty
             && packResults.allSatisfy { $0.availabilityConfirmed && ($0.result?.remainingNeed == nil || $0.result?.remainingNeed == .zero) }
         // Missing selections must not make an incomplete basket look like a complete zero-cost line set.
-        let quoteComplete = scenario.baselineComplete && demandProofComplete && unknownFoods.isEmpty
+        let quoteComplete = scenario.baselineComplete && foodComplete && demandProofComplete && unknownFoods.isEmpty
             && Set(scenario.demands.map(\.commitmentID)) == commitmentIDs
-            && packResults.allSatisfy { $0.result != nil || $0.availabilityConfirmed }
         let quote = CheckoutQuote(scope: scenario.scope, context: scenario.context,
             pricing: .components(lines: lines, lineSetComplete: quoteComplete, fees: scenario.fees,
                 discounts: scenario.discounts, tax: scenario.tax, deposits: scenario.deposits))
-        let checkout = try CheckoutEngine.evaluate(quote, cap: cap)
+        var checkout = try CheckoutEngine.evaluate(quote, cap: cap)
+        if checkout.total.exact == nil, case .within = checkout.cap {
+            // A range can bound this quote, but is not confirmed checkout cash for the plan.
+            checkout = CheckoutResult(scope: checkout.scope, total: checkout.total, uncertainties: checkout.uncertainties, cap: .unresolved)
+        }
         if scenario.preparation.isFeasible == nil { issues.append("Preparation time is unconfirmed") }
         else if scenario.preparation.isFeasible == false { issues.append("Known preparation cannot fit the available time") }
         return DinnerScenarioResult(scenarioID: scenario.id, quote: quote, checkout: checkout, stockAllocation: stock,
+            ingredientValues: demandProofComplete ? try ingredientValues(for: scenario) : [:],
             packs: packResults, foodCoverageComplete: foodComplete, timingFeasible: scenario.preparation.isFeasible, issues: issues)
     }
+    private static func ingredientValues(for scenario: DinnerScenario) throws -> [UUID: DinnerIngredientValue] {
+        let packs = Dictionary(uniqueKeysWithValues: scenario.packs.map { ($0.foodID, $0.offer) })
+        let demands = Dictionary(grouping: scenario.demands, by: \.commitmentID)
+        var values: [UUID: DinnerIngredientValue] = [:]
+        for meal in scenario.commitments.commitments {
+            guard let ingredients = demands[meal.id], ingredients.contains(where: { ($0.quantity?.amount ?? .zero) > .zero }) else { continue }
+            var total = Rational.zero
+            var complete = true
+            for ingredient in ingredients {
+                guard let quantity = ingredient.quantity, let offer = packs[ingredient.foodID],
+                      let price = offer.price, let usable = offer.usableQuantity,
+                      let yield = try usable.converted(to: quantity.unit,
+                          using: offer.confirmedConversion ?? usable.confirmedConversion ?? quantity.confirmedConversion), yield > .zero else { complete = false; break }
+                let packsUsed = try quantity.amount.divided(by: yield)
+                let minorUnits = try packsUsed.multiplied(by: Rational(price.minorUnits))
+                total = try total.adding(minorUnits)
+            }
+            if complete {
+                values[meal.id] = try DinnerIngredientValue(total: Money(minorUnits: total.roundedNearest()),
+                    perServing: Money(minorUnits: total.divided(by: meal.portions).roundedNearest()))
+            }
+        }
+        return values
+    }
+
     public static func pair(current: DinnerScenario, alternatives: [DinnerScenario], selectedAcceptedDinnerIDs: Set<UUID>,
         state: DinnerPlanningState, cap: CheckoutCap?, access: DinnerAccessContext, at now: Date, isolated: Bool = false, searchLimit: Int = 32, ledger: ShoppingLedger? = nil) throws -> DinnerPairingResult {
         try access.validate(shopID: ledger?.id ?? access.shopID, at: now, budget: true)

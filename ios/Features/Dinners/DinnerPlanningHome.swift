@@ -77,7 +77,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                         NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }
                         if model.budgetVisible {
                             if let shop = model.shop {
-                                DinnerDecisionButton(model: model, title: dinnerText("Pairing and fallback evidence"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
+                                DinnerDecisionButton(model: model, title: dinnerText("Price a dinner plan or compare pairings"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
                             }
                             NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
                         }

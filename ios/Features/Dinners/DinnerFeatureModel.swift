@@ -246,6 +246,12 @@ extension DinnerWorkspaceStore {
     }
     /// Scenario inputs must come from an explicit ingredient/stock/pack review.
     /// No product-name inference or automatic current-basket replacement occurs here.
+    func cost(of scenario: DinnerScenario, cap: CheckoutCap?) throws -> DinnerScenarioResult {
+        guard let shop else { throw DinnerPlanningError.invalid("shop") }
+        try access(for: shop.id).validate(shopID: shop.id, at: clock(), budget: true)
+        return try DinnerScenarioEngine.evaluate(scenario, acceptedDinners: state.acceptedDinners,
+            cap: cap, ledger: shop, state: state)
+    }
     func pair(current: DinnerScenario, alternatives: [DinnerScenario], selected: Set<UUID>,
               cap: CheckoutCap?, isolated: Bool = false) throws -> DinnerPairingResult {
         guard let shop else { throw DinnerPlanningError.invalid("shop") }

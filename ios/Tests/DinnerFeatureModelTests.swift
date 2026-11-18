@@ -687,6 +687,28 @@ import CoreDomain
         let wrapNeed = review.current.demands.first { $0.foodID == draft.foods[0].id }!
         XCTAssertEqual(result.stockAllocation.demands.first { $0.id == wrapNeed.id }?.allocated, .one)
     }
+    func testCanonicalFreeStockAndReviewedEssentialAreAppliedOnce() throws {
+        let (shop, state, original) = try fixture()
+        var draft = original
+        let wraps = draft.foods[0]
+        let free = Quantity(amount: try Rational(4), unit: .count, originalLiteral: "4 free")
+        draft.reviewedLeftovers = [ConfirmedStockLot(id: UUID(), foodID: wraps.id, name: wraps.name,
+            usable: free, confirmedAt: Date(), source: .pantry)]
+        draft.leftoverPantryBasis = .init(originID: UUID(), inventoryRevision: 7, sourceHeads: [])
+        draft.essentials = [DinnerBaselineCostDraft(id: UUID(), name: "Laundry soap", cost: "4.50", feeEligible: false)]
+        let reviewed = try draft.build(shop: shop, state: state)
+        for plan in [reviewed.current, reviewed.candidate] {
+            XCTAssertEqual(plan.baselineLines.filter { $0.id == draft.essentials[0].id }.count, 1)
+            let result = try DinnerScenarioEngine.evaluate(plan, acceptedDinners: state.acceptedDinners)
+            let pack = try XCTUnwrap(result.packs.first { $0.foodID == wraps.id }?.result)
+            XCTAssertEqual(pack.amountToBuy, try Rational(2))
+            XCTAssertEqual(pack.packsToBuy, 1)
+        }
+        draft.foods[0].outsideReservationsReviewed = true
+        draft.foods[0].outsideAmount = "2"
+        XCTAssertThrowsError(try draft.build(shop: shop, state: state))
+    }
+
     func testUnknownPackYieldAndPriceNeverBecomeZeroOrCoverage() throws {
         let (shop, state, original) = try fixture(); var draft = original
         draft.foods[0].yieldReviewed = false; draft.foods[0].packPrice = ""

@@ -95,6 +95,13 @@ public struct Rational: Codable, Hashable, Sendable, Comparable, CustomStringCon
         try checkedAdd(numerator / denominator, numerator % denominator == 0 ? 0 : 1)
     }
 
+    /// Round a nonnegative value to the nearest integer, rounding half upward.
+    func roundedNearest() throws -> Int64 {
+        let whole = numerator / denominator
+        let remainder = numerator % denominator
+        return try checkedAdd(whole, remainder >= denominator - remainder ? 1 : 0)
+    }
+
     private static func gcd(_ first: Int64, _ second: Int64) -> Int64 {
         var a = first, b = second
         while b != 0 { (a, b) = (b, a % b) }

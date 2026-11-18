@@ -98,7 +98,10 @@ class PlanIOSFixtureTests(unittest.TestCase):
                          sorted(self.inventory["RecordsMediaUITests"]))
         self.assertNotIn("suites", records)
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
-        self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
+        dinner = plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]
+        self.assertEqual(dinner["suite"], "DinnerDecisionSheetUITests")
+        pricing = f"{UI_TARGET}/DinnerDecisionSheetUITests/testCurrentDinnerCostSeparatesServingValueFromPackagesAndCheckout"
+        self.assertEqual([identifier.removesuffix("()") for identifier in dinner["test_identifiers"]].count(pricing), 1)
         correction = f"{UI_TARGET}/ContributorRequestUITests/testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen"
         contributor = plans["contributor"]["shards"]["contributor-balanced-02"]["test_identifiers"]
         self.assertEqual([selector.removesuffix("()") for selector in contributor].count(correction), 1)

@@ -1556,7 +1556,7 @@ import XCTest
         // Return through the library only after that sheet has closed.
         XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
         dinnerRoot()
-        tap(app.buttons["Pairing and fallback evidence"])
+        tap(app.buttons["dinnerPairings"])
         tap(app.buttons["Load chosen dinners and protected serving groups"])
         tap(app.buttons["Find accepted dinners not chosen for this pickup"])
         assertText("No new pairing; these dinners are already selected.")

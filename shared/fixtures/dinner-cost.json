@@ -1,0 +1,24 @@
+{
+  "currency": "USD",
+  "item": "Wraps",
+  "servings": 4,
+  "required": 14,
+  "onHand": 6,
+  "held": 2,
+  "usablePerPack": 8,
+  "packMinor": 199,
+  "essential": "Laundry soap",
+  "essentialMinor": 450,
+  "feeThresholdMinor": 800,
+  "feeMinor": 100,
+  "capMinor": 1000,
+  "expected": {
+    "neededAfterStock": 10,
+    "packs": 2,
+    "packageMinor": 398,
+    "ingredientMinor": 348,
+    "perServingMinor": 87,
+    "completeMinor": 948,
+    "unknownFeeLowerMinor": 848
+  }
+}
