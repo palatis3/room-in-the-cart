@@ -33,17 +33,25 @@ public struct ReviewedShelfImage: Codable, Equatable, Sendable {
 
     public struct Proposal: Equatable, Sendable {
         public let packages: Int64?
+        public let packageSize: Quantity?
+        public let rateQuantity: Quantity?
+        public var priceBasis: PriceBasis {
+            if rateQuantity != nil { return .unit }
+            if packages != nil || (packageSize != nil && amount != nil) { return .bundle }
+            return .unknown
+        }
         public let amount: Money?
         public let conditions: String?
         public let currencyCode: String?
     }
 
-    /// Suggests only explicit bundle wording. A bare unit price cannot imply package size.
+    /// Package measurements and prices are proposed independently of membership and eligibility.
     public static func propose(_ text: String) -> Proposal {
         let s = text.lowercased()
+        let size = PrintedPriceText.packageSize(in: text)
         let pattern = #"(?<![\d.,])([1-9][0-9]{0,3})\s*(?:for|por|/)\s*([$€£])\s*([0-9]+(?:[.,][0-9]{1,2})?)(?![.,0-9])"#
         let matches = (try? NSRegularExpression(pattern: pattern))?.matches(in: s, range: NSRange(s.startIndex..., in: s)) ?? []
-        let terms = s.range(of: #"\b(member|members|socio|socios|miembros|club|loyalty|tarjeta)\b"#, options: .regularExpression) != nil ? text : nil
+        let terms = s.range(of: #"\b(member|members|socio|socios|miembros|club|loyalty|tarjeta|coupon|cup[oó]n|limit|l[ií]mite|with purchase|con la compra)\b"#, options: .regularExpression) != nil ? text : nil
         let codes = PrivatePriceEvidence.supportedCurrencies.filter { code in
             s.range(of: #"\b"# + code.lowercased() + #"\b"#, options: .regularExpression) != nil
         }
@@ -54,10 +62,14 @@ public struct ReviewedShelfImage: Codable, Equatable, Sendable {
         let currency = currencies.count == 1 ? currencies.first : nil
         guard matches.count == 1, let match = matches.first, let quantity = Range(match.range(at: 1), in: s),
               let price = Range(match.range(at: 3), in: s), let count = Int64(s[quantity]) else {
-            return .init(packages: nil, amount: nil, conditions: terms, currencyCode: currency)
+            let promotion = s.range(of: #"\b(save|savings|ahorra|ahorro|coupon|cup[oó]n|off)\b"#, options: .regularExpression) != nil
+            return .init(packages: nil, packageSize: size, rateQuantity: PrintedPriceText.rateQuantity(in: text), amount: promotion ? nil : PrintedPriceText.singlePrice(in: text),
+                         conditions: terms, currencyCode: currency)
         }
-        let amount = try? Money(decimal: s[price].replacingOccurrences(of: ",", with: "."))
-        return .init(packages: count, amount: amount, conditions: terms, currencyCode: currency)
+        // A second marked price may belong to a different offer on the same label.
+        let amount = PrintedPriceText.singlePrice(in: text) == nil ? nil
+            : try? Money(decimal: s[price].replacingOccurrences(of: ",", with: "."))
+        return .init(packages: count, packageSize: size, rateQuantity: nil, amount: amount, conditions: terms, currencyCode: currency)
     }
 }
 

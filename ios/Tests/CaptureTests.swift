@@ -281,7 +281,7 @@ import UniformTypeIdentifiers
         XCTAssertEqual(CaptureReadingOrder.indices(sameRow), [1,2,0])
     }
     func testPriceImageOCRPreservesMembershipWordingAndNeverInfersCheckoutTotalFromSubtotal() async throws {
-        let image = try imageOfPriceText([("Members only 2 for $5", 110), ("Subtotal $18", 40)])
+        let image = try imageOfPriceText([("Members only 2 for $5 USD 500 g", 110), ("Subtotal $18", 40)])
         let evidence = try await OnDeviceTextCapture().recognize(image)
         let text = evidence.text.split(separator: "\n").map(String.init)
         let label = try XCTUnwrap(text.first(where: { $0.localizedCaseInsensitiveContains("members") }))
@@ -289,10 +289,15 @@ import UniformTypeIdentifiers
         XCTAssertEqual(proposal.packages, 2)
         XCTAssertEqual(proposal.amount?.minorUnits, 500)
         XCTAssertEqual(proposal.conditions, label)
+        XCTAssertEqual(proposal.packageSize?.amount, try Rational(500))
+        XCTAssertEqual(proposal.packageSize?.unit, .gram)
         let i = try XCTUnwrap(text.firstIndex(where: { $0.localizedCaseInsensitiveContains("subtotal") }))
         let line = try PriceImageLine(digest: Data(SHA256.hash(data: image)), ordinal: i, wording: text[i],
             uncertain: evidence.uncertainLines.contains(text[i]))
-        let checkout = try ReviewedCheckoutImage(charges: [.init(field: .subtotal, amount: .init(minorUnits: 1800), inclusion: .unknown, line: line)])
+        let offers = ReviewedCheckoutImage.proposals(from: [line])
+        let subtotal = try XCTUnwrap(offers[.subtotal])
+        XCTAssertEqual(subtotal.amount?.minorUnits, 1800)
+        let checkout = try ReviewedCheckoutImage(charges: [subtotal])
         XCTAssertNil(checkout.displayedTotal)
         XCTAssertEqual(checkout.charges.first?.line.wording, text[i])
     }

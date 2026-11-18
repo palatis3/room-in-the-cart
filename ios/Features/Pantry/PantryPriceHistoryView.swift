@@ -484,8 +484,10 @@ private struct PantryPriceEditor: View {
                     packages = String(suggestion.packages ?? 1)
                     amount = suggestion.amount.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
                     eligibility = suggestion.conditions ?? ""
-                    priceBasis = suggestion.packages == nil ? .unknown : .bundle
-                    quantity = ""
+                    priceBasis = suggestion.priceBasis
+                    let measurement = suggestion.rateQuantity ?? suggestion.packageSize
+                    quantity = measurement?.amount.description ?? ""
+                    unit = measurement?.unit ?? .count
                 })
             }
         }
