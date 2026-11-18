@@ -423,6 +423,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     public var mealTemplates: [MealTemplate]
     public var selectedShopID: UUID?
     public var dinnerPlanning: DinnerPlanningState
+    public internal(set) var privateMealFeedback: [PrivateMealFeedback] = []
     public var listLayout = LedgerListLayout()
     public var packSelections: [LedgerPackSelection]
     public init(shops: [ShoppingLedger] = [], mealTemplates: [MealTemplate] = [], selectedShopID: UUID? = nil,
@@ -431,9 +432,10 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         self.dinnerPlanning = dinnerPlanning
         self.packSelections = packSelections
     }
-    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout }
+    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout, privateMealFeedback }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        if !privateMealFeedback.isEmpty { try c.encode(privateMealFeedback, forKey: .privateMealFeedback) }
         try c.encode(shops, forKey: .shops)
         try c.encode(mealTemplates, forKey: .mealTemplates)
         try c.encodeIfPresent(selectedShopID, forKey: .selectedShopID)
@@ -444,6 +446,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        privateMealFeedback = try c.decodeIfPresent([PrivateMealFeedback].self, forKey: .privateMealFeedback) ?? []
         listLayout = try c.decodeIfPresent(LedgerListLayout.self, forKey: .listLayout) ?? LedgerListLayout()
         shops = try c.decode([ShoppingLedger].self, forKey: .shops)
         mealTemplates = try c.decode([MealTemplate].self, forKey: .mealTemplates)
@@ -458,6 +461,14 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         if let selectedShopID, !shops.contains(where: { $0.id == selectedShopID }) { throw LedgerError.notFound(selectedShopID) }
         for shop in shops { try shop.validate() }
         for meal in mealTemplates { try meal.validate() }
+        guard privateMealFeedback.count <= 10_000 else { throw LedgerError.invalid("mealFeedback") }
+        var feedbackSources: [String: Set<MealFeedbackSource>] = [:]
+        for entry in privateMealFeedback {
+            guard !entry.owner.isEmpty, entry.owner.utf8.count <= 128, !entry.reactions.isEmpty,
+                  entry.reactions == MealReaction.allCases.filter(Set(entry.reactions).contains),
+                  feedbackSources[entry.owner, default: []].insert(entry.source).inserted,
+                  feedbackSourceExists(entry.source) else { throw LedgerError.invalid("mealFeedback") }
+        }
         try dinnerPlanning.validate(shops: shops)
         try listLayout.validate(shops: shops)
         guard packSelections.count <= 10_000 else { throw LedgerError.invalid("packSelections") }

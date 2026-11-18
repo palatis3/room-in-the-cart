@@ -90,13 +90,13 @@ public enum PantryMealMatcher {
     }
 
     /// Use the library order for ties. Unknown effort sorts after reviewed effort.
-    public static func ranked(_ reviews: [Review]) -> [Review] {
+    public static func ranked(_ reviews: [Review], feedback: [MealFeedbackSource: MealFeedbackSignal] = [:]) -> [Review] {
         let eligible = reviews.filter { $0.eligibility.eligible && $0.hasConfirmedPantryFood }
         let scored = eligible.enumerated().map { entry in
             (review: entry.element, index: entry.offset,
              covered: entry.element.ingredients.filter(\.covered).count)
         }
-        return scored.sorted { lhs, rhs in
+        let ordered = scored.sorted { lhs, rhs in
             let left = lhs.review, right = rhs.review
             if left.useFirstLotIDs.isEmpty != right.useFirstLotIDs.isEmpty { return !left.useFirstLotIDs.isEmpty }
             if left.allIngredientsCovered != right.allIngredientsCovered { return left.allIngredientsCovered }
@@ -111,6 +111,44 @@ public enum PantryMealMatcher {
             let rightEffort = right.recipe.eligibilityEvidence?.effort?.rank ?? Int.max
             if leftEffort != rightEffort { return leftEffort < rightEffort }
             return lhs.index < rhs.index
-        }.map(\.review)
+        }
+        guard !feedback.isEmpty else { return ordered.map(\.review) }
+
+        // Only recipes with the same supply, preference and effort evidence can change order.
+        func canTie(_ a: Review, _ b: Review) -> Bool {
+            a.useFirstLotIDs.isEmpty == b.useFirstLotIDs.isEmpty &&
+                a.allIngredientsCovered == b.allIngredientsCovered &&
+                a.ingredients.filter(\.covered).count * max(1, b.ingredients.count) ==
+                b.ingredients.filter(\.covered).count * max(1, a.ingredients.count) &&
+                a.eligibility.softDifferences.count == b.eligibility.softDifferences.count &&
+                a.recipe.eligibilityEvidence?.effort == b.recipe.eligibilityEvidence?.effort
+        }
+        func feasible(_ review: Review) -> Bool {
+            review.ingredients.allSatisfy { !$0.hasUnresolvedStock && $0.ingredient.quantity != nil && ($0.coverage?.issues.isEmpty ?? true) }
+        }
+        var result: [Review] = []
+        var start = 0
+        while start < ordered.count {
+            let first = ordered[start].review
+            var end = start + 1
+            if feasible(first) {
+                while end < ordered.count && feasible(ordered[end].review) && canTie(first, ordered[end].review) { end += 1 }
+            }
+            var group = ordered[start..<end].map { row in
+                (review: row.review, index: row.index,
+                 signal: feedback[.recipe(id: row.review.id, revision: row.review.recipe.revision)])
+            }.sorted { a, b in
+                let left = a.signal?.score ?? 0, right = b.signal?.score ?? 0
+                return left == right ? a.index < b.index : left > right
+            }
+            // Keep an untried meal in the first two of an otherwise equivalent group.
+            if let unseen = group.firstIndex(where: { $0.signal == nil }), unseen > 1 {
+                let discovery = group.remove(at: unseen)
+                group.insert(discovery, at: 1)
+            }
+            result.append(contentsOf: group.map(\.review))
+            start = end
+        }
+        return result
     }
 }

@@ -1,11 +1,41 @@
 import XCTest
 import CoreDomain
+import RecordArchive
 @testable import RoomInTheCart
 
 final class LedgerReadableRecordTests: XCTestCase {
     private struct Document: Encodable {
         let formatVersion = 1
         let workspace: LedgerWorkspace
+    }
+
+    @MainActor func testMealFeedbackPersonalBackupKeepsSelectedAdultAndSourceWhileHelperDropsReactions() throws {
+        let recipe = MealTemplate(title: "Rice", ingredients: [MealIngredient(name: "Rice", quantity: nil)])
+        var shop = ShoppingLedger(title: "Weekend")
+        let meal = try shop.chooseMeal(recipe)
+        var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)
+        let target = MealFeedbackSource.occurrence(shopID: shop.id, occurrenceID: meal)
+        let recipeTarget = MealFeedbackSource.recipe(id: recipe.id, revision: recipe.revision)
+        try workspace.updateMealFeedback(for: target, owner: "adultA", expectedRevision: nil, reactions: [.childrenLikedIt], at: Date())
+        try workspace.updateMealFeedback(for: target, owner: "adultB", expectedRevision: nil, reactions: [.tooMuchEffort], at: Date())
+        try workspace.updateMealFeedback(for: recipeTarget, owner: "adultA", expectedRevision: nil, reactions: [.makeAgain], at: Date())
+        let visible = try RecordsNativeCodec.ledgerScope(workspace, shop: shop, feedbackOwner: "adultA")
+        let hidden = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
+        XCTAssertTrue(hidden.privateMealFeedback.isEmpty)
+        XCTAssertEqual(visible.privateMealFeedback.map(\.source), [target])
+        XCTAssertEqual(visible.privateMealFeedback.first?.reactions, [.childrenLikedIt])
+        let library = try XCTUnwrap(RecordsNativeCodec.ledgerLibrary(workspace, feedbackOwner: "adultA"))
+        XCTAssertEqual(library.privateMealFeedback.map(\.source), [recipeTarget])
+        let bytes = try RecordsNativeCodec.canonical(Document(workspace: visible))
+        let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/" + UUID().uuidString, revision: ArchiveCodec.digest(bytes),
+            kind: .ledger, title: shop.title, savedAtMilliseconds: 1, nativePayload: bytes)
+        try RecordsNativeCodec.validate(record)
+        let personal = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: record.origin, revision: record.revision)
+        let restored = try RecordsNativeCodec.ledger(XCTUnwrap(personal.payload.records.first?.nativePayload))
+        XCTAssertEqual(restored.feedback(for: target, owner: "adultA")?.reactions, [.childrenLikedIt])
+        let helper = try ArchiveCodec.make(records: [record], kind: .helperShop, origin: record.origin, revision: record.revision, shopID: shop.id.uuidString)
+        XCTAssertNil(helper.payload.records.first?.nativePayload)
+        XCTAssertFalse(String(decoding: try ArchiveCodec.canonical(helper), as: UTF8.self).contains("childrenLikedIt"))
     }
 
     @MainActor func testShopSeparatesOutstandingItemsFromHandledHistoryAndRetainsImportDecisions() throws {

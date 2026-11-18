@@ -110,18 +110,20 @@ private struct RecordsPlanningProjection: Codable {
         try ArchiveCodec.preflight(data)
         return try LedgerModel.validatePayload(data)
     }
-    static func ledgerScope(_ workspace: LedgerWorkspace, shop: ShoppingLedger) throws -> LedgerWorkspace {
+    static func ledgerScope(_ workspace: LedgerWorkspace, shop: ShoppingLedger, feedbackOwner: String? = nil) throws -> LedgerWorkspace {
         let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: shop).decoded()
         var value = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id, dinnerPlanning: planning,
             packSelections: workspace.packSelections.filter { $0.shopID == shop.id })
         value.listLayout = workspace.listLayout.scoped(to: shop)
+        value.copyPrivateMealFeedback(from: workspace, owner: feedbackOwner, includeRecipes: false)
         try value.validate()
         return value
     }
-    static func ledgerLibrary(_ workspace: LedgerWorkspace) throws -> LedgerWorkspace? {
+    static func ledgerLibrary(_ workspace: LedgerWorkspace, feedbackOwner: String? = nil) throws -> LedgerWorkspace? {
         let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: nil).decoded()
         guard !workspace.mealTemplates.isEmpty || !planning.acceptedDinners.isEmpty || !planning.rotations.isEmpty || !planning.ideas.isEmpty else { return nil }
-        let value = LedgerWorkspace(mealTemplates: workspace.mealTemplates, dinnerPlanning: planning)
+        var value = LedgerWorkspace(mealTemplates: workspace.mealTemplates, dinnerPlanning: planning)
+        value.copyPrivateMealFeedback(from: workspace, owner: feedbackOwner)
         try value.validate()
         return value
     }
@@ -168,17 +170,17 @@ private struct RecordsPlanningProjection: Codable {
         return record
     }
     static func recoveredLedger(_ saved: RecoveredRecord, current: LedgerRecord, scope: RecordsRecoveryCapture.Scope,
-                                sources: [SourceMediaRecord]) throws -> [ArchiveRecord] {
+                                sources: [SourceMediaRecord], feedbackOwner: String? = nil) throws -> [ArchiveRecord] {
         let workspace = try ledger(current.payload)
         var result = try workspace.shops.map { shop in
-            let scoped = try ledgerScope(workspace, shop: shop)
+            let scoped = try ledgerScope(workspace, shop: shop, feedbackOwner: feedbackOwner)
             let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
             let lines = shop.contributions.filter { $0.removedAt == nil }.map {
                 HelperLine(label: $0.productName, originalAmount: $0.quantity?.originalLiteral ?? "", originalUnit: $0.quantity?.unit.rawValue ?? "")
             }
             return try revised(saved.record, nativePayload: bytes, id: shop.id.uuidString, title: shop.title, date: current.savedAt, lines: lines)
         }
-        if let library = try ledgerLibrary(workspace) {
+        if let library = try ledgerLibrary(workspace, feedbackOwner: feedbackOwner) {
             let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
             result.append(try revised(saved.record, nativePayload: bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
         }
@@ -493,6 +495,11 @@ private struct RecordsRecoveredPantryView: View {
               handle.directory.lastPathComponent == handle.reference.bundleID.uuidString else { throw ArchiveError.invalidIdentity }
         if FileManager.default.fileExists(atPath: job.path) { try FileManager.default.removeItem(at: job) }
     }
+    private var feedbackOwner: String? {
+        guard let scope = privateIdentity(), scope.grantID == nil else { return nil }
+        return scope.identity.mealFeedbackOwner
+    }
+
     private func privateIdentity() -> RecordsScope? {
         guard let access, let household,
               let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
@@ -787,7 +794,7 @@ private struct RecordsRecoveredPantryView: View {
         if ledger.ready, let originID = ledger.sourceWorkspaceID {
             let workspace = try RecordsNativeCodec.ledger(ledger.exportPayload())
             for shop in workspace.shops {
-                let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
+                let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop, feedbackOwner: feedbackOwner)
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
                 let lines = shop.contributions.filter { $0.removedAt == nil }.map { contribution in
                     HelperLine(label: contribution.productName, originalAmount: contribution.quantity?.originalLiteral ?? "",
@@ -797,7 +804,7 @@ private struct RecordsRecoveredPantryView: View {
                     revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title,
                     savedAtMilliseconds: ArchiveCodec.milliseconds(ledger.savedAt ?? Date(timeIntervalSince1970: 0)), helperLines: lines, nativePayload: bytes))
             }
-            if let library = try RecordsNativeCodec.ledgerLibrary(workspace) {
+            if let library = try RecordsNativeCodec.ledgerLibrary(workspace, feedbackOwner: feedbackOwner) {
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
                 result.append(ArchiveRecord(id: "meal-library", origin: "ledger/" + originID.uuidString,
                     revision: ArchiveCodec.digest(bytes), kind: .ledger, title: "Reusable dinners",
@@ -898,7 +905,21 @@ private struct RecordsRecoveredPantryView: View {
         }
         let url = folder.appendingPathComponent(filename)
         guard FileManager.default.fileExists(atPath: url.path) else {
-            do { try RecordsNativeCodec.validate(saved.record); return [saved.record] }
+            do {
+                try RecordsNativeCodec.validate(saved.record)
+                if saved.record.kind == .ledger, let bytes = saved.record.nativePayload {
+                    let workspace = try RecordsNativeCodec.ledger(bytes)
+                    if workspace.privateMealFeedback.contains(where: { $0.owner != feedbackOwner }) {
+                        var visible = workspace
+                        visible.copyPrivateMealFeedback(from: workspace, owner: feedbackOwner)
+                        let payload = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: visible))
+                        return [try RecordsNativeCodec.revised(saved.record, nativePayload: payload, id: saved.record.id,
+                            title: saved.record.title, date: Date(timeIntervalSince1970: Double(saved.record.savedAtMilliseconds) / 1000),
+                            lines: saved.record.helperLines)]
+                    }
+                }
+                return [saved.record]
+            }
             catch { return omitRecovered(saved, reason: .invalidNative, unavailableRecords: &unavailableRecords) }
         }
         if saved.record.kind == .ledger {
@@ -911,7 +932,7 @@ private struct RecordsRecoveredPantryView: View {
             guard let current else { return omitRecovered(saved, reason: .unreadableStorage, unavailableRecords: &unavailableRecords) }
             do {
             let sources = try await mediaListing(workspaceID: opened.scope.workspaceID, authorize: authorize, liveScope: opened.scope, unavailableRecords: &unavailableRecords).records
-            return try RecordsNativeCodec.recoveredLedger(saved, current: current, scope: opened.scope, sources: sources)
+            return try RecordsNativeCodec.recoveredLedger(saved, current: current, scope: opened.scope, sources: sources, feedbackOwner: feedbackOwner)
             } catch { return omitRecovered(saved, reason: .invalidNative, unavailableRecords: &unavailableRecords) }
         }
         let store: ComparisonStore

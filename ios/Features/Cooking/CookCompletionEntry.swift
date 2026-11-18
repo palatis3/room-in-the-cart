@@ -287,6 +287,7 @@ private struct CookCompletionSavedView: View {
     @ObservedObject var pickup: PickupModel
     let draft: CookCompletionDraft
     @State private var reviewingUse = false
+    @State private var reviewingFeedback = false
     private var recordedNames: [UUID: String] {
         if let recovered = draft.recoveredMeal {
             return Dictionary(uniqueKeysWithValues: recovered.ingredients.map { ($0.need.id, $0.foodName) })
@@ -303,6 +304,10 @@ private struct CookCompletionSavedView: View {
                 Text(draft.cookedAt.formatted(date: .abbreviated, time: .shortened))
                 Text(cookCompletionText(model.remainingUnresolvedUseIDs.isEmpty ? "Inventory changes recorded." : "Inventory needs review. Unresolved use remains linked to this cooking event."))
                     .accessibilityIdentifier("cook.inventoryStatus")
+            }
+            if draft.recoveredMeal == nil {
+                Button(dinnerText("Private meal feedback")) { reviewingFeedback = true }
+                    .accessibilityIdentifier("cook.mealFeedback")
             }
             Section(cookCompletionText("Recorded ingredient use")) {
                 ForEach(draft.parts) { part in
@@ -348,6 +353,11 @@ private struct CookCompletionSavedView: View {
                 Button(cookCompletionText("Review Undo for this cooking")) { Task { await model.prepareUndo() } }
                     .disabled(!model.canReviewUndo).accessibilityIdentifier("cook.undo.review")
                 Text(cookCompletionText("Undo is available only while the affected counts, leftovers and holds still match this cooking record."))
+            }
+        }
+        .sheet(isPresented: $reviewingFeedback) {
+            NavigationStack {
+                MealFeedbackEntry(ledger: ledger, source: .occurrence(shopID: draft.shopID, occurrenceID: draft.meal.id), title: draft.cookedTitle)
             }
         }
         .sheet(isPresented: $reviewingUse, onDismiss: { Task { await model.reload() } }) {
