@@ -367,6 +367,15 @@ private struct PickupMealRecoveryEditor: View {
         }
         Section(recoveryText("Reviewed stock evidence")) {
             Text(recoveryText("Only confirmed stock available at the review time can cover a need. Future observations and planned trips do not add available food."))
+            if let canonical = value.domain.canonicalAllocation {
+                ForEach(canonical.lots, id: \.id) { lot in
+                    VStack(alignment: .leading) {
+                        Text(lot.name + " · " + pantryCount(lot.count))
+                        Text(pantryLocationName(lot.location))
+                        Text(pantryText("Last quantity confirmation") + ": " + lot.confirmedAt.formatted())
+                    }
+                }
+            }
             ForEach(value.domain.stockEvidence, id: \.lot.id) { item in
                 VStack(alignment: .leading) {
                     Text(item.lot.name + " · " + pQuantity(item.lot.usable))

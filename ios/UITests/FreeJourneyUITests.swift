@@ -16,6 +16,44 @@ import XCTest
     }
 
 #if DEBUG && targetEnvironment(simulator)
+    func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
+        launch(reset: true)
+        let pantry = app.buttons["shop.myPantry"]
+        XCTAssertTrue(pantry.waitForExistence(timeout: 12), "Pantry entry is missing from the empty Shop")
+        pantry.tap()
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        let name = app.textFields["pantry.foodName"]
+        tap(name); name.typeText("Dry lentils")
+        let amount = app.textFields["pantry.amount"]
+        tap(amount); amount.typeText("2")
+        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Dry lentils")).firstMatch
+        XCTAssertTrue(lot.waitForExistence(timeout: 10))
+        let lotID = lot.identifier
+        tap(lot)
+        let detail = app.navigationBars["Dry lentils"]
+        XCTAssertTrue(detail.waitForExistence(timeout: 8), "The saved lot must open from the Shop pantry")
+        tap(app.buttons["Some left"])
+        let confirm = app.buttons["pantry.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8), "Changing a lot requires an explicit review")
+        tap(confirm)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        tap(detail.buttons.firstMatch)
+        XCTAssertTrue(app.navigationBars["My Pantry"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons[lotID].label.contains("Some left — amount unknown"))
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(pantry.waitForExistence(timeout: 12), "Pantry entry is missing after relaunch")
+        pantry.tap()
+        XCTAssertTrue(app.buttons[lotID].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons[lotID].label.contains("Some left — amount unknown"))
+        XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
+    }
+
     func testOfflineFoodKeeperSearchAndReviewedQualityRangeInEnglishAndSpanish() {
         for spanish in [false, true] {
             launch(reset: true, spanish: spanish)
@@ -1269,7 +1307,8 @@ import XCTest
         assertText("This assisted tool requires paid access.")
         app.navigationBars.buttons.element(boundBy: 0).tap()
         assertText("Free manual meal repair")
-        assertText("Open meal need")
+        // The need sits above the manual-repair section when returning from the paid option.
+        reveal(app.staticTexts["Open meal need"], initiallyUpward: false)
         choose("Affected meal need", value: "Wednesday rice")
         fill("Use the remaining peppers in rice.", into: "Exact food, portions, exclusions and instructions")
         let trip = "I agree to an extra top-up trip for this repair"

@@ -61,6 +61,7 @@ enum LedgerPackStockReview {
         if basket.phase == .reportedPlaced { return true } // Historical purchase facts stay sealed.
         for selection in journey.ledgerPackSelections {
             guard (try? selection.validate()) != nil else { return false }
+            guard selection.canonicalStockEvidence == nil else { return false }
             guard let evidence = selection.stockEvidence else {
                 if journey.stockLots.contains(where: {
                     $0.foodID == selection.lineID && ($0.source == .pantry || $0.source == .freezer)
@@ -86,7 +87,17 @@ enum LedgerPackStockReview {
     }
 
     static func isCurrent(_ selection: LedgerPackSelection, shop: ShoppingLedger, workspaceID: UUID,
-                          journey: PickupJourney?, pickupWorkspaceID: UUID?, bindings: [DinnerPortionBinding]) throws -> Bool {
+                          journey: PickupJourney?, pickupWorkspaceID: UUID?, bindings: [DinnerPortionBinding],
+                          currentCanonicalEvidence: LedgerCanonicalPackStockEvidence? = nil, pantryIsActive: Bool = false) throws -> Bool {
+        if selection.canonicalStockEvidence != nil {
+            guard pantryIsActive, let currentCanonicalEvidence else { return false }
+            if try selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: bindings,
+                currentCanonicalEvidence: currentCanonicalEvidence) { return true }
+            guard let journey, let basket = journey.basket, journey.id == shop.id else { return false }
+            return try selection.isCurrentForAppliedBasket(in: shop, workspaceID: workspaceID, bindings: bindings,
+                currentCanonicalEvidence: currentCanonicalEvidence, basket: basket, retainedSelections: journey.ledgerPackSelections)
+        }
+        guard !pantryIsActive, currentCanonicalEvidence == nil else { return false }
         if selection.stockEvidence == nil {
             // A pre-stock choice must be reviewed again after someone confirms a
             // matching lot, even if the ledger's gross demand has not changed.

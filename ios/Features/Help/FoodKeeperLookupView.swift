@@ -12,7 +12,17 @@ struct FoodKeeperLookupContext {
 struct FoodKeeperLookupView: View {
     var context: FoodKeeperLookupContext?
     @Environment(\.locale) private var locale
-    @State private var reference: FoodKeeperReference?
+    private struct Query: Equatable, Sendable {
+        let text: String
+        let language: FoodKeeperLanguage
+    }
+    private struct SearchResult: Sendable {
+        let query: Query
+        let reference: FoodKeeperReference
+        let products: [FoodKeeperProduct]
+        let suggestedTerms: [String]
+    }
+    @State private var result: SearchResult?
     @State private var failed = false
     @State private var search = ""
 
@@ -24,21 +34,20 @@ struct FoodKeeperLookupView: View {
     private var language: FoodKeeperLanguage { locale.language.languageCode?.identifier == "es" ? .spanish : .english }
 
     var body: some View {
+        let query = Query(text: search, language: language)
         List {
-            if let reference {
-                let matches = reference.search(search, language: language)
-                if matches.isEmpty {
+            if let result, result.query == query {
+                if result.products.isEmpty {
                     Text(helpText("No matching FoodKeeper entry. Try another food name or category."))
-                    let alternatives = reference.suggestedTerms(for: search)
-                    if !alternatives.isEmpty {
+                    if !result.suggestedTerms.isEmpty {
                         Section(helpText("Search using one word")) {
-                            ForEach(alternatives, id: \.self) { term in
+                            ForEach(result.suggestedTerms, id: \.self) { term in
                                 Button(term) { search = term }
                             }
                         }
                     }
                 }
-                ForEach(matches) { item in
+                ForEach(result.products) { item in
                     NavigationLink {
                         FoodKeeperDetail(product: item, language: language, context: context)
                     } label: {
@@ -53,10 +62,22 @@ struct FoodKeeperLookupView: View {
         }
         .searchable(text: $search, prompt: Text(helpText("Search foods or categories")))
         .navigationTitle(helpText("Food storage guide"))
-        .task {
-            guard reference == nil else { return }
-            do { reference = try await Task.detached(priority: .userInitiated) { try FoodKeeperReference.bundled() }.value }
-            catch { failed = true }
+        .task(id: query) {
+            guard result?.query != query else { return }
+            let loaded = result?.reference
+            do {
+                let found = try await Task.detached(priority: .userInitiated) {
+                    let reference = try loaded ?? FoodKeeperReference.bundled()
+                    let products = reference.search(query.text, language: query.language)
+                    let terms = products.isEmpty ? reference.suggestedTerms(for: query.text) : []
+                    return SearchResult(query: query, reference: reference, products: products, suggestedTerms: terms)
+                }.value
+                try Task.checkCancellation()
+                result = found
+                failed = false
+            } catch {
+                if !Task.isCancelled { failed = true }
+            }
         }
     }
 }

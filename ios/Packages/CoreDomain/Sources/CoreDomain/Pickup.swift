@@ -271,6 +271,11 @@ public struct StockDemandCoverage: Codable, Equatable, Sendable, Identifiable {
     public let allocated: Rational?
     public let shortfall: Rational?
     public let issues: [PickupIssue]
+    public init(id: UUID, foodID: UUID, unit: UnitOfMeasure, needed: Rational?, allocated: Rational?,
+                shortfall: Rational?, issues: [PickupIssue]) {
+        self.id = id; self.foodID = foodID; self.unit = unit; self.needed = needed
+        self.allocated = allocated; self.shortfall = shortfall; self.issues = issues
+    }
 }
 public struct StockAllocationEdge: Codable, Equatable, Sendable {
     public let lotID: UUID
@@ -278,6 +283,9 @@ public struct StockAllocationEdge: Codable, Equatable, Sendable {
     public let foodID: UUID
     public let unit: UnitOfMeasure
     public let amount: Rational
+    public init(lotID: UUID, needID: UUID, foodID: UUID, unit: UnitOfMeasure, amount: Rational) {
+        self.lotID = lotID; self.needID = needID; self.foodID = foodID; self.unit = unit; self.amount = amount
+    }
 }
 public struct StockLotBalance: Codable, Equatable, Sendable {
     public let lotID: UUID
@@ -285,12 +293,23 @@ public struct StockLotBalance: Codable, Equatable, Sendable {
     public let unit: UnitOfMeasure
     public let remainingUnallocated: Rational
     public let issues: [PickupIssue]
+    public init(lotID: UUID, foodID: UUID, unit: UnitOfMeasure, remainingUnallocated: Rational, issues: [PickupIssue]) {
+        self.lotID = lotID; self.foodID = foodID; self.unit = unit
+        self.remainingUnallocated = remainingUnallocated; self.issues = issues
+    }
 }
 public struct StockAllocationResult: Codable, Equatable, Sendable {
     public let demands: [StockDemandCoverage]
     public let allocations: [StockAllocationEdge]
     public let remainingLots: [StockLotBalance]
-    public var confirmedCoverageComplete: Bool { !demands.isEmpty && demands.allSatisfy { $0.shortfall == .zero } }
+    /// Presentation may project a scoped view of a previously computed all-shop
+    /// allocation. These value constructors never reserve or mutate physical food.
+    public init(demands: [StockDemandCoverage], allocations: [StockAllocationEdge], remainingLots: [StockLotBalance]) {
+        self.demands = demands; self.allocations = allocations; self.remainingLots = remainingLots
+    }
+    public var confirmedCoverageComplete: Bool {
+        !demands.isEmpty && demands.allSatisfy { $0.issues.isEmpty && $0.allocated != nil && $0.shortfall == .zero }
+    }
 }
 
 /// Works on a fresh installation with no shop, order, receipt, or invented meal date.

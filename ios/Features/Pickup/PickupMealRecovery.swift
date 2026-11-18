@@ -20,6 +20,7 @@ struct PickupMealRecoveryReview {
     let authority: PickupRecoveryAuthority
     let journeyRevision: Int64
     let candidateHistory: PickupMealRecoveryHistory
+    var reviewedLedger: PickupModel.CheckoutLedgerBasis? = nil
     var id: UUID { domain.request.id }
 }
 struct PickupMealContextReview {
@@ -170,7 +171,6 @@ extension PickupJourney {
     }
 
     var currentRepairNeeds: [AllocationNeed] {
-        guard mealRecovery != nil else { return needs }
         let urgentIDs = Set(recoveryCurrentUrgent.map(\.id))
         return recoveryCurrentAllocationNeeds.filter { !urgentIDs.contains($0.id) }
     }
@@ -240,14 +240,21 @@ extension PickupModel {
     var recoveryStockMatches: [PickupStockMatch] {
         guard let current = journey else { return [] }
         var result = current.reviewedStockMatches, seen = Set(result.map(\.id))
+        if pantryIsActive {
+            guard let context = try? pantryReviewContext() else { return [] }
+            for lot in context.snapshot.lots where seen.insert(lot.foodID).inserted {
+                result.append(.init(id: lot.foodID, name: lot.name))
+            }
+            return result
+        }
         for evidence in current.recoveryStockEvidence where seen.insert(evidence.lot.foodID).inserted {
             result.append(.init(id: evidence.lot.foodID, name: evidence.lot.name))
         }
         return result
     }
 
-    private func permitsRecovery(_ authority: PickupRecoveryAuthority, allowPending: Bool = false) -> Bool {
-        guard ready, !saving, allowPending || !hasPendingSave, let scope = authority.scope, scope.permitsReview,
+    private func permitsRecovery(_ authority: PickupRecoveryAuthority, allowPending: Bool = false, savingOperationID: UUID? = nil) -> Bool {
+        guard ready, (!saving || savingOperationID.map(isValidatingRecoverySave) == true), allowPending || !hasPendingSave, let scope = authority.scope, scope.permitsReview,
               scope.workspaceID == sourceWorkspaceID, authority.selectedPickupID == selectedID,
               let current = journey, current.id == authority.selectedPickupID, current.closedAt == nil,
               !current.awayCarryovers.contains(where: { $0.phase == .prepared || $0.phase == .reserved }),
@@ -276,34 +283,75 @@ extension PickupModel {
         guard let previous = try history.definition(for: definition.meal.id) else { throw PickupMealRecoveryError.invalid }
         try definition.validate(replacing: previous)
         try validateCurrentAcceptedTemplate(definition)
-        try validateMatchedIngredientRules(definition, evidence: current.recoveryStockEvidence, at: instant)
         let request = MealRecoveryRequest(id: operationID, shopID: current.id,
             baseRevisionID: try MealRecoveryEngine.project(history.domain).revisionID,
             target: previous.meal, replacement: definition.meal, reviewedAt: instant,
             agreesToRepeat: agreesToRepeat, proposesExtraTrip: proposesExtraTrip, agreesToExtraTrip: agreesToExtraTrip,
             acceptsUnresolved: acceptsUnresolved)
+        if let context = try pantryReviewContext() {
+            let captured = PantryPackStockReview.Context(snapshot: context.snapshot, mapping: context.mapping, asOf: instant)
+            let proof = try PantryMealRecoveryEvidence.prepare(request: request, history: history, journey: current, context: captured)
+            try validateMatchedIngredientRules(definition, names: proof.lots.map { ($0.foodID, $0.name) })
+            guard let ledger = recoveryLedger else { throw PickupMealRecoveryError.unavailable }
+            let review = try MealRecoveryEngine.preview(request, in: history.domain, canonicalAllocation: proof, at: instant)
+            return .init(domain: review, definition: definition, authority: authority, journeyRevision: current.revision,
+                candidateHistory: history, reviewedLedger: try .init(ledger: ledger))
+        }
+        try validateMatchedIngredientRules(definition, evidence: current.recoveryStockEvidence, at: instant)
         let review = try MealRecoveryEngine.preview(request, in: history.domain, stockEvidence: current.recoveryStockEvidence,
             reservations: current.carryoverStockReservations, at: instant)
         return .init(domain: review, definition: definition, authority: authority, journeyRevision: current.revision, candidateHistory: history)
     }
     func applyMealRecovery(_ review: PickupMealRecoveryReview,
                            currentAuthority: @escaping @MainActor () -> PickupRecoveryAuthority?) async -> Bool {
+        // A durable canonical receipt is recognized before asking whether the
+        // old action can still be performed. Uncommitted retries still authorize.
+        if pantryIsActive, hasPendingSave {
+            return await retryRecoveryCandidate(operationID: review.id, authorize: { [weak self] in
+                guard let self, let latest = currentAuthority(), latest == review.authority,
+                      self.permitsRecovery(latest, allowPending: true, savingOperationID: review.id),
+                      review.definition.acceptedTemplate == nil || latest.permitsAcceptedDinner,
+                      let live = self.journey, live.revision == review.journeyRevision else { return false }
+                do {
+                    try self.validateCurrentAcceptedTemplate(review.definition)
+                    var checked = review.domain.source
+                    _ = try self.applyReviewedRecovery(review, to: &checked, live: live)
+                    return true
+                } catch { return false }
+            }, matches: { self.matchesSavedRecovery($0, review: review) })
+        }
+        if pantryIsActive {
+            guard await refreshPantryStock() else { return false }
+            if let live = journey, live.mealRecovery?.domain.events.contains(where: { $0.id == review.id }) == true {
+                return matchesSavedRecovery(live, review: review)
+            }
+        }
         guard let authority = currentAuthority(), authority == review.authority, permitsRecovery(authority, allowPending: true),
               review.definition.acceptedTemplate == nil || authority.permitsAcceptedDinner else {
             error = recoveryText("The meal or your access changed. Review the replacement again."); return false
         }
         if hasPendingSave {
-            return await retryRecoveryCandidate(operationID: review.id) { pending in
+            return await retryRecoveryCandidate(operationID: review.id, authorize: { [weak self] in
+                guard let self, let latest = currentAuthority() else { return false }
+                guard latest == authority, self.permitsRecovery(latest, allowPending: true, savingOperationID: review.id),
+                      let live = self.journey, live.revision == review.journeyRevision else { return false }
+                do {
+                    try self.validateCurrentAcceptedTemplate(review.definition)
+                    var checked = review.domain.source
+                    _ = try self.applyReviewedRecovery(review, to: &checked, live: live)
+                    return true
+                } catch { return false }
+            }) { pending in
                 guard let history = pending.mealRecovery, let event = history.domain.events.first(where: { $0.id == review.id }) else { return false }
                 return event.request == review.domain.request && event.stockEvidence == review.domain.stockEvidence &&
-                    event.reservations == review.domain.reservations && history.definitions.first(where: { $0.operationID == review.id })?.definition == review.definition
+                    event.canonicalAllocation == review.domain.canonicalAllocation && event.reservations == review.domain.reservations && history.definitions.first(where: { $0.operationID == review.id })?.definition == review.definition
             }
         }
         do {
             guard var candidate = journey else { throw PickupMealRecoveryError.unavailable }
             if let history = candidate.mealRecovery, let saved = history.domain.events.first(where: { $0.id == review.id }) {
                 guard saved.request == review.domain.request, saved.stockEvidence == review.domain.stockEvidence,
-                      saved.reservations == review.domain.reservations,
+                      saved.canonicalAllocation == review.domain.canonicalAllocation, saved.reservations == review.domain.reservations,
                       history.definitions.first(where: { $0.operationID == review.id })?.definition == review.definition else {
                     throw MealRecoveryError.operationConflict
                 }
@@ -324,25 +372,19 @@ extension PickupModel {
             }
             guard fresh == review.candidateHistory else { throw PickupMealRecoveryError.stale }
             try validateCurrentAcceptedTemplate(review.definition)
-            let instant = stockReviewDate
-            try validateMatchedIngredientRules(review.definition, evidence: candidate.recoveryStockEvidence, at: instant)
-            try MealRecoveryEngine.apply(review.domain, to: &fresh.domain, stockEvidence: candidate.recoveryStockEvidence,
-                reservations: candidate.carryoverStockReservations, at: instant)
+            let writeReview = try applyReviewedRecovery(review, to: &fresh.domain, live: candidate)
             fresh.definitions.append(.init(operationID: review.id, definition: review.definition,
                 localActorID: authority.presentation.localActorID))
             try fresh.validate()
             candidate.mealRecovery = fresh
-            return await saveRecoveryCandidate(candidate, operationID: review.id) { [weak self] in
+            return await saveRecoveryCandidate(candidate, operationID: review.id, reviewedPantry: writeReview) { [weak self] in
                 guard let self, let latest = currentAuthority() else { return false }
-                guard latest == authority, self.permitsRecovery(latest, allowPending: true),
+                guard latest == authority, self.permitsRecovery(latest, allowPending: true, savingOperationID: review.id),
                       let live = self.journey, live.revision == review.journeyRevision else { return false }
                 do {
-                    let instant = self.stockReviewDate
                     try self.validateCurrentAcceptedTemplate(review.definition)
-                    try self.validateMatchedIngredientRules(review.definition, evidence: live.recoveryStockEvidence, at: instant)
                     var checked = review.domain.source
-                    try MealRecoveryEngine.apply(review.domain, to: &checked, stockEvidence: live.recoveryStockEvidence,
-                        reservations: live.carryoverStockReservations, at: instant)
+                    _ = try self.applyReviewedRecovery(review, to: &checked, live: live)
                     return true
                 } catch { return false }
             }
@@ -369,7 +411,10 @@ extension PickupModel {
                            currentAuthority: @escaping @MainActor () -> PickupRecoveryAuthority?) async -> Bool {
         guard let authority = currentAuthority(), authority == review.authority, permitsRecovery(authority, allowPending: true) else { return false }
         if hasPendingSave {
-            return await retryRecoveryCandidate(operationID: review.domain.request.id) { pending in
+            return await retryRecoveryCandidate(operationID: review.domain.request.id, authorize: { [weak self] in
+                guard let self, let latest = currentAuthority() else { return false }
+                return latest == authority && self.permitsRecovery(latest, allowPending: true, savingOperationID: review.domain.request.id)
+            }) { pending in
                 pending.mealRecovery?.domain.contextChanges.first(where: { $0.id == review.domain.request.id })?.request == review.domain.request
             }
         }
@@ -386,7 +431,7 @@ extension PickupModel {
             candidate.mealRecovery = history
             return await saveRecoveryCandidate(candidate, operationID: review.domain.request.id) { [weak self] in
                 guard let self, let latest = currentAuthority() else { return false }
-                return latest == authority && self.permitsRecovery(latest, allowPending: true)
+                return latest == authority && self.permitsRecovery(latest, allowPending: true, savingOperationID: review.domain.request.id)
             }
         } catch { self.error = recoveryText("The meal changed. Review its date again."); return false }
     }
@@ -396,15 +441,52 @@ extension PickupModel {
             $0.acceptedFallback && $0.template == template
         }) == true else { throw PickupMealRecoveryError.sourceChanged }
     }
+    private func matchesSavedRecovery(_ journey: PickupJourney, review: PickupMealRecoveryReview) -> Bool {
+        guard let history = journey.mealRecovery,
+              let event = history.domain.events.first(where: { $0.id == review.id }) else { return false }
+        return event.request == review.domain.request && event.stockEvidence == review.domain.stockEvidence &&
+            event.reservations == review.domain.reservations && event.canonicalAllocation == review.domain.canonicalAllocation &&
+            history.definitions.first(where: { $0.operationID == review.id })?.definition == review.definition
+    }
+
+    /// Rebuild the same complete proof at its original review instant. The final
+    /// source save also checks actual inventory/ledger revisions and resulting claims.
+    private func applyReviewedRecovery(_ review: PickupMealRecoveryReview, to state: inout MealRecoveryState,
+                                       live: PickupJourney) throws -> PantryWriteReview? {
+        let instant = stockReviewDate
+        if let proof = review.domain.canonicalAllocation {
+            guard pantryIsActive, proof.asOf <= instant,
+                  let ledger = recoveryLedger, let reviewedLedger = review.reviewedLedger,
+                  try CheckoutLedgerBasis(ledger: ledger) == reviewedLedger,
+                  let current = try pantryReviewContext(forRecoveryOperationID: review.id),
+                  let afterClaims = review.domain.canonicalAfterClaims else { throw PickupMealRecoveryError.stale }
+            let context = PantryPackStockReview.Context(snapshot: current.snapshot, mapping: current.mapping, asOf: proof.asOf)
+            let rebuilt = try PantryMealRecoveryEvidence.prepare(request: review.domain.request,
+                history: review.candidateHistory, journey: live, context: context)
+            guard rebuilt == proof else { throw PickupMealRecoveryError.stale }
+            try validateMatchedIngredientRules(review.definition, names: proof.lots.map { ($0.foodID, $0.name) })
+            try MealRecoveryEngine.apply(review.domain, to: &state, canonicalAllocation: rebuilt, at: instant)
+            return .init(inventory: proof.basis, ledger: reviewedLedger, resultingReservations: afterClaims)
+        }
+        guard !pantryIsActive else { throw PickupMealRecoveryError.stale }
+        try validateMatchedIngredientRules(review.definition, evidence: live.recoveryStockEvidence, at: instant)
+        try MealRecoveryEngine.apply(review.domain, to: &state, stockEvidence: live.recoveryStockEvidence,
+            reservations: live.carryoverStockReservations, at: instant)
+        return nil
+    }
+
     private func validateMatchedIngredientRules(_ definition: PickupRecoveryMealDefinition,
                                                 evidence: [RecoveryStockEvidence], at instant: Date) throws {
+        try validateMatchedIngredientRules(definition, names: evidence.map { ($0.lot.foodID, $0.lot.name) })
+    }
+    private func validateMatchedIngredientRules(_ definition: PickupRecoveryMealDefinition,
+                                                names: [(UUID, String)]) throws {
         for ingredient in definition.meal.ingredients {
             guard let rule = definition.ingredientRules.first(where: { $0.needID == ingredient.need.id }) else { throw PickupMealRecoveryError.invalid }
-            // Food identity/rules apply to retained future evidence too; availability
-            // alone is time-filtered by the allocation engine.
-            for lot in evidence where lot.lot.foodID == ingredient.need.foodID {
+            // Name checks do not turn an unknown canonical count into food credit.
+            for (foodID, name) in names where foodID == ingredient.need.foodID {
                 try MealTemplate(id: ingredient.need.id, title: definition.meal.title,
-                    ingredients: [.init(id: ingredient.need.id, name: lot.lot.name, quantity: ingredient.need.amount,
+                    ingredients: [.init(id: ingredient.need.id, name: name, quantity: ingredient.need.amount,
                         exclusions: rule.exclusions)], exclusions: definition.meal.exclusions).validate()
             }
         }

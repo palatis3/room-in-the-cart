@@ -3728,6 +3728,1281 @@
           }
         }
       }
+    },
+    "Pantry recovery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry recovery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperación de la despensa"
+          }
+        }
+      }
+    },
+    "Save an encrypted backup of your pantry or import one as a separate copy on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save an encrypted backup of your pantry or import one as a separate copy on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda una copia de seguridad cifrada de tu despensa o importa una como copia independiente en este iPhone."
+          }
+        }
+      }
+    },
+    "Show recovery key": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show recovery key"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar la clave de recuperación"
+          }
+        }
+      }
+    },
+    "Keep the key somewhere safe. You’ll need the same key to open this backup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the key somewhere safe. You’ll need the same key to open this backup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda la clave en un lugar seguro. Necesitarás la misma clave para abrir esta copia de seguridad."
+          }
+        }
+      }
+    },
+    "I saved this recovery key somewhere safe.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I saved this recovery key somewhere safe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardé esta clave de recuperación en un lugar seguro."
+          }
+        }
+      }
+    },
+    "I understand this pantry package contains private food and meal records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I understand this pantry package contains private food and meal records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entiendo que este paquete de la despensa contiene registros privados de alimentos y comidas."
+          }
+        }
+      }
+    },
+    "Save current pantry to Files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save current pantry to Files"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la despensa actual en Archivos"
+          }
+        }
+      }
+    },
+    "Choose pantry package from Files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose pantry package from Files"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un paquete de la despensa en Archivos"
+          }
+        }
+      }
+    },
+    "Refresh recovered pantries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh recovered pantries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar las despensas recuperadas"
+          }
+        }
+      }
+    },
+    "Working…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Procesando…"
+          }
+        }
+      }
+    },
+    "Review pantry import": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pantry import"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la importación de la despensa"
+          }
+        }
+      }
+    },
+    "Food batches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food batches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lotes de alimentos"
+          }
+        }
+      }
+    },
+    "Meal reservations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal reservations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservas para comidas"
+          }
+        }
+      }
+    },
+    "Saved revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión guardada"
+          }
+        }
+      }
+    },
+    "Pending changes in this backup are kept as history in the recovered copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending changes in this backup are kept as history in the recovered copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los cambios pendientes de esta copia de seguridad se conservan en el historial de la copia recuperada."
+          }
+        }
+      }
+    },
+    "Apply pantry import": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply pantry import"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar la importación de la despensa"
+          }
+        }
+      }
+    },
+    "Cancel pantry review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel pantry review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar la revisión de la despensa"
+          }
+        }
+      }
+    },
+    "Recovered pantries on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered pantries on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Despensas recuperadas en este iPhone"
+          }
+        }
+      }
+    },
+    "No recovered pantry copies.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recovered pantry copies."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay copias recuperadas de la despensa."
+          }
+        }
+      }
+    },
+    "Recovered pantry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Despensa recuperada"
+          }
+        }
+      }
+    },
+    "Open recovered pantry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open recovered pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la despensa recuperada"
+          }
+        }
+      }
+    },
+    "Save this edited copy to Files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save this edited copy to Files"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar esta copia editada en Archivos"
+          }
+        }
+      }
+    },
+    "Open this recovered pantry before exporting its current contents.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this recovered pantry before exporting its current contents."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre esta despensa recuperada antes de exportar su contenido actual."
+          }
+        }
+      }
+    },
+    "Review deletion of this copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review deletion of this copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la eliminación de esta copia"
+          }
+        }
+      }
+    },
+    "Delete recovered pantry copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete recovered pantry copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la copia recuperada de la despensa"
+          }
+        }
+      }
+    },
+    "This permanently deletes the selected recovered copy from this iPhone. You’ll keep your current pantry and any files already exported.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This permanently deletes the selected recovered copy from this iPhone. You’ll keep your current pantry and any files already exported."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia recuperada que seleccionaste se eliminará de este iPhone de forma permanente. Conservarás tu despensa actual y los archivos que ya exportaste."
+          }
+        }
+      }
+    },
+    "I reviewed this recovered copy for deletion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this recovered copy for deletion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé la copia recuperada que se va a eliminar."
+          }
+        }
+      }
+    },
+    "Enter a valid pantry recovery key before using Files.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid pantry recovery key before using Files."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce una clave de recuperación válida para la despensa antes de usar Archivos."
+          }
+        }
+      }
+    },
+    "Pantry access or records changed. Unlock and refresh before reviewing again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry access or records changed. Unlock and refresh before reviewing again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los permisos de acceso o los registros de la despensa han cambiado. Desbloquea y actualiza antes de volver a revisarlos."
+          }
+        }
+      }
+    },
+    "Couldn’t finish this action. Refresh the recovered pantries and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t finish this action. Refresh the recovered pantries and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo completar la acción. Actualiza las despensas recuperadas y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Pantry import saved as a separate local copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry import saved as a separate local copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La despensa importada se guardó como una copia local independiente."
+          }
+        }
+      }
+    },
+    "Recovered pantry opened.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered pantry opened."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se abrió la despensa recuperada."
+          }
+        }
+      }
+    },
+    "Encrypted pantry package saved to Files.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypted pantry package saved to Files."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El paquete cifrado de la despensa se guardó en Archivos."
+          }
+        }
+      }
+    },
+    "Recovered pantry copy deleted from this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered pantry copy deleted from this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia recuperada de la despensa se eliminó de este iPhone."
+          }
+        }
+      }
+    },
+    "File selection cancelled.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File selection cancelled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se canceló la selección del archivo."
+          }
+        }
+      }
+    },
+    "This package can become a separate recovered pantry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This package can become a separate recovered pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este paquete se puede recuperar como una despensa independiente."
+          }
+        }
+      }
+    },
+    "This exact pantry package is already recovered here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This exact pantry package is already recovered here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este mismo paquete de la despensa ya se recuperó en este iPhone."
+          }
+        }
+      }
+    },
+    "Another version is recovered here. This package will remain a separate copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another version is recovered here. This package will remain a separate copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya se recuperó otra versión en este iPhone. Este paquete se conservará como una copia independiente."
+          }
+        }
+      }
+    },
+    "This package conflicts with a recovered identity and cannot be applied.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This package conflicts with a recovered identity and cannot be applied."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este paquete tiene un conflicto de identidad con una copia recuperada y no se puede importar."
+          }
+        }
+      }
+    },
+    "This pantry package was removed locally and cannot be recovered again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pantry package was removed locally and cannot be recovered again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este paquete de la despensa se eliminó de este iPhone y no se puede volver a recuperar."
+          }
+        }
+      }
+    },
+    "Delete pantry data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete pantry data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar datos de la despensa"
+          }
+        }
+      }
+    },
+    "Choose what to delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige qué eliminar"
+          }
+        }
+      }
+    },
+    "There are no pantry records to delete.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no pantry records to delete."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay registros de la despensa para eliminar."
+          }
+        }
+      }
+    },
+    "Retry confirmed cleanup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry confirmed cleanup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la limpieza confirmada"
+          }
+        }
+      }
+    },
+    "Refresh pantry deletion choices": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh pantry deletion choices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar las opciones de eliminación"
+          }
+        }
+      }
+    },
+    "Entire local pantry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entire local pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toda la despensa local"
+          }
+        }
+      }
+    },
+    "Food batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lote de alimentos"
+          }
+        }
+      }
+    },
+    "Pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra para recoger"
+          }
+        }
+      }
+    },
+    "These records changed. Refresh and review the deletion again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These records changed. Refresh and review the deletion again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos registros cambiaron. Actualiza las opciones y vuelve a revisar la eliminación."
+          }
+        }
+      }
+    },
+    "Unlock the private workspace to review pantry deletion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock the private workspace to review pantry deletion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea el espacio de trabajo privado para revisar la eliminación de datos de la despensa."
+          }
+        }
+      }
+    },
+    "Couldn’t verify the deletion status. Refresh to check the pantry records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t verify the deletion status. Refresh to check the pantry records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar el estado de la eliminación. Actualiza las opciones para comprobar los registros de la despensa."
+          }
+        }
+      }
+    },
+    "A confirmed pantry deletion has unfinished cleanup on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A confirmed pantry deletion has unfinished cleanup on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda pendiente la limpieza de una eliminación de datos de la despensa que ya confirmaste en este iPhone."
+          }
+        }
+      }
+    },
+    "The reviewed pantry data was deleted from this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed pantry data was deleted from this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos de la despensa que revisaste se eliminaron de este iPhone."
+          }
+        }
+      }
+    },
+    "There is no confirmed cleanup left to finish.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no confirmed cleanup left to finish."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No queda ninguna limpieza confirmada pendiente."
+          }
+        }
+      }
+    },
+    "Review pantry deletion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pantry deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la eliminación de datos de la despensa"
+          }
+        }
+      }
+    },
+    "You selected one food batch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You selected one food batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionaste un lote de alimentos."
+          }
+        }
+      }
+    },
+    "You selected one pickup and its pantry records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You selected one pickup and its pantry records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionaste una compra para recoger y sus registros de la despensa."
+          }
+        }
+      }
+    },
+    "You selected the entire local pantry and its history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You selected the entire local pantry and its history."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionaste toda la despensa local y su historial."
+          }
+        }
+      }
+    },
+    "Food batches to delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food batches to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lotes de alimentos que se eliminarán"
+          }
+        }
+      }
+    },
+    "Pickups to delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickups to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras para recoger que se eliminarán"
+          }
+        }
+      }
+    },
+    "Meal reservations to delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal reservations to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservas para comidas que se eliminarán"
+          }
+        }
+      }
+    },
+    "Reservations whose history or backing will change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservations whose history or backing will change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservas cuyo historial o cuyos alimentos asignados cambiarán"
+          }
+        }
+      }
+    },
+    "Other pickups that depend on these records": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other pickups that depend on these records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otras compras para recoger que dependen de estos registros"
+          }
+        }
+      }
+    },
+    "Receipt food that will be kept": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt food that will be kept"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos registrados en recibos que se conservarán"
+          }
+        }
+      }
+    },
+    "Recovered pantry copies to delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered pantry copies to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copias recuperadas de la despensa que se eliminarán"
+          }
+        }
+      }
+    },
+    "Pending change files to delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending change files to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos de cambios pendientes que se eliminarán"
+          }
+        }
+      }
+    },
+    "Deletion is blocked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletion is blocked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se puede realizar la eliminación"
+          }
+        }
+      }
+    },
+    "Other pickups contain related records. Your selection does not include those pickups.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other pickups contain related records. Your selection does not include those pickups."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay otras compras para recoger con registros relacionados que están fuera de tu selección."
+          }
+        }
+      }
+    },
+    "Related shopping ledger history must be resolved before these records can be deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Related shopping ledger history must be resolved before these records can be deleted."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el historial de compras relacionado antes de eliminar estos registros."
+          }
+        }
+      }
+    },
+    "Some stored content could not be checked for related pantry data.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some stored content could not be checked for related pantry data."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo comprobar si parte del contenido guardado contiene datos relacionados de la despensa."
+          }
+        }
+      }
+    },
+    "Related recovered records must be reviewed separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Related recovered records must be reviewed separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros recuperados relacionados se deben revisar por separado."
+          }
+        }
+      }
+    },
+    "I reviewed the records and permanent changes listed above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the records and permanent changes listed above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé los registros y los cambios permanentes indicados arriba."
+          }
+        }
+      }
+    },
+    "Permanently delete reviewed pantry data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete reviewed pantry data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar de forma permanente los datos de la despensa que revisé"
+          }
+        }
+      }
+    },
+    "Files you previously exported stay wherever you saved them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files you previously exported stay wherever you saved them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los archivos que ya exportaste se conservarán donde los guardaste."
+          }
+        }
+      }
+    },
+    "Cancel deletion review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel deletion review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar la revisión de la eliminación"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

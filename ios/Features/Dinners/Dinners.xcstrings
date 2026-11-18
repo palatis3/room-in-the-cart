@@ -8518,6 +8518,40 @@
           }
         }
       }
+    },
+    "Only current confirmed pantry food can feed a fallback. Other needs stay reserved; these instructions do not release or replace them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only current confirmed pantry food can feed a fallback. Other needs stay reserved; these instructions do not release or replace them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo los alimentos confirmados del inventario actual pueden usarse en una alternativa. Las demás necesidades siguen reservadas; estas instrucciones no las liberan ni las sustituyen."
+          }
+        }
+      }
+    },
+    "Start a new manual instruction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a new manual instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar una nueva instrucción manual"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

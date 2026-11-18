@@ -7,11 +7,21 @@ struct PickupFallbackReviewEntry: View {
     @EnvironmentObject private var membership: MembershipCoordinator
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
     let select: (PickupRepairDraft) -> Void
 
     private var permitted: Bool {
-        access.unlocked && !household.locked && (household.projection.map { ["shopper","organizer"].contains($0.role) } ?? true) &&
+        scenePhase == .active && access.unlocked && !household.locked && (household.projection.map { ["shopper","organizer"].contains($0.role) } ?? true) &&
         membership.model?.hasPaidAccess == true && ledger.ready && !ledger.saving && !ledger.hasPendingSave && model.ready && !model.saving && !model.hasPendingSave
+    }
+    private func canonicalSupply(for journey: PickupJourney) throws -> PickupFallbackCanonicalSupply? {
+        guard model.pantryIsActive else { return nil }
+        guard let context = try model.pantryReviewContext() else { throw MealRecoveryError.stale }
+        return try .prepare(journey: journey, context: context)
+    }
+    private func stockIdentity(_ supply: PickupFallbackCanonicalSupply?) -> String {
+        guard let basis = supply?.basis else { return "legacy" }
+        return "\(basis.originID)/\(basis.inventoryRevision)/" + basis.sourceHeads.map { "\($0.journeyID):\($0.revision)" }.joined(separator: "/")
     }
     var body: some View {
         TimelineView(.periodic(from: .now, by: 5)) { tick in
@@ -19,11 +29,16 @@ struct PickupFallbackReviewEntry: View {
                 let state = ledger.workspace.dinnerPlanning
                 let shop = ledger.workspace.shops.first { $0.id == journey.id }
                 let chosen = Set((shop?.mealOccurrences ?? []).filter { $0.removedAt == nil }.compactMap(\.templateID))
+                let canonical = try? canonicalSupply(for: journey)
+                if !model.pantryIsActive || canonical != nil {
                 PickupFallbackReviewView(journey: journey, library: state.acceptedDinners.filter(\.acceptedFallback), chosen: chosen,
-                                         now: tick.date, authorized: { permitted && model.journey?.revision == journey.revision &&
+                                         now: tick.date, canonical: canonical, authorized: { permitted && model.journey?.revision == journey.revision &&
                                             model.journey?.id == journey.id && ledger.workspace.dinnerPlanning.revisionID == state.revisionID &&
-                                            ledger.workspace.shops.first(where: { $0.id == journey.id })?.revisionID == shop?.revisionID }, select: select)
-                    .id("\(journey.id)/\(journey.revision)/\(state.revisionID)/\(shop?.revisionID.uuidString ?? "")")
+                                            ledger.workspace.shops.first(where: { $0.id == journey.id })?.revisionID == shop?.revisionID &&
+                                            (!model.pantryIsActive || canonical != nil) &&
+                                            (try? canonicalSupply(for: journey))?.basis == canonical?.basis }, select: select)
+                    .id("\(journey.id)/\(journey.revision)/\(state.revisionID)/\(shop?.revisionID.uuidString ?? "")/\(stockIdentity(canonical))")
+                } else { Text(pantryText("Could not load a complete pantry. No partial availability is shown.")).padding() }
             } else { Text(dinnerText("This assisted tool requires paid access. Manual dinner editing remains available.")).padding() }
         }.navigationTitle(dinnerText("Recover with an accepted dinner"))
             .task { if !ledger.ready { await ledger.open() } }
@@ -35,6 +50,7 @@ private struct PickupFallbackReviewView: View {
     let library: [AcceptedDinner]
     let chosen: Set<UUID>
     let now: Date
+    let canonical: PickupFallbackCanonicalSupply?
     let authorized: () -> Bool
     let select: (PickupRepairDraft) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -42,12 +58,16 @@ private struct PickupFallbackReviewView: View {
     private var choices: [StockNeed] { PickupFallbackOptions.needs(journey) }
     private var foodNames: [UUID:String] {
         var names = Dictionary(uniqueKeysWithValues: (journey.pickup?.orderLines ?? []).map { ($0.id,$0.name) })
-        for lot in PickupFallbackOptions.lots(journey, at: now) { names[lot.foodID] = names[lot.foodID] ?? lot.name }
+        if let canonical {
+            names.merge(canonical.foodNames) { _, current in current }
+        } else {
+            for lot in PickupFallbackOptions.lots(journey, at: now) { names[lot.foodID] = names[lot.foodID] ?? lot.name }
+        }
         return names
     }
     private func rankedBest(at date: Date) -> PickupFallbackOption? {
         try? PickupFallbackOptions.ranked(journey: journey, library: library, chosenTemplates: chosen,
-                                          draft: review.draft, at: date, paid: authorized()).first
+                                          draft: review.draft, at: date, paid: authorized(), canonical: canonical).first
     }
 
     var body: some View {
@@ -55,7 +75,11 @@ private struct PickupFallbackReviewView: View {
         let best = review.isReviewed ? rankedBest(at: now) : nil
         Form {
             Section {
-                Text(dinnerText("Only checked usable food from this pickup and its confirmed stock can feed a fallback. All other named needs stay reserved."))
+                if canonical != nil {
+                    Text(dinnerText("Only current confirmed pantry food can feed a fallback. Other needs stay reserved; these instructions do not release or replace them."))
+                } else {
+                    Text(dinnerText("Only checked usable food from this pickup and its confirmed stock can feed a fallback. All other named needs stay reserved."))
+                }
                 Picker(dinnerText("Need to repair"), selection: $review.draft.target) {
                     Text(dinnerText("Choose a meal")).tag(UUID?.none)
                     ForEach(choices.filter { $0.priority != .protected && !journey.recoveryCurrentUrgent.filter(\.resolved).map(\.id).contains($0.id) }) { need in
@@ -65,8 +89,14 @@ private struct PickupFallbackReviewView: View {
                 TextField(dinnerText("Required portions"), text: $review.draft.portions)
                 Toggle(dinnerText("Meal deadline is known"), isOn: Binding(get: { review.draft.deadline != nil }, set: { review.draft.deadline = $0 ? Date() : nil }))
                 if let date = Binding($review.draft.deadline) { DatePicker(dinnerText("Meal deadline"), selection: date) }
-                ForEach(choices.filter { $0.id != draft.target }) { need in
-                    Text(dinnerFormat("Reserved: %@ · %@",need.name,dinnerQuantity(need.amount)))
+                if let canonical {
+                    ForEach(canonical.reservations(excluding: draft.target)) { hold in
+                        Text(dinnerFormat("Reserved: %@ · %@", hold.name, dinnerQuantity(hold.amount)))
+                    }
+                } else {
+                    ForEach(choices.filter { $0.id != draft.target }) { need in
+                        Text(dinnerFormat("Reserved: %@ · %@",need.name,dinnerQuantity(need.amount)))
+                    }
                 }
                 if let rule = journey.recoveryCurrentDetails.first(where: { $0.id == draft.target }), !rule.exclusions.isEmpty { Text(rule.exclusions.joined(separator: ", ")) }
                 TextField(dinnerText("Usual fallback minutes, optional"), text: $review.draft.usualMinutes)
@@ -79,7 +109,7 @@ private struct PickupFallbackReviewView: View {
                 if library.isEmpty { Text(dinnerText("No household dinner is marked as an accepted fallback.")) }
                 ForEach(library) { dinner in
                     NavigationLink(dinner.template.title) {
-                        FallbackRecipeEditor(dinner: dinner, foods: foodNames, review: Binding(get: { review.draft.reviews[dinner.id] ?? .init() }, set: { review.draft.reviews[dinner.id] = $0 }))
+                        FallbackRecipeEditor(dinner: dinner, foods: foodNames, authorized: authorized, review: Binding(get: { review.draft.reviews[dinner.id] ?? .init() }, set: { review.draft.reviews[dinner.id] = $0 }))
                     }
                 }
                 Button(dinnerText("Review feasible repairs")) { if authorized() { review.reviewDraft() } }
@@ -136,8 +166,12 @@ private struct PickupFallbackReviewView: View {
 private struct FallbackRecipeEditor: View {
     let dinner: AcceptedDinner
     let foods: [UUID:String]
+    let authorized: () -> Bool
+    @Environment(\.scenePhase) private var scenePhase
     @Binding var review: FallbackRecipeReview
     var body: some View {
+        Group {
+        if scenePhase == .active && authorized() {
         Form {
             Text(dinnerFormat("Servings: %@",dinner.template.servings.description))
             ForEach(dinner.template.ingredients) { ingredient in
@@ -165,5 +199,7 @@ private struct FallbackRecipeEditor: View {
                 Toggle(dinnerText("I checked these food identities, yields and exclusions for this meal"), isOn: $review.reviewedIdentityYieldAndExclusions)
             }
         }.navigationTitle(dinner.template.title)
+        } else { Text(pantryText("Could not load a complete pantry. No partial availability is shown.")) }
+        }
     }
 }

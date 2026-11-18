@@ -5,6 +5,9 @@ import RecordArchive
 struct RecordsToolsView: View {
     @ObservedObject var model: RecordsToolsModel
     var recipeLibraryOnly = false
+    var pantry: RecordsPantryToolsModel? = nil
+    var pantryErasure: RecordsPantryErasureModel? = nil
+    var didDismissPantryErasure: @MainActor () async -> Void = {}
     @State private var exporting = false
     @State private var presentedSaveID: UUID?
     @State private var acknowledgedPrivate = false
@@ -75,6 +78,8 @@ struct RecordsToolsView: View {
                 currentSources
                 exportSection
                 importSection
+                if let pantry { RecordsPantrySection(model: pantry) }
+                if let pantryErasure { RecordsPantryErasureSection(model: pantryErasure, didDismiss: didDismissPantryErasure) }
             }
             if let review = model.review { reviewSection(review) }
             if !model.lastImportIDs.isEmpty {

@@ -9,6 +9,17 @@ import CoreDomain
     var saving: Bool { get }
     var hasPendingSave: Bool { get }
     func change(key: String, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool
+    func change(key: String, reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?,
+                _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool
+}
+
+extension DinnerWorkspaceStore {
+    func change(key: String, reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?,
+                _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
+        // A store without the canonical gated save path cannot honor this proof.
+        guard reviewedPantryBasis == nil else { return false }
+        return await change(key: key, edit)
+    }
 }
 
 /// No imported document can provide this feature's authority. The coordinator supplies
@@ -16,6 +27,11 @@ import CoreDomain
 @MainActor final class DinnerFeatureModel: ObservableObject {
     typealias AccessProvider = (UUID) -> DinnerAccessContext?
     @Published private(set) var preview: DinnerPreview?
+    private var pantryPreviewReview: (proposalID: UUID, basis: LedgerCanonicalPackStockEvidence.Basis)?
+    var reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? {
+        guard pantryPreviewReview?.proposalID == preview?.proposal.id else { return nil }
+        return pantryPreviewReview?.basis
+    }
     @Published private(set) var error: String?
     @Published private(set) var notice: String?
     @Published private(set) var busy = false
@@ -88,26 +104,29 @@ import CoreDomain
         return try DinnerPlanningEngine.week(start: start, ledger: shop, state: state,
             access: access(for: shop.id), at: clock())
     }
-    @discardableResult func prepare(_ changes: [DinnerLedgerChange], tool: DinnerPlanningTool = .manual, isolated: Bool = false, expectedRevision: UUID? = nil) -> Bool {
+    @discardableResult func prepare(_ changes: [DinnerLedgerChange], tool: DinnerPlanningTool = .manual, isolated: Bool = false, expectedRevision: UUID? = nil, reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil) -> Bool {
         guard editable, let shop else { return false }
         do {
             if let expectedRevision, expectedRevision != shop.revisionID { throw DinnerPlanningError.stalePreview }
             preview = try DinnerPlanningEngine.preview(changes: changes, tool: tool, ledger: shop,
                 state: state, access: access(for: shop.id), phase: phaseProvider(shop.id), at: clock(), isolated: isolated)
+            pantryPreviewReview = reviewedPantryBasis.flatMap { basis in preview.map { ($0.proposal.id, basis) } }
             error = nil; notice = nil; return true
         } catch { preview = nil; fail(error); return false }
     }
-    func cancelPreview() { preview = nil; error = nil }
-    func endDecision(restoring previous: DinnerPreview?) {
+    func cancelPreview() { preview = nil; pantryPreviewReview = nil; error = nil }
+    func endDecision(restoring previous: DinnerPreview?, pantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil) {
         cancelPreview()
         guard let previous, shop?.id == previous.proposal.shopID, shop?.revisionID == previous.proposal.baseRevisionID,
               state.revisionID == previous.proposal.planningRevisionID else { return }
         preview = previous
+        pantryPreviewReview = pantryBasis.map { (previous.proposal.id, $0) }
         if !canReviewPreview { preview = nil }
     }
     @discardableResult func applyPreview() async -> Bool {
         guard canApply, let reviewed = preview else { fail(DinnerPlanningError.forbidden); return false }
-        let ok = await mutate(key: "dinner-apply-\(reviewed.proposal.id)", shopID: reviewed.proposal.shopID) { workspace, index, access, now in
+        let ok = await mutate(key: "dinner-apply-\(reviewed.proposal.id)", shopID: reviewed.proposal.shopID,
+            reviewedPantryBasis: reviewedPantryBasis) { workspace, index, access, now in
             // The local adapter has no server commit binding. Even a caller-supplied
             // sharedCommitAuthorized bit cannot enable a shared authoritative write.
             guard case .local = access.scope else { throw DinnerPlanningError.forbidden }
@@ -119,7 +138,8 @@ import CoreDomain
     }
     @discardableResult func savePreviewAsProposal() async -> Bool {
         guard canReviewPreview, let reviewed = preview, !reviewed.proposal.isIsolatedPreview else { return false }
-        let ok = await mutate(key: "dinner-proposal-\(reviewed.proposal.id)", shopID: reviewed.proposal.shopID) { workspace, _, access, now in
+        let ok = await mutate(key: "dinner-proposal-\(reviewed.proposal.id)", shopID: reviewed.proposal.shopID,
+            reviewedPantryBasis: reviewedPantryBasis) { workspace, _, access, now in
             try workspace.dinnerPlanning.saveProposal(reviewed.proposal, access: access, at: now)
         }
         if ok { notice = dinnerText("Proposal saved on this device. It has not been sent or applied.") }
@@ -258,12 +278,12 @@ import CoreDomain
             error = nil; return true
         } catch { preview = nil; fail(error); return false }
     }
-    private func mutate(key: String, shopID: UUID,
+    private func mutate(key: String, shopID: UUID, reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
                         edit: (inout LedgerWorkspace, Int, DinnerAccessContext, Date) throws -> Void) async -> Bool {
         guard editable else { return false }
         busy = true; defer { busy = false }
         var failure: Error?
-        let saved = await store.change(key: key) { workspace in
+        let saved = await store.change(key: key, reviewedPantryBasis: reviewedPantryBasis) { workspace in
             do {
                 let current = try self.access(for: shopID)
                 guard let index = workspace.shops.firstIndex(where: { $0.id == shopID }) else { throw DinnerPlanningError.notFound(shopID) }

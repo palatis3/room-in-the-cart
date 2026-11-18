@@ -77,6 +77,7 @@ struct DinnerScenarioDraft {
     var matches: [DinnerRecipeMatchDraft] = []
     var reviewedLeftovers: [ConfirmedStockLot] = []
     var leftoverRevision: Int64?
+    var leftoverPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
     private(set) var matchedMeals: [DinnerScenarioMealDraftSnapshot] = []
     var baseline: [DinnerBaselineCostDraft]
     var baselineComplete = false

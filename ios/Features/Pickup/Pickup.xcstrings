@@ -13012,6 +13012,91 @@
           }
         }
       }
+    },
+    "The saved reservation needs a current pantry review. No food or calendar entry changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved reservation needs a current pantry review. No food or calendar entry changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reserva guardada necesita una revisión actual de la despensa. No se cambió ningún alimento ni entrada del calendario."
+          }
+        }
+      }
+    },
+    "Preparation cancelled. The physical count and original dinner demand are unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation cancelled. The physical count and original dinner demand are unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparación cancelada. El recuento físico y la necesidad de la cena original no han cambiado."
+          }
+        }
+      }
+    },
+    "Cancelling releases only this preparation's held claim. Recount and review again to create a new carryover.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelling releases only this preparation's held claim. Recount and review again to create a new carryover."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al cancelar se libera únicamente la reserva de esta preparación. Vuelve a contar y revisar para crear una nueva reserva para otra fecha."
+          }
+        }
+      }
+    },
+    "Cancel this saved preparation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel this saved preparation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar esta preparación guardada"
+          }
+        }
+      }
+    },
+    "Review this saved pantry reservation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this saved pantry reservation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta reserva guardada de la despensa"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
