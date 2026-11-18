@@ -4,7 +4,6 @@ import UIKit
 import CoreDomain
 import LocalStore
 import SQLite3
-import UIKit
 import CoreImage
 @testable import RoomInTheCart
 
@@ -588,7 +587,8 @@ extension PantryModelTests {
         let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
         let scope = PantryDigestScope(origin: db.workspaceID, identity: owner)
         let scheduler = DigestSchedulerSpy(); scheduler.granted = true
-        let digest = PantryDigestStore(folder: dir.appendingPathComponent("digest"), scheduler: scheduler, now: { self.now })
+        let folder = dir.appendingPathComponent("digest")
+        let digest = PantryDigestStore(folder: folder, scheduler: scheduler, now: { self.now })
         let zone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
         let first = try MealDay(year: 2027, month: 12, day: 11, timeZoneIdentifier: zone.identifier)
         let later = try MealDay(year: 2027, month: 12, day: 12, timeZoneIdentifier: zone.identifier)
@@ -610,7 +610,15 @@ extension PantryModelTests {
         scheduler.onRequest = nil
         try await digest.setAlerts(scope, enabled: true, minute: 600, timeZone: zone, authorized: { true })
         let before = try XCTUnwrap(scheduler.deliveries.first)
-        try await digest.saveDay(scope, lot: lot, day: later, authorized: { true })
+        // A notification already shown for this date must still open the digest after saving the same day.
+        scheduler.delivered.insert(before.handle)
+        let afterDelivery = PantryDigestStore(folder: folder, scheduler: scheduler, now: { before.date.addingTimeInterval(1) })
+        try await afterDelivery.saveDay(scope, lot: lot, day: first, authorized: { true })
+        XCTAssertTrue(scheduler.deliveries.isEmpty)
+        XCTAssertEqual(try digest.document(scope).rules.first?.handle, before.handle)
+        XCTAssertTrue(scheduler.delivered.contains(before.handle))
+        try await afterDelivery.saveDay(scope, lot: lot, day: later, authorized: { true })
+        XCTAssertFalse(scheduler.delivered.contains(before.handle))
         let replacement = try XCTUnwrap(scheduler.deliveries.first)
         XCTAssertEqual(scheduler.deliveries.count, 1)
         XCTAssertNotEqual(before.handle, replacement.handle)

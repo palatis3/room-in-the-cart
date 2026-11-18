@@ -92,12 +92,13 @@ struct PantryDigestDocument: Codable, Equatable {
 
     mutating func set(lot: InventoryLot, day: MealDay?, source: PantryDigestRule.Source? = nil) throws {
         guard lot.count.quantity?.amount != .zero else { throw PantryDigestFailure.changed }
+        // Handles identify calendar days, including a day whose only lot is being edited.
+        let handle = day.flatMap { selected in rules.first { $0.day.hasSameCivilDate(as: selected) }?.handle }
         rules.removeAll { $0.lotID == lot.id }
         if let day {
             guard rules.count < 32 else { throw PantryDigestFailure.capacity }
             try day.validate()
-            let existing = rules.first { $0.day.hasSameCivilDate(as: day) }
-            rules.append(.init(lotID: lot.id, revision: lot.revision, day: day, handle: existing?.handle ?? UUID(), source: source))
+            rules.append(.init(lotID: lot.id, revision: lot.revision, day: day, handle: handle ?? UUID(), source: source))
         }
         try validate()
     }
