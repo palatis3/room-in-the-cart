@@ -40,14 +40,17 @@ import XCTest
         let recipe = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "No-shop rice dinner")).firstMatch
         tap(recipe)
         let unresolvedPrice = app.staticTexts.matching(NSPredicate(format: "label == %@", "Some amounts or package prices still need review.")).firstMatch
-        revealText(unresolvedPrice)
+        revealInList(unresolvedPrice)
         XCTAssertTrue(unresolvedPrice.exists, app.debugDescription)
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.choose.")).firstMatch.isEnabled,
                        "No stock match cannot be offered as a pantry-based dinner")
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinner.tonight"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "No-shop rice dinner")).firstMatch.waitForExistence(timeout: 8))
+        // This tab starts at the top of its own list. The saved recipe is below
+        // the preferences and optional-help sections when it needs a pantry match.
+        revealInList(recipe)
+        XCTAssertTrue(recipe.isHittable, recipe.debugDescription)
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8), "Browse and canceled recipe review must leave the workspace without a pickup")
         XCTAssertFalse(app.buttons["tonight.apply"].exists)
@@ -61,7 +64,7 @@ import XCTest
             tap(app.buttons["pantry.tonight"])
             let text = spanish ? "La ayuda en línea requiere una cuenta de adulto autorizada. Puedes seguir revisando coincidencias locales sin iniciar sesión." : "Online help requires an authorized adult account. Keep reviewing local matches without signing in."
             let fallback = app.staticTexts[text]
-            revealText(fallback)
+            revealInList(fallback)
             XCTAssertTrue(fallback.exists, app.debugDescription)
             XCTAssertFalse(app.buttons["tonight.explanations.send"].exists)
             XCTAssertFalse(app.buttons["tonight.explanations.open"].exists)
@@ -69,14 +72,14 @@ import XCTest
             app.terminate()
         }
     }
-    private func revealText(_ element: XCUIElement) {
+    private func revealInList(_ element: XCUIElement) {
         for _ in 0..<12 {
             let top = app.navigationBars.firstMatch.frame.maxY
             let bottom = app.tabBars.firstMatch.frame.minY
             if element.exists, element.frame.midY > top, element.frame.midY < bottom { return }
             app.swipeUp()
         }
-        XCTFail("Expected readable cost evidence after scrolling: " + app.debugDescription)
+        XCTFail("Expected the requested row in the visible list: " + app.debugDescription)
     }
     private func fill(_ element: XCUIElement, _ value: String) {
         tap(element); element.typeText(value)
