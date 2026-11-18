@@ -26,3 +26,20 @@ struct TonightHomeBasis: Codable, Equatable {
         return try Self(ledger: origin, revision: ledger.revision, stock: stock)
     }
 }
+
+@MainActor extension AdultHomeSummaryStore {
+    func refreshTonight(_ model: TonightMealModel, access: PantryDigestAccess, ledgerID: UUID,
+                        liveBasis: () throws -> TonightHomeBasis) {
+        guard model.batch == nil, access.authorized(), enabled(.tonight, scope: access.scope),
+              let input = model.input else { return }
+        do {
+            let basis = try TonightHomeBasis(ledger: ledgerID, revision: input.ledgerRevision, stock: input.basis)
+            let choices = model.homeScreenChoices
+            guard try liveBasis() == basis, let first = choices.first else {
+                try invalidate(.tonight, origin: access.scope.origin, forget: false)
+                return
+            }
+            try update(.tonight, access: access, count: choices.count, reviewedTitle: String(first.recipe.title.prefix(64)), tonightBasis: basis)
+        } catch { try? invalidate(.tonight, origin: access.scope.origin, forget: false) }
+    }
+}

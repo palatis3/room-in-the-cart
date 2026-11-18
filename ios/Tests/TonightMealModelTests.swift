@@ -42,8 +42,17 @@ import RecordArchive
         let identity = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
         let access = PantryDigestAccess(scope: .init(origin: reviewed.basis.originID, identity: identity), authorized: { true })
         try home.setEnabled(true, kind: .tonight, access: access, ledgerID: origin)
-        try home.update(.tonight, access: access, count: 1, reviewedTitle: recipe.title, tonightBasis: basis)
-        let projection = try AdultFoodSummaryFile(directory: directory, kind: .tonight).read()
+        home.refreshTonight(model, access: access, ledgerID: origin) { basis }
+        let widget = try AdultFoodSummaryFile(directory: directory, kind: .tonight)
+        let projection = try widget.read()
+        let batchModel = TonightMealModel(batch: .init(originID: reviewed.basis.originID, lotID: food))
+        await batchModel.refresh(authorize: { true }, load: { reviewed })
+        home.refreshTonight(batchModel, access: access, ledgerID: origin) {
+            XCTFail("A selected batch must not replace or clear the global Home Screen summary.")
+            return basis
+        }
+        XCTAssertEqual(try widget.read(), projection)
+        XCTAssertTrue(home.enabled(.tonight, scope: access.scope))
         XCTAssertEqual(projection.reviewedTitle, "Dinner wraps")
         XCTAssertTrue(home.permitsTonight(projection.route, access: access, basis: basis))
         let changed = try TonightHomeBasis(ledger: origin, revision: reviewed.ledgerRevision + 1, stock: reviewed.basis)

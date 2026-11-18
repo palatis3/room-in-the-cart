@@ -34,20 +34,10 @@ struct TonightEntry: View {
         return .current(pickup: pickup, access: access, household: household, child: child)
     }
     private func refreshHome() {
-        guard let current = homeAccess, home.enabled(.tonight, scope: current.scope),
-              let ledgerID = ledger.sourceWorkspaceID, let input = model.input else { return }
-        do {
-            let basis = try TonightHomeBasis(ledger: ledgerID, revision: input.ledgerRevision, stock: input.basis)
-            guard let live = try? TonightHomeBasis.current(ledger: ledger, pickup: pickup), basis == live else {
-                try home.invalidate(.tonight, origin: current.scope.origin, forget: false); return
-            }
-            let choices = model.homeScreenChoices
-            guard let first = choices.first else {
-                try home.invalidate(.tonight, origin: current.scope.origin, forget: false); return
-            }
-            let title = String(first.recipe.title.prefix(64))
-            try home.update(.tonight, access: current, count: choices.count, reviewedTitle: title, tonightBasis: basis)
-        } catch { try? home.invalidate(.tonight, origin: current.scope.origin, forget: false) }
+        guard let current = homeAccess, let ledgerID = ledger.sourceWorkspaceID else { return }
+        home.refreshTonight(model, access: current, ledgerID: ledgerID) {
+            try TonightHomeBasis.current(ledger: ledger, pickup: pickup)
+        }
     }
     private struct Scope: Equatable {
         let adult: CapturePrivateIdentity
@@ -120,6 +110,7 @@ struct TonightEntry: View {
                 Section(tonightText("Selected batch")) {
                     if let lot = model.selectedLot {
                         LabeledContent(lot.name, value: ledgerQuantity(lot.usable))
+                            .accessibilityIdentifier("tonight.batch.available")
                         Text(tonightText("Available after reservations. Match a recipe ingredient to this food to see how much it can use."))
                     } else {
                         Text(tonightText("This batch has no confirmed unreserved quantity. Check its count and reservations in My Pantry."))
@@ -252,7 +243,9 @@ struct TonightEntry: View {
             }
             if let use = review.batchUse {
                 LabeledContent(tonightText("Would use from this batch"), value: ledgerQuantity(use.used))
+                    .accessibilityIdentifier("tonight.batch.used." + review.id.uuidString)
                 LabeledContent(tonightText("Unreserved amount left afterward"), value: ledgerQuantity(use.remaining))
+                    .accessibilityIdentifier("tonight.batch.remaining." + review.id.uuidString)
                 if review.canProjectRemainder {
                     if model.firstRecipeID == review.id {
                         followingMeals
@@ -306,6 +299,7 @@ struct TonightEntry: View {
                 if let use = next.batchUse {
                     LabeledContent(tonightText("Would use from this batch"), value: ledgerQuantity(use.used))
                     LabeledContent(tonightText("Unreserved amount left afterward"), value: ledgerQuantity(use.remaining))
+                        .accessibilityIdentifier("tonight.batch.secondRemaining." + next.id.uuidString)
                 }
                 if let minutes = next.recipe.leadTimeMinutes {
                     LabeledContent(tonightText("Reviewed preparation minutes"), value: minutes.formatted())
@@ -322,7 +316,8 @@ struct TonightEntry: View {
                     TonightPricesView(estimate: try? TonightPurchaseEstimate.estimate(next, workspace: input.workspace,
                         workspaceID: workspaceID, shopID: input.workspace.selectedShopID, at: Date()))
                 }
-            }.accessibilityIdentifier("tonight.batch.second.\(next.id)")
+            }.accessibilityElement(children: .contain)
+                .accessibilityIdentifier("tonight.batch.second.\(next.id)")
         }
     }
     private func canChoose(_ review: PantryMealMatcher.Review) -> Bool {

@@ -63,6 +63,111 @@ import XCTest
         XCTAssertTrue(app.buttons["Release food from this reservation"].exists)
     }
 
+    func testFinishPackageReviewsTwoMealsAndKeepsLunchAndHomeConsentAfterCancel() {
+        let lotName = "Corn tortillas"
+        let firstTitle = "Tortilla bowls", secondTitle = "Tortilla soup"
+        func row(_ title: String) -> XCUIElement {
+            app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "tonight.result.", title)).firstMatch
+        }
+        func saveRecipe(_ title: String) {
+            tap(app.buttons["Review a recipe by hand"])
+            fill(title, into: "tonight.recipe.title")
+            fill("1", into: "tonight.recipe.servings")
+            fill("Tortillas", into: "tonight.recipe.ingredient")
+            fill("2", into: "Amount, unknown if blank")
+            enableSwitch("I reviewed required appliances")
+            tap(element("tonight.recipe.review"))
+            tap(element("tonight.recipe.save"))
+            XCTAssertTrue(app.navigationBars["Review a recipe"].waitForNonExistence(timeout: 12), app.debugDescription)
+            XCTAssertTrue(row(title).waitForExistence(timeout: 12), app.debugDescription)
+        }
+        func match(_ title: String, pickerID: String? = nil) -> (recipe: String, picker: String) {
+            let result = row(title)
+            reveal(result)
+            let id = String(result.identifier.dropFirst("tonight.result.".count))
+            result.tap()
+            let picker = pickerID.map(element) ?? app.descendants(matching: .any).matching(
+                NSPredicate(format: "identifier BEGINSWITH %@", "tonight.match.")).firstMatch
+            reveal(picker)
+            let selectedPickerID = picker.identifier
+            picker.tap()
+            tap(app.buttons[lotName])
+            return (id, selectedPickerID)
+        }
+        func checkAmount(_ identifier: String, _ expected: String) {
+            let value = element(identifier)
+            reveal(value)
+            XCTAssertTrue([value.label, value.value as? String ?? ""].joined(separator: " ").contains(expected),
+                          "\(identifier): \(value.debugDescription)")
+        }
+        let home = app.switches["adultHomeSummary.tonight"]
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill(lotName, into: "pantry.foodName")
+        fill("6", into: "pantry.amount")
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", lotName)).firstMatch
+        XCTAssertTrue(lot.waitForExistence(timeout: 10), app.debugDescription)
+        let lotID = lot.identifier
+        tap(lot)
+        tap(app.buttons["pantry.reserve"])
+        tap(app.buttons["Tomorrow’s lunch"])
+        fill("2", into: "pantry.reservationAmount")
+        tap(app.buttons["Review reservation"])
+        tap(app.buttons["pantry.confirm"])
+        let backing = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.claimBacking.")).firstMatch
+        XCTAssertTrue(backing.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(backing.value as? String, "2 units")
+        let backingID = backing.identifier
+        tap(app.navigationBars.buttons.firstMatch)
+        tap(app.buttons["pantry.tonight"])
+        tap(app.buttons["tonight.preferences"])
+        enableSwitch("Limit recipes to available appliances")
+        tap(app.buttons["preferences.review"])
+        tap(app.buttons["preferences.save"])
+        saveRecipe(firstTitle)
+        saveRecipe(secondTitle)
+        let global = match(secondTitle)
+        enableSwitch("adultHomeSummary.tonight", position: { self.reveal($0, initiallyUpward: false) })
+        XCTAssertEqual(home.value as? String, "1")
+        tap(app.navigationBars["Tonight"].buttons.firstMatch)
+        tap(app.buttons[lotID])
+        tap(app.buttons["pantry.batch.meals"])
+        checkAmount("tonight.batch.available", "4 items")
+        XCTAssertFalse(home.exists, app.debugDescription)
+        let first = match(firstTitle)
+        let second = match(secondTitle, pickerID: global.picker)
+        let follow = app.buttons["tonight.batch.followUp." + first.recipe]
+        if !follow.exists { tap(row(firstTitle)) }
+        checkAmount("tonight.batch.used." + first.recipe, "2 items")
+        checkAmount("tonight.batch.remaining." + first.recipe, "2 items")
+        tap(follow)
+        checkAmount("tonight.batch.secondRemaining." + second.recipe, "0 items")
+        XCTAssertTrue(element("tonight.batch.second." + second.recipe).exists, app.debugDescription)
+        tap(app.buttons["Close second-meal suggestions"])
+        tap(app.buttons["tonight.choose." + first.recipe])
+        fill("Trial pickup", into: "New pickup name")
+        tap(app.buttons["Preview dinner choice"])
+        tap(app.buttons["Cancel preview"])
+        XCTAssertFalse(app.buttons["tonight.apply"].exists, app.debugDescription)
+        restart()
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons[lotID])
+        XCTAssertEqual(element(backingID).value as? String, "2 units")
+        tap(app.buttons["pantry.batch.meals"])
+        checkAmount("tonight.batch.available", "4 items")
+        XCTAssertFalse(home.exists, app.debugDescription)
+        tap(app.navigationBars["Tonight"].buttons.firstMatch)
+        tap(app.navigationBars.buttons.firstMatch)
+        tap(app.buttons["pantry.tonight"])
+        XCTAssertTrue(home.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(home.value as? String, "1")
+    }
+
     func testProductBatchManualBarcodeRepeatNeedsTwoPackagesAndConfirmedFoodSurvivesRelaunch() {
         launch(reset: true)
         tap(app.buttons["shop.myPantry"])
