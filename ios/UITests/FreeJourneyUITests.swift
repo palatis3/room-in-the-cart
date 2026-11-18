@@ -2920,9 +2920,17 @@ import XCTest
         tap(app.buttons.matching(NSPredicate(format: "identifier == %@", "dinnerStartPickup")).firstMatch)
         fill("Original reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         openMealWeek(); tapVisibleFormRow(app.buttons["Protect a lunch or side"])
-        fill("Fictional original lunch", into: "Food name", requireDone: true, control: app.textFields["Food name"])
-        fill("2", into: "Protected amount", requireDone: true, control: app.textFields["Protected amount"])
-        fill("Original pickup only", into: "Purpose, such as lunch", requireDone: true, control: app.textFields["Purpose, such as lunch"])
+        for (label, value) in [("Food name", "Fictional original lunch"), ("Protected amount", "2"),
+                               ("Purpose, such as lunch", "Original pickup only")] {
+            let field = app.textFields[label]
+            tap(field)
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, label)
+        }
+        let done = app.buttons["dinnerReservationKeyboardDone"]
+        XCTAssertTrue(done.wait(for: \.isHittable, toEqual: true, timeout: 5))
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "dinnerReservationKeyboardDone"))
         openShoppingList(); startAnotherPickupFromList()
         fill("Different reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(app.tabBars.buttons["Dinners"])
