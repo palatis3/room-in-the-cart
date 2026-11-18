@@ -46,8 +46,8 @@ import LocalStore
         try source.linkContribution(contributionID: secondIngredient, within: supplyID, quantity: q(4), at: now)
         workspace.shops[0] = source
         var journey = PickupJourney(id: source.id, savedAt: now)
-        journey.stockLots = [.init(id: food, foodID: food, name: "Wraps", usable: q(8), confirmedAt: now),
-                             .init(id: foreign, foodID: foreign, name: "Unrelated private food", usable: q(99), confirmedAt: now)]
+        journey.stockLots = [.init(id: food, foodID: food, name: "Wraps", usable: q(8), confirmedAt: now, source: .pantry),
+                             .init(id: foreign, foodID: foreign, name: "Unrelated private food", usable: q(99), confirmedAt: now, source: .pantry)]
         var other = PickupJourney(id: UUID(), savedAt: now)
         other.originShopID = source.id; other.stockLots = journey.stockLots
         other.stockNeeds = [.init(id: UUID(), foodID: food, name: "Other shop school lunch", amount: q(3), priority: .protected)]

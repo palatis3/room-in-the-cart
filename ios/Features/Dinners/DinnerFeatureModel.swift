@@ -80,6 +80,10 @@ extension DinnerWorkspaceStore {
         guard let preview, shop?.id == preview.proposal.shopID, let access = try? access(for: preview.proposal.shopID) else { return false }
         let namespace: String
         switch access.scope { case .local(let id): namespace = "local:\(id.uuidString)"; case .household(let id): namespace = "household:\(id)" }
+        if let repeated = preview.proposal.repeatWeek {
+            guard let identity = editorIdentity, canReadRepeatSources(repeated.sourceShopIDs, identity: identity),
+                  repeated.staples.isEmpty || access.hasPaidTools else { return false }
+        }
         return namespace == preview.proposal.namespace && access.actorID == preview.proposal.authorID &&
             preview.proposal.preferenceRevision == state.preferences(for: access)?.revision
     }

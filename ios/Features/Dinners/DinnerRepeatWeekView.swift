@@ -51,7 +51,7 @@ struct DinnerRepeatWeekView: View {
                         LabeledContent(dinnerText("Previous week"), value: range)
                     }
                 }
-                if let review {
+                if let review, model.canReadRepeatSources(review.sourceShopIDs, identity: review.identity) {
                     meals
                     calendarNotes(review)
                     if !selected.isEmpty { shoppingEstimate(review) }

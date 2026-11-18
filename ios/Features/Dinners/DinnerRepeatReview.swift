@@ -28,6 +28,7 @@ struct DinnerRepeatChoice: Identifiable {
 struct DinnerRepeatReview {
     let start: MealDay
     let identity: DinnerFeatureModel.EditorIdentity
+    let sourceShopIDs: Set<UUID>
     let targetRevision: UUID
     let planningRevision: UUID
     let pantryBasis: DinnerPantrySupply.Basis?
@@ -54,6 +55,14 @@ extension DinnerFeatureModel {
                 throw DinnerPlanningError.invalid("week")
             }
             return try MealDay(date: shifted, timeZoneIdentifier: zone.identifier)
+        }
+    }
+
+    func canReadRepeatSources(_ ids: Set<UUID>, identity: EditorIdentity) -> Bool {
+        guard editorIdentity == identity else { return false }
+        return ids.allSatisfy { id in
+            guard let current = try? access(for: id) else { return false }
+            return current.scope == identity.scope && current.actorID == identity.actorID
         }
     }
 
@@ -131,7 +140,8 @@ extension DinnerFeatureModel {
         let evidence = try DinnerRepeatEvidence.build(candidates: candidates, workspace: visible, workspaceID: workspaceID,
             authorizedShopIDs: allowed, targetShopID: shop.id, sourceDays: sourceDays, targetDays: targetDays,
             staples: staples + settled, recoveredMeals: recovered, canonical: canonical, unknownFoodIDs: unknownFoods, asOf: now)
-        return DinnerRepeatReview(start: start, identity: identity, targetRevision: shop.revisionID,
+        let sourceShopIDs = mealShops.union((staples + settled).map { $0.source.shopID })
+        return DinnerRepeatReview(start: start, identity: identity, sourceShopIDs: sourceShopIDs, targetRevision: shop.revisionID,
             planningRevision: state.revisionID, pantryBasis: canonical?.basis, meals: candidates.map(DinnerRepeatChoice.init),
             staples: staples, evidence: evidence)
     }

@@ -223,6 +223,7 @@ import LocalStore
         }
         _ = try prepare()
         readableShops.remove(prior.id)
+        XCTAssertFalse(dinners.canReviewPreview)
         let revoked = await dinners.applyPreview()
         XCTAssertFalse(revoked)
         XCTAssertTrue(f.ledger.shop?.mealOccurrences.isEmpty == true)
