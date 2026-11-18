@@ -92,7 +92,9 @@ import XCTest
             reveal(picker)
             let selectedPickerID = picker.identifier
             picker.tap()
-            tap(app.buttons[lotName])
+            let foodOption = app.collectionViews.cells.buttons.matching(NSPredicate(format: "label == %@", lotName)).firstMatch
+            XCTAssertTrue(foodOption.waitForExistence(timeout: 8), app.debugDescription)
+            tap(foodOption)
             return (id, selectedPickerID)
         }
         func checkAmount(_ identifier: String, _ expected: String) {
