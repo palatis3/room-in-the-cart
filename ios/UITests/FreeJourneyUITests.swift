@@ -832,13 +832,13 @@ import XCTest
         tap(app.buttons["Crop the selected source image"])
         let edge = app.sliders["Left edge"]
         reveal(edge)
-        edge.adjust(toNormalizedSliderPosition: 0.24)
-        tap(app.buttons["receipt.assistance.previewCrop"])
+        edge.adjust(toNormalizedSliderPosition: 0.21)
+        tapVisibleFormRow(app.buttons["receipt.assistance.previewCrop"])
+        let localReading = app.buttons["Use this local text instead of sharing the crop"]
+        reveal(localReading)
         XCTAssertFalse(app.buttons["assistance.useWording"].exists)
-        tap(app.buttons["receipt.assistance.send"])
-        let apply = app.buttons["assistance.useWording"]
-        XCTAssertTrue(apply.waitForExistence(timeout: 12), app.debugDescription)
-        tap(apply)
+        tapVisibleFormRow(app.buttons["receipt.assistance.send"], marker: "SEND_CHECKOUT_CROP")
+        tapVisibleFormRow(app.buttons["assistance.useWording"], marker: "USE_CHECKOUT_CROP")
         let back = app.navigationBars["Choose the printed line"].buttons.element(boundBy: 0)
         XCTAssertTrue(back.waitForExistence(timeout: 6), app.debugDescription)
         back.tap()
