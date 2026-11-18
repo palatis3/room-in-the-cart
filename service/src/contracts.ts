@@ -28,9 +28,10 @@ export const decisionSchema = z.discriminatedUnion('choice', [
   if(decision.choice==='add'&&decision.reviewedPackEvidence&&!matchesReviewedPack(decision.line,decision.reviewedPackEvidence))ctx.addIssue({code:'custom',message:'Reviewed pack evidence must match the chosen sufficient available whole packs',path:['reviewedPackEvidence']});
 });
 export const previewSchema = z.object({ requestId: uuid, base: z.object({ shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), requestRevision: z.number().int().positive() }).strict(), decision: decisionSchema }).strict();
+export const chooseTonight=z.object({v:z.literal(1),recipeId:uuid.toLowerCase(),recipeRevision:z.number().int().positive().max(2147483647),grantEpoch:z.number().int().nonnegative().max(2147483647),reviewToken:z.string().regex(/^[a-f0-9]{64}$/),day:z.iso.date().nullable(),occurrenceId:uuid.toLowerCase()}).strict();
 export const envelopeSchema = z.object({
   v: z.literal(1), replayWindow: uuid, clientKey: uuid, shopId: uuid,
-  kind: z.enum(['cook.complete','cook.resolve','cook.undo','amendment.recordResponse','mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.undoAcceptance','request.confirmPurchase','request.carry']),
+  kind: z.enum(['meal.chooseTonight','cook.complete','cook.resolve','cook.undo','amendment.recordResponse','mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.undoAcceptance','request.confirmPurchase','request.carry']),
   base: z.object({ shopRevision: z.number().int().min(0), authorityEpoch: z.number().int().min(0), requestRevision: z.number().int().positive().optional() }).strict(),
   body: z.record(z.string(),z.unknown()),
 }).strict();
@@ -92,6 +93,7 @@ export const bodySchemas = {
   ...cookBodies,
   'cookCopy.save':cookCopySaveBody, 'cookCopy.markSent':cookCopySendBody,
   'delivery.reserve': deliveryReservationBody, 'delivery.match': deliveryMatchBody, 'delivery.register': deliverySourceBody, 'delivery.arrival': deliveryArrivalBody, 'delivery.usable': deliveryUsableBody,
+  'meal.chooseTonight':chooseTonight,
   'shop.create': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200) }).strict(),
   'shop.patch': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200), mealEdit: mealEdit.optional(), demandReview:demandReviewSchema.optional(), reviewedStoreBasisRevision: z.number().int().positive().optional() }).strict(),
   'shop.freeze': z.object({trackingReview:demandReviewSchema.optional()}).strict(), 'shop.reopen': empty,

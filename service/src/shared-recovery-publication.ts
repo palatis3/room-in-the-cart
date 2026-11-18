@@ -169,6 +169,7 @@ async function rememberSources(ctx:Context,shop:Shop,operationId:string) {
      SELECT actor_id FROM ritc.pantry_lot WHERE household_id=$1 AND lot_id=ANY($4::uuid[])
      UNION SELECT actor_id FROM ritc.pantry_event WHERE household_id=$1 AND lot_id=ANY($4::uuid[])
      UNION SELECT actor_id FROM ritc.operation WHERE household_id=$1 AND shop_id=ANY($3::uuid[]) AND kind LIKE 'delivery.%'
+     UNION SELECT actor_id FROM ritc.tonight_meal_author WHERE household_id=$1 AND shop_id=ANY($3::uuid[])
      UNION SELECT actor_id FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=ANY($3::uuid[])
      UNION SELECT actor_id FROM ritc.shared_meal_change WHERE household_id=$1 AND shop_id=ANY($3::uuid[]) AND state='applied'
      UNION SELECT actor_id FROM ritc.meal_recovery_revision WHERE household_id=$1 AND shop_id=ANY($3::uuid[]) AND current_meal IS NOT NULL

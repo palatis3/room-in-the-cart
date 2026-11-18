@@ -198,6 +198,7 @@ export async function rememberSources(ctx:Context,shop:Shop,before:DemandGraph,a
  const requests=new Map((await ctx.db.query('SELECT request_id,author_id FROM ritc.request WHERE household_id=$1 AND shop_id=$2 AND request_id=ANY($3::uuid[])',[ctx.householdId,shop.shop_id,requestIds])).rows.map(r=>[r.request_id,r.author_id as string]));
  const occurrenceIds=contributions.flatMap(c=>c.source.kind==='meal'?[c.source.occurrenceId]:c.source.kind==='reservation'&&c.source.originOccurrenceId?[c.source.originOccurrenceId]:[]);
  const origins=(await ctx.db.query(`SELECT occurrence_id,actor_id FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=ANY($3::uuid[])
+ UNION SELECT occurrence_id,actor_id FROM ritc.tonight_meal_author WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=ANY($3::uuid[])
  UNION SELECT occurrence_id,actor_id FROM ritc.shared_meal_change WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=ANY($3::uuid[]) AND (state='applied' OR proposal_id=$4)`,[ctx.householdId,shop.shop_id,occurrenceIds,acceptedProposalId])).rows;
  const mealAuthors=new Map<string,Set<string>>();for(const origin of origins){if(!mealAuthors.has(origin.occurrence_id))mealAuthors.set(origin.occurrence_id,new Set());mealAuthors.get(origin.occurrence_id)!.add(origin.actor_id);}
  const entries:{id:string;kind:string;member:string}[]=[];
