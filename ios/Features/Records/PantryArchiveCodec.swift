@@ -218,7 +218,7 @@ enum PantryArchiveCodec {
                       observation.observedAt <= lot.updatedAt else { throw Failure.invalid }
                 previous = observation
             }
-            guard let latest = previous, latest.id == lot.observationID, latest.count == lot.count,
+            guard let latest = previous, latest.id == lot.observationID, latest.count == lot.count, latest.countWording == lot.countWording,
                   latest.observedAt == lot.confirmedAt else { throw Failure.invalid }
         }
         for reservation in value.reservations {
@@ -311,7 +311,7 @@ enum PantryArchiveCodec {
             guard revision.observation != nil || revision.foodID != nil || revision.name != nil || revision.useFirst != nil || revision.location != nil else { throw Failure.invalid }
             if let name = revision.name { guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 512 else { throw Failure.invalid } }
             if let changed = revision.observation {
-                try changed.count.validate()
+                try changed.count.validate(wording: changed.countWording)
                 guard changed.observedAt <= event.occurredAt else { throw Failure.invalid }
                 try observation(changed.observationID, count: changed.count, at: changed.observedAt)
             }
@@ -336,7 +336,7 @@ enum PantryArchiveCodec {
                                 baselines.append(InventoryLot(id: original.id, foodID: original.foodID, name: original.name,
                                     source: original.source, revision: 1, location: original.location, openedAt: original.openedAt,
                                     unit: original.unit, count: original.count, observationID: baselineID,
-                                    confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst))
+                                    confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording))
                             }
                         default: break
                         }
@@ -345,7 +345,7 @@ enum PantryArchiveCodec {
                     current = baseline
                 }
                 guard let current, let first = observations[current.observationID], first.lotID == current.id,
-                      first.revision == 1, first.supersedesID == nil, first.count == current.count,
+                      first.revision == 1, first.supersedesID == nil, first.count == current.count, first.countWording == current.countWording,
                       first.observedAt == current.confirmedAt else { throw Failure.invalid }
             }
             for event in events {
@@ -374,10 +374,11 @@ enum PantryArchiveCodec {
         case .opened(let date):
             guard event.revision > 1, date.timeIntervalSinceReferenceDate.isFinite, date <= event.occurredAt else { throw Failure.invalid }
         case .revise(let change):
+            try change.validateUsage()
             guard event.revision > 1, change.observation != nil || change.foodID != nil || change.name != nil || change.useFirst != nil || change.location != nil else { throw Failure.invalid }
             if let name = change.name { guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 512 else { throw Failure.invalid } }
             if let observed = change.observation {
-                try observed.count.validate()
+                try observed.count.validate(wording: observed.countWording)
                 guard observed.observedAt.timeIntervalSinceReferenceDate.isFinite, observed.observedAt <= event.occurredAt else { throw Failure.invalid }
             }
         }

@@ -30,21 +30,25 @@ public enum InventoryEngine {
             var count = current.count, observationID = current.observationID, confirmedAt = current.confirmedAt
             var location = current.location, openedAt = current.openedAt, unit = current.unit
             var foodID = current.foodID, name = current.name, useFirst = current.useFirst
+            var countWording = current.countWording
             var recordsObservation = false
             switch command.change {
             case .create: throw InventoryError.stale
             case .reservation: throw InventoryError.invalid("reservationNeedsClaims")
             case .count(let value, let id):
+                countWording = nil
                 count = value; observationID = id; confirmedAt = command.occurredAt
                 unit = value.quantity?.unit ?? current.unit
                 recordsObservation = true
             case .usedUp(let id):
+                countWording = nil
                 count = .exact(Quantity(amount: .zero, unit: unit, originalLiteral: "0"))
                 observationID = id; confirmedAt = command.occurredAt
                 recordsObservation = true
             case .move(let value): location = value
             case .opened(let value): openedAt = value
             case .revise(let revision):
+                try revision.validateUsage(replacing: current.count)
                 guard revision.observation != nil || revision.foodID != nil || revision.name != nil
                         || revision.useFirst != nil || revision.location != nil else {
                     throw InventoryError.invalid("emptyRevision")
@@ -55,6 +59,7 @@ public enum InventoryEngine {
                           observation.observedAt <= command.occurredAt else {
                         throw InventoryError.invalid("observationChronology")
                     }
+                    countWording = observation.countWording
                     count = observation.count; observationID = observation.observationID
                     confirmedAt = observation.observedAt
                     unit = count.quantity?.unit ?? current.unit
@@ -68,13 +73,13 @@ public enum InventoryEngine {
             if recordsObservation {
                 guard observationID != current.observationID else { throw InventoryError.duplicateIdentity }
                 observation = InventoryObservation(id: observationID, lotID: current.id, operationID: command.id,
-                    revision: next.partialValue, supersedesID: current.observationID, observedAt: confirmedAt, count: count)
+                    revision: next.partialValue, supersedesID: current.observationID, observedAt: confirmedAt, count: count, countWording: countWording)
             } else {
                 observation = nil
             }
             lot = InventoryLot(id: current.id, foodID: foodID, name: name, source: current.source,
                 revision: next.partialValue, location: location, openedAt: openedAt, unit: unit, count: count,
-                observationID: observationID, confirmedAt: confirmedAt, updatedAt: command.occurredAt, useFirst: useFirst)
+                observationID: observationID, confirmedAt: confirmedAt, updatedAt: command.occurredAt, useFirst: useFirst, countWording: countWording)
         }
         try lot.validate(); try observation?.validate()
         let event = InventoryEvent(id: command.eventID, operationID: command.id, originID: command.originID,

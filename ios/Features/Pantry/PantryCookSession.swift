@@ -264,3 +264,68 @@ struct PantryCookRecord: Codable, Equatable {
         guard authorize() else { throw Failure.unavailable }
     }
 }
+
+extension PantryRepository {
+    /// Cook corrections and undo live on the latest journey head. Its original ingredient
+    /// part is the use, even when a later correction identifies the batch or amount.
+    func cookUsageHistory(lotID: UUID, basis: InventoryState) async throws -> [PantryUsageHistoryRow] {
+        try requireAccess()
+        let source = try await store.inventorySourceToken()
+        try requireAccess()
+        guard basis.active, basis.workspaceID == originID, source.workspaceID == originID else { throw Failure.wrongWorkspace }
+        var cursor: UUID?
+        var bytes = 0
+        var heads = 0
+        var rows = [PantryUsageHistoryRow]()
+        let pageSize = 8
+        repeat {
+            let page = try await store.inventorySourcePage(token: source, after: cursor, limit: pageSize)
+            try requireAccess()
+            for head in page {
+                heads += 1
+                bytes += head.payload.count
+                guard heads <= PantryLegacyMigration.maximumHeads, bytes <= limits.payloadBytes else { throw InventoryError.capacity }
+                let journey = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
+                guard journey.id == head.id, journey.savedAt == head.savedAt else { throw Failure.invalidProvenance }
+                try PickupModel.validate(journey)
+                for cook in journey.cookedMeals ?? [] where cook.isActive {
+                    guard cook.draft.inventoryID == originID, cook.draft.inventoryRevision < basis.revision,
+                          cook.resolutions?.last.map({ $0.inventoryRevision < basis.revision }) ?? true
+                    else { throw Failure.invalidProvenance }
+                    rows += try cook.usageHistory(for: lotID)
+                }
+            }
+            cursor = page.count == pageSize ? page.last?.id : nil
+        } while cursor != nil
+        let current = try await store.inventorySourceToken()
+        try requireAccess()
+        guard current == source else { throw PantryConsumptionFailure.stale }
+        return rows
+    }
+}
+
+extension PantryCookRecord {
+    func usageHistory(for lotID: UUID) throws -> [PantryUsageHistoryRow] {
+        let amendments = Dictionary(uniqueKeysWithValues: (resolutions ?? []).map { ($0.eventID, $0.decision) })
+        return try draft.parts.compactMap { part in
+            let used: Quantity?
+            if let decision = amendments[part.id] {
+                guard decision.lotID == lotID else { return nil }
+                switch decision {
+                case .alreadyIncluded(_, let amount), .recount(_, _, let amount): used = amount
+                case .deduct(_, let amount): used = amount
+                case .outsidePantry: return nil
+                }
+            } else {
+                guard case .lot(let id, _, let amount) = part.use, id == lotID else { return nil }
+                used = amount
+            }
+            if let used {
+                try used.validate()
+                guard used.amount > .zero else { throw PantryRepository.Failure.invalidProvenance }
+            }
+            return .init(id: part.id, occurredAt: draft.cookedAt, kind: used.map(InventoryUsage.Kind.measured) ?? .some,
+                         remainingWording: nil)
+        }
+    }
+}

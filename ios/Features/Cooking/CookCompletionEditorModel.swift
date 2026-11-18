@@ -172,7 +172,9 @@ import CoreDomain
         ingredients[ingredient].parts[part].selectBatch(suggestion.lot)
         ingredients[ingredient].parts[part].relation = .substitution
         ingredients[ingredient].parts[part].substitution = suggestion.lot.name
-        ingredients[ingredient].parts[part].use = .measured
+        if ingredients[ingredient].parts[part].use != .unmeasured {
+            ingredients[ingredient].parts[part].use = .measured
+        }
     }
     func reviewFoodDetails(lot: InventoryLot, evidence: MealEligibilityEvidence) throws {
         guard canEdit, context?.inventory.lots.contains(lot) == true else { throw Failure.stale }

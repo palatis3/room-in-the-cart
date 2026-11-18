@@ -53,6 +53,178 @@ import LocalStore
             reviewedInventoryRevision: result.current.state.revision, at: date ?? now)
     }
 
+    func testConsumptionAtomicallyRecoversEveryBatchAndQualitativeReadingAfterLostReply() async throws {
+        let f = try await fixture(), model = editor(f)
+        await model.load()
+        for (name, amount) in [("Eggs", "6"), ("Ketchup", "1"), ("Milk", "1")] {
+            await model.prepareNewFood(name: name, location: .fridge, amount: amount, unit: .count)
+            await model.confirmReview(acknowledgingReservations: false)
+        }
+        let snapshot = try XCTUnwrap(model.snapshot)
+        let eggs = try XCTUnwrap(snapshot.lots.first { $0.name == "Eggs" })
+        let ketchup = try XCTUnwrap(snapshot.lots.first { $0.name == "Ketchup" })
+        let milk = try XCTUnwrap(snapshot.lots.first { $0.name == "Milk" })
+        let one = Quantity(amount: .one, unit: .count, originalLiteral: "1")
+        let wording = "less than half a bottle left"
+        let review = try await model.reviewConsumption([
+            .init(lotID: eggs.id, use: .amount(one)), .init(lotID: ketchup.id, use: .low(wording)),
+            .init(lotID: milk.id, use: .all), .init(lotID: eggs.id, use: .amount(one))
+        ], basis: snapshot.state)
+        XCTAssertEqual(review.lines.map { $0.after.quantity?.amount }, [try Rational(5), nil, .zero, try Rational(4)])
+        XCTAssertEqual(review.lines.last?.before.quantity?.amount, try Rational(5))
+        XCTAssertEqual(model.snapshot?.lots, snapshot.lots)
+        let repo = repository(f)
+        let original = try repo.stagePending(review.entry)
+        let reopenedBefore = editor(f)
+        await reopenedBefore.load()
+        XCTAssertEqual(reopenedBefore.pending, original)
+        XCTAssertFalse(reopenedBefore.canEdit)
+        guard case .committed(_, let committed) = try await repo.recoverPending(original, at: now, commitIfUnapplied: true) else {
+            return XCTFail("Expected atomic SQLite commit")
+        }
+        XCTAssertEqual(committed.receipt.revision, snapshot.state.revision + 1)
+        XCTAssertEqual(committed.receipt.heads.count, 9)
+        // Simulate a lost reply and a fresh database handle. Adoption must never spend a second time.
+        let fresh = try ComparisonStore(url: f.directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(fresh)
+        let reopened = PantryModel(repository: PantryRepository(store: fresh, mutationGate: f.gate, pendingStore: f.journal,
+                                                                 authorize: { true }), clock: { self.now })
+        await reopened.load()
+        XCTAssertTrue(reopened.canEdit)
+        XCTAssertNil(try f.journal.read())
+        let after = try XCTUnwrap(reopened.snapshot)
+        XCTAssertEqual(after.state.revision, committed.receipt.revision)
+        XCTAssertEqual(after.lots.first { $0.id == eggs.id }?.count.quantity?.amount, try Rational(4))
+        XCTAssertEqual(after.lots.first { $0.id == milk.id }?.count.quantity?.amount, .zero)
+        let low = try XCTUnwrap(after.lots.first { $0.id == ketchup.id })
+        XCTAssertEqual(low.count, .someLeft)
+        XCTAssertEqual(low.countWording, wording)
+        XCTAssertNil(after.availability.lots.first { $0.id == low.id }?.free)
+        let history = try await fresh.inventoryRecords(kind: .observation)
+        let latest = try XCTUnwrap(history.first { $0.key.id == low.observationID })
+        XCTAssertEqual(try PantryPersistenceCodec.observation(latest).countWording, wording)
+        let events = try await fresh.inventoryRecords(kind: .event)
+        XCTAssertEqual(events.count, 6)
+        let replayed = try await repo.apply(original, at: now)
+        XCTAssertTrue(replayed.replayed)
+        await reopened.prepare(lotID: low.id, action: .move(.cupboard))
+        await reopened.confirmReview(acknowledgingReservations: false)
+        XCTAssertEqual(reopened.snapshot?.lots.first { $0.id == low.id }?.countWording, wording)
+        await reopened.prepare(lotID: low.id, action: .recount("1", .count))
+        await reopened.confirmReview(acknowledgingReservations: false)
+        XCTAssertNil(reopened.snapshot?.lots.first { $0.id == low.id }?.countWording)
+    }
+
+    func testConsumptionUnmeasuredUseHistorySurvivesRecountAndReopenButObservationAloneIsNotAUse() async throws {
+        let f = try await fixture(), model = editor(f)
+        await model.load()
+        await model.prepareNewFood(name: "Ketchup", location: .fridge, amount: "1", unit: .count)
+        await model.confirmReview(acknowledgingReservations: false)
+        let start = try XCTUnwrap(model.snapshot)
+        let id = try XCTUnwrap(start.lots.first?.id)
+        func submit(_ use: PantryConsumptionSelection.Use) async throws {
+            let basis = try XCTUnwrap(model.snapshot?.state)
+            let review = try await model.reviewConsumption([.init(lotID: id, use: use)], basis: basis)
+            try await model.saveConsumption(review)
+        }
+        try await submit(.usedSome(remainingWording: nil))
+        let unknown = try XCTUnwrap(model.snapshot)
+        XCTAssertEqual(unknown.lots.first?.count, .unknown)
+        XCTAssertNil(unknown.availability.lots.first?.free)
+        try await submit(.usedSome(remainingWording: "less than half a bottle"))
+        let estimated = try XCTUnwrap(model.snapshot)
+        XCTAssertEqual(estimated.lots.first?.countWording, "less than half a bottle")
+        XCTAssertEqual(estimated.lots.first?.count, .someLeft)
+        let original = try await model.usageHistory(lotID: id, basis: estimated.state)
+        XCTAssertEqual(original.count, 2)
+        XCTAssertEqual(Set(original.map(\.id)).count, 2)
+        XCTAssertTrue(original.allSatisfy { $0.kind == .some && $0.occurredAt == now })
+        XCTAssertEqual(original.compactMap(\.remainingWording), ["less than half a bottle"])
+        try await submit(.low("nearly empty"))
+        try await submit(.unknown)
+        try await submit(.empty)
+        let empty = try XCTUnwrap(model.snapshot)
+        for use in [PantryConsumptionSelection.Use.usedSome(remainingWording: nil), .usedSome(remainingWording: "a little left"), .all] {
+            do { _ = try await model.reviewConsumption([.init(lotID: id, use: use)], basis: empty.state); XCTFail("Empty batch accepted a use") }
+            catch { XCTAssertEqual(error as? PantryConsumptionFailure, .emptyBatch) }
+        }
+        XCTAssertEqual(model.snapshot?.state, empty.state)
+        XCTAssertNil(try f.journal.read())
+        await model.prepare(lotID: id, action: .recount("2", .count))
+        await model.confirmReview(acknowledgingReservations: false)
+        let final = try XCTUnwrap(model.snapshot)
+        let fresh = try ComparisonStore(url: f.directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(fresh)
+        let reopened = PantryRepository(store: fresh, authorize: { true })
+        let history = try await reopened.usageHistory(lotID: id, basis: final.state)
+        XCTAssertEqual(history, original)
+        XCTAssertEqual(final.lots.first?.count.quantity?.amount, try Rational(2))
+        XCTAssertNil(final.lots.first?.countWording)
+        let token = try await fresh.inventorySourceToken()
+        _ = try await fresh.eraseInventoryOrigin(expectedRevision: final.state.revision, sourceToken: token, operationID: UUID(), at: now)
+        do { _ = try await reopened.usageHistory(lotID: id, basis: final.state); XCTFail("Retired inventory exposed use history") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .erased) }
+    }
+
+    func testConsumptionRequiresExactLotFreeQuantityAndCurrentAuthorizedBasis() async throws {
+        let f = try await fixture(), model = editor(f)
+        await model.load()
+        for name in ["Eggs", "Eggs"] {
+            await model.prepareNewFood(name: name, location: .fridge, amount: "5", unit: .count)
+            await model.confirmReview(acknowledgingReservations: false)
+        }
+        let before = try XCTUnwrap(model.snapshot)
+        let lot = try XCTUnwrap(before.lots.first)
+        let spare = try XCTUnwrap(before.lots.last)
+        XCTAssertNotEqual(lot.id, spare.id)
+        let basis = PantryReviewedFood(id: lot.foodID, name: lot.name, inventoryWorkspaceID: before.state.workspaceID,
+                                      inventoryRevision: before.state.revision)
+        await model.prepareReservation(.reserve(purpose: "Lunch", amount: "3", day: nil), lotID: lot.id, basis: basis)
+        await model.confirmReview(acknowledgingReservations: false)
+        let held = try XCTUnwrap(model.snapshot)
+        let one = Quantity(amount: .one, unit: .count, originalLiteral: "1")
+        let three = Quantity(amount: try Rational(3), unit: .count, originalLiteral: "3")
+        let volume = Quantity(amount: .one, unit: .cup, originalLiteral: "1")
+        for (use, expected) in [(PantryConsumptionSelection.Use.all, PantryConsumptionFailure.reserved),
+                                (.low("nearly empty"), .reserved), (.usedSome(remainingWording: nil), .reserved), (.unknown, .reserved),
+                                (.amount(three), .insufficientFree), (.amount(volume), .incompatibleUnit)] {
+            do {
+                _ = try await model.reviewConsumption([.init(lotID: lot.id, use: use)], basis: held.state)
+                XCTFail("Invalid consumption was offered")
+            } catch { XCTAssertEqual(error as? PantryConsumptionFailure, expected) }
+        }
+        let valid = try await model.reviewConsumption([.init(lotID: lot.id, use: .amount(one))], basis: held.state)
+        let other = editor(f)
+        await other.load()
+        await other.prepare(lotID: spare.id, action: .move(.freezer))
+        await other.confirmReview(acknowledgingReservations: false)
+        do {
+            try await model.saveConsumption(valid)
+            XCTFail("Stale review committed")
+        } catch { XCTAssertEqual(error as? PantryConsumptionFailure, .stale) }
+        XCTAssertTrue(model.requiresFreshReview)
+        await model.discardStaleReview()
+        let current = try XCTUnwrap(model.snapshot)
+        let retried = try await model.reviewConsumption([.init(lotID: lot.id, use: .amount(one))], basis: current.state)
+        try await model.saveConsumption(retried)
+        let result = try XCTUnwrap(model.snapshot)
+        XCTAssertEqual(result.lots.first { $0.id == lot.id }?.count.quantity?.amount, try Rational(4))
+        XCTAssertEqual(result.lots.first { $0.id == spare.id }?.count.quantity?.amount, try Rational(5))
+        XCTAssertEqual(result.availability.lots.first { $0.id == lot.id }?.held?.amount, try Rational(3))
+        XCTAssertEqual(result.reservations, held.reservations)
+        var allowed = true
+        let guarded = editor(f, authorize: { allowed })
+        await guarded.load()
+        let final = try await guarded.reviewConsumption([.init(lotID: spare.id, use: .all)], basis: result.state)
+        allowed = false
+        do { try await guarded.saveConsumption(final); XCTFail("Revoked writer changed pantry") } catch {}
+        XCTAssertNil(guarded.snapshot)
+        XCTAssertEqual(guarded.phase, .accessDenied)
+        let verified = try await repository(f).load(at: now)
+        XCTAssertEqual(verified.state, result.state)
+        XCTAssertNil(try f.journal.read())
+    }
+
     func testDirectLunchReservationAndPartialReleaseRecoverExactClaimAfterSQLiteReopen() async throws {
         let f = try await fixture()
         let a = editor(f)

@@ -171,7 +171,7 @@ private struct CookCompletionPartView: View {
         Picker(cookCompletionText("How was this part recorded?"), selection: $part.use) {
             Text(cookCompletionText("Choose a record type")).tag(CookCompletionEditorModel.PartUse.undecided)
             Text(cookCompletionText("Known amount from a pantry batch")).tag(CookCompletionEditorModel.PartUse.measured)
-            Text(cookCompletionText("Unmeasured amount from a pantry batch")).tag(CookCompletionEditorModel.PartUse.unmeasured)
+            Text(cookCompletionText("Used some from a pantry batch")).tag(CookCompletionEditorModel.PartUse.unmeasured)
             Text(cookCompletionText("Food not tracked in this pantry")).tag(CookCompletionEditorModel.PartUse.untracked)
         }.pickerStyle(.menu).accessibilityIdentifier("cook.part.\(part.id)")
     }

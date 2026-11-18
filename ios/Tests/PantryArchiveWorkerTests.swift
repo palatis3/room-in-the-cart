@@ -921,6 +921,55 @@ import RecordArchive
         try await f.worker.discardRestoration(prepared)
     }
 
+    func testIndependentUsageHistoryCombinesVerifiedSourceAndLocalUsesAcrossTwoRestores() async throws {
+        let f = try await fixture()
+        let original = try await firstLot(f.store)
+        let firstUse = InventoryUsage(id: UUID(), kind: .some)
+        let firstReading = InventoryCountRevision(count: .someLeft, observationID: UUID(), observedAt: now,
+                                                  countWording: "menos de media botella")
+        try await append(.init(id: UUID(), originID: f.store.workspaceID, lotID: original.id, eventID: UUID(),
+                               expectedRevision: original.revision, occurredAt: now,
+                               change: .revise(.init(observation: firstReading, usage: [firstUse]))),
+                         current: original, to: f.store)
+        let source = try await f.capture.captureHandle(worker: f.worker, at: now)
+        let gate = PantryMutationGate()
+        let coordinator = try PantryRecoveryCoordinator(root: f.directory.appendingPathComponent("usage-copies"), worker: f.worker,
+            gate: gate, protectedWorkspaceIDs: { [f.store.workspaceID, f.ledger.workspaceID] }, authorize: { _, _ in true })
+        let copy = try await coordinator.create(copyID: UUID(), reference: source.reference, at: now)
+        f.cleanup.track(copy.store)
+        let baseline = try await firstLot(copy.store)
+        let daysLater = now.addingTimeInterval(3 * 86_400)
+        let nextUse = InventoryUsage(id: UUID(), kind: .some)
+        let nextReading = InventoryCountRevision(count: .unknown, observationID: UUID(), observedAt: daysLater)
+        try await append(.init(id: UUID(), originID: copy.store.workspaceID, lotID: baseline.id, eventID: UUID(),
+                               expectedRevision: baseline.revision, occurredAt: daysLater,
+                               change: .revise(.init(observation: nextReading, usage: [nextUse]))),
+                         current: baseline, to: copy.store)
+        let repo = PantryRepository(store: copy.store, archivedUsage: { lot in
+            try await f.worker.archivedUsage(source, context: copy.identity, lot: lot)
+        }, authorize: { true })
+        let copyState = try await copy.store.inventoryState()
+        let history = try await repo.usageHistory(lotID: baseline.id, basis: copyState)
+        XCTAssertEqual(history.map(\.id), [nextUse.id, firstUse.id])
+        XCTAssertEqual(history.map(\.occurredAt), [daysLater, now])
+        XCTAssertEqual(history.compactMap(\.remainingWording), ["menos de media botella"])
+
+        let exported = try await PantryArchiveCapture.captureIndependent(worker: f.worker, inventory: copy.store,
+            original: source, identity: copy.identity, journalDirectory: f.directory.appendingPathComponent("usage-journal"),
+            gate: gate, at: daysLater, authorize: {})
+        let nested = try await coordinator.create(copyID: UUID(), reference: exported.reference, at: daysLater)
+        f.cleanup.track(nested.store)
+        let second = try await firstLot(nested.store)
+        let nestedRows = try await f.worker.archivedUsage(exported, context: nested.identity, lot: second)
+        XCTAssertEqual(nestedRows, history)
+        let unrelated = InventoryLot(id: second.id, foodID: second.foodID, name: second.name,
+            source: .manual(originID: nested.store.workspaceID, sourceID: UUID()), revision: second.revision,
+            location: second.location, openedAt: second.openedAt, unit: second.unit, count: second.count,
+            observationID: second.observationID, confirmedAt: second.confirmedAt, updatedAt: second.updatedAt)
+        let unrelatedRows = try await f.worker.archivedUsage(exported, context: nested.identity, lot: unrelated)
+        XCTAssertTrue(unrelatedRows.isEmpty)
+    }
+
     func testIndependentEditReexportIsSelfContainedAndOldPendingStaysInert() async throws {
         let f = try await fixture(), originalLot = try await firstLot(f.store)
         let foodJournal = try f.pending.makeFoodPendingStore()

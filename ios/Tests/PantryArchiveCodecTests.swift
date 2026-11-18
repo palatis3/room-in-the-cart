@@ -32,6 +32,24 @@ import RecordArchive
             sourceLinks: source.sourceLinks, history: history ?? source.history)
     }
 
+    func testQualitativeUseRoundTripKeepsWordingAndHistoryAcrossIndependentRestore() throws {
+        let original = try snapshot(), before = try XCTUnwrap(original.lots.first)
+        let wording = "menos de media botella"
+        let read = InventoryCountRevision(count: .someLeft, observationID: UUID(), observedAt: now, countWording: wording)
+        let action = InventoryUsage(id: UUID(), kind: .some)
+        let command = InventoryCommand(id: UUID(), originID: original.descriptor.originID, lotID: before.id, eventID: UUID(),
+            expectedRevision: before.revision, occurredAt: now, change: .revise(.init(observation: read, usage: [action])))
+        let change = try InventoryEngine.prepare(command, current: before, at: now)
+        let saved = replacing(original, lots: [change.lot], observations: original.observations + [try XCTUnwrap(change.observation)],
+                              events: original.events + [change.event])
+        let restored = try PantryArchiveRestore.prepare(PantryArchiveCodec.decode(PantryArchiveCodec.encode(saved)),
+            newOriginID: UUID(), restorationID: UUID(), at: now)
+        XCTAssertEqual(restored.lots.first?.countWording, wording)
+        XCTAssertEqual(restored.observations.first?.countWording, wording)
+        XCTAssertTrue(restored.history.contains(.originalEvent(change.event)))
+        XCTAssertNil(restored.lots.first?.count.quantity)
+    }
+
     func testDatedPersonalLunchSurvivesArchiveAndIndependentRestoreKeepsItsHoldUnresolved() throws {
         let source = try snapshot(), lot = try XCTUnwrap(source.lots.first)
         let day = try MealDay(year: 2026, month: 11, day: 18, timeZoneIdentifier: "America/New_York")

@@ -393,9 +393,11 @@ import RecordArchive
             case .originalSourceLink(let value): result.source(value.source, .incidentalCopy); result.add(.lot(value.lotID), .incidentalCopy)
             case .foodPending(let value):
                 guard value.command.originID == context.originID else { result.unresolved.insert(.foreignLineage); break }
-                result.add(.lot(value.command.lotID), .incidentalCopy)
-                if case .reservation(let edit) = value.command.change { result.add(.claim(edit.id), .incidentalCopy) }
-                if case .create(let seed, _) = value.command.change { result.source(seed.source, .incidentalCopy) }
+                for command in value.commands {
+                    result.add(.lot(command.lotID), .incidentalCopy)
+                    if case .reservation(let edit) = command.change { result.add(.claim(edit.id), .incidentalCopy) }
+                    if case .create(let seed, _) = command.change { result.source(seed.source, .incidentalCopy) }
+                }
             case .packPending(let value):
                 if value.request.inventoryWorkspaceID != context.originID { result.unresolved.insert(.foreignLineage) } else { result.pack(value.request.selection) }
             case .pickupPending(let value):

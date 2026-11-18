@@ -1395,19 +1395,19 @@
         }
       }
     },
-    "Unmeasured amount from a pantry batch": {
+    "Used some from a pantry batch": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unmeasured amount from a pantry batch"
+            "value": "Used some from a pantry batch"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cantidad no medida de un lote de la despensa"
+            "value": "Usé un poco de un lote de la despensa"
           }
         }
       }

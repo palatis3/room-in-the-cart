@@ -168,6 +168,50 @@ import LocalStore
         XCTAssertEqual(reopened.completed, original); XCTAssertEqual(reopened.inventory.state.revision, revision)
     }
 
+    func testUsedSomeFromReviewedSubstitutePreservesChoiceAndOneHistoryRowThroughCorrectionAndUndo() async throws {
+        let f = try await fixture()
+        let editor = f.editor
+        let repository = PantryRepository(store: f.store, authorize: { f.access.allowed })
+        let lotID = f.lots[1]
+        func history(_ id: UUID) async throws -> [PantryUsageHistoryRow] {
+            let basis = try await f.store.inventoryState()
+            return try await repository.usageHistory(lotID: id, basis: basis)
+        }
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        editor.ingredients[0].parts[0].use = .unmeasured
+        let partID = editor.ingredients[0].parts[0].id
+        let ingredientID = editor.ingredients[0].id
+        let substitute = try XCTUnwrap(editor.suggestions(for: ingredientID).first { $0.id == lotID })
+        try editor.chooseSuggestion(substitute, ingredientID: ingredientID, partID: partID)
+        XCTAssertEqual(editor.ingredients[0].parts[0].use, .unmeasured)
+        await editor.prepareReview()
+        let reviewed = try XCTUnwrap(editor.review)
+        XCTAssertEqual(reviewed.draft.parts.first?.use, .lot(id: lotID, revision: substitute.lot.revision, amount: nil))
+        await editor.confirm()
+        try await f.session.apply(reviewed)
+        let original = try await history(lotID)
+        XCTAssertEqual(original, [.init(id: partID, occurredAt: reviewed.draft.cookedAt, kind: .some, remainingWording: nil)])
+        let otherLot = try await history(f.lots[0])
+        XCTAssertTrue(otherLot.isEmpty)
+
+        let correction = await resolution(f)
+        correction.action = .deduct
+        correction.usedAmount = "1"
+        await correction.prepare()
+        await correction.confirm()
+        let amended = try await history(lotID)
+        XCTAssertEqual(amended.map(\.id), [partID])
+        XCTAssertEqual(amended.first?.occurredAt, reviewed.draft.cookedAt)
+        guard case .measured(let amount) = amended.first?.kind else { return XCTFail("Expected corrected cooking quantity") }
+        XCTAssertEqual(amount.amount, try Rational(1))
+        await editor.reload()
+        await editor.prepareUndo()
+        await editor.confirmUndo()
+        let undone = try await history(lotID)
+        XCTAssertTrue(undone.isEmpty)
+    }
+
     func testUnmeasuredAndUntrackedRetainDistinctUnknownUseLineage() async throws {
         let f = try await fixture(), model = f.editor
         explicitNoUse(model)

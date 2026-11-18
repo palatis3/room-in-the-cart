@@ -197,9 +197,10 @@ extension ComparisonDatabase {
         return id
     }
 
-    func inventoryRecords(kind: InventoryRecordKind, id: UUID? = nil, after: UUID? = nil, limit: Int = 1) throws -> [InventoryRecord] {
+    func inventoryRecords(kind: InventoryRecordKind, id: UUID? = nil, lotID: UUID? = nil, after: UUID? = nil, limit: Int = 1) throws -> [InventoryRecord] {
         var query = "SELECT h.kind, h.id, h.revision, r.payload_version, r.payload, r.digest, h.lot_id, h.source_origin, h.source_id FROM inventory_heads h JOIN inventory_revisions r ON r.kind = h.kind AND r.id = h.id AND r.revision = h.revision WHERE h.kind = ?"
         var values: [ComparisonSQLValue] = [.text(kind.rawValue)]
+        if let lotID { query += " AND h.lot_id = ?"; values.append(.text(lotID.uuidString)) }
         if let id { query += " AND h.id = ?"; values.append(.text(id.uuidString)) }
         if let after { query += " AND h.id > ?"; values.append(.text(after.uuidString)) }
         query += " ORDER BY h.id LIMIT ?"; values.append(.integer(Int64(limit)))

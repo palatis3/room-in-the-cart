@@ -283,8 +283,9 @@ import RecordArchive
             case .migration(let value): try migration(value)
             case .sourceHead(let origin, let head): try journey(head, origin)
             case .foodPending(let entry):
-                let command = entry.command
-                try change(command.change, lot: command.lotID, event: command.eventID, origin: command.originID)
+                for command in entry.commands {
+                    try change(command.change, lot: command.lotID, event: command.eventID, origin: command.originID)
+                }
             case .packPending(let entry):
                 let request = entry.request
                 try checkOrigin(request.inventoryWorkspaceID)

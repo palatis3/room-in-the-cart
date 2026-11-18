@@ -818,11 +818,11 @@ actor PantryArchiveWorker {
             case .restoredFrom(let value): return [entry(value.originID, .inventoryOrigin, value.originID)]
             case .sourceHead(let origin, let value): return [entry(origin, .sourceHead, value.id, value.revision)]
             case .foodPending(let value):
-                let lot = entry(value.command.originID, .lot, value.command.lotID)
+                var result = value.commands.map { entry($0.originID, .lot, $0.lotID) }
                 if case .reservation(let edit) = value.command.change {
-                    return [lot, entry(value.command.originID, .reservation, edit.id, max(1, edit.previousRevision))]
+                    result.append(entry(value.command.originID, .reservation, edit.id, max(1, edit.previousRevision)))
                 }
-                return [lot]
+                return result
             case .pickupPending(let value):
                 var result = value.submission.changedHeads.map { entry(value.submission.request.originID, .sourceHead, $0.id, $0.revision) }
                 if let ledger = value.submission.request.ledgerOriginID { result.append(entry(ledger, .ledgerOrigin, ledger)) }
@@ -909,7 +909,7 @@ actor PantryArchiveWorker {
                 case .lot(let original):
                     let lot = try PantryArchiveRestore.baselineLot(original, newOriginID: context.workspaceID, restorationID: context.restorationID)
                     let observation = InventoryObservation(id: lot.observationID, lotID: lot.id, operationID: context.restorationID,
-                        revision: 1, supersedesID: nil, observedAt: lot.confirmedAt, count: lot.count)
+                        revision: 1, supersedesID: nil, observedAt: lot.confirmedAt, count: lot.count, countWording: lot.countWording)
                     let link = PantryPersistenceCodec.SourceLink(lotID: lot.id, source: lot.source)
                     try stage(.init(key: .init(.lot, lot.id), revision: 1, payload: ArchiveCodec.canonical(lot)))
                     try stage(.init(key: .init(.observation, observation.id), revision: 1, payload: ArchiveCodec.canonical(observation), lotID: lot.id))
@@ -1196,6 +1196,125 @@ extension PantryArchiveWorker {
         }
         guard chain == header.evidenceChainDigest, count == header.evidenceItemCount else { throw Failure.invalid }
         return total.partialValue
+    }
+
+    /// Restored history is read from the authenticated package. A prior origin belongs
+    /// to this batch only when its final head reproduces the child's actual restore baseline.
+    func archivedUsage(_ handle: PantryArchiveHandle, context: RestorationContext, lot: InventoryLot) throws -> [PantryUsageHistoryRow] {
+        guard context.version == 1, context.reference == handle.reference, context.workspaceID == lot.source.originID,
+              context.workspaceID != handle.scope.originID else { throw Failure.invalid }
+        var scopes = [handle.scope.originID: handle.scope]
+        var latest = [UUID: InventoryLot](), baselines = [UUID: InventoryLot]()
+        var sourceLot: InventoryLot?
+        try readContent(handle) { _, part in
+            switch part {
+            case .evidence(let evidence):
+                for case .previousScope(let previous) in evidence {
+                    if let prior = scopes[previous.originID], prior != previous { throw Failure.invalid }
+                    scopes[previous.originID] = previous
+                }
+            case .items(let items):
+                for item in items {
+                    switch item {
+                    case .lot(let head) where head.id == lot.id: sourceLot = head
+                    case .historical(.originalLot(let head)) where head.id == lot.id:
+                        let origin = head.source.originID
+                        if head.revision == 1 { baselines[origin] = head }
+                        if let old = latest[origin], old.revision > head.revision { continue }
+                        if let old = latest[origin], old.revision == head.revision, old != head { throw Failure.invalid }
+                        latest[origin] = head
+                    default: break
+                    }
+                }
+            }
+        }
+        guard let sourceLot,
+              try PantryArchiveRestore.baselineLot(sourceLot, newOriginID: context.workspaceID,
+                                                   restorationID: context.restorationID).source == lot.source else { return [] }
+        var lineage = [handle.scope.originID: sourceLot]
+        var scope = handle.scope
+        while case .independent(let copy) = scope {
+            guard let parent = scopes[copy.originalOriginID], let head = latest[parent.originID],
+                  let baseline = baselines[scope.originID], head.updatedAt <= parent.capturedAt,
+                  head.revision <= parent.inventoryRevision,
+                  try PantryArchiveRestore.baselineLot(head, newOriginID: copy.originID, restorationID: copy.restorationID) == baseline
+            else { break } // A new batch in the independent workspace has no earlier source.
+            guard lineage[parent.originID] == nil else { throw Failure.invalid }
+            lineage[parent.originID] = head
+            scope = parent
+        }
+
+        var observations = [UUID: [UUID: InventoryObservation]]()
+        var events = [UUID: [InventoryEvent]]()
+        struct CookHead { let revision: Int64; let rows: [PantryUsageHistoryRow] }
+        var journeys = [UUID: CookHead](), retiredJourneys = [UUID: Int64]()
+        try readContent(handle) { _, part in
+            switch part {
+            case .items(let items):
+                for item in items {
+                    switch item {
+                    case .observation(let observation) where observation.lotID == lot.id:
+                        observations[handle.scope.originID, default: [:]][observation.id] = observation
+                    case .historical(.originalObservation(let origin, let observation)) where observation.lotID == lot.id && lineage[origin] != nil:
+                        observations[origin, default: [:]][observation.id] = observation
+                    case .event(let event) where event.lotID == lot.id,
+                         .historical(.originalEvent(let event)) where event.lotID == lot.id:
+                        if lineage[event.originID] != nil, case .revise(let revision) = event.change, revision.usage != nil {
+                            events[event.originID, default: []].append(event)
+                        }
+                    case .historical(.sourceHead(let origin, let head)) where origin == scope.originID:
+                        // Independent workspaces have no live cook journey. Only the final paired
+                        // ancestor's latest surviving head can establish a cook, its corrections or Undo.
+                        guard case .paired(let paired) = scope, head.savedAt <= paired.capturedAt,
+                              journeys[head.id].map({ head.revision > $0.revision }) ?? true else { continue }
+                        let journey = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
+                        guard journey.id == head.id, journey.savedAt == head.savedAt else { throw Failure.invalid }
+                        try PickupModel.validate(journey)
+                        var rows = [PantryUsageHistoryRow]()
+                        for cook in journey.cookedMeals ?? [] where cook.isActive {
+                            guard cook.draft.inventoryID == origin, cook.draft.ledgerID == paired.ledgerOriginID,
+                                  cook.draft.inventoryRevision < paired.inventoryRevision,
+                                  cook.resolutions?.last.map({ $0.inventoryRevision < paired.inventoryRevision }) ?? true
+                            else { continue }
+                            rows += try cook.usageHistory(for: lot.id)
+                        }
+                        journeys[head.id] = .init(revision: head.revision, rows: rows)
+                    default: break
+                    }
+                }
+            case .evidence(let values):
+                for value in values {
+                    let evidence: PantryArchiveCapture.Evidence
+                    switch value {
+                    case .current(let e) where handle.scope.originID == scope.originID: evidence = e
+                    case .historical(let origin, let e) where origin == scope.originID: evidence = e
+                    default: continue
+                    }
+                    if case .comparisonRetired(let id, let origin, let revision, _, _) = evidence, origin == scope.originID {
+                        retiredJourneys[id] = max(revision, retiredJourneys[id] ?? 0)
+                    }
+                }
+            }
+        }
+        var rows = journeys.filter { $0.value.revision > (retiredJourneys[$0.key] ?? 0) }.flatMap { $0.value.rows }
+        for (origin, uses) in events {
+            guard let head = lineage[origin], let readings = observations[origin] else { throw Failure.invalid }
+            var chain = Set<UUID>(), cursor: UUID? = head.observationID
+            while let id = cursor {
+                guard chain.insert(id).inserted, let observation = readings[id] else { throw Failure.invalid }
+                cursor = observation.supersedesID
+            }
+            for event in uses {
+                guard case .revise(let revision) = event.change, let reading = revision.observation,
+                      chain.contains(reading.observationID), let recorded = readings[reading.observationID],
+                      recorded.operationID == event.operationID, recorded.revision == event.revision,
+                      recorded.count == reading.count, recorded.countWording == reading.countWording,
+                      recorded.observedAt == reading.observedAt, event.occurredAt <= head.updatedAt else { throw Failure.invalid }
+                rows += try PantryUsageHistoryRow.entries(from: event)
+            }
+        }
+        guard Set(rows.map(\.id)).count == rows.count else { throw Failure.invalid }
+        return rows.sorted { ($0.occurredAt, $0.id.uuidString) > ($1.occurredAt, $1.id.uuidString) }
     }
 
     /// Privacy predicates perform read-only comparisons on the worker. An early

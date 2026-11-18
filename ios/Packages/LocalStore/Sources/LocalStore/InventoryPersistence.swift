@@ -194,12 +194,12 @@ extension ComparisonStore {
     }
 
     /// Stable UUID pagination. Callers must check inventory revision again when combining pages.
-    public func inventoryRecords(kind: InventoryRecordKind, after: UUID? = nil, limit: Int = 100) throws -> [InventoryRecord] {
+    public func inventoryRecords(kind: InventoryRecordKind, lotID: UUID? = nil, after: UUID? = nil, limit: Int = 100) throws -> [InventoryRecord] {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
         try database.requireInventoryOriginLive()
         guard (1...InventoryPersistenceLimits.pageItems).contains(limit) else { throw ComparisonStoreError.invalidInput }
         try requireInventoryReadable(kind)
-        return try database.inventoryRecords(kind: kind, after: after, limit: limit)
+        return try database.inventoryRecords(kind: kind, lotID: lotID, after: after, limit: limit)
     }
 
     private func requireInventoryReadable(_ kind: InventoryRecordKind) throws {
