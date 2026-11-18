@@ -1779,6 +1779,82 @@ import XCTest
 
     func testEnglishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: false) }
     func testSpanishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: true) }
+    func testFreeSingleDinnerSwapReopensItsReplacementAndRestoresTheOriginalOnUndo() {
+        func reopenDinners() {
+            app.terminate()
+            launch(reset: false)
+            let tab = app.tabBars.buttons["Dinners"]
+            XCTAssertTrue(tab.waitForExistence(timeout: 12), app.debugDescription)
+            tab.tap()
+        }
+        func fillDinner(_ title: String, ingredient: String) {
+            fill(title, into: "ledgerDinnerTitle")
+            fill("2", into: "ledgerDinnerServings", replacing: true)
+            fill(ingredient, into: "Ingredient name")
+            fill("2", into: "Amount, optional")
+        }
+        func occurrence(_ title: String) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "dinnerOccurrence-", title)).firstMatch
+        }
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinnerStartPickup"])
+        fill("Midweek pickup", into: "ledgerShopName")
+        tap(app.buttons["ledgerCreateShop"])
+        tap(app.buttons["dinnerLibrary"])
+        tap(app.buttons["ledgerNewTemplate"])
+        fillDinner("Rice bowls", ingredient: "Rice")
+        tap(app.buttons["ledgerReviewDinner"])
+        tap(app.buttons["ledgerSaveDinner"])
+        tap(app.buttons["Done"])
+        let makeFree = app.buttons["Use as Free reusable dinner"].firstMatch
+        if makeFree.waitForExistence(timeout: 4) { tap(makeFree) }
+        reopenDinners()
+        tap(app.buttons["dinnerManual"])
+        fillDinner("Tuesday tacos", ingredient: "Tortillas")
+        enableSwitch("Assign a date")
+        tap(app.buttons["ledgerReviewDinner"])
+        tap(app.buttons["dinnerApply"])
+        XCTAssertTrue(app.buttons["dinnerApply"].waitForNonExistence(timeout: 10), app.debugDescription)
+        reopenDinners()
+        let allDinners = app.buttons["All chosen dinners, including earlier dates"]
+        tap(allDinners)
+        let original = occurrence("Tuesday tacos")
+        XCTAssertTrue(original.waitForExistence(timeout: 10), app.debugDescription)
+        let originalID = original.identifier
+        tap(original)
+        tap(app.buttons["dinner.swap"])
+        let option = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "swap.option.", "Rice bowls")).firstMatch
+        XCTAssertTrue(option.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(option.isEnabled, app.debugDescription)
+        tap(option)
+        tap(app.buttons["swap.preview"])
+        let apply = app.buttons["dinnerApply"]
+        XCTAssertTrue(app.navigationBars["Dinner preview"].waitForExistence(timeout: 12), app.debugDescription)
+        reveal(apply)
+        XCTAssertTrue(apply.isEnabled, app.debugDescription)
+        tapVisibleFormRow(apply, marker: "SINGLE_SWAP_APPLY")
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 10), app.debugDescription)
+        reopenDinners()
+        tap(allDinners)
+        let replacement = occurrence("Rice bowls")
+        XCTAssertTrue(replacement.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertNotEqual(replacement.identifier, originalID)
+        XCTAssertFalse(original.exists, app.debugDescription)
+        tap(replacement)
+        tap(app.buttons["swap.undo.review"])
+        let undo = app.buttons["swap.undo.confirm"]
+        tap(undo)
+        XCTAssertTrue(undo.waitForNonExistence(timeout: 10), app.debugDescription)
+        reopenDinners()
+        tap(allDinners)
+        XCTAssertTrue(original.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(original.identifier, originalID)
+        XCTAssertFalse(replacement.exists, app.debugDescription)
+    }
+
     func testFreeRepeatLastWeekPreviewsAndAddsOneNewDatedDinner() {
         launch(reset: true)
         tap(app.tabBars.buttons["Dinners"])
