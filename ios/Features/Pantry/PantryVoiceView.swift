@@ -521,8 +521,8 @@ extension PantryUsageHistoryRow {
                 Section {
                     LabeledContent(pantryText("Recorded uses"), value: entries.count.formatted())
                         .accessibilityIdentifier("pantry.usageCount")
-                    TimelineView(.everyMinute) { context in
-                        let count = PantryUsageHistoryRow.usesInLast30Days(entries, asOf: context.date)
+                    TimelineView(.everyMinute) { _ in
+                        let count = PantryUsageHistoryRow.usesInLast30Days(entries, asOf: Date())
                         LabeledContent(pantryText("Uses in the last 30 days"), value: count.formatted())
                             .accessibilityIdentifier("pantry.usageCount30Days")
                     }
