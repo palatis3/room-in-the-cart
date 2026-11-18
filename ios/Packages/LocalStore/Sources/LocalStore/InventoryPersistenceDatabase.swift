@@ -134,6 +134,10 @@ extension ComparisonDatabase {
 
     func validateInventory() throws {
         try checkIntegrity()
+        try validateInventorySchemaAndRecords()
+    }
+
+    func validateInventorySchemaAndRecords() throws {
         let tables = ["inventory_state", "inventory_heads", "inventory_revisions", "inventory_tombstones", "inventory_retired_sources", "inventory_operations", "inventory_migrations", "inventory_migration_chunks", "inventory_staged_records", "inventory_migration_sources", "inventory_migration_keys"]
         let triggers = ["inventory_source_insert", "inventory_source_update", "inventory_source_delete", "inventory_source_retired",
             "inventory_revision_immutable", "inventory_append_only", "inventory_revision_retired", "inventory_head_retired",
