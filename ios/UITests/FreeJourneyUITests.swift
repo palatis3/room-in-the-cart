@@ -54,6 +54,242 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
+    func testPrivateLotPrintedWordingCanBeReviewedReopenedInSpanishAndRemoved() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill("Green lentils", into: "pantry.foodName")
+        fill("2", into: "pantry.amount")
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Green lentils")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.packageDate"])
+        XCTAssertTrue(app.buttons["Choose a label photo"].exists)
+        XCTAssertTrue(app.buttons["Photograph the printed date"].exists)
+        let wording = "BEST BEFORE 03/04"
+        fill(wording, into: "packageDate.wording")
+        XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
+        tap(app.buttons["packageDate.save"])
+        XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
+        app.terminate()
+        launch(reset: false, spanish: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(lot)
+        XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
+        tap(app.buttons["pantry.packageDate"])
+        XCTAssertTrue(app.navigationBars["Fecha impresa en el envase"].waitForExistence(timeout: 8))
+        XCTAssertEqual(editableElement("packageDate.wording").value as? String, wording)
+        tap(app.buttons["packageDate.remove"])
+        XCTAssertTrue(app.navigationBars["Green lentils"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts[wording].exists)
+    }
+
+    func testPantryManualCheckDateRemainsAvailableWhenDigestPermissionIsDenied() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        tap(app.textFields["pantry.foodName"])
+        app.textFields["pantry.foodName"].typeText("Green lentils")
+        tap(app.textFields["pantry.amount"])
+        app.textFields["pantry.amount"].typeText("2")
+        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Green lentils")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.digest.checkDate"])
+        tap(app.buttons["pantry.digest.saveDate"])
+        XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 10))
+        app.terminate()
+        launch(reset: false)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.digest"])
+        let item = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Green lentils")).firstMatch
+        XCTAssertTrue(item.waitForExistence(timeout: 10))
+        tap(app.buttons["pantry.digest.enable"])
+        XCTAssertTrue(app.staticTexts["Notifications are unavailable. Your check dates are still here."].waitForExistence(timeout: 10))
+        XCTAssertTrue(item.exists)
+        capture("Private manual food check retained after notifications denied")
+    }
+
+    #if PANTRY_DIGEST_LIVE_ACCEPTANCE
+    /// Run only on a fresh, dedicated simulator. The ordinary app asks iOS for notification consent.
+    func testSystemDeliversPrivatePantryDigestAndReopensCurrentCheckList() {
+        let lotName = "Digest lentils " + String(UUID().uuidString.prefix(6))
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Shop"])
+        tap(app.buttons["shop.myPantry"])
+        let setup = app.buttons["pantry.setup.apply"]
+        if setup.waitForExistence(timeout: 3) { tap(setup) }
+        tap(app.buttons["pantry.add"])
+        tap(app.textFields["pantry.foodName"])
+        app.textFields["pantry.foodName"].typeText(lotName)
+        tap(app.textFields["pantry.amount"])
+        app.textFields["pantry.amount"].typeText("2")
+        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", lotName)).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.digest.checkDate"])
+        tap(app.buttons["pantry.digest.saveDate"])
+        XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 8))
+        for _ in 0..<2 { app.navigationBars.buttons.firstMatch.tap() }
+        tap(app.buttons["pantry.digest"])
+        tap(element("pantry.digest.time"))
+        let picker = app.pickerWheels
+        XCTAssertTrue(picker.firstMatch.waitForExistence(timeout: 6), app.debugDescription)
+        let fire = Date().addingTimeInterval(150)
+        let parts = Calendar.current.dateComponents([.hour,.minute], from: fire)
+        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
+        picker.element(boundBy: 0).adjust(toPickerWheelValue: String(hour % 12 == 0 ? 12 : hour % 12))
+        picker.element(boundBy: 1).adjust(toPickerWheelValue: String(format: "%02d", minute))
+        if picker.count == 3 { picker.element(boundBy: 2).adjust(toPickerWheelValue: hour < 12 ? "AM" : "PM") }
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.16)).tap()
+        tap(app.buttons["pantry.digest.enable"])
+        let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = board.alerts.buttons["Allow"]
+        if allow.waitForExistence(timeout: 5) { allow.tap() }
+        let on = app.staticTexts["Daily notifications are on."]
+        if !on.waitForExistence(timeout: 8) { tap(app.buttons["pantry.digest.enable"]) }
+        XCTAssertTrue(on.waitForExistence(timeout: 8))
+        capture("Pantry digest enabled by explicit OS consent")
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["My Pantry"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.navigationBars["Use soon"].exists)
+        XCUIDevice.shared.press(.home)
+        let text = "Open My Pantry to review the foods you chose to check."
+        let notification = board.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+        XCTAssertTrue(notification.waitForExistence(timeout: 165), board.debugDescription)
+        XCTAssertFalse(notification.label.contains("lentils"))
+        captureSystemScreen("iOS delivered a redacted Pantry notification")
+        notification.tap()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 12))
+        XCTAssertTrue(app.navigationBars["Use soon"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", lotName)).firstMatch.exists)
+        capture("Notification opens the current authorized food checks")
+    }
+    #endif
+
+#if CONTRIBUTOR_CAPTURE_UI_FIXTURE
+    func testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange() {
+        app.launchArguments = ["--ui-testing", "--measurement-fixture", "--foodkeeper-match-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_WORKSPACE"] = UUID().uuidString
+        app.launch()
+        let guide = app.buttons["pantry.foodKeeper"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 20), app.debugDescription)
+        tap(guide)
+        tap(app.buttons["foodKeeper.assistance"])
+        XCTAssertFalse(app.buttons["foodKeeper.assistance.confirm"].exists)
+        fill("chicken from an opened can", into: "foodKeeper.assistance.wording", replacing: true)
+        tap(app.buttons["foodKeeper.assistance.send"])
+        let confirm = app.buttons["foodKeeper.assistance.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertFalse(app.buttons["foodKeeper.review.refrigerate_after_opening"].exists)
+        capture("Adult reviews suggested USDA entry before confirming")
+        tap(confirm)
+        tap(app.buttons["foodKeeper.review.refrigerate_after_opening"])
+        XCTAssertFalse(element("foodKeeper.rangeStart").exists)
+        enableSwitch("foodKeeper.confirmStorage")
+        XCTAssertTrue(element("foodKeeper.rangeStart").waitForExistence(timeout: 8))
+        XCTAssertTrue(element("foodKeeper.rangeEnd").exists)
+        tap(app.buttons["foodKeeper.saveRange"])
+        XCTAssertTrue(element("foodKeeper.savedStatus").waitForExistence(timeout: 8))
+        capture("Deterministic FoodKeeper range after separate storage confirmation")
+    }
+#endif
+
+    func testOptionalFoodKeeperMatchingKeepsTheSignedOutManualGuideAvailable() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill("Canned chicken", into: "pantry.foodName")
+        fill("2", into: "pantry.amount")
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Canned chicken")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.foodKeeper"])
+        tap(app.buttons["foodKeeper.assistance"])
+        XCTAssertTrue(element("foodKeeper.assistance.signedOut").waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["foodKeeper.assistance.send"].exists)
+        tap(app.navigationBars["Match a food label"].buttons.firstMatch)
+        tap(app.buttons["foodKeeper.product.142"])
+        XCTAssertTrue(app.navigationBars.firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Batch storage"].exists)
+        XCTAssertFalse(element("pantry.foodKeeper.range").exists)
+    }
+
+    func testEnglishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
+        verifyLotFoodKeeper(spanish: false)
+    }
+
+    func testSpanishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
+        verifyLotFoodKeeper(spanish: true)
+    }
+
+    private func verifyLotFoodKeeper(spanish: Bool) {
+        let name = spanish ? "Pollo enlatado" : "Canned chicken"
+        launch(reset: true, spanish: spanish)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        tap(app.textFields["pantry.foodName"])
+        app.textFields["pantry.foodName"].typeText(name)
+        tap(app.textFields["pantry.amount"])
+        app.textFields["pantry.amount"].typeText("2")
+        for done in ["Done", "Listo"] where app.keyboards.buttons[done].exists { app.keyboards.buttons[done].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", name)).firstMatch
+        tap(row)
+        tap(app.buttons["pantry.move.fridge"])
+        tap(app.buttons["pantry.confirm"])
+        tap(app.buttons["pantry.opened"])
+        tap(app.buttons["pantry.confirm"])
+        tap(app.buttons["pantry.foodKeeper"])
+        tap(app.buttons["foodKeeper.product.142"])
+        let unknown = spanish ? "No hay recomendaciones correspondientes a esta condición de almacenamiento." : "No matching guidance for this storage condition."
+        XCTAssertTrue(app.staticTexts[unknown].firstMatch.waitForExistence(timeout: 8))
+        tap(app.buttons["foodKeeper.review.refrigerate_after_opening"])
+        XCTAssertFalse(app.buttons["foodKeeper.saveRange"].exists)
+        let confirm = app.switches["foodKeeper.confirmStorage"]
+        reveal(confirm)
+        confirm.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        tap(app.buttons["foodKeeper.saveRange"])
+        let status = app.staticTexts["foodKeeper.savedStatus"]
+        XCTAssertTrue(status.waitForExistence(timeout: 8))
+        XCTAssertEqual(status.label, spanish ? "Se guardó el intervalo de calidad." : "Quality range saved.")
+        app.terminate()
+        launch(reset: false, spanish: spanish)
+        tap(app.buttons["shop.myPantry"])
+        tap(row)
+        let source = element("pantry.foodKeeper.source")
+        XCTAssertTrue(source.waitForExistence(timeout: 8))
+        XCTAssertTrue(source.label.contains("v128 · #142"))
+        XCTAssertTrue(element("pantry.foodKeeper.range").exists)
+        capture(spanish ? "Intervalo de calidad guardado en el lote" : "Saved USDA range on the ordinary lot after relaunch")
+        tap(app.buttons["pantry.move.freezer"])
+        let commit = app.buttons["pantry.confirm"]
+        tap(commit)
+        XCTAssertTrue(commit.waitForNonExistence(timeout: 8))
+        let staleRange = element("pantry.foodKeeper.needsReview")
+        // The move action is below the saved range. Return to that section after the review sheet closes.
+        reveal(staleRange, initiallyUpward: false)
+        XCTAssertTrue(staleRange.label.contains(spanish ? "Vuelve a revisar" : "Review its current storage"))
+        XCTAssertFalse(element("pantry.foodKeeper.range").exists)
+        tap(app.buttons["pantry.foodKeeper"])
+        tap(app.buttons["foodKeeper.product.142"])
+        XCTAssertTrue(app.staticTexts[unknown].firstMatch.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "foodKeeper.review.")).firstMatch.exists)
+        app.terminate()
+    }
+
     func testOfflineFoodKeeperSearchAndReviewedQualityRangeInEnglishAndSpanish() {
         for spanish in [false, true] {
             launch(reset: true, spanish: spanish)

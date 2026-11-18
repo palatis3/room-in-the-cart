@@ -10,6 +10,7 @@ private enum PantrySheet: Identifiable {
 
 /// Composition owns authorization and migration. This surface never activates a database.
 struct PantryHomeView: View {
+    @Environment(\.pantryDigestAccess) private var digestAccess
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
     var offersTonight = false
@@ -27,6 +28,10 @@ struct PantryHomeView: View {
                         }
                     }
                     if model.phase == .ready, let snapshot = model.snapshot {
+                        if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID {
+                            NavigationLink(pantryText("Use soon")) { PantryDigestList(model: model, access: digestAccess) }
+                                .accessibilityIdentifier("pantry.digest")
+                        }
                         Section {
                             if offersTonight {
                                 NavigationLink(tonightText("Tonight")) { TonightEntry() }
@@ -191,7 +196,8 @@ private struct PantryEntryPresentation: ViewModifier {
     func body(content: Content) -> some View {
         content
         .task(id: accessAllowed) {
-            if accessAllowed { await model.load() } else { sheet = nil; model.accessLost() }
+            if !accessAllowed { sheet = nil }
+            await model.loadOnAppearance(accessAllowed: accessAllowed)
         }
         .onChange(of: accessAllowed) { _, allowed in
             if !allowed { sheet = nil; model.accessLost() }
@@ -205,17 +211,24 @@ private struct PantryEntryPresentation: ViewModifier {
         .onChange(of: model.phase) { _, phase in
             if phase == .accessDenied { sheet = nil }
         }
-        .sheet(item: Binding(get: { accessAllowed && model.phase != .accessDenied ? sheet : nil }, set: { sheet = $0 })) { value in
+        .sheet(isPresented: Binding(get: { accessAllowed && model.phase != .accessDenied && sheet != nil }, set: { shown in
+            if !shown {
+                if case .review = sheet, model.pending == nil { model.cancelReview() }
+                sheet = nil
+            }
+        })) {
             NavigationStack {
-                switch value {
-                case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
-                case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
-                case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
-                case .receipt: PantryReceiptEntry(model: model)
-                case .aliases: PantryReceiptAliasList(model: model)
-                case .prices: PantryReceiptHistory(model: model)
-                case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,
-                                                     availabilityNeedsReview: availabilityNeedsReview)
+                if let value = sheet {
+                    switch value {
+                    case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
+                    case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
+                    case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
+                    case .receipt: PantryReceiptEntry(model: model)
+                    case .aliases: PantryReceiptAliasList(model: model)
+                    case .prices: PantryReceiptHistory(model: model)
+                    case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,
+                                                   availabilityNeedsReview: availabilityNeedsReview)
+                    }
                 }
             }
         }
@@ -243,6 +256,7 @@ struct PantryLotSummary: View {
 }
 
 private struct PantryLotView: View {
+    @Environment(\.pantryDigestAccess) private var digestAccess
     @ObservedObject var model: PantryModel
     let lotID: UUID
     let accessAllowed: Bool
@@ -261,6 +275,14 @@ private struct PantryLotView: View {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
                 }
+                if let access = digestAccess, access.scope.origin == model.snapshot?.state.workspaceID, access.authorized() {
+                    PantryPackageDateSection(model: model, lot: lot, access: access, store: PantryDigestStore.shared.packageDates)
+                }
+                PantryLotFoodKeeperSection(model: model, lot: lot, accessAllowed: accessAllowed)
+                if let digestAccess, digestAccess.scope.origin == model.snapshot?.state.workspaceID, lot.count.quantity?.amount != .zero {
+                    NavigationLink(pantryText("Batch check date")) { PantryDigestDayEditor(model: model, access: digestAccess, lot: lot) }
+                        .accessibilityIdentifier("pantry.digest.checkDate")
+                }
                 PantryReservationSection(model: model, lot: lot, availabilityNeedsReview: availabilityNeedsReview)
                     .id(lot.id)
                 Section {
@@ -268,11 +290,11 @@ private struct PantryLotView: View {
                     action("Some left", .someLeft)
                     Button(pantryText("Recount food"), action: recount).frame(minHeight: 44)
                         .accessibilityIdentifier("pantry.recount")
-                    action("Opened now", .opened)
+                    action("Opened now", .opened).accessibilityIdentifier("pantry.opened")
                     ForEach(InventoryLocation.allCases.filter { $0 != lot.location }, id: \.self) { location in
                         Button(pantryFormat("Move to %@", pantryLocationName(location))) {
                             Task { await model.prepare(lotID: lotID, action: .move(location)) }
-                        }.frame(minHeight: 44)
+                        }.frame(minHeight: 44).accessibilityIdentifier("pantry.move." + location.rawValue)
                     }
                     action("Used up", .usedUp)
                 } footer: {
@@ -479,7 +501,6 @@ private struct PantryReviewView: View {
             }
         }
         .interactiveDismissDisabled(model.busy || model.pending != nil)
-        .onDisappear { if model.pending == nil { model.cancelReview() } }
         .privacySensitive()
     }
 }

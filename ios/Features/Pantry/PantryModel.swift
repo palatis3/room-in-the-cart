@@ -58,10 +58,23 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
 
     var canEdit: Bool { phase == .ready && snapshot != nil && !busy && pending == nil && review == nil && !requiresFreshReview }
 
+    func verifyDigestLot(_ lot: InventoryLot, origin: UUID) async throws {
+        guard canEdit, repository.originID == origin else { throw PantryDigestFailure.changed }
+        let current = try await repository.loadForEditing(at: clock())
+        guard canEdit, current.lots.first(where: { $0.id == lot.id }) == lot else { throw PantryDigestFailure.changed }
+    }
+
     func accessLost() {
         generation = UUID()
         snapshot = nil; review = nil; pending = nil; savedLotID = nil
         phase = .accessDenied; notice = nil; busy = false; requiresFreshReview = false; pendingWasCommitted = false
+    }
+
+    /// Reappearing below the edit sheet keeps the reviewed command. An explicit refresh still reloads it.
+    func loadOnAppearance(accessAllowed: Bool) async {
+        guard accessAllowed, (try? repository.requireAccess()) != nil else { accessLost(); return }
+        if phase == .ready, snapshot != nil, pending == nil, review != nil { return }
+        await load()
     }
 
     func reviewReceipt(_ draft: ReceiptImportDraft) async throws -> PantryReceiptReview {

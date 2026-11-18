@@ -1773,6 +1773,118 @@
           }
         }
       }
+    },
+    "Use soon will use the start of this range unless you have chosen a manual check date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use soon will use the start of this range unless you have chosen a manual check date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar pronto tomará el inicio de este intervalo, salvo que hayas elegido una fecha de revisión manual."
+          }
+        }
+      }
+    },
+    "Save quality range for this batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save quality range for this batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el intervalo de calidad para este lote"
+          }
+        }
+      }
+    },
+    "Quality range saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quality range saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el intervalo de calidad."
+          }
+        }
+      }
+    },
+    "Could not save this range. Check the current batch and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save this range. Check the current batch and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar el intervalo. Revisa el lote actual y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "This batch or reference has changed. Review its current storage and starting date again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch or reference has changed. Review its current storage and starting date again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El lote o la referencia cambió. Vuelve a revisar cómo se almacena ahora y la fecha inicial."
+          }
+        }
+      }
+    },
+    "Remove saved quality range": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved quality range"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar el intervalo de calidad guardado"
+          }
+        }
+      }
+    },
+    "This batch has no recorded starting date for this condition. Choose the day you can confirm.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch has no recorded starting date for this condition. Choose the day you can confirm."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este lote no tiene una fecha inicial registrada para esta condición. Elige la fecha que puedas confirmar."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

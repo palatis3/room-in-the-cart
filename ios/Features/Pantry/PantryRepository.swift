@@ -214,6 +214,9 @@ final class PantryRepository {
             expectedRevision: reviewedInventoryRevision, request: request, writes: writes)
         try requireAccess()
         try checkPending()
+        try await PantryDigestStore.shared.beforeLotCommit(batch)
+        try requireAccess()
+        try checkPending()
         let receipt = try await store.commitInventory(batch, at: now)
         try requireAccess()
         return Result(receipt: receipt, current: try await load(at: now), replayed: false)
@@ -652,7 +655,7 @@ final class PantryRepository {
 
     var permitsReceiptSource: Bool { authorize() }
 
-    private func requireAccess() throws {
+    func requireAccess() throws {
         guard authorize() else { throw Failure.unauthorized }
         guard (1...ReadLimits.standard.payloadBytes).contains(limits.payloadBytes),
               (1...ReadLimits.standard.observations).contains(limits.observations) else {

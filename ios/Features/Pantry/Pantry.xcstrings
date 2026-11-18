@@ -2402,6 +2402,985 @@
         }
       }
     },
+    "Open My Pantry to review the foods you chose to check.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open My Pantry to review the foods you chose to check."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Mi despensa para revisar los alimentos que elegiste comprobar."
+          }
+        }
+      }
+    },
+    "Use soon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use soon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar pronto"
+          }
+        }
+      }
+    },
+    "Foods to check": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foods to check"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos para revisar"
+          }
+        }
+      }
+    },
+    "Choose a batch in My Pantry and set a check date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a batch in My Pantry and set a check date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un lote en Mi despensa y fija una fecha para revisarlo."
+          }
+        }
+      }
+    },
+    "Daily notification": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily notification"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificación diaria"
+          }
+        }
+      }
+    },
+    "Digest time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digest time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora del aviso"
+          }
+        }
+      }
+    },
+    "One private notification groups foods checked on the same day. Your food names stay in My Pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One private notification groups foods checked on the same day. Your food names stay in My Pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un aviso privado agrupa los alimentos que revisarás el mismo día. Los nombres se quedan en Mi despensa."
+          }
+        }
+      }
+    },
+    "Turn on daily notifications": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on daily notifications"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar las notificaciones diarias"
+          }
+        }
+      }
+    },
+    "Turn off daily notifications": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off daily notifications"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar las notificaciones diarias"
+          }
+        }
+      }
+    },
+    "Save digest time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save digest time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la hora del aviso"
+          }
+        }
+      }
+    },
+    "Notifications are unavailable. Your check dates are still here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are unavailable. Your check dates are still here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notificaciones no están disponibles. Tus fechas de revisión siguen aquí."
+          }
+        }
+      }
+    },
+    "Daily notifications are on.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily notifications are on."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notificaciones diarias están activadas."
+          }
+        }
+      }
+    },
+    "Daily notifications are off.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily notifications are off."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las notificaciones diarias están desactivadas."
+          }
+        }
+      }
+    },
+    "Could not update the digest. Review and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not update the digest. Review and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar el aviso. Revisa los datos y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Batch check date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batch check date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de revisión del lote"
+          }
+        }
+      }
+    },
+    "Check this food on": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check this food on"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar este alimento el"
+          }
+        }
+      }
+    },
+    "Choose a day to check the batch. A check date does not indicate food safety.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a day to check the batch. A check date does not indicate food safety."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un día para revisar el lote. Esa fecha no indica si el alimento es seguro."
+          }
+        }
+      }
+    },
+    "Save check date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save check date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar fecha de revisión"
+          }
+        }
+      }
+    },
+    "Remove check date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove check date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar fecha de revisión"
+          }
+        }
+      }
+    },
+    "Check date saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check date saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó la fecha de revisión."
+          }
+        }
+      }
+    },
+    "Check date removed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check date removed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó la fecha de revisión."
+          }
+        }
+      }
+    },
+    "This device can keep check dates for 32 batches. Remove a date before adding another.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device can keep check dates for 32 batches. Remove a date before adding another."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo puede guardar fechas de revisión para 32 lotes. Elimina una fecha antes de añadir otra."
+          }
+        }
+      }
+    },
+    "Saved digest time zone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved digest time zone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zona horaria guardada para el aviso"
+          }
+        }
+      }
+    },
+    "Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al guardar la hora se usa %@. Las fechas de revisión mantienen su día si viajas. Si el reloj omite la hora elegida, el aviso llegará a la siguiente hora válida."
+          }
+        }
+      }
+    },
+    "Best before": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best before"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consumo preferente"
+          }
+        }
+      }
+    },
+    "Camera unavailable. Choose a photo or type the printed wording.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera unavailable. Choose a photo or type the printed wording."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no está disponible. Elige una foto o escribe el texto impreso."
+          }
+        }
+      }
+    },
+    "Choose a label photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a label photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una foto de la etiqueta"
+          }
+        }
+      }
+    },
+    "Choose fewer lines or type the printed wording.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose fewer lines or type the printed wording."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige menos líneas o escribe el texto impreso."
+          }
+        }
+      }
+    },
+    "Could not read this photo. Type the wording or choose another photo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read this photo. Type the wording or choose another photo."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer la foto. Escribe el texto o elige otra foto."
+          }
+        }
+      }
+    },
+    "Entered by hand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered by hand"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introducido a mano"
+          }
+        }
+      }
+    },
+    "Expiration date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expiration date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de caducidad"
+          }
+        }
+      }
+    },
+    "Label photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto de la etiqueta"
+          }
+        }
+      }
+    },
+    "Label source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Origen del texto"
+          }
+        }
+      }
+    },
+    "Meaning printed on the package": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meaning printed on the package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de fecha que indica el envase"
+          }
+        }
+      }
+    },
+    "Other or unclear": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other or unclear"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra o poco clara"
+          }
+        }
+      }
+    },
+    "Packed on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packed on"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de envasado"
+          }
+        }
+      }
+    },
+    "Photograph the printed date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photograph the printed date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotografiar la fecha impresa"
+          }
+        }
+      }
+    },
+    "Printed calendar date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed calendar date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha indicada en el envase"
+          }
+        }
+      }
+    },
+    "Printed package date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed package date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha impresa en el envase"
+          }
+        }
+      }
+    },
+    "Printed wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto impreso"
+          }
+        }
+      }
+    },
+    "Reading the package label…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the package label…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo la etiqueta del envase…"
+          }
+        }
+      }
+    },
+    "Record what the package says. The storage estimate and reminder are separate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record what the package says. The storage estimate and reminder are separate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anota lo que dice el envase. La estimación de conservación y el recordatorio se gestionan por separado."
+          }
+        }
+      }
+    },
+    "Remove saved label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la etiqueta guardada"
+          }
+        }
+      }
+    },
+    "Reopen this pantry batch to review its current package label.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen this pantry batch to review its current package label."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir este lote para revisar su etiqueta actual."
+          }
+        }
+      }
+    },
+    "Review the date on this package": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the date on this package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la fecha de este envase"
+          }
+        }
+      }
+    },
+    "Review the label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la etiqueta"
+          }
+        }
+      }
+    },
+    "Save printed label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save printed label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la etiqueta impresa"
+          }
+        }
+      }
+    },
+    "Select the lines that belong to this date. Review any unclear text.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the lines that belong to this date. Review any unclear text."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona las líneas que correspondan a esta fecha. Revisa el texto que no esté claro."
+          }
+        }
+      }
+    },
+    "Selected label photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected label photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto de la etiqueta seleccionada"
+          }
+        }
+      }
+    },
+    "Selected package label photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected package label photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto seleccionada de la etiqueta del envase"
+          }
+        }
+      }
+    },
+    "Selected text from your photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected text from your photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto seleccionado de la foto"
+          }
+        }
+      }
+    },
+    "Sell by": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sell by"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha límite de venta"
+          }
+        }
+      }
+    },
+    "Text recognition runs on this iPhone. Only the wording you select is saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text recognition runs on this iPhone. Only the wording you select is saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto se reconoce en este iPhone. Solo se guarda el texto que selecciones."
+          }
+        }
+      }
+    },
+    "The batch or its saved label changed. Reopen it before saving.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The batch or its saved label changed. Reopen it before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El lote o su etiqueta ha cambiado. Vuelve a abrirlo antes de guardar."
+          }
+        }
+      }
+    },
+    "The full calendar date is clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The full calendar date is clear"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fecha completa está clara"
+          }
+        }
+      }
+    },
+    "The saved label could not be opened.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved label could not be opened."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir la etiqueta guardada."
+          }
+        }
+      }
+    },
+    "Unclear text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unclear text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto poco claro"
+          }
+        }
+      }
+    },
+    "Use by": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use by"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha límite de consumo"
+          }
+        }
+      }
+    },
+    "Use selected wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use selected wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el texto seleccionado"
+          }
+        }
+      }
+    },
     "A correction adds a price revision. Pantry quantities and posted spending stay the same.": {
       "localizations": {
         "en": {
@@ -5429,22 +6408,6 @@
         }
       }
     },
-    "Printed wording": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Printed wording"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Texto impreso"
-          }
-        }
-      }
-    },
     "Not shown": {
       "localizations": {
         "en": {
@@ -6265,6 +7228,246 @@
           "stringUnit": {
             "state": "translated",
             "value": "Elige una línea de la foto original o escribe el texto manualmente."
+          }
+        }
+      }
+    },
+    "Get help matching this label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get help matching this label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener ayuda para identificar esta etiqueta"
+          }
+        }
+      }
+    },
+    "An adult household sign-in is needed for optional label matching. You can search the guide on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An adult household sign-in is needed for optional label matching. You can search the guide on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para pedir ayuda con la etiqueta, inicia sesión con una cuenta adulta del hogar. Puedes buscar en la guía en este dispositivo."
+          }
+        }
+      }
+    },
+    "Search the guide for a food or category to choose possible entries.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search the guide for a food or category to choose possible entries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca un alimento o una categoría en la guía para ver posibles entradas."
+          }
+        }
+      }
+    },
+    "Selected wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto seleccionado"
+          }
+        }
+      }
+    },
+    "Wording to send": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wording to send"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto que se enviará"
+          }
+        }
+      }
+    },
+    "Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio de la app enviará a OpenAI solo el texto que se muestra aquí y los nombres e identificadores de estas entradas públicas del USDA."
+          }
+        }
+      }
+    },
+    "USDA FoodKeeper entries to consider": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USDA FoodKeeper entries to consider"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posibles entradas de FoodKeeper del USDA"
+          }
+        }
+      }
+    },
+    "Send selected wording for a match": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send selected wording for a match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar el texto seleccionado para buscar una coincidencia"
+          }
+        }
+      }
+    },
+    "Remote matching is unavailable. You can still search the guide on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote matching is unavailable. You can still search the guide on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La búsqueda remota no está disponible. Puedes buscar en la guía en este dispositivo."
+          }
+        }
+      }
+    },
+    "Suggested USDA entry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested USDA entry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrada sugerida del USDA"
+          }
+        }
+      }
+    },
+    "Confirm this entry and review storage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this entry and review storage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar esta entrada y revisar la conservación"
+          }
+        }
+      }
+    },
+    "Match a food label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match a food label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificar una etiqueta de alimento"
+          }
+        }
+      }
+    },
+    "No matching entry was proposed. Search the guide or keep your own check date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching entry was proposed. Search the guide or keep your own check date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se propuso ninguna coincidencia. Busca en la guía o conserva tu propia fecha de revisión."
+          }
+        }
+      }
+    },
+    "Review the selected wording again before sending it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the selected wording again before sending it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a revisar el texto seleccionado antes de enviarlo."
+          }
+        }
+      }
+    },
+    "The batch changed. Return to the guide and review it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The batch changed. Return to the guide and review it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El lote cambió. Regresa a la guía para revisarlo de nuevo."
           }
         }
       }
