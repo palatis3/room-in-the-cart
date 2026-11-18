@@ -37,3 +37,23 @@ The private pickup list's item review offers online wording help to an enrolled 
 `GET /v1/households/{id}/language-assistance/natural-list` reads availability. `POST` uses a fresh consented request. In addition to M1 configuration, `LANGUAGE_ASSISTANCE_MAX_REQUEST_USD_MICROS` sets the worst-case reservation for a 16 KiB request and 1,536 output tokens. Omitting it keeps this purpose unavailable. The existing per-account and global daily budgets are shared with other capture assistance. Timeout is ten seconds. Responses are bounded at both the service and client, and returned text is checked against the selected line. The eligibility checks run before submission and again before the reply leaves the service.
 
 The synthetic English and Spanish fixtures require exact source IDs and wording, zero extra items or fields, rejection of missing consent and refusal after authority loss. They exercise the contract without a provider call. A live accuracy, correction-burden, latency and cost comparison with deterministic capture remains an activation evaluation.
+
+## Comparing a future model with the local editor
+
+Use paired, labeled English and Spanish cases before selecting a production model. The baseline is the same app build with local OCR, document extraction or on-device dictation. Give each path the same permitted source. Keep the answer key and resulting notes free of personal data. Score each language and source type separately.
+
+| Source | Example and expected review |
+| --- | --- |
+| Receipt line | “Pears 0.75 lb” and “PERAS 0,75 lb” should suggest the printed quantity and unit. The shopper separately confirms what arrived. |
+| Digital receipt | “Service fee $3.25” and “Descuento $2” are charges. Neither is acquired food. Preserve the page and row through review. |
+| Partial or blurred text | “03/04” and an unreadable weight should stay ambiguous. Record an abstention independently from a wrong suggestion. |
+| Recipe image | “2 tbsp oil” and “2 cucharadas de aceite” should retain the printed quantity, unit and ingredient. A partially cropped instruction can be left unknown. |
+| Shelf image | “Members 2 for $5” and “Socios 2 por $5” should preserve the condition. A lone dollar sign leaves the currency unresolved. |
+| Checkout image | “Tax at pickup” and “Propina adicional” supply wording only. Unknown amounts and the relation to the total remain available for manual review. |
+| Voice list | “Milk and bread, no peanuts” and “Leche y pan, sin cacahuates” should retain the exclusion in the transcript. The adult confirms individual items in the existing list review. |
+
+Freeze examples, expected fields, visual/audio conditions, language, app revision and the exact provider configuration before collecting results. Record correct supported fields divided by labeled fields, explicit unknowns, unsupported assertions, edits required before ordinary confirmation, elapsed time and estimated USD per task at the checked model rate. Count a timeout, refusal or rejected reply even when manual recovery succeeds.
+
+Proposed pilot targets are zero unsupported facts accepted by the app, 100% correct request/source binding, no loss of an explicit exclusion, and no increase in incorrect fields in either language. For a source type to justify offering remote help, target at least one fewer manual correction across each five comparable hard examples. Compare paired latency with the 10-second image/text or 15-second audio request deadline and report the observed maximum cost against the configured per-request reservation. These are proposed decision thresholds for an operator-run evaluation.
+
+Offline qualification established authorization, source binding, local playback/OCR, correction, refusal, cost reservation and replay behavior. The mock replies supply known text. There are no comparative provider accuracy, real latency or billed-cost results from these runs. Before enabling the adapter, the operator also needs to reconcile published policy language with the chosen provider's actual retention and deletion terms.
