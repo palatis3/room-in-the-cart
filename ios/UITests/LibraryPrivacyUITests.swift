@@ -11,10 +11,10 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("Library privacy acceptance failure") }
         app.terminate()
     }
-    func launch(_ mode: String, reset: Bool = true) {
+    func launch(_ mode: String, reset: Bool = true, arguments: [String] = []) {
         // Keep the XCTest runtime-logging crash workaround limited to iOS 17.
         if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
-        app.launchArguments = ["--ui-testing", mode, "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchArguments = ["--ui-testing", mode, "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + arguments
         if reset { app.launchArguments.append("--reset-library-privacy-fixture") }
         app.launch()
     }
@@ -93,6 +93,34 @@ import XCTest
 }
 
 @MainActor final class RecipeLibraryAcceptanceUITests: LibraryPrivacyUITestCase {
+    func testNotesOnlyRecipeReviewsOnlySelectedWordsBeforePlayback() {
+        launch("--recipe-library-fixture", arguments: ["--recipe-notes-only", "--recipe-full-screen"])
+        tap(button("records.recovered.Notes-only soup"))
+        tap(button("records.openSavedRecipe"))
+        tap(button("cooking.openRecipe"))
+        assertText("Private family note.")
+        let play = button("capture.readback.play")
+        XCTAssertFalse(play.exists)
+        tap(button("cooking.chooseNotes"))
+        tap(app.buttons["Simmer for 10 minutes."])
+        let excerpt = element("cooking.noteExcerpt")
+        XCTAssertEqual(excerpt.value as? String, "Simmer for 10 minutes.")
+        XCTAssertFalse(play.exists)
+        let prepare = app.buttons["Prepare selected words for read-aloud"]
+        tap(excerpt)
+        excerpt.typeText("x")
+        XCTAssertFalse(prepare.isEnabled)
+        excerpt.typeText(XCUIKeyboardKey.delete.rawValue + XCUIKeyboardKey.delete.rawValue)
+        tap(button("cooking.noteDone"))
+        XCTAssertEqual(excerpt.value as? String, "Simmer for 10 minutes")
+        tap(prepare)
+        reveal(play)
+        XCTAssertTrue(app.staticTexts["Simmer for 10 minutes"].exists)
+        XCTAssertTrue(app.buttons["Stop readback"].exists)
+        XCTAssertFalse(app.buttons["Stop readback"].isEnabled)
+        capture("Notes-only recipe with selected instruction ready and playback stopped")
+    }
+
     func testCookingTimersRestoreInSpanishAtLargestTextAndEndOnRequest() {
         launch("--recipe-library-fixture")
         tap(button("records.recovered.Existing family soup"))

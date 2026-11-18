@@ -18,7 +18,9 @@ import SwiftUI
     @State private var alerts = false
     @State private var confirmEnd = false
     @State private var readback: CookReadbackInstruction?
-    @FocusState private var editingMinutes: Bool
+    @State private var noteExcerpt: String?
+    private enum Input { case minutes, noteExcerpt }
+    @FocusState private var focusedInput: Input?
     @AccessibilityFocusState private var instructionFocused: Bool
 
     init(title: String, steps: [RecipeStep], ingredients: [String], legacyNotes: String, yieldText: String = "",
@@ -61,13 +63,31 @@ import SwiftUI
                     }
                     if let step, !step.instruction.isEmpty {
                         Section {
-                            Button(recordsText("Prepare read-aloud for this step")) { prepareReadback(step) }
+                            Button(recordsText("Prepare read-aloud for this step")) { prepareReadback(step.instruction) }
                                 .accessibilityIdentifier("cooking.prepareReadback")
-                            if let readback {
-                                CookReadbackView(instruction: readback) { candidate, _ in
-                                    self.readback == candidate && model.context.authorize() && Int64(index) == candidate.sourceRevision
+                            readbackControls
+                        }
+                    } else if step == nil, !legacyNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        let noteLines = legacyNotes.split(whereSeparator: \.isNewline)
+                        Section {
+                            Menu(recordsText("Choose cooking instructions from notes")) {
+                                ForEach(noteLines.indices, id: \.self) { index in
+                                    let line = String(noteLines[index])
+                                    Button(line) { noteExcerpt = line; readback = nil }
                                 }
+                            }.accessibilityIdentifier("cooking.chooseNotes")
+                            if noteExcerpt != nil {
+                                TextField(recordsText("Words to read aloud"), text: Binding(get: { noteExcerpt ?? "" },
+                                    set: { noteExcerpt = $0; readback = nil }), axis: .vertical)
+                                    .focused($focusedInput, equals: .noteExcerpt)
+                                    .accessibilityIdentifier("cooking.noteExcerpt")
+                                Button(recordsText("Prepare selected words for read-aloud")) {
+                                    if let noteExcerpt, isVisibleExcerpt(noteExcerpt) { prepareReadback(noteExcerpt) }
+                                }.disabled(!isVisibleExcerpt(noteExcerpt ?? ""))
                             }
+                            readbackControls
+                        } footer: {
+                            Text(recordsText("Choose a line, then keep only the cooking instructions you want to hear."))
                         }
                     }
                     timers
@@ -89,17 +109,18 @@ import SwiftUI
         .navigationTitle(recordsText("Cooking mode"))
         .privacySensitive()
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: editingMinutes, title: ledgerText("Done"), identifier: "cooking.timerDone") { editingMinutes = false }
+        .keyboardDoneAction(visible: focusedInput != nil, title: ledgerText("Done"),
+                            identifier: focusedInput == .minutes ? "cooking.timerDone" : "cooking.noteDone") { focusedInput = nil }
         .task {
             model.load(); suggestedMinutes()
             await model.reconcileAlerts()
         }
         .onChange(of: scenePhase) { _, phase in
-            readback = nil
+            readback = nil; noteExcerpt = nil
             if phase == .active { model.load(); Task { await model.reconcileAlerts() } }
             else { model.retire() }
         }
-        .onDisappear { readback = nil }
+        .onDisappear { readback = nil; noteExcerpt = nil }
         .confirmationDialog(recordsText("End this cooking session?"), isPresented: $confirmEnd, titleVisibility: .visible) {
             Button(recordsText("End session and remove its timers"), role: .destructive) { if model.end() { dismiss() } }
                 .accessibilityIdentifier("cooking.confirmEnd")
@@ -134,27 +155,38 @@ import SwiftUI
                 }.buttonStyle(.borderless).accessibilityElement(children: .contain)
             }
             TextField(recordsText("Timer minutes"), text: $minutes)
-                .keyboardType(.numberPad).focused($editingMinutes)
+                .keyboardType(.numberPad).focused($focusedInput, equals: .minutes)
             Toggle(recordsText("Alert me when this timer finishes"), isOn: $alerts)
             Button(recordsText("Start timer")) {
                 guard let duration = Int(minutes) else { return }
-                editingMinutes = false
+                focusedInput = nil
                 Task { await model.start(minutes: duration, alert: alerts) }
             }.disabled(Int(minutes).map { !(1...1440).contains($0) } ?? true)
                 .accessibilityIdentifier("cooking.start")
         }
     }
     private func select(_ next: Int) {
-        readback = nil; editingMinutes = false
+        readback = nil; focusedInput = nil
         model.choose(next); suggestedMinutes()
         instructionFocused = true
     }
     private func suggestedMinutes() { minutes = String(step?.suggestedTimerMinutes ?? 5) }
-    private func prepareReadback(_ step: RecipeStep) {
+    private func isVisibleExcerpt(_ text: String) -> Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && (try? CaptureLimits.validate(text)) != nil && legacyNotes.range(of: text, options: .literal) != nil
+    }
+    @ViewBuilder private var readbackControls: some View {
+        if let readback {
+            CookReadbackView(instruction: readback) { candidate, _ in
+                self.readback == candidate && model.context.authorize() && Int64(index) == candidate.sourceRevision
+            }
+        }
+    }
+    private func prepareReadback(_ text: String) {
         guard model.context.authorize() else { model.retire(); return }
         let now = Date()
         readback = CookReadbackInstruction(authorityBindingID: UUID(), sourceID: model.context.key.source,
             sourceRevision: Int64(index), createdAt: now, startBefore: now.addingTimeInterval(120),
-            text: step.instruction, localeIdentifier: locale.identifier, excludesPrivateBudget: true)
+            text: text, localeIdentifier: locale.identifier, excludesPrivateBudget: true)
     }
 }

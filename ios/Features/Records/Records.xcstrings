@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose cooking instructions from notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose cooking instructions from notes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir instrucciones de cocina de las notas"
+          }
+        }
+      }
+    },
+    "Words to read aloud": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Words to read aloud"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto para leer en voz alta"
+          }
+        }
+      }
+    },
+    "Prepare selected words for read-aloud": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare selected words for read-aloud"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar el texto seleccionado para leerlo en voz alta"
+          }
+        }
+      }
+    },
+    "Choose a line, then keep only the cooking instructions you want to hear.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a line, then keep only the cooking instructions you want to hear."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una línea y conserva solo las instrucciones de cocina que quieras escuchar."
+          }
+        }
+      }
+    },
     "Choose a shared recipe link": {
       "extractionState": "manual",
       "localizations": {

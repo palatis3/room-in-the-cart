@@ -170,7 +170,11 @@ enum RecipeLibraryUIFixtureSamples {
             attributes: [.protectionKey: FileProtectionType.complete])
         let registry = try RecoveryRegistry(url: recordsDirectory.appendingPathComponent("recovery-v1.json"))
         self.registry = registry
-        let record = try RecipeLibraryUIFixtureSamples.existing.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
+        let recipe = ProcessInfo.processInfo.arguments.contains("--recipe-notes-only")
+            ? ImportedRecipe(title: "Notes-only soup", yieldText: "4 bowls", ingredients: ["Beans"],
+                             notes: "Simmer for 10 minutes.\nPrivate family note.")
+            : RecipeLibraryUIFixtureSamples.existing
+        let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
         let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "recipe-library-v1", revision: record.revision)
         let seeded = try await registry.apply(registry.review(envelope))
         existingRecipeCopy = seeded.records.first
