@@ -178,9 +178,12 @@ struct HouseholdHelperComposer: View {
     private func optionalText(_ value: String) -> String? { let value = value.trimmingCharacters(in: .whitespacesAndNewlines); return value.isEmpty ? nil : value }
 }
 
+private enum HouseholdCookingReportField: Hashable { case servings, ingredients, leftovers }
+
 struct HouseholdHelperView: View {
     @ObservedObject var model: HouseholdLifecycleModel
     @State private var clearProposal = false
+    @FocusState private var reportEditing: HouseholdCookingReportField?
     var body: some View {
         Form {
             if model.isHelper {
@@ -213,7 +216,7 @@ struct HouseholdHelperView: View {
                         }
                     } else if view.canPropose {
                         Section {
-                            HouseholdCookingReport(model: model, view: view)
+                            HouseholdCookingReport(model: model, view: view, editing: $reportEditing)
                                 .id([view.grantId, String(view.revision), model.scope?.memberId ?? ""].joined(separator: "/"))
                         }
                         Section(ht("Suggest a correction")) {
@@ -227,6 +230,11 @@ struct HouseholdHelperView: View {
                 lifecycleNotice(model)
             } else { Text(ht("This scoped view is no longer available. Ask the shopper for a fresh invitation.")) }
         }.disabled(model.busy).navigationTitle(ht("Cook instructions")).task { await model.loadHelper() }
+        .keyboardDoneAction(visible: reportEditing != nil, title: ht("Done"),
+                            identifier: "helper.cookingReport.done") { reportEditing = nil }
+        .onChange(of: model.helperView?.canPropose) { _, allowed in
+            if allowed != true { reportEditing = nil }
+        }
         .task(id: model.helperView?.expiresAt) {
             guard let date = model.helperView.flatMap({ serviceDate($0.expiresAt) }) else { return }
             if date > Date() { try? await Task.sleep(for: .seconds(date.timeIntervalSinceNow)) }
@@ -246,8 +254,7 @@ private struct HouseholdCookingReport: View {
     @State private var leftovers = ""
     @State private var reviewedText: String?
     @State private var expanded = false
-    private enum Field: Hashable { case servings, ingredients, leftovers }
-    @FocusState private var editing: Field?
+    @FocusState.Binding var editing: HouseholdCookingReportField?
 
     private var wording: String {
         var sections = [ht("Cooking report")]
@@ -285,14 +292,6 @@ private struct HouseholdCookingReport: View {
                     .accessibilityIdentifier("helper.cookingReport.review")
                     .disabled(ingredients.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                               leftovers.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || wording.utf16.count > 1000)
-            }
-        }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                if editing != nil {
-                    Spacer()
-                    Button(ht("Done")) { editing = nil }.accessibilityIdentifier("helper.cookingReport.done")
-                }
             }
         }
     }
