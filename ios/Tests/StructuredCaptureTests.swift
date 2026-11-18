@@ -4,6 +4,68 @@ import CoreDomain
 
 final class StructuredCaptureTests: XCTestCase {
     private let destination = "Saturday pickup"
+    func testNaturalReviewImportsOnceAndKeepsTimingOutOfIngredientPurpose() throws {
+        let text = "Two milks, bread and cereal for next week"
+        let proposed = try StructuredCaptureParser.naturalList(text, destination: destination)
+        XCTAssertEqual(proposed.timing, "for next week")
+        XCTAssertEqual(proposed.lines.map(\.name), ["milks", "bread", "cereal"])
+        XCTAssertEqual(proposed.lines.map(\.amount), ["2", "", ""])
+        XCTAssertTrue(proposed.lines.allSatisfy { $0.purpose.isEmpty && !$0.confirmed })
+        let lines = try proposed.lines.map { draft in
+            var reviewed = draft
+            reviewed.confirmed = true
+            return try XCTUnwrap(reviewed.reviewed(expectedDestination: destination))
+        }
+        let capture = ReviewedCapture(id: UUID(), text: text, originalText: text, source: .speech,
+                                     localeIdentifier: "en-US", sourceImageData: nil, lines: lines)
+        var list = ShoppingLedger()
+        let staged = try CaptureLedgerImport.stage(capture, in: list)
+        try list.commitImport(staged.preview)
+        XCTAssertTrue(try CaptureLedgerImport.stage(capture, in: list).alreadyApplied)
+        XCTAssertEqual(list.contributions.count, 3)
+        XCTAssertEqual(list.importBatches.first?.preview.originalText, text)
+        XCTAssertEqual(list.contributions.compactMap { $0.quantity?.amount }, [try Rational(2)])
+        XCTAssertThrowsError(try StructuredCaptureParser.naturalList("two guests and eggs", destination: destination))
+        XCTAssertThrowsError(try StructuredCaptureParser.naturalList("milk for this week, bread for next week", destination: destination)) {
+            XCTAssertEqual($0 as? StructuredCaptureFailure, .timingReviewRequired)
+        }
+        let titled = try StructuredCaptureParser.naturalList("tea, “cake for next week”", destination: destination)
+        XCTAssertNil(titled.timing)
+        XCTAssertEqual(titled.lines.last?.name, "“cake for next week”")
+        XCTAssertEqual(titled.lines.last?.purpose, "")
+        XCTAssertEqual(try StructuredCaptureParser.lines(text, destination: destination).count, 1)
+    }
+
+    func testNaturalDictationPunctuationPreservesEvidenceAndQuotedProductNames() throws {
+        let spoken = "milk and bread."
+        let proposal = try StructuredCaptureParser.naturalList(spoken, destination: destination)
+        XCTAssertEqual(proposal.lines.map(\.name), ["milk", "bread"])
+        XCTAssertEqual(proposal.lines.map(\.originalText), ["milk", "bread."])
+        XCTAssertEqual(try StructuredCaptureParser.naturalList("“Yum!”", destination: destination).lines.first?.name, "“Yum!”")
+        XCTAssertEqual(try StructuredCaptureParser.lines("bread.", destination: destination).first?.name, "bread.")
+    }
+
+    func testNaturalDecimalCommaAfterConjunctionKeepsAmountAndEvidence() throws {
+        let list = try StructuredCaptureParser.naturalList("pan y 2,5 litros de leche", destination: destination)
+        XCTAssertEqual(list.lines.map(\.name), ["pan", "leche"])
+        XCTAssertEqual(list.lines.last?.amount, "5/2")
+        XCTAssertEqual(list.lines.last?.unit, .liter)
+        XCTAssertEqual(list.lines.last?.originalText, "2,5 litros de leche")
+        let packs = try StructuredCaptureParser.naturalList("2 latas de leche, 0,5 litros cada una; pan", destination: destination)
+        XCTAssertEqual(packs.lines.map(\.name), ["leche", "pan"])
+        XCTAssertEqual(packs.lines[0].packCount, "2")
+        XCTAssertEqual(packs.lines[0].amountPerPack, "1/2")
+        XCTAssertEqual(packs.lines[0].packUnit, .liter)
+    }
+
+    func testNaturalCaptureDistinguishesUnspecifiedAmountsFromUnclearSpokenNumbers() throws {
+        let list = try StructuredCaptureParser.naturalList("bread, two to three apples, 1,000 tortillas, 0 eggs", destination: destination)
+        XCTAssertEqual(list.lines.count, 4)
+        XCTAssertTrue(list.lines.allSatisfy { $0.amount.isEmpty })
+        XCTAssertFalse(list.lines[0].warnings.contains(.ambiguous))
+        XCTAssertTrue(list.lines.dropFirst().allSatisfy { $0.warnings.contains(.ambiguous) })
+    }
+
     func testRangeConnectorsRemainAmountsAndKeepTheRealDestination() throws {
         let simple = try row("2 to 3 apples")
         XCTAssertEqual(simple.amount, "")

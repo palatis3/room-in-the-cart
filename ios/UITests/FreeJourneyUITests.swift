@@ -699,6 +699,41 @@ import XCTest
     }
 #endif
 
+    func testNaturalListReviewsTimingThenAddsOnlyToChosenPickup() {
+        launch(reset: true)
+        openShoppingList()
+        app.renameSelectedPickup("Next week groceries")
+        startAnotherPickupFromList()
+        fill("Friday groceries", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        fill("Two milks, bread and cereal for next week", into: "ledgerImportText")
+        tap(element("ledger.capture"))
+        enableSwitch("capture.naturalMode")
+        tap(element("capture.reviewFields"))
+        assertText("Timing in your wording: for next week")
+        XCTAssertFalse(app.textFields["Total amount, unknown if blank"].exists)
+        capture("Natural-list-compact-review-and-unresolved-timing")
+        let proceed = element("capture.continue")
+        reveal(proceed)
+        XCTAssertFalse(proceed.isEnabled)
+        let pickup = element("capture.batchPickup")
+        reveal(pickup, initiallyUpward: false)
+        pickup.tap()
+        tap(app.buttons["Next week groceries"])
+        tap(proceed)
+        assertText("Pickup for all items: Next week groceries")
+        tap(element("ledgerCommitImport"))
+        XCTAssertTrue(app.navigationBars["Friday groceries"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["Inspect cereal"].exists)
+        tap(app.buttons["ledgerShopPicker"])
+        tap(app.buttons["Next week groceries"])
+        for item in ["milks", "bread", "cereal"] {
+            reveal(app.buttons["Inspect " + item])
+        }
+    }
+
+
     func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() throws {
         try exerciseRetailerShareCancellation()
 
