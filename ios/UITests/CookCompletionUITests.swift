@@ -27,7 +27,10 @@ import XCTest
         fill(app.textFields["ledgerDinnerServings"], "2")
         let ingredient = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH 'ingredient.' AND identifier ENDSWITH '.name'")).firstMatch
         fill(ingredient, "Rice")
-        tap(app.buttons["ledgerReviewDinner"]); tap(app.buttons["dinnerApply"])
+        tapVisibleFormControl(app.buttons["ledgerReviewDinner"], in: "Manual dinner", captureName: "Manual dinner Review above tab bar")
+        XCTAssertTrue(app.navigationBars["Dinner preview"].waitForExistence(timeout: 4), app.debugDescription)
+        captureScreen("Dinner preview opened from the visible Review button")
+        tap(app.buttons["dinnerApply"])
         let applied = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.buttons["dinnerApply"])
         XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 15), .completed, app.debugDescription)
         // Applied manual editor remains in its navigation path. Return to the
@@ -64,7 +67,7 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [editable], timeout: 10), .completed, app.debugDescription)
         let ingredientPicker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.ingredient.'")).element
         let currentUse = ingredientPicker.staticTexts["Choose what happened"]
-        tapVisiblePickerValue(currentUse)
+        tapVisibleFormControl(currentUse, in: "Record cooking")
         let used = app.buttons["Used"]
         XCTAssertTrue(used.waitForExistence(timeout: 4) && used.isHittable, app.debugDescription)
         used.tap()
@@ -113,24 +116,31 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [resolved], timeout: 10), .completed, app.debugDescription)
         XCTAssertFalse(app.buttons["cook.resolution.open"].exists, "The original unresolved history must not appear as unfinished after resolution")
     }
-    private func tapVisiblePickerValue(_ value: XCUIElement) {
-        // A compact Form can expose the picker while its value is still underneath the tab bar.
+    private func captureScreen(_ name: String) {
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = name; screenshot.lifetime = .keepAlways; add(screenshot)
+    }
+
+    private func tapVisibleFormControl(_ control: XCUIElement, in screen: String, captureName: String? = nil) {
+        // A compact Form can expose a control while its activation point is still behind a bar.
         let form = app.collectionViews.firstMatch
-        let bar = app.navigationBars["Record cooking"]
+        let bar = app.navigationBars[screen]
         let tabs = app.tabBars.firstMatch
         for _ in 0..<8 {
             let top = bar.frame.maxY
             let bottom = tabs.frame.minY
-            let frame = value.exists ? value.frame : .zero
-            print("Actual use value frame: \(frame), visible form: \(top)...\(bottom)")
-            if !frame.isEmpty, frame.minY >= top, frame.maxY <= bottom, value.isHittable {
-                value.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            let frame = control.exists ? control.frame : .zero
+            print("\(screen) control frame: \(frame), visible form: \(top)...\(bottom)")
+            if !frame.isEmpty, frame.minY >= top, frame.maxY <= bottom, control.isHittable {
+                XCTAssertTrue(control.isEnabled, app.debugDescription)
+                if let captureName { captureScreen(captureName) }
+                control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
             }
             if !frame.isEmpty && frame.midY < top { form.swipeDown() }
             else { form.swipeUp() }
         }
-        XCTFail("The ingredient picker value was not visible between the navigation and tab bars. " + app.debugDescription)
+        XCTFail("Could not reveal the control between the navigation and tab bars on \(screen). " + app.debugDescription)
     }
     private func tap(_ element: XCUIElement) {
         _ = element.waitForExistence(timeout: 4)
