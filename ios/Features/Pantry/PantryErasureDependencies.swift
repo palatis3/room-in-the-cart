@@ -12,6 +12,7 @@ import RecordArchive
     enum Selection: Codable, Equatable {
         case lot(UUID, revision: Int64)
         case pickup(UUID, revision: Int64, payloadDigest: Data)
+        case price(UUID, revision: Int64)
         case wholeOrigin
     }
     enum Role: String, Hashable { case physicalFact, sourceFact, claim, incidentalCopy, identityLink }
@@ -116,6 +117,7 @@ import RecordArchive
                 // proof of exclusive ownership and cannot silently select food.
                 ids = Set(context.mapping.sourceLinks.filter { $0.references.contains { $0.journeyID == id } }.map(\.lotID)).union(historicalSourceLots)
                 journey = id; all = false
+            case .price: throw Failure.invalidContext
             case .wholeOrigin: ids = Set(context.lots.map(\.id)); journey = nil; all = true
             }
             lots = ids; sources = Set(context.lots.filter { ids.contains($0.id) }.map(\.source))
@@ -357,6 +359,14 @@ import RecordArchive
                     result.matches.formUnion(copy.matches.map { .init(subject: $0.subject, role: .incidentalCopy) })
                     result.unresolved.formUnion(copy.unresolved)
                 }
+            case .price(let origin, let price):
+                guard origin == context.originID else { result.unresolved.insert(.foreignLineage); break }
+                if let id = price.linkedLotID { result.add(.lot(id), .incidentalCopy) }
+            case .acquisition(let origin, let row):
+                guard origin == context.originID else { result.unresolved.insert(.foreignLineage); break }
+                result.add(.lot(row.lotID), .incidentalCopy)
+                if let pickup = row.savedPickup, pickup.originID == context.originID { result.add(.journey(pickup.id), .incidentalCopy) }
+                if case .linked(let fragment) = row.stock { result.source(.receipt(originID: origin, key: fragment), .incidentalCopy) }
             case .originalLot(let value): result.lot(value, .incidentalCopy)
             case .originalObservation(let origin, let value):
                 if origin != context.originID { result.unresolved.insert(.foreignLineage) } else { result.add(.lot(value.lotID), .incidentalCopy) }
@@ -472,7 +482,7 @@ import RecordArchive
     private static func preview(selection: Selection, target: Target, context: Context, inspections: [Inspection], ledgerOrigins: Set<UUID>) throws -> Preview {
         guard inspections.count <= 250_000 else { throw Failure.capacity }
         let explicit: Set<UUID>
-        switch selection { case .lot(let id, _): explicit = [id]; case .wholeOrigin: explicit = Set(context.lots.map(\.id)); case .pickup: explicit = [] }
+        switch selection { case .lot(let id, _): explicit = [id]; case .wholeOrigin: explicit = Set(context.lots.map(\.id)); case .pickup, .price: explicit = [] }
         let collateral = Set(inspections.compactMap { value -> UUID? in
             guard case .pickup(let id, _) = value.container, value.containsPrivateDependency, target.journey != id else { return nil }; return id
         })

@@ -258,6 +258,17 @@ enum HistoryReviewedWrite: Equatable {
         periodDraft?.shopIDs.append(id)
     }
     func editSelectedPeriod() { guard canEditSelectedPeriod, let selectedPeriod else { return }; periodDraft = .init(selectedPeriod); cancelReview() }
+    func reviewPublication(_ observation: HistoryPriceObservation) throws {
+        cancelReview()
+        guard canBeginObservation, let source = observation.sourceRevision, let assigned = ownedShops.first(where: {
+            $0.shopId == observation.shopId
+        }), assigned.revision == source.shopRevision, assigned.authorityEpoch == source.authorityEpoch else { throw HistoryDraftError.invalid }
+        try observation.validate()
+        reviewed = .observation(observation)
+        approved = false
+        notice = nil
+    }
+
     func reviewObservation() {
         guard canReviewObservation else { return }
         do { let value = try observationDraft.dto(); guard HistoryDate.date(value.observedAt)! <= Date().addingTimeInterval(300) else { throw HistoryDraftError.invalid }; reviewed = .observation(value); approved = false; notice = nil }

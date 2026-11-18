@@ -78,6 +78,7 @@ private struct PantryErasureReviewView: View {
         switch choice.selection {
         case .lot(let id, _): return recordsText("Food batch") + " · " + id.uuidString.suffix(8)
         case .pickup(let id, _, _): return recordsText("Pickup") + " · " + id.uuidString.suffix(8)
+        case .price(let id, _): return pantryText("Private price history") + " · " + id.uuidString.suffix(8)
         case .wholeOrigin: return nil
         }
     }
@@ -104,10 +105,20 @@ private struct PantryErasureImpactView: View {
             switch review.selection {
             case .lot: Text(recordsText("You selected one food batch."))
             case .pickup: Text(recordsText("You selected one pickup and its pantry records."))
+            case .price: Text(pantryText("You selected one price and its corrections and credits."))
             case .wholeOrigin: Text(recordsText("You selected the entire local pantry and its history."))
             }
         }
         rows(recordsText("Food batches to delete"), review.foodNames)
+        if review.priceRevisionCount > 0 {
+            LabeledContent(pantryText("Price revisions to delete"), value: review.priceRevisionCount.formatted())
+        }
+        if review.aliasCount > 0 {
+            LabeledContent(pantryText("Saved receipt spellings to delete"), value: review.aliasCount.formatted())
+        }
+        if review.receiptRevisionCount > 0 {
+            LabeledContent(pantryText("Receipt and paid-price revisions to delete"), value: review.receiptRevisionCount.formatted())
+        }
         pickupRows(recordsText("Pickups to delete"), review.pickups)
         if case .wholeOrigin = review.selection {
             rows(recordsText("Meal reservations to delete"), review.affectedReservationNames)
@@ -126,6 +137,9 @@ private struct PantryErasureImpactView: View {
             Section(recordsText("Deletion is blocked")) {
                 if review.blockers.contains(.collateralPickups) || !review.collateralPickups.isEmpty {
                     Text(recordsText("Other pickups contain related records. Your selection does not include those pickups."))
+                }
+                if review.blockers.contains(.retainedReceiptEvidence) {
+                    Text(pantryText("A retained food batch has receipt evidence from this pickup. Review that batch before deleting the pickup."))
                 }
                 if review.blockers.contains(.ledgerHistory) {
                     Text(recordsText("Related shopping ledger history must be resolved before these records can be deleted."))

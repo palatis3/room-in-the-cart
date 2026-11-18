@@ -200,7 +200,9 @@ struct PantryLiveStockProjection {
                 // Keep an old reader's exact local observation alias, but always
                 // expose the independent canonical head above as freshness evidence.
                 readerID = selectedLatest[key]?.id ?? current.id
-                issues += receiptIssues(receiptEvidence[key], at: now)
+                if !snapshot.receiptAcquiredLots.contains(current.id) {
+                    issues += receiptIssues(receiptEvidence[key], at: now)
+                }
             }
             rows.append(Lot(id: current.id, readerID: readerID, current: current, availability: availability,
                 scopedLegacyLotIDs: aliases, scopedLegacyObservationIDs: observationAliases, receiptKey: receiptKey, issues: issues))

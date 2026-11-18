@@ -28,14 +28,20 @@ public struct InventoryErasureManifest: Codable, Equatable, Sendable {
   public let operationID: UUID
   public let expectedRevision: Int64
   public let sourceToken: InventorySourceToken
+  public struct Price: Codable, Equatable, Sendable {
+    public let id: UUID
+    public let revision: Int64
+    public init(id: UUID, revision: Int64) { self.id = id; self.revision = revision }
+  }
   public let scope: Scope
+  public let price: Price?
   public let chunkCount: Int64
   public let entryCount: Int64
   public let manifestDigest: Data
   public init(
     workspaceID: UUID, operationID: UUID, expectedRevision: Int64,
     sourceToken: InventorySourceToken,
-    scope: Scope = .sourceGraph, chunkCount: Int64, entryCount: Int64, manifestDigest: Data
+    scope: Scope = .sourceGraph, price: Price? = nil, chunkCount: Int64, entryCount: Int64, manifestDigest: Data
   ) {
     version = 1
     self.workspaceID = workspaceID
@@ -43,6 +49,7 @@ public struct InventoryErasureManifest: Codable, Equatable, Sendable {
     self.expectedRevision = expectedRevision
     self.sourceToken = sourceToken
     self.scope = scope
+    self.price = price
     self.chunkCount = chunkCount
     self.entryCount = entryCount
     self.manifestDigest = manifestDigest
@@ -285,7 +292,8 @@ extension ComparisonStore {
       value.chunkCount >= 0, value.entryCount >= 0, value.chunkCount <= value.entryCount,
       value.chunkCount >= value.entryCount / 256 + (value.entryCount % 256 == 0 ? 0 : 1),
       value.manifestDigest.count == 32,
-      value.scope == .origin ? value.entryCount == 0 : value.entryCount > 0
+      value.price.map({ $0.revision > 0 && value.scope == .sourceGraph }) ?? true,
+      value.scope == .origin || value.price != nil ? value.entryCount == 0 : value.entryCount > 0
     else { throw ComparisonStoreError.invalidInput }
   }
 

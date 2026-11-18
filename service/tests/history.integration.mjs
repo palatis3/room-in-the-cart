@@ -276,3 +276,33 @@ if (process.env.RITC_TEST_NATIVE_WIRE === '1') {
   });
  }
 }
+
+test('reviewed private prices publish immutable scoped revisions without posting charges', async()=>{
+ const f=await fixture(), base=f.base+'/price-observations', sourceId=randomUUID();
+ const source={sourceId,revision:1,shopRevision:1,authorityEpoch:1};
+ const original={...observation(f.shopId),evidenceKind:'paidReceipt',sourceRevision:source,variant:'Unsalted',price:{kind:'exact',minor:550}};
+ const post=(actor,value)=>call(actor,base,'POST',{clientKey:randomUUID(),observation:value});
+ const reader=await joinAdult(f);
+ assert.equal((await post(reader,original)).status,404);
+ assert.equal((await post(f.owner,{...original,sourceRevision:{...source,shopRevision:2}})).status,409);
+ ok(await post(f.owner,original));
+ assert.equal(ok(await post(f.owner,original)).observationId,original.id);
+ assert.equal((await post(f.owner,{...original,price:{kind:'exact',minor:450}})).status,409);
+ assert.deepEqual(ok(await call(f.owner,base+'/'+original.id)).observation,original);
+ const corrected={...original,id:randomUUID(),sourceRevision:{...source,revision:2},price:{kind:'exact',minor:510}};
+ ok(await post(f.owner,corrected));
+ assert.equal((await post(f.owner,original)).status,409);
+ const shelf={...observation(f.shopId),evidenceKind:'shelf'};
+ ok(await post(f.owner,shelf));
+ assert.equal((await call(f.owner,base)).status,403);
+ await f.paid();
+ const history=ok(await call(f.owner,base)).observations;
+ assert.deepEqual(new Set(history.map(x=>x.id)),new Set([corrected.id,shelf.id]));
+ assert.deepEqual(ok(await call(f.owner,base+'/'+original.id)).observation,original);
+ const financial=ok(await call(f.owner,f.base+'/shops/'+f.shopId+'/financial-evidence'));
+ assert.equal(financial.entries.length,0);
+ ok(await call(f.owner,f.base+'/commands','POST',{v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId:f.shopId,
+  kind:'shop.transferAuthority',base:{shopRevision:1,authorityEpoch:1},body:{newShopperId:reader.id}}));
+ assert.equal((await post(f.owner,corrected)).status,404);
+ assert.equal((await post(reader,{...corrected,id:randomUUID(),sourceRevision:{...source,revision:3}})).status,409);
+});
