@@ -21,6 +21,15 @@ public struct InventoryReservationCoverage: Equatable, Sendable, Identifiable {
     public let issues: [InventoryAvailabilityIssue]
     public var unresolved: Bool { !issues.isEmpty }
 }
+/// The same claim may draw from several batches. Its requested amount and shortfall
+/// describe the whole claim; the allocation belongs only to the displayed batch.
+public struct InventoryBatchReservation: Equatable, Sendable, Identifiable {
+    public var id: UUID { reservation.id }
+    public let reservation: InventoryReservation
+    public let coverage: InventoryReservationCoverage
+    public let allocation: StockAllocationEdge?
+}
+
 public struct InventoryProjection: Equatable, Sendable {
     public static let maximumLots = 10_000
     public static let maximumReservations = 20_000
@@ -30,6 +39,21 @@ public struct InventoryProjection: Equatable, Sendable {
     /// use these edges instead of allocating the full stock again for each shop.
     /// Consult coverage issues before treating partial backing as a fulfilled claim.
     public let allocations: [StockAllocationEdge]
+
+    public func reservations(for lot: InventoryLot, among claims: [InventoryReservation]) -> [InventoryBatchReservation] {
+        let coverage = Dictionary(uniqueKeysWithValues: reservations.map { ($0.id, $0) })
+        // The allocator emits at most one edge for a given need in this batch.
+        let edges = Dictionary(uniqueKeysWithValues: allocations.filter { $0.lotID == lot.id }.map { ($0.needID, $0) })
+        let lotIssues = lots.first { $0.id == lot.id }?.issues ?? []
+        return claims.compactMap { claim -> InventoryBatchReservation? in
+            guard claim.originID == lot.source.originID, claim.foodID == lot.foodID, claim.state != .released,
+                  let status = coverage[claim.id] else { return nil }
+            let edge = edges[claim.id]
+            let uncertainSource = claim.lotID == nil && status.unresolved && !lotIssues.isEmpty
+            guard claim.lotID == lot.id || edge != nil || uncertainSource else { return nil }
+            return .init(reservation: claim, coverage: status, allocation: edge)
+        }.sorted { ($0.reservation.name, $0.id.uuidString) < ($1.reservation.name, $1.id.uuidString) }
+    }
 
     /// Input must be one authoritative, revision-consistent private snapshot,
     /// including claims from every shop. A selected-shop subset is insufficient.

@@ -16,6 +16,53 @@ import XCTest
     }
 
 #if DEBUG && targetEnvironment(simulator)
+    func testLunchHoldShowsBackingAndShortfallAfterRestartAndPartialRelease() throws {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        let name = app.textFields["pantry.foodName"]
+        tap(name); name.typeText("Lunch portions")
+        let count = app.textFields["pantry.amount"]
+        tap(count); count.typeText("4")
+        tap(app.buttons["pantry.review"])
+        let confirm = app.buttons["pantry.confirm"]
+        tap(confirm)
+        let batch = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Lunch portions")).firstMatch
+        XCTAssertTrue(batch.waitForExistence(timeout: 10))
+        let batchID = batch.identifier
+        tap(batch)
+        tap(app.buttons["pantry.reserve"])
+        tap(app.buttons["Tomorrow’s lunch"])
+        func enterReservation(_ value: String) {
+            let field = app.textFields["pantry.reservationAmount"]
+            tap(field); field.typeText(value)
+            let done = app.buttons["pantry.reservationAmountDone"]
+            if done.waitForExistence(timeout: 2), done.isHittable { done.tap() }
+            tap(app.buttons["Review reservation"])
+            tap(confirm)
+            XCTAssertTrue(confirm.waitForNonExistence(timeout: 8))
+        }
+        enterReservation("2")
+        restart()
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons[batchID])
+        let backing = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.claimBacking.")).firstMatch
+        XCTAssertTrue(backing.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertEqual(backing.value as? String, "2 units")
+        let claimID = String(backing.identifier.dropFirst("pantry.claimBacking.".count))
+        tap(app.buttons["Release food from this reservation"])
+        enterReservation("1")
+        XCTAssertEqual(backing.value as? String, "1 unit")
+        tap(app.buttons["Used up"])
+        enableSwitch("pantry.acknowledgeReservations")
+        tap(confirm)
+        let shortfall = app.descendants(matching: .any).matching(identifier: "pantry.claimShortfall." + claimID).firstMatch
+        XCTAssertTrue(shortfall.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(shortfall.value as? String, "1 unit")
+        XCTAssertTrue(app.buttons["Release food from this reservation"].exists)
+    }
+
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
         launch(reset: true)
         let pantry = app.buttons["shop.myPantry"]
