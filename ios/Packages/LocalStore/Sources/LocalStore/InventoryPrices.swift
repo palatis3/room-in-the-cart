@@ -61,7 +61,7 @@ extension ComparisonStore {
         return total
     }
 
-    public func priceRows(id: UUID? = nil, adjustmentsFor: UUID? = nil, after: InventoryPriceRow? = nil, latestOnly: Bool = true,
+    public func priceRows(id: UUID? = nil, revision: Int64? = nil, adjustmentsFor: UUID? = nil, after: InventoryPriceRow? = nil, latestOnly: Bool = true,
                           limit: Int = 100) throws -> [InventoryPriceRow] {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
         try database.requireInventoryOriginLive()
@@ -69,6 +69,7 @@ extension ComparisonStore {
         var predicates = ["1=1"]
         var values: [ComparisonSQLValue] = []
         if let id { predicates.append("p.id=?"); values.append(.text(id.uuidString)) }
+        if let revision { predicates.append("p.revision=?"); values.append(.integer(revision)) }
         if let adjustmentsFor { predicates.append("p.adjusts=?"); values.append(.text(adjustmentsFor.uuidString)) }
         if latestOnly {
             predicates.append("NOT EXISTS(SELECT 1 FROM inventory_prices n WHERE n.id=p.id AND n.revision>p.revision)")

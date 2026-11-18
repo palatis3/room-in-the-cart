@@ -156,7 +156,7 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         guard isPaidPrice, other.isPaidPrice, currencyCode == other.currencyCode else { return false }
         let sharedFood = foodID != nil && foodID == other.foodID
         let sharedVariant = variant != nil && variant == other.variant && name == other.name
-        guard (sharedFood || sharedVariant), variant == nil || other.variant == nil || variant == other.variant else { return false }
+        guard (sharedFood || sharedVariant), variant == other.variant else { return false }
         return try unitPrice(in: unit) != nil && other.unitPrice(in: unit) != nil
     }
 }

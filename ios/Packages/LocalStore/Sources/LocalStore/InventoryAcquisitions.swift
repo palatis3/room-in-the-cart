@@ -32,7 +32,7 @@ extension ComparisonStore {
         return result
     }
 
-    public func acquisitionRows(receiptID: UUID? = nil, lineIDs: [UUID]? = nil, firstRevisionOnly: Bool = false, latestForLine: Bool = false, currentOnly: Bool = false, after: UUID? = nil, limit: Int = 100) throws -> [InventoryAcquisitionRow] {
+    public func acquisitionRows(receiptID: UUID? = nil, lineIDs: [UUID]? = nil, revision: Int64? = nil, firstRevisionOnly: Bool = false, latestForLine: Bool = false, currentOnly: Bool = false, after: UUID? = nil, limit: Int = 100) throws -> [InventoryAcquisitionRow] {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
         try database.requireInventoryOriginLive()
         guard (1...InventoryPersistenceLimits.pageItems).contains(limit) else { throw ComparisonStoreError.invalidInput }
@@ -48,6 +48,7 @@ extension ComparisonStore {
         if currentOnly {
             conditions.append("NOT EXISTS(SELECT 1 FROM inventory_acquisitions n WHERE n.line_id=a.line_id AND n.revision>a.revision)")
         }
+        if let revision { conditions.append("revision=?"); values.append(.integer(revision)) }
         if firstRevisionOnly { conditions.append("revision=1") }
         if let after { conditions.append("id>?"); values.append(.text(after.uuidString)) }
         values.append(.integer(Int64(limit)))
