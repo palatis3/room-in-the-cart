@@ -89,7 +89,7 @@ extension PantryRepository {
         var result = RescanPlan(receipt: exact ?? draft.receiptID)
         guard let recognition else { return result }
         try await store.checkRescanLines(owner: recognition.owner, document: recognition.document, ordinals: draft.selectedLines.map(\.ordinal))
-        try await store.checkReceiptOwner(recognition.owner, receipt: result.receipt)
+        try await store.checkReceiptOwner(recognition.owner, receipt: result.receipt, fileDigest: recognition.fileDigest)
         let known = try await store.rescanBindings(owner: recognition.owner, document: recognition.document)
         try requireAccess()
         let receipt = known.first?.receiptID ?? exact
@@ -104,6 +104,9 @@ extension PantryRepository {
             let owned = try await store.rescanBindings(owner: recognition.owner, receipt: receipt)
             try requireAccess()
             result.authorizedRows = Set(owned.map(\.sourceID))
+            if known.isEmpty, !owned.isEmpty, !owned.contains(where: { $0.merchantDay == recognition.merchantDay }) {
+                throw PantryReceiptError.changedEvidence
+            }
             // A linked document has its own page coordinates. This also applies on the next partial selection.
             if known.first?.additionalDocument == true || (known.isEmpty && !owned.isEmpty && draft.imageDigest != nil) {
                 result.document = recognition.document
@@ -120,6 +123,7 @@ extension PantryRepository {
         }
         try requireAccess()
         var candidates: [ReceiptRescanPrompt.Candidate] = []
+        var payloadBudget = limits.payloadBytes
         for id in ids.prefix(8) {
             let registered = try await store.rescanBindings(owner: recognition.owner, receipt: id)
             try requireAccess()
@@ -131,6 +135,8 @@ extension PantryRepository {
                 let rows = try await store.acquisitionRows(receiptID: id, sourceIDs: chunk, firstRevisionOnly: true, limit: limit)
                 try requireAccess()
                 guard rows.count == chunk.count else { throw PantryReceiptError.stale }
+                payloadBudget -= rows.reduce(0) { $0 + $1.payload.count }
+                guard payloadBudget >= 0 else { throw ComparisonStoreError.payloadTooLarge }
                 facts += try rows.map(PantryAcquisitionCodec.record)
             }
             guard !facts.isEmpty else { continue }

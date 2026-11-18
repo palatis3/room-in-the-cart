@@ -284,6 +284,7 @@ private func receiptBasisChanged(_ error: Error) -> Bool {
 }
 
 private func receiptError(_ error: Error) -> String {
+    if (error as? ComparisonStoreError) == .payloadTooLarge { return pantryText("This receipt exceeds the local comparison limit. Open Receipt history to inspect the saved lines.") }
     if error is ScanFailure { return pantryText("This saved source is unavailable. Reopen the receipt in its private workspace.") }
     if case PantryReceiptError.changedEvidence = error { return pantryText("This receipt line already has different confirmed evidence. Open Receipt history to review it.") }
     if case PantryReceiptError.stale = error { return pantryText("The pantry changed. Refresh and review the receipt again.") }

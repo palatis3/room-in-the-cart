@@ -81,7 +81,12 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     func reviewReceipt(_ draft: ReceiptImportDraft) async throws -> PantryReceiptReview {
         guard canEdit, let basis = snapshot?.state else { throw PantryReceiptError.stale }
         let token = generation
-        let review = try await repository.reviewReceipt(draft, expected: basis, at: clock())
+        let review: PantryReceiptReview
+        do { review = try await repository.reviewReceipt(draft, expected: basis, at: clock()) }
+        catch let prompt as ReceiptRescanPrompt {
+            guard token == generation, canEdit, snapshot?.state == basis else { throw PantryReceiptError.stale }
+            throw prompt
+        }
         guard token == generation, canEdit, snapshot?.state == basis else { throw PantryReceiptError.stale }
         return review
     }

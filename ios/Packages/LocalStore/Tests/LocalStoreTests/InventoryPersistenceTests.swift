@@ -300,6 +300,10 @@ final class InventoryPersistenceTests: XCTestCase {
         let other = try await reopened.rescanCandidates(owner: UUID(), merchantDay: day, wording: [wording])
         let files = try await reopened.rescanDocumentDigests(for: [row.lotID])
         XCTAssertEqual(saved, [linked]); XCTAssertEqual(mine, [receipt]); XCTAssertTrue(other.isEmpty); XCTAssertEqual(files, [digest])
+        do {
+            try await reopened.checkReceiptOwner(UUID(), receipt: UUID(), fileDigest: digest)
+            XCTFail("A binding-only attachment cannot become another actor's purchase")
+        } catch ComparisonStoreError.invalidInput {}
         let third = UUID()
         do {
             _ = try await reopened.commitInventory(.init(workspaceID: reopened.workspaceID, operationID: UUID(), expectedRevision: 3,

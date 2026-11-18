@@ -7639,6 +7639,22 @@
           }
         }
       }
+    },
+    "This receipt exceeds the local comparison limit. Open Receipt history to inspect the saved lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This receipt exceeds the local comparison limit. Open Receipt history to inspect the saved lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este recibo supera el límite de comparación local. Abre el historial de recibos para consultar las líneas guardadas."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

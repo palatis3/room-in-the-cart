@@ -63,7 +63,7 @@ final class PantryRepository {
     let pendingStore: PantryPendingStore?
     let store: ComparisonStore
     private let authorize: () -> Bool
-    private let limits: ReadLimits
+    let limits: ReadLimits
     private let mutationGate: PantryMutationGate?
     var originID: UUID { store.workspaceID }
     func observeErasure(_ observer: any PantryErasureObserver) { mutationGate?.observeErasure(observer) }

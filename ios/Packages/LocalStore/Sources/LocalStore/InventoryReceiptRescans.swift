@@ -94,10 +94,10 @@ extension ComparisonStore {
         }
     }
 
-    public func checkReceiptOwner(_ owner: UUID, receipt: UUID) throws {
+    public func checkReceiptOwner(_ owner: UUID, receipt: UUID, fileDigest: String? = nil) throws {
         try database.requireInventoryOriginLive()
-        let query = try database.statement("SELECT 1 FROM receipt_recognition WHERE receipt=? AND owner<>? LIMIT 1",
-            values: [.text(receipt.uuidString), .text(owner.uuidString)])
+        let query = try database.statement("SELECT 1 FROM receipt_recognition WHERE (receipt=? OR file_digest=?) AND owner<>? LIMIT 1",
+            values: [.text(receipt.uuidString), fileDigest.map(ComparisonSQLValue.text) ?? .null, .text(owner.uuidString)])
         defer { sqlite3_finalize(query) }
         guard sqlite3_step(query) == SQLITE_DONE else { throw ComparisonStoreError.invalidInput }
     }
@@ -120,6 +120,7 @@ extension ComparisonDatabase {
             CREATE TRIGGER IF NOT EXISTS prohibit_retired_receipt_recognition BEFORE INSERT ON receipt_recognition
                 WHEN EXISTS(SELECT 1 FROM retired_receipt_recognition WHERE owner=NEW.owner AND document=NEW.document AND ordinal=NEW.ordinal)
                 BEGIN SELECT RAISE(ABORT,'receipt line previously erased'); END;
+            CREATE INDEX IF NOT EXISTS receipt_recognition_file ON receipt_recognition(file_digest,owner);
             CREATE INDEX IF NOT EXISTS receipt_recognition_lot ON receipt_recognition(lot);
             CREATE INDEX IF NOT EXISTS receipt_recognition_source ON receipt_recognition(source);
             """)
@@ -130,11 +131,11 @@ extension ComparisonDatabase {
             INSERT INTO receipt_recognition(owner,merchant_day,wording,document,ordinal,source,receipt,lot,file_digest,additional_document)
             SELECT ?,?,?,?,?,a.id,a.receipt_id,a.lot_id,?,? FROM inventory_acquisitions a
             WHERE a.id=? AND a.receipt_id=? AND a.lot_id=? AND a.revision=1
-            AND NOT EXISTS(SELECT 1 FROM receipt_recognition WHERE receipt=a.receipt_id AND owner<>?)
+            AND NOT EXISTS(SELECT 1 FROM receipt_recognition WHERE (receipt=a.receipt_id OR file_digest=?) AND owner<>?)
             AND NOT EXISTS(SELECT 1 FROM receipt_recognition WHERE owner=? AND document=? AND receipt<>a.receipt_id)
             """, [.text(value.owner.uuidString), .text(value.merchantDay.uuidString), .text(value.wording.uuidString),
                   .text(value.document.uuidString), .integer(Int64(value.ordinal)), value.fileDigest.map(ComparisonSQLValue.text) ?? .null, .integer(value.additionalDocument ? 1 : 0), .text(value.sourceID.uuidString),
-                  .text(value.receiptID.uuidString), .text(value.lotID.uuidString), .text(value.owner.uuidString),
+                  .text(value.receiptID.uuidString), .text(value.lotID.uuidString), value.fileDigest.map(ComparisonSQLValue.text) ?? .null, .text(value.owner.uuidString),
                   .text(value.owner.uuidString), .text(value.document.uuidString)])
         guard try integer("SELECT changes()") == 1 else { throw ComparisonStoreError.invalidInput }
     }
