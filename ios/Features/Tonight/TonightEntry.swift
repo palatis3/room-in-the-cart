@@ -19,6 +19,9 @@ struct TonightEntry: View {
         _model = StateObject(wrappedValue: TonightMealModel(batch: batch))
     }
     @State private var suggestedSecond: PantryMealMatcher.Review?
+    private enum ChoiceSection: Hashable { case destination, review }
+    @State private var requestedSection: ChoiceSection?
+    @AccessibilityFocusState private var focusedSection: ChoiceSection?
     @State private var choosing: MealTemplate?
     @State private var sourceToReview: TonightMealModel.Source?
     @State private var manual = false
@@ -67,7 +70,18 @@ struct TonightEntry: View {
             } else if let batch = model.batch, let scope, batch.originID != scope.inventory {
                 Text(tonightText("This batch is no longer in the open pantry."))
             } else {
-                content
+                ScrollViewReader { scroll in
+                    content.task(id: requestedSection) {
+                        guard let section = requestedSection else { return }
+                        // The section is inserted above the recipe that opened it.
+                        await Task.yield()
+                        guard !Task.isCancelled, requestedSection == section else { return }
+                        requestedSection = nil
+                        guard choosing != nil, (preview != nil) == (section == .review) else { return }
+                        scroll.scrollTo(section, anchor: .top)
+                        focusedSection = section
+                    }
+                }
             }
         }
         .navigationTitle(tonightText("Tonight"))
@@ -136,6 +150,8 @@ struct TonightEntry: View {
             if let preview {
                 Section(tonightText("Review dinner choice")) {
                     Text(preview.recipe.title).font(.headline)
+                        .id(ChoiceSection.review)
+                        .accessibilityFocused($focusedSection, equals: .review)
                     Text(preview.destinationTitle)
                     Text(tonightText(preview.createsPickup ? "Apply creates a new pickup and one dinner. Cancel creates neither." : "Apply adds one dinner to this pickup."))
                     ForEach(preview.recipe.ingredients) { ingredient in
@@ -150,6 +166,8 @@ struct TonightEntry: View {
             } else if let choosing {
                 Section(tonightText("Choose a destination")) {
                     Text(choosing.title).font(.headline)
+                        .id(ChoiceSection.destination)
+                        .accessibilityFocused($focusedSection, equals: .destination)
                     Picker(tonightText("Pickup"), selection: $destination) {
                         Text(tonightText("Start a new pickup")).tag(UUID?.none)
                         ForEach(ledger.workspace.shops) { shop in Text(shop.title).tag(Optional(shop.id)) }
@@ -195,7 +213,7 @@ struct TonightEntry: View {
                     authorize: { scope == original && !ledger.saving && !ledger.hasPendingSave },
                     refresh: { await refresh() }, choose: { recipe in
                         guard scope == original else { return }
-                        choosing = recipe; destination = ledger.workspace.selectedShopID; preview = nil; message = nil
+                        beginChoice(recipe)
                     })
             }
             if !model.needsReview.isEmpty {
@@ -277,7 +295,7 @@ struct TonightEntry: View {
                         ledgerQuantity(TonightMealModel.missingQuantity(row)))
                 }
                 Button(tonightText("Choose…")) {
-                    choosing = review.recipe; destination = ledger.workspace.selectedShopID; preview = nil; message = nil
+                    beginChoice(review.recipe)
                 }.disabled(!canChoose(review) || model.busy || applying)
                     .accessibilityIdentifier("tonight.choose.\(review.id)")
             }
@@ -347,7 +365,7 @@ struct TonightEntry: View {
                     // This is hypothetical stock left after the first meal. Retain the ordinary second-meal comparison.
                     suggestedSecond = chosen
                 } else {
-                    choosing = chosen.recipe; destination = ledger.workspace.selectedShopID; preview = nil; message = nil
+                    beginChoice(chosen.recipe)
                 }
             }
         })
@@ -372,10 +390,19 @@ struct TonightEntry: View {
             return input
         }
     }
+    private func beginChoice(_ recipe: MealTemplate) {
+        choosing = recipe
+        destination = ledger.workspace.selectedShopID
+        preview = nil
+        message = nil
+        requestedSection = .destination
+    }
+
     @MainActor private func prepareChoice(_ recipe: MealTemplate) async {
         guard let original = model.input, let originalScope = scope else { return }
         let matches = model.matches[recipe.id, default: [:]]
         await refresh()
+        guard choosing == recipe else { return }
         do {
             guard scope == originalScope else { throw TonightMealModel.Failure.unavailable }
             try model.assertCurrent(original, recipe: recipe, matches: matches)
@@ -383,6 +410,7 @@ struct TonightEntry: View {
             preview = try TonightPlanChoice.prepare(match: review, pantryBasis: original.basis,
                 destinationShopID: destination, newShopTitle: newTitle, ledger: ledger, pickup: pickup,
                 currentIdentity: currentIdentity)
+            requestedSection = .review
         } catch { preview = nil; message = tonightText("The recipe, preferences, pantry or destination changed. Review the current information again.") }
     }
     @MainActor private func apply(_ review: TonightPlanChoice.Review) async {
