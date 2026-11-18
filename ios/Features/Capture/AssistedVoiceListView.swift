@@ -45,7 +45,7 @@ import SwiftUI
                         if audio.recording {
                             Button(captureText("Stop this recording")) { audio.stop() }
                         } else if audio.preparing { ProgressView() }
-                        else if audio.clip == nil {
+                        else if audio.clip == nil, transcript == nil {
                             Button(captureText("Record a new list on this iPhone")) {
                                 operation = Task { await audio.start() }
                             }
@@ -85,6 +85,11 @@ import SwiftUI
             if !Task.isCancelled, current, self.scope == scope { available = allowed == true }
             checked = true
         }
+        .task(id: audio.clip != nil) {
+            guard audio.clip != nil else { return }
+            try? await Task.sleep(for: .seconds(300))
+            if !Task.isCancelled, audio.clip != nil { clear() }
+        }
         .onChange(of: identity) { _, next in if basis != nil && next != basis { clear(); dismiss() } }
         .onChange(of: scope) { _, newScope in if originalScope != nil && newScope != originalScope { clear(); dismiss() } }
         .onChange(of: scene) { _, next in if next == .background { clear(); dismiss() } }
@@ -104,11 +109,13 @@ import SwiftUI
         audio.stopPlayback()
         let active = generation
         operation = Task {
-            defer { if generation == active { sending = false } }
+            defer { if generation == active { sending = false; operation = nil } }
             do {
                 let result = try await service.transcribeVoiceList(input, scope: scope)
                 guard !Task.isCancelled, current, self.scope == scope, active == generation, request == input else { return }
                 transcript = result.text
+                request = nil
+                audio.clear()
             } catch { if !Task.isCancelled && current && active == generation { failed = true } }
         }
     }
