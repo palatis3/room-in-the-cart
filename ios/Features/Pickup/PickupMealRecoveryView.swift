@@ -209,6 +209,7 @@ private struct PickupRecoveryUndoView: View {
         catch PickupRecoveryUndoError.stock { message = recoveryText("The food counts or reservations used by this swap changed. Review the current food before choosing another dinner.") }
         catch PickupRecoveryUndoError.cooked { message = recoveryText("This dinner has a cooking record. Review what was cooked before replacing it.") }
         catch PickupRecoveryUndoError.repair { message = recoveryText("A separate repair instruction belongs to one of these dinners. Review it before choosing another dinner.") }
+        catch MealRecoveryError.protectedAllocation { message = recoveryText("Restoring this dinner would change food already allocated to another need. Review the affected meals and reservations.") }
         catch PickupRecoveryUndoError.constraints { message = recoveryText("The earlier dinner does not meet the current reviewed meal requirements.") }
         catch { message = recoveryText("This dinner or its food changed. Review its current instructions before undoing the swap.") }
     }

@@ -1413,6 +1413,22 @@
           }
         }
       }
+    },
+    "Restoring this dinner would change food already allocated to another need. Review the affected meals and reservations.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restoring this dinner would change food already allocated to another need. Review the affected meals and reservations."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar esta cena cambiaría los alimentos ya asignados a otra necesidad. Revisa las comidas y las reservas afectadas."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

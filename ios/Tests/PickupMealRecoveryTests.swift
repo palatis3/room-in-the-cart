@@ -19,7 +19,7 @@ import LocalStore
         let authority: PickupRecoveryAuthority
         let inventory: ComparisonStore?
     }
-    private func fixture(canonical: Bool = false) async throws -> Fixture {
+    private func fixture(canonical: Bool = false, usableWraps: Int64 = 6) async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(directory, test: self)
@@ -62,8 +62,8 @@ import LocalStore
         let frozen = await model.freeze(); XCTAssertTrue(frozen)
         let placed = await model.reportPlaced(); XCTAssertTrue(placed)
         let key = ReceiptKey(sourceEventID: "wrap-delivery", orderLineID: line, branchID: "Main", segmentID: "one")
-        let received = await model.receive(.init(key: key, itemName: "Wraps", received: q(8), disposition: .partial, receivedAt: now),
-            usable: .init(id: UUID(), receipt: key, usable: q(6), confirmedAt: now, confirmedMatchToOrderLine: true))
+        let received = await model.receive(.init(key: key, itemName: "Wraps", received: q(max(8, usableWraps)), disposition: .partial, receivedAt: now),
+            usable: .init(id: UUID(), receipt: key, usable: q(usableWraps), confirmedAt: now, confirmedMatchToOrderLine: true))
         XCTAssertTrue(received)
         let beans = UUID()
         let stocked = await model.change { $0.stockLots.append(.init(id: UUID(), foodID: beans, name: "Beans", usable: q(4), confirmedAt: now, source: .freezer)) }
@@ -144,7 +144,7 @@ import LocalStore
     }
 
     func testPlacedSwapUndoCommitsOneSQLiteCompensationAndPreservesPurchasesLunchAndUnrelatedEdits() async throws {
-        let f = try await fixture(canonical: true)
+        let f = try await fixture(canonical: true, usableWraps: 12)
         let initial = try XCTUnwrap(f.model.journey)
         let original = try XCTUnwrap(f.model.recoveryDefinitions().first { $0.meal.id == f.wednesday })
         let tuesday = try XCTUnwrap(f.model.recoveryDefinitions().first { $0.meal.id == f.tuesday })
@@ -192,7 +192,7 @@ import LocalStore
     }
 
     func testPlacedSwapUndoRejectsRecountAndNewHardExclusionWithoutRewritingSavedSwap() async throws {
-        let f = try await fixture(canonical: true)
+        let f = try await fixture(canonical: true, usableWraps: 12)
         let forward = try review(f)
         let applied = await f.model.applyMealRecovery(forward, currentAuthority: { f.authority })
         XCTAssertTrue(applied)
