@@ -163,6 +163,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     func permission(request: Bool) async throws -> Bool
     func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws
     func remove(_ handles: Set<UUID>) async
+    func prune(keepingPending: Set<UUID>, keepingDelivered: Set<UUID>) async
 }
 
 @MainActor struct PantryDigestNotifications: PantryDigestScheduling {
@@ -184,19 +185,27 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
         center.removeDeliveredNotifications(withIdentifiers: identifiers)
     }
+    private func identifier(_ handle: UUID) -> String { Self.prefix + handle.uuidString }
+
+    func prune(keepingPending: Set<UUID>, keepingDelivered: Set<UUID>) async {
+        guard !isolated else { return }
+        let center = UNUserNotificationCenter.current()
+        let pending = Set(keepingPending.map(identifier))
+        let delivered = Set(keepingDelivered.map(identifier))
+        let requests = await center.pendingNotificationRequests().map(\.identifier)
+        center.removePendingNotificationRequests(withIdentifiers: requests.filter { $0.hasPrefix(Self.prefix) && !pending.contains($0) })
+        let notifications = await center.deliveredNotifications().map(\.request.identifier)
+        center.removeDeliveredNotifications(withIdentifiers: notifications.filter { $0.hasPrefix(Self.prefix) && !delivered.contains($0) })
+    }
+
     func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws {
         guard !isolated else { return }
         let center = UNUserNotificationCenter.current()
-        func id(_ handle: UUID) -> String { Self.prefix + handle.uuidString }
-        let desired = Set(deliveries.map { id($0.handle) })
-        let prior = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix(Self.prefix) }
-        center.removePendingNotificationRequests(withIdentifiers: prior.filter { !desired.contains($0) })
-        let keep = Set(keepingDelivered.map(id))
-        let delivered = await center.deliveredNotifications().map(\.request.identifier).filter { $0.hasPrefix(Self.prefix) && !keep.contains($0) }
-        center.removeDeliveredNotifications(withIdentifiers: delivered)
+        let desired = Set(deliveries.map(\.handle))
+        await prune(keepingPending: desired, keepingDelivered: keepingDelivered)
         do {
             for delivery in deliveries {
-                let identifier = id(delivery.handle)
+                let identifier = self.identifier(delivery.handle)
                 var calendar = Calendar(identifier: .gregorian)
                 guard let offset = TimeZone(secondsFromGMT: delivery.zone.secondsFromGMT(for: delivery.date)) else { throw PantryDigestFailure.invalid }
                 calendar.timeZone = offset
@@ -212,7 +221,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
                 try await center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: trigger))
             }
         } catch {
-            center.removePendingNotificationRequests(withIdentifiers: Array(desired))
+            center.removePendingNotificationRequests(withIdentifiers: desired.map(identifier))
             throw error
         }
     }
@@ -315,6 +324,9 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
             let request = try !document(scope).enabled
             guard try await scheduler.permission(request: request) else { throw PantryDigestFailure.denied }
         }
+        if !enabled {
+            try await pruneOrphanedNotifications()
+        }
         guard authorized() else { throw PantryDigestFailure.changed }
         try await change(scope) { doc in
             doc.enabled = enabled
@@ -326,19 +338,44 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     func failClosed() async {
         do { try await suspendNotifications() } catch { notificationsUnavailable = true }
     }
-    func suspendNotifications() async throws {
-        // Every delivery is registered under a random handle saved before scheduling.
-        // Removing these identifiers also works before iOS has requested alert permission.
-        guard FileManager.default.fileExists(atPath: folder.path) else { return }
+    private func documentURLs() throws -> [URL] {
+        guard FileManager.default.fileExists(atPath: folder.path) else { return [] }
         let urls = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "json" }
+        return urls.filter { $0.pathExtension == "json" }
+    }
+
+    /// Drop only requests absent from all enabled digests before disabling alerts or erasing their last document.
+    private func pruneOrphanedNotifications() async throws {
+        try await serialized { [self] in
+            // Unreadable metadata cannot authorize notifications or prevent another shopper's cleanup.
+            // Preserve its file and retain every handle independently verified by a readable document.
+            let urls = (try? documentURLs()) ?? []
+            var live = Set<UUID>()
+            for url in urls {
+                guard let doc = try? read(url), doc.enabled else { continue }
+                live.formUnion(doc.rules.map(\.handle))
+            }
+            await scheduler.prune(keepingPending: live, keepingDelivered: live)
+        }
+    }
+
+    func suspendNotifications() async throws {
+        let documents: [PantryDigestDocument]
         do {
-            let handles = Set(try urls.flatMap { try read($0).rules.map(\.handle) })
+            documents = try documentURLs().map(read)
+        } catch {
+            try await schedule(nil)
+            return
+        }
+        if documents.contains(where: \.enabled) {
+            // A corrected date can reach disk before its old OS request is replaced.
+            // Clear the digest namespace, including handles no longer present in these rules.
+            try await schedule(nil)
+        } else {
+            // Manual dates work before notification permission is requested.
+            let handles = Set(documents.flatMap { $0.rules.map(\.handle) })
             if !handles.isEmpty { try await serialized { [scheduler] in await scheduler.remove(handles) } }
             notificationsUnavailable = false
-        } catch {
-            // Recover unknown handles from the isolated OS namespace when private metadata is corrupt.
-            try await schedule(nil)
         }
     }
     func reconcile(_ scope: PantryDigestScope, lots: [InventoryLot]) async throws {
@@ -383,6 +420,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         }
         let urls = try documents(for: origin)
         guard !urls.isEmpty else { return }
+        try await pruneOrphanedNotifications()
         for url in urls {
             var doc = try read(url)
             guard doc.origin == origin else { throw PantryDigestFailure.invalid }

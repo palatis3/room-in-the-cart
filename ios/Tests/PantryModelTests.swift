@@ -337,6 +337,8 @@ final class PantryModelTests: XCTestCase {
     var granted = false
     var requests = 0
     var replacementCount = 0
+    var interruptNextReplacement = false
+    var delivered = Set<UUID>()
     var onRequest: (() -> Void)?
     var deliveries: [PantryDigestDelivery] = []
     var removed = Set<UUID>()
@@ -346,10 +348,20 @@ final class PantryModelTests: XCTestCase {
     }
     func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws {
         replacementCount += 1
+        if interruptNextReplacement {
+            interruptNextReplacement = false
+            throw CancellationError()
+        }
+        delivered.formIntersection(keepingDelivered)
         self.deliveries = deliveries
+    }
+    func prune(keepingPending: Set<UUID>, keepingDelivered: Set<UUID>) async {
+        deliveries.removeAll { !keepingPending.contains($0.handle) }
+        delivered.formIntersection(keepingDelivered)
     }
     func remove(_ handles: Set<UUID>) async {
         removed.formUnion(handles)
+        delivered.subtract(handles)
         deliveries.removeAll { handles.contains($0.handle) }
     }
 }
@@ -582,6 +594,124 @@ extension PantryModelTests {
         try await digest.setAlerts(scope, enabled: false, minute: 600, timeZone: zone, authorized: { true })
         XCTAssertFalse(try digest.document(scope).enabled)
         XCTAssertEqual(try digest.document(scope).rules.first?.day, later)
+        try await db.close()
+    }
+
+    func testScopeChangeCancelsOrphanedDigestAfterInterruptedDateCorrection() async throws {
+        let (dir, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let pantry = model(db)
+        await pantry.load()
+        let lot = try await add(pantry)
+        let original = PantryDigestScope(origin: db.workspaceID, identity: .init(actorID: UUID(), subject: nil,
+            householdID: nil, memberID: nil, role: nil))
+        let other = PantryDigestScope(origin: db.workspaceID, identity: .init(actorID: UUID(), subject: nil,
+            householdID: nil, memberID: nil, role: nil))
+        let day = try MealDay(year: 2027, month: 6, day: 1, timeZoneIdentifier: "America/New_York")
+        let corrected = try MealDay(year: 2027, month: 6, day: 2, timeZoneIdentifier: day.timeZoneIdentifier)
+        let folder = dir.appendingPathComponent("digest")
+        let scheduler = DigestSchedulerSpy()
+        scheduler.granted = true
+        for alreadyDelivered in [false, true] {
+            let store = PantryDigestStore(folder: folder, scheduler: scheduler, now: { self.now })
+            try await store.saveDay(original, lot: lot, day: day, authorized: { true })
+            try await store.setAlerts(original, enabled: true, minute: 600, authorized: { true })
+            let oldHandle = try XCTUnwrap(scheduler.deliveries.first?.handle)
+            if alreadyDelivered {
+                scheduler.deliveries.removeAll()
+                scheduler.delivered.insert(oldHandle)
+            }
+            // Stop between the atomic date write and the notification center's replacement.
+            scheduler.interruptNextReplacement = true
+            do {
+                try await store.saveDay(original, lot: lot, day: corrected, authorized: { true })
+                XCTFail("The interrupted replacement unexpectedly completed")
+            } catch is CancellationError {}
+
+            let reopened = PantryDigestStore(folder: folder, scheduler: scheduler, now: { self.now })
+            let rule = try XCTUnwrap(reopened.document(original).rules.first)
+            XCTAssertEqual(rule.day, corrected)
+            XCTAssertNotEqual(rule.handle, oldHandle)
+            XCTAssertTrue(try reopened.document(other).rules.isEmpty)
+            try await reopened.reconcile(other, lots: [lot])
+            XCTAssertTrue(scheduler.deliveries.isEmpty, "The previous shopper's pending alert survived")
+            XCTAssertTrue(scheduler.delivered.isEmpty, "The previous shopper's delivered alert survived")
+            XCTAssertEqual(try reopened.document(original).rules.first?.day, corrected)
+        }
+        try await db.close()
+    }
+
+    func testDisableAndWholeErasurePruneUnlistedDigestRequestsAndPreserveAnotherOrigin() async throws {
+        try await verifyInterruptedDigestCleanup(corruptUnrelated: false)
+    }
+
+    func testCorruptUnrelatedDigestDoesNotBlockOptOutOrWholeOriginErasure() async throws {
+        try await verifyInterruptedDigestCleanup(corruptUnrelated: true)
+    }
+
+    private func verifyInterruptedDigestCleanup(corruptUnrelated: Bool) async throws {
+        let (dir, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let pantry = model(db)
+        await pantry.load()
+        let lot = try await add(pantry)
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let original = PantryDigestScope(origin: db.workspaceID, identity: owner)
+        let (otherDir, otherDB) = try await database()
+        defer { try? FileManager.default.removeItem(at: otherDir) }
+        let otherPantry = model(otherDB)
+        await otherPantry.load()
+        let otherLot = try await add(otherPantry, name: "Rice")
+        let other = PantryDigestScope(origin: otherDB.workspaceID, identity: owner)
+        let day = try MealDay(year: 2027, month: 6, day: 1, timeZoneIdentifier: "America/New_York")
+        let corrected = try MealDay(year: 2027, month: 6, day: 2, timeZoneIdentifier: day.timeZoneIdentifier)
+        for (erase, keepOther) in [(false, true), (true, true), (true, false)] {
+            let folder = dir.appendingPathComponent(UUID().uuidString)
+            let scheduler = DigestSchedulerSpy()
+            scheduler.granted = true
+            let store = PantryDigestStore(folder: folder, scheduler: scheduler, now: { self.now })
+            var surviving: [PantryDigestDelivery] = []
+            if keepOther {
+                try await store.saveDay(other, lot: otherLot, day: day, authorized: { true })
+                try await store.setAlerts(other, enabled: true, minute: 600, authorized: { true })
+                surviving = [try XCTUnwrap(scheduler.deliveries.first)]
+            }
+            try await store.saveDay(original, lot: lot, day: day, authorized: { true })
+            try await store.setAlerts(original, enabled: true, minute: 600, authorized: { true })
+            let oldHandle = try XCTUnwrap(scheduler.deliveries.first?.handle)
+            scheduler.interruptNextReplacement = true
+            do {
+                try await store.saveDay(original, lot: lot, day: corrected, authorized: { true })
+                XCTFail("The interrupted replacement unexpectedly completed")
+            } catch is CancellationError {}
+
+            // Include an independent, still-valid registration in both OS inventories.
+            scheduler.deliveries.append(contentsOf: surviving)
+            let survivingHandles = Set(surviving.map(\.handle))
+            scheduler.delivered = survivingHandles.union([oldHandle])
+            let corruptURL = folder.appendingPathComponent(UUID().uuidString + "-" + original.owner + ".json")
+            let unreadable = Data("incomplete private digest".utf8)
+            if corruptUnrelated {
+                try unreadable.write(to: corruptURL)
+                let unknown = UUID()
+                scheduler.deliveries.append(.init(handle: unknown, date: now, zone: .current))
+                scheduler.delivered.insert(unknown)
+            }
+            let reopened = PantryDigestStore(folder: folder, scheduler: scheduler, now: { self.now })
+            if erase {
+                try await reopened.erase(origin: original.origin, whole: true, inventory: db)
+                XCTAssertTrue(try reopened.document(original).rules.isEmpty)
+            } else {
+                try await reopened.setAlerts(original, enabled: false, minute: 600, authorized: { true })
+                XCTAssertEqual(try reopened.document(original).rules.first?.day, corrected)
+            }
+            XCTAssertFalse(try reopened.document(original).enabled)
+            XCTAssertEqual(scheduler.deliveries, surviving)
+            XCTAssertEqual(scheduler.delivered, survivingHandles)
+            XCTAssertEqual(try reopened.document(other).enabled, keepOther)
+            if corruptUnrelated { XCTAssertEqual(try Data(contentsOf: corruptURL), unreadable) }
+        }
+        try await otherDB.close()
         try await db.close()
     }
 
