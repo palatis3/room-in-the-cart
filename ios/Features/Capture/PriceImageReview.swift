@@ -12,6 +12,7 @@ struct PriceImageReview: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
     @State private var photo: PhotosPickerItem?
+    @State private var loadedPhoto: PhotosPickerItem?
     @State private var lines: [PriceImageLine] = []
     @State private var sourcePreview: Data?
     @State private var sourceDigest: Data?
@@ -118,12 +119,15 @@ struct PriceImageReview: View {
         .privacySensitive()
         .onChange(of: authorized()) { _, allowed in
             if !allowed {
-                photo = nil; sourcePreview = nil; sourceDigest = nil; lines = []
+                photo = nil; loadedPhoto = nil; sourcePreview = nil; sourceDigest = nil; lines = []
                 selections = [:]; amounts = [:]; inclusions = [:]; notice = nil
                 dismiss()
             }
         }
         .task(id: photo) {
+            // Returning from crop review must preserve the shopper’s assignments and edited wording.
+            if let photo, photo == loadedPhoto, authorized() { return }
+            loadedPhoto = nil
             sourcePreview = nil; sourceDigest = nil
             lines = []; selections = [:]; amounts = [:]; inclusions = [:]; notice = nil
             guard let photo, authorized() else { loading = false; return }
@@ -138,6 +142,7 @@ struct PriceImageReview: View {
                 catch {
                     let preview = try await Task.detached(priority: .userInitiated) { try ScanImageNormalizer.normalize(data) }.value
                     guard !Task.isCancelled, authorized() else { return }
+                    loadedPhoto = photo
                     sourcePreview = preview; sourceDigest = digest
                     notice = pantryText("Choose a line from the source photo or enter the wording manually.")
                     return
@@ -147,6 +152,7 @@ struct PriceImageReview: View {
                     try PriceImageLine(digest: digest, ordinal: ordinal, wording: String(value), uncertain: uncertain.contains(String(value)))
                 }
                 guard !Task.isCancelled, authorized() else { return }
+                loadedPhoto = photo
                 sourcePreview = evidence.previewImageData
                 sourceDigest = digest
                 lines = recognized
