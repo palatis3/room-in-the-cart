@@ -1941,6 +1941,30 @@ async function reviewedCookingFixture(settings={}){
  return {...f,p,manual,path,review,stock,body,need,known};
 }
 
+test('active shared cooking blocks dinner swap while an undone completion remains historical',async()=>{
+ const f=await reviewedCookingFixture(),prepared=await f.body();
+ const complete=ok(await f.send(f.command('cook.complete',{...prepared.base,servings:2,
+   uses:prepared.draft.needs.map(n=>({rowId:randomUUID(),needId:n.id,kind:'notUsed'})),outputs:[]})));
+ const path=f.base+'/shops/'+f.shopId+'/meal-recovery';
+ async function swap(){
+   const page=ok(await call(f.owner,path)),old=page.meals.find(m=>m.occurrenceId===prepared.draft.base.occurrenceId);
+   const replacement={...old,title:'Freshly reviewed supper',revisionId:randomUUID(),needs:old.needs.map(n=>
+     n.priority==='protected'?n:{...n,id:randomUUID(),ingredientId:randomUUID()})};
+   return call(f.owner,path+'/preview','POST',{v:1,base:page.base,intent:{dinnerSwap:true,
+     occurrenceId:old.occurrenceId,targetDigest:page.targetDigests.find(d=>d.occurrenceId===old.occurrenceId).digest,
+     replacement,reviewedAt:page.asOf,repeatOfOccurrenceId:null,agreesToRepeat:false,proposesExtraTrip:false,
+     agreesToExtraTrip:false,acceptsUnresolved:true}});
+ }
+ assert.equal((await swap()).status,409);
+ const undo=f.command('cook.undo',{...(await f.body()).base,cookId:complete.cookId});
+ ok(await f.send(undo));
+ const stock=await f.stock();
+ ok(await swap());
+ assert.deepEqual((await f.stock()).lots,stock.lots,'Swap review does not consume or restore food');
+ const history=(await admin.query('SELECT undone_by FROM ritc.shared_cook WHERE household_id=$1 AND operation_id=$2',[f.h,complete.cookId])).rows;
+ assert.equal(history.length,1);assert(history[0].undone_by,'Undo keeps the original cooking audit record');
+});
+
 test('optional shared meal feedback binds consent, source, adult and replay window and clears on cooking Undo',async()=>{
  const f=await reviewedCookingFixture();
  const {draft,base}=await f.body();

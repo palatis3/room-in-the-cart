@@ -35,7 +35,7 @@ export async function cooked(ctx:Context,shop:Shop,occurrenceId:string) {
   // Households may use this service before the optional cook ledger ships.
   const table=await ctx.db.query("SELECT to_regclass('ritc.shared_cook') IS NOT NULL AS available");
   if(!table.rows[0].available) return false;
-  return !!(await ctx.db.query(`SELECT 1 FROM ritc.shared_cook WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 LIMIT 1`,
+  return !!(await ctx.db.query(`SELECT 1 FROM ritc.shared_cook WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 AND undone_by IS NULL LIMIT 1`,
     [ctx.householdId,shop.shop_id,occurrenceId])).rowCount;
 }
 
