@@ -675,12 +675,14 @@ export class WebApp {
       if(this.withdrawn?.requestId===r.requestId){card.append(this.el('p',this.t('Withdraw this pending request?')),this.button('Confirm withdrawal',()=>void this.run(async()=>{
         const fresh=await this.reauthenticate(this.withdrawalCommand??undefined);
         this.withdrawalCommand??=this.makeCommand('request.withdraw',{requestId:r.requestId},r.revision,r.shopId);
-        try {await this.api.command(fresh,this.withdrawalCommand);} catch(error) {
+        let received:OwnRequest;
+        try {received=await this.api.command(fresh,this.withdrawalCommand);} catch(error) {
           if(!isRequestRevisionConflict(error))throw error;
           this.withdrawn=null;this.withdrawalCommand=null;
           await this.reloadChangedRequest();return;
         }
-        this.withdrawn=null;this.withdrawalCommand=null;this.notice='Withdrawn';await this.load();
+        this.withdrawn=null;this.withdrawalCommand=null;this.notice='Withdrawn';
+        await this.refreshAfterReceipt(received);
       })),this.button('Cancel',()=>{this.withdrawn=null;this.render();}));}own.append(card);
     }main.append(own);
   }
@@ -777,8 +779,20 @@ export class WebApp {
         this.notice='Received by the shopper. Retry to clear the copy on this browser.';
       }
     }
-    // A successful command is received even if the subsequent refresh disconnects.
-    try{await this.load();}catch(error){if(error instanceof ApiError&&(error.status===401||error.status===403))throw error;}
+    await this.refreshAfterReceipt(received);
+  }
+  private async refreshAfterReceipt(received?:OwnRequest):Promise<void> {
+    if(received) {
+      const previous=this.requests.find(row=>row.requestId===received.requestId);
+      if(!previous)this.requests.unshift(received);
+      else if(previous.revision<=received.revision)this.requests=this.requests.map(row=>row===previous?received:row);
+      this.reconcileRequestActions();
+    }
+    // The command receipt remains authoritative if the next read disconnects.
+    try { await this.load(); }
+    catch(error) {
+      if(!(error instanceof ApiError) || (error.status!==0 && error.status<500))throw error;
+    }
   }
   private showQueued(pending:Pending):void {
     this.pending=[...this.pending.filter(item=>item.id!==pending.id),pending];
