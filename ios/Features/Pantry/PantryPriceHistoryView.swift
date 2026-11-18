@@ -249,6 +249,7 @@ private struct PantryPriceEditor: View {
     let didSave: () -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
+    @FocusState private var focused: String?
     @State private var id = UUID()
     @State private var paid = true
     @State private var name = ""
@@ -317,24 +318,24 @@ private struct PantryPriceEditor: View {
                     Text(pantryText("Manually confirmed paid price")).tag(true)
                     Text(pantryText("Shelf observation")).tag(false)
                 }.disabled(original != nil).accessibilityIdentifier("prices.source")
-                TextField(pantryText("Product"), text: $name).accessibilityIdentifier("prices.name")
-                TextField(pantryText("Brand or variant"), text: $variant).accessibilityIdentifier("prices.variant")
-                TextField(pantryText("Store"), text: $store).accessibilityIdentifier("prices.store")
-                TextField(pantryText("Branch"), text: $branch)
+                TextField(pantryText("Product"), text: $name).accessibilityIdentifier("prices.name").focused($focused, equals: "name")
+                TextField(pantryText("Brand or variant"), text: $variant).accessibilityIdentifier("prices.variant").focused($focused, equals: "variant")
+                TextField(pantryText("Store"), text: $store).accessibilityIdentifier("prices.store").focused($focused, equals: "store")
+                TextField(pantryText("Branch"), text: $branch).focused($focused, equals: "branch")
                 DatePicker(pantryText("Price date"), selection: $date, in: ...Date(), displayedComponents: .date)
                 Picker(pantryText("Currency"), selection: $currency) {
                     ForEach(PrivatePriceEvidence.supportedCurrencies, id: \.self) { Text(verbatim: $0).tag($0) }
                 }
-                TextField(pantryText("Total for all packages"), text: $amount).keyboardType(.decimalPad).accessibilityIdentifier("prices.total")
+                TextField(pantryText("Total for all packages"), text: $amount).keyboardType(.decimalPad).accessibilityIdentifier("prices.total").focused($focused, equals: "amount")
                 Section(pantryText("Package basis")) {
-                    TextField(pantryText("Number of packages"), text: $packages).keyboardType(.numberPad)
-                    TextField(pantryText("Quantity per package"), text: $quantity).keyboardType(.decimalPad).accessibilityIdentifier("prices.quantity")
+                    TextField(pantryText("Number of packages"), text: $packages).keyboardType(.numberPad).focused($focused, equals: "packages")
+                    TextField(pantryText("Quantity per package"), text: $quantity).keyboardType(.decimalPad).accessibilityIdentifier("prices.quantity").focused($focused, equals: "quantity")
                     Picker(pantryText("Unit"), selection: $unit) {
                         ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
                     }
                 }
-                TextField(pantryText("Promotion or membership conditions"), text: $eligibility)
-                TextField(pantryText("Price source wording"), text: $source, axis: .vertical)
+                TextField(pantryText("Promotion or membership conditions"), text: $eligibility).focused($focused, equals: "eligibility")
+                TextField(pantryText("Price source wording"), text: $source, axis: .vertical).focused($focused, equals: "source")
                 Button(pantryText("Review price")) {
                     do { review = try reviewed(); notice = nil }
                     catch { notice = pantryText("Review the product, store, price and package quantities.") }
@@ -344,11 +345,9 @@ private struct PantryPriceEditor: View {
         .navigationTitle(pantryText("Record a price"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() }.disabled(saving) }
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button(pantryText("Done")) { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
-            }
+
         }
+        .keyboardDoneAction(visible: focused != nil, title: pantryText("Done"), identifier: "prices.done") { focused = nil }
         .interactiveDismissDisabled(saving)
         .privacySensitive()
     }
