@@ -1293,6 +1293,33 @@ import XCTest
     }
 #endif
 
+    func testFirstNaturalListRestoresPendingPreviewAndCommitsOnlyItsProvisionalPickup() {
+        launch(reset: true)
+        let firstList = element("shop.addFirstList")
+        tap(firstList)
+        let wording = "Two milks, bread and cereal for next week"
+        fill(wording, into: "ledgerImportText")
+        tap(element("ledger.capture"))
+        enableSwitch("capture.naturalMode")
+        tap(element("capture.reviewFields"))
+        assertText("Timing in your wording: for next week")
+        tap(element("capture.batchPickup"))
+        tap(app.buttons["Pickup (Current pickup)"])
+        tap(element("capture.continue"))
+        assertText("Pickup for all items: Pickup")
+        tap(app.buttons["Close"])
+        XCTAssertTrue(firstList.waitForExistence(timeout: 10))
+        restart()
+        tap(firstList)
+        assertText(wording)
+        tap(element("ledgerCommitImport"))
+        for item in ["milks", "bread", "cereal"] {
+            reveal(app.buttons["Inspect " + item])
+        }
+        tap(element("ledgerUndoImport"))
+        XCTAssertTrue(element("ledgerUndoImport").waitForNonExistence(timeout: 10))
+    }
+
     func testNaturalListReviewsTimingThenAddsOnlyToChosenPickup() {
         launch(reset: true)
         openShoppingList()
