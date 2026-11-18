@@ -17,7 +17,7 @@ struct ReceiptPrintedEvidence: Equatable {
     // A final amount must be distinct from an explicit unit price. Preserve currency ambiguity for review.
     private static let price = #/(?i)(?:US\$|USD\s*\$?|\$)\s*([0-9]{1,7}[.,][0-9]{2})(?:\s*USD)?\s*$/#
     private static let unmarkedTotal = #/\s+([0-9]{1,7}[.,][0-9]{2})\s*$/#
-    private static let unitPrice = #/(?i)\s+(?:@|at|a)\s*(?:US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]{1,2})?\s*(?:\/|per|por)\s*[a-z.]+\s*$/#
+    private static let unitPrice = #/(?i)(?:\s*@|\s+(at|a)\b)\s*(?:US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]{1,2})?(?:\s*(?:\/|per|por)\s*([a-z.]+))?\s*$/#
     private static let measure = #/(?i)\b([0-9]{1,5}(?:[.,][0-9]{1,3})?)\s*(fl\.?\s*oz|kg|kgs|kilogramos?|kilograms?|gramos?|grams?|gr|g|lb[s.]?|pounds?|libras?|ounces?|onzas?|oz|liters?|litros?|ml|l|count|ct|ea|each|unidades|uds)\b/#
     private static let adjustment = #/(?i)^\s*(?:service fee|bottle deposit|sales tax|tax|impuesto|iva|subtotal|sub total|total|change|cambio|cash|efectivo|tender|visa|mastercard|payment|pago|discount|descuento|coupon|cup[oó]n|deposit|dep[oó]sito|fee|cargo|delivery fee|shipping|env[ií]o|tip|propina|refund|reembolso|return|devoluci[oó]n|promotion|promoci[oó]n)\b/#
     private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|MXN|AUD|BOGO|gratis|was|ahorra|save|oferta|coupon|cup[oó]n)\b|\b(?:buy|compra)\s+\w+\s+(?:get|recibe)\b|\b[0-9]+\s*(?:for|por)\s*[$0-9]|\d+\s*%|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
@@ -37,6 +37,7 @@ struct ReceiptPrintedEvidence: Equatable {
         kind = .item
         guard !text.contains(Self.mixed), !text.contains(Self.signedValue) else { uncertain = true; return }
         var candidate = text
+        Self.removeUnitPrice(from: &candidate)
         if let total = candidate.firstMatch(of: Self.price) {
             let before = candidate[..<total.range.lowerBound].trimmingCharacters(in: .whitespaces)
             if !before.hasSuffix("@"), !before.hasSuffix("/"), !before.hasSuffix("-"), !before.hasSuffix("−"), !before.isEmpty {
@@ -52,7 +53,7 @@ struct ReceiptPrintedEvidence: Equatable {
                 candidate = before
             }
         }
-        if let price = candidate.firstMatch(of: Self.unitPrice) { candidate.removeSubrange(price.range) }
+        Self.removeUnitPrice(from: &candidate)
         if candidate.contains(Self.otherNumbers) && candidate.matches(of: Self.measure).isEmpty {
             amount = nil; priceWording = nil; uncertain = true; return
         }
@@ -90,6 +91,16 @@ struct ReceiptPrintedEvidence: Equatable {
         if places.count == 1, !text.contains(Self.storageConflict) { storage = places.first }
         uncertain = quantity == nil || amount == nil || name == nil
     }
+    private static func removeUnitPrice(from text: inout String) {
+        guard let rate = text.firstMatch(of: unitPrice) else { return }
+        let prefix = text[..<rate.range.lowerBound]
+        // Spanish "a" after a quantity introduces a rate. In a name such as "Grade A",
+        // it belongs to the product unless the receipt also gives a price denominator.
+        if rate.1?.lowercased() == "a", rate.2 == nil,
+           prefix.matches(of: measure).last?.range.upperBound != prefix.endIndex { return }
+        text.removeSubrange(rate.range)
+    }
+
     private static func measurement(_ number: String, unit: String) -> (String,UnitOfMeasure)? {
         let token = unit.lowercased(), normalized = number.replacingOccurrences(of: ",", with: ".")
         var tokens = ListQuantityParser.itemTokens(token)

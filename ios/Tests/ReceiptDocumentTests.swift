@@ -43,6 +43,16 @@ import XCTest
         let row = proposal("PERAS 0,75 kg @ USD 4,00/kg USD 3,00")
         XCTAssertEqual(row.name, "PERAS"); XCTAssertEqual(row.quantity, "0.75"); XCTAssertEqual(row.unit, .kilogram)
         XCTAssertEqual(row.storage, .fridge); XCTAssertEqual(row.amount, "3.00")
+        for text in ["PERAS 2 kg a USD 2,50", "PERAS 2 kg @ USD 2,50", "PERAS 2 kg at 2.50"] {
+            let rateOnly = proposal(text)
+            XCTAssertNil(rateOnly.amount, text)
+            XCTAssertNil(rateOnly.priceWording, text)
+            XCTAssertEqual(rateOnly.quantity, "2", text)
+            XCTAssertEqual(rateOnly.name, "PERAS", text)
+        }
+        XCTAssertEqual(proposal("PERAS 2 kg a USD 2,50 USD 5,00").amount, "5.00")
+        XCTAssertEqual(proposal("EGGS GRADE A $4.00").name, "EGGS GRADE A")
+        XCTAssertEqual(proposal("EGGS GRADE A $4.00").amount, "4.00")
         let returned = proposal("PERAS -2 CT USD 6.50")
         XCTAssertNil(returned.quantity); XCTAssertNil(returned.amount); XCTAssertTrue(returned.uncertain)
         XCTAssertNil(proposal("PERAS 2 CT (6.50)").quantity)
