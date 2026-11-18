@@ -112,22 +112,24 @@ struct MealLanguageFixture: View {
         _access = StateObject(wrappedValue: WorkspaceAccess(defaults: UserDefaults(suiteName: "mealNoteFixture." + id)!))
     }
     var body: some View {
-        NavigationStack {
+        Group {
             if let household {
-                List {
-                    if ProcessInfo.processInfo.arguments.contains("--checkout-crop-fixture"), let shop = ledger.shop {
-                        NavigationLink("Pickup details") { LedgerFactsView(model: ledger, shop: shop).environmentObject(household).environmentObject(access) }
-                            .accessibilityIdentifier("fixture.checkout.details")
+                NavigationStack {
+                    List {
+                        if ProcessInfo.processInfo.arguments.contains("--checkout-crop-fixture"), let shop = ledger.shop {
+                            NavigationLink("Pickup details") { LedgerFactsView(model: ledger, shop: shop).environmentObject(household).environmentObject(access) }
+                                .accessibilityIdentifier("fixture.checkout.details")
+                        }
+                        if let swap, let pickup, let original = ledger.shop?.mealOccurrences.first {
+                            NavigationLink("Swap") {
+                                DinnerSwapView(model: swap, meal: original)
+                                    .environmentObject(pickup).environmentObject(household).environmentObject(access)
+                            }.accessibilityIdentifier("mealFixture.swap")
+                        }
+                        NavigationLink("Preferences") { PrivateMealPreferencesEntry(ledger: ledger).environmentObject(household).environmentObject(access) }.accessibilityIdentifier("mealFixture.preferences")
+                        NavigationLink("Feedback") { MealFeedbackEntry(ledger: ledger, source: .recipe(id: recipe.id, revision: recipe.revision),
+                            title: recipe.title).environmentObject(household).environmentObject(access) }.accessibilityIdentifier("mealFixture.feedback")
                     }
-                    if let swap, let pickup, let original = ledger.shop?.mealOccurrences.first {
-                        NavigationLink("Swap") {
-                            DinnerSwapView(model: swap, meal: original)
-                                .environmentObject(pickup).environmentObject(household).environmentObject(access)
-                        }.accessibilityIdentifier("mealFixture.swap")
-                    }
-                    NavigationLink("Preferences") { PrivateMealPreferencesEntry(ledger: ledger).environmentObject(household).environmentObject(access) }.accessibilityIdentifier("mealFixture.preferences")
-                    NavigationLink("Feedback") { MealFeedbackEntry(ledger: ledger, source: .recipe(id: recipe.id, revision: recipe.revision),
-                        title: recipe.title).environmentObject(household).environmentObject(access) }.accessibilityIdentifier("mealFixture.feedback")
                 }.environmentObject(household).environmentObject(access)
             } else if failed { Text("Fixture unavailable") }
             else { ProgressView() }
