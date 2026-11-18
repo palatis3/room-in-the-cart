@@ -14,11 +14,15 @@ original release obligations or certify unimplemented features. PR #29 merged af
 in [PR #60](https://github.com/palatis3/room-in-the-cart/pull/60).
 [Current handoff](CURRENT-HANDOFF.md) tracks its qualification and staging revision.
 
-Xcode produced an unsigned arm64 iPhone Release archive at `417802d9`.
+Xcode produced an unsigned arm64 iPhone Release archive at `b2e58601`.
 The app and both extensions matched their crash symbols. Package checks verified
 the embedded extensions, assets and privacy manifests. Signed distribution still
 requires the production subscription product ID, Supabase URL and publishable
 key, household service URL, and public privacy, terms and support URLs.
+
+On November 18, the staging build from `b2e58601` passed all three installed-app checks on iPhone 17 with iOS 27.0. It reached the live schema 059 service anonymously and opened Spanish Help and English Support in Safari. XCTest recorded zero runtime warnings.
+
+The full web dependency audit on that revision blocks automated release. The web build tools resolve picomatch 4.0.7, and the advisory listed no patched version on November 18. The four high-severity entries trace to this single dependency. The service audit and the production-only web audit returned zero findings. Once a fix is available, verify the resolved web lockfile, run the complete dependency audit and exercise the built web screens. [GitHub advisory](https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
 
 The November 15 staging update rehearsal preserved the original saved comparison
 byte-for-byte, then saved and reopened a second revision after changing the
