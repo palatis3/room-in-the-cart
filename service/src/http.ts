@@ -248,13 +248,15 @@ export function createHTTPServer(options:HTTPOptions) {
         z.object({}).strict().parse(await body(req));
         send(201,await repository.enroll(householdId,auth.identity));return;
       }
-      if(path==='/receipt-assistance' && (method==='GET'||method==='POST')) {
+      const visual = /^\/capture-assistance\/(recipe|shelf|checkout)-line$/.exec(path);
+      if((path==='/receipt-assistance' && (method==='GET'||method==='POST')) || (visual && method==='POST')) {
         const assistance=options.receiptAssistance;
         const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
         await authorize();
         if(method==='GET'){send(200,{version:1,available:!!assistance,allowsCrop:!!assistance?.budget.maxCropMicros});return;}
         if(!assistance)throw new ServiceError(503,'receipt_assistance_unavailable','Keep editing this receipt on your device.');
         const input=receiptAssistanceInput.parse(await body(req,assistance.budget.maxCropMicros ? 251_000 : 2048));
+        if(visual && (!input.crop || !assistance.budget.maxCropMicros)) throw invalid();
         const cancellation=new AbortController();
         const stop=()=>cancellation.abort();
         res.once('close',stop);
@@ -264,7 +266,9 @@ export function createHTTPServer(options:HTTPOptions) {
             await requireReceiptAdult(repository,ctx);
             await reserveReceiptAssistance(ctx,auth.identity,input,assistance.budget);
           });
-          const result=await assistance.extract(input,cancellation.signal);
+          const result=visual
+            ? await assistance.visibleLine(input,cancellation.signal,z.enum(['recipe','shelf','checkout']).parse(visual[1]))
+            : await assistance.extract(input,cancellation.signal);
           await authorize();
           send(200,result);
         } finally { res.off('close',stop); }

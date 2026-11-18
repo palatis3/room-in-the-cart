@@ -94,7 +94,8 @@ private struct PantryPriceDetail: View {
                     Text(verbatim: priceSource(row))
                     Text(verbatim: priceAmount(row)).font(.title2)
                     if let image = row.shelfImage {
-                        LabeledContent(pantryText("Printed wording"), value: image.printed.wording)
+                        if !image.printed.wording.isEmpty { LabeledContent(pantryText("Printed wording"), value: image.printed.wording) }
+                        if let reading = image.printed.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
                         Text(shelfBasisName(image.basis))
                     }
                     if let variant = row.variant { Text(verbatim: variant) }
@@ -381,7 +382,11 @@ private struct PantryPriceEditor: View {
                 Text(review.date, style: .date)
                 if let pack = review.pack { Text(verbatim: String(pack.count) + " × " + pack.perPackage.originalLiteral) }
                 if let eligibility = review.eligibility { Text(verbatim: eligibility) }
-                if let shelf = review.shelfImage { Text(shelfBasisName(shelf.basis)); Text(verbatim: shelf.printed.wording) }
+                if let shelf = review.shelfImage {
+                    Text(shelfBasisName(shelf.basis))
+                    if !shelf.printed.wording.isEmpty { Text(verbatim: shelf.printed.wording) }
+                    if let reading = shelf.printed.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
+                }
                 Text(verbatim: review.sourceText)
                 Button(pantryText("Save reviewed price")) {
                     guard !saving else { return }
@@ -404,7 +409,8 @@ private struct PantryPriceEditor: View {
                         Button(pantryText("Read a shelf label")) { selectingImage = true }.accessibilityIdentifier("prices.readShelf")
                     }
                     if let printed {
-                        Text(verbatim: printed.wording)
+                        if !printed.wording.isEmpty { Text(verbatim: printed.wording) }
+                        if let reading = printed.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
                         if printed.uncertain { Text(pantryText("Uncertain image wording")) }
                         Picker(pantryText("Printed price basis"), selection: $priceBasis) {
                             Text(pantryText("Package or multibuy total")).tag(ReviewedShelfImage.PriceBasis.bundle)
@@ -457,10 +463,11 @@ private struct PantryPriceEditor: View {
         }
         .sheet(isPresented: $selectingImage) {
             NavigationStack {
-                PriceImageReview(purpose: .shelf, acceptShelf: { line in
+                PriceImageReview(purpose: .shelf, authorized: { model.permitsReceiptSource && model.snapshot?.state == expected }, acceptShelf: { line in
+                    guard model.permitsReceiptSource && model.snapshot?.state == expected else { return }
                     printed = line
-                    source = line.wording
-                    let suggestion = ReviewedShelfImage.propose(line.wording)
+                    source = line.effectiveWording
+                    let suggestion = ReviewedShelfImage.propose(line.effectiveWording)
                     currency = suggestion.currencyCode ?? ""
                     packages = String(suggestion.packages ?? 1)
                     amount = suggestion.amount.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""

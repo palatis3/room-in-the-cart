@@ -110,6 +110,15 @@ import CoreDomain
                     }
                 }
                 if kind == .recipe {
+                    if let photo = model.accepted, localPhotoConsent {
+                        let source = model.text
+                        let lines = source.components(separatedBy: "\n")
+                        AssistedImageLines(wording: lines, image: photo.referenceJPEG, purpose: .recipe, authorized: {
+                            authorize() && localPhotoConsent && model.accepted == photo && model.text == source
+                        }) { index, reading in
+                            try model.applyRecipeImageReading(reading, line: index, reviewedText: source, source: photo)
+                        }
+                    }
                     Button(captureText("Review recipe fields")) {
                         do { recipe = try RecipeOCRParser.draft(model.text); error = nil }
                         catch { self.error = captureText("Shorten the text or type the source again, then review.") }

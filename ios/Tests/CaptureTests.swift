@@ -15,6 +15,27 @@ import UniformTypeIdentifiers
         for _ in 0..<2000 { if condition() { return }; await Task.yield() }
         XCTFail("Capture operation did not settle")
     }
+    func testReviewedPriceImageWordingPreservesOriginalAndLeavesCheckoutAmountsForTheShopper() throws {
+        let digest = Data(repeating: 1, count: 32)
+        let original = try PriceImageLine(digest: digest, ordinal: 1, wording: "2 por $? socios", uncertain: true)
+        let reading = try ReviewedImageWording(text: "2 por $5 socios", method: .assistedImage, cropDigest: Data(repeating: 2, count: 32))
+        let reviewed = try PriceImageLine(digest: digest, ordinal: 1, wording: original.wording, uncertain: true, reviewedReading: reading)
+        XCTAssertEqual(original.shelfID, reviewed.shelfID)
+        XCTAssertNil(ReviewedShelfImage.propose(reviewed.effectiveWording).currencyCode)
+        let unknownTotal = try ReviewedCheckoutImage(charges: [.init(field: .total, amount: nil, inclusion: .unknown, line: reviewed)])
+        let saved = try JSONDecoder().decode(ReviewedCheckoutImage.self, from: JSONEncoder().encode(unknownTotal))
+        XCTAssertEqual(saved.charges.first?.line.wording, original.wording)
+        XCTAssertEqual(saved.charges.first?.line.reviewedReading, reading)
+        XCTAssertNil(saved.displayedTotal)
+        XCTAssertEqual(saved.charges.first?.inclusion, .unknown)
+
+        let cropOnly = try PriceImageLine(digest: digest, ordinal: 1, wording: "", uncertain: true, reviewedReading: reading)
+        let other = try ReviewedImageWording(text: "Fee", method: .deviceOCR, cropDigest: Data(repeating: 3, count: 32))
+        XCTAssertNotEqual(cropOnly.shelfID, try PriceImageLine(digest: digest, ordinal: 1, wording: "", uncertain: true, reviewedReading: other).shelfID)
+        let legacy = try JSONSerialization.data(withJSONObject: ["digest": digest.base64EncodedString(), "ordinal": 1, "wording": original.wording, "uncertain": true])
+        XCTAssertEqual(try JSONDecoder().decode(PriceImageLine.self, from: legacy), original)
+    }
+
     func testTypedReviewRequiresConfirmationAndDeliversExactlyOnce() {
         let model = make()
         XCTAssertNil(model.reviewed())

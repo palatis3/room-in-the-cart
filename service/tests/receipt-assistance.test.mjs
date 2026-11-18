@@ -142,3 +142,27 @@ test('a selected crop contains only the preview pixels and needs its own cost al
   assert.equal(value.foodName,'Avena');
   assert.equal(calls,1);
 });
+
+test('only literal reviewed wording crosses recipe, shelf and checkout crop boundaries', async () => {
+  const crop = {width:4,height:4,pixels:Buffer.alloc(16,127).toString('base64')};
+  const selected = {...input(),text:'',crop};
+  const signal = new AbortController().signal;
+  for (const [purpose, wording] of [['recipe','2 tortillas'],['shelf','2 por $5 · socios'],['checkout','Service fee —']]) {
+    let reply = {page:2,line:3,wording};
+    const adapter = new ReceiptAssistance({...budget,maxCropMicros:30},'fixture','unused',async (_url,options) => {
+      const body = JSON.parse(options.body);
+      assert.equal(body.text.format.name,'visible_line_v1');
+      assert.deepEqual(body.text.format.schema.required,['page','line','wording']);
+      assert.equal(body.input[0].content[1].type,'input_image');
+      return Response.json(completed(reply));
+    });
+    assert.deepEqual(await adapter.visibleLine(selected,signal,purpose),{version:1,requestID:selected.requestID,...reply});
+    reply = {...reply,wording:null};
+    assert.equal((await adapter.visibleLine(selected,signal,purpose)).wording,null);
+    for (const changed of [{page:2,line:4,wording},{page:2,line:3,wording,amount:'5.00'}]) {
+      reply=changed;
+      await assert.rejects(adapter.visibleLine(selected,signal,purpose));
+    }
+    await assert.rejects(adapter.visibleLine(input(),signal,purpose));
+  }
+});

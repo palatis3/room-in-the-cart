@@ -5979,6 +5979,295 @@
           }
         }
       }
+    },
+    "Original source wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original source wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original de la fuente"
+          }
+        }
+      }
+    },
+    "Online image reading requires an authorized adult account. Continue with the local source editor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online image reading requires an authorized adult account. Continue with the local source editor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para leer imágenes en línea se necesita una cuenta de adulto autorizada. Puedes seguir editando la fuente en este iPhone."
+          }
+        }
+      }
+    },
+    "Online image reading is unavailable. Continue with the local source editor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online image reading is unavailable. Continue with the local source editor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La lectura de imágenes en línea no está disponible. Puedes seguir editando la fuente en este iPhone."
+          }
+        }
+      }
+    },
+    "Optional text to share with this crop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional text to share with this crop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto opcional para compartir con este recorte"
+          }
+        }
+      }
+    },
+    "Compare this reading with the image": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare this reading with the image"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara esta lectura con la imagen"
+          }
+        }
+      }
+    },
+    "Use this reviewed wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this reviewed wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este texto revisado"
+          }
+        }
+      }
+    },
+    "The source changed. Open the line again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source changed. Open the line again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fuente cambió. Vuelve a abrir la línea."
+          }
+        }
+      }
+    },
+    "This line could not be read. You can type the wording in the source editor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This line could not be read. You can type the wording in the source editor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer esta línea. Puedes escribir el texto al editar la fuente."
+          }
+        }
+      }
+    },
+    "Crop the selected source image": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crop the selected source image"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recortar la imagen seleccionada"
+          }
+        }
+      }
+    },
+    "Source image with selected rectangle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source image with selected rectangle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen con el rectángulo seleccionado"
+          }
+        }
+      }
+    },
+    "Choose a smaller box around a legible line.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a smaller box around a legible line."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona un rectángulo más pequeño alrededor de una línea legible."
+          }
+        }
+      }
+    },
+    "Choose the printed line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the printed line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir la línea impresa"
+          }
+        }
+      }
+    },
+    "Read an unclear image line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read an unclear image line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer una línea poco clara de la imagen"
+          }
+        }
+      }
+    },
+    "Choose a line from the source photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a line from the source photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una línea de la foto original"
+          }
+        }
+      }
+    },
+    "Reviewed online image reading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed online image reading"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la imagen leído en línea y revisado"
+          }
+        }
+      }
+    },
+    "Reviewed on-device image reading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed on-device image reading"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la imagen leído en el dispositivo y revisado"
+          }
+        }
+      }
+    },
+    "Choose a line from the source photo or enter the wording manually.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a line from the source photo or enter the wording manually."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una línea de la foto original o escribe el texto manualmente."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

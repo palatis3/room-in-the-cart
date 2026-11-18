@@ -1,27 +1,49 @@
 import Foundation
 
+public struct ReviewedImageWording: Codable, Equatable, Sendable {
+    public enum Method: String, Codable, Sendable { case deviceOCR, assistedImage }
+    public let text: String
+    public let method: Method
+    public let cropDigest: Data
+    public init(text: String, method: Method, cropDigest: Data) throws {
+        self.text = text; self.method = method; self.cropDigest = cropDigest
+        try validate()
+    }
+    public func validate() throws {
+        guard cropDigest.count == 32, text.utf8.count <= 512, !text.contains("\n") else { throw DomainError.invalidInput("imageReading") }
+        try ledgerText(text, nonempty: true, maximum: 500)
+    }
+}
+
 /// Only the selected source wording and digest persist. The reviewed photo remains device-local.
 public struct PriceImageLine: Codable, Equatable, Sendable {
     public let digest: Data
     public let ordinal: Int
     public let wording: String
     public let uncertain: Bool
+    public let reviewedReading: ReviewedImageWording?
+    public var effectiveWording: String { reviewedReading?.text ?? wording }
 
-    public init(digest: Data, ordinal: Int, wording: String, uncertain: Bool) throws {
+    public init(digest: Data, ordinal: Int, wording: String, uncertain: Bool, reviewedReading: ReviewedImageWording? = nil) throws {
         self.digest = digest
         self.ordinal = ordinal
         self.wording = wording
         self.uncertain = uncertain
+        self.reviewedReading = reviewedReading
         try validate()
     }
 
     public func validate() throws {
         guard digest.count == 32, (0..<200).contains(ordinal) else { throw DomainError.invalidInput("imagePriceLine") }
-        try ledgerText(wording, nonempty: true, maximum: 2048)
+        try ledgerText(wording, nonempty: reviewedReading == nil, maximum: 2048)
+        try reviewedReading?.validate()
     }
 
     public var shelfID: UUID {
-        ReceiptAcquisition.identity(["shelf-image", digest.base64EncodedString(), String(ordinal)])
+        if wording.isEmpty, let reviewedReading {
+            return ReceiptAcquisition.identity(["shelf-crop", digest.base64EncodedString(), reviewedReading.cropDigest.base64EncodedString()])
+        }
+        return ReceiptAcquisition.identity(["shelf-image", digest.base64EncodedString(), String(ordinal)])
     }
 }
 

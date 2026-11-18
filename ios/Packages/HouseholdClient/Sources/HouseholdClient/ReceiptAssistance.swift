@@ -82,6 +82,22 @@ public struct ReceiptLineSuggestion: Decodable, Equatable, Sendable {
     }
 }
 
+public enum ImageAssistancePurpose: String, Sendable { case recipe, shelf, checkout }
+
+public struct ImageWordingSuggestion: Decodable, Equatable, Sendable {
+    public let version: Int
+    public let requestID: UUID
+    public let page: Int
+    public let line: Int
+    public let wording: String?
+
+    public func validate(for request: ReceiptLineAssistanceRequest) throws {
+        guard version == 1, requestID == request.requestID, request.crop != nil,
+              page == request.page, line == request.line,
+              wording.map({ ReceiptLineAssistanceRequest.accepts($0) }) ?? true else { throw ClientError.invalidResponse }
+    }
+}
+
 public struct ReceiptAssistanceAvailability: Decodable, Sendable {
     public let version: Int
     public let available: Bool
@@ -93,6 +109,16 @@ extension HouseholdService {
         try verifyReceiptAssistanceScope(scope)
         let result: ReceiptAssistanceAvailability = try await perform("receipt-assistance", method: "GET", reportingShopID: scope.shopID, maximumResponseBytes: 1024)
         guard result.version == 1 else { throw ClientError.invalidResponse }
+        return result
+    }
+
+    public func visibleImageLine(_ input: ReceiptLineAssistanceRequest, purpose: ImageAssistancePurpose,
+                                 scope: ReceiptAssistanceScope) async throws -> ImageWordingSuggestion {
+        try verifyReceiptAssistanceScope(scope)
+        guard input.crop != nil else { throw ClientError.invalidResponse }
+        let result: ImageWordingSuggestion = try await perform("capture-assistance/" + purpose.rawValue + "-line",
+            method: "POST", body: input.wireData(), reportingShopID: scope.shopID, maximumResponseBytes: 2048)
+        try result.validate(for: input)
         return result
     }
 

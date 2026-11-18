@@ -6,12 +6,15 @@ import SwiftUI
 struct PriceImageReview: View {
     enum Purpose { case shelf, checkout }
     let purpose: Purpose
+    let authorized: () -> Bool
     var acceptShelf: (PriceImageLine) -> Void = { _ in }
     var acceptCheckout: (ReviewedCheckoutImage) -> Void = { _ in }
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
     @State private var photo: PhotosPickerItem?
     @State private var lines: [PriceImageLine] = []
+    @State private var sourcePreview: Data?
+    @State private var sourceDigest: Data?
     @FocusState private var focusedAmount: ReviewedCheckoutImage.Field?
     @State private var loading = false
     @State private var notice: String?
@@ -26,13 +29,32 @@ struct PriceImageReview: View {
             }.accessibilityIdentifier("priceImage.choose")
             if loading { ProgressView() }
             if let notice { Text(verbatim: notice) }
+            if let image = sourcePreview, let digest = sourceDigest, authorized() {
+                let reviewed = lines
+                let originals = reviewed.map(\.wording) + (reviewed.count < 200 ? [""] : [])
+                AssistedImageLines(wording: originals, image: image, purpose: purpose == .shelf ? .shelf : .checkout, authorized: {
+                    authorized() && sourceDigest == digest && lines == reviewed
+                }) { index, reading in
+                    guard originals.indices.contains(index) else { throw ScanFailure.stale }
+                    let item = try PriceImageLine(digest: digest, ordinal: index, wording: originals[index], uncertain: true, reviewedReading: reading)
+                    if index == lines.count {
+                        guard !lines.contains(where: { $0.reviewedReading?.cropDigest == reading.cropDigest }) else { throw ScanFailure.stale }
+                        lines.append(item)
+                    } else { lines[index] = item }
+                    for field in ReviewedCheckoutImage.Field.allCases where selections[field] == index {
+                        amounts[field] = nil
+                        inclusions[field] = nil
+                    }
+                }
+            }
             if !lines.isEmpty {
                 if purpose == .shelf {
                     Section(pantryText("Choose the printed price line")) {
                         ForEach(lines, id: \.ordinal) { line in
                             Button { acceptShelf(line); dismiss() } label: {
                                 VStack(alignment: .leading) {
-                                    Text(verbatim: line.wording)
+                                    if !line.wording.isEmpty { Text(verbatim: line.wording) }
+                                    if let reading = line.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
                                     if line.uncertain { Text(pantryText("Uncertain image wording")).font(.caption) }
                                 }
                             }
@@ -50,9 +72,10 @@ struct PriceImageReview: View {
                                 }
                             )) {
                                 Text(pantryText("Not shown")).tag(-1)
-                                ForEach(lines, id: \.ordinal) { line in Text(verbatim: line.wording).tag(line.ordinal) }
+                                ForEach(lines, id: \.ordinal) { line in Text(verbatim: line.effectiveWording).tag(line.ordinal) }
                             }
                             if let index = selections[field], lines.indices.contains(index) {
+                                if let reading = lines[index].reviewedReading { ReviewedImageWordingLabel(reading: reading) }
                                 if lines[index].uncertain { Text(pantryText("Uncertain image wording")).font(.caption) }
                                 TextField(pantryText("Shown USD amount, blank if unknown"), text: Binding(
                                     get: { amounts[field] ?? "" }, set: { amounts[field] = $0 })).keyboardType(.decimalPad)
@@ -87,6 +110,7 @@ struct PriceImageReview: View {
         .keyboardDoneAction(visible: focusedAmount != nil, title: pantryText("Done"), identifier: "priceImage.done") { focusedAmount = nil }
         .privacySensitive()
         .task(id: photo) {
+            sourcePreview = nil; sourceDigest = nil
             lines = []; selections = [:]; amounts = [:]; inclusions = [:]; notice = nil
             guard let photo else { loading = false; return }
             loading = true
@@ -94,14 +118,22 @@ struct PriceImageReview: View {
             do {
                 guard let selected = try await photo.loadTransferable(type: SelectedPhotoTransfer.self) else { throw ScanFailure.invalidImage }
                 let data = try selected.data
-                let evidence = try await OnDeviceTextCapture().recognize(data)
                 let digest = Data(SHA256.hash(data: data))
+                let evidence: CaptureEvidence
+                do { evidence = try await OnDeviceTextCapture().recognize(data) }
+                catch {
+                    let preview = try await Task.detached(priority: .userInitiated) { try ScanImageNormalizer.normalize(data) }.value
+                    guard !Task.isCancelled, authorized() else { return }
+                    sourcePreview = preview; sourceDigest = digest
+                    notice = pantryText("Choose a line from the source photo or enter the wording manually.")
+                    return
+                }
                 let uncertain = Set(evidence.uncertainLines)
                 let recognized = try evidence.text.split(separator: "\n").enumerated().map { ordinal, value in
                     try PriceImageLine(digest: digest, ordinal: ordinal, wording: String(value), uncertain: uncertain.contains(String(value)))
                 }
-                guard !Task.isCancelled else { return }
-                lines = recognized
+                guard !Task.isCancelled, authorized() else { return }
+                sourcePreview = evidence.previewImageData; sourceDigest = digest; lines = recognized
             } catch {
                 guard !Task.isCancelled else { return }
                 notice = pantryText("Couldn’t read this image. Choose another image or enter the evidence manually.")

@@ -66,12 +66,21 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
     let receiptLines: [ScanReceiptLine]
     let capturedAt: Date
     var documentDigest: Data? = nil
+    var reviewedImageLines: [Int: ReviewedImageWording]? = nil
     var reference: SourceMediaReference { .init(workspaceID: target.workspaceID, mediaID: id) }
     func validate() throws {
         guard target.revision >= 0, capturedAt.timeIntervalSinceReferenceDate.isFinite,
               !reviewedLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               reviewedLabel.utf8.count <= 512, !reviewedLabel.contains("\0"),
               receiptLines.count <= 200, Set(receiptLines.map(\.id)).count == receiptLines.count else { throw ScanFailure.invalidText }
+        if let reviewedImageLines {
+            let lines = (reviewedText ?? originalText).components(separatedBy: "\n")
+            guard target.kind == .recipeSource, imageJPEG != nil, reviewedImageLines.count <= CaptureLimits.lines else { throw ScanFailure.invalidText }
+            for (index, reading) in reviewedImageLines {
+                try reading.validate()
+                guard lines.indices.contains(index), lines[index] == reading.text else { throw ScanFailure.invalidText }
+            }
+        }
         if let documentDigest {
             guard documentDigest.count == 32, imageJPEG == nil, !receiptLines.isEmpty,
                   receiptLines.allSatisfy({ $0.documentLine != nil }) else { throw ScanFailure.invalidText }

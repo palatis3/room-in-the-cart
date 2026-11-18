@@ -161,7 +161,7 @@ struct PantryReceiptEntry: View {
             if !Task.isCancelled, scope == aliasScope { aliases = matches ?? [] }
         }
         .sheet(item: $assistance) { basis in
-            PantryReceiptAssistance(line: basis.line, sourceImage: reviewedSourceImage, authorized: { assistanceCurrent(basis) }, checkSource: verifySource) { suggestion, input, received in
+            AssistedCaptureLineReview(line: basis.line, sourceImage: reviewedSourceImage, authorized: { assistanceCurrent(basis) }, checkSource: verifySource) { suggestion, input, received in
                 guard assistanceCurrent(basis), var current = draft,
                       let index = current.lines.firstIndex(where: { $0.id == basis.line.id }) else { throw PantryReceiptError.stale }
                 try current.lines[index].applyAssisted(suggestion, request: input, reviewedLine: basis.line, useReceived: received)

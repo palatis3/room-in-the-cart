@@ -55,7 +55,7 @@ struct ReceiptLineCropEditor: View {
                                 .frame(width: area.width * geometry.size.width, height: area.height * geometry.size.height)
                                 .position(x: area.midX * geometry.size.width, y: area.midY * geometry.size.height)
                         }
-                    }.accessibilityLabel(pantryText("Receipt photo with selected rectangle"))
+                    }.accessibilityLabel(pantryText("Source image with selected rectangle"))
                     Text(pantryText("Frame only the printed line. Leave out personal details and nearby lines."))
                     edge("Top edge", $top, 0...max(0, bottom-0.04))
                     edge("Bottom edge", $bottom, min(1, top+0.04)...1)
@@ -66,9 +66,9 @@ struct ReceiptLineCropEditor: View {
                     do { let crop = try ReceiptLineCrop.selected(from: image, rectangle: area); select(crop); dismiss() }
                     catch { failed = true }
                 }.accessibilityIdentifier("receipt.assistance.previewCrop")
-                if failed { Text(pantryText("Choose a smaller box around a legible receipt line.")) }
+                if failed { Text(pantryText("Choose a smaller box around a legible line.")) }
             }
-            .navigationTitle(pantryText("Choose the receipt line"))
+            .navigationTitle(pantryText("Choose the printed line"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() } } }
         }.privacySensitive()
     }
