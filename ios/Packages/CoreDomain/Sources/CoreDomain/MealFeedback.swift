@@ -65,9 +65,21 @@ public extension LedgerWorkspace {
         privateMealFeedback = surviving
     }
 
-    func mealFeedbackSignals(owner: String, at now: Date) -> [MealFeedbackSource: MealFeedbackSignal] {
+    func suggestedFutureServings(shopID: UUID, occurrenceID: UUID, owner: String, at now: Date) -> Rational? {
+        guard let meal = shops.first(where: { $0.id == shopID })?.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil }),
+              let date = meal.scheduledDay, let today = try? MealDay(date: now, timeZoneIdentifier: date.timeZoneIdentifier),
+              date.iso8601 > today.iso8601, let id = meal.templateID, let revision = meal.templateRevision,
+              meal.servings > .one, !meal.servingGroups.contains(where: \.isProtected) else { return nil }
+        // Feedback on this very dinner is not an earlier portion experience.
+        let signals = mealFeedbackSignals(owner: owner, at: now, excluding: .occurrence(shopID: shopID, occurrenceID: occurrenceID))
+        guard signals[.recipe(id: id, revision: revision)]?.reviewPortions == true,
+              let smaller = try? meal.servings.subtracting(.one) else { return nil }
+        return max(.one, smaller)
+    }
+
+    func mealFeedbackSignals(owner: String, at now: Date, excluding source: MealFeedbackSource? = nil) -> [MealFeedbackSource: MealFeedbackSignal] {
         var result: [MealFeedbackSource: MealFeedbackSignal] = [:]
-        for entry in privateMealFeedback where entry.owner == owner {
+        for entry in privateMealFeedback where entry.owner == owner && entry.source != source {
             let age = now.timeIntervalSince(entry.recordedAt)
             guard age >= 0, age < 90 * 86_400 else { continue }
             let recipe: MealFeedbackSource

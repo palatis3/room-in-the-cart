@@ -44,6 +44,27 @@ final class MealFeedbackTests: XCTestCase {
         XCTAssertFalse(String(decoding: try JSONEncoder().encode(workspace), as: UTF8.self).contains("privateMealFeedback"))
     }
 
+    func testLeftoverReactionSuggestsOnlyForADifferentFutureDinnerAndPreservesSourceAmounts() throws {
+        var meal = recipe("Rice")
+        meal.servings = try Rational(3, 2)
+        var shop = ShoppingLedger(title: "Pickup")
+        let past = try shop.chooseMeal(meal, on: now.addingTimeInterval(-86_400), at: now)
+        let future = try shop.chooseMeal(meal, on: now.addingTimeInterval(86_400), at: now)
+        var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [meal])
+        func suggestion(_ id: UUID) -> Rational? { workspace.suggestedFutureServings(shopID: shop.id, occurrenceID: id, owner: "adult", at: now) }
+        try workspace.updateMealFeedback(for: .occurrence(shopID: shop.id, occurrenceID: future), owner: "adult",
+                                         expectedRevision: nil, reactions: [.tooManyLeftovers], at: now)
+        XCTAssertNil(suggestion(future))
+        let source = MealFeedbackSource.occurrence(shopID: shop.id, occurrenceID: past)
+        try workspace.updateMealFeedback(for: source, owner: "adult", expectedRevision: nil, reactions: [.tooManyLeftovers], at: now)
+        XCTAssertEqual(suggestion(future), .one)
+        XCTAssertNil(suggestion(past))
+        XCTAssertEqual(workspace.shops, [shop])
+        XCTAssertEqual(workspace.mealTemplates, [meal])
+        try workspace.updateMealFeedback(for: source, owner: "adult", expectedRevision: workspace.feedback(for: source, owner: "adult")?.revision, reactions: [], at: now)
+        XCTAssertNil(suggestion(future))
+    }
+
     func testRankingExpiresAndChangesOnlyEligibleTiesWithSpaceForDiscovery() throws {
         let recipes = ["Untried", "Second favorite", "Favorite", "Blocked", "Reserved"].map(recipe)
         var workspace = LedgerWorkspace(mealTemplates: recipes)

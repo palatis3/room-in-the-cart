@@ -124,12 +124,8 @@ struct DinnerOccurrenceView: View {
         guard household.projection?.grantId == nil, child?.presented != true,
               UIApplication.shared.isProtectedDataAvailable,
               let identity = CapturePrivateIdentity.current(access: access, household: household),
-              let date = meal.scheduledDay, let today = try? MealDay(date: Date(), timeZoneIdentifier: date.timeZoneIdentifier),
-              date.iso8601 > today.iso8601, let id = meal.templateID, let revision = meal.templateRevision,
-              !meal.servingGroups.contains(where: \.isProtected), meal.servings > .one,
-              ledger.workspace.mealFeedbackSignals(owner: identity.mealFeedbackOwner, at: Date())[.recipe(id: id, revision: revision)]?.reviewPortions == true
-        else { return nil }
-        return try? meal.servings.subtracting(.one)
+              let shopID = model.shop?.id else { return nil }
+        return ledger.workspace.suggestedFutureServings(shopID: shopID, occurrenceID: meal.id, owner: identity.mealFeedbackOwner, at: Date())
     }
 
     private func resetCalendarDraft() {
