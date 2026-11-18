@@ -175,6 +175,28 @@ import XCTest
     }
     #endif
 
+    func testOptionalFoodKeeperMatchingKeepsTheSignedOutManualGuideAvailable() {
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill("Canned chicken", into: "pantry.foodName")
+        fill("2", into: "pantry.amount")
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Canned chicken")).firstMatch
+        tap(lot)
+        tap(app.buttons["pantry.foodKeeper"])
+        tap(app.buttons["foodKeeper.assistance"])
+        XCTAssertTrue(element("foodKeeper.assistance.signedOut").waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["foodKeeper.assistance.send"].exists)
+        tap(app.navigationBars["Match a food label"].buttons.firstMatch)
+        tap(app.buttons["foodKeeper.product.142"])
+        XCTAssertTrue(app.navigationBars.firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Batch storage"].exists)
+        XCTAssertFalse(element("pantry.foodKeeper.range").exists)
+    }
+
     func testEnglishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
         verifyLotFoodKeeper(spanish: false)
     }

@@ -7231,6 +7231,246 @@
           }
         }
       }
+    },
+    "Get help matching this label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get help matching this label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener ayuda para identificar esta etiqueta"
+          }
+        }
+      }
+    },
+    "An adult household sign-in is needed for optional label matching. You can search the guide on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An adult household sign-in is needed for optional label matching. You can search the guide on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para pedir ayuda con la etiqueta, inicia sesión con una cuenta adulta del hogar. Puedes buscar en la guía en este dispositivo."
+          }
+        }
+      }
+    },
+    "Search the guide for a food or category to choose possible entries.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search the guide for a food or category to choose possible entries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca un alimento o una categoría en la guía para ver posibles entradas."
+          }
+        }
+      }
+    },
+    "Selected wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto seleccionado"
+          }
+        }
+      }
+    },
+    "Wording to send": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wording to send"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto que se enviará"
+          }
+        }
+      }
+    },
+    "Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the wording shown here and these public USDA entry names and IDs will be sent to OpenAI through the app’s service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio de la app enviará a OpenAI solo el texto que se muestra aquí y los nombres e identificadores de estas entradas públicas del USDA."
+          }
+        }
+      }
+    },
+    "USDA FoodKeeper entries to consider": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USDA FoodKeeper entries to consider"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posibles entradas de FoodKeeper del USDA"
+          }
+        }
+      }
+    },
+    "Send selected wording for a match": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send selected wording for a match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar el texto seleccionado para buscar una coincidencia"
+          }
+        }
+      }
+    },
+    "Remote matching is unavailable. You can still search the guide on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote matching is unavailable. You can still search the guide on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La búsqueda remota no está disponible. Puedes buscar en la guía en este dispositivo."
+          }
+        }
+      }
+    },
+    "Suggested USDA entry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested USDA entry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrada sugerida del USDA"
+          }
+        }
+      }
+    },
+    "Confirm this entry and review storage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this entry and review storage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar esta entrada y revisar la conservación"
+          }
+        }
+      }
+    },
+    "Match a food label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match a food label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificar una etiqueta de alimento"
+          }
+        }
+      }
+    },
+    "No matching entry was proposed. Search the guide or keep your own check date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching entry was proposed. Search the guide or keep your own check date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se propuso ninguna coincidencia. Busca en la guía o conserva tu propia fecha de revisión."
+          }
+        }
+      }
+    },
+    "Review the selected wording again before sending it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the selected wording again before sending it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a revisar el texto seleccionado antes de enviarlo."
+          }
+        }
+      }
+    },
+    "The batch changed. Return to the guide and review it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The batch changed. Return to the guide and review it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El lote cambió. Regresa a la guía para revisarlo de nuevo."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
