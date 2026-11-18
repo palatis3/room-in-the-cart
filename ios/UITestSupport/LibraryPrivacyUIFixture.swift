@@ -108,9 +108,15 @@ enum RecipeLibraryUIFixtureSamples {
     }
 
     var fileAdapter: RecordsMediaUITestFileAdapter {
-        RecordsMediaUITestFileAdapter(save: { _ in throw ArchiveError.unavailable }, selectedURL: { [weak self] in
+        RecordsMediaUITestFileAdapter(save: { [weak self] document in
+            guard let self, document.kind == .recipeDraft else { throw ArchiveError.unavailable }
+            try document.data.write(to: self.directory.appendingPathComponent("saved-recipe-draft.json"),
+                                    options: [.atomic, .completeFileProtection])
+        }, selectedURL: { [weak self] in
             guard let self else { return nil }
             self.fileSelections += 1
+            let draft = self.directory.appendingPathComponent("saved-recipe-draft.json")
+            if FileManager.default.fileExists(atPath: draft.path) { return draft }
             return self.corruptFileSelected ? self.corruptFile : self.libraryFile
         }, recipePage: { address in
             guard address == "https://example.org/soup" else { throw ArchiveError.invalidRecipe }
@@ -221,14 +227,16 @@ struct RecipeLibraryUIFixtureRoot: View {
     @StateObject private var fixture = LibraryPrivacyUIFixtureState(mode: .recipes)
     var body: some View {
         VStack(spacing: 2) {
-            Text("E01 saved recipes: \(fixture.recoveredCount)").font(.caption2).accessibilityIdentifier("fixture.library.recipeCount")
-            Text("E01 original recipe preserved: \(fixture.existingRecipePreserved ? "yes" : "no")").font(.caption2).accessibilityIdentifier("fixture.library.existingPreserved")
-            Text("E01 local source unchanged: \(fixture.sourceUnchanged ? "yes" : "no")").font(.caption2).accessibilityIdentifier("fixture.library.sourceUnchanged")
-            HStack {
-                Button("Use library picker input") { fixture.corruptFileSelected = false }.accessibilityIdentifier("fixture.library.selectLibrary")
-                Button("Use corrupt picker input") { fixture.corruptFileSelected = true }.accessibilityIdentifier("fixture.library.selectCorrupt")
-            }.buttonStyle(.bordered).font(.caption).frame(minHeight: 44)
-            Text("E01 picker selections: \(fixture.fileSelections)").font(.caption2).accessibilityIdentifier("fixture.library.fileSelections")
+            if !ProcessInfo.processInfo.arguments.contains("--recipe-full-screen") {
+                Text("E01 saved recipes: \(fixture.recoveredCount)").font(.caption2).accessibilityIdentifier("fixture.library.recipeCount")
+                Text("E01 original recipe preserved: \(fixture.existingRecipePreserved ? "yes" : "no")").font(.caption2).accessibilityIdentifier("fixture.library.existingPreserved")
+                Text("E01 local source unchanged: \(fixture.sourceUnchanged ? "yes" : "no")").font(.caption2).accessibilityIdentifier("fixture.library.sourceUnchanged")
+                HStack {
+                    Button("Use library picker input") { fixture.corruptFileSelected = false }.accessibilityIdentifier("fixture.library.selectLibrary")
+                    Button("Use corrupt picker input") { fixture.corruptFileSelected = true }.accessibilityIdentifier("fixture.library.selectCorrupt")
+                }.buttonStyle(.bordered).font(.caption).frame(minHeight: 44)
+                Text("E01 picker selections: \(fixture.fileSelections)").font(.caption2).accessibilityIdentifier("fixture.library.fileSelections")
+            }
             if fixture.ready {
                 NavigationStack {
                     RecordsToolsEntryView(app: fixture.app, ledger: fixture.ledger, pickup: fixture.pickup, erasureCleanup: fixture.erasureCleanup)

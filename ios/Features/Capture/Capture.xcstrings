@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Use each instruction line as a cooking step": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use each instruction line as a cooking step"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar cada línea de instrucciones como un paso de la receta"
+          }
+        }
+      }
+    },
     "Type item": {
       "extractionState": "manual",
       "localizations": {

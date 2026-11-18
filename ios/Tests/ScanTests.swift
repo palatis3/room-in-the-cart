@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
@@ -171,11 +172,37 @@ private func image() throws -> Data {
 }
 
 final class RecipeCaptureAdapterTests: XCTestCase {
+    @MainActor func testSpanishRecipeScreenshotYieldsOrderedEditableInstructionsOnDevice() async throws {
+        let words = ["Sopa de tomate", "Rinde: 2", "Ingredientes", "2 tomates", "Instrucciones",
+                     "Corta los tomates.", "Hierve el agua."]
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 850, height: 620), format: format)
+        let png = renderer.pngData { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 850, height: 620))
+            for (index, line) in words.enumerated() {
+                (line as NSString).draw(at: CGPoint(x: 42, y: 35 + index * 80),
+                    withAttributes: [.font: UIFont.systemFont(ofSize: 42), .foregroundColor: UIColor.black])
+            }
+        }
+        let source = try await OnDeviceScanService().scan(png)
+        let draft = try RecipeOCRParser.draft(source.originalText)
+        XCTAssertEqual(draft.title.lowercased(), "sopa de tomate")
+        XCTAssertEqual(draft.servings, "2")
+        XCTAssertTrue(draft.ingredientText.contains("tomates"))
+        XCTAssertEqual(draft.instructionLines.count, 2)
+        XCTAssertTrue(draft.instructionLines.first?.lowercased().contains("corta") == true)
+        XCTAssertTrue(draft.instructionLines.last?.lowercased().contains("hierve") == true)
+        XCTAssertFalse(draft.confirmed)
+    }
+
     func testBilingualHeadingsSeparateIngredientsAndInstructions() throws {
         let draft = try RecipeOCRParser.draft("Tacos\nRinde: 4\nIngredientes\n2 paquetes de 6 tortillas\nPreparación\nCaliente las tortillas\n")
         XCTAssertEqual(draft.title, "Tacos"); XCTAssertEqual(draft.servings, "4")
         XCTAssertEqual(draft.ingredientText, "2 paquetes de 6 tortillas")
-        XCTAssertEqual(draft.notes, "Caliente las tortillas"); XCTAssertFalse(draft.confirmed)
+        XCTAssertEqual(draft.notes, "Caliente las tortillas"); XCTAssertTrue(draft.useInstructionLines); XCTAssertFalse(draft.confirmed)
         let unstructured = try RecipeOCRParser.draft("Dinner\n2 apples\nBake for 20 minutes")
         XCTAssertTrue(unstructured.servings.isEmpty); XCTAssertTrue(unstructured.ingredientText.isEmpty)
         XCTAssertTrue(unstructured.unclassifiedText.contains("Bake"))
@@ -203,7 +230,10 @@ final class RecipeCaptureAdapterTests: XCTestCase {
     func testReviewedRecipeKeepsOriginalSeparateAndDoesNotChooseAMeal() throws {
         let original = "Tacos\nServes 4\nIngredients\n2 packs of 6 wraps\nInstructions\nWarm wraps"
         var draft = try RecipeOCRParser.draft(original)
-        draft.title = "Family tacos"; draft.notes = "Our own method"; draft.sourceURL = "https://example.com/old-recipe"; draft.confirmed = true
+        draft.title = "Family tacos"; draft.notes = "Our own method"; draft.sourceURL = "https://example.com/old-recipe"
+        draft.stepEdits.apply(RecipeStep("Our own method", ingredientIndices: [0], suggestedTimerMinutes: 3),
+                              at: 0, instructions: draft.instructionLines, ingredients: draft.ingredientLines)
+        draft.confirmed = true
         var row = try XCTUnwrap(StructuredCaptureParser.lines(draft.ingredientText, destination: "Recipe").first)
         row.confirmed = true
         let line = try XCTUnwrap(row.reviewed(expectedDestination: "Recipe"))
@@ -212,6 +242,16 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         let template = try draft.template(captureID: captured, target: target, originalText: original, kind: .photoOCR, hasImage: true, reviewedIngredients: [line])
         XCTAssertEqual(template.id, target.objectID); XCTAssertEqual(template.title, "Family tacos")
         XCTAssertEqual(template.notes, "Our own method"); XCTAssertEqual(template.sourceEvidence?.originalText, original)
+        XCTAssertEqual(template.recipeSteps?.map(\.instruction), ["Our own method"])
+        XCTAssertEqual(template.recipeSteps?.first?.ingredientIndices, [0])
+        XCTAssertEqual(template.recipeSteps?.first?.suggestedTimerMinutes, 3)
+        draft.useInstructionLines = false
+        XCTAssertFalse(draft.confirmed)
+        draft.confirmed = true
+        let notesOnly = try draft.template(captureID: captured, target: target, originalText: original,
+            kind: .photoOCR, hasImage: true, reviewedIngredients: [line])
+        XCTAssertNil(notesOnly.recipeSteps)
+        XCTAssertEqual(notesOnly.notes, "Our own method")
         XCTAssertEqual(template.sourceEvidence?.localMediaID(in: .activeNativeWorkspace(target.workspaceID)), captured)
         XCTAssertNil(template.sourceEvidence?.localMediaID(in: .importedOrRecovered))
         XCTAssertEqual(template.ingredients.first?.quantity?.amount.description, "12")

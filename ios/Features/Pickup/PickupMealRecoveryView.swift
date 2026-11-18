@@ -35,11 +35,21 @@ struct PickupMealRecoveryEntry: View {
                     ForEach(values.filter { occurrenceID == nil || $0.meal.id == occurrenceID }, id: \.meal.id) { value in
                         Section(value.meal.title) {
                             PickupRecoveryMealSummary(definition: value, allocation: model.stockAllocation, carryovers: model.journey?.awayCarryovers ?? [])
-                            if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true,
-                               model.pantryIsActive {
-                                NavigationLink(cookCompletionText("Record cooking and leftovers")) {
-                                    CookCompletionEntry(ledger: ledger, pickup: model, shopID: pickupID, mealID: value.meal.id)
-                                }.accessibilityIdentifier("dinner.cookCompletion")
+                            if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true {
+                                NavigationLink(recordsText("Cook this dinner")) {
+                                    ChosenDinnerCookingEntry(ledger: ledger, pickup: model, shopID: pickupID, mealID: value.meal.id) {
+                                        guard currentAuthority() != nil,
+                                              let current = try model.recoveryDefinitions().first(where: { $0.meal.id == value.meal.id }),
+                                              model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true
+                                        else { throw PickupMealRecoveryError.sourceChanged }
+                                        return try DinnerCookingPage(recovered: current)
+                                    }
+                                }.accessibilityIdentifier("cooking.openReplacement")
+                                if model.pantryIsActive {
+                                    NavigationLink(cookCompletionText("Record cooking and leftovers")) {
+                                        CookCompletionEntry(ledger: ledger, pickup: model, shopID: pickupID, mealID: value.meal.id)
+                                    }.accessibilityIdentifier("dinner.cookCompletion")
+                                }
                             }
                             if model.journey?.closedAt == nil {
                                 if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true {

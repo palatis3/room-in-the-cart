@@ -6,6 +6,14 @@ struct RecipeCaptureDraft: Equatable, Sendable {
     var servings = "" { didSet { confirmed = false } }
     var sourceURL = "" { didSet { confirmed = false } }
     var notes = "" { didSet { confirmed = false } }
+    var useInstructionLines = false { didSet { confirmed = false } }
+    var stepEdits = RecipeStepEdits() { didSet { confirmed = false } }
+    var instructionLines: [String] {
+        useInstructionLines ? notes.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } : []
+    }
+    var ingredientLines: [String] {
+        ingredientText.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
     var ingredientText = "" { didSet { confirmed = false } }
     var unclassifiedText = ""
     var confirmed = false
@@ -33,7 +41,9 @@ struct RecipeCaptureDraft: Equatable, Sendable {
         let evidence = try RecipeSourceEvidence(captureID: captureID, originalText: originalText, kind: kind,
             localMedia: hasImage ? .init(workspaceID: target.workspaceID, mediaID: captureID) : nil)
         let template = MealTemplate(id: target.objectID, title: title, servings: servings, ingredients: ingredients,
-            notes: notes, sourceURL: source.isEmpty ? nil : source, sourceEvidence: evidence)
+            notes: notes, sourceURL: source.isEmpty ? nil : source, sourceEvidence: evidence,
+            recipeSteps: useInstructionLines ? stepEdits.current(instructions: instructionLines,
+                ingredients: reviewedIngredients.map(\.originalText)) : nil)
         try template.validate()
         return template
     }
@@ -73,6 +83,7 @@ enum RecipeOCRParser {
         }
         value.ingredientText = ingredients.joined(separator: "\n")
         value.notes = instructions.joined(separator: "\n")
+        value.useInstructionLines = !instructions.isEmpty
         if let first = yields.first, yields.count == unclassified.filter(\.yield).count,
            yields.allSatisfy({ $0.amount == first.amount }) {
             value.servings = first.literal

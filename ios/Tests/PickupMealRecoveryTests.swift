@@ -224,6 +224,10 @@ import LocalStore
         let shop = try XCTUnwrap(f.ledger.shop)
         let session = PantryCookSession(ledger: f.ledger, pickup: f.model, authorize: { true })
         let original = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        let oldPage = try DinnerCookingPage(original: original.meal, shop: shop)
+        XCTAssertTrue(oldPage.steps.isEmpty)
+        XCTAssertEqual(oldPage.notes, "Original instructions")
+        XCTAssertNil(oldPage.replacement)
         let oldDraft = CookCompletionDraft(inventoryID: original.inventory.state.workspaceID,
             inventoryRevision: original.inventory.state.revision, ledgerID: original.ledgerID, shop: shop, meal: original.meal,
             cookedAt: now, servingsMade: .one, parts: original.meal.ingredientContributionIDs.map {
@@ -237,6 +241,11 @@ import LocalStore
         catch {}
         let fresh = try await session.load(shopID: shop.id, mealID: f.wednesday)
         let recovered = try XCTUnwrap(fresh.recovery?.meal)
+        let definition = try XCTUnwrap(f.model.recoveryDefinitions().first { $0.meal.id == f.wednesday })
+        let page = try DinnerCookingPage(recovered: definition)
+        XCTAssertEqual(page.replacement, recovered.revisionID)
+        XCTAssertEqual(page.ingredients.map(\.name), recovered.ingredients.map(\.foodName))
+        XCTAssertNotEqual(page.ingredients, oldPage.ingredients)
         let row = try XCTUnwrap(recovered.ingredients.first)
         let beans = try XCTUnwrap(fresh.inventory.lots.first { $0.foodID == f.beans })
         let draft = CookCompletionDraft(inventoryID: fresh.inventory.state.workspaceID,
@@ -734,7 +743,8 @@ import LocalStore
         let recipe = MealTemplate(title: "Family bean bowls", servings: try Rational(3),
             ingredients: [.init(name: "Beans", quantity: q(3), notes: "Drain first", exclusions: ["onion"])],
             notes: "Warm gently", sourceURL: "https://example.invalid/family-beans",
-            exclusions: ["pepper"], revision: 2, leadTimeMinutes: 12)
+            exclusions: ["pepper"], revision: 2, leadTimeMinutes: 12,
+            recipeSteps: [RecipeStep("Warm beans", ingredientIndices: [0], suggestedTimerMinutes: 5)])
         var draft = try PickupRecoveryDraft(original, using: recipe)
         XCTAssertEqual(draft.rows.count, 1)
         XCTAssertNil(draft.rows[0].foodID, "A recipe name cannot establish a stock match")
@@ -745,6 +755,9 @@ import LocalStore
         let definition = try draft.definition()
         XCTAssertEqual(definition.acceptedTemplate, recipe)
         XCTAssertEqual(definition.meal.needs[0].amount.amount, try Rational(4))
+        let page = try DinnerCookingPage(recovered: definition)
+        XCTAssertEqual(page.steps, recipe.recipeSteps)
+        XCTAssertEqual(page.ingredients.first?.amount?.amount, try Rational(4))
         XCTAssertEqual(definition.meal.requiredLeadMinutes, 12)
         XCTAssertEqual(definition.notes, recipe.notes)
         XCTAssertEqual(Set(definition.meal.exclusions), ["pepper", "garlic"])
