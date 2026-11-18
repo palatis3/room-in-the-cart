@@ -13,7 +13,7 @@ public struct SharedCookReview: Codable, Equatable, Sendable {
     }
     public struct Lot: Codable, Equatable, Identifiable, Sendable {
         public let lotId, headId: UUID
-        public let name: String
+        public let name, location: String
         public let quantity: SharedMealQuantity?
         public var id: UUID { lotId }
     }
@@ -21,6 +21,7 @@ public struct SharedCookReview: Codable, Equatable, Sendable {
         public let id: UUID
         public let name: String
         public let quantity: SharedMealQuantity?
+        public let groupNames: [String]
         public let lots: [Lot]
     }
     public struct Unresolved: Codable, Equatable, Identifiable, Sendable {
@@ -48,7 +49,7 @@ public struct SharedCookReview: Codable, Equatable, Sendable {
         for need in needs {
             guard !need.name.isEmpty, Set(need.lots.map(\.id)).count == need.lots.count else { throw ClientError.invalidResponse }
             for lot in need.lots {
-                guard !lot.name.isEmpty else { throw ClientError.invalidResponse }
+                guard !lot.name.isEmpty, ["fridge", "freezer", "pantry"].contains(lot.location) else { throw ClientError.invalidResponse }
                 if let count = lot.quantity {
                     guard (0...1_000_000_000).contains(count.amount.numerator), (1...1_000_000_000).contains(count.amount.denominator) else { throw ClientError.invalidResponse }
                 }

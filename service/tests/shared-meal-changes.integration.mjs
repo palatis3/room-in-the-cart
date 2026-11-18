@@ -1930,6 +1930,8 @@ test('shared cooking batches lot splits, fulfills only actual holds, recovers it
  const f=await reviewedCookingFixture();
  ok(await f.write('delivery.reserve',{...f.reservation,supplyRevision:4}));
  const {draft,base}=await f.body(),[dinner,lunch]=draft.needs;
+ assert.notDeepEqual(dinner.groupNames,lunch.groupNames);
+ assert.equal(f.need(draft,lunch.id,f.sourceId).location,'pantry');
  const output={lotId:randomUUID(),name:'Cooked wraps',portions:2,location:'freezer'};
  const uses=[f.known(dinner.id,f.need(draft,dinner.id,f.manual),2),f.known(lunch.id,f.need(draft,lunch.id,f.sourceId),2)];
  const command=f.command('cook.complete',{...base,servings:3,uses,outputs:[output]});

@@ -54,7 +54,7 @@ struct SharedCookCompletionView: View {
                         ForEach(completion.unresolved) { row in
                             if let need = review.needs.first(where: { $0.id == row.needId }) {
                                 Button { resolution = row; resolveLot = row.lotId; resolveAmount = ""; included = false } label: {
-                                    Label(need.name, systemImage: "pencil")
+                                    Label(([need.name] + need.groupNames).joined(separator: " · "), systemImage: "pencil")
                                 }
                             }
                         }
@@ -112,7 +112,7 @@ struct SharedCookCompletionView: View {
                         Picker(cookingText("Used from"), selection: $resolveLot) {
                             Text(cookingText("Choose a lot")).tag(nil as UUID?)
                             ForEach(need.lots.filter { row.lotId == nil || $0.id == row.lotId }) { lot in
-                                Text(verbatim: lot.name).tag(Optional(lot.id))
+                                Text(verbatim: lotLabel(lot, among: need.lots)).tag(Optional(lot.id))
                             }
                         }
                         if let lot = need.lots.first(where: { $0.id == resolveLot }) {
@@ -146,7 +146,7 @@ struct SharedCookCompletionView: View {
                     if row.mode == "known" || row.mode == "unknown" {
                         Picker(cookingText("Used from"), selection: $row.lotID) {
                             Text(cookingText(row.mode == "known" ? "Choose a lot" : "Source not tracked")).tag(nil as UUID?)
-                            ForEach(need.lots) { lot in Text(verbatim: lot.name).tag(Optional(lot.id)) }
+                            ForEach(need.lots) { lot in Text(verbatim: lotLabel(lot, among: need.lots)).tag(Optional(lot.id)) }
                         }
                     }
                     if row.mode == "known", let lot = need.lots.first(where: { $0.id == row.lotID }), let count = lot.quantity {
@@ -162,7 +162,13 @@ struct SharedCookCompletionView: View {
                 }
             }
             Button(cookingText("Add another lot")) { rows.append(ActualUse(needID: need.id)) }.disabled(rows.count >= 200)
-        } header: { Text(verbatim: need.name) }
+        } header: {
+            VStack(alignment: .leading) {
+                Text(verbatim: need.name)
+                if !need.groupNames.isEmpty { Text(verbatim: need.groupNames.joined(separator: " · ")) }
+                if let q = need.quantity { Text(verbatim: cookingText("Planned amount") + " · " + physicalLabel(q)) }
+            }
+        }
     }
     private func load() async {
         failed = false
@@ -177,6 +183,19 @@ struct SharedCookCompletionView: View {
         } catch { if !Task.isCancelled { review = nil; failed = true } }
     }
     private func idValue(_ id: UUID) -> JSONValue { .string(id.uuidString.lowercased()) }
+    private func physicalLabel(_ quantity: SharedMealQuantity) -> String {
+        let amount = quantity.amount
+        let value = amount.denominator == 1 ? String(amount.numerator) : "\(amount.numerator)/\(amount.denominator)"
+        return value + " " + cookingText(quantity.unit)
+    }
+    private func lotLabel(_ lot: SharedCookReview.Lot, among choices: [SharedCookReview.Lot]) -> String {
+        let count = lot.quantity.map(physicalLabel) ?? cookingText("Count unknown")
+        var label = [lot.name, cookingText(lot.location), count].joined(separator: " · ")
+        if choices.contains(where: { $0.id != lot.id && $0.name == lot.name && $0.location == lot.location && $0.quantity == lot.quantity }) {
+            label += " · " + String(lot.id.uuidString.prefix(8))
+        }
+        return label
+    }
     private func units(_ unit: String) -> [String] {
         let groups = [["gram","kilogram","ounce","pound"],["milliliter","liter","fluidOunce","cup"],["count"]]
         return groups.first { $0.contains(unit) } ?? [unit]
