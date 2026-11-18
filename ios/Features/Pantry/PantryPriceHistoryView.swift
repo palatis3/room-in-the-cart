@@ -423,12 +423,15 @@ private struct PantryPriceEditor: View {
                 }
                 DatePicker(pantryText("Price date"), selection: $date, in: ...Date(), displayedComponents: .date)
                 Picker(pantryText("Currency"), selection: $currency) {
+                    if printed != nil { Text(pantryText("Choose the printed currency")).tag("") }
                     ForEach(PrivatePriceEvidence.supportedCurrencies, id: \.self) { Text(verbatim: $0).tag($0) }
                 }
                 TextField(!paid && printed != nil ? pantryText("Printed price amount") : pantryText("Total for all packages"), text: $amount).keyboardType(.decimalPad).accessibilityIdentifier("prices.total").focused($focused, equals: "amount")
                 Section(pantryText("Package basis")) {
-                    TextField(pantryText("Number of packages"), text: $packages).keyboardType(.numberPad).focused($focused, equals: "packages")
-                    TextField(pantryText("Quantity per package"), text: $quantity).keyboardType(.decimalPad).accessibilityIdentifier("prices.quantity").focused($focused, equals: "quantity")
+                    if paid || printed == nil || priceBasis != .unit {
+                        TextField(pantryText("Number of packages"), text: $packages).keyboardType(.numberPad).focused($focused, equals: "packages")
+                    }
+                    TextField(!paid && printed != nil && priceBasis == .unit ? pantryText("Printed unit-price quantity") : pantryText("Quantity per package"), text: $quantity).keyboardType(.decimalPad).accessibilityIdentifier("prices.quantity").focused($focused, equals: "quantity")
                     Picker(pantryText("Unit"), selection: $unit) {
                         ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
                     }
@@ -447,6 +450,7 @@ private struct PantryPriceEditor: View {
                     printed = line
                     source = line.wording
                     let suggestion = ReviewedShelfImage.propose(line.wording)
+                    currency = suggestion.currencyCode ?? ""
                     packages = String(suggestion.packages ?? 1)
                     amount = suggestion.amount.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
                     eligibility = suggestion.conditions ?? ""
@@ -477,7 +481,8 @@ private struct PantryPriceEditor: View {
         }
         let pack: PrivatePriceEvidence.Pack?
         if let raw = text(quantity) {
-            pack = try .init(count: packages, perPackage: .init(amount: ListQuantityParser.numericAmount(decimal(raw)), unit: unit,
+            let reviewedCount = !paid && printed != nil && priceBasis == .unit ? 1 : packages
+            pack = try .init(count: reviewedCount, perPackage: .init(amount: ListQuantityParser.numericAmount(decimal(raw)), unit: unit,
                                                                originalLiteral: raw + " " + pantryUnit(unit)))
         } else { pack = nil }
         guard (original?.revision ?? 0) < Int64.max else { throw PantryReceiptError.invalid }

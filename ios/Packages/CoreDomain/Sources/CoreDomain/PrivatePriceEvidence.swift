@@ -115,7 +115,8 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         if let shelfImage {
             try shelfImage.printed.validate()
             guard source == .shelf, shelfImage.printed.shelfID == id,
-                  shelfImage.basis != .unknown || pack == nil else { throw DomainError.invalidInput("shelfImageBasis") }
+                  shelfImage.basis != .unknown || pack == nil,
+                  shelfImage.basis != .unit || pack == nil || pack?.count == 1 else { throw DomainError.invalidInput("shelfImageBasis") }
         }
         switch source {
         case .adjustment(let target, let targetRevision, _):

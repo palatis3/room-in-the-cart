@@ -5350,6 +5350,40 @@
           }
         }
       }
+    },
+    "Choose the printed currency": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the printed currency"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la moneda impresa"
+          }
+        }
+      }
+    },
+    "Printed unit-price quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed unit-price quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad a la que corresponde el precio por unidad"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

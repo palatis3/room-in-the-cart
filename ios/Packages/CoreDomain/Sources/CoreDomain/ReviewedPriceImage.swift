@@ -35,6 +35,7 @@ public struct ReviewedShelfImage: Codable, Equatable, Sendable {
         public let packages: Int64?
         public let amount: Money?
         public let conditions: String?
+        public let currencyCode: String?
     }
 
     /// Suggests only explicit bundle wording. A bare unit price cannot imply package size.
@@ -43,12 +44,20 @@ public struct ReviewedShelfImage: Codable, Equatable, Sendable {
         let pattern = #"(?<![\d.,])([1-9][0-9]{0,3})\s*(?:for|por|/)\s*([$€£])\s*([0-9]+(?:[.,][0-9]{1,2})?)(?![.,0-9])"#
         let matches = (try? NSRegularExpression(pattern: pattern))?.matches(in: s, range: NSRange(s.startIndex..., in: s)) ?? []
         let terms = s.range(of: #"\b(member|members|socio|socios|miembros|club|loyalty|tarjeta)\b"#, options: .regularExpression) != nil ? text : nil
+        let codes = PrivatePriceEvidence.supportedCurrencies.filter { code in
+            s.range(of: #"\b"# + code.lowercased() + #"\b"#, options: .regularExpression) != nil
+        }
+        var currencies = Set(codes)
+        if s.contains("€") { currencies.insert("EUR") }
+        if s.contains("£") { currencies.insert("GBP") }
+        if s.contains("$"), !currencies.isSubset(of: ["USD","CAD"]) { currencies.removeAll() }
+        let currency = currencies.count == 1 ? currencies.first : nil
         guard matches.count == 1, let match = matches.first, let quantity = Range(match.range(at: 1), in: s),
               let price = Range(match.range(at: 3), in: s), let count = Int64(s[quantity]) else {
-            return .init(packages: nil, amount: nil, conditions: terms)
+            return .init(packages: nil, amount: nil, conditions: terms, currencyCode: currency)
         }
         let amount = try? Money(decimal: s[price].replacingOccurrences(of: ",", with: "."))
-        return .init(packages: count, amount: amount, conditions: terms)
+        return .init(packages: count, amount: amount, conditions: terms, currencyCode: currency)
     }
 }
 
