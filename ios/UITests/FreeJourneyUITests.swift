@@ -739,6 +739,15 @@ import XCTest
         XCTAssertTrue(source.label.contains("v128 · #142"))
         XCTAssertTrue(element("pantry.foodKeeper.range").exists)
         capture(spanish ? "Intervalo de calidad guardado en el lote" : "Saved USDA range on the ordinary lot after relaunch")
+        tapVisibleFormRow(app.buttons["pantry.foodKeeper"])
+        let chooseAnother = app.buttons["foodKeeper.chooseAnother"]
+        XCTAssertTrue(chooseAnother.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["foodKeeper.review.refrigerate_after_opening"].exists)
+        tap(chooseAnother)
+        let guideBar = app.navigationBars[spanish ? "Guía de conservación de alimentos" : "Food storage guide"]
+        XCTAssertTrue(guideBar.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["foodKeeper.product.142"].waitForExistence(timeout: 8))
+        tap(guideBar.buttons.firstMatch)
         tap(app.buttons["pantry.move.freezer"])
         let commit = app.buttons["pantry.confirm"]
         tap(commit)
@@ -2193,10 +2202,10 @@ import XCTest
             ("Physical amount received", "4"), ("Confirmed usable amount (optional)", "4"),
         ], doneIdentifier: "arrival.keyboardDone")
         enableSwitch("I checked the identity, units and meal constraints")
-        try fillReviewedFields([("Segment ID (distinct for each split delivery)", "segment-1")],
-                               doneIdentifier: "arrival.keyboardDone")
         tap(app.buttons["Save observed arrival"])
-        assertText("segment-1")
+        let savedArrival = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Correct usable amount")).firstMatch
+        reveal(savedArrival)
+        XCTAssertTrue(savedArrival.exists)
         capture("Free-observed-short-fill")
         tap(app.buttons["Review protected portions and repair meals"])
         assertText("Lunch")

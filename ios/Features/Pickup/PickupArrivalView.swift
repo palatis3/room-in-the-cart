@@ -2,6 +2,30 @@ import SwiftUI
 import UIKit
 import CoreDomain
 
+/// Default arrival keys are stable across reopening an order. Only an explicit new delivery creates a new automatic segment.
+struct ArrivalDeliveryReferences {
+    var receipt = ""
+    var segment = ""
+    private var additionalSegment: UUID?
+
+    mutating func startAnother() {
+        additionalSegment = UUID()
+        segment = ""
+    }
+
+    func key(orderID: UUID, line: PickupOrderLine) -> ReceiptKey {
+        let event = receipt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? orderID.uuidString : receipt
+        let part = segment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? additionalSegment?.uuidString ?? "1" : segment
+        return ReceiptKey(sourceEventID: event, orderLineID: line.id, branchID: line.branchID, segmentID: part)
+    }
+
+    func canRecord(_ key: ReceiptKey, in pickup: PickupLedger) -> Bool {
+        if additionalSegment != nil { return true }
+        let previous = pickup.receipts.filter { $0.key.orderLineID == key.orderLineID }
+        return previous.isEmpty || previous.contains { $0.key == key }
+    }
+}
+
 private struct ArrivalLineEntry {
     let lineID: UUID?
     var disposition: ReceiptDisposition = .received {
@@ -30,8 +54,9 @@ struct PickupArrivalView: View {
     @FocusState private var focused: Field?
     @ObservedObject var model: PickupModel
     @State private var entry = ArrivalLineEntry()
-    @State private var eventID = UUID().uuidString
-    @State private var segment = ""
+    @State private var references = ArrivalDeliveryReferences()
+    @State private var showingReferences = false
+    @State private var entryOrderID: UUID?
     @State private var occurred = Date()
     @State private var formError: String?
 
@@ -63,27 +88,38 @@ struct PickupArrivalView: View {
                 quantityField(pTr("Confirmed usable amount (optional)"), text: $entry.usable, field: .usable)
                 Picker(pTr("Unit"), selection: $entry.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
                 Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $entry.matched)
-                TextField(pTr("Delivery or receipt evidence ID"), text: receiptField($eventID))
-                    .focused($focused, equals: .evidence)
-                TextField(pTr("Segment ID (distinct for each split delivery)"), text: receiptField($segment))
-                    .focused($focused, equals: .segment)
+                DisclosureGroup(pTr("Delivery references (optional)"), isExpanded: $showingReferences) {
+                    Text(pTr("Use the receipt number or a label for this part of a split delivery if you have one."))
+                    TextField(pTr("Receipt or delivery reference"), text: receiptField($references.receipt))
+                        .focused($focused, equals: .evidence)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    TextField(pTr("Split delivery reference"), text: receiptField($references.segment))
+                        .focused($focused, equals: .segment)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                }.accessibilityIdentifier("arrival.references")
                 DatePicker(pTr("Actual arrival"), selection: $occurred, in: ...model.stockReviewDate)
                 Button(pTr("Save observed arrival")) { save() }.buttonStyle(.borderedProminent)
-                if let formError { Text(formError).foregroundStyle(.red) }
-                Button(pTr("Start another actual delivery segment")) {
-                    entry = ArrivalLineEntry(line: selectedLine)
-                    eventID = UUID().uuidString
-                    segment = ""
-                    occurred = Date()
-                    formError = nil
+                    .disabled(model.hasPendingSave || needsAnotherDelivery)
+                if needsAnotherDelivery {
+                    Text(pTr("An arrival is already saved for this item. Start another delivery to record more, or review the saved arrival below."))
                 }
+                if let formError { Text(formError).foregroundStyle(.red) }
+                Button(pTr("Start another delivery for this item")) {
+                    entry = ArrivalLineEntry(line: selectedLine)
+                    references.startAnother()
+                    occurred = model.stockReviewDate
+                    formError = nil
+                }.disabled(selectedLine == nil || model.hasPendingSave)
             }
             Section(pTr("Saved arrivals and usable corrections")) {
                 ForEach(Array((model.journey?.pickup?.receipts ?? []).enumerated()), id: \.offset) { _, receipt in
                     VStack(alignment: .leading) {
                         Text(receipt.itemName).font(.headline)
                         Text("\(pTr("Received")): \(pQuantity(receipt.received)) · \(pTr(receipt.disposition.rawValue))")
-                        Text("\(receipt.key.sourceEventID) / \(receipt.key.segmentID)").font(.caption)
+                        DisclosureGroup(pTr("Saved delivery references")) {
+                            LabeledContent(pTr("Receipt or delivery reference"), value: receipt.key.sourceEventID)
+                            LabeledContent(pTr("Split delivery reference"), value: receipt.key.segmentID)
+                        }
                         LabeledContent(pTr("Actual arrival")) {
                             Text(receipt.receivedAt, format: .dateTime.month().day().year().hour().minute())
                         }
@@ -100,6 +136,16 @@ struct PickupArrivalView: View {
                 }
             }
             NavigationLink(pTr("Review protected portions and repair meals")) { PickupRepairView(model: model) }
+        }
+        .onChange(of: model.journey?.pickup?.orderID, initial: true) { _, orderID in
+            guard orderID != entryOrderID else { return }
+            entryOrderID = orderID
+            references = ArrivalDeliveryReferences()
+            showingReferences = false
+            occurred = model.stockReviewDate
+            formError = nil
+            let remaining = model.journey?.unobservedRetailerLines(at: occurred) ?? []
+            entry = ArrivalLineEntry(line: remaining.count == 1 ? remaining.first : nil)
         }
         .keyboardDoneAction(visible: focused != nil, title: pTr("Done"), identifier: "arrival.keyboardDone") { focused = nil }
         .navigationTitle(pTr("What came home"))
@@ -120,15 +166,16 @@ struct PickupArrivalView: View {
         .accessibilityElement(children: .contain)
     }
 
-    private func receiptKey(for line: PickupOrderLine) -> ReceiptKey {
-        ReceiptKey(sourceEventID: eventID, orderLineID: line.id, branchID: line.branchID, segmentID: segment)
+    private var needsAnotherDelivery: Bool {
+        guard let pickup = model.journey?.pickup, let line = selectedLine else { return false }
+        return !references.canRecord(references.key(orderID: pickup.orderID, line: line), in: pickup)
     }
 
     private func receiptField(_ field: Binding<String>) -> Binding<String> {
         Binding(get: { field.wrappedValue }, set: { value in
             guard value != field.wrappedValue else { return }
-            if let line = selectedLine,
-               model.journey?.pickup?.receipts.contains(where: { $0.key == receiptKey(for: line) }) == true {
+            if let line = selectedLine, let pickup = model.journey?.pickup,
+               pickup.receipts.contains(where: { $0.key == references.key(orderID: pickup.orderID, line: line) }) {
                 entry = ArrivalLineEntry(line: line)
                 formError = nil
             } else {
@@ -140,17 +187,21 @@ struct PickupArrivalView: View {
 
     private func save() {
         do {
-            guard let line = selectedLine,
+            guard let line = selectedLine, let pickup = model.journey?.pickup, pickup.orderID == entryOrderID,
                   let received = try ComparisonModel.quantity(entry.received, entry.unit),
-                  !entry.item.isEmpty, !segment.isEmpty, !eventID.isEmpty else { throw CocoaError(.validationMissingMandatoryProperty) }
-            let key = receiptKey(for: line)
+                  !entry.item.isEmpty else { throw CocoaError(.validationMissingMandatoryProperty) }
+            let key = references.key(orderID: pickup.orderID, line: line)
+            guard references.canRecord(key, in: pickup) else { return }
             let fragment = ReceiptFragment(key: key, itemName: entry.item, received: received, disposition: entry.disposition, receivedAt: occurred)
             let observed = try ComparisonModel.quantity(entry.usable, entry.unit).map {
                 UsableObservation(id: entry.observationID, receipt: key, usable: $0, confirmedAt: occurred,
                                   confirmedMatchToOrderLine: entry.matched)
             }
-            Task { if await model.receive(fragment, usable: observed) { formError = nil } }
-        } catch { formError = pTr("Choose a line, name the delivery segment and enter valid quantities. No fill requires zero received.") }
+            Task {
+                guard model.journey?.pickup?.orderID == pickup.orderID else { return }
+                if await model.receive(fragment, usable: observed) { formError = nil }
+            }
+        } catch { formError = pTr("Choose an order line and enter the amount received. For no fill, enter zero.") }
     }
 }
 struct PickupOfferView: View {
