@@ -103,6 +103,11 @@ import CoreDomain
               let receipt = try? consent(.tonight) else { return false }
         return receipt.tonightBasis == basis
     }
+    func tonightConsentToken(scope: PantryDigestScope, ledger: UUID) -> UUID? {
+        guard let receipt = try? consent(.tonight), receipt.belongs(to: scope),
+              receipt.reviewedLedger == ledger else { return nil }
+        return receipt.token
+    }
     func reconcileOwner(_ access: PantryDigestAccess) throws {
         guard access.authorized() else { return }
         for kind in AdultFoodSummaryKind.allCases {
@@ -203,16 +208,41 @@ struct AdultHomeSummaryDestination: View {
     @Environment(\.guardianChildCoordinator) private var child
     @ObservedObject private var home = AdultHomeSummaryStore.shared
     @State private var model: PantryModel?
-    @State private var openedTonight: PantryDigestScope?
+    @State private var openedTonight: TonightSession?
     @ObservedObject private var digest = PantryDigestStore.shared
+
+    private struct TonightSession: Equatable {
+        let scope: PantryDigestScope
+        let ledger: UUID
+        let generation: UUID
+        let consent: UUID
+    }
+    private var tonightSession: TonightSession? {
+        guard UIApplication.shared.isProtectedDataAvailable, let child, !child.presented,
+              household.projection?.grantId == nil, pickup.pantryRouteAvailable, pickup.pantryIsActive,
+              let identity = CapturePrivateIdentity.current(access: access, household: household),
+              let origin = pickup.sourceWorkspaceID, ledger.ready, !ledger.hasPendingLedgerDeletion,
+              let ledgerID = ledger.sourceWorkspaceID else { return nil }
+        let scope = PantryDigestScope(origin: origin, identity: identity)
+        guard let consent = home.tonightConsentToken(scope: scope, ledger: ledgerID) else { return nil }
+        return TonightSession(scope: scope, ledger: ledgerID, generation: pickup.privatePantryGeneration, consent: consent)
+    }
     var body: some View {
         Group {
-            if let child, let current = PantryDigestAccess.current(pickup: pickup, access: access, household: household, child: child) {
-                if kind == .tonight, openedTonight == current.scope, home.enabled(.tonight, scope: current.scope) {
-                    TonightEntry()
-                } else if kind == .tonight, home.permitsTonight(handle, access: current,
+            if let openedTonight, kind == .tonight {
+                // Tonight refreshes stock on entry. Its own in-flight read must
+                // retain the view and task under the originally admitted session.
+                if openedTonight == tonightSession { TonightEntry() }
+                else { SurfaceUnavailableView() }
+            } else if let child, let current = PantryDigestAccess.current(pickup: pickup, access: access, household: household, child: child) {
+                if kind == .tonight, home.permitsTonight(handle, access: current,
                             basis: try? TonightHomeBasis.current(ledger: ledger, pickup: pickup)) {
-                    ProgressView().task { openedTonight = current.scope }
+                    ProgressView().task {
+                        guard current.authorized(), let session = tonightSession, session.scope == current.scope,
+                              home.permitsTonight(handle, access: current, basis: try? TonightHomeBasis.current(ledger: ledger, pickup: pickup))
+                        else { return }
+                        openedTonight = session
+                    }
                 } else if kind == .useSoon, let snapshot = pickup.pantrySnapshot,
                           home.permitsUseSoon(handle, access: current, lots: snapshot.lots, digest: digest) {
                     if let model { PantryDigestList(model: model, access: current) }
