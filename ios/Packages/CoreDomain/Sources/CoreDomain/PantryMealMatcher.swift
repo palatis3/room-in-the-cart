@@ -161,12 +161,13 @@ public enum PantryMealMatcher {
 
         // Only recipes with the same supply, preference and effort evidence can change order.
         func canTie(_ a: Review, _ b: Review) -> Bool {
-            a.useFirstLotIDs.isEmpty == b.useFirstLotIDs.isEmpty &&
-                a.allIngredientsCovered == b.allIngredientsCovered &&
-                a.ingredients.filter(\.covered).count * max(1, b.ingredients.count) ==
-                b.ingredients.filter(\.covered).count * max(1, a.ingredients.count) &&
-                a.eligibility.softDifferences.count == b.eligibility.softDifferences.count &&
-                a.recipe.eligibilityEvidence?.effort == b.recipe.eligibilityEvidence?.effort
+            guard a.useFirstLotIDs.isEmpty == b.useFirstLotIDs.isEmpty,
+                  a.allIngredientsCovered == b.allIngredientsCovered else { return false }
+            let leftCoverage: Int = a.ingredients.filter(\.covered).count * max(1, b.ingredients.count)
+            let rightCoverage: Int = b.ingredients.filter(\.covered).count * max(1, a.ingredients.count)
+            guard leftCoverage == rightCoverage,
+                  a.eligibility.softDifferences.count == b.eligibility.softDifferences.count else { return false }
+            return a.recipe.eligibilityEvidence?.effort == b.recipe.eligibilityEvidence?.effort
         }
         func feasible(_ review: Review) -> Bool {
             review.ingredients.allSatisfy { !$0.hasUnresolvedStock && $0.ingredient.quantity != nil && ($0.coverage?.issues.isEmpty ?? true) }
