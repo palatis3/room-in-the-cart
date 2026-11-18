@@ -1,0 +1,43 @@
+name: Check A1 and A2 with the iPhone compilation cache
+on:
+  push:
+    branches: [codex/bitrise-a1-a2-cache-check]
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    name: Cached iPhone build on ${{ matrix.pool }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pool: [bitrise-runner-A1, bitrise-runner-A2]
+    runs-on: ${{ matrix.pool }}
+    timeout-minutes: 23
+    env:
+      DEVELOPER_DIR: /Applications/Xcode-27.1.0.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Verify hardware, compiler and simulator runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          sysctl -n machdep.cpu.brand_string
+          sysctl -n hw.ncpu
+          xcodebuild -version
+          test "$(xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+          xcrun simctl list runtimes --json | python3 -c "import json,sys; assert any(r.get('isAvailable') and r['version']=='27.0' and r['buildversion']=='24A434' for r in json.load(sys.stdin)['runtimes'])"
+      - name: Activate the Bitrise compilation cache for reads and writes
+        timeout-minutes: 3
+        run: bash scripts/activate_bitrise_xcode_cache.sh
+      - name: Compile the app through the activated cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+            -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -jobs 4 -derivedDataPath "$RUNNER_TEMP/RITC-Cached-Build" ARCHS=arm64 \
+            CODE_SIGN_IDENTITY=- build -showBuildTimingSummary
