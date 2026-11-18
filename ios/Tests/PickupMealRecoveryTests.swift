@@ -211,6 +211,8 @@ import LocalStore
         XCTAssertTrue(cleared)
         let current = try f.model.prepareRecoveryUndo(forward: forward.id, authority: f.authority)
         try await recountCanonicalBeans(f, count: .exact(q(2)))
+        let refreshed = await f.model.refreshPantryStock()
+        XCTAssertTrue(refreshed)
         XCTAssertThrowsError(try f.model.prepareRecoveryUndo(forward: forward.id, authority: f.authority))
         let stale = await f.model.applyMealRecovery(current, currentAuthority: { f.authority })
         XCTAssertFalse(stale)

@@ -186,13 +186,23 @@ private struct PickupRecoveryUndoView: View {
                 }
             } else {
                 if let message { Text(message) }
-                Button(recoveryText("Review the saved swap again")) { prepare() }.disabled(busy)
+                Button(recoveryText("Review the saved swap again")) { Task { await prepare() } }.disabled(busy)
             }
-        }.navigationTitle(recoveryText("Undo dinner swap")).onAppear { prepare() }
+        }.navigationTitle(recoveryText("Undo dinner swap")).task { await prepare() }
     }
-    private func prepare() {
+    @MainActor private func prepare() async {
+        guard !busy else { return }
+        busy = true
+        defer { busy = false }
         review = nil; message = nil; repeatAgreed = false; acceptsOpenNeeds = false
-        guard let authority = currentAuthority() else { message = recoveryText("Reopen the pickup in the same private workspace."); return }
+        guard let expected = currentAuthority() else { message = recoveryText("Reopen the pickup in the same private workspace."); return }
+        if model.pantryIsActive {
+            guard await model.refreshPantryStock() else {
+                message = recoveryText("This dinner or its food changed. Review its current instructions before undoing the swap.")
+                return
+            }
+        }
+        guard !Task.isCancelled, let authority = currentAuthority(), authority == expected else { message = recoveryText("Reopen the pickup in the same private workspace."); return }
         do { review = try model.prepareRecoveryUndo(forward: forward, authority: authority) }
         catch PickupRecoveryUndoError.actor { message = recoveryText("The adult who saved this swap must review its Undo.") }
         catch PickupRecoveryUndoError.stock { message = recoveryText("The food counts or reservations used by this swap changed. Review the current food before choosing another dinner.") }
