@@ -84,6 +84,35 @@ import RecordArchive
         return draft
     }
 
+    func testRepeatedReviewedShelfImageKeepsOneSourceAndNoPaidPurchase() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
+        f.cleanup.track(repository)
+        let wording = "Members only 2 for $5"
+        let printed = try PriceImageLine(digest: Data(repeating: 7, count: 32), ordinal: 3, wording: wording, uncertain: true)
+        let shelf = PrivatePriceEvidence(id: printed.shelfID, source: .shelf, name: "Cashews", store: "South",
+            mode: .inStore, date: now, currencyCode: "CAD", amountMinor: 500, pack: nil, eligibility: wording,
+            sourceText: wording, shelfImage: .init(printed: printed, basis: .bundle))
+        let initial = try await f.store.inventoryState()
+        let lotsBefore = try await f.store.inventoryRecords(kind: .lot)
+        try await repository.savePrice(shelf, expected: initial, at: now)
+        let page = try await repository.pricePage()
+        XCTAssertEqual(page.standalone, [shelf])
+        XCTAssertFalse(shelf.isPaidPrice)
+        XCTAssertNil(try shelf.unitPrice(in: .gram))
+        do {
+            try await repository.savePrice(shelf, expected: page.state, at: now)
+            XCTFail("The shopper should see that the selected image line is already saved")
+        } catch PantryPriceError.imageAlreadySaved {}
+        let reopened = try await repository.pricePage()
+        let lotsAfter = try await f.store.inventoryRecords(kind: .lot)
+        let ledger = try await f.ledger.load()
+        XCTAssertEqual(reopened.state, page.state)
+        XCTAssertEqual(reopened.standalone, [shelf])
+        XCTAssertEqual(lotsBefore, lotsAfter)
+        XCTAssertNil(ledger)
+    }
+
     func testReviewedPrivatePriceCorrectionsRestoreAndErasureFencesEarlierExports() async throws {
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
