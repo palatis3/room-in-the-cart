@@ -272,6 +272,72 @@ import RecordArchive
         XCTAssertEqual(history, [confirmed])
     }
 
+    func testDuplicateReceiptRejectsDifferentExplicitAliasAndRetainsSavedFoodWhenAliasIsAbsent() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })
+        f.cleanup.track(repository)
+        var first = try receiptDraft(f.store)
+        first.language = "en"
+        first.lines[0].name = "Long grain rice"
+
+        func save(_ draft: ReceiptImportDraft) async throws -> PantryReceiptReview {
+            let state = try await f.store.inventoryState()
+            let review = try await repository.reviewReceipt(draft, expected: state, at: now)
+            try await repository.applyReceipt(review, at: now)
+            return review
+        }
+        let original = try await save(first)
+        var second = first
+        second.reference = "transaction-15"
+        let secondReview = try await save(second)
+        let aliasSource = try XCTUnwrap(secondReview.facts.first)
+        XCTAssertNotEqual(original.facts.first?.foodID, aliasSource.foodID)
+        let beforeAlias = try await f.store.inventoryState()
+        try await repository.rememberReceiptAlias(aliasSource, wording: "RICE", language: "en", expected: beforeAlias, at: now)
+        let aliases = try await repository.receiptAliases(merchant: first.merchant, language: first.language)
+        let alias = try XCTUnwrap(aliases.first)
+
+        var mixed = first
+        mixed.lines[0].use(alias)
+        mixed.lines[1].treatment = .add
+        mixed.lines[1].received = "1"
+        mixed.lines[1].usable = "1"
+        mixed.lines.swapAt(0, 1) // The new food is prepared before the conflicting duplicate.
+        let beforeConflict = try await f.store.inventoryState()
+        do {
+            _ = try await repository.reviewReceipt(mixed, expected: beforeConflict, at: now)
+            XCTFail("A previously saved line cannot be reassigned to a different same-name food")
+        } catch PantryReceiptError.changedEvidence {}
+        let afterConflict = try await f.store.inventoryState()
+        let firstHistory = try await repository.acquisitionHistory(receiptID: first.receiptID)
+        XCTAssertEqual(afterConflict, beforeConflict)
+        XCTAssertEqual(firstHistory, original.facts)
+
+        var third = try receiptDraft(f.store)
+        third.language = "en"
+        third.reference = "transaction-16"
+        third.lines[0].use(alias)
+        let aliasedReview = try await save(third)
+        XCTAssertEqual(aliasedReview.facts.first?.foodID, aliasSource.foodID)
+        let beforeForget = try await f.store.inventoryState()
+        try await repository.forgetReceiptAliases([alias], expected: beforeForget, at: now)
+        third.clearAliases()
+        XCTAssertEqual(third.lines[0].name, "Rice")
+        let beforeReplay = try await f.store.inventoryState()
+        let replay = try await save(third)
+        XCTAssertNil(replay.batch)
+        XCTAssertEqual(replay.facts, aliasedReview.facts)
+        XCTAssertEqual(replay.existing, Set(aliasedReview.facts.map(\.lineID)))
+        try await repository.applyReceipt(aliasedReview, at: now)
+        let afterReplay = try await f.store.inventoryState()
+        XCTAssertEqual(afterReplay, beforeReplay)
+        third.lines[0].name = "Jasmine rice"
+        do {
+            _ = try await repository.reviewReceipt(third, expected: afterReplay, at: now)
+            XCTFail("An edited food name must still match the original evidence")
+        } catch PantryReceiptError.changedEvidence {}
+    }
+
     func testClaimedDocumentSurvivesRestartUntilExactRecordsErasureAndOtherSourcesStayPending() async throws {
         let f = try await fixture()
         let repo = PantryRepository(store: f.store, authorize: { true })

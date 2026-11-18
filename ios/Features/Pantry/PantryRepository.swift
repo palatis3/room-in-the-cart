@@ -405,7 +405,7 @@ final class PantryRepository {
                       ReceiptImportDraft.containsWording(alias.wording, in: line.original) else { throw PantryReceiptError.stale }
             }
         }
-        let facts = try draft.facts(receiptID: receiptID, snapshot: before, at: now)
+        var facts = try draft.facts(receiptID: receiptID, snapshot: before, at: now)
         var prior: [UUID: ReceiptAcquisition] = [:], cursor: UUID?
         repeat {
             let page = try await acquisitionHistory(receiptID: receiptID, after: cursor, limit: 200)
@@ -418,13 +418,21 @@ final class PantryRepository {
         } while cursor != nil
         var writes: [InventoryWrite] = [], rows: [InventoryAcquisitionRow] = []
         var existing = Set<UUID>(), acquisitionBytes = 0
-        for fact in facts {
+        for (index, line) in draft.selectedLines.enumerated() {
+            let fact = facts[index]
             if let old = prior[fact.lineID] {
                 // Another image of the same confirmed transaction can differ.
                 // Never silently replace the original evidence or increase stock.
-                guard old.name == fact.name, old.originalLine == fact.originalLine, old.received == fact.received,
+                let sourceName = line.sourceName?.trimmingCharacters(in: .whitespacesAndNewlines)
+                // A reimport can omit an earlier spelling choice. Show the saved identity
+                // and name unless this review explicitly selects a different one.
+                let preservedName = line.appliedAlias == nil && sourceName == fact.name && old.foodID != old.lotID
+                guard line.appliedAlias == nil || old.foodID == fact.foodID,
+                      old.name == fact.name || preservedName,
+                      old.originalLine == fact.originalLine, old.received == fact.received,
                       old.usable == fact.usable, old.paidLineTotal == fact.paidLineTotal, old.stock == fact.stock,
                       old.purchaseDate == fact.purchaseDate, old.merchant == fact.merchant else { throw PantryReceiptError.changedEvidence }
+                facts[index] = old
                 existing.insert(fact.lineID)
                 continue
             }
