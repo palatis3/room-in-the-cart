@@ -58,6 +58,12 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
 
     var canEdit: Bool { phase == .ready && snapshot != nil && !busy && pending == nil && review == nil && !requiresFreshReview }
 
+    func verifyDigestLot(_ lot: InventoryLot, origin: UUID) async throws {
+        guard canEdit, repository.originID == origin else { throw PantryDigestFailure.changed }
+        let current = try await repository.loadForEditing(at: clock())
+        guard canEdit, current.lots.first(where: { $0.id == lot.id }) == lot else { throw PantryDigestFailure.changed }
+    }
+
     func accessLost() {
         generation = UUID()
         snapshot = nil; review = nil; pending = nil; savedLotID = nil

@@ -10,6 +10,7 @@ private enum PantrySheet: Identifiable {
 
 /// Composition owns authorization and migration. This surface never activates a database.
 struct PantryHomeView: View {
+    @Environment(\.pantryDigestAccess) private var digestAccess
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
     @State private var sheet: PantrySheet?
@@ -26,6 +27,10 @@ struct PantryHomeView: View {
                         }
                     }
                     if model.phase == .ready, let snapshot = model.snapshot {
+                        if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID {
+                            NavigationLink(pantryText("Use soon")) { PantryDigestList(model: model, access: digestAccess) }
+                                .accessibilityIdentifier("pantry.digest")
+                        }
                         Section {
                             Button(pantryText("Add food")) { sheet = .add }
                                 .frame(minHeight: 44).disabled(!model.canEdit)
@@ -242,6 +247,7 @@ struct PantryLotSummary: View {
 }
 
 private struct PantryLotView: View {
+    @Environment(\.pantryDigestAccess) private var digestAccess
     @ObservedObject var model: PantryModel
     let lotID: UUID
     let accessAllowed: Bool
@@ -261,6 +267,11 @@ private struct PantryLotView: View {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
                 }
+                PantryLotFoodKeeperSection(model: model, lot: lot, accessAllowed: accessAllowed)
+                if let digestAccess, digestAccess.scope.origin == model.snapshot?.state.workspaceID, lot.count.quantity?.amount != .zero {
+                    NavigationLink(pantryText("Batch check date")) { PantryDigestDayEditor(model: model, access: digestAccess, lot: lot) }
+                        .accessibilityIdentifier("pantry.digest.checkDate")
+                }
                 PantryReservationSection(model: model, lot: lot, availabilityNeedsReview: availabilityNeedsReview,
                                         amountFocus: $reservationAmountFocused)
                     .id(lot.id)
@@ -269,11 +280,11 @@ private struct PantryLotView: View {
                     action("Some left", .someLeft)
                     Button(pantryText("Recount food"), action: recount).frame(minHeight: 44)
                         .accessibilityIdentifier("pantry.recount")
-                    action("Opened now", .opened)
+                    action("Opened now", .opened).accessibilityIdentifier("pantry.opened")
                     ForEach(InventoryLocation.allCases.filter { $0 != lot.location }, id: \.self) { location in
                         Button(pantryFormat("Move to %@", pantryLocationName(location))) {
                             Task { await model.prepare(lotID: lotID, action: .move(location)) }
-                        }.frame(minHeight: 44)
+                        }.frame(minHeight: 44).accessibilityIdentifier("pantry.move." + location.rawValue)
                     }
                     action("Used up", .usedUp)
                 } footer: {
