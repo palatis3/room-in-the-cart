@@ -152,7 +152,9 @@ import XCTest
         saveFreeRecipe(secondTitle)
         XCTAssertTrue(row(firstTitle).waitForExistence(timeout: 10), app.debugDescription)
         let global = match(secondTitle)
-        enableSwitch("adultHomeSummary.tonight", position: { self.reveal($0, initiallyUpward: false) })
+        enableSwitch("adultHomeSummary.tonight", position: {
+            self.revealScrollableContent($0, initiallyUpward: false, entireRow: true)
+        })
         XCTAssertEqual(home.value as? String, "1")
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         tap(app.buttons[lotID])
