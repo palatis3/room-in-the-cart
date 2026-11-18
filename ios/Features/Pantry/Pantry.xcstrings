@@ -7415,6 +7415,230 @@
           }
         }
       }
+    },
+    "Compare a possible earlier receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare a possible earlier receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar con un recibo anterior"
+          }
+        }
+      }
+    },
+    "These saved receipts share the store, purchase day and printed food wording. Check which purchase this is.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These saved receipts share the store, purchase day and printed food wording. Check which purchase this is."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos recibos guardados coinciden en la tienda, el día de compra y el texto impreso de algún alimento. Comprueba de qué compra se trata."
+          }
+        }
+      }
+    },
+    "Only the first eight possible receipts are shown. Check Receipt history if yours is missing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the first eight possible receipts are shown. Check Receipt history if yours is missing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se muestran hasta ocho recibos posibles. Si falta el tuyo, consulta el historial de recibos."
+          }
+        }
+      }
+    },
+    "Previously confirmed lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously confirmed lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Líneas ya confirmadas"
+          }
+        }
+      }
+    },
+    "Selected lines on this document": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected lines on this document"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Líneas seleccionadas en este documento"
+          }
+        }
+      }
+    },
+    "Open original receipt and price corrections": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open original receipt and price corrections"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir el recibo original y las correcciones de precios"
+          }
+        }
+      }
+    },
+    "New selected line on this receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New selected line on this receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nueva línea seleccionada para este recibo"
+          }
+        }
+      }
+    },
+    "Match this printed line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match this printed line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular esta línea impresa"
+          }
+        }
+      }
+    },
+    "Additional line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea adicional"
+          }
+        }
+      }
+    },
+    "Review against this original": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review against this original"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar con este recibo original"
+          }
+        }
+      }
+    },
+    "This is a separate purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a separate purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es una compra distinta"
+          }
+        }
+      }
+    },
+    "Edit selected lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit selected lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar las líneas seleccionadas"
+          }
+        }
+      }
+    },
+    "Choose each saved line once. An additional line must be distinct.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose each saved line once. An additional line must be distinct."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona cada línea guardada una sola vez. Las líneas adicionales deben ser distintas."
+          }
+        }
+      }
+    },
+    "The printed wording, quantity, price or storage differs from the original. Open the original for corrections, edit your selections, or review a separate purchase.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The printed wording, quantity, price or storage differs from the original. Open the original for corrections, edit your selections, or review a separate purchase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto impreso, la cantidad, el precio o el lugar de almacenamiento difieren del original. Abre el recibo original para corregirlo, edita la selección o revisa una compra distinta."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

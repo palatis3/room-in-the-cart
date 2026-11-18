@@ -38,6 +38,8 @@ struct ReceiptImportDraft {
     let workspaceID: UUID
     let savedPickup: ReceiptAcquisition.SavedPickup?
     let imageDigest: Data?
+    var supportsRescan = true
+    var rescanDecision: ReceiptRescanDecision?
     var merchant: String
     var language = Bundle.main.preferredLocalizations.first?.hasPrefix("es") == true ? "es" : "en"
     var reference = ""
@@ -77,7 +79,7 @@ struct ReceiptImportDraft {
 
     var selectedLines: [Line] { lines.filter { $0.treatment != .skip } }
 
-    func facts(receiptID: UUID, snapshot: PantryRepository.Snapshot, at now: Date) throws -> [ReceiptAcquisition] {
+    func facts(receiptID: UUID, snapshot: PantryRepository.Snapshot, at now: Date, lineDocumentID: UUID? = nil) throws -> [ReceiptAcquisition] {
         guard snapshot.state.workspaceID == workspaceID, dateConfirmed, purchaseDate <= now,
               !cleaned(merchant).isEmpty else { throw PantryReceiptError.invalid }
         let selected = selectedLines
@@ -85,7 +87,7 @@ struct ReceiptImportDraft {
         return try selected.map { row in
             guard let received = try ComparisonModel.quantity(row.received, row.unit),
                   let usable = try ComparisonModel.quantity(row.usable, row.unit) else { throw PantryReceiptError.invalid }
-            let lineID = ReceiptAcquisition.lineID(receiptID: receiptID, ordinal: row.ordinal)
+            let lineID = ReceiptAcquisition.lineID(receiptID: receiptID, ordinal: row.ordinal, document: lineDocumentID)
             let lotID: UUID, foodID: UUID, stock: ReceiptAcquisition.Stock
             switch row.treatment {
             case .skip: throw PantryReceiptError.invalid
@@ -104,7 +106,7 @@ struct ReceiptImportDraft {
                 foodID: foodID, merchant: cleaned(merchant), purchaseDate: purchaseDate,
                 transactionReference: cleaned(reference).isEmpty ? nil : cleaned(reference), imageDigest: imageDigest,
                 originalLine: row.original, name: cleaned(row.name), received: received, usable: usable,
-                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine)
+                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine, lineDocumentID: lineDocumentID)
             try fact.validate()
             return fact
         }

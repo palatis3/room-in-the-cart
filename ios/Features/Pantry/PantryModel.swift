@@ -136,10 +136,10 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         return adjustments
     }
 
-    func receiptHistory(after: UUID? = nil) async throws -> [ReceiptAcquisition] {
+    func receiptHistory(after: UUID? = nil, receiptID: UUID? = nil) async throws -> [ReceiptAcquisition] {
         guard canEdit else { throw PantryReceiptError.stale }
         let token = generation
-        let page = try await repository.acquisitionHistory(after: after)
+        let page = try await repository.acquisitionHistory(receiptID: receiptID, after: after)
         guard token == generation else { throw PantryReceiptError.stale }
         return page
     }

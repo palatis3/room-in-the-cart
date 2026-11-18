@@ -20,6 +20,7 @@ struct PantryReceiptEntry: View {
     @State private var fileSource = false
     @State private var scan = false
     @State private var draft: ReceiptImportDraft?
+    @State private var rescan: ReceiptRescanPrompt?
     @State private var review: PantryReceiptReview?
     @State private var working = false
     @State private var message: String?
@@ -69,6 +70,14 @@ struct PantryReceiptEntry: View {
                         .accessibilityIdentifier("receipt.commit")
                     Button(pantryText("Edit receipt lines")) { self.review = nil; message = nil }.disabled(working)
                 }
+            } else if let rescan, let proposed = draft {
+                PantryReceiptRescanView(model: model, prompt: rescan) { decision in
+                    var next = proposed
+                    next.rescanDecision = decision
+                    prepare(next)
+                } edit: {
+                    self.rescan = nil; draft?.rescanDecision = nil; message = nil
+                }.id(rescan.basis).disabled(working)
             } else if let displayed = draft {
                 // SwiftUI may read a field during removal of its form. Retain the
                 // displayed value for that transition and ignore stale setters.
@@ -99,21 +108,7 @@ struct PantryReceiptEntry: View {
                     }, field: $field)
                 }
                 Button(pantryText("Review selected food")) {
-                    let proposed = value.wrappedValue
-                    working = true
-                    Task {
-                        defer { working = false }
-                        do {
-                            try await verifySource()
-                            review = try await model.reviewReceipt(proposed)
-                            message = nil
-                        }
-                        catch {
-                            if receiptBasisChanged(error) { await model.load() }
-                            message = receiptError(error)
-                            resultFocused = true
-                        }
-                    }
+                    prepare(value.wrappedValue)
                 }.disabled(working || !model.canEdit || !value.dateConfirmed.wrappedValue || !value.lines.wrappedValue.contains { $0.treatment != .skip })
                 .accessibilityIdentifier("receipt.review")
             } else {
@@ -141,7 +136,7 @@ struct PantryReceiptEntry: View {
             }
         }
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
-            if origin == nil { draft = nil; review = nil; scan = false; fileSource = false; sharedSource = nil }
+            if origin == nil { draft = nil; review = nil; rescan = nil; scan = false; fileSource = false; sharedSource = nil }
         }
         .task(id: aliasScope) {
             let scope = aliasScope
@@ -175,6 +170,30 @@ struct PantryReceiptEntry: View {
         }
     }
 
+    private func prepare(_ proposed: ReceiptImportDraft) {
+        guard !working else { return }
+        working = true
+        Task {
+            defer { working = false }
+            do {
+                try await verifySource()
+                let result = try await model.reviewReceipt(proposed)
+                guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
+                review = result; draft = proposed; rescan = nil; message = nil
+            } catch let prompt as ReceiptRescanPrompt {
+                guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
+                rescan = prompt
+                message = proposed.rescanDecision == nil ? nil : pantryText("Choose each saved line once. An additional line must be distinct.")
+                resultFocused = true
+            } catch {
+                if receiptBasisChanged(error) { rescan = nil; draft?.rescanDecision = nil; await model.load() }
+                if rescan != nil, case PantryReceiptError.changedEvidence = error {
+                    message = pantryText("The printed wording, quantity, price or storage differs from the original. Open the original for corrections, edit your selections, or review a separate purchase.")
+                } else { message = receiptError(error) }
+                resultFocused = true
+            }
+        }
+    }
     private func accept(_ source: SourceMediaRecord, fromSavedPickup: Bool = false) {
         guard model.canEdit, model.snapshot?.state.workspaceID == source.target.workspaceID else { return }
         do { draft = try ReceiptImportDraft(source: source, fromSavedPickup: fromSavedPickup); message = nil }
@@ -272,12 +291,15 @@ private func receiptError(_ error: Error) -> String {
     return pantryText("Check the store, purchase date, food, received amount, usable amount and optional paid total.")
 }
 
-private func receiptMoney(_ price: Money) -> String {
+func receiptMoney(_ price: Money) -> String {
     (Decimal(price.minorUnits) / 100).formatted(.currency(code: price.currency.rawValue))
 }
 
 struct PantryReceiptHistory: View {
     @ObservedObject var model: PantryModel
+    var receiptID: UUID? = nil
+    var permittedLines: Set<UUID>? = nil
+    @State private var lastReadID: UUID?
     @State private var facts: [ReceiptAcquisition] = []
     @State private var hasMore = true
     @State private var busy = false
@@ -321,7 +343,7 @@ struct PantryReceiptHistory: View {
         }
         .privacySensitive()
         .onChange(of: model.snapshot?.state.workspaceID) { _, scope in
-            if scope == nil { facts = []; learning = nil; correcting = nil; price = ""; hasMore = false }
+            if scope == nil { facts = []; lastReadID = nil; learning = nil; correcting = nil; price = ""; hasMore = false }
         }
         .navigationTitle(pantryText("Receipt history"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Done")) { dismiss() } } }
@@ -358,7 +380,7 @@ struct PantryReceiptHistory: View {
                                 }
                                 message = pantryText("The receipt changed or the price is invalid. Reopen the latest revision.")
                             }
-                            correcting = nil; facts = []; hasMore = true; busy = false
+                            correcting = nil; facts = []; lastReadID = nil; hasMore = true; busy = false
                             await loadPage()
                         }
                     }.disabled(busy || (try? Money(decimal: price)) == nil || (try? Money(decimal: price)) == original.paidLineTotal)
@@ -372,8 +394,9 @@ struct PantryReceiptHistory: View {
         busy = true
         defer { busy = false }
         do {
-            let page = try await model.receiptHistory(after: facts.last?.id)
-            facts.append(contentsOf: page)
+            let page = try await model.receiptHistory(after: lastReadID, receiptID: receiptID)
+            lastReadID = page.last?.id
+            facts.append(contentsOf: page.filter { permittedLines?.contains($0.lineID) ?? true })
             hasMore = page.count == 30
         } catch { message = receiptError(error) }
     }

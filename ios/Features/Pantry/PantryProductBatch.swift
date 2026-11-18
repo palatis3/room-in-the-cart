@@ -123,6 +123,7 @@ struct PantryProductBatch {
 
 extension ReceiptImportDraft {
     init(batchID: UUID, workspaceID: UUID, merchant: String, purchaseDate: Date, lines: [Line]) {
+        supportsRescan = false
         draftID = batchID
         self.workspaceID = workspaceID
         savedPickup = nil
