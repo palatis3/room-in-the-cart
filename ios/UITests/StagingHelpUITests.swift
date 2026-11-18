@@ -58,11 +58,11 @@ final class StagingHelpUITests: XCTestCase {
         #if targetEnvironment(simulator)
         // Safari can dismiss its first-run sheet as the requested page opens.
         // Give the page priority and avoid asking XCTest to re-find a vanished button during the tap.
-        if !pageHeading.waitForExistence(timeout: 5) {
+        if !pageHeading.waitForExistence(timeout: 5) || !pageHeading.isHittable {
             for name in ["Continue", "Start Browsing", "Not Now"] {
                 let button = safari.buttons[name]
                 guard button.exists, button.isHittable, let snapshot = try? button.snapshot() else { continue }
-                if pageHeading.exists { break }
+                if pageHeading.exists && pageHeading.isHittable { break }
                 let frame = snapshot.frame
                 let point = CGPoint(x: frame.midX, y: frame.midY)
                 let bounds = safari.frame
