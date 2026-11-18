@@ -87,10 +87,10 @@ extension ReviewedCheckoutImage {
         return (field, try? Money(decimal: literal.replacingOccurrences(of: ",", with: ".")))
     }
 
-    /// After an adult explicitly assigns an amount-only OCR line to a field, the number can be edited.
+    /// Selecting a field can use a confirmed crop reading even when the original OCR was uncertain.
     public static func proposedAmount(for field: Field, from line: PriceImageLine) -> Money? {
-        guard !line.uncertain else { return nil }
-        guard let suggestion = reading(line.wording, selectedField: field), suggestion.field == field else { return nil }
+        guard !line.uncertain || line.reviewedReading != nil,
+              let suggestion = reading(line.effectiveWording, selectedField: field), suggestion.field == field else { return nil }
         return suggestion.amount
     }
 
@@ -99,10 +99,10 @@ extension ReviewedCheckoutImage {
         var proposals: [Field: Charge] = [:]
         var seen: Set<Field> = []
         for line in lines {
-            guard let reading = reading(line.wording) else { continue }
+            guard let reading = reading(line.effectiveWording) else { continue }
             if !seen.insert(reading.field).inserted {
                 proposals.removeValue(forKey: reading.field)
-            } else if !line.uncertain, let amount = reading.amount {
+            } else if line.reviewedReading == nil, !line.uncertain, let amount = reading.amount {
                 proposals[reading.field] = Charge(field: reading.field, amount: amount, inclusion: .unknown, line: line)
             }
         }

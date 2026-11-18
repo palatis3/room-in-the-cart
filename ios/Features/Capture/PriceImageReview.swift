@@ -41,7 +41,9 @@ struct PriceImageReview: View {
                     if index == lines.count {
                         lines.append(item)
                     } else { lines[index] = item }
+                    // A corrected crop may name a different charge. Ask the shopper to assign it again.
                     for field in ReviewedCheckoutImage.Field.allCases where selections[field] == index {
+                        selections[field] = nil
                         amounts[field] = nil
                         inclusions[field] = nil
                     }
