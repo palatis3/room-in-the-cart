@@ -62,11 +62,11 @@ import XCTest
         }
         openHistory()
         tap(app.buttons["pantry.setup.apply"])
-        func record(_ name: String, shelf: Bool, amount: String) {
+        func record(_ name: String, source: String? = nil, amount: String) {
             tap(app.buttons["prices.add"])
-            if shelf {
+            if let source {
                 tap(app.buttons["prices.source"])
-                tap(app.buttons["Shelf observation"])
+                tap(app.buttons[source])
             }
             for (field, text) in [("prices.name", name), ("prices.variant", "Unsalted"),
                                   ("prices.store", "South Market"), ("prices.total", amount), ("prices.quantity", "2")] {
@@ -81,8 +81,9 @@ import XCTest
             tap(app.buttons["prices.confirm"])
             XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch.waitForExistence(timeout: 8))
         }
-        record("Paid cashews", shelf: false, amount: "5.60")
-        record("Shelf cashews", shelf: true, amount: "5.00")
+        record("Paid cashews", amount: "5.60")
+        record("Shelf cashews", source: "Shelf observation", amount: "5.00")
+        record("Quoted cashews", source: "Checkout quote", amount: "6.00")
         app.terminate()
         launch(reset: false)
         openHistory()
@@ -94,6 +95,7 @@ import XCTest
         reveal(filter)
         filter.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         XCTAssertTrue(shelf.waitForNonExistence(timeout: 5))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Quoted cashews")).firstMatch.exists)
         tap(paid)
         XCTAssertTrue(app.staticTexts["Manually confirmed paid price"].waitForExistence(timeout: 5))
         tap(app.tabBars.buttons["Shop"])

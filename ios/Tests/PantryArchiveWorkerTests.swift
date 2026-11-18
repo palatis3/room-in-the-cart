@@ -173,6 +173,35 @@ import RecordArchive
         XCTAssertEqual(committed.lots.first(where: { $0.name == "Oats" })?.count.quantity?.amount, .one)
     }
 
+    func testRepeatedReviewedShelfImageKeepsOneSourceAndNoPaidPurchase() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
+        f.cleanup.track(repository)
+        let wording = "Members only 2 for $5"
+        let printed = try PriceImageLine(digest: Data(repeating: 7, count: 32), ordinal: 3, wording: wording, uncertain: true)
+        let shelf = PrivatePriceEvidence(id: printed.shelfID, source: .shelf, name: "Cashews", store: "South",
+            mode: .inStore, date: now, currencyCode: "CAD", amountMinor: 500, pack: nil, eligibility: wording,
+            sourceText: wording, shelfImage: .init(printed: printed, basis: .bundle))
+        let initial = try await f.store.inventoryState()
+        let lotsBefore = try await f.store.inventoryRecords(kind: .lot)
+        try await repository.savePrice(shelf, expected: initial, at: now)
+        let page = try await repository.pricePage()
+        XCTAssertEqual(page.standalone, [shelf])
+        XCTAssertFalse(shelf.isPaidPrice)
+        XCTAssertNil(try shelf.unitPrice(in: .gram))
+        do {
+            try await repository.savePrice(shelf, expected: page.state, at: now)
+            XCTFail("The shopper should see that the selected image line is already saved")
+        } catch PantryPriceError.imageAlreadySaved {}
+        let reopened = try await repository.pricePage()
+        let lotsAfter = try await f.store.inventoryRecords(kind: .lot)
+        let ledger = try await f.ledger.load()
+        XCTAssertEqual(reopened.state, page.state)
+        XCTAssertEqual(reopened.standalone, [shelf])
+        XCTAssertEqual(lotsBefore, lotsAfter)
+        XCTAssertNil(ledger)
+    }
+
     func testReviewedPrivatePriceCorrectionsRestoreAndErasureFencesEarlierExports() async throws {
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
@@ -234,6 +263,12 @@ import RecordArchive
                 ledger: f.ledger, gate: f.gate, authorize: { true })
             XCTFail("Reimport must honor a price and its credits erased at the original store")
         } catch PantryArchivePrivacyValidator.Failure.retired {}
+        let quote = PrivatePriceEvidence(id: UUID(), source: .currentQuote, name: "Rice", store: "East market",
+            mode: .pickup, date: now, currencyCode: "USD", amountMinor: 440, pack: nil, sourceText: "Entered from checkout")
+        try await repository.savePrice(quote, expected: after.state, at: now)
+        let quoted = try await repository.pricePage()
+        XCTAssertEqual(quoted.standalone, [quote])
+        XCTAssertFalse(quote.isPaidPrice)
         try await reader.discardRestoration(restored)
         try await reader.discardImport(imported, registry: registry)
         try await f.worker.discardExport(bundle)
