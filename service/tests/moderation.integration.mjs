@@ -184,3 +184,66 @@ test('successor shopper can include only a chosen dated-copy excerpt and removal
   assert.equal((await f.post('shopper',report(ref))).status,404);
   assert.deepEqual((await admin.query('SELECT snapshot FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2',[f.h,f.shop])).rows[0].snapshot,snapshot);
 });
+test('removing one reported field follows its unchanged wording through unrelated edits and releases a correction',async()=>{
+  const f=await fixture(),scope={'X-View-Grant-ID':f.grant};
+  const current=async(projection)=>{
+    const response=await fetch(origin+'/v1/views/'+f.grant+'/current',{headers:{Authorization:'Bearer '+f.actors.cook.token,'X-Device-Token':f.actors.cook.secret,'X-Household-ID':f.h,...scope}});
+    if(projection)assert.deepEqual((await response.json()).items,projection);
+    return response.status;
+  };
+  const items=[{label:'Apples',amount:'2',unit:'cups',action:'Slice the apples'}];
+  const write=async(rows,actor=f.actors.shopper.id)=>admin.query(`UPDATE ritc.view_grant SET revision=revision+1,projection_wording_revision=revision+1,
+    projection_author_id=$3,projection=jsonb_set(projection,'{items}',$4) WHERE household_id=$1 AND grant_id=$2`,[f.h,f.grant,actor,JSON.stringify(rows)]);
+  const a=await f.post('cook',report(instruction(f)),scope);assert.equal(a.status,200);
+  const moved=[{label:'Pears',amount:'1',unit:'cup',action:'Wash the pears'},{...items[0],amount:'3'}];
+  await write(moved,f.actors.stranger.id);
+  assert.equal(await current(moved),200);
+  await asOperator("SELECT ritc.moderation_resolve($1,'remove')",[a.body.receiptId]);
+  assert.equal(await current(),404,'moving the retained action or changing its amount must not expose it');
+  const changed=[{...moved[1],unit:'slices'},moved[0]];
+  await write(changed);
+  assert.equal(await current(),404,'editing another field after operator removal must retain suppression');
+  const corrected=[{...changed[0],action:'Dice the apples'},changed[1]];
+  await write(corrected);
+  assert.equal(await current(corrected),200);
+  const row=(await admin.query('SELECT author_id,excerpt FROM ritc.moderation_case WHERE case_id=$1',[a.body.receiptId])).rows[0];
+  assert.deepEqual(row,{author_id:f.actors.shopper.id,excerpt:null});
+  const item={kind:'request',id:f.request,revision:2,field:'item'};
+  const b=await f.post('shopper',report(item));assert.equal(b.status,200);
+  const mutate=async(name,amount)=>admin.query('UPDATE ritc.request SET revision=revision+1,wording_revision=revision+1,original_item=$3,own_quantity=$4 WHERE household_id=$1 AND request_id=$2',[f.h,f.request,name,amount]);
+  await mutate('Milk','4');
+  await asOperator("SELECT ritc.moderation_resolve($1,'remove')",[b.body.receiptId]);
+  assert.equal((await f.post('shopper',report({...item,revision:3}))).status,404);
+  await mutate('Oats','4');
+  assert.equal((await f.post('shopper',report({...item,revision:4}))).status,200);
+});
+test('editing the selected row releases its corrected amount even when a different row still shows the same amount',async()=>{
+  const f=await fixture(),scope={'X-View-Grant-ID':f.grant};
+  const rows=[{label:'Apples',amount:'2',unit:'cups',action:'Slice apples'},{label:'Pears',amount:'2',unit:'cups',action:'Wash pears'}];
+  const change=async value=>admin.query("UPDATE ritc.view_grant SET revision=revision+1,projection_wording_revision=revision+1,projection=jsonb_set(projection,'{items}',$3) WHERE household_id=$1 AND grant_id=$2",[f.h,f.grant,JSON.stringify(value)]);
+  await change(rows);
+  const ref={...instruction(f),revision:2,field:'amount'};
+  const a=await f.post('cook',report(ref),scope);assert.equal(a.status,200);
+  await asOperator("SELECT ritc.moderation_resolve($1,'remove')",[a.body.receiptId]);
+  await change([rows[1],{...rows[0],amount:'3'}]);
+  assert.equal((await f.post('cook',report({...ref,revision:3,index:1},'3'),scope)).status,200);
+});
+test('a separately edited next-shop carry retains removal of its original item, but an independently corrected name is visible',async()=>{
+  const f=await fixture(),next=randomUUID(),carried=randomUUID(),window=randomUUID(),owner=f.actors.shopper;
+  const item={kind:'request',id:f.request,revision:2,field:'item'};
+  const a=await f.post('shopper',report(item));assert.equal(a.status,200);
+  await admin.query("INSERT INTO ritc.shop(household_id,shop_id,shopper_id,quote) VALUES($1,$2,$3,'{}')",[f.h,next,owner.id]);
+  await admin.query("INSERT INTO ritc.replay_window(household_id,window_id,member_id,device_id,expires_at) VALUES($1,$2,$3,$4,now()+interval '1 day')",[f.h,window,owner.id,owner.device]);
+  await admin.query(`INSERT INTO ritc.operation(household_id,operation_id,actor_id,device_id,client_key,window_id,kind,shop_id,payload_digest,response_scope)
+    VALUES($1,$2,$3,$4,$5,$6,'request.carryDeferred',$7,repeat('a',64),'shopper')`,[f.h,carried,owner.id,owner.device,randomUUID(),window,next]);
+  await admin.query(`INSERT INTO ritc.request(household_id,request_id,author_id,client_request_id,shop_id,original_item,own_quantity,route,status,authored_at,author_consent_id)
+    SELECT household_id,$2,author_id,$4,$5,original_item,own_quantity,'current','pending',authored_at,
+    (SELECT consent_id FROM ritc.consent WHERE household_id=$1 AND child_id=$6) FROM ritc.request WHERE household_id=$1 AND request_id=$3`,
+    [f.h,carried,f.request,randomUUID(),next,f.actors.child.id]);
+  await admin.query('INSERT INTO ritc.request_carry VALUES($1,$2,$3,1,1)',[f.h,f.request,carried]);
+  await admin.query("UPDATE ritc.request SET revision=2,wording_revision=2,own_quantity='4' WHERE household_id=$1 AND request_id=$2",[f.h,carried]);
+  await asOperator("SELECT ritc.moderation_resolve($1,'remove')",[a.body.receiptId]);
+  assert.equal((await f.post('shopper',report({...item,id:carried}))).status,404);
+  await admin.query("UPDATE ritc.request SET revision=3,wording_revision=3,original_item='Oats' WHERE household_id=$1 AND request_id=$2",[f.h,carried]);
+  assert.equal((await f.post('shopper',report({...item,id:carried,revision:3},'Oats'))).status,200);
+});
