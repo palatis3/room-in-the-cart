@@ -2345,7 +2345,19 @@ import XCTest
 
         // Inspect the original reusable dinner without saving a new version.
         // Weekly edits must not rewrite its original servings, recipe or source.
-        dinnerRoot()
+        // The library row can be below the fold at the root. Follow the actual
+        // back controls and verify each destination before looking for that row.
+        for (source, destination) in [("Manual quantities", "Chosen dinner"),
+                                      ("Chosen dinner", "All chosen dinners"),
+                                      ("All chosen dinners", "Dinners")] {
+            let sourceBar = app.navigationBars[source]
+            let labeledBack = sourceBar.buttons[destination]
+            let backButton = labeledBack.exists ? labeledBack : sourceBar.buttons["BackButton"]
+            XCTAssertTrue(backButton.waitForExistence(timeout: 8) && backButton.isHittable)
+            backButton.tap()
+            XCTAssertTrue(app.navigationBars[destination].waitForExistence(timeout: 8))
+        }
+        revealScrollableContent(app.buttons["dinnerLibrary"])
         tap(app.buttons["dinnerLibrary"])
         tap(app.buttons["Review as a new dinner version"])
         assertField("ledgerDinnerTitle", title)
