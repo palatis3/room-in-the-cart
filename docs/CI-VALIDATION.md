@@ -1144,7 +1144,13 @@ recorded; the image documentation does not publish its build identifier.
 The rolling preview label is not an immutable image pin. Runner availability and
 successful hosted execution still need qualification at the migrated revision.
 
-`ios-swift-codeql` remains required on `macos-15` with Xcode 26.3. GitHub's
+The required `ios-swift-codeql` job uses GitHub's standard `macos-15-intel`
+runner with Xcode 26.3 (17C529) to trace the arm64 iPhone build. GitHub
+reported that it could not assign an arm64 Mac to this scan after 15 minutes.
+Compare queue time and traced build time separately on the Intel runner.
+[Run annotations](https://api.github.com/repos/palatis3/room-in-the-cart/check-runs/134824855150/annotations) · [Intel runner image](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)
+
+GitHub's
 [official CodeQL support notice](https://github.blog/changelog/2026-10-19-codeql-changes-for-macos-27-xcode-27-and-swift-6-4/)
 explicitly excludes Swift 6.4 and traced Xcode 27 builds; `build-mode: none` is
 not a Swift replacement. This hosted security exception preserves manual Swift

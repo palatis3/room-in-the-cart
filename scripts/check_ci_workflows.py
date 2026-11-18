@@ -241,7 +241,8 @@ def validate_workflows(paths, policy=POLICY):
             expected = policy[identity]
             validate_native_matrix(job, identity, expected)
             if identity not in ROUTED_NATIVE_JOBS:
-                require(job.get('runs-on') in GITHUB_RUNNERS, f'Expected standard GitHub runner: {identity}')
+                runners = ('macos-15-intel',) if identity == ('ci.yml', 'ios-swift-codeql') else GITHUB_RUNNERS
+                require(job.get('runs-on') in runners, f'Expected standard GitHub runner: {identity}')
                 require('concurrency' not in job, f'GitHub native job must use provider admission: {identity}')
                 continue
             runner = A2_RUNNER if identity in A2_JOBS else FIXTURE_RUNNER if identity in PRODUCER_JOBS else FIXTURE_CONSUMER_RUNNER

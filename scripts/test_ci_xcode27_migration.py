@@ -27,7 +27,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                 seen.add(key)
                 env = {**workflow.get('env', {}), **job.get('env', {})}
                 if key == ('ci.yml', 'ios-swift-codeql'):
-                    self.assertEqual(job['runs-on'], 'macos-15')
+                    self.assertEqual(job['runs-on'], 'macos-15-intel')
                     self.assertEqual(env['DEVELOPER_DIR'], '/Applications/Xcode_26.3.app/Contents/Developer')
                     self.assertNotIn('CI_IPHONE_RUNTIME', env)
                     self.assertNotIn('CI_IPHONE_NAME', env)

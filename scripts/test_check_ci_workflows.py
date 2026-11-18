@@ -235,7 +235,7 @@ class WorkflowGuardTests(unittest.TestCase):
                 with self.subTest(changed=changed), self.assertRaises(ValueError):
                     self.validate(changed, producer_policy)
         self.path = Path(self.temp.name) / 'probe.yml'
-        for label in (FIXTURE_RUNNER, A1_LABEL, 'xcode-27-xlarge', 'macos-15-xlarge'):
+        for label in (FIXTURE_RUNNER, A1_LABEL, 'xcode-27-xlarge', 'macos-15-xlarge', 'macos-15-intel'):
             with self.assertRaisesRegex(ValueError, 'Expected standard GitHub runner'):
                 self.validate(GITHUB_TEXT.replace('runs-on: macos-15', 'runs-on: ' + label))
 
