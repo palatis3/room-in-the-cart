@@ -24,16 +24,15 @@ No fixture flags, assertions, timeouts or warning allowances are weakened.
 Use a native **Bitrise CI** macOS Apple Silicon stack containing Xcode **27.1
 (27A9275)** and iOS **27.0 (24A434)**, with both simulator device types installed.
 Select a supported Mac machine with at least 14 GB RAM and set native project
-concurrency to two. `-jobs 2` bounds each compilation. The stack and machine type
-inherit the reviewed dashboard settings until their exact IDs are verified;
-GitHub runner labels `bitrise-runner-A1/A2` are not native CI stack IDs. Do not
-substitute a rolling `latest` stack or install a different runtime during a run.
+concurrency to two. `-jobs 2` bounds each compilation. The workflow pins the stable native stack to `osx-xcode-27.1.x`. The workspace selects the included Mac machine type.
 The script fails before compiling if the pinned toolchain/runtime is absent.
 
-Use the repository's `bitrise.yml` at the event revision. The native Bitrise
-configuration is separate from GitHub's twelve A1/A2 lanes and does not change
-the existing Buildkite manual pipeline. Capacity and billing remain dashboard
-settings; source schema validation does not prove either is available.
+The public GitHub repository sends push events to the native Bitrise project.
+The project currently uses the validated copy of `bitrise.yml` stored on Bitrise.
+After changing that file, run `bitrise yml validate --offline --config bitrise.yml`
+and `bitrise yml update --file bitrise.yml` from this checkout. The local
+`.bitrise-cli.yml` selects Room in the Cart. Use `bitrise build list` to check
+which jobs actually started on a push. Build Hub and Buildkite run separately.
 
 There are no SSH-key, signing, secret, deployment, third-party upload, remote
 cache or artifact-distribution steps. Source fetch is public HTTPS with Git

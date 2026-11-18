@@ -1,8 +1,9 @@
 format_version: '25'
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 project_type: ios
-# Native Bitrise CI, separate from the GitHub A1/A2 runner pools. Select the
-# verified Xcode 27.1 stack and two-machine concurrency in the project settings.
+meta:
+  bitrise.io:
+    stack: osx-xcode-27.1.x
 pipelines:
   app-pair:
     triggers:
