@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {digest} from './database.js';
 import {z} from 'zod';
 import {refresh, unavailable} from './errors.js';
-import {householdPantryEpoch} from './pantry-lots.js';
+import {cookReview} from './shared-cook-completion.js';
 import type {Context, Shop} from './repository.js';
 
 const options = ['makeAgain','tooMuchEffort','childrenLikedIt','tooManyLeftovers'] as const;
@@ -18,13 +18,13 @@ interface Stored {
   reactions: Reaction[]; updated_at: Date;
 }
 async function source(ctx: Context, shop: Shop, occurrenceId: string) {
-  const grantEpoch = householdPantryEpoch(ctx);
-  if (grantEpoch === null || shop.shopper_id !== ctx.member.member_id) throw unavailable();
-  const row = (await ctx.db.query<{operation_id:string}>(`SELECT operation_id FROM ritc.shared_cook
-    WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 AND undone_by IS NULL`,
-    [ctx.householdId,shop.shop_id,occurrenceId])).rows[0];
-  if (!row) throw unavailable();
-  return {cookId: row.operation_id, grantEpoch, authorityEpoch: shop.authority_epoch};
+  const review = await cookReview(ctx,shop,occurrenceId);
+  if (!review.completion) throw unavailable();
+  const exact = await ctx.db.query(`SELECT 1 FROM ritc.shared_cook WHERE household_id=$1 AND shop_id=$2
+    AND operation_id=$3 AND occurrence_id=$4 AND meal_revision=$5 AND recipe_revision_id=$6 AND undone_by IS NULL`,
+    [ctx.householdId,shop.shop_id,review.completion.cookId,occurrenceId,review.base.mealRevision,review.base.recipeRevisionId]);
+  if (!exact.rowCount) throw unavailable();
+  return {cookId:review.completion.cookId, grantEpoch:review.base.grantEpoch, authorityEpoch:shop.authority_epoch};
 }
 export async function readMealFeedback(ctx: Context, shop: Shop, occurrenceId: string) {
   const basis = await source(ctx,shop,occurrenceId);
@@ -62,14 +62,13 @@ export async function updateMealFeedback(ctx: Context, shop: Shop, occurrenceId:
     WHERE household_id=$1 AND cook_id=$2 AND member_id=$3`,args)).rows[0];
   if ((old?.revision ?? null)!==body.expectedRevision) throw refresh();
   const reactions = options.filter(reaction=>body.reactions.includes(reaction));
-  const revision = reactions.length ? randomUUID() : null;
+  // Keep a payload-free revision after removal so a previously reviewed empty form cannot resurrect it.
+  const revision = reactions.length || old ? randomUUID() : null;
   if (revision) {
     await ctx.db.query(`INSERT INTO ritc.household_meal_feedback(household_id,cook_id,member_id,revision,reactions,updated_at)
       VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(household_id,cook_id,member_id) DO UPDATE SET
       revision=EXCLUDED.revision,reactions=EXCLUDED.reactions,updated_at=EXCLUDED.updated_at`,
       [...args,revision,reactions,ctx.now]);
-  } else if (old) {
-    await ctx.db.query('DELETE FROM ritc.household_meal_feedback WHERE household_id=$1 AND cook_id=$2 AND member_id=$3',args);
   }
   await ctx.db.query(`INSERT INTO ritc.meal_feedback_receipt(household_id,cook_id,member_id,device_id,client_key,window_id,request_digest,accepted_revision)
     VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,[...args,ctx.deviceId,body.clientKey,body.replayWindow,fingerprint,revision]);

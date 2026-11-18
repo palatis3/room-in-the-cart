@@ -759,6 +759,182 @@
           }
         }
       }
+    },
+    "Household meal feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household meal feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opiniones del hogar sobre la comida"
+          }
+        }
+      }
+    },
+    "My household reactions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My household reactions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis reacciones para el hogar"
+          }
+        }
+      }
+    },
+    "Only the reactions you share here are visible to adults authorized for this cooking record.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the reactions you share here are visible to adults authorized for this cooking record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los adultos con acceso a este registro de cocina pueden ver las reacciones que compartas aquí."
+          }
+        }
+      }
+    },
+    "Share selected reactions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share selected reactions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir las reacciones seleccionadas"
+          }
+        }
+      }
+    },
+    "Remove my shared reactions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove my shared reactions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar mis reacciones compartidas"
+          }
+        }
+      }
+    },
+    "Shared for this meal in the last 90 days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared for this meal in the last 90 days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reacciones compartidas sobre esta comida en los últimos 90 días"
+          }
+        }
+      }
+    },
+    "Reload this cooking record to check the current shared reactions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload this cooking record to check the current shared reactions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a cargar este registro de cocina para ver las reacciones compartidas actuales."
+          }
+        }
+      }
+    },
+    "Make again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volvería a prepararla"
+          }
+        }
+      }
+    },
+    "Too much effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too much effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demasiado trabajo"
+          }
+        }
+      }
+    },
+    "Children liked it": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Children liked it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les gustó a los niños"
+          }
+        }
+      }
+    },
+    "Too many leftovers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobró demasiada comida"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

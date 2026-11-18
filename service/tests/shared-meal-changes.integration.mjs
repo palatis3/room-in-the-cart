@@ -1865,6 +1865,67 @@ async function reviewedCookingFixture(settings={}){
  return {...f,p,manual,path,review,stock,body,need,known};
 }
 
+test('optional shared meal feedback binds consent, source, adult and replay window and clears on cooking Undo',async()=>{
+ const f=await reviewedCookingFixture();
+ const {draft,base}=await f.body();
+ const path=f.path.replace(/\/cook-completion\?.*/, '/cook-feedback/'+draft.base.occurrenceId);
+ assert.equal((await call(f.owner,path)).status,404);
+ const cook=f.command('cook.complete',{...base,servings:2,uses:draft.needs.map(n=>({rowId:randomUUID(),needId:n.id,kind:'notUsed'})),outputs:[]});
+ const receipt=ok(await f.send(cook));
+ const read=async()=>ok(await call(f.owner,path));
+ const initial=await read(),stock=await f.stock();
+ assert.deepEqual(initial.shared,[]);assert.deepEqual(initial.own,[]);assert.equal(initial.revision,null);
+ const command={v:1,cookId:receipt.cookId,grantEpoch:initial.grantEpoch,authorityEpoch:initial.authorityEpoch,
+   expectedRevision:null,clientKey:randomUUID(),replayWindow:f.owner.window,reactions:['childrenLikedIt','tooManyLeftovers']};
+ const save=async body=>call(f.owner,path,'PUT',body);
+ const accepted=ok(await save(command));assert.deepEqual(ok(await save(command)),accepted);
+ assert.deepEqual((await read()).shared,command.reactions);
+ assert.equal((await save({...command,reactions:['tooMuchEffort']})).status,409);
+ assert.equal((await save({...command,clientKey:randomUUID(),grantEpoch:command.grantEpoch+1})).status,409);
+ assert.equal((await call(f.planner,path)).status,404);
+ const removed=ok(await save({...command,clientKey:randomUUID(),expectedRevision:accepted.revision,reactions:[]}));
+ assert.notEqual(removed.revision,accepted.revision);assert.deepEqual((await read()).shared,[]);
+ assert.equal((await save({...command,clientKey:randomUUID()})).status,409);
+ const after=await f.stock();assert.deepEqual(after.lots,stock.lots);assert.equal(after.pantryRevision,stock.pantryRevision);
+ const undo=f.command('cook.undo',{...(await f.body()).base,cookId:receipt.cookId});
+ ok(await f.send(undo));
+ assert.equal((await call(f.owner,path)).status,404);assert.equal((await save(command)).status,404);
+ const retained=await admin.query('SELECT count(*)::int AS n FROM ritc.meal_feedback_receipt WHERE cook_id=$1',[receipt.cookId]);
+ assert.equal(retained.rows[0].n,0);
+});
+
+test('household feedback survives authorized shopper handoff and is withdrawn on grant revocation or author erasure',async()=>{
+ const f=await reviewedCookingFixture();
+ const {draft,base}=await f.body();
+ const cook=ok(await f.send(f.command('cook.complete',{...base,servings:2,
+   uses:draft.needs.map(n=>({rowId:randomUUID(),needId:n.id,kind:'notUsed'})),outputs:[]})));
+ const path=f.path.replace(/\/cook-completion\?.*/, '/cook-feedback/'+draft.base.occurrenceId);
+ const read=async actor=>ok(await call(actor,path));
+ const consent=(actor,page,reactions)=>({v:1,cookId:cook.cookId,grantEpoch:page.grantEpoch,authorityEpoch:page.authorityEpoch,
+   expectedRevision:page.revision,clientKey:randomUUID(),replayWindow:actor.window,reactions});
+ const ownerEdit=consent(f.owner,await read(f.owner),['makeAgain']);
+ ok(await call(f.owner,path,'PUT',ownerEdit));
+ ok(await f.write('shop.transferAuthority',{newShopperId:f.planner.id}));f.snapshot.authorityEpoch++;
+ const grant=(enabled,expectedGrantEpoch)=>call(f.owner,f.base+'/pantry/grants','POST',{v:1,memberId:f.planner.id,enabled,expectedGrantEpoch});
+ assert.equal((await call(f.planner,path)).status,404);ok(await grant(true,0));
+ const plannerPage=await read(f.planner);
+ assert.deepEqual(plannerPage.own,[]);assert.deepEqual(plannerPage.shared,['makeAgain']);
+ assert(!JSON.stringify(plannerPage).includes(f.owner.id));
+ assert.equal((await call(f.owner,path,'PUT',ownerEdit)).status,404);
+ const second=consent(f.planner,plannerPage,['childrenLikedIt']);
+ ok(await call(f.planner,path,'PUT',second));
+ assert.deepEqual((await read(f.planner)).shared,['makeAgain','childrenLikedIt']);
+ ok(await grant(false,1));assert.equal((await call(f.planner,path,'PUT',second)).status,404);
+ ok(await grant(true,2));assert.equal((await call(f.planner,path,'PUT',second)).status,409);
+ const again=await read(f.planner);assert.deepEqual(again.own,[]);assert.deepEqual(again.shared,['makeAgain']);
+ const third=consent(f.planner,again,['tooMuchEffort']);ok(await call(f.planner,path,'PUT',third));
+ await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
+ const records=await admin.query('SELECT member_id FROM ritc.household_meal_feedback WHERE household_id=$1',[f.h]);
+ assert.deepEqual(records.rows.map(row=>row.member_id),[f.owner.id]);
+ const receipts=await admin.query('SELECT count(*)::int AS n FROM ritc.meal_feedback_receipt WHERE household_id=$1 AND member_id=$2',[f.h,f.planner.id]);
+ assert.equal(receipts.rows[0].n,0);
+});
+
 test('shared cooking batches lot splits, fulfills only actual holds, recovers its receipt and compensates unrelated changes',async()=>{
  const f=await reviewedCookingFixture();
  ok(await f.write('delivery.reserve',{...f.reservation,supplyRevision:4}));

@@ -58,6 +58,11 @@ struct SharedCookCompletionView: View {
                                 }
                             }
                         }
+                        if model.canShareMealFeedback {
+                            NavigationLink(cookingText("Household meal feedback")) {
+                                SharedCookFeedbackView(model: model, occurrence: occurrence, cook: completion.cookId)
+                            }.accessibilityIdentifier("sharedCook.mealFeedback")
+                        }
                         Button(cookingText("Undo cooking changes"), role: .destructive) { confirmUndo = true }
                     }
                 } else {

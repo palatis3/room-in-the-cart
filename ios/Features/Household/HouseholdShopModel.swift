@@ -336,6 +336,23 @@ struct SharedShopTransfer: Equatable {
         return UUID(uuidString: id)
     }
     var pendingSharedCook: Bool { pendingEnvelope?.kind.hasPrefix("cook.") == true }
+    var canShareMealFeedback: Bool { canCompleteCook && scope.capabilities.contains("meal_feedback") }
+
+    func sharedMealFeedback(occurrence: UUID, cook: UUID) async throws -> SharedMealFeedback {
+        guard canShareMealFeedback, let id = scope.shopId else { throw ClientError.accessEnded }
+        let start = generation, actor = scope
+        let page = try await service.sharedMealFeedback(shopID: id, occurrence: occurrence, cook: cook)
+        guard start == generation, actor == scope, canShareMealFeedback else { throw ClientError.cancelled }
+        return page
+    }
+    func setSharedMealFeedback(_ reactions: Set<SharedMealReaction>, reviewed: SharedMealFeedback) async throws -> SharedMealFeedback {
+        guard canShareMealFeedback, let id = scope.shopId else { throw ClientError.accessEnded }
+        let start = generation, actor = scope
+        let page = try await service.setSharedMealFeedback(shopID: id, reviewed: reviewed, reactions: reactions)
+        guard start == generation, actor == scope, canShareMealFeedback else { throw ClientError.cancelled }
+        return page
+    }
+
     func sharedCookReview(occurrence: UUID) async throws -> SharedCookReview {
         guard canCompleteCook, let id = scope.shopId else { throw ClientError.accessEnded }
         let start = generation, actor = scope
