@@ -1,0 +1,34 @@
+{
+  "qualifiedCommit": "8ac2159c5be1657436244fd9acd6979d66c99e46",
+  "productionSourceCommit": "2a897c15f00c7e1b0f5f6359c342f75875694b33",
+  "configuration": "Debug + CONTRIBUTOR_CAPTURE_UI_FIXTURE",
+  "device": "iPhone 17e, iOS 27.0 (24A434)",
+  "test": "testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange",
+  "durationSeconds": 49.124,
+  "xctest": {
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  },
+  "result": "An authenticated shopper edited the selected wording on a real private SQLite lot, approved its disclosure, confirmed proposed public entry #142, separately confirmed storage history and opening date, then saved the ordinary v128 quality range.",
+  "screenshotSHA256": {
+    "saved-range.png": "b75b8a0e1acf7f808ab4fa4fbb64e158f18ff81e9fd2c978f3ed34f56d4107e4",
+    "review.png": "3e0fd50fd2d93ccd92457b26b9e9a01c556d68da40ed7d5582eb27d0571f971d"
+  },
+  "fixtureBoundary": "Photos show the existing signed-in test shell. Its small top counters describe unrelated household measurement actions. Fixture HTTP substitutes a strict ID-only reply for a live provider. No account, provider activation, actual vendor request or spending occurred.",
+  "additionalChecks": [
+    {
+      "source": "ec5690f15fe8f33baeeb4139d3023b791cef009a",
+      "url": "https://buildkite.com/room-in-cart/room-in-the-cart-ios-qualification/builds/79",
+      "result": "Three passed with zero runtime warnings: English lot range survives relaunch and invalidates on storage change, signed-out optional path preserves manual guide, authenticated offered-ID contract."
+    },
+    {
+      "source": "2a897c15f00c7e1b0f5f6359c342f75875694b33",
+      "result": "Authenticated transport and source/scope/lot/lifetime/expiry/stale reply test passed (0.219 seconds)."
+    },
+    {
+      "result": "Eight checked-in offline service tests passed (all 654 EN/ES IDs and labels, offered ID or null, unoffered/stale extra fields, existing M1 bounds). Additional local loopback of the FoodKeeper HTTP purpose rejected unauthenticated, child, contributor, view-grant, denied-consent and revoked adults, plus replay and excess quota."
+    }
+  ]
+}
