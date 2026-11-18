@@ -2285,6 +2285,12 @@ import XCTest
             reveal(editor)
             XCTAssertEqual(editor.value as? String, "2 Wraps")
             if attempt == 0 {
+                tap(element("capture.onlineVoice"))
+                assertText("Online transcription is unavailable. Return to your list to dictate on this iPhone or type.")
+                let online = app.navigationBars["Optional online transcription"]
+                tap(online.buttons["Cancel"])
+                reveal(editor)
+                XCTAssertEqual(editor.value as? String, "2 Wraps")
                 let paste = app.buttons["Paste selected text for review"]
                 reveal(paste)
                 XCTAssertTrue(paste.isEnabled)

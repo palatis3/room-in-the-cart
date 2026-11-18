@@ -166,3 +166,59 @@ test('only literal reviewed wording crosses recipe, shelf and checkout crop boun
     await assert.rejects(adapter.visibleLine(input(),signal,purpose));
   }
 });
+
+test('voice transcription accepts only the recorded clip, preserves EN/ES and never retries a provider submission', async t => {
+  const {VoiceAssistance,voiceAssistanceInput} = await import('../dist/voice-assistance.js');
+  const samples = 1600, pcm = Buffer.alloc(samples * 2);
+  for (let i=0;i<samples;i++) pcm.writeInt16LE(Math.round(1000*Math.sin(i*0.1)),i*2);
+  const request = {version:1,requestID:randomUUID(),issuedAt:Date.now(),consent:true,language:'es',samples,pcm:pcm.toString('base64')};
+  assert.equal(VoiceAssistance.configured({},budget),undefined);
+  for (const invalid of [{...request,consent:false},{...request,samples:1601},{...request,language:'xx'},{...request,samples:480001},{...request,audioURL:'irrelevant'}])
+    assert.equal(voiceAssistanceInput.safeParse(invalid).success,false);
+  let calls=0,role='adult';
+  const voice=new VoiceAssistance(30,'fixture','unused',async(url,options)=>{
+    calls++;
+    assert.equal(url,'https://api.openai.com/v1/audio/transcriptions');
+    assert.equal(options.redirect,'error');
+    assert.deepEqual([...options.body.keys()],['model','language','response_format','file']);
+    assert.equal(options.body.get('language'),'es');
+    const wav=Buffer.from(await options.body.get('file').arrayBuffer());
+    assert.equal(wav.toString('ascii',0,4),'RIFF');
+    assert.equal(wav.readUInt32LE(24),16000);
+    assert.equal(wav.readUInt32LE(40),samples*2);
+    assert.equal(wav.readUInt16LE(22),1);
+    assert.deepEqual(wav.subarray(44),pcm);
+    return Response.json({text:'leche y pan',usage:{type:'duration',seconds:0.1}});
+  });
+  let reservations=new Map();
+  const repository={options:{}, async authorized(_id,auth,work){
+    const copy=new Map(reservations);
+    const ctx={now:new Date(),householdId:household,member:{member_id:'member',kind:role,organizer:role==='adult'},viewGrantId:auth.viewGrantId,
+      db:{async query(sql,params){
+        if(sql.includes('set_config'))return {rows:[]};
+        const [key,,cost,cap]=params, next=(copy.get(key)??0)+cost;
+        if(next>cap)return {rowCount:0};
+        copy.set(key,next);return {rowCount:1};
+      }}};
+    const value=await work(ctx);reservations=copy;return value;
+  }};
+  const verifier={verify:async()=>({issuer:'fixture',subject:'adult',sessionId:'test',expiresAt:new Date(Date.now()+60000)})};
+  const server=createHTTPServer({repository,verifier,receiptAssistance:new ReceiptAssistance(budget,'fixture','unused'),voiceAssistance:voice});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  t.after(()=>new Promise(resolve=>server.close(resolve)));
+  const url='http://127.0.0.1:'+server.address().port+'/v1/households/'+household+'/capture-assistance/transcription';
+  const headers={Authorization:'Bearer fixture','Content-Type':'application/json'};
+  const post=value=>fetch(url,{method:'POST',headers,body:JSON.stringify(value)});
+  assert.deepEqual(await (await fetch(url,{headers})).json(),{version:1,available:true});
+  assert.equal(calls,0);
+  role='child';assert.equal((await post(request)).status,404);role='adult';
+  assert.equal((await post({...request,consent:false})).status,422);
+  assert.deepEqual(await (await post(request)).json(),{version:1,requestID:request.requestID,language:'es',text:'leche y pan'});
+  assert.equal((await post(request)).status,429);
+  assert.equal((await post({...request,requestID:randomUUID()})).status,429);
+  assert.equal(calls,1);
+  for(const supplied of [new Response('x'.repeat(16385)),Response.json({text:''}),new Response(null,{status:429})]) {
+    const failed=new VoiceAssistance(30,'fixture','unused',async()=>supplied);
+    await assert.rejects(failed.transcribe({...request,language:'en'},new AbortController().signal));
+  }
+});

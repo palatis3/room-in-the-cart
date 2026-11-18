@@ -1,4 +1,6 @@
 import XCTest
+import AVFoundation
+import HouseholdClient
 import CoreDomain
 import CryptoKit
 import CoreGraphics
@@ -36,6 +38,88 @@ import UniformTypeIdentifiers
         XCTAssertNotEqual(cropOnly.shelfID, try PriceImageLine(digest: digest, ordinal: 1, wording: "", uncertain: true, reviewedReading: other).shelfID)
         let legacy = try JSONSerialization.data(withJSONObject: ["digest": digest.base64EncodedString(), "ordinal": 1, "wording": original.wording, "uncertain": true])
         XCTAssertEqual(try JSONDecoder().decode(PriceImageLine.self, from: legacy), original)
+    }
+
+    func testConsentedVoiceClipIsPreviewedThenAddedThroughOrdinaryListReview() async throws {
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 9_600))
+        buffer.frameLength = 9_600
+        let floats = try XCTUnwrap(buffer.floatChannelData?[0])
+        for i in 0..<Int(buffer.frameLength) { floats[i] = Float(sin(Double(i) * 0.05) * 0.3) }
+        let recorded = try VoiceListSampleBuffer(input: format)
+        recorded.append(buffer)
+        let clip = try recorded.clip()
+        XCTAssertGreaterThan(clip.duration, 0.15)
+        XCTAssertLessThanOrEqual(clip.duration, 0.20)
+        XCTAssertEqual(try AVAudioPlayer(data: clip.playbackWAV).duration, clip.duration, accuracy: 0.001)
+        XCTAssertEqual(clip.playbackWAV.dropFirst(44), clip.pcm)
+        let input = try VoiceTranscriptionRequest(consentingTo: clip, language: "es")
+        let raw = "leche y pan"
+        let server = S24FixtureServer()
+        defer { server.close() }
+        let transport = HTTPTransport(session: server.makeSession())
+        let auth = AdultAuth(configuration: try .init(projectURL: server.baseURL, publishableKey: "sb_publishable_fixture_only"),
+                             vault: S24FixtureVault(), transport: transport)
+        let client = HouseholdService(configuration: try .init(baseURL: server.baseURL), auth: auth, deviceVault: S24FixtureVault(), transport: transport)
+        _ = try await auth.verifyEmailCode(email: "person@example.invalid", code: "123456")
+        _ = try await client.enroll(householdID: S24FixtureServer.household)
+        server.intercept = { call in
+            guard call.request.url?.path.hasSuffix("/capture-assistance/transcription") == true else { return false }
+            do {
+                let value: [String:Any]
+                if call.request.httpMethod == "GET" {
+                    XCTAssertNil(call.request.httpBody)
+                    value = ["version":1,"available":true]
+                } else {
+                    var bytes = call.request.httpBody ?? Data()
+                    if bytes.isEmpty, let stream = call.request.httpBodyStream {
+                        stream.open(); defer { stream.close() }
+                        var buffer = [UInt8](repeating: 0, count: 4096)
+                        while stream.hasBytesAvailable {
+                            let count = stream.read(&buffer, maxLength: buffer.count)
+                            guard count > 0 else { break }
+                            bytes.append(buffer, count: count)
+                        }
+                    }
+                    let sent = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String:Any])
+                    XCTAssertEqual(sent["pcm"] as? String, clip.pcm.base64EncodedString())
+                    XCTAssertEqual(sent["consent"] as? Bool, true)
+                    XCTAssertEqual(sent["language"] as? String, "es")
+                    value = ["version":1,"requestID":input.requestID.uuidString,"language":"es","text":raw]
+                }
+                let response = try XCTUnwrap(HTTPURLResponse(url: XCTUnwrap(call.request.url), statusCode: 200, httpVersion: nil, headerFields: nil))
+                call.client?.urlProtocol(call, didReceive: response, cacheStoragePolicy: .notAllowed)
+                call.client?.urlProtocol(call, didLoad: try JSONSerialization.data(withJSONObject: value))
+                call.client?.urlProtocolDidFinishLoading(call)
+            } catch { call.client?.urlProtocol(call, didFailWithError: error) }
+            return true
+        }
+        let scope = ReceiptAssistanceScope(subject: "fixture-adult", householdID: S24FixtureServer.household,
+            memberID: S24FixtureServer.member, shopID: S24FixtureServer.shop)
+        let available = try await client.voiceTranscriptionAvailable(scope: scope)
+        XCTAssertTrue(available)
+        let transcript = try await client.transcribeVoiceList(input, scope: scope)
+        let model = make()
+        model.stageOnlineTranscript(transcript.text)
+        XCTAssertEqual(model.text, "12 wraps")
+        XCTAssertNil(model.reviewed())
+        model.acceptCandidate()
+        XCTAssertTrue(model.naturalListMode)
+        model.text = "leche y pan integral"
+        model.confirmed = true
+        let lines = try model.fields(forList: true, destination: "This pickup").lines.map { line in
+            var row = line; row.confirmed = true
+            return try XCTUnwrap(row.reviewed(expectedDestination: "This pickup"))
+        }
+        let capture = try XCTUnwrap(model.reviewed(lines: lines))
+        var shop = ShoppingLedger()
+        let preview = try CaptureLedgerImport.stage(capture, in: shop)
+        XCTAssertTrue(shop.contributions.isEmpty)
+        try shop.commitImport(preview.preview)
+        XCTAssertEqual(shop.importBatches.first?.preview.source, .assistedVoice)
+        XCTAssertEqual(shop.importBatches.first?.preview.originalText, raw)
+        XCTAssertEqual(shop.contributions.count, 2)
+        XCTAssertTrue(try CaptureLedgerImport.stage(capture, in: shop).alreadyApplied)
     }
 
     func testTypedReviewRequiresConfirmationAndDeliversExactlyOnce() {

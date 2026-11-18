@@ -4,7 +4,7 @@ import CoreDomain
 
 func captureText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Capture") }
 
-/// Returns a reviewed draft to the staged ledger import; never commits a list or sends its content to a service.
+/// Returns a reviewed draft to the ordinary staged ledger import.
 @MainActor struct CaptureReviewView: View {
     @StateObject private var model: CaptureModel
     @StateObject private var corrections = CaptureCorrectionsModel()
@@ -15,6 +15,8 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     let currentPickup: CapturePickup?
     let availablePickups: [CapturePickup]
     let authorizePickup: (CapturePickup) -> Bool
+    private struct VoiceSelection: Identifiable { let id = UUID(); let original: String }
+    @State private var voiceSelection: VoiceSelection?
     private enum StagingIssue { case guest, timing, invalid }
     @State private var stagingIssue: StagingIssue?
     let destination: String
@@ -178,6 +180,10 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                         Label(captureText("Dictate on this iPhone"), systemImage: "mic")
                     }.disabled(loadingPhoto || model.closed).accessibilityIdentifier("capture.startSpeech")
                 }
+                if !requestMode, !model.busy {
+                    Button(captureText("Optional online transcription")) { voiceSelection = .init(original: model.text) }
+                        .disabled(loadingPhoto || model.closed).accessibilityIdentifier("capture.onlineVoice")
+                }
                 if model.busy || loadingPhoto {
                     ProgressView(captureText(model.listening ? "Listening — tap Stop when finished" : "Preparing text for review…"))
                 }
@@ -235,7 +241,16 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         .onChange(of: availablePickups) { _, pickups in naturalBatch?.refreshPickups(pickups) }
         .onChange(of: photo) { _, item in load(item) }
         .onChange(of: scenePhase) { _, phase in if phase == .background { close(); dismiss() } }
-        .onDisappear { close() }
+        .sheet(item: $voiceSelection) { selection in
+            let language = Locale(identifier: model.localeIdentifier).language.languageCode?.identifier ?? ""
+            AssistedVoiceListView(language: language, authorized: {
+                authorize() && !model.closed && !model.busy && model.text == selection.original
+            }, stage: { transcript in
+                guard authorize(), model.text == selection.original else { return }
+                model.stageOnlineTranscript(transcript)
+            })
+        }
+        .onDisappear { if voiceSelection == nil { close() } }
     }
 
     @ViewBuilder private func evidence(_ value: CaptureEvidence) -> some View {
@@ -243,6 +258,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 250)
                 .accessibilityLabel(captureText("Selected source photo. Recognized wording is shown below."))
         }
+        if value.source == .assistedSpeech { Text(captureText("Source: reviewed online transcript")) }
         Text(value.text.isEmpty ? captureText("No words recognized yet") : value.text).textSelection(.enabled)
         if !value.uncertainLines.isEmpty {
             Label(captureText("Some wording was uncertain. Compare it with the source and correct it."), systemImage: "questionmark.circle")
@@ -303,7 +319,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         switch failure {
         case .notConfigured: return captureText("Speech is not available in this build. Type or paste your list instead.")
         case .permissionDenied: return captureText("Microphone or speech permission was not granted. Your typed draft is unchanged; typing, paste and photo review remain available.")
-        case .onDeviceUnavailable: return captureText("On-device recognition is unavailable for this language or device. Type or paste instead; there is no online speech fallback.")
+        case .onDeviceUnavailable: return captureText("On-device dictation is unavailable for this language or device. You can type or paste your list.")
         case .audioUnavailable: return captureText("The microphone is unavailable. Stop another recording or type your list.")
         case .recognitionFailed: return captureText("Recognition could not finish. Review any captured wording or keep typing. Your saved pickup is unchanged.")
         case .imageUnavailable: return captureText("This photo could not be read. Choose another image or type the text.")

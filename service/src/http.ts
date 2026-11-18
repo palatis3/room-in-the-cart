@@ -1,4 +1,5 @@
-import { ReceiptAssistance, receiptAssistanceInput, requireReceiptAdult, reserveReceiptAssistance } from './receipt-assistance.js';
+import { ReceiptAssistance, receiptAssistanceInput, requireReceiptAdult, reserveCaptureAssistance } from './receipt-assistance.js';
+import { VoiceAssistance, voiceAssistanceInput } from './voice-assistance.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
@@ -39,7 +40,7 @@ import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
-export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -249,14 +250,32 @@ export function createHTTPServer(options:HTTPOptions) {
         send(201,await repository.enroll(householdId,auth.identity));return;
       }
       const visual = /^\/capture-assistance\/(recipe|shelf|checkout)-line$/.exec(path);
-      if((path==='/receipt-assistance' && (method==='GET'||method==='POST')) || (visual && method==='POST')) {
+      const voice = path === '/capture-assistance/transcription';
+      if(((path==='/receipt-assistance' || voice) && (method==='GET'||method==='POST')) || (visual && method==='POST')) {
         const assistance=options.receiptAssistance;
         const authorize=()=>repository.authorized(householdId,auth,ctx=>requireReceiptAdult(repository,ctx));
         await authorize();
-        if(method==='GET'){send(200,{version:1,available:!!assistance,allowsCrop:!!assistance?.budget.maxCropMicros});return;}
+        if(method==='GET'){
+          send(200,voice ? {version:1,available:!!assistance && !!options.voiceAssistance}
+            : {version:1,available:!!assistance,allowsCrop:!!assistance?.budget.maxCropMicros});
+          return;
+        }
         if(!assistance)throw new ServiceError(503,'receipt_assistance_unavailable','Keep editing this receipt on your device.');
-        const input=receiptAssistanceInput.parse(await body(req,assistance.budget.maxCropMicros ? 251_000 : 2048));
-        if(visual && (!input.crop || !assistance.budget.maxCropMicros)) throw invalid();
+        const prepare = async () => {
+          if (voice) {
+            const adapter = options.voiceAssistance;
+            if (!adapter) throw new ServiceError(503,'voice_transcription_unavailable','Continue with on-device dictation.');
+            const input = voiceAssistanceInput.parse(await body(req,1_281_024));
+            return {input,cost:adapter.maximumCost,run:(signal:AbortSignal)=>adapter.transcribe(input,signal)};
+          }
+          const input = receiptAssistanceInput.parse(await body(req,assistance.budget.maxCropMicros ? 251_000 : 2048));
+          if (visual && (!input.crop || !assistance.budget.maxCropMicros)) throw invalid();
+          const cost = input.crop ? assistance.budget.maxCropMicros : assistance.budget.maxRequestMicros;
+          return {input,cost,run:(signal:AbortSignal)=>visual
+            ? assistance.visibleLine(input,signal,z.enum(['recipe','shelf','checkout']).parse(visual[1]))
+            : assistance.extract(input,signal)};
+        };
+        const prepared = await prepare();
         const cancellation=new AbortController();
         const stop=()=>cancellation.abort();
         res.once('close',stop);
@@ -264,11 +283,9 @@ export function createHTTPServer(options:HTTPOptions) {
           if(res.destroyed)throw unavailable();
           await repository.authorized(householdId,auth,async ctx=>{
             await requireReceiptAdult(repository,ctx);
-            await reserveReceiptAssistance(ctx,auth.identity,input,assistance.budget);
+            await reserveCaptureAssistance(ctx,auth.identity,prepared.input,assistance.budget,prepared.cost);
           });
-          const result=visual
-            ? await assistance.visibleLine(input,cancellation.signal,z.enum(['recipe','shelf','checkout']).parse(visual[1]))
-            : await assistance.extract(input,cancellation.signal);
+          const result=await prepared.run(cancellation.signal);
           await authorize();
           send(200,result);
         } finally { res.off('close',stop); }

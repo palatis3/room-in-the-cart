@@ -267,7 +267,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public var isTrashed: Bool { trashedAt != nil }
 }
 
-public enum ImportSource: String, Codable, CaseIterable, Sendable { case typed, paste, selectedText, voice, photoOCR }
+public enum ImportSource: String, Codable, CaseIterable, Sendable { case typed, paste, selectedText, voice, assistedVoice, photoOCR }
 public enum ImportResolution: Codable, Hashable, Sendable {
     case addNew
     case addToLine(UUID)
