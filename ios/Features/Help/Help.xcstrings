@@ -1950,18 +1950,18 @@
         }
       }
     },
-    "When you save a recipe in Household Tonight, adults with access to that pantry can read its ingredients, portions, reviewed restrictions and any package labels you include. You choose the household batches to link to the recipe.": {
+    "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When you save a recipe in Household Tonight, adults with access to that pantry can read its ingredients, portions, reviewed restrictions and any package labels you include. You choose the household batches to link to the recipe."
+            "value": "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando guardas una receta en «Esta noche en casa», los adultos con acceso a esa despensa pueden leer sus ingredientes, porciones, restricciones revisadas y los datos de las etiquetas que incluyas. Tú eliges qué lotes del hogar vincular con la receta."
+            "value": "Cuando guardas una receta en «Esta noche en casa», envías al servicio del hogar los ingredientes, las porciones, los lotes que elegiste y las restricciones o los datos del paquete que hayas revisado. Los adultos con acceso a la despensa pueden ver el nombre de la receta y sus ingredientes cuando se les sugiere esa cena."
           }
         }
       }

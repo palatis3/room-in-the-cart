@@ -257,8 +257,8 @@ export const publicPages = {
             "es": "Al confirmar un recibo para la despensa del hogar, los adultos con acceso a la despensa pueden ver la tienda, la fecha de compra, la referencia que ingreses y, de cada renglón seleccionado, el texto original, el alimento, las cantidades, el lugar de almacenamiento y el precio si lo ingresaste. El archivo original se queda en este iPhone."
           },
           {
-            "en": "When you save a recipe in Household Tonight, adults with access to that pantry can read its ingredients, portions, reviewed restrictions and any package labels you include. You choose the household batches to link to the recipe.",
-            "es": "Cuando guardas una receta en «Esta noche en casa», los adultos con acceso a esa despensa pueden leer sus ingredientes, porciones, restricciones revisadas y los datos de las etiquetas que incluyas. Tú eliges qué lotes del hogar vincular con la receta."
+            "en": "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion.",
+            "es": "Cuando guardas una receta en «Esta noche en casa», envías al servicio del hogar los ingredientes, las porciones, los lotes que elegiste y las restricciones o los datos del paquete que hayas revisado. Los adultos con acceso a la despensa pueden ver el nombre de la receta y sus ingredientes cuando se les sugiere esa cena."
           },
           {
             "en": "If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place.",
