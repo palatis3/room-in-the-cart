@@ -6,7 +6,7 @@ struct HouseholdPantryLink: View {
     @ObservedObject var household: HouseholdModel
     var body: some View {
         if let scope = household.householdPantryScope, let service = household.service {
-            NavigationLink(pantryText("Household pantry")) {
+            NavigationLink(householdPantryText("Household pantry")) {
                 HouseholdPantryView(household: household, scope: scope, service: service)
             }.accessibilityIdentifier("household.pantry")
         }
@@ -35,37 +35,37 @@ private struct HouseholdPantryView: View {
             if household.householdPantryScope == model.scope {
                 List {
                     if let page = model.page {
-                        Section(household.projection?.household.label ?? pantryText("Household pantry")) {
+                        Section(household.projection?.household.label ?? householdPantryText("Household pantry")) {
                             if model.pending == nil {
                                 Button(ht("Add food to storage")) { sheet = .addition(page) }
                                     .accessibilityIdentifier("householdPantry.add")
                             }
                             if model.scope.managesGrants {
-                                Button(pantryText("Manage pantry access")) { sheet = .grants }
+                                Button(householdPantryText("Manage pantry access")) { sheet = .grants }
                                     .accessibilityIdentifier("householdPantry.manage")
                             }
                         }
                         if let pending = model.pending {
-                            Section(pantryText("Saved pantry change")) {
+                            Section(householdPantryText("Saved pantry change")) {
                                 switch pending.intent.change {
                                 case .addition(let addition): PantryAdditionFacts(addition: addition)
                                 case .correction(let correction):
                                     if let lot = model.lots.first(where: { $0.id == correction.lotId }) { Text(lot.foodName) }
-                                    LabeledContent(pantryText("Corrected count"), value: deliveryQuantityText(correction.quantity))
+                                    LabeledContent(householdPantryText("Corrected count"), value: deliveryQuantityText(correction.quantity))
                                 }
-                                Text(pantryText("Check the stock below. Retrying sends the same change."))
+                                Text(householdPantryText("Check the stock below. Retrying sends the same change."))
                                 if let deadline = serviceDate(pending.intent.expiresAt), deadline > Date() {
-                                    Button(pantryText("Retry the same change")) { Task { await model.retry() } }
+                                    Button(householdPantryText("Retry the same change")) { Task { await model.retry() } }
                                         .accessibilityIdentifier("householdPantry.retry")
-                                } else { Text(pantryText("The retry period has ended.")) }
-                                Button(pantryText("Clear saved retry"), role: .destructive) { clearingRetry = true }
-                                    .confirmationDialog(pantryText("Clear the saved retry after checking stock?"), isPresented: $clearingRetry, titleVisibility: .visible) {
-                                        Button(pantryText("I checked the stock. Clear retry."), role: .destructive) { Task { await model.clearReviewedRetry() } }
+                                } else { Text(householdPantryText("The retry period has ended.")) }
+                                Button(householdPantryText("Clear saved retry"), role: .destructive) { clearingRetry = true }
+                                    .confirmationDialog(householdPantryText("Clear the saved retry after checking stock?"), isPresented: $clearingRetry, titleVisibility: .visible) {
+                                        Button(householdPantryText("I checked the stock. Clear retry."), role: .destructive) { Task { await model.clearReviewedRetry() } }
                                         Button(ht("Cancel"), role: .cancel) {}
                                     }
                             }
                         }
-                        Section(pantryText("Stored food")) {
+                        Section(householdPantryText("Stored food")) {
                             if model.lots.isEmpty { Text(ht("No household batches recorded.")) }
                             ForEach(model.lots) { lot in
                                 VStack(alignment: .leading, spacing: 4) {
@@ -78,25 +78,25 @@ private struct HouseholdPantryView: View {
                                     PantryStorageFacts(storedAt: lot.storedAt, useFirstAt: lot.useFirstAt, tags: lot.exclusionTags)
                                 }.accessibilityElement(children: .combine)
                                 if model.pending == nil, lot.origin == .manual, lot.observation != nil {
-                                    Button(pantryText("Correct count")) { sheet = .correction(page, lot) }
-                                        .accessibilityLabel(Text(pantryText("Correct count")) + Text(verbatim: " · " + lot.foodName))
+                                    Button(householdPantryText("Correct count")) { sheet = .correction(page, lot) }
+                                        .accessibilityLabel(Text(householdPantryText("Correct count")) + Text(verbatim: " · " + lot.foodName))
                                         .accessibilityIdentifier("householdPantry.correct." + lot.id.uuidString)
                                 }
                             }
                             if page.nextCursor != nil {
-                                Button(pantryText("Load more food")) { Task { await model.loadMore() } }
+                                Button(householdPantryText("Load more food")) { Task { await model.loadMore() } }
                                     .accessibilityIdentifier("householdPantry.more")
                             }
                         }
                     }
                     if let notice = model.notice { Text(notice).accessibilityIdentifier("householdPantry.notice") }
                     if model.busy { ProgressView(ht("Checking service…")) }
-                    Button(pantryText("Reload pantry")) { Task { await model.load() } }
+                    Button(householdPantryText("Reload pantry")) { Task { await model.load() } }
                         .accessibilityIdentifier("householdPantry.refresh")
                 }.disabled(model.busy)
             } else { ContentUnavailableView(ht("Household access changed"), systemImage: "lock") }
         }
-        .navigationTitle(pantryText("Household pantry"))
+        .navigationTitle(householdPantryText("Household pantry"))
         .task { await model.load() }
         .onDisappear { model.dismiss() }
         .onChange(of: household.householdPantryScope) { _, updated in
@@ -124,7 +124,7 @@ private struct PantryStorageFacts: View {
     var body: some View {
         if let stored = storedAt.flatMap(serviceDate) { LabeledContent(ht("Stored at"), value: stored.formatted()) }
         if let useFirst = useFirstAt.flatMap(serviceDate) { LabeledContent(ht("Use first by"), value: useFirst.formatted()) }
-        if !tags.isEmpty { LabeledContent(pantryText("Food exclusions"), value: tags.joined(separator: ", ")) }
+        if !tags.isEmpty { LabeledContent(householdPantryText("Food exclusions"), value: tags.joined(separator: ", ")) }
     }
 }
 
@@ -175,9 +175,9 @@ private struct HouseholdPantryEditor: View {
     var body: some View {
         Form {
             if let reviewed {
-                Section(pantryText("Review pantry addition")) { PantryAdditionFacts(addition: reviewed) }
-                Button(pantryText("Edit addition")) { self.reviewed = nil }
-                Button(pantryText("Confirm and add food")) {
+                Section(householdPantryText("Review pantry addition")) { PantryAdditionFacts(addition: reviewed) }
+                Button(householdPantryText("Edit addition")) { self.reviewed = nil }
+                Button(householdPantryText("Confirm and add food")) {
                     Task { await model.confirm(reviewed, reviewed: page); dismiss() }
                 }.accessibilityIdentifier("householdPantry.confirm")
             } else {
@@ -198,8 +198,8 @@ private struct HouseholdPantryEditor: View {
                         ForEach(UnitOfMeasure.allCases, id: \.self) { Text(dinnerUnit($0)).tag($0) }
                     }
                 } footer: { Text(ht("Leave the quantity blank if it is unknown. Enter 0 for a confirmed zero.")) }
-                if invalid { Text(pantryText("Check the food name, amount and exclusions.")) }
-                Button(pantryText("Review pantry addition")) {
+                if invalid { Text(householdPantryText("Check the food name, amount and exclusions.")) }
+                Button(householdPantryText("Review pantry addition")) {
                     do { reviewed = try draft.review(); invalid = false } catch { invalid = true }
                 }.accessibilityIdentifier("householdPantry.review")
             }
@@ -238,25 +238,25 @@ private struct HouseholdPantryCountEditor: View {
     var body: some View {
         Form {
             Section(lot.foodName) {
-                LabeledContent(pantryText("Previous count"), value: deliveryQuantityText(lot.observation?.quantity))
+                LabeledContent(householdPantryText("Previous count"), value: deliveryQuantityText(lot.observation?.quantity))
                 if let reviewed {
-                    LabeledContent(pantryText("Corrected count"), value: deliveryQuantityText(reviewed.quantity))
+                    LabeledContent(householdPantryText("Corrected count"), value: deliveryQuantityText(reviewed.quantity))
                 }
             }
             if let reviewed {
-                Button(pantryText("Edit count")) { self.reviewed = nil }
-                Button(pantryText("Confirm corrected count")) {
+                Button(householdPantryText("Edit count")) { self.reviewed = nil }
+                Button(householdPantryText("Confirm corrected count")) {
                     Task { await model.confirmChange(.correction(reviewed), reviewed: page); dismiss() }
                 }.accessibilityIdentifier("householdPantry.confirmCount")
             } else {
                 Section {
-                    TextField(pantryText("Corrected count"), text: $literal).accessibilityIdentifier("householdPantry.correctedQuantity")
+                    TextField(householdPantryText("Corrected count"), text: $literal).accessibilityIdentifier("householdPantry.correctedQuantity")
                     Picker(ht("Unit"), selection: $unit) {
                         ForEach(UnitOfMeasure.allCases, id: \.self) { Text(dinnerUnit($0)).tag($0) }
                     }
                 } footer: { Text(ht("Leave the quantity blank if it is unknown. Enter 0 for a confirmed zero.")) }
-                if invalid { Text(pantryText("Check the count and unit.")) }
-                Button(pantryText("Review count")) {
+                if invalid { Text(householdPantryText("Check the count and unit.")) }
+                Button(householdPantryText("Review count")) {
                     do {
                         reviewed = try .init(lot: lot, confirmedAt: Date.now.ISO8601Format(),
                                              quantity: pantryEntryQuantity(literal, unit: unit))
@@ -265,7 +265,7 @@ private struct HouseholdPantryCountEditor: View {
                 }.accessibilityIdentifier("householdPantry.reviewCount")
             }
         }.disabled(model.busy)
-            .navigationTitle(pantryText("Correct count"))
+            .navigationTitle(householdPantryText("Correct count"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(model.busy) } }
     }
 }
@@ -277,25 +277,25 @@ private struct HouseholdPantryGrantsView: View {
     var body: some View {
         List {
             Section {
-                Text(pantryText("Adults with pantry access can see stored food, add food and correct counts."))
+                Text(householdPantryText("Adults with pantry access can see stored food, add food and correct counts."))
                 if let grants = model.grants {
-                    if grants.adults.isEmpty { Text(pantryText("There are no other active adults to manage.")) }
+                    if grants.adults.isEmpty { Text(householdPantryText("There are no other active adults to manage.")) }
                     ForEach(grants.adults) { adult in
                         Button { target = adult } label: {
-                            LabeledContent(adult.label, value: adult.enabled ? pantryText("Has pantry access") : pantryText("No pantry access"))
+                            LabeledContent(adult.label, value: adult.enabled ? householdPantryText("Has pantry access") : householdPantryText("No pantry access"))
                         }
                     }
                 }
                 if model.busy { ProgressView() }
             }
-            Button(pantryText("Reload pantry access")) { Task { await model.loadGrants() } }
-        }.navigationTitle(pantryText("Manage pantry access"))
+            Button(householdPantryText("Reload pantry access")) { Task { await model.loadGrants() } }
+        }.navigationTitle(householdPantryText("Manage pantry access"))
             .disabled(model.busy)
             .task { await model.loadGrants() }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(tr("Done")) { dismiss() } } }
-            .alert(target?.enabled == true ? pantryText("Remove pantry access?") : pantryText("Grant pantry access?"),
+            .alert(target?.enabled == true ? householdPantryText("Remove pantry access?") : householdPantryText("Grant pantry access?"),
                    isPresented: Binding(get: { target != nil }, set: { if !$0 { target = nil } }), presenting: target) { adult in
-                Button(adult.enabled ? pantryText("Remove access") : pantryText("Grant access"), role: adult.enabled ? .destructive : nil) {
+                Button(adult.enabled ? householdPantryText("Remove access") : householdPantryText("Grant access"), role: adult.enabled ? .destructive : nil) {
                     Task { await model.changeGrant(adult) }
                 }
                 Button(ht("Cancel"), role: .cancel) {}

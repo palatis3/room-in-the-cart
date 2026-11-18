@@ -192,7 +192,7 @@ private actor PantryTestService: HouseholdPantryServing {
         var draft = HouseholdPantryDraft()
         draft.name = "Corn"
         await model.confirm(try draft.review(), reviewed: reviewed)
-        XCTAssertEqual(model.notice, pantryText("Food added. Reload to see the updated stock."))
+        XCTAssertEqual(model.notice, householdPantryText("Food added. Reload to see the updated stock."))
         XCTAssertNil(model.pending)
         XCTAssertNil(model.page)
         await model.retry()
