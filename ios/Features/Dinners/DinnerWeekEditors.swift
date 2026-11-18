@@ -5,6 +5,9 @@ struct DinnerOccurrenceView: View {
     @ObservedObject var model: DinnerFeatureModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var ledger: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.guardianChildCoordinator) private var child
     let occurrenceID: UUID
     @State private var date = Date()
     @State private var scheduled = false
@@ -79,6 +82,15 @@ struct DinnerOccurrenceView: View {
                         }
                     }
                     Section {
+                        NavigationLink(dinnerText("Private meal feedback")) {
+                            MealFeedbackEntry(ledger: ledger, source: .occurrence(shopID: shop.id, occurrenceID: meal.id), title: meal.title)
+                        }.accessibilityIdentifier("dinner.mealFeedback")
+                        if let suggested = portionSuggestion(meal) {
+                            Text(dinnerFormat("You reported too many leftovers. Consider %@ servings for this dinner.", suggested.description))
+                            NavigationLink(dinnerText("Review smaller portions")) {
+                                DinnerManualAdjustmentView(model: model, meal: meal, suggestedServings: suggested)
+                            }
+                        }
                         if pickup.pantryIsActive {
                             NavigationLink(cookCompletionText("Record cooking and leftovers")) {
                                 CookCompletionEntry(ledger: ledger, pickup: pickup, shopID: shop.id, mealID: meal.id)
@@ -138,6 +150,14 @@ struct DinnerOccurrenceView: View {
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
 
+    private func portionSuggestion(_ meal: MealOccurrence) -> Rational? {
+        guard household.projection?.grantId == nil, child?.presented != true,
+              UIApplication.shared.isProtectedDataAvailable,
+              let identity = CapturePrivateIdentity.current(access: access, household: household),
+              let shopID = model.shop?.id else { return nil }
+        return ledger.workspace.suggestedFutureServings(shopID: shopID, occurrenceID: meal.id, owner: identity.mealFeedbackOwner, at: Date())
+    }
+
     private func resetCalendarDraft() {
         let day = meal?.scheduledDay
         scheduled = day != nil
@@ -157,9 +177,9 @@ struct DinnerManualAdjustmentView: View {
     @State private var bindings: [DinnerBindingDraft]
     @State private var showPreview = false
     private var reviewsAllocations: Bool { meal.servingGroups.contains(where: \.isProtected) }
-    init(model: DinnerFeatureModel, meal: MealOccurrence) {
+    init(model: DinnerFeatureModel, meal: MealOccurrence, suggestedServings: Rational? = nil) {
         self.model = model; self.meal = meal; baseRevision = model.shop?.revisionID
-        _servings = State(initialValue: meal.servings.description)
+        _servings = State(initialValue: (suggestedServings ?? meal.servings).description)
         _groups = State(initialValue: meal.servingGroups.map(DinnerGroupDraft.init))
         _amounts = State(initialValue: meal.ingredientContributionIDs.compactMap { id in
             model.shop?.contributions.first(where: { $0.id == id }).map {

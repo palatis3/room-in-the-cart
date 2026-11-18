@@ -61,6 +61,10 @@ struct TonightEntry: View {
             model.invalidate(); preview = nil; choosing = nil
             Task { await refresh() }
         }
+        .onChange(of: ledger.workspace.privateMealFeedback) { _, _ in
+            preview = nil
+            Task { await refresh() }
+        }
         .sheet(item: $foodToReview) { food in
             if let original = model.input, let originalScope = scope {
                 NavigationStack {
@@ -182,6 +186,10 @@ struct TonightEntry: View {
     }
     @ViewBuilder private func recipeRow(_ review: PantryMealMatcher.Review) -> some View {
         DisclosureGroup {
+            NavigationLink(dinnerText("Private meal feedback")) {
+                MealFeedbackEntry(ledger: ledger, source: .recipe(id: review.id, revision: review.recipe.revision),
+                                  title: review.recipe.title)
+            }
             Button(tonightText("Review recipe facts")) { recipeToReview = review.recipe }
             ForEach(Array((review.eligibility.blocked + review.eligibility.unresolved + review.eligibility.softDifferences).enumerated()), id: \.offset) { _, issue in
                 Text(tonightIssue(issue))
@@ -245,7 +253,9 @@ struct TonightEntry: View {
             let workspace = ledger.workspace, revision = ledger.revision
             let sources = try await TonightRecipeLibrary.read(authorize: authorized)
             guard authorized(), workspace == ledger.workspace, revision == ledger.revision else { throw TonightMealModel.Failure.stale }
-            return try TonightMealModel.input(workspace: workspace, ledgerRevision: revision, context: context, sources: sources)
+            var input = try TonightMealModel.input(workspace: workspace, ledgerRevision: revision, context: context, sources: sources)
+            input.feedbackOwner = original.adult.mealFeedbackOwner
+            return input
         }
     }
     @MainActor private func prepareChoice(_ recipe: MealTemplate) async {

@@ -63,6 +63,8 @@ final class DinnerPlanningTests: XCTestCase {
         XCTAssertEqual(MealEligibilityPolicy.evaluateFood(profile: p, labels: ["Sauce"], evidence: nil).unresolved, [.ingredientsUnknown])
         s.strictBrands = true
         XCTAssertFalse(MealEligibilityPolicy.evaluateFood(profile: .init(settings: s), labels: ["Sauce"], evidence: details).eligible)
+        details.brands = []
+        XCTAssertEqual(MealEligibilityPolicy.evaluateFood(profile: .init(settings: s), labels: ["Sauce"], evidence: details).blocked, [.brandMismatch])
         s.strictDislikes = true; s.strictEffort = true; s.exclusions = []
         XCTAssertEqual(MealEligibilityPolicy.evaluate(profile: .init(settings: s), ingredients: ["food"], evidence: nil).unresolved,
                        [.ingredientsUnknown, .brandsUnknown, .effortUnknown])

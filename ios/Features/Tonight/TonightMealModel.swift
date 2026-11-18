@@ -28,6 +28,7 @@ import RecordArchive
         let freeLots: [ConfirmedStockLot]
         let unresolvedFoods: Set<UUID>
         let sources: [Source]
+        var feedbackOwner: String? = nil
     }
     enum Failure: Error { case unavailable, stale, recipeChanged }
     @Published private(set) var input: Input?
@@ -73,7 +74,8 @@ import RecordArchive
         try rebuild()
     }
     var suggestions: [PantryMealMatcher.Review] {
-        PantryMealMatcher.ranked(reviews)
+        guard let input, let owner = input.feedbackOwner else { return PantryMealMatcher.ranked(reviews) }
+        return PantryMealMatcher.ranked(reviews, feedback: input.workspace.mealFeedbackSignals(owner: owner, at: Date()))
     }
     var needsReview: [PantryMealMatcher.Review] {
         let suggestions = Set(suggestions.map(\.id))
@@ -91,7 +93,7 @@ import RecordArchive
         do {
             let next = try await load()
             guard token == generation, authorize() else { invalidate(); return }
-            if let old = input, old.basis != next.basis || old.workspace != next.workspace || old.sources != next.sources {
+            if let old = input, old.basis != next.basis || old.workspace.withoutMealFeedback() != next.workspace.withoutMealFeedback() || old.sources != next.sources {
                 matches = [:]; foodEvidence = [:]; selectedVersions = [:]
             }
             input = next

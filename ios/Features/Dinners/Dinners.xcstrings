@@ -10456,6 +10456,486 @@
           }
         }
       }
+    },
+    "Private meal feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private meal feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opiniones privadas sobre la comida"
+          }
+        }
+      }
+    },
+    "Unlock the same private workspace to review this meal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock the same private workspace to review this meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea el mismo espacio privado para revisar esta comida."
+          }
+        }
+      }
+    },
+    "Choose any reactions you want to keep for future meal suggestions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose any reactions you want to keep for future meal suggestions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige las reacciones que quieras guardar para futuras sugerencias."
+          }
+        }
+      }
+    },
+    "Feedback changed or could not be saved. Reopen this meal to review it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback changed or could not be saved. Reopen this meal to review it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las opiniones cambiaron o no se pudieron guardar. Vuelve a abrir la comida para revisarlas."
+          }
+        }
+      }
+    },
+    "Save private feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save private feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar mis opiniones privadas"
+          }
+        }
+      }
+    },
+    "Remove my feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove my feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar mis opiniones"
+          }
+        }
+      }
+    },
+    "Make again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volvería a prepararla"
+          }
+        }
+      }
+    },
+    "Too much effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too much effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demasiado trabajo"
+          }
+        }
+      }
+    },
+    "Children liked it": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Children liked it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les gustó a los niños"
+          }
+        }
+      }
+    },
+    "Too many leftovers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobró demasiada comida"
+          }
+        }
+      }
+    },
+    "You reported too many leftovers. Consider %@ servings for this dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You reported too many leftovers. Consider %@ servings for this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comentaste que sobró demasiada comida. Considera %@ porciones para esta cena."
+          }
+        }
+      }
+    },
+    "Review smaller portions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review smaller portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una cantidad menor de porciones"
+          }
+        }
+      }
+    },
+    "Suggest a draft from my words": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest a draft from my words"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerir un borrador a partir de mis palabras"
+          }
+        }
+      }
+    },
+    "Words to share with OpenAI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Words to share with OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palabras que compartirás con OpenAI"
+          }
+        }
+      }
+    },
+    "Type only the words you want to send. Leave out names and personal details. Your saved meal, preferences and feedback stay on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type only the words you want to send. Leave out names and personal details. Your saved meal, preferences and feedback stay on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe solo las palabras que quieras enviar. Omite nombres y datos personales. La comida, las preferencias y las opiniones guardadas se quedan en este dispositivo."
+          }
+        }
+      }
+    },
+    "My words": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My words"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis palabras"
+          }
+        }
+      }
+    },
+    "Send these words for a suggestion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send these words for a suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar estas palabras para recibir una sugerencia"
+          }
+        }
+      }
+    },
+    "Review the proposed addition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the proposed addition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar lo que se propone añadir"
+          }
+        }
+      }
+    },
+    "Add to my editable draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to my editable draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir a mi borrador editable"
+          }
+        }
+      }
+    },
+    "The meal or draft changed. Open the suggestion again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The meal or draft changed. Open the suggestion again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La comida o el borrador cambió. Vuelve a abrir la sugerencia."
+          }
+        }
+      }
+    },
+    "Online suggestions are unavailable. You can keep editing on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online suggestions are unavailable. You can keep editing on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las sugerencias en línea no están disponibles. Puedes seguir editando en este dispositivo."
+          }
+        }
+      }
+    },
+    "Draft from my words": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft from my words"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador a partir de mis palabras"
+          }
+        }
+      }
+    },
+    "No addition was suggested. You can enter your choice manually.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No addition was suggested. You can enter your choice manually."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se sugirió añadir nada. Puedes indicar tu elección manualmente."
+          }
+        }
+      }
+    },
+    "No usable addition was available. You can enter your choice manually.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No usable addition was available. You can enter your choice manually."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una sugerencia que puedas añadir. Puedes indicar tu elección manualmente."
+          }
+        }
+      }
+    },
+    "Soft preference · disliked ingredient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft preference · disliked ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferencia opcional · ingrediente que no me gusta"
+          }
+        }
+      }
+    },
+    "Soft preference · preferred brand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft preference · preferred brand"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferencia opcional · marca preferida"
+          }
+        }
+      }
+    },
+    "Meal feedback · make again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal feedback · make again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opinión de la comida · volver a prepararla"
+          }
+        }
+      }
+    },
+    "Meal feedback · too much effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal feedback · too much effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opinión de la comida · demasiado esfuerzo"
+          }
+        }
+      }
+    },
+    "Meal feedback · children liked it": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal feedback · children liked it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opinión de la comida · les gustó a los niños"
+          }
+        }
+      }
+    },
+    "Meal feedback · too many leftovers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal feedback · too many leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opinión de la comida · sobró demasiado"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

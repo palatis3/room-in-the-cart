@@ -101,7 +101,7 @@ public enum MealEligibilityPolicy {
         if !settings.preferredBrands.isEmpty {
             let preferred = Set(settings.preferredBrands.map(normalized))
             if let brands = evidence?.brands {
-                if !brands.allSatisfy({ preferred.contains(normalized($0)) }) {
+                if brands.isEmpty || !brands.allSatisfy({ preferred.contains(normalized($0)) }) {
                     if settings.strictBrands { result.blocked.append(.brandMismatch) } else { result.softDifferences.append(.brandMismatch) }
                 }
             } else if settings.strictBrands { result.unresolved.append(.brandsUnknown) }
