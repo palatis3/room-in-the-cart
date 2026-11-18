@@ -438,6 +438,12 @@ import XCTest
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         XCTAssertTrue(app.navigationBars["Use soon"].waitForExistence(timeout: 8))
         XCTAssertTrue(item.waitForExistence(timeout: 8))
+        tap(item)
+        tap(app.buttons["pantry.digest.batchMeals"])
+        let available = element("tonight.batch.available")
+        XCTAssertTrue(available.waitForExistence(timeout: 10), app.debugDescription)
+        let summary = [available.label, available.value as? String ?? ""].joined(separator: " ")
+        XCTAssertTrue(summary.contains("Green lentils") && summary.contains("2 items"), summary)
     }
 
     #if ADULT_WIDGET_LIVE_ACCEPTANCE

@@ -149,7 +149,7 @@ struct PantryDigestList: View {
                     if doc.rules.isEmpty { Text(pantryText("Choose a batch in My Pantry and set a check date.")) }
                     ForEach(doc.rules.sorted { $0.day.iso8601 < $1.day.iso8601 }, id: \.lotID) { rule in
                         if let lot = snapshot.lots.first(where: { $0.id == rule.lotID }) {
-                            NavigationLink { PantryDigestDayEditor(model: model, access: access, lot: lot) } label: {
+                            NavigationLink { PantryDigestDayEditor(model: model, access: access, lot: lot, offersMealIdeas: true) } label: {
                                 LabeledContent(lot.name, value: rule.day.iso8601)
                             }
                         }
@@ -215,6 +215,7 @@ struct PantryDigestDayEditor: View {
     @ObservedObject var model: PantryModel
     let access: PantryDigestAccess
     let lot: InventoryLot
+    var offersMealIdeas = false
     @State private var date = Date()
     @State private var zone = TimeZone.current
     @State private var message: String?
@@ -233,6 +234,12 @@ struct PantryDigestDayEditor: View {
                 Button(pantryText("Save check date")) { save(remove: false) }.accessibilityIdentifier("pantry.digest.saveDate")
                 if (try? store.document(access.scope).rules.contains { $0.lotID == lot.id }) == true {
                     Button(pantryText("Remove check date")) { save(remove: true) }
+                }
+                if offersMealIdeas {
+                    NavigationLink(tonightText("Find meals that use this batch")) {
+                        TonightEntry(batch: .init(originID: access.scope.origin, lotID: lot.id))
+                    }
+                    .accessibilityIdentifier("pantry.digest.batchMeals")
                 }
             } else { Text(pantryText("This food is unavailable. Return to My Pantry and refresh.")) }
             if let message { Text(message).accessibilityIdentifier("pantry.digest.dateStatus") }
