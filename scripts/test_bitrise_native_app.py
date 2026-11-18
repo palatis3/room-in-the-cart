@@ -25,7 +25,8 @@ class BitriseNativeAppTests(unittest.TestCase):
         self.assertEqual(pipeline['workflows'], {'compact-cooking': {}, 'large-tonight': {}})
         self.assertEqual(set(CONFIG['workflows']), set(pipeline['workflows']))
         for lane, workflow in CONFIG['workflows'].items():
-            self.assertEqual(workflow, {'envs': [{'RITC_NATIVE_LANE': lane}],
+            self.assertEqual(workflow, {'envs': [{'RITC_NATIVE_LANE': lane},
+                                                 {'BITRISE_BUILD_CACHE_BENCHMARK_PHASE_XCODE': 'established'}],
                                         'steps': [{'bundle::native-app': {}}]})
         steps = CONFIG['step_bundles']['native-app']['steps']
         checkout, cache, test = steps

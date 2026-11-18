@@ -18,11 +18,13 @@ workflows:
   compact-cooking:
     envs:
       - RITC_NATIVE_LANE: compact-cooking
+      - BITRISE_BUILD_CACHE_BENCHMARK_PHASE_XCODE: established
     steps:
       - bundle::native-app: {}
   large-tonight:
     envs:
       - RITC_NATIVE_LANE: large-tonight
+      - BITRISE_BUILD_CACHE_BENCHMARK_PHASE_XCODE: established
     steps:
       - bundle::native-app: {}
 step_bundles:
