@@ -259,6 +259,7 @@ enum HistoryReviewedWrite: Equatable {
     }
     func editSelectedPeriod() { guard canEditSelectedPeriod, let selectedPeriod else { return }; periodDraft = .init(selectedPeriod); cancelReview() }
     func reviewPublication(_ observation: HistoryPriceObservation) throws {
+        cancelReview()
         guard canBeginObservation, let source = observation.sourceRevision, let assigned = ownedShops.first(where: {
             $0.shopId == observation.shopId
         }), assigned.revision == source.shopRevision, assigned.authorityEpoch == source.authorityEpoch else { throw HistoryDraftError.invalid }
