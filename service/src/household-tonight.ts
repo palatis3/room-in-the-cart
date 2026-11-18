@@ -18,6 +18,15 @@ const label = z
   .min(1)
   .max(240)
   .refine((s) => !/[\p{Cc}\uD800-\uDFFF]/u.test(s));
+const productReview = mealEvidence
+  .pick({ reviewedIngredientDetails: true, brands: true })
+  .extend({
+    lotId: id,
+    observationId: id,
+  })
+  .strict()
+  .refine((review) => review.reviewedIngredientDetails != null || review.brands != null);
+
 const recipe = z
   .object({
     title: label,
@@ -41,8 +50,17 @@ const recipe = z
       .min(1)
       .max(60),
     preferenceEvidence: mealEvidence.nullish(),
+    productReviews: z.array(productReview).max(60).optional(),
   })
   .strict()
+  .refine((r) => {
+    const reviews = r.productReviews ?? [],
+      bound = new Set(r.ingredients.flatMap((i) => i.reviewedLotIds));
+    return (
+      reviews.every((review) => bound.has(review.lotId)) &&
+      new Set(reviews.map((review) => review.lotId)).size === reviews.length
+    );
+  })
   .refine(
     (r) =>
       new Set(r.ingredients.map((i) => i.id)).size === r.ingredients.length &&
@@ -131,7 +149,13 @@ export async function saveTonightRecipe(ctx: Context, input: unknown) {
       throw new ServiceError(409, 'recipe_limit', 'Review your existing household recipes.');
   }
   const lotIds = [...new Set(linked(command.recipe))];
-  if ((await reviewedStock(ctx, lotIds)).length !== lotIds.length) throw refresh();
+  const lots = await reviewedStock(ctx, lotIds);
+  const observations = new Map(lots.map((lot) => [lot.id, lot.observed?.observationId]));
+  if (
+    lots.length !== lotIds.length ||
+    command.recipe.productReviews?.some((review) => observations.get(review.lotId) !== review.observationId)
+  )
+    throw refresh();
   const revision = (source?.revision ?? 0) + 1;
   const saved = await ctx.db.query(
     `INSERT INTO ritc.tonight_recipe(household_id,recipe_id,actor_id,revision,recipe)
@@ -152,9 +176,10 @@ type Settings = Awaited<ReturnType<typeof mealConstraints>>['settings'];
 type RecipeRow = { recipe_id: string; actor_id: string; revision: number; recipe: Recipe };
 type ExcludedReview = { recipeId: string; recipeRevision: number; reviewedRecipe: Recipe };
 
-function ingredientNeeds(recipe: Recipe, stock: Stock, now: Date, settings: Settings) {
-  // Counts, ingredient composition, and brand are independent reviews. The household
-  // lot has a label and positive exclusion tags, but no reviewed composition/brand.
+function productsForRecipe(recipe: Recipe, stock: Stock, settings: Settings) {
+  // A package review applies only to this recipe, lot and physical observation.
+  // Updating the count cannot move a previous ingredient/brand attestation to the new head.
+  const byLot = new Map(recipe.productReviews?.map((review) => [review.lotId, review]));
   const productRules = settings && {
     ...settings,
     availableAppliances: null,
@@ -162,13 +187,22 @@ function ingredientNeeds(recipe: Recipe, stock: Stock, now: Date, settings: Sett
     strictEffort: false,
     timeLimit: null,
   };
+  return stock.map((lot) => {
+    const previous = byLot.get(lot.id);
+    const evidence =
+      previous && lot.observed?.observationId === previous.observationId ? previous : undefined;
+    return { ...lot, eligibility: mealEligibility(productRules, [lot.name, ...lot.tags], evidence) };
+  });
+}
+
+function ingredientNeeds(recipe: Recipe, stock: ReturnType<typeof productsForRecipe>, now: Date) {
   const available = stock.map((lot) => ({
     id: lot.id,
     quantity: lot.observed?.quantity,
     free: lot.free ? { n: BigInt(lot.free.numerator), d: BigInt(lot.free.denominator) } : null,
     useSoon: lot.useFirstAt !== null && Date.parse(lot.useFirstAt) <= now.getTime() + 3 * 86400000,
     evidenceAt: lot.observed?.confirmedAt ?? null,
-    eligible: mealEligibility(productRules, [lot.name, ...lot.tags]).eligible,
+    eligible: lot.eligibility.eligible,
   }));
   let usedConfirmedStock = false;
   const ingredients = recipe.ingredients.map((ingredient) => {
@@ -299,7 +333,8 @@ async function candidates(ctx: Context) {
       source.preferenceEvidence ?? undefined,
       source.minutes,
     );
-    if (eligibility.blocked.length) {
+    const products = productsForRecipe(source, sourceStock, profile.settings);
+    if (eligibility.blocked.length || products.some((lot) => lot.eligibility.blocked.length)) {
       excludedCount++;
       if (canEdit)
         excludedReviewedRecipes.push({
@@ -309,12 +344,7 @@ async function candidates(ctx: Context) {
         });
       return [];
     }
-    const { ingredients, usedConfirmedStock } = ingredientNeeds(
-      source,
-      sourceStock,
-      ctx.now,
-      profile.settings,
-    );
+    const { ingredients, usedConfirmedStock } = ingredientNeeds(source, products, ctx.now);
     const selectable =
       eligibility.eligible && usedConfirmedStock && ingredients.every((i) => i.status !== 'unknown');
     const covered = ingredients.filter((i) => i.status === 'covered').length;
@@ -339,7 +369,7 @@ async function candidates(ctx: Context) {
         recipe: source,
         covered,
         soon: ingredients.filter((i) => i.useSoon).length,
-        soft: eligibility.soft.length,
+        soft: new Set([...eligibility.soft, ...products.flatMap((lot) => lot.eligibility.soft)]).size,
         effort: effort < 0 ? 3 : effort,
         feedback: feedback.get(row.recipe_id) ?? 0,
       },

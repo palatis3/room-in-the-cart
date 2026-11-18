@@ -2302,9 +2302,47 @@ test('household Tonight serializes competing recipe reviews and isolates indepen
  assert.equal((await checkUnknown()).ingredients[0].status,'unknown');
  revision=ok(await prefs({...rules,exclusions:[],timeLimit:{maximumMinutes:20,strict:true}},revision)).revision;
  assert.equal((await checkUnknown()).ingredients[0].status,'covered');
- ok(await prefs({...rules,exclusions:['Lentils']},revision));
+ revision=ok(await prefs({...rules,exclusions:['Lentils']},revision)).revision;
  const denied=await browse(reader);assert.deepEqual(denied.recipes,[]);assert.equal(denied.excludedCount,1);assert.equal(denied.excludedReviewedRecipes,undefined);
  assert.equal((await browse()).excludedReviewedRecipes[0].recipeRevision,2);
+ // Recipe facts never clear the independent label review. Even the same physical
+ // lot needs an intentional review before a different recipe may rely on it.
+ ok(await prefs({...rules,preferredBrands:['One brand'],strictBrands:true},revision));
+ const current=ok(await call(f.owner,f.base+'/pantry'));
+ const oldObservation=current.lots.find(lot=>lot.lotId===lentils).observation.observationId;
+ const product={lotId:lentils,observationId:oldObservation,reviewedIngredientDetails:['Lentils'],brands:['One brand']};
+ const source=(await browse()).recipes[0].reviewedRecipe;
+ const update=(baseRevision,products)=>({...command,baseRevision,clientKey:randomUUID(),
+   recipe:{...source,productReviews:products}});
+ assert.equal((await save(f.owner,update(2,[{lotId:lentils,observationId:oldObservation}]))).status,422);
+ assert.equal((await save(f.owner,update(2,[product,product]))).status,422);
+ assert.equal((await save(f.owner,update(2,[{...product,lotId:zero}]))).status,422);
+ assert.equal((await save(f.owner,update(2,[{...product,observationId:randomUUID()}]))).status,409);
+ const good=update(2,[product]);assert.equal(ok(await save(f.owner,good)).recipeRevision,3);
+ const qualifying=(await browse()).recipes[0];assert.equal(qualifying.checkoutEstimate,'noPurchaseNeeded');assert(qualifying.reviewToken);
+ const scoped=await browse(reader);assert.equal(scoped.recipes[0].reviewedRecipe,undefined);
+ assert(!JSON.stringify(scoped).includes('One brand'));
+ const otherRecipe={...update(null,[]),recipeId:randomUUID()};ok(await save(f.owner,otherRecipe));
+ const other=(await browse()).recipes.find(r=>r.recipeId===otherRecipe.recipeId);assert.equal(other.reviewToken,null);
+ const shopId=await f.shop(),choice={v:1,shopId,base:{shopRevision:1,authorityEpoch:1},clientKey:randomUUID(),replayWindow:f.owner.window,
+   kind:'meal.chooseTonight',body:{v:1,grantEpoch:h.grantEpoch,recipeId:command.recipeId,recipeRevision:3,
+   reviewToken:qualifying.reviewToken,day:null,occurrenceId:randomUUID()}};
+ const correction=ok(await call(f.owner,f.base+'/pantry/commands','POST',{v:1,kind:'pantry.correctCount',clientKey:randomUUID(),
+   replayWindow:f.owner.window,grantEpoch:current.grantEpoch,pantryRevision:current.pantryRevision,
+   body:{lotId:lentils,predecessorId:oldObservation,confirmedAt:new Date().toISOString(),quantity:q(2)}}));
+ const stale=(await browse()).recipes.find(r=>r.recipeId===command.recipeId);
+ assert.equal(stale.reviewToken,null);assert.equal(stale.ingredients[0].status,'unknown');
+ assert.equal(stale.reviewedRecipe.productReviews[0].observationId,oldObservation);
+ assert.equal((await call(f.owner,f.base+'/commands','POST',choice)).status,409);
+ assert.equal((await save(f.owner,update(3,[product]))).status,409);
+ const fresh={...product,observationId:correction.operationId};
+ ok(await save(f.owner,update(3,[{...fresh,reviewedIngredientDetails:['Milk']}])));
+ const filtered=await browse();assert(!filtered.recipes.some(r=>r.recipeId===command.recipeId));assert.equal(filtered.excludedReviewedRecipes[0].recipeRevision,4);
+ ok(await save(f.owner,update(4,[fresh])));
+ const accepted=(await browse()).recipes.find(r=>r.recipeId===command.recipeId);
+ const receipt=ok(await call(f.owner,f.base+'/commands','POST',{...choice,body:{...choice.body,recipeRevision:5,reviewToken:accepted.reviewToken}}));
+ assert.equal(receipt.occurrenceId,choice.body.occurrenceId);
+
 });
 
 test('household Tonight subtracts protected existing meal allocations before matching a stored delivery',async()=>{
