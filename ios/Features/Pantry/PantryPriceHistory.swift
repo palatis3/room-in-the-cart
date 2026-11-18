@@ -10,6 +10,8 @@ struct PantryPricePage {
     let state: InventoryState
 }
 
+enum PantryPriceError: Error { case imageAlreadySaved }
+
 enum PantryPriceCodec {
     static func row(_ evidence: PrivatePriceEvidence) throws -> InventoryPriceRow {
         try evidence.validate()

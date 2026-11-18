@@ -423,6 +423,8 @@ final class PantryRepository {
         let row = try PantryPriceCodec.row(evidence)
         let existing = try await store.priceRows(id: row.id, limit: 1)
         try requireAccess()
+        if let image = evidence.shelfImage, evidence.revision == 1, let saved = try existing.first.map(PantryPriceCodec.evidence),
+           saved.shelfImage?.printed.shelfID == image.printed.shelfID { throw PantryPriceError.imageAlreadySaved }
         if existing.first == row { return }
         guard (existing.first?.revision ?? 0) < Int64.max, (existing.first?.revision ?? 0) + 1 == row.revision else { throw PantryReceiptError.stale }
         if let previous = try existing.first.map(PantryPriceCodec.evidence) {

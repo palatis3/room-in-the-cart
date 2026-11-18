@@ -92,6 +92,10 @@ private struct PantryPriceDetail: View {
                 Section {
                     Text(verbatim: priceSource(row))
                     Text(verbatim: priceAmount(row)).font(.title2)
+                    if let image = row.shelfImage {
+                        LabeledContent(pantryText("Printed wording"), value: image.printed.wording)
+                        Text(shelfBasisName(image.basis))
+                    }
                     if let variant = row.variant { Text(verbatim: variant) }
                     Text(verbatim: [row.store, row.branch].compactMap { $0 }.joined(separator: " · "))
                     Text(row.date, style: .date)
@@ -227,6 +231,14 @@ private struct PantryPriceCreditEditor: View {
     }
 }
 
+private func shelfBasisName(_ basis: ReviewedShelfImage.PriceBasis) -> String {
+    switch basis {
+    case .bundle: pantryText("Package or multibuy total")
+    case .unit: pantryText("Displayed unit price")
+    case .unknown: pantryText("Price basis unclear")
+    }
+}
+
 private func priceSource(_ row: PrivatePriceEvidence) -> String {
     switch row.source {
     case .paidReceipt: pantryText("Paid on receipt")
@@ -249,6 +261,9 @@ private struct PantryPriceEditor: View {
     let didSave: () -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
+    @State private var selectingImage = false
+    @State private var printed: PriceImageLine?
+    @State private var priceBasis = ReviewedShelfImage.PriceBasis.unknown
     @State private var id = UUID()
     @State private var paid = true
     @State private var name = ""
@@ -274,6 +289,8 @@ private struct PantryPriceEditor: View {
         self.didSave = didSave
         guard let original else { return }
         _id = State(initialValue: original.id)
+        _printed = State(initialValue: original.shelfImage?.printed)
+        _priceBasis = State(initialValue: original.shelfImage?.basis ?? .unknown)
         _paid = State(initialValue: original.isPaidPrice)
         _name = State(initialValue: original.name)
         _variant = State(initialValue: original.variant ?? "")
@@ -301,6 +318,7 @@ private struct PantryPriceEditor: View {
                 Text(review.date, style: .date)
                 if let pack = review.pack { Text(verbatim: String(pack.count) + " × " + pack.perPackage.originalLiteral) }
                 if let eligibility = review.eligibility { Text(verbatim: eligibility) }
+                if let shelf = review.shelfImage { Text(shelfBasisName(shelf.basis)); Text(verbatim: shelf.printed.wording) }
                 Text(verbatim: review.sourceText)
                 Button(pantryText("Save reviewed price")) {
                     guard !saving else { return }
@@ -308,6 +326,7 @@ private struct PantryPriceEditor: View {
                     Task {
                         defer { saving = false }
                         do { try await model.writePrice(review, expected: expected); didSave() }
+                        catch PantryPriceError.imageAlreadySaved { notice = pantryText("This image line already has a saved price. Open that record to review a correction.") }
                         catch { notice = pantryText("Prices changed. Reopen the price history to review the current records.") }
                     }
                 }.disabled(saving).accessibilityIdentifier("prices.confirm")
@@ -317,6 +336,20 @@ private struct PantryPriceEditor: View {
                     Text(pantryText("Manually confirmed paid price")).tag(true)
                     Text(pantryText("Shelf observation")).tag(false)
                 }.disabled(original != nil).accessibilityIdentifier("prices.source")
+                if !paid {
+                    if original == nil {
+                        Button(pantryText("Read a shelf label")) { selectingImage = true }.accessibilityIdentifier("prices.readShelf")
+                    }
+                    if let printed {
+                        Text(verbatim: printed.wording)
+                        if printed.uncertain { Text(pantryText("Uncertain image wording")) }
+                        Picker(pantryText("Printed price basis"), selection: $priceBasis) {
+                            Text(pantryText("Package or multibuy total")).tag(ReviewedShelfImage.PriceBasis.bundle)
+                            Text(pantryText("Displayed unit price")).tag(ReviewedShelfImage.PriceBasis.unit)
+                            Text(pantryText("Price basis unclear")).tag(ReviewedShelfImage.PriceBasis.unknown)
+                        }
+                    }
+                }
                 TextField(pantryText("Product"), text: $name).accessibilityIdentifier("prices.name")
                 TextField(pantryText("Brand or variant"), text: $variant).accessibilityIdentifier("prices.variant")
                 TextField(pantryText("Store"), text: $store).accessibilityIdentifier("prices.store")
@@ -325,7 +358,7 @@ private struct PantryPriceEditor: View {
                 Picker(pantryText("Currency"), selection: $currency) {
                     ForEach(PrivatePriceEvidence.supportedCurrencies, id: \.self) { Text(verbatim: $0).tag($0) }
                 }
-                TextField(pantryText("Total for all packages"), text: $amount).keyboardType(.decimalPad).accessibilityIdentifier("prices.total")
+                TextField(!paid && printed != nil ? pantryText("Printed price amount") : pantryText("Total for all packages"), text: $amount).keyboardType(.decimalPad).accessibilityIdentifier("prices.total")
                 Section(pantryText("Package basis")) {
                     TextField(pantryText("Number of packages"), text: $packages).keyboardType(.numberPad)
                     TextField(pantryText("Quantity per package"), text: $quantity).keyboardType(.decimalPad).accessibilityIdentifier("prices.quantity")
@@ -339,6 +372,20 @@ private struct PantryPriceEditor: View {
                     do { review = try reviewed(); notice = nil }
                     catch { notice = pantryText("Review the product, store, price and package quantities.") }
                 }.accessibilityIdentifier("prices.review")
+            }
+        }
+        .sheet(isPresented: $selectingImage) {
+            NavigationStack {
+                PriceImageReview(purpose: .shelf, acceptShelf: { line in
+                    printed = line
+                    source = line.wording
+                    let suggestion = ReviewedShelfImage.propose(line.wording)
+                    packages = String(suggestion.packages ?? 1)
+                    amount = suggestion.amount.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
+                    eligibility = suggestion.conditions ?? ""
+                    priceBasis = suggestion.packages == nil ? .unknown : .bundle
+                    quantity = ""
+                })
             }
         }
         .navigationTitle(pantryText("Record a price"))
@@ -369,11 +416,12 @@ private struct PantryPriceEditor: View {
                                                                originalLiteral: raw + " " + pantryUnit(unit)))
         } else { pack = nil }
         guard (original?.revision ?? 0) < Int64.max else { throw PantryReceiptError.invalid }
-        let evidence = try PrivatePriceEvidence(id: id, revision: (original?.revision ?? 0) + 1, source: paid ? .paidManual : .shelf,
+        let image = paid ? nil : printed.map { ReviewedShelfImage(printed: $0, basis: priceBasis) }
+        let evidence = try PrivatePriceEvidence(id: image?.printed.shelfID ?? id, revision: (original?.revision ?? 0) + 1, source: paid ? .paidManual : .shelf,
             foodID: original?.foodID, linkedLotID: original?.linkedLotID, name: name,
             variant: text(variant), store: store, branch: text(branch), date: date, currencyCode: currency,
             amountMinor: text(amount).map { try Money(decimal: decimal($0)).minorUnits }, pack: pack,
-            eligibility: text(eligibility), sourceText: text(source) ?? priceSourceWording)
+            eligibility: text(eligibility), sourceText: text(source) ?? priceSourceWording, shelfImage: image)
         try evidence.validate()
         return evidence
     }

@@ -57,12 +57,13 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
     public let amountMinor: Int64?
     public let pack: Pack?
     public let eligibility: String?
+    public let shelfImage: ReviewedShelfImage?
     public let sourceText: String
 
     public init(id: UUID, revision: Int64 = 1, source: Source, foodID: UUID? = nil, linkedLotID: UUID? = nil, name: String,
                 variant: String? = nil, store: String, branch: String? = nil, mode: FulfillmentMode? = nil,
                 date: Date, currencyCode: String, amountMinor: Int64?, pack: Pack?, eligibility: String? = nil,
-                sourceText: String) {
+                sourceText: String, shelfImage: ReviewedShelfImage? = nil) {
         self.id = id
         self.revision = revision
         self.source = source
@@ -78,6 +79,7 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         self.amountMinor = amountMinor
         self.pack = pack
         self.eligibility = eligibility
+        self.shelfImage = shelfImage
         self.sourceText = sourceText
     }
 
@@ -110,6 +112,11 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         }
         try ledgerText(sourceText, nonempty: true, maximum: 8192)
         try pack?.validate()
+        if let shelfImage {
+            try shelfImage.printed.validate()
+            guard source == .shelf, shelfImage.printed.shelfID == id,
+                  shelfImage.basis != .unknown || pack == nil else { throw DomainError.invalidInput("shelfImageBasis") }
+        }
         switch source {
         case .adjustment(let target, let targetRevision, _):
             guard target != id, targetRevision > 0, amountMinor != nil, pack == nil else { throw DomainError.invalidInput("priceAdjustment") }
