@@ -123,7 +123,8 @@ import RecordArchive
         defer { if generation == token { busy = false } }
         do {
             let next = try await load()
-            guard token == generation, authorize() else { invalidate(); return }
+            guard token == generation else { return }
+            guard authorize() else { invalidate(); return }
             if let old = input, old.basis != next.basis || old.workspace.withoutMealFeedback() != next.workspace.withoutMealFeedback() || old.sources != next.sources {
                 clearPairing()
                 matches = [:]; foodEvidence = [:]; selectedVersions = [:]

@@ -181,6 +181,17 @@ import RecordArchive
         var authorized = true
         await model.refresh(authorize: { authorized }, load: { authorized = false; return read })
         XCTAssertNil(model.input); XCTAssertTrue(model.reviews.isEmpty); XCTAssertTrue(model.matches.isEmpty)
+
+        let current = MealTemplate(title: "New workspace dinner", ingredients: [.init(name: "Rice", quantity: q(1))])
+        let replacement = input(recipe: current, food: UUID())
+        authorized = true
+        await model.refresh(authorize: { authorized }, load: {
+            authorized = false
+            model.invalidate()
+            await model.refresh(authorize: { true }, load: { replacement })
+            return read
+        })
+        XCTAssertEqual(model.recipes, [current], "A late response from the previous workspace must leave the new workspace visible.")
     }
     func testProductDetailsAreNotBorrowedFromRecipeAndStaleFoodReviewFails() async throws {
         let food = UUID(), ingredient = MealIngredient(name: "Wraps", quantity: q(2))
