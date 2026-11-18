@@ -88,6 +88,7 @@ struct GroceryWindow: View {
     @StateObject private var guardianChild = GuardianChildCoordinator()
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var pantryRuntime = PrivatePantryRuntime()
+    @StateObject private var voicePrompt = PantryVoicePromptWindow()
     @State private var pantryOpenAttempt = UUID()
     @State private var failedPantryScope: PantryOpenScope?
     #if DEBUG && targetEnvironment(simulator)
@@ -96,10 +97,21 @@ struct GroceryWindow: View {
     @AppStorage("appearance") private var appearance = "system"
     var body: some View {
         Group {
-            if scenePhase != .active && access.isProtected {
+            if scenePhase != .active && access.isProtected && !retainsVoicePrompt {
                 Theme.canvas.ignoresSafeArea()
-            } else { root }
-        }.modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
+            } else {
+                root
+                    .opacity(retainsVoicePrompt ? 0 : 1)
+                    .allowsHitTesting(!retainsVoicePrompt)
+                    .accessibilityHidden(retainsVoicePrompt)
+                    .background { if retainsVoicePrompt { PantryVoicePrivacyCover() } }
+            }
+        }.environment(\.pantryVoicePrompt, PantryVoicePromptAccess(retainsInactiveScope: retainsVoicePrompt, begin: {
+            guard let scope = voicePromptScope, pickup.pantryRouteAvailable else { return nil }
+            return voicePrompt.begin(scope, phase: scenePhase)
+        }, ready: { voicePrompt.recognitionReady($0, appActive: UIApplication.shared.applicationState == .active) },
+           cancel: { voicePrompt.cancel($0) }))
+        .modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
             .environment(\.pickupLedger, ledger)
             .environment(\.offersDuplicateAssistance, true)
             .environment(\.privatePantryRetry, pantryRetry)
@@ -165,6 +177,7 @@ struct GroceryWindow: View {
                 if unlocked && !guardianChild.presented { Task { await openAdultWorkspace() } }
             }
             .onChange(of: scenePhase) { _, phase in
+                voicePrompt.sceneChanged(phase)
                 if phase == .background {
                     guardianChild.suspend()
                     navigation.suspend(); surfaces.background(); access.background(); household.lock()
@@ -193,8 +206,20 @@ struct GroceryWindow: View {
         #endif
     }
 
+    private var voicePromptScope: PantryVoicePromptScope? {
+        guard UIApplication.shared.isProtectedDataAvailable, !guardianChild.presented, household.projection?.grantId == nil,
+              let adult = CapturePrivateIdentity.current(access: access, household: household),
+              let origin = pickup.sourceWorkspaceID, ledger.sourceWorkspaceID == origin, !ledger.hasPendingLedgerDeletion else { return nil }
+        return PantryVoicePromptScope(adult: adult, origin: origin, generation: pickup.privatePantryGeneration)
+    }
+
+    private var retainsVoicePrompt: Bool {
+        guard voicePrompt.token != nil, scenePhase == .inactive else { return false }
+        return voicePrompt.retains(voicePromptScope, phase: scenePhase)
+    }
+
     private var privatePantryIdentity: CapturePrivateIdentity? {
-        guard scenePhase == .active, !guardianChild.presented, household.projection?.grantId == nil else { return nil }
+        guard scenePhase == .active || retainsVoicePrompt, !guardianChild.presented, household.projection?.grantId == nil else { return nil }
         return CapturePrivateIdentity.current(access: access, household: household)
     }
 
@@ -240,7 +265,11 @@ struct GroceryWindow: View {
             }
             return  // Publishing ready starts a new task bound to the opened ledger.
         }
-        let authorize = pantryRuntime.authorization(for: identity, access: access, household: household, child: guardianChild)
+        let current = pantryRuntime.authorization(for: identity, access: access, household: household, child: guardianChild)
+        let prompt = voicePrompt
+        let authorize = { @MainActor in
+            current() && prompt.allowsPantryAction(appActive: UIApplication.shared.applicationState == .active)
+        }
         guard authorize(), !Task.isCancelled, ledger.sourceWorkspaceID == scope.ledgerOrigin else { return }
         do {
             let persona = ReceiptAcquisition.identity(["private-receipt-aliases", identity.actorID.uuidString,
@@ -313,6 +342,7 @@ struct ShopView: View {
     @EnvironmentObject private var navigation: NavigationRestorationModel
     @State private var showingFirstList = false
     @State private var showingPantry = false
+    @Environment(\.pantryVoicePrompt) private var pantryVoicePrompt
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
         VStack(spacing: 0) {
@@ -415,7 +445,7 @@ struct ShopView: View {
                             .font(.headline).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
-                    if pickup.pantryRouteAvailable {
+                    if pickup.pantryRouteAvailable || pantryVoicePrompt?.retainsInactiveScope == true {
                         if #available(iOS 18, *), household.projection?.canBrowseHouseholdTonight != true {
                             NavigationLink { PantrySetupView(pickup: pickup, ledger: ledger) } label: { pantryLabel }
                                 .accessibilityIdentifier("shop.myPantry")

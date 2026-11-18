@@ -39,16 +39,19 @@ struct LedgerImportView: View {
     let onFirstSave: ((UUID) -> Void)?
     let authorizeEntry: @MainActor () -> Bool
     private let prefill: String
+    private let pantryFoodPrefill: Bool
     @State private var incomingWording: String?
-    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
+    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", pantryFoodPrefill: Bool = false, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
         self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onFirstSave = onFirstSave
         self.authorizeEntry = authorizeEntry
         self.prefill = prefill
+        self.pantryFoodPrefill = pantryFoodPrefill
         _original = State(initialValue: prefill)
         if let firstDraft { _importID = State(initialValue: firstDraft.content.importID) }
         if let content = firstDraft?.content, firstDraft?.version != nil {
             _original = State(initialValue: content.original); _source = State(initialValue: content.source)
-            _incomingWording = State(initialValue: prefill.isEmpty ? nil : prefill)
+            let alreadyInDraft = pantryFoodPrefill && PantryRestockReview.draftIncludes(food: prefill, text: content.original, preview: content.preview)
+            _incomingWording = State(initialValue: prefill.isEmpty || alreadyInDraft ? nil : prefill)
             _importID = State(initialValue: content.importID); _preview = State(initialValue: content.preview)
             _choices = State(initialValue: content.choices); _invalidAmounts = State(initialValue: content.invalidAmounts)
             _explicitSeparate = State(initialValue: content.explicitSeparate); _matchesAreCurrent = State(initialValue: content.matchesAreCurrent)
@@ -61,7 +64,11 @@ struct LedgerImportView: View {
     }
     /// The first-list editor owns one provisional pickup until its byte-bound draft is committed.
     private var reviewWorkspace: LedgerWorkspace? {
-        guard let firstDraft else { return model.workspace }
+        guard let firstDraft else {
+            var workspace = model.workspace
+            if pantryFoodPrefill { workspace.shops.removeAll { $0.id != shopID } }
+            return workspace
+        }
         guard firstDraft.authorize(), firstDraft.content.shopID == shopID else { return nil }
         let proposed = ShoppingLedger(id: shopID, title: ledgerText("Pickup"))
         return LedgerWorkspace(shops: [proposed], selectedShopID: shopID)
@@ -151,7 +158,9 @@ struct LedgerImportView: View {
                             guard let shop else { return }
                             inputFocus = nil
                             do {
-                                let staged = try shop.stageImport(text: original, source: source, importID: importID)
+                                let staged = try pantryFoodPrefill
+                                    ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop)
+                                    : shop.stageImport(text: original, source: source, importID: importID)
                                 invalidAmounts = [:]
                                 preview = staged
                                 choices = LedgerImportReview.initialChoices(staged)

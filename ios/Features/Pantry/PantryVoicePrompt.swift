@@ -1,0 +1,110 @@
+import SwiftUI
+import UIKit
+
+struct PantryVoicePromptScope: Equatable {
+    let adult: CapturePrivateIdentity
+    let origin: UUID
+    let generation: UUID
+}
+
+/// Retains only the mounted review during a system permission interruption.
+@MainActor final class PantryVoicePromptWindow: ObservableObject {
+    @Published private(set) var token: UUID?
+    private var scope: PantryVoicePromptScope?
+    private var phase: ScenePhase = .active
+    private var finished = false
+
+    func begin(_ scope: PantryVoicePromptScope, phase: ScenePhase) -> UUID? {
+        guard phase == .active, token == nil else { return nil }
+        self.phase = phase
+        self.scope = scope
+        finished = false
+        let id = UUID()
+        token = id
+        return id
+    }
+
+    func retains(_ current: PantryVoicePromptScope?, phase: ScenePhase) -> Bool {
+        phase == .inactive && token != nil && scope == current
+    }
+
+    func allowsPantryAction(appActive: Bool) -> Bool {
+        token == nil || (phase == .active && appActive)
+    }
+
+    func recognitionReady(_ id: UUID, appActive: Bool) {
+        guard token == id else { return }
+        if phase == .active && appActive { clear() }
+        else { finished = true }
+    }
+
+    func cancel(_ id: UUID) { if token == id { clear() } }
+
+    func sceneChanged(_ next: ScenePhase) {
+        phase = next
+        if next == .background || (next == .active && finished) { clear() }
+    }
+
+    private func clear() {
+        guard token != nil else { return }
+        scope = nil
+        finished = false
+        token = nil
+    }
+}
+
+struct PantryVoicePromptAccess {
+    let retainsInactiveScope: Bool
+    let begin: @MainActor () -> UUID?
+    let ready: @MainActor (UUID) -> Void
+    let cancel: @MainActor (UUID) -> Void
+}
+
+private struct PantryVoicePromptKey: EnvironmentKey {
+    static let defaultValue: PantryVoicePromptAccess? = nil
+}
+
+extension EnvironmentValues {
+    var pantryVoicePrompt: PantryVoicePromptAccess? {
+        get { self[PantryVoicePromptKey.self] }
+        set { self[PantryVoicePromptKey.self] = newValue }
+    }
+}
+
+/// A pantry can be presented in a sheet above the root view. Cover the app window
+/// without becoming key or replacing the system permission alert in SpringBoard.
+struct PantryVoicePrivacyCover: UIViewRepresentable {
+    final class Anchor: UIView {
+        private(set) var cover: UIWindow?
+        private weak var coveredWindow: UIWindow?
+        private var wasAccessibilityHidden = false
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            guard let window, let scene = window.windowScene else { removeCover(); return }
+            guard coveredWindow !== window else { return }
+            removeCover()
+            let cover = UIWindow(windowScene: scene)
+            let controller = UIViewController()
+            controller.view.backgroundColor = UIColor(named: "canvas") ?? .systemBackground
+            cover.rootViewController = controller
+            cover.windowLevel = .alert + 1
+            coveredWindow = window
+            wasAccessibilityHidden = window.accessibilityElementsHidden
+            window.accessibilityElementsHidden = true
+            self.cover = cover
+            cover.isHidden = false
+        }
+
+        func removeCover() {
+            cover?.isHidden = true
+            cover = nil
+            coveredWindow?.accessibilityElementsHidden = wasAccessibilityHidden
+            coveredWindow = nil
+        }
+    }
+
+    func makeUIView(context: Context) -> Anchor { Anchor() }
+    func updateUIView(_ uiView: Anchor, context: Context) {}
+    static func dismantleUIView(_ uiView: Anchor, coordinator: ()) { uiView.removeCover() }
+}

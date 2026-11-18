@@ -336,7 +336,9 @@ private struct RecordsRecoveredPantryView: View {
     var body: some View {
         Group {
             if let model = session.model, session.phase == .ready, session.hasAccess {
-                PantryHomeView(model: model, accessAllowed: session.hasAccess)
+                PantryHomeView(model: model, accessAllowed: session.hasAccess, recoveredHistoryAccess: {
+                    session.phase == .ready && session.hasAccess && session.model === model
+                })
             } else {
                 ContentUnavailableView(recordsText("Records could not open"), systemImage: "lock")
             }

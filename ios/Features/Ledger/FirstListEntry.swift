@@ -136,6 +136,7 @@ struct FirstListResumeButton: View {
 struct FirstListEntry: View {
     @ObservedObject var model: LedgerModel
     var prefill: String = ""
+    var pantryFoodPrefill = false
     var authorizeEntry: @MainActor () -> Bool = { true }
     let onSaved: (UUID) -> Void
     @EnvironmentObject private var access: WorkspaceAccess
@@ -152,7 +153,7 @@ struct FirstListEntry: View {
     var body: some View {
         Group {
             if let editor, editor.authorize() {
-                FirstListForm(model: model, editor: editor, prefill: prefill, onSaved: onSaved)
+                FirstListForm(model: model, editor: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, onSaved: onSaved)
             } else if failed || identity == nil || editor != nil {
                 ContentUnavailableView(ledgerText("Draft unavailable"), systemImage: "lock",
                     description: Text(ledgerText("Reopen the private shopping list to check the current workspace.")))
@@ -189,6 +190,7 @@ private struct FirstListForm: View {
     @ObservedObject var model: LedgerModel
     @ObservedObject var editor: FirstListEditor
     let prefill: String
+    let pantryFoodPrefill: Bool
     let onSaved: (UUID) -> Void
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -200,7 +202,7 @@ private struct FirstListForm: View {
                 Button(ledgerText("Discard draft"), role: .destructive) { Task { if await editor.discard() { dismiss() } } }
             }.toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
         } else {
-            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, authorizeEntry: editor.authorize, onFirstSave: onSaved)
+            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, authorizeEntry: editor.authorize, onFirstSave: onSaved)
         }
     }
 }

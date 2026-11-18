@@ -102,9 +102,9 @@
 		</dict>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Dictate your list on this iPhone or record a separate clip to review and send for online transcription.</string>
+	<string>Dictate a shopping list or ask about your pantry on this iPhone. For online transcription, you can record, review and send a separate clip.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Turn dictated words into text on this iPhone so you can review them before adding anything.</string>
+	<string>Turn your words into text on this iPhone so you can review a shopping list, pantry update or package question.</string>
 <key>NSCameraUsageDescription</key>
 <string>Scan a package, recipe or receipt on this iPhone. You can choose to share a cropped image for online help.</string>
 </dict>
