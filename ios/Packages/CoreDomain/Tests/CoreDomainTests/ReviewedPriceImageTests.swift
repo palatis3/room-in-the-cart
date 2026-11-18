@@ -54,6 +54,32 @@ final class ReviewedPriceImageTests: XCTestCase {
         XCTAssertNil(ReviewedCheckoutImage.proposedAmount(for: .total, from: lines[0]))
     }
 
+    func testCheckoutUsesReviewedCropOnlyAfterFieldSelectionAndPreservesBothReadings() throws {
+        let digest = Data(repeating: 1, count: 32)
+        let crop = Data(repeating: 2, count: 32)
+        for method in [ReviewedImageWording.Method.deviceOCR, .assistedImage] {
+            let reading = try ReviewedImageWording(text: "Total a pagar $12,50", method: method, cropDigest: crop)
+            for original in ["Subtotal $32.50", ""] {
+                let line = try PriceImageLine(digest: digest, ordinal: 0, wording: original, uncertain: true, reviewedReading: reading)
+                XCTAssertTrue(ReviewedCheckoutImage.proposals(from: [line]).isEmpty)
+                XCTAssertNil(ReviewedCheckoutImage.proposedAmount(for: .subtotal, from: line))
+                XCTAssertEqual(ReviewedCheckoutImage.proposedAmount(for: .total, from: line)?.minorUnits, 1250)
+
+                let other = try PriceImageLine(digest: digest, ordinal: 1, wording: "Total $9", uncertain: false)
+                XCTAssertNil(ReviewedCheckoutImage.proposals(from: [line, other])[.total])
+                for typed in [nil, Money(minorUnits: 1299)] {
+                    let reviewed = try ReviewedCheckoutImage(charges: [.init(field: .total, amount: typed, inclusion: .unknown, line: line)])
+                    let restored = try JSONDecoder().decode(ReviewedCheckoutImage.self, from: JSONEncoder().encode(reviewed))
+                    XCTAssertEqual(restored.charges.first?.line, line)
+                    XCTAssertEqual(restored.displayedTotal, typed)
+                }
+            }
+        }
+        let unreadable = try ReviewedImageWording(text: "Total illisible", method: .assistedImage, cropDigest: crop)
+        let uncertain = try PriceImageLine(digest: digest, ordinal: 0, wording: "Total $32.50", uncertain: true, reviewedReading: unreadable)
+        XCTAssertNil(ReviewedCheckoutImage.proposedAmount(for: .total, from: uncertain))
+    }
+
     func testShelfPackageSizeAndPriceStayIndependentOfUnitRatesAndPromotions() {
         let shelf = ReviewedShelfImage.propose("Yogur 1,5 kg — socios 2 por $5,50 USD")
         XCTAssertEqual(shelf.amount?.minorUnits, 550)
