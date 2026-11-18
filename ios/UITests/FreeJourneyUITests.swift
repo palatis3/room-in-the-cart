@@ -170,8 +170,12 @@ import XCTest
         XCTAssertTrue(element("tonight.batch.second." + second.recipe).exists, app.debugDescription)
         tap(app.buttons["Close second-meal suggestions"])
         tap(app.buttons["tonight.choose." + first.recipe])
-        tap(app.buttons["Preview dinner choice"])
-        tap(app.buttons["Cancel preview"])
+        let prepare = app.buttons["Preview dinner choice"]
+        XCTAssertTrue(prepare.isEnabled, app.debugDescription)
+        tapVisibleFormRow(prepare, marker: "FINISH_PACKAGE_PREVIEW")
+        let cancel = app.buttons["Cancel preview"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
+        tapVisibleFormRow(cancel, marker: "FINISH_PACKAGE_CANCEL")
         XCTAssertFalse(app.buttons["tonight.apply"].exists, app.debugDescription)
         restart()
         tap(app.buttons["shop.myPantry"])
