@@ -491,7 +491,6 @@ import RecordArchive
         XCTAssertEqual(erase.sharedReceiptCount, 2)
         XCTAssertEqual(erase.receiptRevisionCount, 2)
         XCTAssertEqual(erase.priceRevisionCount, 1)
-        XCTAssertEqual(erase.receiptRevisionCount, 1)
         _ = try await coordinator.commit(erase)
         let removed = try await f.store.priceRows(id: refund.id, latestOnly: false)
         XCTAssertTrue(removed.isEmpty)
