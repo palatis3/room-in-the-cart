@@ -186,7 +186,12 @@ extension SelectedTextInbox {
     }
 
     static func readPlainText(at url: URL, type: UTType) throws -> String {
-        let bytes = try readRegularFile(at: url, maximumBytes: maximumEntryBytes)
+        try decodePlainText(readRegularFile(at: url, maximumBytes: maximumEntryBytes), type: type)
+    }
+
+    public static func decodePlainText(_ bytes: Data, type: UTType) throws -> String {
+        guard type.conforms(to: .plainText) else { throw SurfaceError.unsupported }
+        guard bytes.count <= maximumEntryBytes else { throw SurfaceError.capacity }
         let hasUTF16Mark = bytes.starts(with: [0xFF, 0xFE]) || bytes.starts(with: [0xFE, 0xFF])
         let text: String?
         if hasUTF16Mark || type == .utf16ExternalPlainText || type == .utf16PlainText {

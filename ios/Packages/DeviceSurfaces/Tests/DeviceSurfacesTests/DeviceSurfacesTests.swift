@@ -101,6 +101,18 @@ final class DeviceSurfacesTests: XCTestCase {
         }
         XCTAssertEqual(try stringResult.get(), text)
     }
+    func testOnlyBoundedPlainTextFileBytesCanBecomeShoppingListWording() throws {
+        let wording = "2 cajas de arroz\r\nCafé"
+        let bytes = try XCTUnwrap(wording.data(using: .utf16LittleEndian))
+        XCTAssertEqual(try SelectedTextInbox.decodePlainText(bytes, type: .utf16PlainText), wording)
+        for (data, type) in [(bytes, UTType.pdf), (Data([0xff, 0xfe, 0x01]), .plainText),
+                             (Data("a\0b".utf8), .plainText), (Data("  ".utf8), .plainText),
+                             (Data(repeating: 65, count: SelectedTextInbox.maximumEntryBytes + 1), .plainText),
+                             (Data(String(repeating: "rice\n", count: SelectedTextInbox.maximumLines + 1).utf8), .plainText)] {
+            XCTAssertThrowsError(try SelectedTextInbox.decodePlainText(data, type: type))
+        }
+    }
+
     func testBlankShareMessageUsesOnlyAnUnambiguousTextAttachment() async throws {
         let item = NSExtensionItem()
         let list = "  Café\r\n2 limones 🍋  "

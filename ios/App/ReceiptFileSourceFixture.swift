@@ -10,12 +10,16 @@ struct ReceiptFileSourceFixture: View {
     @State private var saved = false
     @State private var shareToken: String?
     @State private var pdfURL: URL?
+    @State private var groceryTextURL: URL?
     @State private var photo: UIImage?
     @State private var photoResult = ""
     static let name = "Room Market Fixture Receipt"
 
     var body: some View {
         VStack {
+            if let groceryTextURL {
+                ShareLink(item: groceryTextURL) { Text(verbatim: "Share sample grocery text file") }
+            }
             if let pdfURL {
                 ShareLink(item: pdfURL) { Text(verbatim: "Share sample receipt PDF") }
                 Button { exporting = true } label: { Text(verbatim: "Export sample receipt PDF") }
@@ -34,6 +38,13 @@ struct ReceiptFileSourceFixture: View {
         .task {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("receipt-sender", isDirectory: true)
             try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            if ProcessInfo.processInfo.arguments.contains("--shopping-list-text-file") {
+                let list = root.appendingPathComponent("Shopping list.txt")
+                do {
+                    try "2 cajas de arroz\nCafé".write(to: list, atomically: true, encoding: .utf8)
+                    groceryTextURL = list
+                } catch { groceryTextURL = nil }
+            }
             let bounds = CGRect(x: 0, y: 0, width: 400, height: 440)
             func draw() {
                 UIColor.white.setFill(); UIRectFill(bounds)
