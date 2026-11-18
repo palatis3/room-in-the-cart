@@ -27,7 +27,7 @@ import CoreDomain
         var substitution = ""
         init(id: UUID = UUID()) { self.id = id }
 
-        mutating func selectBatch(_ lot: InventoryLot?) {
+        @MainActor mutating func selectBatch(_ lot: InventoryLot?) {
             guard lotID != lot?.id else { return }
             lotID = lot?.id
             needsNewMeasurement = false
@@ -39,8 +39,9 @@ import CoreDomain
             // Keep the cook's original measurement. The review converts it to the
             // batch unit using the same confirmed basis that governs the deduction.
             if unit.dimension == lot.unit.dimension { return }
-            if let measured = try? LedgerEntry.quantity(amount, unit),
-               (try? measured.converted(to: lot.unit, using: lot.count.quantity?.confirmedConversion)) != nil { return }
+            if let basis = lot.count.quantity?.confirmedConversion,
+               let measured = try? LedgerEntry.quantity(amount, unit), measured.amount > .zero,
+               (try? measured.converted(to: lot.unit, using: basis)) != nil { return }
             amount = ""
             unit = lot.unit
             needsNewMeasurement = true
