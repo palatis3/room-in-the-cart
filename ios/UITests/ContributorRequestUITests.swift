@@ -170,13 +170,13 @@ import XCTest
         let label = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.label.")).firstMatch
         tap(label)
         XCTAssertFalse(app.buttons["householdTonight.label.apply"].isEnabled)
-        enableSwitch("Ingredient details reviewed")
+        enableSwitch("Package ingredients reviewed")
         tap(app.navigationBars["Review this package label"].buttons["Cancel"])
         tap(label)
         XCTAssertFalse(app.buttons["householdTonight.label.apply"].isEnabled)
-        enableSwitch("Ingredient details reviewed")
-        enableSwitch("Brands reviewed")
-        fill("North Farm", into: "Brands used, one per line")
+        enableSwitch("Package ingredients reviewed")
+        enableSwitch("Package brands reviewed")
+        fill("North Farm", into: "householdTonight.label.brands")
         tap(app.buttons["householdTonight.label.apply"])
         tap(app.buttons["householdTonight.recipe.review"])
         assertText("North Farm")
@@ -185,8 +185,8 @@ import XCTest
         XCTAssertTrue(choose.exists, app.debugDescription)
         tap(app.buttons["Edit household recipe"])
         tap(label)
-        XCTAssertEqual(app.switches["Ingredient details reviewed"].value as? String, "1")
-        XCTAssertEqual(app.textFields["Brands used, one per line"].value as? String, "North Farm")
+        XCTAssertEqual(app.switches["Package ingredients reviewed"].value as? String, "1")
+        XCTAssertEqual(app.textFields["householdTonight.label.brands"].value as? String, "North Farm")
     }
 
     func testEnrolledAdultReviewsTwoReceiptLinesAndReopensOnlyHouseholdEvidence() {

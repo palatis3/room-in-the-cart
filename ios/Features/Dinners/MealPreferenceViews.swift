@@ -27,17 +27,22 @@ private struct ReviewedTermsField: View {
     let field: String
     @Binding var value: [String]?
     private let focus: FocusState<String?>.Binding?
+    private let identifier: String?
     @FocusState private var localFocus: String?
-    init(title: String, field: String, value: Binding<[String]?>, focus: FocusState<String?>.Binding? = nil) {
+    init(title: String, field: String, value: Binding<[String]?>, focus: FocusState<String?>.Binding? = nil, identifier: String? = nil) {
         self.title = title
         self.field = field
         _value = value
         self.focus = focus
+        self.identifier = identifier
     }
     var body: some View {
         Toggle(title, isOn: Binding(get: { value != nil }, set: { value = $0 ? [] : nil }))
         if value != nil {
-            PreferenceTermsField(field, terms: Binding(get: { value ?? [] }, set: { value = $0 }), focus: focus ?? $localFocus)
+            let input = PreferenceTermsField(field, terms: Binding(get: { value ?? [] }, set: { value = $0 }), focus: focus ?? $localFocus)
+            if let identifier {
+                input.accessibilityLabel(field).accessibilityIdentifier(identifier)
+            } else { input }
         }
     }
 }
@@ -58,11 +63,16 @@ private struct MealEffortPicker: View {
 struct MealEvidenceFields: View {
     @Binding var draft: MealEligibilityEvidence
     var foodOnly = false
+    var packageLabel = false
     var focus: FocusState<String?>.Binding? = nil
     var body: some View {
-        ReviewedTermsField(title: dinnerText("Ingredient details reviewed"), field: dinnerText("Additional ingredients, one per line"), value: $draft.reviewedIngredientDetails, focus: focus)
+        ReviewedTermsField(title: packageLabel ? tonightText("Package ingredients reviewed") : dinnerText("Ingredient details reviewed"),
+            field: packageLabel ? tonightText("Ingredients printed on this package, one per line") : dinnerText("Additional ingredients, one per line"),
+            value: $draft.reviewedIngredientDetails, focus: focus, identifier: packageLabel ? "householdTonight.label.ingredients" : nil)
         if !foodOnly { ReviewedTermsField(title: dinnerText("Required appliances reviewed"), field: dinnerText("Required appliances, one per line"), value: $draft.requiredAppliances, focus: focus) }
-        ReviewedTermsField(title: dinnerText("Brands reviewed"), field: dinnerText("Brands used, one per line"), value: $draft.brands, focus: focus)
+        ReviewedTermsField(title: packageLabel ? tonightText("Package brands reviewed") : dinnerText("Brands reviewed"),
+            field: packageLabel ? tonightText("Brands printed on this package, one per line") : dinnerText("Brands used, one per line"),
+            value: $draft.brands, focus: focus, identifier: packageLabel ? "householdTonight.label.brands" : nil)
         if !foodOnly { MealEffortPicker(title: dinnerText("Recipe effort"), effort: $draft.effort) }
     }
 }

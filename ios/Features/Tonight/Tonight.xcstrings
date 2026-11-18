@@ -2771,6 +2771,74 @@
           }
         }
       }
+    },
+    "Package ingredients reviewed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package ingredients reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes del envase revisados"
+          }
+        }
+      }
+    },
+    "Package brands reviewed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package brands reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcas del envase revisadas"
+          }
+        }
+      }
+    },
+    "Ingredients printed on this package, one per line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredients printed on this package, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes impresos en este envase, uno por línea"
+          }
+        }
+      }
+    },
+    "Brands printed on this package, one per line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brands printed on this package, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcas impresas en este envase, una por línea"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

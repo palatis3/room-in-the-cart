@@ -237,7 +237,7 @@ private struct HouseholdRecipePackageEditor: View {
                     HouseholdPackageFacts(review: previous)
                 }
             }
-            Section(tonightText("Current package label")) { MealEvidenceFields(draft: $evidence, foodOnly: true, focus: $focus) }
+            Section(tonightText("Current package label")) { MealEvidenceFields(draft: $evidence, foodOnly: true, packageLabel: true, focus: $focus) }
             if invalid { Text(tonightText("Check the label entries before adding them to this recipe.")) }
             Button(tonightText("Use this label in the recipe draft")) {
                 do {
