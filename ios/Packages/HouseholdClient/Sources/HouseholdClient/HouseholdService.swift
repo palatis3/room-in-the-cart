@@ -706,7 +706,7 @@ public actor HouseholdService {
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
                "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve",
                "cookCopy.save", "cookCopy.markSent", "pantry.create", "pantry.storeDelivery", "pantry.observe",
-               "pantry.select", "pantry.match", "pantry.reserve", "cook.complete", "cook.resolve", "cook.undo", "mealRecovery.apply", "amendment.recordResponse"].contains(envelope.kind) else { throw ClientError.configuration }
+               "pantry.select", "pantry.match", "pantry.reserve", "cook.complete", "cook.resolve", "cook.undo", "mealRecovery.apply", "meal.chooseTonight", "amendment.recordResponse"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
@@ -715,6 +715,7 @@ public actor HouseholdService {
         } else {
             let capability = envelope.kind == "amendment.recordResponse" ? "confirmed_order" : envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
             let live = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+            if envelope.kind == "meal.chooseTonight", !live.capabilities.contains("household_pantry") { throw ClientError.accessEnded }
             if envelope.kind.hasPrefix("cook."), !live.capabilities.contains("cook_completion") { throw ClientError.accessEnded }
             if envelope.kind == "cookCopy.save", envelope.body["factIndex"] != nil,
                !live.capabilities.contains("cook_corrections") { throw ClientError.accessEnded }
@@ -731,6 +732,13 @@ public actor HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, omitSelectedShop: envelope.kind == "shop.create")
+        if envelope.kind == "meal.chooseTonight" {
+            guard UUID(uuidString: receipt.operationId) != nil, receipt.shopId == envelope.shopId, receipt.kind == envelope.kind,
+                  receipt.disposition == "meal_chosen", receipt.authorityEpoch == envelope.base.authorityEpoch,
+                  envelope.base.shopRevision < Int.max, receipt.shopRevision == envelope.base.shopRevision + 1,
+                  let occurrence = receipt.occurrenceId, envelope.body["occurrenceId"] == .string(occurrence.uuidString.lowercased())
+            else { throw ClientError.invalidResponse }
+        }
         if envelope.kind == "amendment.recordResponse" { try receipt.validateAmendment(envelope) }
         if envelope.kind == "mealRecovery.apply" { try receipt.validateRecovery(envelope) }
         if envelope.kind.hasPrefix("cook.") { try receipt.validateCookCompletion(envelope) }
