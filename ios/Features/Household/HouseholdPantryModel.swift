@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import HouseholdClient
 
-func pantryText(_ key: String) -> String {
+func householdPantryText(_ key: String) -> String {
     String(localized: String.LocalizationValue(key), table: "HouseholdPantry")
 }
 
@@ -106,19 +106,19 @@ extension HouseholdService: HouseholdPantryServing {}
             guard projection() != nil else { return }
             switch error as? ClientError {
             case .accessEnded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
-                notice = pantryText("Pantry access has changed. Check household access again.")
+                notice = householdPantryText("Pantry access has changed. Check household access again.")
                 if checkingPantryAccess {
                     do { try await store.purge(householdID: scope.householdID, subject: scope.subject) }
                     catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
                 }
                 await recheckAccess()
             case .sessionNeeded:
-                notice = pantryText("Pantry access has changed. Check household access again.")
+                notice = householdPantryText("Pantry access has changed. Check household access again.")
                 await recheckAccess()
             case .service(status: 409, code: _, correlationID: _, retryAfter: _):
-                notice = pantryText("The pantry or its permissions changed. Reload and check the current stock.")
+                notice = householdPantryText("The pantry or its permissions changed. Reload and check the current stock.")
             case .cancelled: break
-            default: notice = pantryText("The result could not be confirmed. Reload the pantry to check stock and any saved retry.")
+            default: notice = householdPantryText("The result could not be confirmed. Reload the pantry to check stock and any saved retry.")
             }
         }
     }
@@ -148,7 +148,7 @@ extension HouseholdService: HouseholdPantryServing {}
             } else {
                 try await store.complete(record, expectedEpoch: epoch)
                 try check(start)
-                notice = pantryText("An earlier retry ended when pantry access changed. Check the current stock.")
+                notice = householdPantryText("An earlier retry ended when pantry access changed. Check the current stock.")
             }
         }
         session = currentSession
@@ -204,8 +204,8 @@ extension HouseholdService: HouseholdPantryServing {}
             try check(start)
             try await loadFirstPage(start)
             switch record.intent.change {
-            case .addition: notice = pantryText("Food added to the household pantry.")
-            case .correction: notice = pantryText("Count corrected.")
+            case .addition: notice = householdPantryText("Food added to the household pantry.")
+            case .correction: notice = householdPantryText("Count corrected.")
             }
         } catch {
             try check(start)
@@ -214,8 +214,8 @@ extension HouseholdService: HouseholdPantryServing {}
                 throw error
             default:
                 switch record.intent.change {
-                case .addition: notice = pantryText("Food added. Reload to see the updated stock.")
-                case .correction: notice = pantryText("Count corrected. Reload to see the updated stock.")
+                case .addition: notice = householdPantryText("Food added. Reload to see the updated stock.")
+                case .correction: notice = householdPantryText("Count corrected. Reload to see the updated stock.")
                 }
             }
         }
