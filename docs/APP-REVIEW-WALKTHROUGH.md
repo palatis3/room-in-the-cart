@@ -83,6 +83,15 @@ Run these steps with the submitted build and the isolated review household. The 
 
 8. With the enrolled adult, open **Settings → Household pantry → Add receipt to household pantry**. Add two fictional foods there, confirming a price for only one. Reopen the household pantry and check both quantities and the unknown price. Return to the adult’s private My Pantry and check that its original batches and receipt history are unchanged.
 
+### Choose a household dinner before a shop exists
+
+Use a review household with two enrolled adults and a confirmed pantry batch. On a server that offers **Household Tonight**, open it from **Shop → My Pantry** or **Dinners**.
+
+1. As the organizer, review a two-serving recipe using three units from the batch. Select the exact batch under **Match household batches**. If a household restriction applies, review the ingredients or brand printed on that package. Save the recipe and reopen it from the other tab.
+2. Open **Choose a shared dinner destination**, then cancel. Verify that the recipe is still available and browsing left the household without a new pickup.
+3. As the assigned shopper, select a draft shop, review the dinner and confirm once. Reopen the shared shop and verify the chosen dinner appears once on its selected day.
+4. For a second preview, have the other authorized adult correct the available quantity before confirmation. Verify that the shopper must refresh and review again. When the physical observation changes, check the current package before using its previous label statement again.
+
 ## Household walkthrough on the candidate build
 
 The facilitator can give these tasks to English- or Spanish-speaking households once the candidate and review household are available. Give each person only their role's prompt. Keep the prices on the shopper's phone. Use fictional groceries and a recipient participating in the session.
