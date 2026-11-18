@@ -45,6 +45,20 @@ extension SharedRecoveryPage {
                   kind == option.kind, quantity == option.quantity, option.quantity?.validStockQuantity != false else { throw ClientError.invalidResponse }
         }
         let options = Set(sourceOptions.map(\.id))
+        if let donors = swapDonors {
+            guard distinct(donors), Set(donors).isSubset(of: ids) else { throw ClientError.invalidResponse }
+        }
+        if let offers = undoOffers {
+            guard distinct(offers.map(\.operationId)), distinct(offers.map(\.occurrenceId)) else { throw ClientError.invalidResponse }
+            for offer in offers {
+                guard let target = meals.first(where: { $0.id == offer.occurrenceId }), offer.previous.id == target.id,
+                      offer.previous.revisionId != target.revisionId, offer.previous.sourceMealRevision == target.sourceMealRevision,
+                      offer.previous.groups == target.groups, offer.previous.day == target.day, offer.previous.due == target.due,
+                      offer.previous.needs.filter({ $0.priority == "protected" }) == target.needs.filter({ $0.priority == "protected" })
+                else { throw ClientError.invalidResponse }
+                try offer.previous.validate(options: options)
+            }
+        }
         for meal in meals {
             guard let sealed = delivery.meals?.first(where: { $0.id == meal.id }),
                   meal.sourceMealRevision == sealed.revision, meal.day == sealed.meal.day, meal.portions == sealed.meal.portions,
@@ -92,6 +106,13 @@ private extension SharedRecoveryMeal {
 extension SharedRecoveryIntent {
     func validate(page: SharedRecoveryPage) throws {
         let next = replacement
+        if let undo = undoesSwap {
+            guard dinnerSwap == nil, fallback == nil, let offer = page.undoOffers?.first(where: { $0.operationId == undo }),
+                  offer.occurrenceId == occurrenceId else { throw ClientError.configuration }
+            var previous = offer.previous
+            previous.revisionId = next.revisionId
+            guard previous == next else { throw ClientError.configuration }
+        }
         guard validHelperTimestamp(reviewedAt), let old = page.meals.first(where: { $0.id == occurrenceId }),
               targetDigest == page.targetDigests.first(where: { $0.occurrenceId == occurrenceId })?.digest,
               next.id == old.id, next.sourceMealRevision == old.sourceMealRevision,

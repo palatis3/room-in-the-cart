@@ -80,7 +80,7 @@ struct SharedMealEditor: View {
     var body: some View {
         Section(ht("Shared meal plan")) {
             if let edit = model.draft.mealEdit, let meal = edit.meal {
-                if edit.proposalID != nil || edit.changeProposalID != nil { SharedMealFacts(meal: meal) }
+                if edit.proposalID != nil || edit.changeProposalID != nil || edit.dinnerSwap == true { SharedMealFacts(meal: meal) }
                 else { fields(for: edit.occurrenceID, meal: meal) }
             } else if model.draft.mealEdit == nil {
                 ForEach(meals) { occurrence in

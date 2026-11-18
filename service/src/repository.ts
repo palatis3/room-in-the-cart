@@ -1,3 +1,4 @@
+import {checkDraftDinnerSwap} from './shared-dinner-swap.js';
 import {checkIngredientChange} from './meal-preferences.js';
 import {isCookCommand} from './cook-completion-contracts.js';
 import {cookReceiptExists,recordCook} from './shared-cook-completion.js';
@@ -558,6 +559,7 @@ export class HouseholdRepository {
         else preserveProtectedMeal(original ? sharedMealSchema.parse(original.meal) : undefined, meal);
         if((original?.revision ?? null)!==b.mealEdit.baseMealRevision)
           throw new ServiceError(409,'stale_meal','Review this occurrence again before applying a change.');
+        if(b.mealEdit.dinnerSwap) await checkDraftDinnerSwap(ctx,original?sharedMealSchema.parse(original.meal):undefined,meal,b.mealEdit.preferenceReview);
         if(b.mealEdit.changeProposalId) await consumeSharedMealChange(ctx,shop,b.mealEdit.changeProposalId,occurrenceId,b.mealEdit.baseMealRevision,meal);
         else if(!b.demandReview)await checkIngredientChange(ctx,original?sharedMealSchema.parse(original.meal):undefined,meal,b.mealEdit.preferenceReview);
         if(b.mealEdit.proposalId) {

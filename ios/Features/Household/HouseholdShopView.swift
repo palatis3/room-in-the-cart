@@ -55,12 +55,23 @@ private struct SharedShopContent: View {
                             }
                             if let meals = shop.meals, !meals.isEmpty {
                                 Text(ht("Shared meal plan")).font(.headline)
-                                ForEach(meals) { meal in
-                                    SharedMealFacts(meal: meal.meal)
+                                ForEach(meals) { occurrence in
+                                    SharedMealFacts(meal: occurrence.meal)
                                     if model.canCompleteCook, let id = UUID(uuidString: shop.shopId) {
                                         NavigationLink(cookingText("Record cooking")) {
-                                            SharedCookCompletionView(model: model, household: household, shopID: id, occurrence: meal.id)
-                                        }.accessibilityIdentifier("sharedShop.cook." + meal.id.uuidString)
+                                            SharedCookCompletionView(model: model, household: household, shopID: id, occurrence: occurrence.id)
+                                        }.accessibilityIdentifier("sharedShop.cook." + occurrence.id.uuidString)
+                                    }
+                                    if occurrence.meal.kind == "dinner", !occurrence.meal.protected, model.canManage, !model.editing, model.review == nil {
+                                        if shop.phase == "draft", household.sharedMealChangeScope != nil {
+                                            NavigationLink(sharedRecoveryText("Swap this dinner")) {
+                                                SharedMealChangesView(household: household, dinnerID: occurrence.id)
+                                            }.accessibilityIdentifier("sharedShop.swap." + occurrence.id.uuidString)
+                                        } else if shop.phase == "placed", model.canReadMealRecovery, let shopID = UUID(uuidString: shop.shopId) {
+                                            NavigationLink(sharedRecoveryText("Swap this dinner")) {
+                                                SharedRecoveryDeskView(model: model, household: household, shopID: shopID, dinnerID: occurrence.id)
+                                            }.accessibilityIdentifier("sharedShop.swap." + occurrence.id.uuidString)
+                                        }
                                     }
                                 }
                             }

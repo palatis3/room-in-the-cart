@@ -11,6 +11,8 @@ import {previewRecovery, recoveryDigest, RecoveryError} from './recovery-domain.
 import type {Context,Shop} from './repository.js';
 import {loadSharedRecoveryDecisionBasis,readSharedRecoveryContext,type SharedRecoveryPublication} from './shared-recovery-basis.js';
 
+import {mealConstraints,mealEligibility} from './meal-preferences.js';
+import {cooked,swapOffers,swapReview,swapStockDigest} from './shared-dinner-swap.js';
 import {recoveryApplyBody} from './contracts.js';
 
 interface PublicationRow {
@@ -47,7 +49,20 @@ export async function readRecoveryDesk(ctx:Context,shop:Shop) {
   requirePlaced(shop,true);
   const desk=await readSharedRecoveryContext(ctx,shop,loadRecoveryPublication);
   const targetDigests=desk.meals.map(meal=>({occurrenceId:meal.occurrenceId,digest:recoveryDigest(meal)}));
-  return {...desk,targetDigests};
+  const profile=await mealConstraints(ctx);
+  const swapDonors=desk.meals.filter(m=>mealEligibility(profile.settings,m.needs.map(n=>n.name),undefined,m.remainingElapsedMinutes).eligible).map(m=>m.occurrenceId);
+  const retained=shop.phase==='placed'?await swapOffers(ctx,shop,desk.meals):[];
+  const undoOffers=[];
+  if(retained.length) {
+    const {basis}=await loadSharedRecoveryDecisionBasis(ctx,shop,loadRecoveryPublication);
+    for(const {operationId,occurrenceId,previous,digest} of retained) {
+      const target=desk.meals.find(m=>m.occurrenceId===occurrenceId);
+      if(target && digest===swapStockDigest(basis,previous,target) && !await cooked(ctx,shop,occurrenceId) &&
+        mealEligibility(profile.settings,previous.needs.map(n=>n.name),undefined,previous.remainingElapsedMinutes).eligible)
+        undoOffers.push({operationId,occurrenceId,previous});
+    }
+  }
+  return {...desk,targetDigests,undoOffers,swapDonors,reviewSwapEvidence:profile.settings!==null};
 }
 
 function normalizeTitle(value:string) {return value.trim().replace(/\s+/gu,' ').toLocaleLowerCase('en-US');}
@@ -86,10 +101,12 @@ function validateRepeat(donor:RecoveryMeal|undefined,target:RecoveryMeal) {
 
 async function decision(ctx:Context,shop:Shop,request:z.infer<typeof recoveryPreviewSchema>,billing?:BillingService) {
   requirePlaced(shop);
+  if(request.intent.preferenceEvidence && !request.intent.dinnerSwap && !request.intent.undoesSwap) throw refresh();
   if(request.intent.fallback) await requireAssistance(ctx,billing);
   const state=await loadSharedRecoveryDecisionBasis(ctx,shop,loadRecoveryPublication);
   const {basis,verifyReplacementCoverage}=state;
   try {
+    const swap=(request.intent.dinnerSwap || request.intent.undoesSwap) ? await swapReview(ctx,shop,basis,request.intent) : undefined;
     if(request.intent.fallback) {
       const selection=request.intent.fallback;
       const target=basis.meals.find(m=>m.occurrenceId===request.intent.occurrenceId);
@@ -100,7 +117,7 @@ async function decision(ctx:Context,shop:Shop,request:z.infer<typeof recoveryPre
       if(!result) throw refresh();
       return result.decision;
     }
-    const reviewed=verifyReplacementCoverage(previewRecovery(basis,request,ctx.now.toISOString()));
+    const reviewed=verifyReplacementCoverage(previewRecovery(basis,request,ctx.now.toISOString(),swap?.previous));
     const intent=reviewed.intent;
     if(intent.repeatOfOccurrenceId) {
       validateRepeat(basis.meals.find(m=>m.occurrenceId===intent.repeatOfOccurrenceId),intent.replacement);
@@ -109,7 +126,8 @@ async function decision(ctx:Context,shop:Shop,request:z.infer<typeof recoveryPre
       reviewed.consentSatisfied=reviewed.consentSatisfied && intent.agreesToRepeat;
       reviewed.previewDigest=recoveryDigest({decision:reviewed.previewDigest,repeatRequired:true,consentSatisfied:reviewed.consentSatisfied});
     }
-    return reviewed;
+    if(swap) reviewed.previewDigest=recoveryDigest({decision:reviewed.previewDigest,stock:swap.dependencyDigest,profile:swap.profileRevision});
+    return {...reviewed,swapDependency:swap?.dependencyDigest};
   } catch(error) {
     if(error instanceof FallbackConstraint) throw refresh();
     if(!(error instanceof RecoveryError)) throw error;
@@ -177,11 +195,12 @@ export async function recordSharedRecovery(ctx:Context,shop:Shop,input:unknown,o
   const recoveryRevision:number=updated.rows[0]!.recovery_revision;
   await ctx.db.query(`INSERT INTO ritc.meal_recovery_revision
     (household_id,shop_id,recovery_revision,operation_id,occurrence_id,source_meal_revision,previous_revision_id,new_revision_id,
-     placed_revision,authority_epoch,supply_revision,pantry_revision,actor_id,created_at,current_meal,intent,decision_digest,need_ids)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+     placed_revision,authority_epoch,supply_revision,pantry_revision,actor_id,created_at,current_meal,intent,decision_digest,need_ids,swap_before,swap_dependencies)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
     [...scope,recoveryRevision,operationId,meal.occurrenceId,meal.sourceMealRevision,previous.revisionId,meal.revisionId,
       shop.placed_revision,shop.authority_epoch,shop.supply_revision,reviewed.base.pantryRevision,ctx.member.member_id,ctx.now,
-      meal,reviewed.intent,previewDigest,[...new Set([...previous.needs,...meal.needs].map(n=>n.id))]]);
+      meal,reviewed.intent,previewDigest,[...new Set([...previous.needs,...meal.needs].map(n=>n.id))],
+      reviewed.intent.dinnerSwap?previous:null,reviewed.intent.dinnerSwap && 'swapDependency' in reviewed?reviewed.swapDependency:null]);
   await rememberSources(ctx,shop,operationId);
   const fallback=reviewed.intent.fallback?.review;
   if(fallback) await linkAcceptedFallback(ctx,operationId,fallback.candidateId,fallback.revision);
