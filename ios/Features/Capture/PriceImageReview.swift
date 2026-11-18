@@ -91,6 +91,7 @@ struct PriceImageReview: View {
                         }
                     }
                     Button(pantryText("Use reviewed screenshot")) {
+                        guard authorized() else { return }
                         do {
                             guard authorized() else { return }
                             let charges = try ReviewedCheckoutImage.Field.allCases.compactMap { field -> ReviewedCheckoutImage.Charge? in
@@ -143,7 +144,7 @@ struct PriceImageReview: View {
                 guard !Task.isCancelled, authorized() else { return }
                 sourcePreview = evidence.previewImageData; sourceDigest = digest; lines = recognized
             } catch {
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, authorized() else { return }
                 notice = pantryText("Couldn’t read this image. Choose another image or enter the evidence manually.")
             }
         }
