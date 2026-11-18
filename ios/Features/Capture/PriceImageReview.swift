@@ -77,12 +77,14 @@ struct PriceImageReview: View {
                                 Text(pantryText("Not shown")).tag(-1)
                                 ForEach(lines, id: \.ordinal) { line in Text(verbatim: line.effectiveWording).tag(line.ordinal) }
                             }
+                            .accessibilityIdentifier("priceImage.line." + field.rawValue)
                             if let index = selections[field], lines.indices.contains(index) {
                                 if let reading = lines[index].reviewedReading { ReviewedImageWordingLabel(reading: reading) }
                                 if lines[index].uncertain { Text(pantryText("Uncertain image wording")).font(.caption) }
                                 TextField(pantryText("Shown USD amount, blank if unknown"), text: Binding(
                                     get: { amounts[field] ?? "" }, set: { amounts[field] = $0 })).keyboardType(.decimalPad)
                                     .focused($focusedAmount, equals: field)
+                                    .accessibilityIdentifier("priceImage.amount." + field.rawValue)
                                 if field != .total {
                                     Picker(pantryText("Relation to displayed total"), selection: Binding(
                                         get: { inclusions[field] ?? .unknown }, set: { inclusions[field] = $0 }

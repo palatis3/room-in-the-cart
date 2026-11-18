@@ -809,9 +809,64 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
-    func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
-        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+    func testReviewedCheckoutCropClearsSubtotalAndKeepsOriginalWithEditedTotal() {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--checkout-crop-photo", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
+        saveSourcePhoto()
+        app.terminate()
+        app.launchArguments = ["--ui-testing", "--meal-language-fixture", "--checkout-crop-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let details = app.buttons["fixture.checkout.details"]
+        XCTAssertTrue(details.waitForExistence(timeout: 20), app.debugDescription)
+        tap(details)
+        tap(app.buttons["priceImage.readCheckout"])
+        tap(app.buttons["priceImage.choose"])
+        let photoName = NSPredicate(format: "label BEGINSWITH[c] %@", "Photo,")
+        let image = app.images.matching(photoName).firstMatch
+        let asset = image.waitForExistence(timeout: 4) ? image : app.cells.matching(photoName).firstMatch
+        XCTAssertTrue(asset.waitForExistence(timeout: 12), app.debugDescription)
+        asset.tap()
+        let subtotal = app.textFields["priceImage.amount.subtotal"]
+        XCTAssertTrue(subtotal.waitForExistence(timeout: 25), app.debugDescription)
+        XCTAssertEqual(subtotal.value as? String, "12.5")
+        tap(app.buttons["capture.assistedImageLine"])
+        tap(app.buttons["Subtotal $12.50"])
+        tap(app.buttons["Crop the selected source image"])
+        let edge = app.sliders["Left edge"]
+        reveal(edge)
+        edge.adjust(toNormalizedSliderPosition: 0.24)
+        tap(app.buttons["receipt.assistance.previewCrop"])
+        XCTAssertFalse(app.buttons["assistance.useWording"].exists)
+        tap(app.buttons["receipt.assistance.send"])
+        let apply = app.buttons["assistance.useWording"]
+        XCTAssertTrue(apply.waitForExistence(timeout: 12), app.debugDescription)
+        tap(apply)
+        let back = app.navigationBars["Choose the printed line"].buttons.element(boundBy: 0)
+        XCTAssertTrue(back.waitForExistence(timeout: 6), app.debugDescription)
+        back.tap()
+        let cleared = app.buttons["priceImage.line.subtotal"]
+        reveal(cleared)
+        XCTAssertTrue(cleared.label.contains("Not shown") || (cleared.value as? String) == "Not shown", cleared.debugDescription)
+        XCTAssertFalse(subtotal.exists)
+        let total = app.buttons["priceImage.line.total"]
+        tap(total)
+        tap(app.buttons["total $12.50"])
+        let amount = app.textFields["priceImage.amount.total"]
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "12.5")
+        tap(amount)
+        amount.typeText("9")
+        XCTAssertEqual(amount.value as? String, "12.59")
+        tap(app.buttons["priceImage.done"])
+        tap(app.buttons["priceImage.reviewCheckout"])
+        tap(app.buttons["ledgerReviewFacts"])
+        assertText("Retailer preview: $12.59")
+        assertText("Subtotal $12.50")
+        assertText("total $12.50")
+        capture("Checkout review preserves original OCR, accepted crop and shopper amount")
+    }
+
+    private func saveSourcePhoto() {
         let add = app.buttons["Add sample receipt to simulator Photos"]
         XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
         add.tap()
@@ -821,6 +876,12 @@ import XCTest
         let saved = app.staticTexts["fixture.receipt.photoResult"]
         XCTAssertTrue(saved.waitForExistence(timeout: 12), app.debugDescription)
         XCTAssertEqual(saved.label, "Test photo saved")
+    }
+
+    func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        saveSourcePhoto()
         app.terminate()
         launch(reset: true)
         tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
