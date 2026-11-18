@@ -32,7 +32,7 @@ async function current(ctx:Context,shop:Shop,occurrenceId:string){
     const manual=state.stock.heads.find(h=>h.lot_id===lot.lot_id && h.kind==='observe');
     const headId=history?(history.balance?.observationId??history.usable?.observationId):manual?.operation_id;
     if(!headId) return [];
-    return [{lotId:lot.lot_id,name:option.name,quantity:option.quantity,headId,usableId:history?.usable?.observationId??null}];
+    return [{lotId:lot.lot_id,name:option.name,location:lot.location,quantity:option.quantity,headId,usableId:history?.usable?.observationId??null}];
   });
   return {base,meal,lots,state,active};
 }
@@ -46,6 +46,7 @@ export async function cookReview(ctx:Context,shop:Shop,id:string){
     [ctx.householdId,r.active.operation_id])).rows:[];
   return {v:1,base:r.base,title:r.meal.title,plannedPortions:r.meal.portions,
     needs:r.meal.needs.map(n=>({id:n.id,name:n.name,quantity:n.quantity,
+      groupNames:r.meal.groups.filter(g=>n.groupId===g.id || n.groupIds?.includes(g.id)).map(g=>g.name),
       lots:r.lots.filter(l=>n.matchedSourceIds?.includes(l.lotId)).map(({usableId,...l})=>l)})),
     completion:r.active?{cookId:r.active.operation_id,servings:r.active.servings,unresolved}:null};
 }
@@ -183,7 +184,10 @@ async function undo(ctx:Context,shop:Shop,r:Review,cookId:string,op:string,next:
       UNION ALL SELECT 1 FROM ritc.cook_use u JOIN ritc.pantry_batch b ON (b.household_id,b.operation_id)=(u.household_id,u.cook_id)
       WHERE u.household_id=$1 AND u.lot_id=$2 AND b.pantry_revision>$3 AND u.cook_id<>$4 LIMIT 1`,
       [ctx.householdId,lot,first.pantry_revision,cookId]);
-    if(downstream.rowCount || last.delivery_usable_id && r.lots.find(l=>l.lotId===lot)?.headId!==last.event_id) throw stale();
+    const laterPlan=await ctx.db.query(`SELECT 1 FROM ritc.meal_recovery_revision m
+      CROSS JOIN LATERAL jsonb_array_elements(m.current_meal->'needs') n WHERE m.household_id=$1 AND m.pantry_revision >= $3
+      AND (n->>'foodId'=$2::text OR n->'matchedSourceIds' ? $2::text) LIMIT 1`,[ctx.householdId,lot,first.pantry_revision]);
+    if(downstream.rowCount || laterPlan.rowCount || last.delivery_usable_id && r.lots.find(l=>l.lotId===lot)?.headId!==last.event_id) throw stale();
     if(last.delivery_usable_id){
       const edits=await ctx.db.query(`SELECT 1 FROM ritc.delivery_reservation WHERE household_id=$1 AND source_id=$2 AND household_revision>$3
         UNION ALL SELECT 1 FROM ritc.delivery_ingredient_review WHERE household_id=$1 AND source_id=$2 AND household_revision>$3
