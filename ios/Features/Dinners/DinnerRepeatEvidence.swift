@@ -248,7 +248,8 @@ struct DinnerRepeatEvidence {
                 }
                 available = try available.adding(value)
             }
-            let remaining = max(.zero, try demand.subtracting(available))
+            // Rational is nonnegative: establish known coverage before subtraction.
+            let remaining = try demand.subtractingClampedToZero(available)
             let obtain = Quantity(amount: remaining, unit: first.unit, originalLiteral: remaining.description)
             return .init(id: foodID, name: row.name, needed: [needed], free: row.free, toObtain: [obtain], unresolved: false)
         }

@@ -203,14 +203,21 @@ import LocalStore
         let port = try f.model.makePantryPackSelectionPort()
         try await f.ledger.configurePantryPackRecovery(port)
         let workspaceID = try XCTUnwrap(f.ledger.sourceWorkspaceID)
-        let instant = now
+        var instant = now
+        // Live grants are issued when requested. Keep issuance and validation
+        // ordered in this test even when they happen in a single main-actor turn.
+        func tick() -> Date {
+            instant = instant.addingTimeInterval(0.001)
+            return instant
+        }
         var readableShops = Set([prior.id, target.id])
         let dinners = DinnerFeatureModel(store: f.ledger, access: { id in
             guard readableShops.contains(id) else { return nil }
+            let issued = tick()
             return DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "adult", shopID: id,
                 assignedShopperID: "adult", canPlan: true, canReadBudget: true, hasPaidTools: false,
-                roleRevision: 0, verifiedAt: instant, validUntil: instant.addingTimeInterval(300))
-        }, phase: { _ in .draft }, clock: { instant })
+                roleRevision: 0, verifiedAt: issued, validUntil: issued.addingTimeInterval(300))
+        }, phase: { _ in .draft }, clock: tick)
         let start = try MealDay(year: 2026, month: 11, day: 16, timeZoneIdentifier: prior.basis.timeZoneIdentifier)
         func prepare() throws -> DinnerPreview {
             let page = try dinners.repeatWeekReview(start: start, pickup: f.model)
