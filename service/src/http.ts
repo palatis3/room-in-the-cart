@@ -264,11 +264,15 @@ export function createHTTPServer(options:HTTPOptions) {
           if(res.destroyed)throw unavailable();
           await repository.authorized(householdId,auth,async ctx=>{
             await requireReceiptAdult(repository,ctx);
+            await request.checkScope(ctx);
             await reserveCaptureAssistance(ctx,auth.identity,request,transport.budget,transport.budget.maxLanguageMicros);
           });
           const result=await request.run(transport,cancellation.signal);
           cancellation.signal.throwIfAborted();
-          await authorize();
+          await repository.authorized(householdId,auth,async ctx=>{
+            await requireReceiptAdult(repository,ctx);
+            await request.checkScope(ctx);
+          });
           send(200,result);
         } finally {res.off('close',stop);}
         return;
