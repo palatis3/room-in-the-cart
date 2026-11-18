@@ -1802,6 +1802,210 @@
           }
         }
       }
+    },
+    "Find meals that use this batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find meals that use this batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar comidas que usen este lote"
+          }
+        }
+      }
+    },
+    "Selected batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lote seleccionado"
+          }
+        }
+      }
+    },
+    "This batch is no longer in the open pantry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch is no longer in the open pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este lote ya no está en la despensa abierta."
+          }
+        }
+      }
+    },
+    "Available after reservations. Match a recipe ingredient to this food to see how much it can use.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available after reservations. Match a recipe ingredient to this food to see how much it can use."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad disponible después de las reservas. Vincula un ingrediente de una receta a este alimento para ver cuánto usaría."
+          }
+        }
+      }
+    },
+    "This batch has no confirmed unreserved quantity. Check its count and reservations in My Pantry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch has no confirmed unreserved quantity. Check its count and reservations in My Pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este lote no tiene una cantidad confirmada sin reservar. Revisa la cantidad y las reservas en Mi despensa."
+          }
+        }
+      }
+    },
+    "Would use from this batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Would use from this batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad que usaría de este lote"
+          }
+        }
+      }
+    },
+    "Unreserved amount left afterward": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unreserved amount left afterward"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad sin reservar que quedaría"
+          }
+        }
+      }
+    },
+    "Close second-meal suggestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close second-meal suggestions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar las sugerencias para la segunda comida"
+          }
+        }
+      }
+    },
+    "Find a second meal for the remainder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find a second meal for the remainder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar otra comida que aproveche lo que queda"
+          }
+        }
+      }
+    },
+    "If you make the first meal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you make the first meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si preparas la primera comida"
+          }
+        }
+      }
+    },
+    "These estimates use the pantry food left after the first recipe’s reviewed matches. Prices cover the second meal separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These estimates use the pantry food left after the first recipe’s reviewed matches. Prices cover the second meal separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas estimaciones usan lo que quedaría en la despensa tras descontar los ingredientes vinculados a la primera receta. Los precios corresponden solo a la segunda comida."
+          }
+        }
+      }
+    },
+    "No other reviewed recipe uses this remainder yet. Check the ingredient matches in your recipe library.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No other reviewed recipe uses this remainder yet. Check the ingredient matches in your recipe library."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay otra receta revisada que use lo que queda. Revisa los ingredientes vinculados en tu recetario."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
