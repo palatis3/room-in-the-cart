@@ -122,7 +122,7 @@ private struct PantryPriceDetail: View {
                 if row.isPaidPrice, row.amountMinor != nil {
                     Button(pantryText("Review a credit or refund")) { adjusting = true }
                 }
-                if row.source == .paidManual || row.source == .shelf {
+                if row.source == .paidManual || row.source == .shelf || row.source == .currentQuote {
                     Button(pantryText("Correct recorded price")) { correcting = true }
                 }
                 if row.isPaidPrice, let unit = row.pack?.perPackage.unit {
@@ -301,6 +301,25 @@ private func priceAmount(_ row: PrivatePriceEvidence) -> String {
     return (Decimal(minor) / 100).formatted(.currency(code: row.currencyCode))
 }
 
+private enum PriceEntryKind: CaseIterable {
+    case paid, shelf, quote
+
+    var source: PrivatePriceEvidence.Source {
+        switch self {
+        case .paid: .paidManual
+        case .shelf: .shelf
+        case .quote: .currentQuote
+        }
+    }
+    var label: String {
+        switch self {
+        case .paid: pantryText("Manually confirmed paid price")
+        case .shelf: pantryText("Shelf observation")
+        case .quote: pantryText("Checkout quote")
+        }
+    }
+}
+
 private struct PantryPriceEditor: View {
     @ObservedObject var model: PantryModel
     let expected: InventoryState
@@ -310,7 +329,7 @@ private struct PantryPriceEditor: View {
     @Environment(\.locale) private var locale
     @FocusState private var focused: String?
     @State private var id = UUID()
-    @State private var paid = true
+    @State private var entryKind = PriceEntryKind.paid
     @State private var name = ""
     @State private var variant = ""
     @State private var store = ""
@@ -335,7 +354,7 @@ private struct PantryPriceEditor: View {
         self.didSave = didSave
         guard let original else { return }
         _id = State(initialValue: original.id)
-        _paid = State(initialValue: original.isPaidPrice)
+        _entryKind = State(initialValue: PriceEntryKind.allCases.first { $0.source == original.source } ?? .paid)
         _name = State(initialValue: original.name)
         _variant = State(initialValue: original.variant ?? "")
         _store = State(initialValue: original.store)
@@ -376,9 +395,8 @@ private struct PantryPriceEditor: View {
                 }.disabled(saving).accessibilityIdentifier("prices.confirm")
                 Button(pantryText("Edit price")) { self.review = nil }.disabled(saving)
             } else {
-                Picker(pantryText("Price source"), selection: $paid) {
-                    Text(pantryText("Manually confirmed paid price")).tag(true)
-                    Text(pantryText("Shelf observation")).tag(false)
+                Picker(pantryText("Price source"), selection: $entryKind) {
+                    ForEach(PriceEntryKind.allCases, id: \.self) { value in Text(value.label).tag(value) }
                 }.disabled(original != nil).accessibilityIdentifier("prices.source")
                 TextField(pantryText("Product"), text: $name).accessibilityIdentifier("prices.name").focused($focused, equals: "name")
                 TextField(pantryText("Brand or variant"), text: $variant).accessibilityIdentifier("prices.variant").focused($focused, equals: "variant")
@@ -434,14 +452,13 @@ private struct PantryPriceEditor: View {
                                                                originalLiteral: raw + " " + pantryUnit(unit)))
         } else { pack = nil }
         guard (original?.revision ?? 0) < Int64.max else { throw PantryReceiptError.invalid }
-        let evidence = try PrivatePriceEvidence(id: id, revision: (original?.revision ?? 0) + 1, source: paid ? .paidManual : .shelf,
+        let evidence = try PrivatePriceEvidence(id: id, revision: (original?.revision ?? 0) + 1, source: entryKind.source,
             foodID: original?.foodID, linkedLotID: original?.linkedLotID, name: name,
             variant: text(variant), store: store, branch: text(branch), mode: mode, date: date, currencyCode: currency,
             amountMinor: text(amount).map { try Money(decimal: decimal($0)).minorUnits }, pack: pack,
-            eligibility: text(eligibility), sourceText: text(source) ?? priceSourceWording)
+            eligibility: text(eligibility), sourceText: text(source) ?? entryKind.label)
         try evidence.validate()
         return evidence
     }
 
-    private var priceSourceWording: String { paid ? pantryText("Manually confirmed paid price") : pantryText("Shelf observation") }
 }
