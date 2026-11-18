@@ -110,11 +110,18 @@ struct PantryProductBatch {
         if let code, candidates.contains(where: { $0.barcode.map(codeKey) == codeKey(code) }) { return false }
         if code == nil, let photo, candidates.contains(where: { $0.photoID == photo && $0.barcode == nil }) { return false }
         guard candidates.count < 12, nextOrdinal < 200 else { throw ProductBatchError.full }
-        let text = String(decoding: original.utf8.prefix(512), as: UTF8.self)
-        let lines = text.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        var remainingBytes = 512
+        let excerpt = original.prefix { character in
+            remainingBytes -= character.utf8.count
+            return remainingBytes >= 0
+        }
+        // A clipped "1 gallon" can look like a complete "1 g" package size.
+        let endsAtLineBoundary = excerpt.endIndex == original.endIndex || original[excerpt.endIndex].isNewline
+        let completeLines = endsAtLineBoundary ? excerpt : excerpt.prefix(upTo: excerpt.lastIndex(where: \.isNewline) ?? excerpt.startIndex)
+        let lines = completeLines.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let proposal = lines.compactMap(Candidate.pack).first
         let name = lines.first { Candidate.pack($0) == nil && $0 != code?.value } ?? ""
-        candidates.append(.init(ordinal: nextOrdinal, barcode: code, photoID: photo, original: text, name: name,
+        candidates.append(.init(ordinal: nextOrdinal, barcode: code, photoID: photo, original: String(excerpt), name: name,
                                 perPack: proposal?.0 ?? "", unit: proposal?.1 ?? .count))
         nextOrdinal += 1
         return true

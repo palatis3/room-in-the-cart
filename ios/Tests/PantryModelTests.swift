@@ -48,6 +48,29 @@ final class PantryModelTests: XCTestCase {
         return claim
     }
 
+    func testPhotoExcerptOnlyProposesCompletePackageLinesAndPreservesUnicode() throws {
+        func candidate(_ label: String) throws -> PantryProductBatch.Candidate {
+            var batch = PantryProductBatch(workspaceID: UUID())
+            let photo = ScannedSource(originalText: label, uncertainLines: [], originalImageData: Data([1]),
+                                      referenceJPEG: Data(), barcodes: [])
+            XCTAssertEqual(try batch.addPhoto(photo), 1)
+            return try XCTUnwrap(batch.candidates.first)
+        }
+
+        let firstLine = String(repeating: "A", count: 508) + "\n"
+        let clipped = try candidate(firstLine + "1 gallon")
+        XCTAssertTrue(clipped.original.hasSuffix("1 g"))
+        XCTAssertTrue(clipped.perPack.isEmpty)
+        let complete = try candidate(firstLine + "1 g\nOther wording")
+        XCTAssertEqual(complete.perPack, "1")
+        XCTAssertEqual(complete.unit, .gram)
+
+        let spanishLabel = "Café\n" + String(repeating: "x", count: 505)
+        let unicode = try candidate(spanishLabel + "ñ")
+        XCTAssertEqual(unicode.original, spanishLabel)
+        XCTAssertEqual(unicode.name, "Café")
+    }
+
     func testTwoLocalProductPhotosAndRepeatedBarcodeCommitOnlyReviewedPackagesOnce() async throws {
         let (directory, db) = try await database()
         defer { try? FileManager.default.removeItem(at: directory) }
