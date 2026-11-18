@@ -47,3 +47,31 @@ extension HouseholdService {
         return current
     }
 }
+
+public struct SharedMealFeedbackWithdrawal: Codable, Equatable, Sendable {
+    public let v, grantEpoch, count: Int
+    public let basis: String
+    func validate() throws {
+        guard v == 1, grantEpoch >= 0, count >= 0, basis.utf8.count == 64,
+              basis.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }) else { throw ClientError.invalidResponse }
+    }
+}
+
+extension HouseholdService {
+    public func reviewMyMealFeedbackWithdrawal() async throws -> SharedMealFeedbackWithdrawal {
+        let start = generation, session = try currentHouseholdPantrySession()
+        let page: SharedMealFeedbackWithdrawal = try await perform("pantry/my-feedback-withdrawal", method: "GET", omitSelectedShop: true)
+        guard generation == start, try currentHouseholdPantrySession() == session else { throw ClientError.cancelled }
+        try page.validate()
+        return page
+    }
+    public func withdrawMyMealFeedback(_ reviewed: SharedMealFeedbackWithdrawal) async throws -> SharedMealFeedbackWithdrawal {
+        let start = generation, session = try currentHouseholdPantrySession()
+        let body: [String: JSONValue] = ["v": .integer(1), "grantEpoch": .integer(reviewed.grantEpoch), "basis": .string(reviewed.basis)]
+        let result: SharedMealFeedbackWithdrawal = try await perform("pantry/my-feedback-withdrawal", method: "POST", body: encoded(body), omitSelectedShop: true)
+        guard generation == start, try currentHouseholdPantrySession() == session else { throw ClientError.cancelled }
+        try result.validate()
+        guard result.count == 0, result.grantEpoch == reviewed.grantEpoch else { throw ClientError.invalidResponse }
+        return result
+    }
+}

@@ -621,6 +621,13 @@ final class SharedMealNativeWireTests: XCTestCase {
         let removed = try await service.setSharedMealFeedback(shopID: feedbackShop, reviewed: shared, reactions: [])
         XCTAssertTrue(removed.own.isEmpty)
         XCTAssertTrue(removed.shared.isEmpty)
+        _ = try await service.setSharedMealFeedback(shopID: feedbackShop, reviewed: removed, reactions: [.childrenLikedIt])
+        let withdrawal = try await service.reviewMyMealFeedbackWithdrawal()
+        XCTAssertEqual(withdrawal.count, 1)
+        let withdrawn = try await service.withdrawMyMealFeedback(withdrawal)
+        XCTAssertEqual(withdrawn.count, 0)
+        let afterWithdrawal = try await service.sharedMealFeedback(shopID: feedbackShop, occurrence: occurrence.id, cook: cookID)
+        XCTAssertTrue(afterWithdrawal.shared.isEmpty)
 
         let currentDelivery = try await service.deliveryEvidence(shopID: delivery.shopId.uuidString.lowercased())
         let currentPantry = try await service.pantryLots(reviewed: currentDelivery)

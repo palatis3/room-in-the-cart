@@ -975,6 +975,86 @@
           }
         }
       }
+    },
+    "Review my shared meal feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review my shared meal feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar mis opiniones compartidas sobre comidas"
+          }
+        }
+      }
+    },
+    "Meals with my shared feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meals with my shared feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comidas sobre las que compartí mi opinión"
+          }
+        }
+      }
+    },
+    "Withdrawing removes your reactions from all of these household meals.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdrawing removes your reactions from all of these household meals."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al retirarlas, se eliminan tus reacciones de todas estas comidas del hogar."
+          }
+        }
+      }
+    },
+    "Withdraw all my shared meal feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdraw all my shared meal feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirar todas mis opiniones compartidas sobre comidas"
+          }
+        }
+      }
+    },
+    "Current feedback could not be verified.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current feedback could not be verified."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron verificar las opiniones actuales."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

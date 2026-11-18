@@ -2,6 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {digest} from './database.js';
 import {z} from 'zod';
 import {refresh, unavailable} from './errors.js';
+import {householdPantryEpoch} from './pantry-lots.js';
 import {cookReview} from './shared-cook-completion.js';
 import type {Context, Shop} from './repository.js';
 
@@ -73,4 +74,24 @@ export async function updateMealFeedback(ctx: Context, shop: Shop, occurrenceId:
   await ctx.db.query(`INSERT INTO ritc.meal_feedback_receipt(household_id,cook_id,member_id,device_id,client_key,window_id,request_digest,accepted_revision)
     VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,[...args,ctx.deviceId,body.clientKey,body.replayWindow,fingerprint,revision]);
   return {v:1,revision};
+}
+
+// Withdrawal remains available to the author after a shopper handoff. This projection cannot enumerate any cook.
+export async function reviewMyFeedbackWithdrawal(ctx: Context) {
+  const grantEpoch = householdPantryEpoch(ctx);
+  if (grantEpoch === null) throw unavailable();
+  const rows = (await ctx.db.query<{revision:string}>(`SELECT revision FROM ritc.household_meal_feedback
+    WHERE household_id=$1 AND member_id=$2 AND cardinality(reactions)>0 ORDER BY revision`,
+    [ctx.householdId,ctx.member.member_id])).rows;
+  return {v:1, grantEpoch, count:rows.length, basis:digest([ctx.householdId,ctx.member.member_id,grantEpoch,rows])};
+}
+
+export async function withdrawMyFeedback(ctx: Context, input: unknown) {
+  const review = await reviewMyFeedbackWithdrawal(ctx);
+  const command = z.object({v:z.literal(1), grantEpoch:z.number().int().nonnegative(), basis:z.string().regex(/^[a-f0-9]{64}$/)}).strict().parse(input);
+  if (command.grantEpoch !== review.grantEpoch || (review.count > 0 && command.basis !== review.basis)) throw refresh();
+  // A repeat after a lost reply can only acknowledge an empty set. New consent produces a different basis.
+  if (review.count) await ctx.db.query(`UPDATE ritc.household_meal_feedback SET reactions='{}',revision=gen_random_uuid(),updated_at=$3
+    WHERE household_id=$1 AND member_id=$2 AND cardinality(reactions)>0`,[ctx.householdId,ctx.member.member_id,ctx.now]);
+  return reviewMyFeedbackWithdrawal(ctx);
 }

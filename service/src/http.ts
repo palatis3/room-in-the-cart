@@ -1,4 +1,4 @@
-import {readMealFeedback,updateMealFeedback} from './household-meal-feedback.js';
+import {readMealFeedback,updateMealFeedback,reviewMyFeedbackWithdrawal,withdrawMyFeedback} from './household-meal-feedback.js';
 import {cookReview} from './shared-cook-completion.js';
 import { changeHouseholdStaples, householdStaples } from './household-staples.js';
 import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
@@ -282,6 +282,8 @@ export function createHTTPServer(options:HTTPOptions) {
           const cursor=url.searchParams.get('cursor');
           return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));
         }
+        if(path==='/pantry/my-feedback-withdrawal' && method==='GET')return reviewMyFeedbackWithdrawal(ctx);
+        if(path==='/pantry/my-feedback-withdrawal' && method==='POST')return withdrawMyFeedback(ctx,payload);
         if(path==='/pantry/staples' && method==='GET')return householdStaples(ctx,url.searchParams.get('zone')??'UTC');
         if(path==='/pantry/staples' && method==='POST')return changeHouseholdStaples(ctx,payload);
         if(path==='/pantry/commands' && method==='POST')return recordHouseholdPantryCommand(ctx,payload);

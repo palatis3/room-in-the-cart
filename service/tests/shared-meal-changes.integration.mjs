@@ -1919,6 +1919,13 @@ test('household feedback survives authorized shopper handoff and is withdrawn on
  ok(await grant(true,2));assert.equal((await call(f.planner,path,'PUT',second)).status,409);
  const again=await read(f.planner);assert.deepEqual(again.own,[]);assert.deepEqual(again.shared,['makeAgain']);
  const third=consent(f.planner,again,['tooMuchEffort']);ok(await call(f.planner,path,'PUT',third));
+ const withdrawal=f.base+'/pantry/my-feedback-withdrawal';
+ const own=ok(await call(f.owner,withdrawal));assert.equal(own.count,1);
+ assert.deepEqual(Object.keys(own).sort(),['basis','count','grantEpoch','v']);
+ const withdraw={v:1,grantEpoch:own.grantEpoch,basis:own.basis};
+ assert.equal(ok(await call(f.owner,withdrawal,'POST',withdraw)).count,0);
+ assert.equal(ok(await call(f.owner,withdrawal,'POST',withdraw)).count,0);
+ assert.deepEqual((await read(f.planner)).shared,['tooMuchEffort']);
  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
  const records=await admin.query('SELECT member_id FROM ritc.household_meal_feedback WHERE household_id=$1',[f.h]);
  assert.deepEqual(records.rows.map(row=>row.member_id),[f.owner.id]);

@@ -40,6 +40,11 @@ private struct HouseholdPantryView: View {
                                 Button(ht("Add food to storage")) { sheet = .addition(page) }
                                     .accessibilityIdentifier("householdPantry.add")
                             }
+                            if household.projection?.capabilities.contains("my_feedback_withdrawal") == true, let service = household.service {
+                                NavigationLink(cookingText("Review my shared meal feedback")) {
+                                    SharedFeedbackWithdrawalView(household: household, scope: model.scope, service: service)
+                                }
+                            }
                             Button(pantryText("Staple reminders")) { sheet = .staples }
                                 .accessibilityIdentifier("householdPantry.staples")
                             if model.scope.managesGrants {

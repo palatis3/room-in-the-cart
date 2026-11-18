@@ -87,3 +87,53 @@ struct SharedCookFeedbackView: View {
         }
     }
 }
+
+struct SharedFeedbackWithdrawalView: View {
+    @ObservedObject var household: HouseholdModel
+    let scope: HouseholdPantryRuntime
+    let service: HouseholdService
+    @Environment(\.scenePhase) private var scene
+    @Environment(\.guardianChildCoordinator) private var child
+    @State private var page: SharedMealFeedbackWithdrawal?
+    @State private var lifetime = UUID()
+    @State private var failed = false
+    @State private var busy = false
+
+    private var allowed: Bool {
+        scene == .active && UIApplication.shared.isProtectedDataAvailable && child?.presented != true &&
+            household.householdPantryScope == scope && household.projection?.capabilities.contains("my_feedback_withdrawal") == true
+    }
+    var body: some View {
+        Form {
+            if allowed, let page {
+                LabeledContent(cookingText("Meals with my shared feedback"), value: page.count.formatted())
+                if page.count > 0 {
+                    Text(cookingText("Withdrawing removes your reactions from all of these household meals."))
+                    Button(cookingText("Withdraw all my shared meal feedback"), role: .destructive) { Task { await reload(withdrawing: page) } }
+                        .accessibilityIdentifier("sharedFeedback.withdrawAll")
+                }
+            } else if failed || !allowed {
+                Text(cookingText("Current feedback could not be verified."))
+                if allowed { Button(cookingText("Refresh")) { Task { await reload() } } }
+            } else { ProgressView() }
+        }.navigationTitle(cookingText("Review my shared meal feedback")).privacySensitive()
+        .disabled(busy)
+        .task(id: allowed) { await reload() }
+        .onDisappear { lifetime = UUID(); page = nil }
+    }
+    private func reload(withdrawing reviewed: SharedMealFeedbackWithdrawal? = nil) async {
+        let token = UUID()
+        lifetime = token
+        page = nil; failed = false; busy = false
+        guard allowed else { return }
+        busy = true
+        defer { if lifetime == token { busy = false } }
+        do {
+            let next: SharedMealFeedbackWithdrawal
+            if let reviewed { next = try await service.withdrawMyMealFeedback(reviewed) }
+            else { next = try await service.reviewMyMealFeedbackWithdrawal() }
+            guard allowed, lifetime == token else { return }
+            page = next
+        } catch { if allowed && lifetime == token { failed = true } }
+    }
+}
