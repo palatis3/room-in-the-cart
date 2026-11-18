@@ -10,6 +10,7 @@ struct ReceiptImportDraft {
         let ordinal: Int
         let original: String
         var documentLine: ReceiptAcquisition.DocumentLine?
+        var sourceName: String?
         var nameBeforeAlias: String?
         var appliedAlias: InventoryReceiptAlias?
 
@@ -53,7 +54,8 @@ struct ReceiptImportDraft {
         imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
         merchant = source.reviewedLabel
         lines = source.receiptLines.enumerated().map { ordinal, line in
-            Line(id: line.id, ordinal: line.documentLine?.ordinal ?? ordinal, original: line.originalText, documentLine: line.documentLine, name: line.reviewedText)
+            Line(id: line.id, ordinal: line.documentLine?.ordinal ?? ordinal, original: line.originalText, documentLine: line.documentLine,
+                 sourceName: line.reviewedText, name: line.reviewedText)
         }
     }
 
@@ -73,10 +75,12 @@ struct ReceiptImportDraft {
         return ids
     }
 
+    var selectedLines: [Line] { lines.filter { $0.treatment != .skip } }
+
     func facts(receiptID: UUID, snapshot: PantryRepository.Snapshot, at now: Date) throws -> [ReceiptAcquisition] {
         guard snapshot.state.workspaceID == workspaceID, dateConfirmed, purchaseDate <= now,
               !cleaned(merchant).isEmpty else { throw PantryReceiptError.invalid }
-        let selected = lines.filter { $0.treatment != .skip }
+        let selected = selectedLines
         guard (1...50).contains(selected.count) else { throw PantryReceiptError.selection }
         return try selected.map { row in
             guard let received = try ComparisonModel.quantity(row.received, row.unit),
