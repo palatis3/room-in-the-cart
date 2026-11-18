@@ -20,6 +20,8 @@ the embedded extensions, assets and privacy manifests. Signed distribution still
 requires the production subscription product ID, Supabase URL and publishable
 key, household service URL, and public privacy, terms and support URLs.
 
+An iPhone 17e simulator running iOS 27.0 installed the Release build from `b2e58601` over merged main `bcca63b0`. The earlier app saved and reopened a synthetic pickup before the update. After pantry setup and a second relaunch, the same two lots still had four and two units reserved, respectively, with zero available. A new three-unit lentil lot also reopened. SQLite integrity and foreign keys passed in each of the three original databases, and every prior revision payload matched. The detailed readback is in `.build/in-place/result.json` in the update-bcca-b2e5 worktree.
+
 On November 18, the staging build from `b2e58601` passed all three installed-app checks on iPhone 17 with iOS 27.0. It reached the live schema 059 service anonymously and opened Spanish Help and English Support in Safari. XCTest recorded zero runtime warnings.
 
 The full web dependency audit on that revision blocks automated release. The web build tools resolve picomatch 4.0.7, and the advisory listed no patched version on November 18. The four high-severity entries trace to this single dependency. The service audit and the production-only web audit returned zero findings. Once a fix is available, verify the resolved web lockfile, run the complete dependency audit and exercise the built web screens. [GitHub advisory](https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
