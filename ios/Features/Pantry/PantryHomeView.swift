@@ -15,6 +15,7 @@ struct PantryHomeView: View {
     let accessAllowed: Bool
     var offersTonight = false
     var offersStaplePrompts = false
+    var household: HouseholdModel?
     @State private var sheet: PantrySheet?
     @AccessibilityFocusState private var resultFocused: Bool
 
@@ -37,6 +38,7 @@ struct PantryHomeView: View {
                             if offersTonight {
                                 NavigationLink(tonightText("Tonight")) { TonightEntry() }
                                     .accessibilityIdentifier("pantry.tonight")
+                                if let household { HouseholdTonightLink(household: household) }
                             }
                             Button(pantryText("Add food")) { sheet = .add }
                                 .frame(minHeight: 44).disabled(!model.canEdit)
