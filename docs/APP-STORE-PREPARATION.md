@@ -4,6 +4,12 @@ Prepared 2026-11-03 from the supplied listing, current native/service source and
 
 The [current acceptance map](CURRENT-ACCEPTANCE.md) controls feature claims and remaining evidence. The [unsigned physical-arm64 Release and ordinary Debug proof](evidence/native/current-build-20261103/polish/build-proof.json) pins the470-input source; its metadata check does not establish signing, physical-device installation, actual StoreKit, working production URLs or App Review acceptance. Build/version, identity and final screen proofs must be attached to the actual submitted candidate.
 
+## November 9 ASO research
+
+The V3 archive supplied for this review contains English (US) and Spanish (Mexico) listing candidates, a separate list-only fallback and first-use tasks. The English candidate keeps the name and subtitle in the November 2 brief. Its description starts with a grocery list and then introduces budgeting, pantry, meals and household requests. The candidate Spanish name is “Room in the Cart: Compras” and its subtitle is “Despensa y comidas en familia”. Use the recorded first-click tasks to decide which benefit deserves the opening screenshot. [Pre-branding tasks](PRE-BRANDING-REVIEW.md)
+
+Select copy against the signed build and the features enabled for the US storefront. For a list-only release, verify creating, editing, quantities, notes, department grouping and checking items off before using the corresponding V3 fallback claims. For a household release, verify invitation, sign-in and reviewer access before advertising sharing. The earlier draft below preserves the November 2 evidence and word counts. The November 9 archive is a separate set of candidates for final selection.
+
 ## Supplied listing, preserved unchanged
 
 Source: [launch/listing.json](product/foundation-gen2.1/launch/listing.json), draft A, evidence date 2026-11-02. SHA256: `6286da129804cfff4dbc2866a838fb5674ccc40d2f30384a8c8567769326a0a5`. This preparation does not update it.
