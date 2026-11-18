@@ -31,6 +31,22 @@
     "runtime-versions.json": "a94304ab9237ea7b6be39c247203b1d2154cbe3d626834089940d9f26524e5fa",
     "applied059.json": "754eca529e13b1c8734a9adbb44ce3bd6615e6a96a191528ee6a8c198ba816bb",
     "fenced-backup.json": "8bc71f5cd95910cd350124458f81b681514736f1d7e151aa11fe79e0ae14bca3",
-    "scoped-postflight.json": "198ceb12d9a6a51a5d4af1651d545efd3f6b5cba8bd2c62a1a433daa58ad5049"
+    "scoped-postflight.json": "198ceb12d9a6a51a5d4af1651d545efd3f6b5cba8bd2c62a1a433daa58ad5049",
+    "first-scheduled-maintenance.json": "cf277de8091e043dddb88fb878f2e874b4c66e057c78abbdab4cc0da1fffcddb"
+  },
+  "firstScheduledRun": {
+    "requestedAtUTC": "2026-11-18T08:21:00.154Z",
+    "completedEventUTC": "2026-11-18T08:21:01.474Z",
+    "requestId": "pp252-1794990060154-20dd4bd243c7",
+    "httpStatus": 200,
+    "durationMs": 471,
+    "attentionRequired": false,
+    "health": {
+      "authDue": 0,
+      "authRetryPending": 0,
+      "authExpiredUnconfirmed": 0,
+      "privacyPending": 0,
+      "privacyDue": 0
+    }
   }
 }
