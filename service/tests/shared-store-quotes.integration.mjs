@@ -50,7 +50,7 @@ async function enroll(a,h){a.device=ok(await call(a,`/v1/households/${h}/devices
 function entered(){
  const first={label:'First store',store:'Store A',branch:'A1',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),
   source:'Manually reviewed complete quote',currency:'USD',terms:'No membership needed. Fees, taxes, deposits and discounts included.',itemsMinor:3600,checkoutMinor:3800,allChargesIncluded:true,
-  available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:3800,capScope:'wholeCheckout',eligibilityConfirmed:true};
+  available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:3800,capScope:'wholeCheckout',orderMinimum:{kind:"noneRequired"},eligibilityConfirmed:true};
  return{first,second:{...first,label:'Second store',store:'Store B',branch:'B1',itemsMinor:3200,checkoutMinor:3500,tripAlreadyPlanned:false,tripMinor:400,extraMinutes:18}};
 }
 async function fixture(){
@@ -171,7 +171,8 @@ test('matching store review saves unknown or expired draft costs while only a co
 
 test('unknown fees, unavailable packages, unmatched quantities and missing eligibility never produce a winner',async()=>{
  const f=await fixture();
- for(const patch of [{allChargesIncluded:false},{available:null},{available:false},{quantitiesMatched:false},{singleStore:false},{eligibilityConfirmed:false}]){
+ for(const patch of [{allChargesIncluded:false},{available:null},{available:false},{quantitiesMatched:false},{singleStore:false},{eligibilityConfirmed:false},
+    {orderMinimum:{kind:"unknown"}},{orderMinimum:{kind:"required",minimumMinor:3500,eligibleSubtotalMinor:3200}}]){
   const options=entered();Object.assign(options.second,patch);const saved=await f.save(f.owner,options),view=ok(await call(f.owner,f.quotes));
   assert.equal(view.pairs.find(p=>p.pairId===saved.pairId).comparison.preferred,null);
   if(patch.allChargesIncluded===false)assert.equal(view.pairs.find(p=>p.pairId===saved.pairId).comparison.secondCheckout,null);

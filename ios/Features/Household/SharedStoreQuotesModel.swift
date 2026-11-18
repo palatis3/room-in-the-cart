@@ -73,9 +73,14 @@ extension HouseholdService: SharedStoreQuotesServing {}
         guard canPrepare, let page, !page.commitments.isEmpty else { return }
         await prepare(.pairs, request: .init(page: page, options: options))
     }
+    func selectionAllowed(_ pair: StoreQuotePage.Pair, choice: StoreQuoteChoice) -> Bool {
+        guard canPrepare, let page, pair.current(in: page), pair.comparison.comparable,
+              let result = try? SharedStoreQuoteMath.compare(pair.options, commitments: pair.commitments, shopID: scope.shopID) else { return false }
+        return result.canSelect(choice == .first ? SharedStoreQuoteMath.firstID : SharedStoreQuoteMath.secondID)
+    }
+
     func prepareSelection(pair: StoreQuotePage.Pair, choice: StoreQuoteChoice, proposalID: UUID? = nil) async {
-        guard canPrepare, let page, pairs.contains(pair), pair.current(in: page), pair.comparison.comparable,
-              pair.options[choice].available == true, pair.options[choice].eligibilityConfirmed else { return }
+        guard selectionAllowed(pair, choice: choice), let page, pairs.contains(pair) else { return }
         if page.shopper {
             guard pair.own || pair.proposals.contains(where: { $0.id == proposalID && $0.choice == choice }) else { return }
         } else { guard pair.own, proposalID == nil else { return } }
@@ -156,6 +161,21 @@ extension HouseholdService: SharedStoreQuotesServing {}
     }
 }
 
+extension EnteredOrderMinimum {
+    var reviewedMinimum: StoreOrderMinimum {
+        StoreOrderMinimum(StoreOrderMinimum.Kind(rawValue: kind.rawValue) ?? .unknown,
+            minimum: minimumMinor.map { Money(minorUnits: Int64($0)) },
+            eligibleSubtotal: eligibleSubtotalMinor.map { Money(minorUnits: Int64($0)) })
+    }
+}
+extension EnteredCommitmentSupply {
+    func reviewedSupply() throws -> StoreCommitmentSupply {
+        guard let unit = UnitOfMeasure(rawValue: unit) else { throw ClientError.configuration }
+        return StoreCommitmentSupply(commitmentID: commitmentId, unit: unit, requiredUnits: requiredUnits,
+            usableUnitsPerPackage: usableUnitsPerPackage, packages: packages)
+    }
+}
+
 /// CoreDomain remains the comparison engine for the connected and local screens.
 enum SharedStoreQuoteMath {
     static let firstID = UUID(uuidString: "00000000-0000-4000-8000-000000000001")!
@@ -171,9 +191,10 @@ enum SharedStoreQuoteMath {
             let evidence = source.allChargesIncluded ? source.checkoutMinor.map { CostEvidence.exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Checkout total is unknown") : .unknown(reason: "Checkout charges are unreviewed")
             return StoreQuoteOption(id: id, label: source.label, commitments: same,
                 quote: CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(evidence)),
-                available: source.eligibilityConfirmed ? source.available : nil, quantitiesMatched: source.quantitiesMatched, singleStore: source.singleStore,
+                available: source.available, quantitiesMatched: source.quantitiesMatched, singleStore: source.singleStore,
                 trip: StoreTripEvidence(incrementalCash: source.tripMinor.map { .exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Trip cash is unknown"), extraMinutes: source.extraMinutes, tripAlreadyPlanned: source.tripAlreadyPlanned),
-                observedItemSubtotal: source.itemsMinor.map { Money(minorUnits: Int64($0)) }, eligibilityTerms: source.terms.isEmpty ? nil : source.terms)
+                observedItemSubtotal: source.itemsMinor.map { Money(minorUnits: Int64($0)) }, eligibilityTerms: source.terms.isEmpty ? nil : source.terms,
+                orderMinimum: source.orderMinimum?.reviewedMinimum, supplies: try source.supplies?.map { try $0.reviewedSupply() }, eligibilityReviewed: source.eligibilityConfirmed)
         }
         let pair = TwoStoreQuotePair(shopID: shopID, baseRevisionID: shopID, basisRevision: 0, first: try option(options.first,id: firstID), second: try option(options.second,id: secondID))
         return try TwoStoreQuoteEngine.evaluateEnteredQuotes(pair)

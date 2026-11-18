@@ -432,7 +432,8 @@ final class DinnerPlanningTests: XCTestCase {
                 quote: CheckoutQuote(scope: .wholeCheckout, context: .init(storeID: store, branchID: store + "1", mode: .pickup, slot: "Tuesday", commitmentsID: needs.id, observedAt: now, source: "Shopper entered"),
                     pricing: .components(lines: [.init(id: UUID(), name: "All goods", cost: .exact(Money(minorUnits: goods)))], lineSetComplete: true,
                         fees: [.init(id: "pickup", rule: .fixed(fee))], discounts: [], tax: .exact(.zero), deposits: .exact(.zero))),
-                available: available, quantitiesMatched: true, trip: .init(incrementalCash: trip, extraMinutes: minutes, tripAlreadyPlanned: store == "A"), adoptionBasis: ShopBasis(branch: store + "1", mode: .pickup, timeZoneIdentifier: "UTC"))
+                available: available, quantitiesMatched: true, trip: .init(incrementalCash: trip, extraMinutes: minutes, tripAlreadyPlanned: store == "A"), adoptionBasis: ShopBasis(branch: store + "1", mode: .pickup, timeZoneIdentifier: "UTC"),
+                orderMinimum: .init(.noneRequired), eligibilityReviewed: true)
         }
         return .init(shopID: ledger.id, baseRevisionID: ledger.revisionID, basisRevision: ledger.basisRevision,
             first: option("A", goods: 3600, fee: .exact(Money(minorUnits: 200)), trip: .exact(.zero), minutes: 0, available: true),
@@ -452,6 +453,48 @@ final class DinnerPlanningTests: XCTestCase {
         XCTAssertEqual(result.extraMinutesChange, 18); XCTAssertEqual(result.preferredByTotalCash, pair.first.id)
         XCTAssertThrowsError(try CheckoutEngine.compare(before: pair.first.quote, after: pair.second.quote))
     }
+    func testNineWrapPackageCoverageAndMerchandiseMinimumExcludeTripAndFees() throws {
+        let ledger = ShoppingLedger()
+        let original = try quotes(ledger)
+        let set = DinnerCommitmentSet(commitments: [DinnerCommitment(name: "Nine wraps", kind: .dinner, portions: .one)])
+        let id = try XCTUnwrap(set.commitments.first?.id)
+        func option(_ source: StoreQuoteOption, minimum: StoreOrderMinimum?, usable: Int64, packs: Int64 = 2,
+                    unit: UnitOfMeasure = .count, need: Int64 = 9) -> StoreQuoteOption {
+            let context = CheckoutContext(storeID: source.label, branchID: source.label + "1", mode: .pickup, slot: "Tuesday",
+                commitmentsID: set.id, observedAt: now, source: "Retailer checkout")
+            return StoreQuoteOption(id: source.id, label: source.label, commitments: set,
+                quote: .init(scope: .wholeCheckout, context: context, pricing: source.quote.pricing),
+                available: true, quantitiesMatched: true, trip: source.trip, adoptionBasis: source.adoptionBasis,
+                orderMinimum: minimum, supplies: [.init(commitmentID: id, unit: unit, requiredUnits: need,
+                    usableUnitsPerPackage: usable, packages: packs)], eligibilityReviewed: true)
+        }
+        let first = option(original.first, minimum: .init(.noneRequired), usable: 6)
+        func compare(_ second: StoreQuoteOption) throws -> TwoStoreQuoteResult {
+            try TwoStoreQuoteEngine.evaluateEnteredQuotes(.init(shopID: ledger.id, baseRevisionID: ledger.revisionID,
+                basisRevision: ledger.basisRevision, first: first, second: second))
+        }
+        let met = StoreOrderMinimum(.required, minimum: Money(minorUnits: 3400), eligibleSubtotal: Money(minorUnits: 3400))
+        let second = option(original.second, minimum: met, usable: 8)
+        XCTAssertEqual(try first.supplies?.first?.surplus(), 3)
+        XCTAssertEqual(try second.supplies?.first?.surplus(), 7)
+        XCTAssertEqual(try compare(second).preferredByTotalCash, first.id)
+        let tooLow = try compare(option(original.second, minimum: .init(.required, minimum: Money(minorUnits: 3500),
+            eligibleSubtotal: Money(minorUnits: 3400)), usable: 8))
+        XCTAssertEqual(tooLow.second.minimumStatus, .notMet)
+        XCTAssertEqual(tooLow.second.tripInclusive.total.exact?.minorUnits, 3900)
+        XCTAssertNil(tooLow.preferredByTotalCash)
+        XCTAssertFalse(tooLow.canSelect(second.id))
+        XCTAssertTrue(tooLow.canSelect(first.id))
+        for missing in [nil, StoreOrderMinimum(.unknown), .init(.required, minimum: Money(minorUnits: 3300))] {
+            let result = try compare(option(original.second, minimum: missing, usable: 8))
+            XCTAssertEqual(result.second.minimumStatus, .unknown)
+            XCTAssertNil(result.preferredByTotalCash)
+        }
+        XCTAssertFalse(try compare(option(original.second, minimum: met, usable: 8, packs: 1)).canSelect(second.id))
+        XCTAssertFalse(try compare(option(original.second, minimum: met, usable: 8, unit: .gram)).comparable)
+        XCTAssertFalse(try compare(option(original.second, minimum: met, usable: 8, need: 8)).comparable)
+    }
+
     func testUnknownFeeTripOrAvailabilityDoesNotCrownWinnerAndBreakEvenIsCashOnly() throws {
         let ledger = ShoppingLedger()
         let fee = try TwoStoreQuoteEngine.compare(quotes(ledger, bFee: .unknown(reason: "Fee unknown")), access: access(ledger), at: now)

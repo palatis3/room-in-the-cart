@@ -9,12 +9,21 @@ const text = z.string().trim().min(1).max(240);
 const date = z.string().datetime({ offset: true });
 const base = z.object({ operationId: id, shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), grantRevision: z.number().int().nonnegative() });
 const choice = z.enum(['first', 'second']);
+const orderMinimum = z.discriminatedUnion('kind', [
+    z.object({kind:z.literal('unknown')}).strict(), z.object({kind:z.literal('noneRequired')}).strict(),
+    z.object({kind:z.literal('required'), minimumMinor:z.number().int().min(0).max(1_000_000_000), eligibleSubtotalMinor:cents}).strict(),
+]);
+const supply = z.object({commitmentId:id, unit:z.enum(['count','gram','milliliter']),
+    requiredUnits:z.number().int().min(1).max(1_000_000_000), usableUnitsPerPackage:z.number().int().min(1).max(1_000_000_000),
+    packages:z.number().int().min(0).max(100_000)}).strict();
 const option = z.object({ label: text, store: text, branch: text, mode: z.enum(['pickup', 'delivery', 'inStore']), slot: date, observedAt: date,
     source: text, currency: z.literal('USD'), terms: z.string().trim().max(500), itemsMinor: cents, checkoutMinor: cents, allChargesIncluded: z.boolean(),
     available: z.boolean().nullable(), quantitiesMatched: z.boolean(), singleStore: z.boolean(), tripAlreadyPlanned: z.boolean(), tripMinor: cents,
     extraMinutes: z.number().int().min(0).max(525600).nullable(),
     capMinor: cents.optional().default(null), capScope: z.enum(['wholeCheckout', 'itemsOnly']).optional().default('wholeCheckout'),
-    eligibilityConfirmed: z.boolean().optional().default(false) }).strict();
+    eligibilityConfirmed: z.boolean().optional().default(false), orderMinimum:orderMinimum.optional(),
+    supplies:z.array(supply).max(500).optional() }).strict().refine(value=>!value.supplies ||
+        new Set(value.supplies.map(row=>row.commitmentId.toLowerCase())).size===value.supplies.length);
 const options = z.object({ first: option, second: option }).strict();
 const save = base.extend({ options }).strict();
 const propose = base.extend({ pairId: id, choice }).strict();
@@ -26,9 +35,29 @@ const conflict = () => new ServiceError(409, 'operation_conflict', 'This identif
 const delta = (a: number | null, b: number | null) => a === null || b === null ? null : b - a;
 /** Both alternatives use the server-snapshotted commitments. Cash is bounded
  * integer minor units; optional travel time is never converted into money. */
-export function compareStoreQuotes(pair: StoreQuoteOptions) {
+function minimumStatus(value: StoreQuoteOptions['first']) {
+    const minimum = value.orderMinimum;
+    if(!minimum || minimum.kind==='unknown')return 'unknown';
+    if(minimum.kind==='noneRequired')return 'noneRequired';
+    if(minimum.eligibleSubtotalMinor===null)return 'unknown';
+    return minimum.eligibleSubtotalMinor>=minimum.minimumMinor?'met':'notMet';
+}
+function orderable(value: StoreQuoteOptions['first'], commitmentIds?: string[]) {
+    const status=minimumStatus(value);
+    if(value.available!==true || !value.eligibilityConfirmed || (status!=='met' && status!=='noneRequired'))return false;
+    if(!value.supplies)return true;
+    return (!commitmentIds || value.supplies.length===commitmentIds.length) &&
+        value.supplies.every(row=>row.packages*row.usableUnitsPerPackage>=row.requiredUnits);
+}
+export function compareStoreQuotes(pair: StoreQuoteOptions, commitmentIds?: string[]) {
     const { first, second } = pair;
-    const comparable = first.quantitiesMatched && second.quantitiesMatched && first.singleStore && second.singleStore;
+    const left=first.supplies, right=second.supplies;
+    const needs=new Map((left??[]).map(row=>[row.commitmentId.toLowerCase(),row]));
+    const equivalent=left && right ? left.length===right.length &&
+        (!commitmentIds || left.length===commitmentIds.length && commitmentIds.every(id=>needs.has(id.toLowerCase()))) &&
+        right.every(row=>{const original=needs.get(row.commitmentId.toLowerCase());
+            return original?.unit===row.unit && original.requiredUnits===row.requiredUnits;}) : !left && !right;
+    const comparable = equivalent && first.quantitiesMatched && second.quantitiesMatched && first.singleStore && second.singleStore;
     const checkout = (entered: StoreQuoteOptions['first']) => entered.allChargesIncluded ? entered.checkoutMinor : null;
     const tripTotal = (entered: StoreQuoteOptions['first']) => {
         const total = checkout(entered);
@@ -37,8 +66,7 @@ export function compareStoreQuotes(pair: StoreQuoteOptions) {
     const firstCheckout = checkout(first), secondCheckout = checkout(second);
     const firstTrip = tripTotal(first), secondTrip = tripTotal(second);
     const cashDelta = comparable ? delta(firstTrip, secondTrip) : null;
-    const coverageConfirmed = first.available === true && second.available === true
-        && first.eligibilityConfirmed === true && second.eligibilityConfirmed === true;
+    const coverageConfirmed = orderable(first,commitmentIds) && orderable(second,commitmentIds);
     const capResult = (entered: StoreQuoteOptions['first']) => {
         const amountMinor = entered.capMinor ?? null;
         const scope = entered.capScope ?? 'wholeCheckout';
@@ -125,7 +153,7 @@ export class SharedStoreQuotes {
             pairs: rows.slice(0, 30).map(p => ({ pairId: p.pair_id, baseRevision: p.shop_revision, savedAt: p.created_at, own: p.own, commitments: p.commitments, options: p.options,
                 authorityEpoch: p.authority_epoch, grantRevision: p.grant_revision,
                 stale: p.shop_revision !== shop.revision || p.authority_epoch !== shop.authority_epoch || (p.own && !shopper && p.grant_revision !== grantRevision),
-                comparison: compareStoreQuotes(p.options), proposals: p.proposals ?? [] })), nextCursor: rows.length > 30 ? rows[29].pair_id : null };
+                comparison: compareStoreQuotes(p.options,p.commitments.map((line:{id:string})=>line.id)), proposals: p.proposals ?? [] })), nextCursor: rows.length > 30 ? rows[29].pair_id : null };
     }
     async change(ctx: Context, shopId: string, action: 'grant' | 'pairs' | 'proposals' | 'adoptions', raw: unknown) {
         const scheme = { grant, pairs: save, proposals: propose, adoptions: adopt }[action];
@@ -165,6 +193,11 @@ export class SharedStoreQuotes {
             if ([entered.first, entered.second].some(o => Date.parse(o.observedAt) > ctx.now.getTime() + 300000))
                 throw new ServiceError(422, 'future_evidence', 'Use the time the quote was observed.');
             const commitments = await this.commitments(ctx, shopId);
+            const commitmentIDs=new Set(commitments.map(line=>line.id.toLowerCase()));
+            for(const option of [entered.first,entered.second]){
+                if(option.supplies?.some(row=>!commitmentIDs.has(row.commitmentId.toLowerCase())))
+                    throw new ServiceError(422,'unknown_commitment','Select a commitment in the reviewed shared basket.');
+            }
             if (!commitments.length)
                 throw new ServiceError(409, 'empty_basket', 'Review a shared basket before comparing stores.');
             const count = (await ctx.db.query('SELECT count(*)::int AS n FROM ritc.store_quote_pair WHERE household_id=$1 AND shop_id=$2 AND actor_id=$3', [ctx.householdId, shopId, ctx.member.member_id])).rows[0].n;
@@ -182,7 +215,8 @@ export class SharedStoreQuotes {
             if (p.shop_revision !== shop.revision)
                 throw stale();
             const entered = p.options as StoreQuoteOptions, selected = entered[selection.choice];
-            if (!compareStoreQuotes(entered).comparable || selected.available !== true || !selected.eligibilityConfirmed)
+            const ids=p.commitments.map((line:{id:string})=>line.id);
+            if (!compareStoreQuotes(entered,ids).comparable || !orderable(selected,ids))
                 throw new ServiceError(409, 'unreviewed_coverage', 'Review package quantities, eligibility and availability.');
             if (action === 'proposals') {
                 if (p.actor_id !== ctx.member.member_id || shopper)

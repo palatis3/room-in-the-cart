@@ -44,6 +44,7 @@ func dinnerIssue(_ issue: String) -> String {
     switch issue {
     case "Correct invalid or excluded ingredients", "Review ingredients", "Review unknown ingredient quantities",
          "Usable yield is unconfirmed", "Availability is unconfirmed", "Compare complete single-store plans for the same commitments and scope",
+         "Some packages do not cover the required quantities", "Offer eligibility needs review", "Purchase minimum or eligible subtotal is unknown", "An option does not meet its purchase minimum",
          "Required product availability is unknown or unavailable", "Checkout terms are incomplete", "Total trip cash is unresolved": return dinnerText(issue)
     default: return dinnerText("Review the entered evidence before continuing.")
     }

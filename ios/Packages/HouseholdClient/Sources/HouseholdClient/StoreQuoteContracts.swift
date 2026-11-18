@@ -8,17 +8,54 @@ public struct StoreQuoteContext: Codable, Equatable, Sendable {
     }
 }
 public enum StoreQuoteChoice: String, Codable, CaseIterable, Sendable { case first, second }
+public struct EnteredOrderMinimum: Codable, Equatable, Sendable {
+    public enum Kind: String, Codable, Sendable { case unknown, noneRequired, required }
+    public let kind: Kind
+    public let minimumMinor: Int?
+    public let eligibleSubtotalMinor: Int?
+    public init(kind: Kind, minimumMinor: Int? = nil, eligibleSubtotalMinor: Int? = nil) {
+        self.kind = kind; self.minimumMinor = minimumMinor; self.eligibleSubtotalMinor = eligibleSubtotalMinor
+    }
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(kind, forKey: .kind)
+        if kind == .required { try c.encode(minimumMinor, forKey: .minimumMinor); try c.encode(eligibleSubtotalMinor, forKey: .eligibleSubtotalMinor) }
+    }
+    func validate() throws {
+        guard kind == .required ? minimumMinor != nil : minimumMinor == nil && eligibleSubtotalMinor == nil,
+              [minimumMinor, eligibleSubtotalMinor].allSatisfy({ $0.map { (0...1_000_000_000).contains($0) } ?? true }) else {
+            throw ClientError.configuration
+        }
+    }
+}
+public struct EnteredCommitmentSupply: Codable, Equatable, Sendable {
+    public let commitmentId: UUID
+    public let unit: String
+    public let requiredUnits: Int64, usableUnitsPerPackage: Int64, packages: Int64
+    public init(commitmentId: UUID, unit: String, requiredUnits: Int64, usableUnitsPerPackage: Int64, packages: Int64) {
+        self.commitmentId = commitmentId; self.unit = unit; self.requiredUnits = requiredUnits
+        self.usableUnitsPerPackage = usableUnitsPerPackage; self.packages = packages
+    }
+    func validate() throws {
+        guard ["count","gram","milliliter"].contains(unit), (1...1_000_000_000).contains(requiredUnits),
+              (1...1_000_000_000).contains(usableUnitsPerPackage), (0...100_000).contains(packages) else { throw ClientError.configuration }
+    }
+}
 public struct EnteredStoreQuote: Codable, Equatable, Sendable {
     public var label: String; public var store: String; public var branch: String; public var mode: String
     public var slot: String; public var observedAt: String; public var source: String; public var currency: String; public var terms: String
     public var itemsMinor: Int?; public var checkoutMinor: Int?; public var allChargesIncluded: Bool
     public var available: Bool?; public var quantitiesMatched: Bool; public var singleStore: Bool
     public var tripAlreadyPlanned: Bool; public var tripMinor: Int?; public var extraMinutes: Int?
+    public var orderMinimum: EnteredOrderMinimum?
+    public var supplies: [EnteredCommitmentSupply]?
     public var capMinor: Int?; public var capScope: String; public var eligibilityConfirmed: Bool
     public init(label: String, store: String, branch: String, mode: String, slot: String, observedAt: String, source: String,
                 currency: String = "USD", terms: String = "", itemsMinor: Int?, checkoutMinor: Int?, allChargesIncluded: Bool,
                 available: Bool?, quantitiesMatched: Bool, singleStore: Bool, tripAlreadyPlanned: Bool, tripMinor: Int?, extraMinutes: Int?,
-                capMinor: Int? = nil, capScope: String = "wholeCheckout", eligibilityConfirmed: Bool) {
+                capMinor: Int? = nil, capScope: String = "wholeCheckout", eligibilityConfirmed: Bool,
+                orderMinimum: EnteredOrderMinimum? = nil, supplies: [EnteredCommitmentSupply]? = nil) {
+        self.orderMinimum = orderMinimum; self.supplies = supplies
         self.label = label; self.store = store; self.branch = branch; self.mode = mode; self.slot = slot; self.observedAt = observedAt
         self.source = source; self.currency = currency; self.terms = terms; self.itemsMinor = itemsMinor; self.checkoutMinor = checkoutMinor
         self.allChargesIncluded = allChargesIncluded; self.available = available; self.quantitiesMatched = quantitiesMatched; self.singleStore = singleStore
@@ -33,9 +70,16 @@ public struct EnteredStoreQuote: Codable, Equatable, Sendable {
         try c.encode(checkoutMinor, forKey: .checkoutMinor); try c.encode(allChargesIncluded, forKey: .allChargesIncluded)
         try c.encode(available, forKey: .available); try c.encode(quantitiesMatched, forKey: .quantitiesMatched); try c.encode(singleStore, forKey: .singleStore)
         try c.encode(tripAlreadyPlanned, forKey: .tripAlreadyPlanned); try c.encode(tripMinor, forKey: .tripMinor); try c.encode(extraMinutes, forKey: .extraMinutes)
+        try c.encodeIfPresent(orderMinimum, forKey: .orderMinimum)
+        try c.encodeIfPresent(supplies, forKey: .supplies)
         try c.encode(capMinor, forKey: .capMinor); try c.encode(capScope, forKey: .capScope); try c.encode(eligibilityConfirmed, forKey: .eligibilityConfirmed)
     }
     public func validate() throws {
+        try orderMinimum?.validate()
+        if let supplies {
+            guard supplies.count <= 500, Set(supplies.map(\.commitmentId)).count == supplies.count else { throw ClientError.configuration }
+            for row in supplies { try row.validate() }
+        }
         func text(_ s: String, limit: Int = 240) -> Bool { !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && s.utf16.count <= limit }
         guard [label,store,branch,source].allSatisfy({ text($0) }), ["pickup","delivery","inStore"].contains(mode), currency == "USD",
               HistoryValidation.date(slot) != nil, HistoryValidation.date(observedAt) != nil, terms.utf16.count <= 500,

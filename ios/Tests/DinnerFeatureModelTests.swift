@@ -554,6 +554,7 @@ import CoreDomain
         let (store, model) = fixture()
         let commitments = DinnerCommitmentSet(commitments: [DinnerCommitment(name: "Dinner", kind: .dinner, portions: .one)])
         var a = DinnerStoreDraft(); a.label = "A"; a.storeID = "a"; a.branch = "branch-a"; a.source = "Reviewed retailer total"
+        a.orderMinimumKind = .noneRequired; a.eligibilityReviewed = true
         a.allChargesIncluded = true; a.total = "12"; a.quantitiesMatched = true; a.singleStore = true; a.availability = 1; a.tripCash = "0"
         var b = a; b.id = UUID(); b.label = "B"; b.storeID = "b"; b.branch = "branch-b"; b.total = "10"
         let shop = model.shop!

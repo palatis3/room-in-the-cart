@@ -768,6 +768,12 @@ import UIKit
             enableSwitch(prefix + "allChargesIncluded", nativeThumb: true)
             enableSwitch(prefix + "quantitiesMatched")
             enableSwitch(prefix + "singleStore")
+            enableSwitch(prefix + "eligibility")
+            tap(element(prefix + "purchaseMinimum"))
+            if slot == "second" {
+                tap(app.buttons["Minimum applies"])
+                enterQuoteFields([(prefix + "minimumAmount", "30"), (prefix + "eligibleSubtotal", "32")])
+            } else { tap(app.buttons["No purchase minimum"]) }
             tap(element(prefix + "availability")); tap(app.buttons["Reviewed available"])
             var tripFields: [(String, String)] = []
             if let cash { tripFields.append((prefix + "tripCash", cash)) }
