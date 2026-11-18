@@ -495,6 +495,9 @@ final class RoomInTheCartUITests: XCTestCase {
     func testAutomatedAccessibilityAuditOnShopAndKnownResults() throws {
         // Collect failures from every viewport in this audit-only test.
         continueAfterFailure = true
+        #if DEBUG && targetEnvironment(simulator)
+        app.launchEnvironment["RITC_HOSTED_AUDIT_GEOMETRY"] = "1"
+        #endif
         launch()
         captureShopFrames("Initial-Shop-before-audit")
         screenshot("Initial-Shop-before-audit")
@@ -525,7 +528,72 @@ final class RoomInTheCartUITests: XCTestCase {
         captureComparisonFrames("Complete-Save-before-audit")
         screenshot("Complete-Save-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Complete Save control"))
+        #if DEBUG && targetEnvironment(simulator)
+        measureComparisonElementDetection()
+        #endif
     }
+
+    #if DEBUG && targetEnvironment(simulator)
+    private func measureComparisonElementDetection() {
+        let save = app.buttons["saveComparison"]
+        revealFullyInComparison(save)
+        XCTAssertTrue(comparisonViewport.contains(save.frame))
+        captureComparisonFrames("Fully visible Save")
+        measureElementDetection("Fully visible Save")
+
+        for (phase, expectedHeaderY) in [("Partial Save", 112.667), ("Save outside viewport", 166.0)] {
+            advanceAuditGeometry()
+            let header = app.staticTexts["bHeader"]
+            let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                header.exists && abs(header.frame.minY - expectedHeaderY) <= 2
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 5), .completed, phase)
+            let viewport = comparisonViewport
+            if phase == "Partial Save" {
+                XCTAssertTrue(save.exists && viewport.intersects(save.frame) && !viewport.contains(save.frame), phase)
+            } else {
+                XCTAssertFalse(save.exists && viewport.intersects(save.frame), phase)
+            }
+            captureComparisonFrames(phase)
+            measureElementDetection(phase)
+        }
+
+        advanceAuditGeometry()
+        XCTAssertTrue(app.staticTexts["Accessible reference"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Diagnostic blue umbrellas"].exists)
+        let findings = measureElementDetection("Missing painted text control")
+        XCTAssertGreaterThan(findings, 0, "Expected element detection to report visible painted text absent from the accessibility hierarchy")
+    }
+
+    private func advanceAuditGeometry() {
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+            CFNotificationName("dev.roominthecart.pr61-audit-geometry" as CFString), nil, nil, true)
+    }
+
+    @discardableResult
+    private func measureElementDetection(_ phase: String) -> Int {
+        func captureViewport(_ moment: String) {
+            let name = phase + " " + moment
+            screenshot(name)
+            let hierarchy = XCTAttachment(string: app.debugDescription)
+            hierarchy.name = name + " hierarchy"
+            hierarchy.lifetime = .keepAlways
+            add(hierarchy)
+        }
+        captureViewport("before")
+        var findings = 0
+        XCTAssertNoThrow(try app.performAccessibilityAudit(for: .elementDetection) { issue in
+            findings += 1
+            let target = issue.element.map { "id=\($0.identifier), label=\($0.label), frame=\($0.frame)" } ?? "no element supplied"
+            print("Measured \(phase): category=\(issue.auditType.rawValue); \(issue.compactDescription); \(issue.detailedDescription); \(target)")
+            captureViewport("callback")
+            return false
+        })
+        print("Measured \(phase): \(findings) element-detection reports")
+        captureViewport("after")
+        return findings
+    }
+    #endif
 
     private var shopViewport: CGRect {
         let scroll = app.scrollViews["shopContentScroll"].frame

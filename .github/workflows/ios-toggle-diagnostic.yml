@@ -1,108 +1,75 @@
-name: Standalone Form toggle diagnostic
-
+name: Comparison accessibility diagnosis on Bitrise A1
 on:
-  pull_request:
-    types: [labeled]
   workflow_dispatch:
     inputs:
       candidate_sha:
-        description: Exact 40-character SHA of the selected workflow ref
-        type: string
+        description: Exact diagnostic branch commit
         required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
-  control:
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'diagnostic:form-toggle'
-    runs-on: xcode-27
-    timeout-minutes: 45
+  compare:
+    if: github.ref == 'refs/heads/codex/pr61-audit-hosted'
+    runs-on: bitrise-runner-A1
+    timeout-minutes: 40
     env:
-      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode-27.1.0.app/Contents/Developer
       CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
       CI_IPHONE_NAME: iPhone 17
-      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || inputs.candidate_sha }}
-      EVENT_SHA: ${{ github.sha }}
-      EVENT_NAME: ${{ github.event_name }}
-      EVIDENCE: ${{ github.workspace }}/.build/form-toggle-diagnostic
-      PRODUCTS: ${{ github.workspace }}/.build/form-toggle-products/Build/Products
+      TEST_SHARD: comparison-audit
+      EXPECTED_TEST_COUNT: '1'
+      EXPECTED_SHA: ${{ inputs.candidate_sha }}
     steps:
-      - name: Require an immutable candidate identity
-        run: |
-          python3 - <<'PY'
-          import os, re
-          candidate = os.environ['EXPECTED_SHA']
-          if not re.fullmatch('[0-9a-f]{40}', candidate):
-              raise SystemExit('An exact candidate SHA is required')
-          if os.environ['EVENT_NAME'] == 'workflow_dispatch' and candidate != os.environ['EVENT_SHA']:
-              raise SystemExit('Dispatch candidate must match the selected workflow ref SHA')
-          PY
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          ref: ${{ env.EXPECTED_SHA }}
           persist-credentials: false
-      - name: Require the reviewed Xcode 27.1 toolchain
-        run: bash scripts/check_ci_xcode27.sh
-      - name: Verify source and hosted environment; create a fresh simulator
-        run: bash diagnostics/swiftui-toggle/require-environment.sh
-      - name: Build and freeze standalone products
-        timeout-minutes: 12
+      - name: Verify the source, toolchain and runner
         run: |
           set -euo pipefail
-          xcodebuild -project diagnostics/swiftui-toggle/FormToggleDiagnostic.xcodeproj \
-            -scheme FormToggleDiagnostic -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' -parallel-testing-enabled NO -jobs 2 \
-            -derivedDataPath .build/form-toggle-products CODE_SIGN_IDENTITY=- build-for-testing \
-            2>&1 | tee "$EVIDENCE/Build.log"
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$EXPECTED_SHA" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(uname -m)" = arm64
+          test "$(xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+          mkdir -p .build/test-plan
           python3 - <<'PY'
-          import hashlib, json, os
-          from pathlib import Path
-          files = {}
-          for root in [Path('diagnostics/swiftui-toggle'), Path(os.environ['PRODUCTS'])]:
-              for path in sorted(root.rglob('*')):
-                  if path.is_file():
-                      files[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
-          (Path(os.environ['EVIDENCE']) / 'source-products-sha256.json').write_text(json.dumps(files, indent=2) + '\n')
+          import os, sys
+          sys.path.insert(0, 'scripts')
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ['CI_IPHONE_RUNTIME'])
+          assert (runtime['version'], runtime['buildversion']) == ('27.0', '24A434'), runtime
           PY
-          tar -czf "$EVIDENCE/source.tar.gz" diagnostics/swiftui-toggle scripts/check_ios_test_results.py
-          tar -czf "$EVIDENCE/products.tar.gz" -C .build/form-toggle-products/Build Products
-      - name: Boot the dedicated simulator
-        timeout-minutes: 8
-        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
-      - name: Run the single control with normal XCTest idle behavior
-        timeout-minutes: 17
-        run: bash diagnostics/swiftui-toggle/run-test.sh
-      - name: Shut down the owned simulator
-        if: always()
+          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          echo 'RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults' > .build/test-plan/comparison-audit.txt
+      - name: Activate the standard compilation cache
+        continue-on-error: true
+        run: bash scripts/activate_bitrise_xcode_cache.sh
+      - name: Build the isolated probe and boot the simulator
+        timeout-minutes: 20
         run: |
-          python3 - <<'PY'
-          import json, os, subprocess, uuid
-          from pathlib import Path
-          root = Path(os.environ['EVIDENCE'])
-          path = root / 'simulator-id.txt'
-          if not path.exists():
-              raise SystemExit(0)  # Environment checks failed before device creation.
-          device = path.read_text().strip()
-          try:
-              uuid.UUID(device)
-          except ValueError:
-              (root / 'cleanup-status.json').write_text(json.dumps({
-                  'status': 'unavailable', 'reason': 'Simulator creation returned no valid owned UUID'}) + '\n')
-              raise SystemExit('Cannot clean up without an exact owned simulator UUID')
-          inventory = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '-j']))
-          matches = [x for group in inventory['devices'].values() for x in group if x['udid'] == device]
-          if len(matches) != 1:
-              raise SystemExit('Owned diagnostic simulator is missing or ambiguous')
-          code = 0 if matches[0]['state'] == 'Shutdown' else subprocess.run(['xcrun', 'simctl', 'shutdown', device]).returncode
-          (root / 'cleanup-status.json').write_text(json.dumps({'simulatorID': device, 'exitCode': code}) + '\n')
-          raise SystemExit(code)
-          PY
+          set -euo pipefail
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" > .build/boot.log 2>&1 &
+          boot_pid=$!
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -derivedDataPath .build/DerivedData \
+            -jobs 4 ONLY_ACTIVE_ARCH=YES CODE_SIGN_IDENTITY=- build-for-testing > .build/Build.log 2>&1
+          wait "$boot_pid"
+      - name: Execute the existing audits and supplemental controls
+        run: bash scripts/run_ios_test_shard.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: standalone-form-toggle-${{ github.run_attempt }}
-          path: .build/form-toggle-diagnostic/
+          name: comparison-audit-A1-${{ github.run_attempt }}
+          path: |
+            .build/Build.log
+            .build/boot.log
+            .build/Tests*.log
+            .build/Tests*.xcresult
+            .build/test-plan
+            .build/test-*.json
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: error

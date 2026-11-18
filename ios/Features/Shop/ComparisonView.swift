@@ -2,6 +2,68 @@ import SwiftUI
 import CoreDomain
 import LocalStore
 
+#if DEBUG && targetEnvironment(simulator)
+// Isolated simulator audit diagnostic only. The original UI is measured before the control appears.
+private final class PaintedAuditText: UIView {
+    override func draw(_ rect: CGRect) {
+        ("Diagnostic blue umbrellas" as NSString).draw(at: CGPoint(x: 0, y: 12),
+            withAttributes: [.font: UIFont.boldSystemFont(ofSize: 24), .foregroundColor: UIColor.black])
+    }
+}
+private enum HostedAuditGeometry {
+    static let event = "dev.roominthecart.pr61-audit-geometry"
+    static weak var packPrice: UILabel?
+    static var step = 0
+    static var listening = false
+    static var controlWindow: UIWindow?
+    static func enable() {
+        guard !listening, ProcessInfo.processInfo.environment["RITC_HOSTED_AUDIT_GEOMETRY"] == "1" else { return }
+        listening = true
+        CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), nil, { _, _, _, _, _ in
+            DispatchQueue.main.async { HostedAuditGeometry.advance() }
+        }, event as CFString, nil, .deliverImmediately)
+    }
+    static func advance() {
+        if step == 2 {
+            guard let scene = packPrice?.window?.windowScene else { return }
+            let window = UIWindow(windowScene: scene)
+            let controller = UIViewController()
+            controller.view.backgroundColor = .white
+            let text = PaintedAuditText(frame: CGRect(x: 35, y: 300, width: 330, height: 65))
+            text.backgroundColor = .white
+            controller.view.addSubview(text)
+            let reference = UILabel(frame: CGRect(x: 35, y: 510, width: 330, height: 170))
+            reference.numberOfLines = 0
+            reference.textColor = .black
+            reference.text = "Accessible reference"
+            reference.font = .preferredFont(forTextStyle: .body)
+            reference.adjustsFontForContentSizeCategory = true
+            reference.isAccessibilityElement = true
+            controller.view.addSubview(reference)
+            controller.view.accessibilityViewIsModal = true
+            window.rootViewController = controller
+            for other in scene.windows where other != window && other.windowLevel == .normal { other.isHidden = true }
+            window.makeKeyAndVisible()
+            controlWindow = window
+            step += 1
+            return
+        }
+        guard let label = packPrice, let window = label.window else { return }
+        var ancestor: UIView? = label
+        while let view = ancestor {
+            if let list = view as? UICollectionView {
+                let goal: CGFloat = step == 0 ? 336.333 : 389.667
+                let top = label.convert(label.bounds, to: window).minY
+                list.setContentOffset(CGPoint(x: 0, y: list.contentOffset.y + top - goal), animated: false)
+                step += 1
+                return
+            }
+            ancestor = view.superview
+        }
+    }
+}
+#endif
+
 struct ComparisonView: View {
     @EnvironmentObject private var app: AppModel
     @StateObject private var model: ComparisonModel
@@ -33,6 +95,9 @@ struct ComparisonView: View {
         .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
                             identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
+#if DEBUG && targetEnvironment(simulator)
+        .onAppear { HostedAuditGeometry.enable() }
+#endif
     }
 
     private var editRow: some View {
@@ -377,6 +442,9 @@ private struct ComparisonMetric: UIViewRepresentable {
     }
 
     func updateUIView(_ label: UILabel, context: Context) {
+#if DEBUG && targetEnvironment(simulator)
+        if HostedAuditGeometry.listening, id == "bPackPrice" { HostedAuditGeometry.packPrice = label }
+#endif
         label.text = text
         label.textColor = .label
         let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
