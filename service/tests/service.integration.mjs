@@ -1423,7 +1423,7 @@ test('fifty long reviewed receipt lines remain one bounded household stock revis
  const lines=Array.from({length:50},(_,ordinal)=>({ordinal,original:'Grocery '.repeat(215)+ordinal,foodName:'Food '+ordinal,
    location:'pantry',received:quantity,usable:quantity}));
  const body={receiptId:randomUUID(),merchant:'Market',purchaseDay:'2026-01-05',zone:'UTC',lines};
- const command={v:1,kind:'pantry.acquireReceipt',grantEpoch:0,pantryRevision:0,clientKey:randomUUID(),replayWindow:f.owner.window,body};
+ const command={v:1,kind:'pantry.acquireReceipt',grantEpoch:0,pantryRevision:0,clientKey:randomUUID(),replayWindow:f.actors.Mia.window,body};
  const write=c=>f.http('Mia','POST','/pantry/commands',c);
  assert(Buffer.byteLength(JSON.stringify(command))>65_536);
  assert.equal((await write({...command,body:{...body,lines:[...lines,{...lines[0],ordinal:50}]}})).status,422);
