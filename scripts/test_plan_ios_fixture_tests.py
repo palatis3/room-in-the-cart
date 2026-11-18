@@ -117,7 +117,11 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
         later_page = f"{UI_TARGET}/RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling"
         return_shard = plans["contributor"]["shards"]["contributor-balanced-01"]["test_identifiers"]
-        self.assertEqual([value.removesuffix("()") for value in return_shard].count(later_page), 1)
+        comparison_selectors = [value.removesuffix("()") for value in return_shard]
+        self.assertEqual(comparison_selectors.count(later_page), 1)
+        for method in ("testShopperReviewsTwoUnaddedRequestsAndUndoesThePairFromTheOtherRequest",
+                       "testOlderServerShowsOtherOpenRequestWithoutPairActions"):
+            self.assertEqual(comparison_selectors.count(f"{UI_TARGET}/RequestDuplicateComparisonUITests/{method}"), 1)
         large_lunches = f"{UI_TARGET}/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
         decision_shard = plans["contributor"]["shards"]["contributor-balanced-03"]["test_identifiers"]
         civil_shard = plans["contributor"]["shards"]["contributor-balanced-04"]["test_identifiers"]

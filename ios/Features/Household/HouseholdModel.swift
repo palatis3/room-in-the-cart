@@ -975,6 +975,7 @@ struct DeviceReminderPersona: Equatable {
            shopperInbox.supportsPurchaseConfirmation == projection.capabilities.contains("request_purchase_confirmation"),
            shopperInbox.supportsPurchaseAttribution == projection.capabilities.contains("request_purchase_attribution"),
            shopperInbox.supportsSameItem == projection.capabilities.contains("request_same_item"),
+           shopperInbox.supportsRequestPairs == projection.capabilities.contains("request_pair_review"),
            shopperInbox.supportsDeferredRequests == projection.capabilities.contains("deferred_requests") { return }
         shopperInbox?.clear()
         let start = generation

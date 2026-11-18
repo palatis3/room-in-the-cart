@@ -80,6 +80,19 @@ extension HouseholdClientTests {
         let value = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded(ShopperDecision.link(lineID: line, promote: true))) as? [String: Any])
         XCTAssertEqual(Set(value.keys), Set(["choice", "lineId", "promote"]))
         XCTAssertEqual(value["lineId"] as? String, line); XCTAssertEqual(value["promote"] as? Bool, true)
+
+        let id = try XCTUnwrap(UUID(uuidString: "ACED1234-ABCD-4BCD-ABCD-ABCDEFABCDEF"))
+        for relationship in [RequestPairRelationship.sameItem, .additionalQuantity] {
+            let decision = ShopperDecision.reviewRequestPair(otherRequestId: id, otherRequestRevision: 4, relationship: relationship)
+            let pair = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded(decision)) as? [String: Any])
+            XCTAssertEqual(Set(pair.keys), ["choice", "otherRequestId", "otherRequestRevision", "relationship"])
+            XCTAssertEqual(pair["choice"] as? String, "reviewRequestPair")
+            XCTAssertEqual(pair["otherRequestId"] as? String, id.uuidString.lowercased())
+            XCTAssertEqual(pair["otherRequestRevision"] as? Int, 4)
+            XCTAssertEqual(pair["relationship"] as? String, relationship.rawValue)
+        }
+        let undo = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded(ShopperDecision.undoRequestPair(operationId: id))) as? [String: String])
+        XCTAssertEqual(undo, ["choice": "undoRequestPair", "operationId": id.uuidString.lowercased()])
     }
 }
 
@@ -234,7 +247,10 @@ extension HouseholdClientTests {
             XCTAssertEqual(page.requests[0].purchaseOutcome, known)
             XCTAssertEqual(page.requests[0].status, "added")
         }
-        for field: (String, Any) in [("linkedLineId", previewID), ("reportedPurchaser", "Buyer"),
+        let pair: [String: Any] = ["otherRequestId": requestID, "otherRequestRevision": 1,
+                                   "relationship": "sameItem", "operationId": previewID]
+        for field: (String, Any) in [("linkedLineId", previewID), ("requestPairs", [pair]),
+                                     ("requestPairs", [] as [[String: Any]]), ("reportedPurchaser", "Buyer"),
                                      ("purchaseRecordedBy", "Recorder"), ("canReportAuthorAsPurchaser", true)] {
             stateLock.withLock { privateField = field }
             do { _ = try await service.ownRequests(); XCTFail("Own view accepted a private shopper field") }

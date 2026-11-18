@@ -125,6 +125,9 @@ struct RequestDuplicateComparisonSection: View {
                 .accessibilityIdentifier("household.duplicates.separateOutcomes")
             ForEach(group.requests) { request in
                 RequestDuplicateComparisonRow(request: request, isSelected: request.id == requestID)
+                if model.canCompareOpenRequest(request) {
+                    RequestPairActions(model: model, other: request)
+                }
             }
             if model.nextCursor != nil {
                 Text(requestDuplicateText("Only the loaded requests are shown. Check more requests to inspect the remaining pages."))
@@ -139,6 +142,58 @@ struct RequestDuplicateComparisonSection: View {
             Text(requestDuplicateText("Compare matching requests"))
                 .accessibilityIdentifier("household.duplicates.comparison")
         }
+    }
+}
+
+private extension RequestPairRelationship {
+    var title: String {
+        switch self {
+        case .sameItem: return requestDuplicateText("Same item")
+        case .additionalQuantity: return requestDuplicateText("Additional quantity")
+        }
+    }
+}
+
+private struct RequestPairActions: View {
+    @ObservedObject var model: HouseholdInboxModel
+    let other: OwnRequest
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let pair = model.reviewedPair(with: other) {
+                LabeledContent(requestDuplicateText("Reviewed comparison"), value: pair.relationship.title)
+                Button(requestDuplicateText("Undo comparison")) {
+                    Task { await model.reviewRequestPairUndo(with: other) }
+                }
+                .accessibilityIdentifier("household.duplicates.pair.undo." + other.id)
+            } else {
+                Button(requestDuplicateText("Same item")) {
+                    Task { await model.reviewRequestPair(with: other, relationship: .sameItem) }
+                }
+                .accessibilityIdentifier("household.duplicates.pair.same." + other.id)
+                Button(requestDuplicateText("Additional quantity")) {
+                    Task { await model.reviewRequestPair(with: other, relationship: .additionalQuantity) }
+                }
+                .accessibilityIdentifier("household.duplicates.pair.additional." + other.id)
+            }
+        }
+        .buttonStyle(.borderless)
+        .disabled(model.busy || model.pending != nil || model.preview != nil)
+    }
+}
+
+struct RequestPairPreview: View {
+    let selected: OwnRequest
+    let evidence: RequestPairEvidence
+    let undo: Bool
+
+    var body: some View {
+        Text(undo ? requestDuplicateText("Undo comparison") : evidence.relationship.title).font(.title2)
+        LabeledContent(selected.authorAlias ?? requestDuplicateText("Alias unavailable"), value: selected.originalItem)
+        Text(selected.ownQuantity ?? requestDuplicateText("No amount or use supplied"))
+        LabeledContent(evidence.authorAlias, value: evidence.item)
+        Text(evidence.quantity ?? requestDuplicateText("No amount or use supplied"))
+        Text(requestDuplicateText("Both requests stay open. Review the packs to buy separately."))
     }
 }
 

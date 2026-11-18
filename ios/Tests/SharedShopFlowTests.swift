@@ -705,6 +705,21 @@ import LocalAuthentication
         let disabled = try XCTUnwrap(household.shopperInbox)
         XCTAssertFalse(disabled.supportsSameItem)
         XCTAssertFalse(enabled.authorized)
+
+        fixture.pairAvailable = true
+        await household.refresh()
+        let pairEnabled = try XCTUnwrap(household.shopperInbox)
+        XCTAssertFalse(disabled.authorized)
+        XCTAssertTrue(pairEnabled.supportsRequestPairs)
+        XCTAssertFalse(pairEnabled.supportsSameItem)
+        await household.refresh()
+        XCTAssertTrue(household.shopperInbox === pairEnabled)
+
+        fixture.pairAvailable = false
+        await household.refresh()
+        let pairDisabled = try XCTUnwrap(household.shopperInbox)
+        XCTAssertFalse(pairEnabled.authorized)
+        XCTAssertFalse(pairDisabled.supportsRequestPairs)
     }
 
     func testChangedShopperAuthorityClearsPrivateViewsBeforeRequestListFailure() async throws {
@@ -780,6 +795,7 @@ private final class SharedFlowService {
     var supplyRevision = 0
     var loseDeliveryResponse = false
     var sameItemAvailable = false
+    var pairAvailable = false
     var rejectExcludedMatch = false, pantryAvailable = false
     var pantryLots: [[String: Any]] = []
     func data(_ value: Any) throws -> Data { try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) }
@@ -810,6 +826,7 @@ private final class SharedFlowService {
             let evidenceCapabilities = placedRevision == nil ? [] : ["confirmed_order", "delivery_evidence"] + (pantryAvailable ? ["pantry_lots"] : [])
             var shopperCapabilities = ["shopper_inbox", "request_preview", "shopper_commands", "accepted_fallbacks"] + evidenceCapabilities
             if sameItemAvailable { shopperCapabilities.append("request_same_item") }
+            if pairAvailable { shopperCapabilities.append("request_pair_review") }
             return try ok(["household":["id":household,"label":"Our home"],"memberId":actor == "mia" ? miaID : samID,
                 "role":shopper ? "shopper" : actor == "mia" ? "organizer" : "contributor", "canSelectShop":canSelectShop, "shopId":shopID as Any? ?? NSNull(),"enrolled":true,"queueConsent":false,
                 "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? shopperCapabilities : [])])

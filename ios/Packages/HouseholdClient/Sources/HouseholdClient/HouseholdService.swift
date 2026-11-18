@@ -185,7 +185,7 @@ public actor HouseholdService {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
         let page: OwnRequestsPage = try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
         try page.validateReadTime()
-        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.draftBasketLineId == nil && $0.sameItemOperationId == nil && $0.authorAlias == nil
+        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.draftBasketLineId == nil && $0.sameItemOperationId == nil && $0.requestPairs == nil && $0.authorAlias == nil
             && $0.reportedPurchaser == nil && $0.purchaseRecordedBy == nil && $0.canReportAuthorAsPurchaser == nil }) else { throw ClientError.invalidResponse }
         return page
     }
@@ -642,6 +642,7 @@ public actor HouseholdService {
         let capability: String?
         switch decision {
         case .sameItem, .undoSameItem: capability = "request_same_item"
+        case .reviewRequestPair, .undoRequestPair: capability = "request_pair_review"
         default: capability = nil
         }
         try await authorizeShopper(shopID: shopID, capability: capability)

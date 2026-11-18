@@ -1,4 +1,5 @@
 import XCTest
+import CoreDomain
 import HouseholdClient
 @testable import RoomInTheCart
 
@@ -159,6 +160,108 @@ final class RequestDuplicateComparisonTests: XCTestCase {
         XCTAssertEqual(model.requests.first { $0.id == lee.id }, lee)
         XCTAssertEqual(model.shop?.lines, [line])
     }
+    @MainActor func testPairingOpenRequestsPreservesOriginalAmountsAndCanBeUndoneFromEitherAuthor() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let server = S23DuplicateFixtureServer(pairMode: .available)
+        let model = try await s23DuplicateFixtureModel(server: server, outboxURL: directory.appendingPathComponent("outbox.json"))
+        let initial = model.requests
+        let shop = try XCTUnwrap(model.shop)
+        XCTAssertEqual(initial.map(\.status), ["pending", "pending"])
+        XCTAssertEqual(initial.map(\.ownQuantity), ["1 box for breakfasts", "2 boxes for the school snack drive"])
+        XCTAssertEqual(initial.map(\.revision), [1, 4])
+        XCTAssertTrue(shop.lines.isEmpty)
+        let sam = try XCTUnwrap(initial.first), lee = try XCTUnwrap(initial.last)
+
+        for relationship in [RequestPairRelationship.sameItem, .additionalQuantity] {
+            model.select(sam)
+            await model.reviewRequestPair(with: lee, relationship: relationship)
+            let preview = try XCTUnwrap(model.preview)
+            let other = try XCTUnwrap(preview.requestPairEvidence)
+            XCTAssertEqual(other.otherRequestId, UUID(uuidString: lee.id))
+            XCTAssertEqual(other.otherRequestRevision, lee.revision)
+            XCTAssertEqual(other.authorAlias, lee.authorAlias)
+            XCTAssertEqual(other.quantity, lee.ownQuantity)
+            XCTAssertEqual(other.relationship, relationship)
+            XCTAssertEqual(preview.before, preview.after)
+            XCTAssertEqual(preview.changeMinor, 0)
+            XCTAssertEqual(model.requests, initial)
+            let before = server.commandCount
+            model.cancelReview()
+            XCTAssertEqual(server.commandCount, before)
+            XCTAssertNil(model.preview)
+
+            model.select(sam)
+            await model.reviewRequestPair(with: lee, relationship: relationship)
+            await model.apply()
+            let paired = model.requests
+            let samPair = try XCTUnwrap(paired.first?.requestPairs?.first)
+            let leePair = try XCTUnwrap(paired.last?.requestPairs?.first)
+            XCTAssertEqual(samPair.otherRequestId, UUID(uuidString: lee.id))
+            XCTAssertEqual(leePair.otherRequestId, UUID(uuidString: sam.id))
+            XCTAssertEqual(samPair.otherRequestRevision, lee.revision)
+            XCTAssertEqual(leePair.otherRequestRevision, sam.revision)
+            XCTAssertEqual(samPair.relationship, relationship)
+            XCTAssertEqual(leePair.relationship, relationship)
+            XCTAssertEqual(samPair.operationId, leePair.operationId)
+            XCTAssertEqual(paired.map(\.status), initial.map(\.status))
+            XCTAssertEqual(paired.map(\.ownQuantity), initial.map(\.ownQuantity))
+            XCTAssertEqual(paired.map(\.revision), initial.map(\.revision))
+            XCTAssertEqual(model.shop, shop)
+
+            model.select(try XCTUnwrap(paired.last))
+            await model.reviewRequestPairUndo(with: try XCTUnwrap(paired.first))
+            let undo = try XCTUnwrap(model.preview?.requestPairEvidence)
+            XCTAssertEqual(undo.otherRequestId, UUID(uuidString: sam.id))
+            XCTAssertEqual(undo.quantity, sam.ownQuantity)
+            await model.apply()
+            XCTAssertEqual(server.commandCount, before + 2)
+            XCTAssertEqual(model.requests, initial)
+            XCTAssertEqual(model.shop, shop)
+        }
+    }
+
+    @MainActor func testPairWithUnresolvedCheckoutClearsThePreviouslySelectedPack() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let server = S23DuplicateFixtureServer(pairMode: .unresolvedBudget)
+        let model = try await s23DuplicateFixtureModel(server: server, outboxURL: directory.appendingPathComponent("outbox.json"))
+        model.select(try XCTUnwrap(model.requests.first))
+        let other = try XCTUnwrap(model.requests.last)
+        let scope = try XCTUnwrap(model.packReviewScope)
+        let one = Quantity(amount: try Rational(1), unit: .count, originalLiteral: "1")
+        let candidate = HouseholdRequestPackCandidate(id: "cereal", label: "Cereal", usable: one, price: Money(minorUnits: 349),
+            availability: .confirmed, availablePacks: 1, matchesRequest: true, feeEligible: true, source: "Shelf label", observedAt: Date())
+        let comparison = try HouseholdRequestPackReview.calculate(needed: one, candidates: [candidate])
+        let selection = try HouseholdRequestPackReview.select(try XCTUnwrap(comparison.results.first), needed: one, scope: scope)
+        XCTAssertTrue(model.usePackSelection(selection))
+        await model.reviewRequestPair(with: other, relationship: .sameItem)
+        let preview = try XCTUnwrap(model.preview)
+        XCTAssertNil(model.packSelection)
+        XCTAssertNil(preview.changeMinor)
+        XCTAssertNil(preview.before.totalMinor)
+        XCTAssertTrue(model.canApply)
+        XCTAssertEqual(server.commandCount, 0)
+    }
+
+    @MainActor func testPairReviewRequiresCapabilityMatchingEvidenceAndUnchangedBudget() async throws {
+        for mode in [S23DuplicateFixtureServer.PairMode.olderServer, .mismatchedEvidence, .changedBudget, .nonzeroDelta, .requiresOverage, .requiresUnknown] {
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let server = S23DuplicateFixtureServer(pairMode: mode)
+            let model = try await s23DuplicateFixtureModel(server: server, outboxURL: directory.appendingPathComponent("outbox.json"))
+            let original = model.requests
+            model.select(try XCTUnwrap(original.first))
+            await model.reviewRequestPair(with: try XCTUnwrap(original.last), relationship: .sameItem)
+            XCTAssertEqual(server.previewCount, mode == .olderServer ? 0 : 1)
+            XCTAssertNil(model.preview)
+            XCTAssertFalse(model.canApply)
+            await model.apply()
+            XCTAssertEqual(server.commandCount, 0)
+            XCTAssertEqual(model.requests, original)
+        }
+    }
+
     func testFixtureInterceptsUnexpectedNetworkDestinations() throws {
         let unexpected = URLRequest(url:URL(string:"https://example.com/inbox")!)
         XCTAssertTrue(S23DuplicateFixtureProtocol.canInit(with:unexpected))

@@ -29,6 +29,62 @@ import XCTest
         XCTAssertEqual(element("fixture.s23.lines").label,"Fixture saved lines: 1")
     }
 
+    func testShopperReviewsTwoUnaddedRequestsAndUndoesThePairFromTheOtherRequest() {
+        launch(language: "en", locale: "en_US", extraArguments: ["--s23-request-pair"])
+        let sam = "a4444444-4444-4444-8444-444444444441"
+        let lee = "a4444444-4444-4444-8444-444444444443"
+        func open(_ id: String) {
+            openRequest(app.buttons["household.request." + id], step: id == sam ? "Sam-pair" : "Lee-pair")
+        }
+        func apply() {
+            tap(app.buttons["household.decision.apply"])
+            XCTAssertTrue(cancelButton.waitForNonExistence(timeout: 10))
+            expectsDecisionSheet = false
+        }
+        func assertOpenRequests(commands: Int) {
+            XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: " + String(commands))
+            XCTAssertEqual(element("fixture.s23.lines").label, "Fixture saved lines: 0")
+            for id in [sam, lee] {
+                let outcome = app.staticTexts["household.request.outcome." + id]
+                reveal(outcome)
+                XCTAssertEqual(outcome.label, "Received, waiting for review")
+            }
+        }
+
+        open(sam)
+        tap(app.buttons["household.duplicates.pair.additional." + lee])
+        assertVisible("Both requests stay open.", contains: true)
+        closeDecision()
+        assertOpenRequests(commands: 0)
+        open(sam)
+        tap(app.buttons["household.duplicates.pair.same." + lee])
+        assertVisible("Both requests stay open.", contains: true)
+        apply()
+        assertOpenRequests(commands: 1)
+        open(lee)
+        assertComparisonValue("amount", request: "sam", value: "1 box for breakfasts")
+        assertComparisonValue("amount", request: "lee", value: "2 boxes for the school snack drive")
+        tap(app.buttons["household.duplicates.pair.undo." + sam])
+        apply()
+        assertOpenRequests(commands: 2)
+        open(lee)
+        reveal(app.buttons["household.duplicates.pair.same." + sam])
+        reveal(app.buttons["household.duplicates.pair.additional." + sam])
+        closeDecision()
+    }
+
+    func testOlderServerShowsOtherOpenRequestWithoutPairActions() {
+        launch(language: "en", locale: "en_US", extraArguments: ["--s23-request-pair", "--s23-older-server"])
+        let lee = "a4444444-4444-4444-8444-444444444443"
+        openRequest(app.buttons["household.request.a4444444-4444-4444-8444-444444444441"], step: "legacy-pair")
+        assertComparisonValue("amount", request: "lee", value: "2 boxes for the school snack drive")
+        for action in ["same", "additional", "undo"] {
+            XCTAssertFalse(app.buttons["household.duplicates.pair." + action + "." + lee].exists)
+        }
+        closeDecision()
+        XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 0")
+    }
+
     func testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam() {
         launch(language:"en",locale:"en_US")
         let sam = element("household.request.a4444444-4444-4444-8444-444444444441")
@@ -139,8 +195,9 @@ import XCTest
         XCTAssertEqual(element("fixture.s23.commands").label,"Fixture applied decisions: 0")
         XCTAssertEqual(element("fixture.s23.lines").label,"Fixture saved lines: 1")
     }
-    private func launch(language:String,locale:String,largeType:Bool=false,meal:Bool=false) {
+    private func launch(language:String,locale:String,largeType:Bool=false,meal:Bool=false,extraArguments:[String]=[]) {
         app.launchArguments = ["--ui-testing","--request-duplicates-fixture","-AppleLanguages","(\(language))","-AppleLocale",locale]
+        app.launchArguments += extraArguments
         if meal { app.launchArguments.append("--s23-same-meal") }
         if largeType { app.launchArguments += ["-UIPreferredContentSizeCategoryName","UICTContentSizeCategoryAccessibilityXXXL"] }
         app.launch()

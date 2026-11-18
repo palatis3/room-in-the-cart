@@ -331,20 +331,70 @@ enum ShopperDelivery: Equatable {
         guard supportsSameItem, let selected, selected.status == "handled", let id = selected.sameItemOperationId else { return }
         await review(decision: .undoSameItem(operationId: id))
     }
+    var supportsRequestPairs: Bool {
+        authorized && bootstrap.grantId == nil && bootstrap.capabilities.contains("request_pair_review")
+    }
+    func canCompareOpenRequest(_ other: OwnRequest) -> Bool {
+        guard supportsRequestPairs, let selected, selected.id != other.id, shop?.phase == "draft",
+              let group = duplicateRequestGroup(containing: selected.id), group.requests.contains(other) else { return false }
+        return [selected, other].allSatisfy {
+            $0.shopId == shopID && $0.route == "current" && $0.carriedForward != true &&
+                $0.ownActionAllowed && ["pending", "clarified"].contains($0.status)
+        }
+    }
+    func reviewedPair(with other: OwnRequest) -> ReviewedRequestPair? {
+        selected?.requestPairs?.first {
+            $0.otherRequestId == UUID(uuidString: other.id) && $0.otherRequestRevision == other.revision
+        }
+    }
+    func reviewRequestPair(with other: OwnRequest, relationship: RequestPairRelationship) async {
+        guard canCompareOpenRequest(other), reviewedPair(with: other) == nil,
+              let id = UUID(uuidString: other.id) else { return }
+        await review(decision: .reviewRequestPair(otherRequestId: id, otherRequestRevision: other.revision, relationship: relationship))
+    }
+    func reviewRequestPairUndo(with other: OwnRequest) async {
+        guard canCompareOpenRequest(other), let pair = reviewedPair(with: other) else { return }
+        await review(decision: .undoRequestPair(operationId: pair.operationId))
+    }
+    private func matchesPairEvidence(_ preview: ShopperPreview, decision: ShopperDecision) -> Bool {
+        let evidence = preview.requestPairEvidence
+        let expected: (UUID, Int, RequestPairRelationship)
+        switch decision {
+        case .reviewRequestPair(let id, let revision, let relationship):
+            expected = (id, revision, relationship)
+        case .undoRequestPair(let id):
+            guard let pair = selected?.requestPairs?.first(where: { $0.operationId == id }) else { return false }
+            expected = (pair.otherRequestId, pair.otherRequestRevision, pair.relationship)
+        default:
+            return evidence == nil
+        }
+        let expectedChange: Int? = preview.before.totalMinor == nil ? nil : 0
+        guard preview.before == preview.after, preview.changeMinor == expectedChange,
+              !preview.requiresOverageAcceptance, !preview.requiresUnknownAcceptance,
+              let evidence, (evidence.otherRequestId, evidence.otherRequestRevision, evidence.relationship) == expected,
+              let other = requests.first(where: { UUID(uuidString: $0.id) == evidence.otherRequestId }),
+              canCompareOpenRequest(other) else { return false }
+        return other.revision == evidence.otherRequestRevision && other.originalItem == evidence.item &&
+            other.ownQuantity == evidence.quantity && other.authorAlias == evidence.authorAlias
+    }
     func review() async {
         guard availableChoices.contains(choice) else { return }
         await review(decision: nil)
     }
     private func review(decision special: ShopperDecision?) async {
         guard authorized, !busy, pending == nil, let selected, let shop else { return }
-        invalidatePreview(preservePackSelection: true)
+        switch special {
+        case .reviewRequestPair, .undoRequestPair: invalidatePreview()
+        default: invalidatePreview(preservePackSelection: true)
+        }
         busy = true; notice = nil; defer { busy = false }; let start = generation; let draft = draftGeneration
         do {
             let decision = try special ?? makeDecision()
             let value = try await service.shopperPreview(shopID: shopID, requestID: selected.id,
                 base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch, requestRevision: selected.revision), decision: decision)
             guard start == generation, draft == draftGeneration else { return }
-            guard (value.sameItemEvidence != nil) == (decision.choice == "sameItem"), value.choice == decision.choice, value.shopRevision == shop.shopRevision,
+            guard matchesPairEvidence(value, decision: decision),
+                  (value.sameItemEvidence != nil) == (decision.choice == "sameItem"), value.choice == decision.choice, value.shopRevision == shop.shopRevision,
                   value.authorityEpoch == shop.authorityEpoch, value.requestRevision == selected.revision else { throw ClientError.invalidResponse }
             reviewedDecision = .init(request: selected, shop: shop, decision: decision, preview: value)
             preview = value

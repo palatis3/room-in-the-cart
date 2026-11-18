@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Additional quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad adicional"
+          }
+        }
+      }
+    },
     "Alias unavailable": {
       "extractionState": "manual",
       "localizations": {
@@ -48,6 +65,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cantidad y uso, tal como se escribieron"
+          }
+        }
+      }
+    },
+    "Both requests stay open. Review the packs to buy separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both requests stay open. Review the packs to buy separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ambas solicitudes siguen abiertas. Revisa por separado cuántos paquetes comprar."
           }
         }
       }
@@ -613,6 +647,23 @@
         }
       }
     },
+    "Reviewed comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparación revisada"
+          }
+        }
+      }
+    },
     "Same item": {
       "extractionState": "manual",
       "localizations": {
@@ -728,6 +779,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta compra"
+          }
+        }
+      }
+    },
+    "Undo comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer comparación"
           }
         }
       }

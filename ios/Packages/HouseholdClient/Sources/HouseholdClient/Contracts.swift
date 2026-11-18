@@ -44,6 +44,7 @@ public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public private(set) var purchaseOutcome: ConfirmedRequestPurchase? = nil
     public private(set) var linkedLineId: UUID? = nil
     public private(set) var sameItemOperationId: UUID? = nil
+    public private(set) var requestPairs: [ReviewedRequestPair]? = nil
     public private(set) var draftBasketLineId: UUID? = nil
 }
 public struct OwnRequestsPage: Codable, Equatable, Sendable {

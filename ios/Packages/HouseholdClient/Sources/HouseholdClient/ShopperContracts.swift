@@ -185,17 +185,40 @@ public struct SameItemEvidence: Equatable, Sendable, Codable {
     public let lineName: String?
     public let packs: Int?
 }
+public enum RequestPairRelationship: String, Codable, Sendable {
+    case sameItem, additionalQuantity
+}
+public struct ReviewedRequestPair: Codable, Equatable, Sendable {
+    public let otherRequestId: UUID
+    public let otherRequestRevision: Int
+    public let relationship: RequestPairRelationship
+    public let operationId: UUID
+}
+public struct RequestPairEvidence: Codable, Equatable, Sendable {
+    public let otherRequestId: UUID
+    public let otherRequestRevision: Int
+    public let item: String
+    public let quantity: String?
+    public let authorAlias: String
+    public let relationship: RequestPairRelationship
+}
 public enum ShopperDecision: Equatable, Sendable, Encodable {
     case add(line: ShopperBasketLine, promote: Bool, reviewedPackEvidence: ReviewedRequestPackEvidence? = nil)
     case link(lineID: String, promote: Bool)
     case sameItem(ReviewedSameItemTarget), undoSameItem(operationId: UUID)
+    case reviewRequestPair(otherRequestId: UUID, otherRequestRevision: Int, relationship: RequestPairRelationship)
+    case undoRequestPair(operationId: UUID)
     case deferRequest, dismiss, handled
     public var choice: String {
         switch self { case .add: return "add"; case .link: return "link"; case .deferRequest: return "defer"
         case .dismiss: return "dismiss"; case .handled: return "handled"
-        case .sameItem: return "sameItem"; case .undoSameItem: return "undoSameItem" }
+        case .sameItem: return "sameItem"; case .undoSameItem: return "undoSameItem"
+        case .reviewRequestPair: return "reviewRequestPair"; case .undoRequestPair: return "undoRequestPair" }
     }
-    private enum CodingKeys: String, CodingKey { case choice, line, lineId, promote, reviewedPackEvidence, target, operationId }
+    private enum CodingKeys: String, CodingKey {
+        case choice, line, lineId, promote, reviewedPackEvidence, target, operationId
+        case otherRequestId, otherRequestRevision, relationship
+    }
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: CodingKeys.self)
         try values.encode(choice, forKey: .choice)
@@ -203,7 +226,12 @@ public enum ShopperDecision: Equatable, Sendable, Encodable {
         case .add(let line, let promote, let evidence): try values.encode(line, forKey: .line); try values.encode(promote, forKey: .promote); try values.encodeIfPresent(evidence, forKey: .reviewedPackEvidence)
         case .link(let id, let promote): try values.encode(id, forKey: .lineId); try values.encode(promote, forKey: .promote)
         case .sameItem(let target): try values.encode(target, forKey: .target)
-        case .undoSameItem(let id): try values.encode(id.uuidString.lowercased(), forKey: .operationId)
+        case .undoSameItem(let id), .undoRequestPair(let id):
+            try values.encode(id.uuidString.lowercased(), forKey: .operationId)
+        case .reviewRequestPair(let id, let revision, let relationship):
+            try values.encode(id.uuidString.lowercased(), forKey: .otherRequestId)
+            try values.encode(revision, forKey: .otherRequestRevision)
+            try values.encode(relationship, forKey: .relationship)
         default: break
         }
     }
@@ -215,6 +243,7 @@ public struct ShopperBudget: Codable, Equatable, Sendable {
 }
 public struct ShopperPreview: Codable, Equatable, Sendable {
     public private(set) var sameItemEvidence: SameItemEvidence? = nil
+    public private(set) var requestPairEvidence: RequestPairEvidence? = nil
     public let previewId: String; public let expiresAt: String; public let shopRevision: Int; public let authorityEpoch: Int
     public let requestRevision: Int; public let choice: String; public let before: ShopperBudget; public let after: ShopperBudget
     public let changeMinor: Int?; public let requiresOverageAcceptance: Bool; public let requiresUnknownAcceptance: Bool
