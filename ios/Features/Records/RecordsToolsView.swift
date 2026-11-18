@@ -1,4 +1,5 @@
 import SwiftUI
+import DeviceSurfaces
 import UniformTypeIdentifiers
 import RecordArchive
 
@@ -159,7 +160,8 @@ struct RecordsToolsView: View {
                           finishFileSave(presentedSaveID, .failure(CancellationError()))
                       })
         .sheet(item: recipePresentation(.recipePage)) { presentation in
-            RecipePageEntryView { address in
+            RecipePageEntryView(sharedLinks: { try await model.sharedRecipeLinks(from: presentation) },
+                                removeLink: { try await model.removeSharedRecipeLink($0, from: presentation) }) { address in
                 #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
                 if let read = uiTestFiles?.recipePage {
                     try await model.importRecipePage(address, from: presentation, read: read)
@@ -665,6 +667,11 @@ private struct RecipePageEntryView: View {
     @State private var address = ""
     @State private var task: Task<Void, Never>?
     @State private var message: String?
+    @State private var links: [SharedCaptureEntry]?
+    @State private var removing: SharedCaptureEntry?
+    @State private var inboxError: String?
+    let sharedLinks: () async throws -> [SharedCaptureEntry]
+    let removeLink: (SharedCaptureEntry) async throws -> Void
     let submit: (String) async throws -> Void
 
     var body: some View {
@@ -692,13 +699,61 @@ private struct RecipePageEntryView: View {
                         }
                     }
                 }.disabled(task != nil || address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Section {
+                    Button(recordsText("Choose a shared recipe link")) {
+                        task = Task {
+                            defer { task = nil }
+                            await refreshLinks()
+                        }
+                    }
+                    if let links {
+                        if links.isEmpty { Text(recordsText("No shared recipe links. Share a page from your browser or paste its address above.")) }
+                        ForEach(links) { link in
+                            VStack(alignment: .leading) {
+                                Button { address = link.envelope.value; self.links = nil; message = nil } label: {
+                                    Text(verbatim: link.envelope.value)
+                                }
+                                Button(recordsText("Remove saved link"), role: .destructive) { removing = link }
+                            }.buttonStyle(.borderless)
+                        }
+                        if !links.isEmpty {
+                            Text(recordsText("Shared links stay on this device for seven days. Choose one, then tap Read recipe.")).font(.footnote)
+                        }
+                    }
+                    if let inboxError { Text(inboxError).accessibilityAddTraits(.updatesFrequently) }
+                }.disabled(task != nil)
             }
             .navigationTitle(recordsText("Import a recipe link"))
             .toolbar { ToolbarItem(placement: .cancellationAction) {
                 Button(recordsText("Cancel")) { task?.cancel(); dismiss() }
             } }
         }
+        .confirmationDialog(recordsText("Remove this shared link?"), isPresented: Binding(
+            get: { removing != nil }, set: { if !$0 { removing = nil } }
+        ), presenting: removing) { link in
+            Button(recordsText("Remove saved link"), role: .destructive) {
+                task = Task {
+                    defer { task = nil }
+                    do { try await removeLink(link); await refreshLinks() }
+                    catch { inboxError = recordsText("Could not remove this link. Open the shared links again and retry.") }
+                }
+            }
+            Button(recordsText("Cancel"), role: .cancel) {}
+        }
         .onDisappear { task?.cancel() }
+    }
+
+    private func refreshLinks() async {
+        inboxError = nil
+        do {
+            let pending = try await sharedLinks()
+            try Task.checkCancellation()
+            links = pending
+        } catch {
+            guard !Task.isCancelled else { return }
+            links = nil
+            inboxError = recordsText("Shared links are unavailable. Paste an HTTPS address or choose a recipe file.")
+        }
     }
 }
 

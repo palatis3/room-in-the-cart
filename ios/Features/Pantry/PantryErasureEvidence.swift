@@ -119,6 +119,10 @@ extension PantryErasureCoordinator {
 
     func verify(_ basis: Basis) async throws {
         try access()
+        let claimed = try await receiptFilesForErasure(inventory.workspaceID, clock())
+        guard claimed == basis.sharedReceipts ?? [] else { throw Failure.stale }
+
+        try access()
         guard try await inventory.inventoryState().revision == basis.revision else { throw Failure.stale }; try access()
         guard try await inventory.inventorySourceToken() == basis.token else { throw Failure.stale }; try access()
         let head = try await ledger.load(); try access()

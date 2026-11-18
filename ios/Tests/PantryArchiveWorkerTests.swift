@@ -1,3 +1,5 @@
+import CryptoKit
+import DeviceSurfaces
 import XCTest
 import CoreDomain
 import LocalStore
@@ -58,13 +60,22 @@ import RecordArchive
             writes: PantryPersistenceCodec.writes(prepared)), at: command.occurredAt)
     }
 
-    private func receiptDraft(_ store: ComparisonStore) throws -> ReceiptImportDraft {
+    private func receiptDraft(_ store: ComparisonStore, document: Bool = false) throws -> ReceiptImportDraft {
         let source = SourceMediaRecord(id: UUID(), target: .init(workspaceID: store.workspaceID, containerID: UUID(),
             objectID: UUID(), revision: 1, kind: .receiptEvidence), originalText: "RICE\nBEANS\nFEE",
             reviewedLabel: "East market", imageJPEG: nil, barcode: nil,
             receiptLines: [.init(originalText: "RICE", reviewedText: "Rice"), .init(originalText: "BEANS", reviewedText: "Beans"),
                            .init(originalText: "FEE")], capturedAt: now)
-        var draft = try ReceiptImportDraft(source: source)
+        let evidence: SourceMediaRecord
+        if document {
+            let raw = Data(source.originalText.utf8)
+            let extracted = ExtractedReceiptDocument(digest: Data(SHA256.hash(data: raw)), pages: [
+                .init(id: 1, method: .textFile, lines: source.receiptLines.enumerated().map { .init(id: $0.offset + 1, text: $0.element.originalText) })
+            ])
+            evidence = try extracted.source(target: source.target, merchant: source.reviewedLabel, stage: .finalInvoice,
+                selection: [.init(page: 1, line: 1), .init(page: 1, line: 2), .init(page: 1, line: 3)], at: now)
+        } else { evidence = source }
+        var draft = try ReceiptImportDraft(source: evidence)
         draft.reference = "transaction-14"
         draft.dateConfirmed = true
         draft.purchaseDate = now
@@ -76,14 +87,16 @@ import RecordArchive
 
     func testReceiptPartialReviewRetryPriceCorrectionRecoveryAndErasure() async throws {
         let f = try await fixture()
-        let repository = PantryRepository(store: f.store, authorize: { true })
+        let repository = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })
         f.cleanup.track(repository)
-        var draft = try receiptDraft(f.store)
+        var draft = try receiptDraft(f.store, document: true)
         let state = try await f.store.inventoryState()
         let review = try await repository.reviewReceipt(draft, expected: state, at: now)
         XCTAssertEqual(review.facts.count, 1)
         let first = try XCTUnwrap(review.facts.first)
         XCTAssertNil(first.paidLineTotal)
+        XCTAssertEqual(first.documentLine, .init(method: .textFile, stage: .finalInvoice, page: 1, line: 1))
+        XCTAssertEqual(first.originalLine, "RICE")
         try await repository.applyReceipt(review, at: now)
         try await repository.applyReceipt(review, at: now)
         let snapshot = try await repository.load(at: now)
@@ -96,7 +109,7 @@ import RecordArchive
         let mapping = try PantryLegacyMigration.map(originID: f.store.workspaceID, heads: [], ledger: .unavailable, at: now)
         let projection = try PantryLiveStockProjection.buildGlobal(snapshot: snapshot, mapping: mapping, at: now)
         XCTAssertEqual(projection.lot(canonicalID: first.lotID)?.free?.amount, try Rational(2))
-        let same = try await repository.reviewReceipt(try receiptDraft(f.store), expected: snapshot.state, at: now)
+        let same = try await repository.reviewReceipt(try receiptDraft(f.store, document: true), expected: snapshot.state, at: now)
         XCTAssertNil(same.batch)
         draft.lines[1].treatment = .add
         draft.lines[1].received = "1"
@@ -113,6 +126,8 @@ import RecordArchive
         XCTAssertEqual(rows.count, 3)
         let corrected = try XCTUnwrap(rows.first(where: { $0.supersedesID == first.id }))
         XCTAssertEqual(corrected.paidLineTotal, paid)
+        try await repository.rememberReceiptAlias(corrected, wording: "RICE", language: "en",
+            expected: f.store.inventoryState(), at: now)
         let handle = try await f.capture.captureHandle(worker: f.worker, at: now)
         let key = Data(repeating: 0x37, count: 32).base64EncodedString()
         let package = try await f.worker.encryptedExport(handle, key: key)
@@ -129,6 +144,8 @@ import RecordArchive
             _ = try await target.stageInventoryMigration(id: restore.plan.migrationID, chunk: chunk)
         }
         _ = try await target.finishInventoryMigration(id: restore.plan.migrationID, at: now)
+        let restoredAliasCount = try await target.receiptAliasCount()
+        XCTAssertEqual(restoredAliasCount, 0)
         let restored = try await target.acquisitionRows(receiptID: draft.receiptID)
         XCTAssertEqual(try restored.map(PantryAcquisitionCodec.record), rows)
         try await reader.discardRestoration(restore)
@@ -139,8 +156,11 @@ import RecordArchive
         let coordinator = eraser(f, registry, cleanup: { _, _ in })
         let erase = try await coordinator.prepare(.lot(first.lotID, revision: 1))
         XCTAssertTrue(erase.canCommit)
+        XCTAssertEqual(erase.aliasCount, 1)
         XCTAssertEqual(erase.receiptRevisionCount, 2)
         _ = try await coordinator.commit(erase)
+        let survivingAliases = try await repository.receiptAliases()
+        XCTAssertTrue(survivingAliases.isEmpty)
         let remaining = try await f.store.acquisitionRows(receiptID: draft.receiptID)
         XCTAssertEqual(remaining.count, 1)
         XCTAssertNotEqual(remaining.first?.lotID, first.lotID)
@@ -206,6 +226,101 @@ import RecordArchive
         let afterPricing = try await repository.load(at: now)
         XCTAssertEqual(afterPricing.reservations, current.reservations)
         XCTAssertEqual(afterPricing.state, current.state)
+    }
+
+    func testReceiptAliasRequiresConsentScopedAcceptanceAndCurrentReview() async throws {
+        let f = try await fixture(), persona = UUID()
+        let repository = PantryRepository(store: f.store, aliasPersonaID: persona, authorize: { true })
+        let other = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })
+        var draft = try receiptDraft(f.store)
+        draft.language = "en"
+        let first = try await repository.reviewReceipt(draft, expected: f.store.inventoryState(), at: now)
+        try await repository.applyReceipt(first, at: now)
+        let confirmed = try XCTUnwrap(first.facts.first)
+        let initial = try await repository.receiptAliases()
+        XCTAssertTrue(initial.isEmpty)
+        let originalState = try await f.store.inventoryState()
+        do {
+            try await repository.rememberReceiptAlias(confirmed, wording: "IC", language: "en", expected: originalState, at: now)
+            XCTFail("A substring inside a different product word must not be learned")
+        } catch PantryReceiptError.invalid {}
+        try await repository.rememberReceiptAlias(confirmed, wording: "rice", language: "en", expected: originalState, at: now)
+        let aliases = try await repository.receiptAliases(merchant: " EAST  market ", language: "en")
+        let alias = try XCTUnwrap(aliases.first)
+        let unrelated = try await other.receiptAliases(), spanish = try await repository.receiptAliases(merchant: "East market", language: "es")
+        let anotherStore = try await repository.receiptAliases(merchant: "West market", language: "en")
+        XCTAssertTrue(unrelated.isEmpty && spanish.isEmpty && anotherStore.isEmpty)
+        draft.reference = "transaction-15"
+        draft.lines[0].use(alias)
+        XCTAssertEqual(draft.lines[0].received, "3")
+        XCTAssertEqual(draft.lines[0].usable, "2")
+        XCTAssertEqual(draft.lines[0].paid, "")
+        let basis = try await f.store.inventoryState()
+        let next = try await repository.reviewReceipt(draft, expected: basis, at: now)
+        XCTAssertEqual(next.facts.first?.foodID, confirmed.foodID)
+        XCTAssertNotEqual(next.facts.first?.lotID, confirmed.lotID)
+        try await repository.forgetReceiptAliases(aliases, expected: basis, at: now)
+        do { try await repository.applyReceipt(next, at: now); XCTFail("A removed spelling invalidates a pending review") }
+        catch {}
+        let latest = try await f.store.inventoryState()
+        do { _ = try await repository.reviewReceipt(draft, expected: latest, at: now); XCTFail("An old match must be reviewed again") }
+        catch PantryReceiptError.stale {}
+        draft.clearAliases()
+        let separate = try await repository.reviewReceipt(draft, expected: latest, at: now)
+        XCTAssertNotEqual(separate.facts.first?.foodID, confirmed.foodID)
+        let history = try await repository.acquisitionHistory()
+        XCTAssertEqual(history, [confirmed])
+    }
+
+    func testClaimedDocumentSurvivesRestartUntilExactRecordsErasureAndOtherSourcesStayPending() async throws {
+        let f = try await fixture()
+        let repo = PantryRepository(store: f.store, authorize: { true })
+        let origin = f.store.workspaceID, scope = SharedReceiptScope(origin: f.store.workspaceID, persona: UUID())
+        let url = f.directory.appendingPathComponent("staging/inbox.sqlite")
+        let writer = try SharedCaptureInbox(url: url), first = UUID(), other = UUID()
+        let bytes = Data("BEANS\nFEE".utf8)
+        _ = try await writer.stageReceipt(bytes, kind: .text, id: first, now: now)
+        _ = try await writer.stageReceipt(Data("MILK".utf8), kind: .text, id: other, now: now)
+        _ = try await writer.stageReceipt(bytes, kind: .text, id: UUID(), now: now)
+        let independent = UUID(), otherScope = SharedReceiptScope(origin: UUID(), persona: UUID())
+        _ = try await writer.stageReceipt(bytes, kind: .text, id: independent, now: now)
+        let inbox = try SharedCaptureInbox(url: url)
+        let initial = try await inbox.pendingReceiptFiles(scope: otherScope, now: now)
+        let otherItem = try XCTUnwrap(initial.first(where: { $0.id == independent }))
+        _ = try await inbox.openReceipt(otherItem, scope: otherScope, now: now)
+        let pending = try await inbox.pendingReceiptFiles(scope: scope, now: now)
+        let selected = try XCTUnwrap(pending.first(where: { $0.id == first }))
+        let raw = try await inbox.openReceipt(selected, scope: scope, now: now)
+        let document = try await ReceiptDocumentReader().extract(.init(data: raw, kind: .text))
+        let source = try document.source(target: .init(workspaceID: origin, containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence),
+            merchant: "Market", stage: .finalInvoice, selection: [.init(page: 1, line: 1)], at: now)
+        var draft = try ReceiptImportDraft(source: source)
+        draft.dateConfirmed = true; draft.purchaseDate = now
+        draft.lines[0].treatment = .add; draft.lines[0].received = "2"; draft.lines[0].usable = "1"
+        let review = try await repo.reviewReceipt(draft, expected: f.store.inventoryState(), at: now)
+        try await repo.applyReceipt(review, at: now)
+        let fact = try XCTUnwrap(review.facts.first)
+        let corrected = try fact.correctingPaidTotal(Money(decimal: "1.15"))
+        XCTAssertEqual(corrected.documentLine, fact.documentLine)
+        XCTAssertEqual(fact.documentLine?.method, .textFile)
+        let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json"))
+        let coordinator = PantryErasureCoordinator(inventory: f.store, ledger: f.ledger, gate: f.gate,
+            pendingDirectory: f.pending.fileURL.deletingLastPathComponent(), registry: registry, worker: f.worker,
+            journalDirectory: f.directory.appendingPathComponent("erasure"), receiptFilesForErasure: { origin, date in
+                try await inbox.receiptErasureCandidates(origin: origin, now: date)
+            }, cleanup: { impact, _ in
+                try await inbox.retireReceipts(impact.sharedReceipts ?? [], origin: impact.originID, now: self.now)
+            }, authorize: { true }, clock: { self.now })
+        let erase = try await coordinator.prepare(.lot(fact.lotID, revision: 1))
+        XCTAssertEqual(erase.sharedReceiptCount, 2)
+        XCTAssertEqual(erase.receiptRevisionCount, 1)
+        _ = try await coordinator.commit(erase)
+        let surviving = try await inbox.pendingReceiptFiles(scope: scope, now: now)
+        XCTAssertEqual(surviving.map(\.id), [other])
+        let unaffected = try await inbox.openReceipt(otherItem, scope: otherScope, now: now)
+        XCTAssertEqual(unaffected, bytes)
+        do { _ = try await inbox.openReceipt(selected, scope: scope, now: now); XCTFail("Erased attachment must be gone") }
+        catch SurfaceError.stale {}
     }
 
     func testReceiptLinkedEvidenceKeepsDeliveredStockAndRejectsChangedDuplicate() async throws {

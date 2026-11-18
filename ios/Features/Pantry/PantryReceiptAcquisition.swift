@@ -9,6 +9,21 @@ struct ReceiptImportDraft {
         let id: UUID
         let ordinal: Int
         let original: String
+        var documentLine: ReceiptAcquisition.DocumentLine?
+        var nameBeforeAlias: String?
+        var appliedAlias: InventoryReceiptAlias?
+
+        mutating func use(_ alias: InventoryReceiptAlias) {
+            if appliedAlias == nil { nameBeforeAlias = name }
+            appliedAlias = alias
+            name = alias.product
+        }
+
+        mutating func clearAlias() {
+            if let nameBeforeAlias { name = nameBeforeAlias }
+            self.nameBeforeAlias = nil
+            appliedAlias = nil
+        }
         var name: String
         var treatment: Treatment = .skip
         var received: String = ""
@@ -23,6 +38,7 @@ struct ReceiptImportDraft {
     let savedPickup: ReceiptAcquisition.SavedPickup?
     let imageDigest: Data?
     var merchant: String
+    var language = Bundle.main.preferredLocalizations.first?.hasPrefix("es") == true ? "es" : "en"
     var reference = ""
     var purchaseDate = Calendar.current.startOfDay(for: Date())
     var dateConfirmed = false
@@ -34,11 +50,15 @@ struct ReceiptImportDraft {
         savedPickup = fromSavedPickup ? .init(originID: source.target.workspaceID, id: source.target.containerID) : nil
         draftID = source.id
         workspaceID = source.target.workspaceID
-        imageDigest = source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
+        imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
         merchant = source.reviewedLabel
         lines = source.receiptLines.enumerated().map { ordinal, line in
-            Line(id: line.id, ordinal: ordinal, original: line.originalText, name: line.reviewedText)
+            Line(id: line.id, ordinal: line.documentLine?.ordinal ?? ordinal, original: line.originalText, documentLine: line.documentLine, name: line.reviewedText)
         }
+    }
+
+    mutating func clearAliases() {
+        for index in lines.indices { lines[index].clearAlias() }
     }
 
     var receiptID: UUID {
@@ -67,22 +87,29 @@ struct ReceiptImportDraft {
             case .skip: throw PantryReceiptError.invalid
             case .add:
                 lotID = ReceiptAcquisition.identity(["lot", workspaceID.uuidString, lineID.uuidString])
-                foodID = lotID
+                foodID = row.appliedAlias?.foodID ?? lotID
                 stock = .added(location: row.location)
             case .link(let id):
                 guard let lot = snapshot.lots.first(where: { $0.id == id }),
                       case .receipt(_, let key) = lot.source,
                       !key.sourceEventID.hasPrefix("receipt-acquisition/"), received.unit == lot.unit else { throw PantryReceiptError.stale }
+                if let alias = row.appliedAlias, alias.foodID != lot.foodID { throw PantryReceiptError.stale }
                 lotID = id; foodID = lot.foodID; stock = .linked(fragment: key)
             }
             let fact = try ReceiptAcquisition(receiptID: receiptID, ordinal: row.ordinal, lotID: lotID,
                 foodID: foodID, merchant: cleaned(merchant), purchaseDate: purchaseDate,
                 transactionReference: cleaned(reference).isEmpty ? nil : cleaned(reference), imageDigest: imageDigest,
                 originalLine: row.original, name: cleaned(row.name), received: received, usable: usable,
-                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup)
+                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine)
             try fact.validate()
             return fact
         }
+    }
+
+    static func containsWording(_ wording: String, in original: String) -> Bool {
+        let key = InventoryReceiptAlias.key(wording)
+        guard !key.isEmpty else { return false }
+        return (" " + InventoryReceiptAlias.key(original) + " ").contains(" " + key + " ")
     }
 
     private func cleaned(_ text: String) -> String { text.trimmingCharacters(in: .whitespacesAndNewlines) }

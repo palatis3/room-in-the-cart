@@ -1,6 +1,125 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose one HTTPS recipe page, or share a plain-text shopping list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one HTTPS recipe page, or share a plain-text shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una página de recetas HTTPS o comparte una lista de compras en texto sin formato."
+          }
+        }
+      }
+    },
+    "Could not save this link. In Import a recipe link, paste the address or remove an older shared link and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save this link. In Import a recipe link, paste the address or remove an older shared link and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar este enlace. En Importar un enlace de receta, pega la dirección o elimina un enlace compartido anterior e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Open Import a recipe link in Room in the Cart to review this link within seven days.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Import a recipe link in Room in the Cart to review this link within seven days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Importar un enlace de receta en Room in the Cart para revisar este enlace en un plazo de siete días."
+          }
+        }
+      }
+    },
+    "Save recipe link for review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save recipe link for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar enlace de receta para revisar"
+          }
+        }
+      }
+    },
+    "Use the selected text as a shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the selected text as a shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el texto seleccionado como lista de compras"
+          }
+        }
+      }
+    },
+    "Could not save recipe link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save recipe link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar el enlace de la receta"
+          }
+        }
+      }
+    },
+    "Recipe link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace de receta"
+          }
+        }
+      }
+    },
     "Apply your line edits before saving or adding this list.": {
       "localizations": {
         "en": {
@@ -1581,6 +1700,102 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar descarta los cambios de revisión sin guardar."
+          }
+        }
+      }
+    },
+    "Choose one readable receipt file up to 10 MB.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one readable receipt file up to 10 MB."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un archivo de recibo legible de hasta 10 MB."
+          }
+        }
+      }
+    },
+    "Could not stage this receipt. Open the private pantry to remove an older shared file, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not stage this receipt. Open the private pantry to remove an older shared file, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar este recibo. Abre la despensa privada, elimina un archivo compartido anterior y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Leer un archivo de recibo en Mi despensa para revisarlo en un plazo de siete días. El archivo se conserva en este dispositivo hasta que se revise, se descarte o venza."
+          }
+        }
+      }
+    },
+    "Save receipt file for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save receipt file for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar archivo de recibo para revisar"
+          }
+        }
+      }
+    },
+    "Save original text as a receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save original text as a receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el texto original como recibo"
+          }
+        }
+      }
+    },
+    "Receipt file": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt file"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivo de recibo"
           }
         }
       }

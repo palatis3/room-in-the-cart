@@ -1,4 +1,5 @@
 import UIKit
+import UniformTypeIdentifiers
 import SwiftUI
 import DeviceSurfaces
 import CoreDomain
@@ -17,25 +18,93 @@ final class ShareViewController: UIViewController {
         addChild(hosted); hosted.view.translatesAutoresizingMaskIntoConstraints = false; view.addSubview(hosted.view)
         NSLayoutConstraint.activate([hosted.view.leadingAnchor.constraint(equalTo: view.leadingAnchor), hosted.view.trailingAnchor.constraint(equalTo: view.trailingAnchor), hosted.view.topAnchor.constraint(equalTo: view.topAnchor), hosted.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)])
         hosted.didMove(toParent: self)
-        loadSelectedText()
+        loadSelection()
     }
-    private func loadSelectedText() {
+    private func loadSelection() {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem], items.count == 1 else { model.reject(); return }
         let expected = generation
-        SelectedTextInbox.loadSelectedText(from: items[0]) { [weak self] result in
+        let item = items[0]
+        let providers = item.attachments ?? []
+        if providers.count == 1, let provider = providers.first {
+            let type: UTType?
+            if provider.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) { type = .pdf }
+            else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) { type = .image }
+            else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier),
+                    provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) { type = .plainText }
+            else { type = nil }
+            if let type {
+                loadReceipt(provider, type: type, generation: expected)
+                return
+            }
+        }
+        let urls = providers.filter { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) }
+        if !urls.isEmpty {
+            let companions = providers.filter { !$0.hasItemConformingToTypeIdentifier(UTType.url.identifier) }
+            guard urls.count == 1, let provider = urls.first, companions.count <= 1,
+                  companions.allSatisfy({ $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) })
+            else { model.rejectLink(); return }
+            if let text = item.attributedContentText?.string,
+               SelectedTextInbox.fitsEnvelope(original: text), !text.contains("\0"),
+               !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                model.alternativeText = text
+            } else if let textProvider = companions.first {
+                SelectedTextInbox.loadPlainText(from: textProvider) { [weak self] result in
+                    Task { @MainActor [weak self] in
+                        guard let self, self.generation == expected, case .success(let text) = result else { return }
+                        self.model.alternativeText = text
+                    }
+                }
+            }
+            SharedCaptureEnvelope.loadRecipeURL(from: provider) { [weak self] result in
+                Task { @MainActor [weak self] in
+                    guard let self, self.generation == expected else { return }
+                    switch result {
+                    case .success(let link): self.model.accept(link)
+                    case .failure: self.model.rejectLink()
+                    }
+                }
+            }
+            return
+        }
+        SelectedTextInbox.loadSelectedText(from: item) { [weak self] result in
             Task { @MainActor [weak self] in
                 guard let self, self.generation == expected else { return }
                 switch result {
                 case .success(let text): self.model.accept(text)
-                case .failure(.capacity): self.model.rejectSize()
+                case .failure(.capacity):
+                    if let text = item.attributedContentText?.string, text.utf8.count <= SharedReceiptDescriptor.maximumBytes {
+                        self.model.acceptReceipt(.success(Data(text.utf8)), kind: .text)
+                    } else if providers.count == 1, let provider = providers.first,
+                              provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
+                        self.loadReceipt(provider, type: .plainText, generation: expected)
+                    } else { self.model.rejectSize() }
                 case .failure: self.model.reject()
                 }
             }
         }
     }
+    private func loadReceipt(_ provider: NSItemProvider, type: UTType, generation expected: UUID) {
+        let kind: SharedReceiptDescriptor.Kind = type == .pdf ? .pdf : type == .plainText ? .text : .image
+        provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { [weak self] url, _ in
+            let result = Result { () throws -> Data in
+                guard let url else { throw SurfaceError.unavailable }
+                return try readRegularFile(at: url, maximumBytes: SharedReceiptDescriptor.maximumBytes)
+            }
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == expected else { return }
+                self.model.acceptReceipt(result, kind: kind)
+            }
+        }
+    }
+
 }
 
 @MainActor private final class ShareComposerModel: ObservableObject {
+    @Published var receiptData: Data?
+    var receiptKind: SharedReceiptDescriptor.Kind = .text
+    @Published var link: SharedCaptureEnvelope?
+    @Published var alternativeText: String?
+    private let operationID = UUID()
     @Published var original = ""
     @Published var edited = ""
     @Published var loading = true
@@ -45,6 +114,62 @@ final class ShareViewController: UIViewController {
     var onCancel: (() -> Void)?
     var onSaved: (() -> Void)?
     private let session = SelectedTextSession()
+    func accept(_ link: SharedCaptureEnvelope) {
+        self.link = link
+        loading = false
+    }
+    func rejectLink() {
+        loading = false
+        error = SurfaceCopy.text("Choose one HTTPS recipe page, or share a plain-text shopping list.")
+    }
+    func chooseAlternativeText() {
+        guard let alternativeText else { return }
+        link = nil
+        error = nil
+        self.alternativeText = nil
+        accept(alternativeText)
+    }
+    func acceptReceipt(_ result: Result<Data, Error>, kind: SharedReceiptDescriptor.Kind) {
+        loading = false
+        do { receiptData = try result.get(); receiptKind = kind }
+        catch { self.error = SurfaceCopy.text("Choose one readable receipt file up to 10 MB.") }
+    }
+
+    func saveReceipt(_ data: Data, kind: SharedReceiptDescriptor.Kind) {
+        guard !saving else { return }
+        saving = true
+        Task {
+            defer { saving = false }
+            do {
+                let inbox: SharedCaptureInbox
+                #if DEBUG && targetEnvironment(simulator)
+                inbox = try ReceiptShareSystemFixture.registeredInbox(for: data, now: Date()) ?? IOSSurfaceContainers.sharedCaptures()
+                #else
+                inbox = try IOSSurfaceContainers.sharedCaptures()
+                #endif
+                let saved = try await inbox.stageReceipt(data, kind: kind, id: operationID, now: Date())
+                guard saved.disposition == .pending else { throw SurfaceError.stale }
+                onSaved?()
+            } catch {
+                saveError = SurfaceCopy.text("Could not stage this receipt. Open the private pantry to remove an older shared file, then try again.")
+            }
+        }
+    }
+    func saveLink() {
+        guard let link, !saving else { return }
+        saving = true
+        Task {
+            defer { saving = false }
+            do {
+                let inbox = try IOSSurfaceContainers.sharedCaptures()
+                let receipt = try await inbox.stage(link, id: operationID, now: Date())
+                guard receipt.disposition == .pending else { throw SurfaceError.stale }
+                onSaved?()
+            } catch {
+                saveError = SurfaceCopy.text("Could not save this link. In Import a recipe link, paste the address or remove an older shared link and try again.")
+            }
+        }
+    }
     func accept(_ text: String) {
         original = text; edited = text; loading = false
     }
@@ -99,24 +224,39 @@ private struct ShareComposerView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Text(SurfaceCopy.text("Save selected text for review in Room in the Cart. Nothing is added to a shop yet."))
+                if let bytes = model.receiptData {
+                    Text(SurfaceCopy.text("Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry."))
+                    Button(SurfaceCopy.text("Save receipt file for review")) { model.saveReceipt(bytes, kind: model.receiptKind) }
+                } else if let link = model.link {
+                    Text(verbatim: link.value).textSelection(.enabled)
+                    Text(SurfaceCopy.text("Open Import a recipe link in Room in the Cart to review this link within seven days."))
+                    Button(SurfaceCopy.text("Save recipe link for review")) { model.saveLink() }
+                } else if !model.loading, model.error == nil {
+                    Text(SurfaceCopy.text("Save selected text for review in Room in the Cart. Nothing is added to a shop yet."))
+                }
+                if !model.loading, model.alternativeText != nil {
+                    Button(SurfaceCopy.text("Use the selected text as a shopping list")) { model.chooseAlternativeText() }
+                }
                 if model.loading { ProgressView() }
                 if !model.original.isEmpty {
                     Section(SurfaceCopy.text("Original text")) { Text(model.original).textSelection(.enabled) }
                     Section(SurfaceCopy.text("Review text")) { TextEditor(text: $model.edited).frame(minHeight: 140).accessibilityLabel(SurfaceCopy.text("Review text")) }
+                    Button(SurfaceCopy.text("Save original text as a receipt")) {
+                        model.saveReceipt(Data(model.original.utf8), kind: .text)
+                    }
                     Button(SurfaceCopy.text("Save for review")) { model.save() }
                         .frame(minHeight: 44)
                         .disabled(model.saving || !model.edited.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
                 }
                 if let error = model.error { Text(error).accessibilityAddTraits(.updatesFrequently) }
             }.disabled(model.saving)
-                .alert(SurfaceCopy.text("Could not save selected text"), isPresented: Binding(
+                .alert(model.receiptData != nil ? SurfaceCopy.text("Receipt file") : model.link == nil ? SurfaceCopy.text("Could not save selected text") : SurfaceCopy.text("Could not save recipe link"), isPresented: Binding(
                     get: { model.saveError != nil },
                     set: { if !$0 { model.saveError = nil } }
                 ), presenting: model.saveError) { _ in
                     Button(SurfaceCopy.text("OK")) { model.saveError = nil }
                 } message: { Text($0) }
-                .navigationTitle(SurfaceCopy.text("Selected text"))
+                .navigationTitle(model.receiptData != nil ? SurfaceCopy.text("Receipt file") : model.link == nil ? SurfaceCopy.text("Selected text") : SurfaceCopy.text("Recipe link"))
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text("Cancel")) { model.cancel() }.disabled(model.saving) } }
                 .interactiveDismissDisabled(model.saving)
         }

@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import CoreDomain
 import LocalStore
+import DeviceSurfaces
 import RecordArchive
 import HouseholdClient
 
@@ -583,11 +584,16 @@ private struct RecordsRecoveredPantryView: View {
                         return PantryErasureCoordinator(inventory: stores.inventory, ledger: config.ledger,
                             gate: config.gate, pendingDirectory: config.pendingStore.fileURL.deletingLastPathComponent(),
                             registry: registry, worker: worker, journalDirectory: config.erasureJournalDirectory,
-                            recoveredDirectory: directory.appendingPathComponent("Recoveries", isDirectory: true),
+                            receiptFilesForErasure: { origin, date in
+                                try await PrivateReceiptInbox.open().receiptErasureCandidates(origin: origin, now: date)
+                            }, recoveredDirectory: directory.appendingPathComponent("Recoveries", isDirectory: true),
                             initiatingPresentation: self, cleanup: { [weak self] cleanup, receipt in
                                 guard let self, authorize(), cleanup.originID == receipt.workspaceID else { throw ArchiveError.unavailable }
                                 try await PantryDigestStore.shared.erase(origin: cleanup.originID, whole: cleanup.wholeOrigin, inventory: stores.inventory)
                                 self.pantryErasureChangedRecords = true
+                                if let clips = cleanup.sharedReceipts {
+                                    try await PrivateReceiptInbox.open().retireReceipts(clips, origin: cleanup.originID, now: Date())
+                                }
                                 try await worker.reconcilePreparedImports(registry: registry, requireIdle: true)
                                 for id in cleanup.pickupIDs {
                                     try await self.erasureCleanup.erasePickupRecord(cleanup.originID, id)
@@ -654,6 +660,17 @@ private struct RecordsRecoveredPantryView: View {
                 guard let self else { throw ArchiveError.unavailable }
                 let review = try await self.ledger.reviewWholeLedgerDeletion()
                 self.destination = Destination(id: "whole-ledger-deletion", content: .ledgerDeletion(review))
+            }, captureInbox: {
+                #if DEBUG
+                if SurfaceRuntimeIsolation.usesUITestWorkspace(launchArguments: ProcessInfo.processInfo.arguments) {
+                    return try SharedCaptureInbox(url: directory.appendingPathComponent("test-shared-captures.sqlite"))
+                }
+                #endif
+                let bundle = Bundle.main
+                _ = try SurfaceConfiguration(inboxGroup: bundle.object(forInfoDictionaryKey: SurfaceInfo.inboxGroupKey) as? String,
+                    widgetGroup: bundle.object(forInfoDictionaryKey: SurfaceInfo.widgetGroupKey) as? String,
+                    urlScheme: bundle.object(forInfoDictionaryKey: SurfaceInfo.schemeKey) as? String)
+                return try IOSSurfaceContainers.sharedCaptures(bundle: bundle)
             }, beginAuthorization: { [weak self] in self?.captureAuthorization() })
             error = nil
         } catch { self.error = error as? ArchiveError ?? .unavailable }

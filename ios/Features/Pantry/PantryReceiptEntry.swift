@@ -1,3 +1,4 @@
+import DeviceSurfaces
 import CoreDomain
 import LocalStore
 import SwiftUI
@@ -6,6 +7,17 @@ struct PantryReceiptEntry: View {
     @ObservedObject var model: PantryModel
     var initialSource: SourceMediaRecord? = nil
     var verifySource: @MainActor () async throws -> Void = {}
+    @State private var aliases: [InventoryReceiptAlias] = []
+    private struct AliasScope: Equatable {
+        let merchant: String?
+        let language: String?
+        let state: InventoryState?
+    }
+    private var aliasScope: AliasScope {
+        .init(merchant: draft?.merchant, language: draft?.language, state: model.snapshot?.state)
+    }
+    @State private var sharedSource: SharedReceiptItem?
+    @State private var fileSource = false
     @State private var scan = false
     @State private var draft: ReceiptImportDraft?
     @State private var review: PantryReceiptReview?
@@ -35,6 +47,7 @@ struct PantryReceiptEntry: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(row.name).font(.headline)
                             Text(row.originalLine).font(.caption)
+                            if let place = row.documentLine { Text(receiptProvenance(place)).font(.caption) }
                             if review.existing.contains(row.lineID) {
                                 Text(pantryText("Previously saved on this receipt."))
                             } else if case .linked = row.stock {
@@ -64,7 +77,16 @@ struct PantryReceiptEntry: View {
                     draft = updated
                 })
                 Section(pantryText("Receipt details")) {
-                    TextField(pantryText("Store or branch"), text: value.merchant).focused($field, equals: "merchant")
+                    TextField(pantryText("Store or branch"), text: Binding(get: { value.wrappedValue.merchant }, set: {
+                        value.wrappedValue.clearAliases()
+                        value.wrappedValue.merchant = $0
+                    })).focused($field, equals: "merchant")
+                    if model.supportsReceiptAliases {
+                        ReceiptLanguagePicker(language: Binding(get: { value.wrappedValue.language }, set: {
+                            value.wrappedValue.clearAliases()
+                            value.wrappedValue.language = $0
+                        }))
+                    }
                     TextField(pantryText("Confirmed transaction reference, if printed"), text: value.reference).focused($field, equals: "reference")
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
                     DatePicker(pantryText("Purchase date"), selection: value.purchaseDate, in: ...Date(), displayedComponents: .date)
@@ -72,7 +94,9 @@ struct PantryReceiptEntry: View {
                 }
                 Text(pantryText("Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped."))
                 ForEach(displayed.lines) { line in
-                    PantryReceiptLineEditor(line: captureDraftBinding(line, in: value.lines), lots: model.snapshot?.lots ?? [], purchases: model.recentPurchases, field: $field)
+                    PantryReceiptLineEditor(line: captureDraftBinding(line, in: value.lines), lots: model.snapshot?.lots ?? [], purchases: model.recentPurchases, aliases: aliases.filter {
+                        InventoryReceiptAlias.key($0.merchant) == InventoryReceiptAlias.key(displayed.merchant) && $0.language == displayed.language && ReceiptImportDraft.containsWording($0.wording, in: line.original)
+                    }, field: $field)
                 }
                 Button(pantryText("Review selected food")) {
                     let proposed = value.wrappedValue
@@ -94,6 +118,7 @@ struct PantryReceiptEntry: View {
                 .accessibilityIdentifier("receipt.review")
             } else {
                 Section {
+                    Button(pantryText("Read a receipt file")) { fileSource = true }.accessibilityIdentifier("receipt.document")
                     Button(pantryText("Scan or type receipt lines")) { scan = true }.accessibilityIdentifier("receipt.scan")
                     Text(pantryText("Check the printed wording first. Then confirm what arrived and how much is usable."))
                 }
@@ -116,7 +141,25 @@ struct PantryReceiptEntry: View {
             }
         }
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
-            if origin == nil { draft = nil; review = nil; scan = false }
+            if origin == nil { draft = nil; review = nil; scan = false; fileSource = false; sharedSource = nil }
+        }
+        .task(id: aliasScope) {
+            let scope = aliasScope
+            aliases = []
+            guard model.supportsReceiptAliases, let merchant = scope.merchant, !merchant.isEmpty, let language = scope.language else { return }
+            do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
+            let matches = try? await model.receiptAliases(merchant: merchant, language: language)
+            if !Task.isCancelled, scope == aliasScope { aliases = matches ?? [] }
+        }
+        .sheet(isPresented: $fileSource) {
+            if let state = model.snapshot?.state {
+                NavigationStack {
+                    PantryReceiptDocuments(model: model, target: .init(workspaceID: state.workspaceID, containerID: targetID,
+                        objectID: targetID, revision: state.revision, kind: .receiptEvidence), authorize: {
+                        model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
+                    }) { source, share in accept(source); sharedSource = share }
+                }
+            }
         }
         .sheet(isPresented: $scan) {
             if let state = model.snapshot?.state {
@@ -146,6 +189,11 @@ struct PantryReceiptEntry: View {
                 try await model.saveReceipt(value)
                 review = nil; draft = nil; finished = true
                 message = value.batch == nil ? pantryText("These lines were already saved.") : pantryText("Reviewed receipt lines saved.")
+                if let sharedSource {
+                    do { try await model.finishSharedReceipt(sharedSource, committed: true) }
+                    catch { message = pantryText("Food saved. Reopen shared receipt files to discard the staged copy.") }
+                    self.sharedSource = nil
+                }
             } catch {
                 message = receiptError(error)
                 if error is PantryReceiptError || (error as? ComparisonStoreError) == .staleInventory {
@@ -162,6 +210,7 @@ private struct PantryReceiptLineEditor: View {
     @Binding var line: ReceiptImportDraft.Line
     let lots: [InventoryLot]
     let purchases: [PantryRecentPurchase]
+    let aliases: [InventoryReceiptAlias]
     var field: FocusState<String?>.Binding
 
     private func label(_ lot: InventoryLot) -> String {
@@ -183,9 +232,19 @@ private struct PantryReceiptLineEditor: View {
                         .tag(ReceiptImportDraft.Treatment.link(lot.id))
                 }
             }
+            .onChange(of: line.treatment) { _, _ in line.clearAlias() }
             .accessibilityIdentifier("receipt.action.\(line.ordinal)")
             if line.treatment != .skip {
-                TextField(pantryText("Food name"), text: $line.name).focused(field, equals: "name-\(line.ordinal)")
+                ForEach(aliases.filter { alias in
+                    if case .link(let lotID) = line.treatment { return lots.contains { $0.id == lotID && $0.foodID == alias.foodID } }
+                    return true
+                }) { alias in
+                    Button(pantryFormat("Use saved product %@ for %@", alias.product, alias.wording)) { line.use(alias) }
+                }
+                if line.appliedAlias != nil {
+                    Button(pantryText("Undo saved spelling")) { line.clearAlias() }
+                }
+                TextField(pantryText("Food name"), text: Binding(get: { line.name }, set: { line.clearAlias(); line.name = $0 })).focused(field, equals: "name-\(line.ordinal)")
                 TextField(pantryText("Amount actually received"), text: $line.received).focused(field, equals: "received-\(line.ordinal)").accessibilityIdentifier("receipt.received.\(line.ordinal)").keyboardType(.numbersAndPunctuation)
                 TextField(pantryText("Amount usable"), text: $line.usable).focused(field, equals: "usable-\(line.ordinal)").accessibilityIdentifier("receipt.usable.\(line.ordinal)").keyboardType(.numbersAndPunctuation)
                 Picker(pantryText("Unit"), selection: $line.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) } }
@@ -223,6 +282,7 @@ struct PantryReceiptHistory: View {
     @State private var hasMore = true
     @State private var busy = false
     @State private var message: String?
+    @State private var learning: ReceiptAcquisition?
     @State private var correcting: ReceiptAcquisition?
     @State private var reviewedState: InventoryState?
     @State private var price = ""
@@ -238,10 +298,15 @@ struct PantryReceiptHistory: View {
                     Text(row.name).font(.headline)
                     Text(row.merchant + " · " + row.purchaseDate.formatted(date: .abbreviated, time: .omitted))
                     Text(row.originalLine)
+                    if let place = row.documentLine { Text(receiptProvenance(place)) }
                     Text(pantryFormat("Received %@", pantryQuantity(row.received)))
                     if let paid = row.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(paid))) }
                     else { Text(pantryText("Paid price unknown")) }
                     Text(pantryFormat("Receipt revision %@", String(row.revision)))
+                    if model.supportsReceiptAliases {
+                        Button(pantryText("Remember this product spelling")) { learning = row }
+                            .buttonStyle(.borderless).disabled(!model.canEdit || busy)
+                    }
                     Button(pantryText("Correct this paid total")) {
                         Task {
                             do {
@@ -249,18 +314,21 @@ struct PantryReceiptHistory: View {
                                 price = ""; correctionMessage = nil; reviewedState = model.snapshot?.state
                             } catch { message = receiptError(error) }
                         }
-                    }.disabled(!model.canEdit || busy)
+                    }.buttonStyle(.borderless).disabled(!model.canEdit || busy)
                 }
             }
             if hasMore { Button(pantryText("Load receipt lines")) { Task { await loadPage() } }.disabled(busy) }
         }
         .privacySensitive()
         .onChange(of: model.snapshot?.state.workspaceID) { _, scope in
-            if scope == nil { facts = []; correcting = nil; price = ""; hasMore = false }
+            if scope == nil { facts = []; learning = nil; correcting = nil; price = ""; hasMore = false }
         }
         .navigationTitle(pantryText("Receipt history"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Done")) { dismiss() } } }
         .task { await loadPage() }
+        .sheet(item: $learning) { original in
+            NavigationStack { PantryReceiptAliasEntry(model: model, source: original) }
+        }
         .sheet(item: $correcting) { original in
             NavigationStack {
                 Form {

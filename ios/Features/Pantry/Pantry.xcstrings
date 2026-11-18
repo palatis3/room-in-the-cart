@@ -3649,6 +3649,1046 @@
           }
         }
       }
+    },
+    "Printed receipt language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed receipt language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma del recibo impreso"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inglés"
+          }
+        }
+      }
+    },
+    "Spanish": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spanish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Español"
+          }
+        }
+      }
+    },
+    "Confirmed receipt line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed receipt line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea confirmada del recibo"
+          }
+        }
+      }
+    },
+    "Product wording from the printed line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product wording from the printed line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del producto tal como aparece en la línea impresa"
+          }
+        }
+      }
+    },
+    "Future receipts can suggest this food for the same store and language. You choose whether to use it each time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Future receipts can suggest this food for the same store and language. You choose whether to use it each time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En futuros recibos de la misma tienda y en el mismo idioma, podrás elegir si usas este alimento sugerido."
+          }
+        }
+      }
+    },
+    "Saved spellings are private to your profile on this device and are excluded from pantry recovery copies.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved spellings are private to your profile on this device and are excluded from pantry recovery copies."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los nombres guardados son privados de tu perfil en este dispositivo y se excluyen de las copias de recuperación de la despensa."
+          }
+        }
+      }
+    },
+    "Save receipt spelling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save receipt spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar nombre del recibo"
+          }
+        }
+      }
+    },
+    "Check the printed wording and your saved spellings before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the printed wording and your saved spellings before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el texto impreso y tus nombres guardados antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Remember this product spelling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember this product spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordar este nombre de producto"
+          }
+        }
+      }
+    },
+    "No saved receipt spellings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved receipt spellings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay nombres de recibos guardados."
+          }
+        }
+      }
+    },
+    "Forget this spelling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget this spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar este nombre"
+          }
+        }
+      }
+    },
+    "Reset all my receipt spellings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset all my receipt spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar todos mis nombres de recibos guardados"
+          }
+        }
+      }
+    },
+    "Saved receipt spellings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved receipt spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombres de recibos guardados"
+          }
+        }
+      }
+    },
+    "Forget %@ saved receipt spellings?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget %@ saved receipt spellings?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Olvidar los nombres de recibos seleccionados (%@)?"
+          }
+        }
+      }
+    },
+    "Previous receipts and pantry food keep their confirmed details.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous receipts and pantry food keep their confirmed details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recibos anteriores y los alimentos de la despensa conservan sus datos confirmados."
+          }
+        }
+      }
+    },
+    "Forget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar"
+          }
+        }
+      }
+    },
+    "The pantry changed. Check the current spellings and confirm again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pantry changed. Check the current spellings and confirm again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La despensa cambió. Revisa los nombres actuales y vuelve a confirmar."
+          }
+        }
+      }
+    },
+    "Reopen the private pantry to review saved receipt spellings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the private pantry to review saved receipt spellings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir la despensa privada para revisar los nombres de recibos guardados."
+          }
+        }
+      }
+    },
+    "Use saved product %@ for %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use saved product %@ for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el producto guardado %@ para %@"
+          }
+        }
+      }
+    },
+    "Undo saved spelling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo saved spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer el uso del nombre guardado"
+          }
+        }
+      }
+    },
+    "Saved receipt spellings to delete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved receipt spellings to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombres de recibos guardados que se eliminarán"
+          }
+        }
+      }
+    },
+    "Plain text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plain text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto sin formato"
+          }
+        }
+      }
+    },
+    "PDF text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto del PDF"
+          }
+        }
+      }
+    },
+    "Scanned PDF page": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanned PDF page"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página escaneada del PDF"
+          }
+        }
+      }
+    },
+    "Receipt photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto del recibo"
+          }
+        }
+      }
+    },
+    "%@ · page %@, line %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · page %@, line %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · página %@, línea %@"
+          }
+        }
+      }
+    },
+    "Order confirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Order confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmación del pedido"
+          }
+        }
+      }
+    },
+    "Purchase receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibo de compra"
+          }
+        }
+      }
+    },
+    "Final invoice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Final invoice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factura final"
+          }
+        }
+      }
+    },
+    "Reading receipt on this device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading receipt on this device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo el recibo en este dispositivo"
+          }
+        }
+      }
+    },
+    "Cancel reading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel reading"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar lectura"
+          }
+        }
+      }
+    },
+    "Receipt source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Documento de origen"
+          }
+        }
+      }
+    },
+    "Document type": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de documento"
+          }
+        }
+      }
+    },
+    "Select printed lines to review. You will enter received and usable quantities separately.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select printed lines to review. You will enter received and usable quantities separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona las líneas impresas que quieres revisar. Después indicarás por separado las cantidades recibidas y utilizables."
+          }
+        }
+      }
+    },
+    "Page %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página %@"
+          }
+        }
+      }
+    },
+    "No readable lines on this page. You can type them in the receipt scanner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No readable lines on this page. You can type them in the receipt scanner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron leer las líneas de esta página. Puedes escribirlas en el escáner de recibos."
+          }
+        }
+      }
+    },
+    "I checked these printed lines and physically received food from this purchase.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked these printed lines and physically received food from this purchase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé estas líneas impresas y recibí alimentos de esta compra."
+          }
+        }
+      }
+    },
+    "Review received food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review received food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar alimentos recibidos"
+          }
+        }
+      }
+    },
+    "Choose another document": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another document"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir otro documento"
+          }
+        }
+      }
+    },
+    "Choose a receipt from Files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a receipt from Files"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un recibo de Archivos"
+          }
+        }
+      }
+    },
+    "Choose a receipt from Photos": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a receipt from Photos"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un recibo de Fotos"
+          }
+        }
+      }
+    },
+    "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 text file up to 10 MB. PDFs can have up to 20 pages.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 text file up to 10 MB. PDFs can have up to 20 pages."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un PDF, una foto JPEG, PNG o HEIC, o un archivo de texto UTF-8 de hasta 10 MB. El PDF puede tener hasta 20 páginas."
+          }
+        }
+      }
+    },
+    "Read a receipt file": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read a receipt file"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer un archivo de recibo"
+          }
+        }
+      }
+    },
+    "Choose a file up to 10 MB.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a file up to 10 MB."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un archivo de hasta 10 MB."
+          }
+        }
+      }
+    },
+    "Choose a PDF with 1 to 20 pages, or export a smaller page range.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a PDF with 1 to 20 pages, or export a smaller page range."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un PDF de 1 a 20 páginas o exporta un intervalo más pequeño."
+          }
+        }
+      }
+    },
+    "Choose a photo or scanned page up to 25 megapixels.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a photo or scanned page up to 25 megapixels."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una foto o una página escaneada de hasta 25 megapíxeles."
+          }
+        }
+      }
+    },
+    "Choose fewer pages with up to 100,000 extracted characters.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose fewer pages with up to 100,000 extracted characters."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige menos páginas, con un máximo de 100 000 caracteres extraídos."
+          }
+        }
+      }
+    },
+    "Choose a smaller page with up to 200 lines, or type the food lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a smaller page with up to 200 lines, or type the food lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una página más pequeña, de hasta 200 líneas, o escribe las líneas de los alimentos."
+          }
+        }
+      }
+    },
+    "Choose fewer or shorter lines for this review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose fewer or shorter lines for this review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige menos líneas o líneas más breves para esta revisión."
+          }
+        }
+      }
+    },
+    "This PDF is locked. Choose an unlocked copy or type the lines in the receipt scanner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This PDF is locked. Choose an unlocked copy or type the lines in the receipt scanner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este PDF está bloqueado. Elige una copia desbloqueada o escribe las líneas en el escáner de recibos."
+          }
+        }
+      }
+    },
+    "Reading took more than 30 seconds. Choose fewer pages or type the lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading took more than 30 seconds. Choose fewer pages or type the lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La lectura tardó más de 30 segundos. Elige menos páginas o escribe las líneas."
+          }
+        }
+      }
+    },
+    "This document could not be read. Try another file or type the lines in the receipt scanner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This document could not be read. Try another file or type the lines in the receipt scanner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer el documento. Prueba con otro archivo o escribe las líneas en el escáner de recibos."
+          }
+        }
+      }
+    },
+    "Pending shared receipt files to delete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending shared receipt files to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos de recibos compartidos pendientes que se eliminarán"
+          }
+        }
+      }
+    },
+    "Shared receipt files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared receipt files"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos de recibos compartidos"
+          }
+        }
+      }
+    },
+    "Open shared receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shared receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir recibo compartido"
+          }
+        }
+      }
+    },
+    "Discard shared receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard shared receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar recibo compartido"
+          }
+        }
+      }
+    },
+    "Discard this shared receipt?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this shared receipt?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar este recibo compartido?"
+          }
+        }
+      }
+    },
+    "Discard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar"
+          }
+        }
+      }
+    },
+    "This removes the staged file from this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes the staged file from this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminará de este dispositivo el archivo pendiente de revisión."
+          }
+        }
+      }
+    },
+    "Shared files are unavailable. You can still choose a receipt from Files or Photos.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared files are unavailable. You can still choose a receipt from Files or Photos."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los archivos compartidos no están disponibles. Aún puedes elegir un recibo de Archivos o Fotos."
+          }
+        }
+      }
+    },
+    "Saving selected food removes this staged file. Keep the original for any other lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving selected food removes this staged file. Keep the original for any other lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar los alimentos seleccionados elimina este archivo pendiente. Conserva el original para revisar otras líneas."
+          }
+        }
+      }
+    },
+    "Food saved. Reopen shared receipt files to discard the staged copy.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food saved. Reopen shared receipt files to discard the staged copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos guardados. Vuelve a abrir los recibos compartidos para descartar la copia pendiente."
+          }
+        }
+      }
+    },
+    "This page exceeds 25 megapixels. Choose a smaller image to review it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This page exceeds 25 megapixels. Choose a smaller image to review it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta página supera los 25 megapíxeles. Elige una imagen más pequeña para revisarla."
+          }
+        }
+      }
+    },
+    "This page exceeds the line limit. You can type the food lines instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This page exceeds the line limit. You can type the food lines instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta página supera el límite de líneas. Puedes escribir las líneas de los alimentos."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

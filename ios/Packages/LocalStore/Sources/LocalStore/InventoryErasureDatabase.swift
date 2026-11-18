@@ -5,7 +5,7 @@ extension ComparisonDatabase {
   func migrateInventoryErasure() throws {
     try transaction {
       let version = try integer("PRAGMA user_version")
-      if version == 4 || version == 5 {
+      if (4...6).contains(version) {
         try validateInventoryErasure()
         return
       }

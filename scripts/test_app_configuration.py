@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
                                load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
-from check_built_app import verify_built_app
+from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app
 
 
 class AppConfigurationTests(unittest.TestCase):
@@ -264,8 +264,7 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 "CFBundleIdentifier": bundle_id + ".share", "CFBundleDisplayName": "Share",
                 "RITCShareInboxAppGroup": share_group,
                 "NSExtension": {"NSExtensionPointIdentifier": "com.apple.share-services",
-                                "NSExtensionAttributes": {"NSExtensionActivationRule": {
-                                    "NSExtensionActivationSupportsText": True}}},
+                                "NSExtensionAttributes": {"NSExtensionActivationRule": SHARE_ACTIVATION_RULE}},
             },
         }
         for bundle, metadata in bundles.items():
@@ -375,12 +374,13 @@ class BuiltAppVerificationTests(unittest.TestCase):
         self.expect_plist_rejected(self.widget, {"CFBundleShortVersionString": "0.2.0"}, "Widget extension version mismatch")
         self.expect_plist_rejected(self.share, {"CFBundleVersion": "999"}, "Share extension version mismatch")
         for rule in ("TRUEPREDICATE", {"NSExtensionActivationSupportsText": True,
-                                       "NSExtensionActivationSupportsImageWithMaxCount": 1}):
+                                       "NSExtensionActivationSupportsImageWithMaxCount": 1},
+                     {"NSExtensionActivationSupportsText": True, "NSExtensionActivationSupportsWebURLWithMaxCount": 2}):
             with self.subTest(rule=rule):
                 self.expect_plist_rejected(self.share, {"NSExtension": {
                     "NSExtensionPointIdentifier": "com.apple.share-services",
                     "NSExtensionAttributes": {"NSExtensionActivationRule": rule},
-                }}, "Share extension must activate for text only")
+                }}, "Share extension must accept supported receipt files, selected text and one web URL")
 
     def test_rejects_test_bundles_in_release_including_the_known_debug_unit_bundle(self):
         for bundle in (self.app / "PlugIns/RoomInTheCartTests.xctest", self.share / "LeakedFixture.xctest"):

@@ -287,6 +287,127 @@ import XCTest
         }
     }
 
+    func testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let export = app.buttons["Export sample receipt PDF"]
+        XCTAssertTrue(export.waitForExistence(timeout: 10))
+        export.tap()
+        let save = app.buttons["Save"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 25), app.debugDescription)
+        save.tap()
+        if app.buttons["Replace"].waitForExistence(timeout: 2) { app.buttons["Replace"].tap() }
+        XCTAssertTrue(app.staticTexts["fixture.receipt.exported"].waitForExistence(timeout: 10), app.debugDescription)
+        app.terminate()
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.receipt"])
+        tap(app.buttons["receipt.document"])
+        tap(app.buttons["Choose a receipt from Files"])
+        let browse = app.buttons["Browse"].firstMatch
+        XCTAssertTrue(browse.waitForExistence(timeout: 12), app.debugDescription)
+        browse.tap()
+        let nameMatch = NSPredicate(format: "label BEGINSWITH[c] %@", "Room Market Fixture Receipt")
+        let file = app.cells.matching(nameMatch).firstMatch
+        if !file.waitForExistence(timeout: 2) {
+            let local = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "On My iPhone")).firstMatch
+            if local.waitForExistence(timeout: 2), local.isHittable { local.tap() }
+        }
+        if !file.waitForExistence(timeout: 2) {
+            let search = app.searchFields.firstMatch
+            XCTAssertTrue(search.waitForExistence(timeout: 8), app.debugDescription)
+            search.tap(); search.typeText("Room Market Fixture Receipt\n")
+        }
+        XCTAssertTrue(file.waitForExistence(timeout: 15), app.debugDescription)
+        file.tap()
+        let choose = app.buttons["Open"]
+        if choose.waitForExistence(timeout: 2), choose.isHittable { choose.tap() }
+        let oats = app.switches["receipt.document.line.1.1"], fee = app.switches["receipt.document.line.1.2"]
+        XCTAssertTrue(oats.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(oats.label.contains("OATS"))
+        XCTAssertTrue(fee.label.contains("SERVICE FEE"))
+        XCTAssertEqual(fee.value as? String, "0")
+        enableSwitch("receipt.document.line.1.1")
+        let name = app.textFields["Store or branch"]
+        tap(name); name.typeText("Room Market")
+        if app.buttons["receipt.document.keyboardDone"].exists { app.buttons["receipt.document.keyboardDone"].tap() }
+        enableSwitch("I checked these printed lines and physically received food from this purchase.")
+        tap(app.buttons["receipt.document.accept"])
+        let action = app.buttons["receipt.action.0"]
+        XCTAssertTrue(action.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["receipt.action.1"].exists)
+        XCTAssertEqual(app.switches["I checked the purchase date."].value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+    }
+
+    func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let add = app.buttons["Add sample receipt to simulator Photos"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
+        add.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.alerts.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
+        if allow.waitForExistence(timeout: 6) { allow.tap() }
+        let saved = app.staticTexts["fixture.receipt.photoResult"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(saved.label, "Test photo saved")
+        app.terminate()
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
+        tap(app.buttons["Choose a receipt from Photos"])
+        let photoName = NSPredicate(format: "label BEGINSWITH[c] %@", "Photo,")
+        let images = app.images.matching(photoName).firstMatch
+        let cells = app.cells.matching(photoName).firstMatch
+        let pickerAsset = images.waitForExistence(timeout: 5) ? images : cells
+        XCTAssertTrue(pickerAsset.waitForExistence(timeout: 12), app.debugDescription)
+        pickerAsset.tap()
+        let oats = app.switches["receipt.document.line.1.1"]
+        XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
+        XCTAssertTrue(oats.label.uppercased().contains("OATS"))
+        XCTAssertEqual(oats.value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+    }
+
+    func testSystemShareSheetStagesReceiptForExplicitPrivateReview() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--receipt-share-test-sender", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let marker = app.staticTexts["fixture.receipt.shareToken"]
+        XCTAssertTrue(marker.waitForExistence(timeout: 12), app.debugDescription)
+        let token = marker.label
+        XCTAssertEqual(token.count, 64)
+        let share = app.buttons["Share sample receipt PDF"]
+        XCTAssertTrue(share.waitForExistence(timeout: 12)); share.tap()
+        let destination = app.cells.matching(NSPredicate(format: "identifier == %@ AND label == %@", "shareCell", "Room in the Cart")).firstMatch
+        if !destination.waitForExistence(timeout: 4) {
+            let more = app.cells["More"].firstMatch
+            XCTAssertTrue(more.waitForExistence(timeout: 8), app.debugDescription); more.tap()
+        }
+        let namedDestination = app.cells.matching(NSPredicate(format: "label == %@", "Room in the Cart")).firstMatch
+        XCTAssertTrue(namedDestination.waitForExistence(timeout: 10), app.debugDescription)
+        namedDestination.tap()
+        let stage = app.buttons["Save receipt file for review"]
+        XCTAssertTrue(stage.waitForExistence(timeout: 15), app.debugDescription); stage.tap()
+        XCTAssertTrue(stage.waitForNonExistence(timeout: 12))
+        app.terminate()
+        launch(reset: true, sharedReceiptToken: token)
+        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
+        let open = app.buttons["Open shared receipt"].firstMatch
+        XCTAssertTrue(open.waitForExistence(timeout: 12), app.debugDescription); open.tap()
+        let oats = app.switches["receipt.document.line.1.1"]
+        XCTAssertTrue(oats.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(oats.label.contains("OATS"))
+        XCTAssertEqual(oats.value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        tap(app.buttons["receipt.document.close"]); tap(app.buttons["receipt.document"])
+        tap(app.buttons["Discard shared receipt"].firstMatch)
+        tap(app.alerts.buttons["Discard"])
+        XCTAssertTrue(open.waitForNonExistence(timeout: 8))
+    }
+
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         func receiptTap(_ control: XCUIElement) {
             for _ in 0..<4 {
@@ -350,6 +471,19 @@ import XCTest
         receiptTap(app.buttons["pantry.receiptHistory"])
         XCTAssertTrue(app.staticTexts["Oats"].firstMatch.waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["Paid price unknown"].exists)
+        receiptTap(app.buttons["Remember this product spelling"])
+        let printedWording = app.textFields["Product wording from the printed line"]
+        receiptTap(printedWording)
+        printedWording.typeText("Oats")
+        if app.buttons["receipt.alias.keyboardDone"].exists { app.buttons["receipt.alias.keyboardDone"].tap() }
+        receiptTap(app.buttons["Save receipt spelling"])
+        XCTAssertTrue(printedWording.waitForNonExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+        receiptTap(app.buttons["Saved receipt spellings"])
+        XCTAssertTrue(app.staticTexts["Oats"].firstMatch.waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Reset all my receipt spellings"])
+        receiptTap(app.alerts.buttons["Forget"])
+        XCTAssertTrue(app.staticTexts["No saved receipt spellings."].waitForExistence(timeout: 8))
     }
 
     /// F02: ordinary Dinners removal, with an independently checked SQLite history.
@@ -2761,9 +2895,10 @@ import XCTest
         XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
     }
 
-    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false) {
+    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false, sharedReceiptToken: String? = nil) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
+        if let sharedReceiptToken { app.launchArguments += ["--receipt-share-test-store", sharedReceiptToken] }
         if privateRecovery { app.launchArguments.append("--seed-private-recovery") }
         if sourceRemoval { app.launchArguments.append("--seed-source-removal") }
         app.launch()

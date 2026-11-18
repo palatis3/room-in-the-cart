@@ -1,3 +1,4 @@
+import DeviceSurfaces
 import CryptoKit
 import Foundation
 import CoreDomain
@@ -58,6 +59,7 @@ final class PantryRepository {
 
     /// Nil is supported for component fixtures/read-only adapters only. App-owned
     /// standalone editors must share a configured journal and mutation gate.
+    let aliasPersonaID: UUID?
     let pendingStore: PantryPendingStore?
     private let store: ComparisonStore
     private let authorize: () -> Bool
@@ -67,12 +69,13 @@ final class PantryRepository {
     func observeErasure(_ observer: any PantryErasureObserver) { mutationGate?.observeErasure(observer) }
 
     init(store: ComparisonStore, limits: ReadLimits = .standard, mutationGate: PantryMutationGate? = nil,
-         pendingStore: PantryPendingStore? = nil,
+         pendingStore: PantryPendingStore? = nil, aliasPersonaID: UUID? = nil,
          authorize: @escaping () -> Bool) {
         self.store = store
         self.authorize = authorize
         self.limits = limits
         self.mutationGate = mutationGate
+        self.aliasPersonaID = aliasPersonaID
         self.pendingStore = pendingStore
     }
 
@@ -394,6 +397,14 @@ final class PantryRepository {
         }
         guard matched.count < 2 else { throw PantryReceiptError.changedEvidence }
         let receiptID = matched.first ?? draft.receiptID
+        if draft.lines.contains(where: { $0.treatment != .skip && $0.appliedAlias != nil }) {
+            let allowed = try await receiptAliases(merchant: draft.merchant, language: draft.language)
+            for line in draft.lines where line.treatment != .skip {
+                guard let alias = line.appliedAlias else { continue }
+                guard allowed.contains(alias), alias.product == line.name,
+                      ReceiptImportDraft.containsWording(alias.wording, in: line.original) else { throw PantryReceiptError.stale }
+            }
+        }
         let facts = try draft.facts(receiptID: receiptID, snapshot: before, at: now)
         var prior: [UUID: ReceiptAcquisition] = [:], cursor: UUID?
         repeat {
@@ -457,6 +468,51 @@ final class PantryRepository {
         try requireAccess()
     }
 
+    func receiptAliases(merchant: String? = nil, language: String? = nil) async throws -> [InventoryReceiptAlias] {
+        try requireAccess()
+        guard let aliasPersonaID else { throw Failure.unauthorized }
+        let aliases = try await store.receiptAliases(personaID: aliasPersonaID, merchant: merchant, language: language)
+        try requireAccess()
+        return aliases
+    }
+
+    func rememberReceiptAlias(_ source: ReceiptAcquisition, wording: String, language: String, expected: InventoryState, at now: Date) async throws {
+        try requireAccess()
+        guard let aliasPersonaID, expected.workspaceID == originID else { throw Failure.unauthorized }
+        let records = try await store.acquisitionRows(receiptID: source.receiptID, lineIDs: [source.lineID], firstRevisionOnly: true, limit: 1)
+        try requireAccess()
+        guard let row = records.first else { throw PantryReceiptError.stale }
+        let original = try PantryAcquisitionCodec.record(row)
+        let trimmed = wording.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard source.lotID == original.lotID, source.foodID == original.foodID, source.name == original.name,
+              source.originalLine == original.originalLine, original.merchant == source.merchant,
+              trimmed.unicodeScalars.contains(where: CharacterSet.letters.contains),
+              ReceiptImportDraft.containsWording(trimmed, in: original.originalLine) else { throw PantryReceiptError.invalid }
+        let alias = InventoryReceiptAlias(personaID: aliasPersonaID, merchant: original.merchant, language: language, wording: trimmed,
+            product: original.name, foodID: original.foodID, sourceID: original.id, lotID: original.lotID)
+        let prior = try await receiptAliases(merchant: original.merchant, language: language)
+        if let existing = prior.first(where: { InventoryReceiptAlias.key($0.wording) == InventoryReceiptAlias.key(trimmed) }) {
+            guard try await store.inventoryState() == expected else { throw PantryReceiptError.stale }
+            try requireAccess()
+            guard existing.foodID == alias.foodID, existing.product == alias.product else { throw PantryReceiptError.changedEvidence }
+            return
+        }
+        try await editReceiptAlias(.remember(alias), expected: expected, at: now)
+    }
+
+    func forgetReceiptAliases(_ aliases: [InventoryReceiptAlias], expected: InventoryState, at now: Date) async throws {
+        try requireAccess()
+        guard let aliasPersonaID, aliases.allSatisfy({ $0.personaID == aliasPersonaID }) else { throw Failure.unauthorized }
+        try await editReceiptAlias(.forget(personaID: aliasPersonaID, ids: aliases.map(\.id)), expected: expected, at: now)
+    }
+
+    private func editReceiptAlias(_ edit: InventoryReceiptAliasEdit, expected: InventoryState, at now: Date) async throws {
+        let id = UUID()
+        let request = try Data(SHA256.hash(data: PantryAcquisitionCodec.data(edit)))
+        let batch = InventoryBatch(workspaceID: originID, operationID: id, expectedRevision: expected.revision, request: request, aliasEdit: edit)
+        try await applyReceipt(.init(id: id, workspaceID: expected.workspaceID, revision: expected.revision, facts: [], existing: [], batch: batch), at: now)
+    }
+
     func latestReceiptRevision(_ original: ReceiptAcquisition) async throws -> ReceiptAcquisition {
         try requireAccess()
         let rows = try await store.acquisitionRows(receiptID: original.receiptID, lineIDs: [original.lineID], latestForLine: true, limit: 1)
@@ -475,6 +531,21 @@ final class PantryRepository {
             expectedRevision: state.revision, request: PantryAcquisitionCodec.data(corrected), writes: [], acquisitions: [row])
         try await applyReceipt(.init(id: corrected.id, workspaceID: state.workspaceID, revision: state.revision,
             facts: [corrected], existing: [], batch: batch), at: now)
+    }
+
+    var permitsReceiptSource: Bool { authorize() }
+
+    func withSharedReceiptScope<T>(_ operation: (SharedCaptureInbox, SharedReceiptScope) async throws -> T) async throws -> T {
+        try requireAccess()
+        guard let aliasPersonaID, let gate = mutationGate else { throw Failure.unauthorized }
+        let lease = try gate.beginExclusiveWrite()
+        defer { gate.endExclusiveWrite(lease) }
+        guard try await store.inventoryOriginRetirement() == nil, try await store.inventoryState().active else { throw Failure.inactive }
+        try requireAccess()
+        let inbox = try PrivateReceiptInbox.open()
+        let result = try await operation(inbox, .init(origin: originID, persona: aliasPersonaID))
+        try requireAccess()
+        return result
     }
 
     func requireAccess() throws {

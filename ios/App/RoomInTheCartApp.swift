@@ -1,3 +1,4 @@
+import CoreDomain
 import SwiftUI
 import DeviceSurfaces
 
@@ -121,6 +122,9 @@ private struct GroceryWindow: View {
                 pantryRuntime.update(identity)
                 if previous != nil { pickup.suspendPrivatePantry() }
             }
+            .task(id: scenePhase) {
+                if scenePhase == .active { try? await PrivateReceiptInbox.expireOnForeground() }
+            }
             .task(id: pantryOpenScope) { await openPrivatePantry(pantryOpenScope) }
             .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
             .onChange(of: guardianChild.presented) { _, childActive in
@@ -150,7 +154,9 @@ private struct GroceryWindow: View {
     }
     @ViewBuilder private var root: some View {
         #if DEBUG && targetEnvironment(simulator)
-        if recoveryFixture.requested && recoveryFixture.phase != .ready {
+        if ProcessInfo.processInfo.arguments.contains("--receipt-file-source-fixture") {
+            ReceiptFileSourceFixture()
+        } else if recoveryFixture.requested && recoveryFixture.phase != .ready {
             if recoveryFixture.phase == .failed { Text(verbatim: "Recovery fixture setup failed") }
             else { ProgressView() }
         } else { RootView() }
@@ -209,7 +215,9 @@ private struct GroceryWindow: View {
         let authorize = pantryRuntime.authorization(for: identity, access: access, household: household, child: guardianChild)
         guard authorize(), !Task.isCancelled, ledger.sourceWorkspaceID == scope.ledgerOrigin else { return }
         do {
-            try await pickup.bindPrivatePantry(ledger: ledger, authorize: authorize)
+            let persona = ReceiptAcquisition.identity(["private-receipt-aliases", identity.actorID.uuidString,
+                identity.subject ?? "", identity.householdID ?? "", identity.memberID ?? ""])
+            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona, authorize: authorize)
             if !pickup.ready { await pickup.load() }
             if pickup.pantryRouteAvailable { Diagnostics.record(.pantryRouteReady) }
             else if !pickup.pantryRestartAvailable {
