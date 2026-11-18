@@ -683,6 +683,30 @@ import LocalAuthentication
         XCTAssertFalse(shared.canManage)
     }
 
+    func testRefreshingSameItemSupportRetiresTheOldInboxAndKeepsAnUnchangedInbox() async throws {
+        let fixture = SharedFlowService()
+        let household = try await createdHousehold(fixture)
+        let shared = try XCTUnwrap(household.sharedShop)
+        enterShop(shared)
+        await shared.applyReviewed()
+
+        let original = try XCTUnwrap(household.shopperInbox)
+        XCTAssertFalse(original.supportsSameItem)
+        fixture.sameItemAvailable = true
+        await household.refresh()
+        let enabled = try XCTUnwrap(household.shopperInbox)
+        XCTAssertTrue(enabled.supportsSameItem)
+        XCTAssertFalse(original.authorized)
+        await household.refresh()
+        XCTAssertTrue(household.shopperInbox === enabled)
+
+        fixture.sameItemAvailable = false
+        await household.refresh()
+        let disabled = try XCTUnwrap(household.shopperInbox)
+        XCTAssertFalse(disabled.supportsSameItem)
+        XCTAssertFalse(enabled.authorized)
+    }
+
     func testChangedShopperAuthorityClearsPrivateViewsBeforeRequestListFailure() async throws {
         let fixture = SharedFlowService()
         let mia = try await createdHousehold(fixture)
@@ -755,6 +779,7 @@ private final class SharedFlowService {
     var deliverySources: [[String: Any]] = []
     var supplyRevision = 0
     var loseDeliveryResponse = false
+    var sameItemAvailable = false
     var rejectExcludedMatch = false, pantryAvailable = false
     var pantryLots: [[String: Any]] = []
     func data(_ value: Any) throws -> Data { try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) }
@@ -783,9 +808,11 @@ private final class SharedFlowService {
             if shopID != nil, let status = readFailureAfterCreate { return try ok(["error":["code":"access_ended","correlationId":"test"]],status) }
             let shopper = actor == "mia" && shopID != nil && !shopperTransferred
             let evidenceCapabilities = placedRevision == nil ? [] : ["confirmed_order", "delivery_evidence"] + (pantryAvailable ? ["pantry_lots"] : [])
+            var shopperCapabilities = ["shopper_inbox", "request_preview", "shopper_commands", "accepted_fallbacks"] + evidenceCapabilities
+            if sameItemAvailable { shopperCapabilities.append("request_same_item") }
             return try ok(["household":["id":household,"label":"Our home"],"memberId":actor == "mia" ? miaID : samID,
                 "role":shopper ? "shopper" : actor == "mia" ? "organizer" : "contributor", "canSelectShop":canSelectShop, "shopId":shopID as Any? ?? NSNull(),"enrolled":true,"queueConsent":false,
-                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] + evidenceCapabilities : [])])
+                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? shopperCapabilities : [])])
         }
         if path.hasSuffix("/accepted-fallbacks"), let shopID {
             if transferAfterLibraryRead { shopperTransferred = true }
