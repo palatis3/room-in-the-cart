@@ -319,6 +319,95 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         XCTAssertFalse(review.lines.isEmpty)
     }
 
+    @MainActor func testTrashingLastPurchaseClearsDraftAndPreservesFrozenHistory() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        let pickupURL = directory.appendingPathComponent("pickup.sqlite")
+        let pickup = PickupModel(databaseURL: pickupURL)
+        await ledger.open(); await pickup.load()
+        var shop = ShoppingLedger(basis: basis())
+        let id = try shop.addManualLine(name: "Milk", quantity: quantity(1))
+        _ = await ledger.change(key: "seed") { $0.shops = [shop]; $0.selectedShopID = shop.id }
+        let first = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: nil)
+        _ = try await LedgerCheckoutAdapter.apply(first, ledger: ledger, pickup: pickup)
+        _ = await pickup.setQuote(.init(scope: .wholeCheckout, context: first.context, pricing: .inclusiveTotal(.exact(.init(minorUnits: 400)))), cap: nil)
+        _ = await pickup.freeze()
+        let frozen = try XCTUnwrap(pickup.frozenSnapshot)
+        _ = await ledger.editShop(key: "trash", shopID: shop.id) { try $0.trash(lineID: id) }
+        let empty = try XCTUnwrap(ledger.shop)
+        XCTAssertThrowsError(try LedgerCheckoutAdapter.review(shop: empty, workspaceRevision: ledger.revision, previous: nil))
+        let review = try LedgerCheckoutAdapter.review(shop: empty, workspaceRevision: ledger.revision, previous: pickup.journey)
+        XCTAssertEqual(review.proposal?.changes, [.remove(id)])
+        let saved = try await LedgerCheckoutAdapter.apply(review, ledger: ledger, pickup: pickup)
+        XCTAssertTrue(saved)
+        let reopened = PickupModel(databaseURL: pickupURL)
+        await reopened.load()
+        let journey = try XCTUnwrap(reopened.journey)
+        XCTAssertEqual(journey.basket?.current.lines, [])
+        XCTAssertEqual(journey.plannedNeeds, [])
+        XCTAssertNil(journey.quote)
+        XCTAssertEqual(journey.basket?.snapshots, [frozen])
+    }
+
+    @MainActor func testListReviewPreservesQuotedCheckoutAndDeferralUntilExplicitUndo() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        await ledger.open(); await pickup.load()
+        var shop = ShoppingLedger(basis: basis())
+        let milk = try shop.addManualLine(name: "Milk", quantity: quantity(1))
+        let coffee = try shop.addManualLine(name: "Coffee", quantity: quantity(1))
+        _ = await ledger.change(key: "seed") { $0.shops = [shop]; $0.selectedShopID = shop.id }
+        let first = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: nil)
+        _ = try await LedgerCheckoutAdapter.apply(first, ledger: ledger, pickup: pickup)
+        let context = CheckoutContext(storeID: "Market", branchID: "South", mode: .pickup, slot: "Friday",
+            commitmentsID: shop.id, observedAt: Date(), source: "Retailer preview")
+        let cap = CheckoutCap(scope: .wholeCheckout, commitmentsID: shop.id, amount: Money(minorUnits: 3800))
+        let quote = CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .components(
+            lines: first.lines.map { .init(id: $0.id, name: $0.name, cost: .exact(.init(minorUnits: 300))) },
+            lineSetComplete: true, fees: [], discounts: [], tax: .exact(.zero), deposits: .exact(.zero)))
+        _ = await pickup.setQuote(quote, cap: cap)
+        _ = await pickup.change { $0.flexible.insert(coffee) }
+        let preview = try pickup.deferralPreview([coffee])
+        let deferred = await pickup.applyDeferral(preview)
+        XCTAssertTrue(deferred)
+        let before = try XCTUnwrap(pickup.journey)
+        let same = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: before)
+        XCTAssertFalse(same.needsApplication)
+        XCTAssertEqual(same.context, context)
+        XCTAssertEqual(same.cap, cap)
+        XCTAssertEqual(same.lines.map(\.id), [milk])
+        let saved = try await LedgerCheckoutAdapter.apply(same, ledger: ledger, pickup: pickup)
+        XCTAssertTrue(saved)
+        XCTAssertEqual(pickup.journey, before)
+
+        _ = await ledger.editShop(key: "fruit", shopID: shop.id) { _ = try $0.addManualLine(name: "Pear", quantity: self.quantity(1)) }
+        let changed = try XCTUnwrap(ledger.shop)
+        let revised = try LedgerCheckoutAdapter.review(shop: changed, workspaceRevision: ledger.revision, previous: before)
+        XCTAssertEqual(revised.lines.map(\.name), ["Milk", "Pear"])
+        XCTAssertEqual(revised.deferredLineIDs, [coffee])
+        let applied = try await LedgerCheckoutAdapter.apply(revised, ledger: ledger, pickup: pickup)
+        XCTAssertTrue(applied)
+        XCTAssertEqual(pickup.journey?.deferred, before.deferred)
+        XCTAssertEqual(pickup.journey?.carriedMeals, before.carriedMeals)
+
+        let contribution = try XCTUnwrap(changed.contributions(forLineID: coffee).first)
+        _ = await ledger.editShop(key: "coffee-quantity", shopID: shop.id) {
+            try $0.updateContribution(contributionID: contribution.id, quantity: self.quantity(2), notes: "")
+        }
+        let edited = try XCTUnwrap(ledger.shop)
+        XCTAssertThrowsError(try LedgerCheckoutAdapter.review(shop: edited, workspaceRevision: ledger.revision, previous: pickup.journey)) {
+            XCTAssertEqual($0 as? LedgerCheckoutError, .changedDeferredLine("Coffee"))
+        }
+        let undo = try XCTUnwrap(pickup.journey?.proposals.last)
+        let undone = await pickup.undoDeferral(undo)
+        XCTAssertTrue(undone)
+        let restored = try LedgerCheckoutAdapter.review(shop: edited, workspaceRevision: ledger.revision, previous: pickup.journey)
+        XCTAssertEqual(restored.lines.first(where: { $0.id == coffee })?.quantity, quantity(2))
+    }
+
     @MainActor func testBasisOnlyChangeRequiresReviewClearsQuoteAndLeavesOldSnapshotImmutable() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -409,6 +498,7 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         _ = await pickup.change { $0.deferred = [deferred] }
         _ = await pickup.startNextShop(accept: [deferred.id])
         let next = try XCTUnwrap(pickup.journey)
+        XCTAssertTrue(next.isFreshNextShopDraft)
         let first = await LedgerCheckoutAdapter.openNextShop(next, ledger: ledger)
         XCTAssertTrue(first)
         let firstLineIDs = ledger.shop?.lines.map(\.id)
@@ -423,10 +513,14 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         XCTAssertNil(ledger.shop?.basis.retailerPreview)
         XCTAssertNil(ledger.shop?.basis.slot)
         XCTAssertEqual(ledger.shop?.basis.branch, "")
+        let saved = try await LedgerCheckoutAdapter.apply(review, ledger: ledger, pickup: pickup)
+        XCTAssertTrue(saved)
         pickup.selectedID = origin
         _ = await pickup.startNextShop(accept: [deferred.id])
         XCTAssertEqual(pickup.journey?.id, next.id)
         XCTAssertEqual(pickup.journeys.count, 2)
+        XCTAssertFalse(try XCTUnwrap(pickup.journey).isFreshNextShopDraft)
+        XCTAssertEqual(pickup.journey?.context, review.context)
     }
 
     @MainActor func testMonthOldMarketCoffeeBoughtByAnotherPersonDropsFromReviewedCheckoutAndOtherDeferralSurvivesRestart() async throws {

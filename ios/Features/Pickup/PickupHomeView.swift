@@ -14,7 +14,7 @@ struct PickupHomeView: View {
             if let value = model.journey {
                 Section(pTr("This pickup")) {
                     Text(value.savedAt, format: .dateTime.month().day().year().hour().minute())
-                    if value.originShopID != nil, value.context == nil, let ledger {
+                    if value.isFreshNextShopDraft, let ledger {
                         NavigationLink(pTr("Open next shopping list")) { PickupListBridgeView(model: model, ledger: ledger, journeyID: value.id) }
                     }
                     if let basket = value.basket {
@@ -377,7 +377,14 @@ struct PickupCheckoutView: View {
                         Button(pTr("Apply reviewed deferral")) { Task { if await model.applyDeferral(preview) { self.preview = nil; selected = []; populate() } } }
                         Button(pTr("Cancel preview")) { self.preview = nil }
                     }
-                    ForEach(model.journey?.proposals.filter { !(model.journey?.undoneProposals.contains($0.id) ?? false) } ?? []) { proposal in
+                }
+            }
+            if !draftIsStale, !draft.hasUnsavedChanges, let journey = model.journey {
+                ForEach(journey.proposals.filter { !journey.undoneProposals.contains($0.id) }) { proposal in
+                    Section {
+                        ForEach(journey.deferred.filter { proposal.changes.contains(.remove($0.line.id)) }) { need in
+                            Text(need.line.name)
+                        }
                         Button(pTr("Undo deferral and review prices")) { Task { await model.undoDeferral(proposal) } }
                     }
                 }

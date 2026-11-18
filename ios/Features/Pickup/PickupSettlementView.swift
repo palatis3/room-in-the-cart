@@ -203,7 +203,7 @@ struct PickupNextShopRoute: ViewModifier {
             guard launch else { return }
             requested = false
             guard let source = model.journey else { return }
-            if source.originShopID != nil, source.context == nil {
+            if source.isFreshNextShopDraft {
                 openedDraft = source.id
             } else if let existing = model.journeys.first(where: { $0.originShopID == source.id }) {
                 model.selectedID = existing.id
@@ -229,7 +229,11 @@ struct PickupNextShopRoute: ViewModifier {
             }.presentationDetents([.large]).interactiveDismissDisabled(model.saving || model.hasPendingSave)
         }
         .navigationDestination(item: $openedDraft) { id in
-            if model.journey?.id == id { PickupNextShopDraft(model: model, journeyID: id) }
+            if let journey = model.journey, journey.id == id {
+                if journey.isFreshNextShopDraft { PickupNextShopDraft(model: model, journeyID: id) }
+                else if journey.isAtHomeOnlyPlan { LedgerAtHomePlanView(model: model) }
+                else { PickupHomeView(model: model) }
+            }
         }
     }
 }
