@@ -4,7 +4,7 @@ import CoreDomain
 
 func captureText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Capture") }
 
-/// Returns a reviewed draft to the staged ledger import; never commits a list or sends its content to a service.
+/// Returns a reviewed draft to staged import. Online wording help requires a separate, line-specific decision.
 @MainActor struct CaptureReviewView: View {
     @StateObject private var model: CaptureModel
     @StateObject private var corrections = CaptureCorrectionsModel()
@@ -106,6 +106,9 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     private func captureForm(_ scroll: ScrollViewProxy) -> some View {
         Form {
             if reviewingFields {
+                if !requestMode, naturalBatch != nil, currentPickup != nil {
+                    NaturalListLanguageEntry(lines: $structuredLines, locale: model.localeIdentifier, authorize: authorize)
+                }
                 StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, correctionScope: correctionScope,
                     fieldFocus: $structuredFieldFocus, naturalBatch: $naturalBatch, currentPickupID: currentPickup?.id,
                     availablePickups: availablePickups, authorizePickup: authorizePickup, destination: destination,

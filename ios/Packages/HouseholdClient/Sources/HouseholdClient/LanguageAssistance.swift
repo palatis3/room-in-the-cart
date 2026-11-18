@@ -30,11 +30,30 @@ public struct NaturalListSuggestion: Decodable, Equatable, Sendable {
     public let itemName: String
     public let purpose: String?
     public let exclusion: String?
+
+    private enum CodingKeys: String, CodingKey { case sourceLineID, itemName, purpose, exclusion }
+    public init(from decoder: Decoder) throws {
+        guard Set(try decoder.container(keyedBy: HistoryCodingKey.self).allKeys.map(\.stringValue)) ==
+                ["sourceLineID","itemName","purpose","exclusion"] else { throw ClientError.invalidResponse }
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        sourceLineID = try values.decode(UUID.self, forKey: .sourceLineID)
+        itemName = try values.decode(String.self, forKey: .itemName)
+        purpose = try values.decodeIfPresent(String.self, forKey: .purpose)
+        exclusion = try values.decodeIfPresent(String.self, forKey: .exclusion)
+    }
 }
 
 public struct NaturalListReply: Decodable, Sendable {
     public let version: Int; public let requestID: UUID
     public let suggestions: [NaturalListSuggestion]
+    private enum CodingKeys: String, CodingKey { case version, requestID, suggestions }
+    public init(from decoder: Decoder) throws {
+        guard Set(try decoder.container(keyedBy: HistoryCodingKey.self).allKeys.map(\.stringValue)) == ["version","requestID","suggestions"] else { throw ClientError.invalidResponse }
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        version = try values.decode(Int.self, forKey: .version)
+        requestID = try values.decode(UUID.self, forKey: .requestID)
+        suggestions = try values.decode([NaturalListSuggestion].self, forKey: .suggestions)
+    }
     public func validate(for request: LanguageAssistanceRequest) throws {
         guard version == 1, requestID == request.requestID, suggestions.count <= request.sourceLines.count,
               Set(suggestions.map(\.sourceLineID)).count == suggestions.count else { throw ClientError.invalidResponse }
