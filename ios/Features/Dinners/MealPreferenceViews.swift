@@ -1,17 +1,32 @@
 import SwiftUI
 import CoreDomain
 
+private struct MealPreferenceFocusKey: EnvironmentKey {
+    static let defaultValue: FocusState<String?>.Binding? = nil
+}
+private extension EnvironmentValues {
+    var mealPreferenceFocus: FocusState<String?>.Binding? {
+        get { self[MealPreferenceFocusKey.self] }
+        set { self[MealPreferenceFocusKey.self] = newValue }
+    }
+}
+
 private struct PreferenceTermsField: View {
     let title: String
     @Binding var terms: [String]
     @State private var text: String
+    @Environment(\.mealPreferenceFocus) private var focus
     init(_ title: String, terms: Binding<[String]>) {
         self.title = title
         _terms = terms
         _text = State(initialValue: terms.wrappedValue.joined(separator: "\n"))
     }
     var body: some View {
-        workingTextField(title, text: $text, axis: .vertical)
+        let field = workingTextField(title, text: $text, axis: .vertical)
+        Group {
+            if let focus { field.focused(focus, equals: title) }
+            else { field }
+        }
             .onChange(of: text) { _, next in terms = DinnerEntry.list(next) }
             .onChange(of: terms) { _, next in
                 if DinnerEntry.list(text) != next { text = next.joined(separator: "\n") }
@@ -68,6 +83,8 @@ struct MealPreferenceIssues: View {
         case .disliked(let term): dinnerFormat("Disliked ingredient: %@", term)
         case .appliancesUnavailable(let values): dinnerFormat("Unavailable appliances: %@", values.joined(separator: ", "))
         case .brandMismatch: dinnerText("A brand differs from your preferences.")
+        case .durationAboveLimit: dinnerText("Total preparation time exceeds your available time.")
+        case .durationUnknown: dinnerText("Total elapsed preparation time is unknown.")
         case .effortAboveLimit: dinnerText("This meal exceeds your preferred effort.")
         case .ingredientsUnknown: dinnerText("Ingredient details still need review.")
         case .appliancesUnknown: dinnerText("Required appliances are unknown.")
@@ -107,16 +124,21 @@ struct PrivateMealPreferencesEntry: View {
 struct MealPreferenceEditor: View {
     let save: (MealPreferenceSettings, UUID?) async -> Bool
     private let initial: MealPreferenceProfile?
+    private let canSetTimeLimit: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var draft: MealPreferenceSettings
+    @State private var minutes: String
     @State private var reviewing = false
     @State private var busy = false
+    @FocusState private var textFocus: String?
     @State private var failed = false
-    init(profile: MealPreferenceProfile?, save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
+    init(profile: MealPreferenceProfile?, canSetTimeLimit: Bool = true, save: @escaping (MealPreferenceSettings, UUID?) async -> Bool) {
         self.save = save
+        self.canSetTimeLimit = canSetTimeLimit
         initial = profile
         _draft = State(initialValue: profile?.settings ?? .init())
         _base = State(initialValue: profile?.revision)
+        _minutes = State(initialValue: profile?.settings.timeLimit.map { String($0.maximumMinutes) } ?? "")
     }
     @State private var base: UUID?
     var body: some View {
@@ -131,6 +153,19 @@ struct MealPreferenceEditor: View {
                 if !draft.dislikes.isEmpty { Toggle(dinnerText("Require meals without these dislikes"), isOn: $draft.strictDislikes) }
                 PreferenceTermsField(dinnerText("Preferred brands, one per line"), terms: $draft.preferredBrands)
                 if !draft.preferredBrands.isEmpty { Toggle(dinnerText("Require preferred brands"), isOn: $draft.strictBrands) }
+                if canSetTimeLimit {
+                    TextField(dinnerText("Available cooking time in minutes, if limited"), text: $minutes)
+                        .keyboardType(.numberPad).focused($textFocus, equals: "availableMinutes")
+                        .accessibilityIdentifier("preferences.availableMinutes")
+                    if !minutes.isEmpty {
+                        Toggle(dinnerText("Require meals within this time"), isOn: Binding(
+                            get: { draft.timeLimit?.strict == true },
+                            set: { required in
+                                if let value = Int(minutes) { draft.timeLimit = .init(maximumMinutes: value, strict: required) }
+                            }
+                        )).accessibilityIdentifier("preferences.requireMinutes")
+                    }
+                }
                 MealEffortPicker(title: dinnerText("Preferred maximum effort"), effort: $draft.maximumEffort)
                 if draft.maximumEffort != nil { Toggle(dinnerText("Require this effort limit"), isOn: $draft.strictEffort) }
             }.disabled(reviewing)
@@ -149,15 +184,27 @@ struct MealPreferenceEditor: View {
                     Button(dinnerText("Keep editing")) { reviewing = false }
                 } else {
                     Button(dinnerText("Review preferences")) {
-                        do { try draft.validate(); failed = false; reviewing = true }
+                        do {
+                            if minutes.isEmpty { draft.timeLimit = nil }
+                            else if let value = Int(minutes) { draft.timeLimit = .init(maximumMinutes: value, strict: draft.timeLimit?.strict ?? false) }
+                            else { throw DinnerPlanningError.invalid("timeLimit") }
+                            try draft.validate(); failed = false; reviewing = true
+                        }
                         catch { failed = true }
                     }.accessibilityIdentifier("preferences.review")
                     if initial != nil, draft != MealPreferenceSettings() {
-                        Button(dinnerText("Remove all preferences"), role: .destructive) { draft = .init(); reviewing = true }
+                        Button(dinnerText("Remove all preferences"), role: .destructive) { draft = .init(); minutes = ""; reviewing = true }
                     }
                 }
             }
         }.disabled(busy)
+        .environment(\.mealPreferenceFocus, $textFocus)
+        .keyboardDoneAction(visible: textFocus != nil, title: dinnerText("Done"),
+                            identifier: "preferences.keyboardDone") { textFocus = nil }
+        .onChange(of: minutes) { _, value in
+            if value.isEmpty { draft.timeLimit = nil }
+            else if let minutes = Int(value) { draft.timeLimit = .init(maximumMinutes: minutes, strict: draft.timeLimit?.strict ?? false) }
+        }
         .onChange(of: draft.dislikes) { _, values in if values.isEmpty { draft.strictDislikes = false } }
         .onChange(of: draft.preferredBrands) { _, values in if values.isEmpty { draft.strictBrands = false } }
         .onChange(of: draft.maximumEffort) { _, value in if value == nil { draft.strictEffort = false } }

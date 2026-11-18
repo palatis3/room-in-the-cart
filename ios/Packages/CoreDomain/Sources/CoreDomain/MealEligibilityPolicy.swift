@@ -5,6 +5,15 @@ public enum MealEffort: String, CaseIterable, Codable, Sendable {
     var rank: Int { switch self { case .low: 0; case .medium: 1; case .high: 2 } }
 }
 
+public struct MealTimeLimit: Codable, Equatable, Sendable {
+    public var maximumMinutes: Int
+    public var strict: Bool
+    public init(maximumMinutes: Int, strict: Bool = false) {
+        self.maximumMinutes = maximumMinutes
+        self.strict = strict
+    }
+}
+
 /// An absent appliance list means the kitchen has not been reviewed. A reviewed
 /// empty list records a kitchen with no available appliances.
 public struct MealPreferenceSettings: Codable, Equatable, Sendable {
@@ -13,13 +22,15 @@ public struct MealPreferenceSettings: Codable, Equatable, Sendable {
     public var dislikes: [String] = []
     public var preferredBrands: [String] = []
     public var maximumEffort: MealEffort?
+    public var timeLimit: MealTimeLimit?
     public var strictDislikes = false
     public var strictBrands = false
     public var strictEffort = false
     public init() {}
     public func validate() throws {
         try [exclusions, availableAppliances ?? [], dislikes, preferredBrands].forEach(MealEligibilityPolicy.validateTerms)
-        guard !strictDislikes || !dislikes.isEmpty, !strictBrands || !preferredBrands.isEmpty,
+        guard timeLimit.map({ (0...525_600).contains($0.maximumMinutes) }) ?? true,
+              !strictDislikes || !dislikes.isEmpty, !strictBrands || !preferredBrands.isEmpty,
               !strictEffort || maximumEffort != nil else { throw DinnerPlanningError.invalid("mealPreferences") }
     }
 }
@@ -50,6 +61,7 @@ public enum MealEligibilityPolicy {
     public enum Issue: Equatable, Sendable {
         case excluded(String), disliked(String), appliancesUnavailable([String]), brandMismatch, effortAboveLimit
         case ingredientsUnknown, appliancesUnknown, brandsUnknown, effortUnknown
+        case durationAboveLimit, durationUnknown
     }
     public struct Result: Equatable, Sendable {
         public var blocked: [Issue] = []
@@ -65,7 +77,8 @@ public enum MealEligibilityPolicy {
         guard terms.count <= 64, terms.allSatisfy({ !$0.isEmpty && $0.utf8.count <= 160 && !normalized($0).isEmpty }),
               Set(terms.map(normalized)).count == terms.count else { throw DinnerPlanningError.invalid("preferenceTerms") }
     }
-    public static func evaluate(profile: MealPreferenceProfile?, ingredients: [String], evidence: MealEligibilityEvidence?) -> Result {
+    public static func evaluate(profile: MealPreferenceProfile?, ingredients: [String], evidence: MealEligibilityEvidence?,
+                                reviewedElapsedMinutes: Int? = nil) -> Result {
         var result = Result()
         guard let settings = profile?.settings else { return result }
         let names = (ingredients + (evidence?.reviewedIngredientDetails ?? [])).map { " " + normalized($0) + " " }
@@ -88,7 +101,7 @@ public enum MealEligibilityPolicy {
         if !settings.preferredBrands.isEmpty {
             let preferred = Set(settings.preferredBrands.map(normalized))
             if let brands = evidence?.brands {
-                if !brands.allSatisfy({ preferred.contains(normalized($0)) }) {
+                if brands.isEmpty || !brands.allSatisfy({ preferred.contains(normalized($0)) }) {
                     if settings.strictBrands { result.blocked.append(.brandMismatch) } else { result.softDifferences.append(.brandMismatch) }
                 }
             } else if settings.strictBrands { result.unresolved.append(.brandsUnknown) }
@@ -102,6 +115,15 @@ public enum MealEligibilityPolicy {
             } else if settings.strictEffort { result.unresolved.append(.effortUnknown) }
             else { result.softDifferences.append(.effortUnknown) }
         }
+        if let limit = settings.timeLimit {
+            if let minutes = reviewedElapsedMinutes, (0...525_600).contains(minutes) {
+                if minutes > limit.maximumMinutes {
+                    if limit.strict { result.blocked.append(.durationAboveLimit) }
+                    else { result.softDifferences.append(.durationAboveLimit) }
+                }
+            } else if limit.strict { result.unresolved.append(.durationUnknown) }
+            else { result.softDifferences.append(.durationUnknown) }
+        }
         return result
     }
     /// Appliances and effort apply to preparing a meal. An individual food must
@@ -112,9 +134,11 @@ public enum MealEligibilityPolicy {
         food.availableAppliances = nil
         food.maximumEffort = nil
         food.strictEffort = false
+        food.timeLimit = nil
         return evaluate(profile: .init(revision: profile.revision, settings: food), ingredients: labels, evidence: evidence)
     }
     public static func evaluate(profile: MealPreferenceProfile?, template: MealTemplate) -> Result {
-        evaluate(profile: profile, ingredients: template.ingredients.map(\.name), evidence: template.eligibilityEvidence)
+        evaluate(profile: profile, ingredients: template.ingredients.map(\.name), evidence: template.eligibilityEvidence,
+                 reviewedElapsedMinutes: template.leadTimeMinutes)
     }
 }
