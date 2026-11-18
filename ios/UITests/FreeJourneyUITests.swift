@@ -268,6 +268,12 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Notifications are unavailable. Your check dates are still here."].waitForExistence(timeout: 10))
         XCTAssertTrue(item.exists)
         capture("Private manual food check retained after notifications denied")
+        tap(app.buttons["pantry.digest.tonight"])
+        XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["tonight.preferences"].waitForExistence(timeout: 8))
+        tap(app.navigationBars["Tonight"].buttons.firstMatch)
+        XCTAssertTrue(app.navigationBars["Use soon"].waitForExistence(timeout: 8))
+        XCTAssertTrue(item.waitForExistence(timeout: 8))
     }
 
     #if ADULT_WIDGET_LIVE_ACCEPTANCE

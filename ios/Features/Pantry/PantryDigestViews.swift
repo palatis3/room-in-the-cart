@@ -142,6 +142,10 @@ struct PantryDigestList: View {
                     }
                 }
                 AdultHomeSummaryPreference(kind: .useSoon, access: access)
+                Section {
+                    NavigationLink(tonightText("Tonight")) { TonightEntry() }
+                        .accessibilityIdentifier("pantry.digest.tonight")
+                }
                 Section(pantryText("Daily notification")) {
                     DatePicker(pantryText("Digest time"), selection: $time, displayedComponents: .hourAndMinute)
                         .accessibilityIdentifier("pantry.digest.time")
