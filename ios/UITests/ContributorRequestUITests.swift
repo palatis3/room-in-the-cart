@@ -157,6 +157,38 @@ import XCTest
         XCTAssertFalse(app.buttons["householdTonight.confirm"].exists)
     }
 
+    func testOrganizerReviewsAProductLabelFromMyPantryWithoutStartingPrivateSetup() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-tonight-fixture", "--tonight-package-review",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["household.tonight"])
+        let choose = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.choose.")).firstMatch
+        XCTAssertTrue(app.staticTexts["Reviewed rice supper"].waitForExistence(timeout: 8))
+        XCTAssertFalse(choose.exists)
+        tap(app.buttons["Edit household recipe"])
+        let label = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.label.")).firstMatch
+        tap(label)
+        XCTAssertFalse(app.buttons["householdTonight.label.apply"].isEnabled)
+        enableSwitch("Ingredient details reviewed")
+        tap(app.navigationBars["Review this package label"].buttons["Cancel"])
+        tap(label)
+        XCTAssertFalse(app.buttons["householdTonight.label.apply"].isEnabled)
+        enableSwitch("Ingredient details reviewed")
+        enableSwitch("Brands reviewed")
+        fill("North Farm", into: "Brands used, one per line")
+        tap(app.buttons["householdTonight.label.apply"])
+        tap(app.buttons["householdTonight.recipe.review"])
+        assertText("North Farm")
+        tap(app.buttons["householdTonight.recipe.save"])
+        reveal(choose)
+        XCTAssertTrue(choose.exists, app.debugDescription)
+        tap(app.buttons["Edit household recipe"])
+        tap(label)
+        XCTAssertEqual(app.switches["Ingredient details reviewed"].value as? String, "1")
+        XCTAssertEqual(app.textFields["Brands used, one per line"].value as? String, "North Farm")
+    }
+
     func testEnrolledAdultReviewsTwoReceiptLinesAndReopensOnlyHouseholdEvidence() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-receipt-fixture",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]

@@ -6,13 +6,15 @@ import SwiftUI
 struct HouseholdTonightRecipeEditor: View {
     let householdName: String
     let lots: [HouseholdPantryPage.Lot]
-    let save: (SharedMeal, SharedMealPreferenceEvidence, [UUID: [UUID]]) async throws -> Void
+    let save: (SharedMeal, SharedMealPreferenceEvidence, [UUID: [UUID]], [HouseholdTonightProductReview]) async throws -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var servings = ""
     @State private var minutes = ""
     @State private var ingredients = [Ingredient()]
     @State private var evidence = MealEligibilityEvidence()
+    @State private var productReviews: [UUID: HouseholdTonightProductReview] = [:]
+    @State private var editingLabel: HouseholdPantryPage.Lot?
     @State private var reviewed: SharedMeal?
     @State private var busy = false
     @State private var attempted = false
@@ -28,7 +30,7 @@ struct HouseholdTonightRecipeEditor: View {
     }
 
     init(householdName: String, lots: [HouseholdPantryPage.Lot], original: HouseholdTonightRecipeWrite.Recipe?,
-         save: @escaping (SharedMeal, SharedMealPreferenceEvidence, [UUID: [UUID]]) async throws -> Void) {
+         save: @escaping (SharedMeal, SharedMealPreferenceEvidence, [UUID: [UUID]], [HouseholdTonightProductReview]) async throws -> Void) {
         self.householdName = householdName
         self.lots = lots
         self.save = save
@@ -42,6 +44,7 @@ struct HouseholdTonightRecipeEditor: View {
                 } ?? "", unit: item.quantity.flatMap { UnitOfMeasure(rawValue: $0.unit) } ?? .count,
                 reviewedLots: Set(item.reviewedLotIds).intersection(lots.map(\.id)))
             })
+            _productReviews = State(initialValue: Dictionary(uniqueKeysWithValues: (original.productReviews ?? []).map { ($0.lotId, $0) }))
             _evidence = State(initialValue: MealEligibilityEvidence(shared: original.preferenceEvidence))
         }
     }
@@ -58,6 +61,11 @@ struct HouseholdTonightRecipeEditor: View {
                     ForEach(ingredients) { row in
                         if !row.reviewedLots.isEmpty {
                             LabeledContent(row.name, value: lots.filter { row.reviewedLots.contains($0.id) }.map { $0.foodName + " · " + String($0.id.uuidString.suffix(8)) }.joined(separator: ", "))
+                        }
+                    }
+                    ForEach(selectedLots) { lot in
+                        if let label = productReviews[lot.id] {
+                            Section(Text(verbatim: lot.foodName)) { HouseholdPackageFacts(review: label) }
                         }
                     }
                     Button(tonightText("Save recipe to household")) { Task { await commit(reviewed) } }
@@ -99,8 +107,28 @@ struct HouseholdTonightRecipeEditor: View {
                         }
                     }
                 }.onDelete { ingredients.remove(atOffsets: $0) }
+                if !selectedLots.isEmpty {
+                    Section(tonightText("Package labels for this recipe")) {
+                        Text(tonightText("Review the physical package for each selected batch. These statements apply only to this recipe and the current observation."))
+                        ForEach(selectedLots) { lot in
+                            VStack(alignment: .leading) {
+                                Text(verbatim: lot.foodName + " · " + String(lot.id.uuidString.suffix(8)))
+                                if let label = productReviews[lot.id] {
+                                    if label.matches(lot) { HouseholdPackageFacts(review: label) }
+                                    else { Text(tonightText("This batch has a newer observation. Review the label again or remove the earlier statement.")) }
+                                    Button(tonightText("Remove label statement from draft")) { productReviews.removeValue(forKey: lot.id) }
+                                        .buttonStyle(.borderless)
+                                } else { Text(tonightText("Package ingredients and brands have not been reviewed.")) }
+                                if lot.observation != nil {
+                                    Button(tonightText("Review this package label")) { focus = nil; editingLabel = lot }
+                                        .buttonStyle(.borderless).accessibilityIdentifier("householdTonight.label." + lot.id.uuidString)
+                                }
+                            }
+                        }
+                    }
+                }
                 Button(tonightText("Add ingredient")) { ingredients.append(.init()) }.disabled(ingredients.count >= 60)
-                Section(tonightText("Reviewed restriction details")) { MealEvidenceFields(draft: $evidence) }
+                Section(tonightText("Reviewed restriction details")) { MealEvidenceFields(draft: $evidence, focus: $focus) }
                 Button(tonightText("Review recipe facts")) {
                     do { reviewed = try makeMeal(); focus = nil; failed = false }
                     catch { failed = true }
@@ -111,6 +139,13 @@ struct HouseholdTonightRecipeEditor: View {
                                 "Could not confirm the shared recipe. Check your connection and retry."))
             }
         }
+        .sheet(item: $editingLabel) { lot in
+            NavigationStack {
+                HouseholdRecipePackageEditor(lot: lot, previous: productReviews[lot.id]) { statement in
+                    productReviews[lot.id] = statement
+                }
+            }
+        }
         .disabled(busy)
         .interactiveDismissDisabled(busy)
         .keyboardDoneAction(visible: focus != nil, title: pantryText("Done"), identifier: "householdTonight.keyboardDone") { focus = nil }
@@ -118,7 +153,17 @@ struct HouseholdTonightRecipeEditor: View {
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(busy) } }
     }
 
+    private var selectedLots: [HouseholdPantryPage.Lot] {
+        let bound = Set(ingredients.flatMap(\.reviewedLots))
+        return lots.filter { bound.contains($0.id) }
+    }
+    private var selectedReviews: [HouseholdTonightProductReview] {
+        selectedLots.compactMap { productReviews[$0.id] }
+    }
     private func makeMeal() throws -> SharedMeal {
+        guard selectedLots.allSatisfy({ lot in productReviews[lot.id]?.matches(lot) != false }) else {
+            throw ClientError.configuration
+        }
         guard let portions = Int(servings), !ingredients.isEmpty, minutes.isEmpty || Int(minutes) != nil else {
             throw ClientError.configuration
         }
@@ -140,7 +185,70 @@ struct HouseholdTonightRecipeEditor: View {
         guard !busy else { return }
         busy = true; attempted = true
         defer { busy = false }
-        do { try await save(meal, evidence.shared, Dictionary(uniqueKeysWithValues: ingredients.map { ($0.id, $0.reviewedLots.sorted { $0.uuidString < $1.uuidString }) })); dismiss() }
+        do { try await save(meal, evidence.shared, Dictionary(uniqueKeysWithValues: ingredients.map { ($0.id, $0.reviewedLots.sorted { $0.uuidString < $1.uuidString }) }), selectedReviews); dismiss() }
         catch { failed = true }
+    }
+}
+
+private struct HouseholdPackageFacts: View {
+    let review: HouseholdTonightProductReview
+    var body: some View {
+        terms(tonightText("Package ingredients"), review.reviewedIngredientDetails)
+        terms(tonightText("Package brands"), review.brands)
+    }
+    private func terms(_ title: String, _ values: [String]?) -> some View {
+        LabeledContent(title, value: values.map { $0.isEmpty ? tonightText("Reviewed, none listed") : $0.joined(separator: ", ") } ?? pantryText("Unknown"))
+    }
+}
+
+private struct HouseholdRecipePackageEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    let lot: HouseholdPantryPage.Lot
+    let previous: HouseholdTonightProductReview?
+    let apply: (HouseholdTonightProductReview) -> Void
+    @State private var evidence: MealEligibilityEvidence
+    @State private var invalid = false
+    @FocusState private var focus: String?
+
+    init(lot: HouseholdPantryPage.Lot, previous: HouseholdTonightProductReview?, apply: @escaping (HouseholdTonightProductReview) -> Void) {
+        self.lot = lot
+        self.previous = previous
+        self.apply = apply
+        var starting = MealEligibilityEvidence()
+        if let previous, previous.matches(lot) {
+            starting.reviewedIngredientDetails = previous.reviewedIngredientDetails
+            starting.brands = previous.brands
+        }
+        _evidence = State(initialValue: starting)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                Text(verbatim: lot.foodName + " · " + String(lot.id.uuidString.suffix(8)))
+                if let observed = (lot.observation?.confirmedAt).flatMap(serviceDate) {
+                    LabeledContent(ht("Previously confirmed"), value: observed.formatted())
+                }
+                if let previous, !previous.matches(lot) {
+                    Text(tonightText("Earlier package statement"))
+                    HouseholdPackageFacts(review: previous)
+                }
+            }
+            Section(tonightText("Current package label")) { MealEvidenceFields(draft: $evidence, foodOnly: true, focus: $focus) }
+            if invalid { Text(tonightText("Check the label entries before adding them to this recipe.")) }
+            Button(tonightText("Use this label in the recipe draft")) {
+                do {
+                    guard let observation = lot.observation else { throw ClientError.configuration }
+                    let statement = try HouseholdTonightProductReview(lotId: lot.id, observationId: observation.observationId,
+                        reviewedIngredientDetails: evidence.reviewedIngredientDetails, brands: evidence.brands)
+                    apply(statement)
+                    dismiss()
+                } catch { invalid = true }
+            }.disabled(evidence.reviewedIngredientDetails == nil && evidence.brands == nil)
+                .accessibilityIdentifier("householdTonight.label.apply")
+        }
+        .keyboardDoneAction(visible: focus != nil, title: pantryText("Done"), identifier: "householdTonight.packageDone") { focus = nil }
+        .navigationTitle(tonightText("Review this package label"))
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
     }
 }

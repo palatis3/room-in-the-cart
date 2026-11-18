@@ -200,6 +200,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     private let tonightFixture = ProcessInfo.processInfo.arguments.contains("--household-tonight-fixture")
     private let tonightHasShop = ProcessInfo.processInfo.arguments.contains("--tonight-assigned-shop")
     private var savedTonight: [String: Any]?
+    private let tonightLabelFixture = ProcessInfo.processInfo.arguments.contains("--tonight-package-review")
     private var tonightReads = 0
     private var chosenTonight: [String: Any]?
     private let tonightRecipeID = UUID().uuidString
@@ -299,6 +300,14 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                       let rows = recipe["ingredients"] as? [[String: Any]], rows.count == 1,
                       let line = rows.first, let name = line["name"], let ingredient = line["id"],
                       (line["reviewedLotIds"] as? [String])?.map({ $0.lowercased() }) == [pantryLot.lowercased()] else { return try response([:], 400) }
+                if tonightLabelFixture {
+                    guard let labels = recipe["productReviews"] as? [[String: Any]], labels.count == 1, let statement = labels.first,
+                          (statement["lotId"] as? String)?.lowercased() == pantryLot.lowercased(),
+                          (statement["observationId"] as? String)?.lowercased() == extraHead.lowercased(),
+                          statement["brands"] as? [String] == ["North Farm"], statement["reviewedIngredientDetails"] as? [String] == [] else {
+                        return try response([:], 409)
+                    }
+                }
                 let previous = savedTonight?["recipeRevision"] as? Int
                 guard (json["baseRevision"] as? Int) == previous, savedTonight == nil || savedTonight?["recipeId"] as? String == id else {
                     return try response([:], 409)
@@ -316,6 +325,15 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                     "portions": 3, "minutes": 20, "status": "eligible", "reviewToken": String(repeating: "b", count: 64),
                     "ingredients": [["id": tonightIngredientID, "name": "Beans", "status": "covered", "useSoon": true]],
                     "checkoutEstimate": "noPurchaseNeeded"]
+                if tonightLabelFixture, savedTonight == nil {
+                    let source: [String: Any] = ["title": "Reviewed rice supper", "portions": 2, "ingredients": [
+                        ["id": tonightIngredientID, "name": "Rice", "quantity": ["amount": ["numerator": 2, "denominator": 1],
+                         "unit": "count", "originalLiteral": "2"], "reviewedLotIds": [pantryLot]] as [String: Any]
+                    ]]
+                    savedTonight = ["recipeId": tonightRecipeID, "recipeRevision": 1, "title": "Reviewed rice supper", "portions": 2,
+                        "status": "unresolved", "ingredients": [["id": tonightIngredientID, "name": "Rice", "status": "unknown", "useSoon": false]],
+                        "checkoutEstimate": "incomplete", "reviewedRecipe": source]
+                }
                 let recipes = savedTonight.map { [$0] } ?? (tonightHasShop ? [existing] : [])
                 return try response(["v": 1, "householdId": household, "grantEpoch": 0, "pantryRevision": revised ? 1 : 0,
                     "asOf": "2026-11-17T10:00:00Z", "canReviewRecipes": !tonightHasShop, "recipes": recipes, "excludedCount": 0])

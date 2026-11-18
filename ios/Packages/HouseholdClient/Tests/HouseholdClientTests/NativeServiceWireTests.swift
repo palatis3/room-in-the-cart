@@ -128,8 +128,10 @@ final class NativeServiceWireTests: XCTestCase {
         XCTAssertEqual(editable.reviewedRecipe.ingredients.first?.reviewedLotIds, [chosenLot.id])
         var amended = meal
         amended.title = "Reviewed lentil dinner"
+        let package = try HouseholdTonightProductReview(lotId: chosenLot.id, observationId: XCTUnwrap(chosenLot.observation?.observationId),
+            reviewedIngredientDetails: ["Lentils"], brands: ["Farm"])
         let update = try await service.prepareTonightRecipe(amended, evidence: nil, reviewedLots: [ingredient: [chosenLot.id]],
-            page: menu, session: actor, replacing: editable)
+            productReviews: [package], page: menu, session: actor, replacing: editable)
         try await service.saveTonightRecipe(update)
         try await service.saveTonightRecipe(update)
         let updatedMenu = try await service.householdTonight(for: actor)
@@ -137,6 +139,17 @@ final class NativeServiceWireTests: XCTestCase {
         XCTAssertEqual(rechecked.recipeRevision, saved.recipeRevision + 1)
         XCTAssertEqual(rechecked.title, amended.title)
         XCTAssertEqual(updatedMenu.pantryRevision, reloaded.pantryRevision)
+        XCTAssertEqual(rechecked.reviewedRecipe?.productReviews, [package])
+        let recounted = try HouseholdPantryCountCorrection(lot: chosenLot, confirmedAt: reloaded.asOf, quantity: zero)
+        let recount = try await service.prepareHouseholdPantryChange(.correction(recounted), reviewed: reloaded, session: actor)
+        _ = try await service.submitHouseholdPantryChange(recount, session: actor)
+        let staleMenu = try await service.householdTonight(for: actor)
+        let staleSource = try XCTUnwrap(staleMenu.recipes.first { $0.id == saved.id }?.editable)
+        XCTAssertEqual(staleSource.reviewedRecipe.productReviews, [package])
+        let stale = try await service.prepareTonightRecipe(amended, evidence: nil, reviewedLots: [ingredient: [chosenLot.id]],
+            productReviews: [package], page: staleMenu, session: actor, replacing: staleSource)
+        do { try await service.saveTonightRecipe(stale); XCTFail("An old physical observation was accepted for a new label review") }
+        catch ClientError.service(let status, _, _, _) { XCTAssertEqual(status, 409) }
         let reminders = try await service.householdStaples(for: actor, zone: "America/New_York")
         XCTAssertFalse(reminders.enabled)
         XCTAssertTrue(reminders.groups.isEmpty)
