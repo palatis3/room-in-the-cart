@@ -43,7 +43,8 @@ struct FoodKeeperMatchLot {
               let actor = CapturePrivateIdentity.current(access: access, household: household),
               let subject = actor.subject, let householdID = actor.householdID, let memberID = actor.memberID,
               PantryDigestScope(origin: lot.scope.origin, identity: actor) == lot.scope else { return nil }
-        return .init(actor: actor, scope: .init(subject: subject, householdID: householdID, memberID: memberID,
+        return .init(actor: actor, workspaceLifetime: access.generation, householdLifetime: household.generation,
+                     scope: .init(subject: subject, householdID: householdID, memberID: memberID,
                                                shopID: household.projection?.shopId),
                      pantry: lot.scope, lotID: lot.id, lotRevision: lot.revision, catalogVersion: reference.version,
                      locale: language == .spanish ? "es" : "en", candidates: choices)

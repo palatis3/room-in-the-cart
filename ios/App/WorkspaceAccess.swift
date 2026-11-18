@@ -10,7 +10,7 @@ import LocalAuthentication
     private let defaults: UserDefaults
     let localActorID: UUID
     private let key = "protectedLocalWorkspace"
-    private var generation = UUID()
+    private(set) var generation = UUID()
     private var authentication: LAContext?
     var isProtected: Bool { defaults.bool(forKey: key) }
     init(defaults: UserDefaults = .standard) {

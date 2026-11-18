@@ -175,6 +175,34 @@ import XCTest
     }
     #endif
 
+#if CONTRIBUTOR_CAPTURE_UI_FIXTURE
+    func testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange() {
+        app.launchArguments = ["--ui-testing", "--measurement-fixture", "--foodkeeper-match-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_WORKSPACE"] = UUID().uuidString
+        app.launch()
+        let guide = app.buttons["pantry.foodKeeper"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 20), app.debugDescription)
+        tap(guide)
+        tap(app.buttons["foodKeeper.assistance"])
+        XCTAssertFalse(app.buttons["foodKeeper.assistance.confirm"].exists)
+        fill("chicken from an opened can", into: "foodKeeper.assistance.wording", replacing: true)
+        tap(app.buttons["foodKeeper.assistance.send"])
+        let confirm = app.buttons["foodKeeper.assistance.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertFalse(app.buttons["foodKeeper.review.refrigerate_after_opening"].exists)
+        capture("Adult reviews suggested USDA entry before confirming")
+        tap(confirm)
+        tap(app.buttons["foodKeeper.review.refrigerate_after_opening"])
+        XCTAssertFalse(element("foodKeeper.rangeStart").exists)
+        enableSwitch("foodKeeper.confirmStorage")
+        XCTAssertTrue(element("foodKeeper.rangeStart").waitForExistence(timeout: 8))
+        XCTAssertTrue(element("foodKeeper.rangeEnd").exists)
+        tap(app.buttons["foodKeeper.saveRange"])
+        XCTAssertTrue(element("foodKeeper.savedStatus").waitForExistence(timeout: 8))
+        capture("Deterministic FoodKeeper range after separate storage confirmation")
+    }
+#endif
+
     func testOptionalFoodKeeperMatchingKeepsTheSignedOutManualGuideAvailable() {
         launch(reset: true)
         tap(app.buttons["shop.myPantry"])

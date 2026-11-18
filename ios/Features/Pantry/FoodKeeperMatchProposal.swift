@@ -10,6 +10,8 @@ struct FoodKeeperMatchChoice: Codable, Equatable, Identifiable, Sendable {
 /// The private workspace/lot basis stays on the device. Only the confirmed wording and public catalog subset are encoded.
 struct FoodKeeperMatchBasis: Equatable {
     let actor: CapturePrivateIdentity
+    let workspaceLifetime: UUID
+    let householdLifetime: UUID
     let scope: ReceiptAssistanceScope
     let pantry: PantryDigestScope
     let lotID: UUID

@@ -20,8 +20,10 @@ import XCTest
         let scope = ReceiptAssistanceScope(subject: "fixture-adult", householdID: S24FixtureServer.household,
                                           memberID: S24FixtureServer.member, shopID: S24FixtureServer.shop)
         let origin = PantryDigestScope(origin: UUID(), identity: actor)
-        func basis(revision: Int64, lotID: UUID, choices: [FoodKeeperMatchChoice]) -> FoodKeeperMatchBasis {
-            .init(actor: actor, scope: scope, pantry: origin, lotID: lotID, lotRevision: revision,
+        let workspaceLifetime = UUID(), householdLifetime = UUID()
+        func basis(revision: Int64, lotID: UUID, choices: [FoodKeeperMatchChoice], reauthorized: Bool = false) -> FoodKeeperMatchBasis {
+            .init(actor: actor, workspaceLifetime: reauthorized ? UUID() : workspaceLifetime, householdLifetime: householdLifetime,
+                  scope: scope, pantry: origin, lotID: lotID, lotRevision: revision,
                   catalogVersion: reference.version, locale: "es", candidates: choices)
         }
         let lotID = UUID()
@@ -63,7 +65,7 @@ import XCTest
         let reply: FoodKeeperMatchReply = try await client.languageSuggestion(purpose: "foodkeeper-match", body: consent.wireData(), scope: scope)
         XCTAssertEqual(try reply.match(for: consent, current: original, wording: selected), food.id)
         for stale in [nil, basis(revision: 4, lotID: lotID, choices: choices), basis(revision: 3, lotID: UUID(), choices: choices),
-                      basis(revision: 3, lotID: lotID, choices: [])] {
+                      basis(revision: 3, lotID: lotID, choices: []), basis(revision: 3, lotID: lotID, choices: choices, reauthorized: true)] {
             XCTAssertThrowsError(try reply.match(for: consent, current: stale, wording: selected))
         }
         XCTAssertThrowsError(try reply.match(for: consent, current: original, wording: "texto cambiado"))
