@@ -164,7 +164,8 @@ public actor HouseholdService {
     public func ownRequests(cursor: String? = nil) async throws -> OwnRequestsPage {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
         let page: OwnRequestsPage = try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
-        guard page.requests.allSatisfy({ $0.linkedLineId == nil }) else { throw ClientError.invalidResponse }
+        try page.validateReadTime()
+        guard page.requests.allSatisfy({ $0.linkedLineId == nil && $0.authorAlias == nil }) else { throw ClientError.invalidResponse }
         return page
     }
     public func requestPickups(cursor: UUID? = nil) async throws -> RequestPickupPage {
@@ -596,7 +597,9 @@ public actor HouseholdService {
         let start = generation
         try await authorizeShopper(shopID: shopID)
         guard start == generation else { throw ClientError.cancelled }
-        return try await perform("shops/\(shopID)/inbox", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+        let page: OwnRequestsPage = try await perform("shops/\(shopID)/inbox", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+        try page.validateReadTime()
+        return page
     }
     public func deferredRequests(shopID: String, after cursor: UUID? = nil) async throws -> DeferredRequestsPage {
         guard let destination = UUID(uuidString: shopID) else { throw ClientError.configuration }

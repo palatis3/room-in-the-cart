@@ -40,6 +40,10 @@ Enrolled adult contributors may explicitly allow pending requests on their curre
 
 The email-code BFF in API-AUTH.md is implemented but remains disabled until real provider code delivery is configured. These lifecycle APIs do not create a provider login or treat an invitation token as identity.
 
+## Shopper inbox basket links
+
+During a draft pickup, an added request can include `draftBasketLineId` in the assigned shopper’s inbox. It identifies the basket line the shopper previously reviewed. Placing the order switches to `linkedLineId` for lines present in the placed snapshot. A purchase still requires a separate shopper confirmation. Contributor and child own-request responses omit both line identifiers.
+
 ## Scoped helper views and suggestions
 
 The reviewed projection is:
@@ -75,6 +79,8 @@ Proposal receipts are durable and idempotent for the authenticated member/key/bo
 ## Shopper inbox addition
 
 `GET /v1/households/{h}/shops/{s}/inbox` now adds `authorAlias:string` to each existing own-request-shaped row, for the assigned shopper only. `/requests/mine` and own command receipts continue to omit this field and every other author's information.
+
+Both request-list endpoints return a page-level `asOf` timestamp from the authorized database read, including for empty pages. A client can show this time on the rows from that page. Paginating, saving a local edit or replaying a command leaves the timestamps of earlier rows unchanged. Earlier servers omit `asOf`. A web client can bind each `/requests/mine` page to its verified session by including that session's `X-CSRF-Token` header.
 
 ## Native helper context and management lists
 

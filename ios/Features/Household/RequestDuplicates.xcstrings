@@ -18,6 +18,23 @@
         }
       }
     },
+    "Already in this basket": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in this basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya en esta cesta"
+          }
+        }
+      }
+    },
     "Amount and use, as written": {
       "extractionState": "manual",
       "localizations": {
@@ -48,6 +65,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar más solicitudes"
+          }
+        }
+      }
+    },
+    "Check planned meal needs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check planned meal needs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar los ingredientes del plan de comidas"
           }
         }
       }
@@ -188,6 +222,23 @@
         }
       }
     },
+    "Meal needs could not be checked. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal needs could not be checked. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron consultar las necesidades de las comidas. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
     "Next shop": {
       "extractionState": "manual",
       "localizations": {
@@ -235,6 +286,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aún no hay nombres coincidentes entre las solicitudes cargadas. Faltan otras solicitudes por revisar."
+          }
+        }
+      }
+    },
+    "No matching need in the current meal plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching need in the current meal plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay necesidades coincidentes en el plan de comidas actual."
           }
         }
       }
@@ -290,6 +358,23 @@
         }
       }
     },
+    "Planned meals": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned meals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comidas planificadas"
+          }
+        }
+      }
+    },
     "Received": {
       "extractionState": "manual",
       "localizations": {
@@ -341,6 +426,23 @@
         }
       }
     },
+    "Review additional packs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review additional packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar paquetes adicionales"
+          }
+        }
+      }
+    },
     "The names match. Check each person's amount and use before deciding.": {
       "extractionState": "manual",
       "localizations": {
@@ -388,6 +490,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta compra"
+          }
+        }
+      }
+    },
+    "Use this basket line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this basket line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este artículo de la cesta"
           }
         }
       }

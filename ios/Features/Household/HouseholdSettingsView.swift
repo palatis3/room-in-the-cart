@@ -111,6 +111,10 @@ struct HouseholdSettingsView: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(request.originalItem).font(.headline)
                                     if let quantity = request.ownQuantity { Text(quantity) }
+                                    RequestReadTimeLabel(asOf: model.requestReadTimes.rows[request.id])
+                                    if let proposed = model.pendingCorrection(for: request) {
+                                        LabeledContent(ht("Correction on this device"), value: proposed)
+                                    }
                                     if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                                     Text(status(request)).foregroundStyle(.secondary)
                                     if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
@@ -126,7 +130,10 @@ struct HouseholdSettingsView: View {
                                 }.accessibilityElement(children: .combine)
                                 .accessibilityIdentifier("household.ownRequest." + request.id)
                             }
-                            if model.requests.isEmpty { Text(ht("No received requests in this view.")) }
+                            if model.requests.isEmpty {
+                                Text(ht("No received requests in this view."))
+                                RequestReadTimeLabel(asOf: model.requestReadTimes.emptyPage)
+                            }
                             if model.nextRequestCursor != nil {
                                 Button(ht("Load more requests")) { Task { await model.loadMoreRequests() } }
                             }

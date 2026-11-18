@@ -239,7 +239,8 @@ export class HouseholdRepository {
     return deferredRequests(ctx,shop,this.carryNotice,after);
   }
   async requests(ctx:Context,after:string|null,shopId?:string) {
-    if(shopId)this.requireShopper(ctx,await this.shop(ctx,shopId));
+    const shop=shopId ? await this.shop(ctx,shopId) : undefined;
+    if(shop)this.requireShopper(ctx,shop);
     let cursor:{received_at:string;request_id:string}|undefined;
     if(after) {
       cursor=(await ctx.db.query<{received_at:string;request_id:string}>(`SELECT received_at::text AS received_at,request_id FROM ritc.request_origin WHERE (NOT (carried_forward OR from_previous_shop) OR (author_active AND (author_kind='adult' OR live_notice=$5))) AND household_id=$1 AND request_id=$2 AND ${shopId?'shop_id':'author_id'}=$3 AND ($4::uuid IS NULL OR shop_id=$4)`,[ctx.householdId,after,shopId??ctx.member.member_id,ctx.selectedShopId??null,this.carryNotice])).rows[0];
@@ -247,17 +248,32 @@ export class HouseholdRepository {
     }
     const params:unknown[]=[ctx.householdId,shopId??ctx.member.member_id,ctx.selectedShopId??null,this.carryNotice];
     if(cursor)params.push(cursor.received_at,cursor.request_id);
+    // The placed link attests to a line in the sealed order. The draft link
+    // identifies an earlier shopper decision about an item still in this basket.
+    let linkJoin='';
+    if(shop?.phase==='draft'){
+      linkJoin=`LEFT JOIN (ritc.request_link l INNER JOIN ritc.basket_line b USING(household_id,shop_id,line_id))
+        ON (l.household_id,l.shop_id,l.request_id)=(r.household_id,r.shop_id,r.request_id) AND r.status='added'`;
+    }else if(shop){
+      linkJoin='LEFT JOIN ritc.placed_request_link l ON (l.household_id,l.shop_id,l.request_id)=(r.household_id,r.shop_id,r.request_id)';
+    }
     const result=await ctx.db.query<RequestRow & {author_alias?:string;linked_line_id?:string}>(`SELECT r.*,p.outcome AS purchase_outcome
       ${shopId?',l.line_id AS linked_line_id':''}
       FROM ritc.request_origin r LEFT JOIN ritc.request_purchase_review p
         ON (p.household_id,p.request_id,p.request_revision)=(r.household_id,r.request_id,r.revision)
-      ${shopId?`LEFT JOIN ritc.placed_request_link l ON (l.household_id,l.request_id)=(r.household_id,r.request_id)`:''}
+      ${linkJoin}
       WHERE r.household_id=$1 AND r.${shopId?'shop_id':'author_id'}=$2 AND ($3::uuid IS NULL OR r.shop_id=$3)
       AND (NOT (r.carried_forward OR r.from_previous_shop) OR (r.author_active AND (r.author_kind='adult' OR r.live_notice=$4)))
       ${cursor?'AND (r.received_at,r.request_id)>($5,$6)':''} ORDER BY r.received_at,r.request_id LIMIT 51`,params);
     const rows=result.rows.slice(0,50);
-    return{requests:rows.map(r=>({...ownRequest(r),...(shopId?{authorAlias:r.author_alias}:{}),
-      ...(shopId && r.linked_line_id?{linkedLineId:r.linked_line_id}:{})})),nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
+    const requests=rows.map(r=>({
+      ...ownRequest(r),
+      ...(shop ? {authorAlias:r.author_alias} : {}),
+      ...(shop && r.linked_line_id
+        ? (shop.phase==='draft' ? {draftBasketLineId:r.linked_line_id} : {linkedLineId:r.linked_line_id})
+        : {})
+    }));
+    return {asOf:ctx.now.toISOString(),requests,nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
   }
   async shop(ctx:Context,shopId:string):Promise<Shop> {
     if(ctx.selectedShopId&&ctx.selectedShopId!==shopId)throw unavailable();
