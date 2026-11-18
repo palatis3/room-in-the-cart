@@ -17,7 +17,6 @@ import SwiftUI
     @State private var selection = Selection.language(CaptureCorrectionScope.appLanguage())
     @State private var boundContext: Context?
     @State private var working = false
-    @State private var confirmDisable = false
     @State private var requestedDisableContext: Context?
     @State private var outcome: CorrectionSettingsOutcome?
     @State private var outcomeRevision = 0
@@ -131,7 +130,7 @@ import SwiftUI
                 }
             }.workingSurface().navigationTitle(captureText("Spelling corrections"))
                 .task(id: context) {
-                    corrections.invalidate(); boundContext = nil; working = false; confirmDisable = false
+                    corrections.invalidate(); boundContext = nil; working = false; requestedDisableContext = nil
                     outcome = nil; outcomeFocused = false
                     guard let selected = context else { return }
                     await corrections.bind(selected.scope, includePreviousRegions: true)
@@ -140,17 +139,19 @@ import SwiftUI
                 }
                 // The live context check hides old entries before a replacement task
                 // loads its own scope. A cancelled task must not clear a newer load.
-                .onDisappear { corrections.invalidate(); boundContext = nil; confirmDisable = false; outcome = nil; outcomeFocused = false }
-                .confirmationDialog(captureText("Turn off spelling memory?"), isPresented: $confirmDisable, titleVisibility: .visible) {
+                .onDisappear { corrections.invalidate(); boundContext = nil; requestedDisableContext = nil; outcome = nil; outcomeFocused = false }
+                .alert(captureText("Turn off spelling memory?"), isPresented: Binding(
+                    get: { requestedDisableContext != nil && requestedDisableContext == context },
+                    set: { if !$0 { requestedDisableContext = nil } }
+                ), presenting: requestedDisableContext) { requested in
                     Button(captureText("Turn off and delete these spellings"), role: .destructive) {
-                        confirmDisable = false
-                        guard let requestedDisableContext, requestedDisableContext == context else { return }
+                        guard requested == context else { return }
                         perform(.disable)
                     }
-                    Button(captureText("Cancel")) { confirmDisable = false }
+                    Button(captureText("Cancel"), role: .cancel) {}
                         .accessibilityIdentifier("corrections.cancelDisable")
-                } message: {
-                    Text(captureText(context?.scope.isPreviousRegion == true
+                } message: { requested in
+                    Text(captureText(requested.scope.isPreviousRegion
                         ? "This deletes only the saved spellings for this earlier region."
                         : "This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are."))
                 }
@@ -167,7 +168,6 @@ import SwiftUI
     private func requestDisable() {
         guard authorized, !working, let context else { return }
         requestedDisableContext = context
-        confirmDisable = true
     }
 
     private func perform(_ action: CorrectionSettingsAction) {
