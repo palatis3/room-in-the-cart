@@ -18,6 +18,51 @@ final class LedgerStoreTests: XCTestCase {
         try FileManager.default.removeItem(at: directory)
     }
 
+    func testFirstListIsPrivateUntilAtomicCommitAndExactReplay() async throws {
+        let owner = Data(repeating: 1, count: 32), other = Data(repeating: 2, count: 32)
+        let store = try LedgerStore(url: url)
+        let first = try await store.replaceFirstListDraft(owner: owner, expected: nil, baseRevision: 0, payload: Data("rice".utf8))
+        try await store.close()
+        let reopened = try LedgerStore(url: url)
+        let recovered = try await reopened.firstListDraft(owner: owner)
+        let differentActor = try await reopened.firstListDraft(owner: other)
+        let empty = try await reopened.load()
+        XCTAssertEqual(recovered?.version, first); XCTAssertEqual(recovered?.payload, Data("rice".utf8))
+        XCTAssertNil(differentActor); XCTAssertNil(empty)
+        let revised = try await reopened.replaceFirstListDraft(owner: owner, expected: first, baseRevision: 0, payload: Data("rice and beans".utf8))
+        do { try await reopened.discardFirstListDraft(first); XCTFail("A stale window removed a newer draft") }
+        catch { XCTAssertEqual(error as? LedgerStoreError, .operationConflict) }
+        do {
+            _ = try await reopened.save(payload: Data([9]), expectedRevision: 0, operationID: first.token, savedAt: Date(), consuming: first)
+            XCTFail("A stale review committed")
+        } catch { XCTAssertEqual(error as? LedgerStoreError, .operationConflict) }
+        let payload = Data("reviewed pickup".utf8)
+        let receipt = try await reopened.save(payload: payload, expectedRevision: 0, operationID: revised.token, savedAt: Date(), consuming: revised)
+        let replay = try await reopened.save(payload: payload, expectedRevision: 0, operationID: revised.token, savedAt: Date(), consuming: revised)
+        let consumed = try await reopened.firstListDraft(owner: owner)
+        XCTAssertEqual(receipt, replay); XCTAssertEqual(receipt.revision, 1); XCTAssertNil(consumed)
+    }
+
+    func testFirstListExpiryDiscardAndWorkspaceErasureFenceEarlierEditors() async throws {
+        let owner = Data(repeating: 3, count: 32), bytes = Data("garbanzos".utf8)
+        let store = try LedgerStore(url: url, inventoryProjectionsEnabled: true)
+        let oldWindow = try LedgerStore(url: url, inventoryProjectionsEnabled: true)
+        let old = try await store.replaceFirstListDraft(owner: owner, expected: nil, baseRevision: 0, payload: bytes, now: originalDate)
+        let expired = try await store.firstListDraft(owner: owner, now: originalDate.addingTimeInterval(LedgerStore.firstListDraftLifetime))
+        XCTAssertNil(expired)
+        do { _ = try await oldWindow.replaceFirstListDraft(owner: owner, expected: old, baseRevision: 0, payload: bytes); XCTFail("Expired editor revived content") }
+        catch { XCTAssertEqual(error as? LedgerStoreError, .operationConflict) }
+        let current = try await store.replaceFirstListDraft(owner: owner, expected: nil, baseRevision: 0, payload: bytes)
+        try await store.discardFirstListDraft(current)
+        let discarded = try await store.firstListDraft(owner: owner), empty = try await store.load()
+        XCTAssertNil(discarded); XCTAssertNil(empty)
+        let final = try await store.replaceFirstListDraft(owner: owner, expected: nil, baseRevision: 0, payload: bytes)
+        _ = try await store.eraseWorkspace(workspaceID: store.workspaceID, expectedRevision: 0, operationID: UUID(), at: Date())
+        XCTAssertEqual(try scalar("SELECT count(*) FROM first_list_draft"), 0)
+        do { _ = try await oldWindow.replaceFirstListDraft(owner: owner, expected: final, baseRevision: 0, payload: bytes); XCTFail("Retired workspace accepted a draft") }
+        catch { XCTAssertEqual(error as? LedgerStoreError, .erased) }
+    }
+
     func testSavedOperationLookupAfterRestartReturnsHistoricalBytesWithoutChangingCurrentHead() async throws {
         let store = try LedgerStore(url: url), operation = UUID()
         let original = try await store.save(payload: Data([1, 4]), expectedRevision: 0,

@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreDomain
+import DeviceSurfaces
 
 struct PantryDigestAccess {
     let scope: PantryDigestScope
@@ -13,19 +14,10 @@ extension EnvironmentValues {
     }
 }
 
-@MainActor struct PantryDigestRuntime: ViewModifier {
-    @ObservedObject var pickup: PickupModel
-    @ObservedObject var access: WorkspaceAccess
-    @ObservedObject var household: HouseholdModel
-    @ObservedObject var child: GuardianChildCoordinator
-    @ObservedObject private var store = PantryDigestStore.shared
-    @Environment(\.scenePhase) private var scene
-    @State private var openScope: PantryDigestScope?
-    @State private var shownModel: PantryModel?
-    @State private var suspended = false
-
-    private var context: PantryDigestAccess? {
-        guard scene == .active, !child.presented, pickup.pantryRouteAvailable, pickup.pantryReadIsCurrent,
+extension PantryDigestAccess {
+    @MainActor static func current(pickup: PickupModel, access: WorkspaceAccess, household: HouseholdModel,
+                                   child: GuardianChildCoordinator) -> Self? {
+        guard UIApplication.shared.isProtectedDataAvailable, !child.presented, pickup.pantryRouteAvailable, pickup.pantryReadIsCurrent,
               let snapshot = pickup.pantrySnapshot, let origin = pickup.sourceWorkspaceID, snapshot.state.workspaceID == origin,
               snapshot.state.active, household.projection?.grantId == nil,
               let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
@@ -36,6 +28,36 @@ extension EnvironmentValues {
                 household.projection?.grantId == nil && CapturePrivateIdentity.current(access: access, household: household) == identity
         }
     }
+}
+
+@MainActor struct PantryDigestRuntime: ViewModifier {
+    @ObservedObject var pickup: PickupModel
+    @ObservedObject var ledger: LedgerModel
+    @ObservedObject var access: WorkspaceAccess
+    @ObservedObject var household: HouseholdModel
+    @ObservedObject var child: GuardianChildCoordinator
+    @ObservedObject private var store = PantryDigestStore.shared
+    @Environment(\.scenePhase) private var scene
+    @State private var openScope: PantryDigestScope?
+    @State private var shownModel: PantryModel?
+    @State private var suspended = false
+
+    @ObservedObject private var home = AdultHomeSummaryStore.shared
+    private var context: PantryDigestAccess? {
+        guard scene == .active else { return nil }
+        return .current(pickup: pickup, access: access, household: household, child: child)
+    }
+    private func refreshHome(_ current: PantryDigestAccess?) {
+        guard let current, current.authorized(), let snapshot = pickup.pantrySnapshot else { return }
+        try? home.checkTonightSource(ledger: ledger, pickup: pickup)
+        do {
+            try home.reconcileOwner(current)
+            let now = Date(), zone = TimeZone.current
+            let doc = try store.document(current.scope)
+            let count = try doc.homeSummaryCount(lots: snapshot.lots, now: now, zone: zone)
+            try home.update(.useSoon, access: current, count: count, now: now, zone: zone)
+        } catch { try? home.invalidate(.useSoon, origin: current.scope.origin, forget: false) }
+    }
     private struct Basis: Equatable {
         let scope: PantryDigestScope?
         let revision: Int64?
@@ -45,7 +67,8 @@ extension EnvironmentValues {
         let current = context
         content.environment(\.pantryDigestAccess, current)
             .onChange(of: household.deviceReminderPersona) { _, _ in clearScope() }
-            .onChange(of: child.presented) { _, active in if active { clearScope() } }
+            .onChange(of: child.presented, initial: true) { _, active in if active { clearScope() } }
+            .onChange(of: household.projection?.grantId) { _, grant in if grant != nil { clearScope() } }
             .onChange(of: pickup.sourceWorkspaceID) { previous, next in
                 if let previous, next != nil && previous != next { clearScope() }
             }
@@ -54,10 +77,20 @@ extension EnvironmentValues {
                 do {
                     try await store.reconcile(current.scope, lots: snapshot.lots)
                     guard current.authorized(), !Task.isCancelled else { return }
+                    refreshHome(current)
                     suspended = false
                     acceptTap(current)
                 } catch { await store.failClosed() }
             }
+            .onChange(of: ledger.revision) { _, _ in try? home.checkTonightSource(ledger: ledger, pickup: pickup) }
+            .onChange(of: pickup.pantrySnapshot?.state.revision) { _, _ in
+                if current != nil { try? home.checkTonightSource(ledger: ledger, pickup: pickup) }
+            }
+            .onChange(of: store.generation) { _, _ in refreshHome(current) }
+            .onChange(of: home.generation) { _, _ in refreshHome(current) }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in refreshHome(current) }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in refreshHome(current) }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in refreshHome(current) }
             .onChange(of: store.tapped) { _, _ in if let current { acceptTap(current) } }
             .sheet(isPresented: Binding(get: { openScope != nil && current?.scope == openScope && !suspended },
                                        set: { if !$0 { openScope = nil; shownModel = nil } })) {
@@ -80,6 +113,7 @@ extension EnvironmentValues {
         openScope = access.scope; shownModel = model
     }
     private func clearScope() {
+        home.revokeAll()
         openScope = nil; shownModel = nil; store.tapped = nil; suspended = true
         Task { await store.failClosed() }
     }
@@ -107,6 +141,7 @@ struct PantryDigestList: View {
                         }
                     }
                 }
+                AdultHomeSummaryPreference(kind: .useSoon, access: access)
                 Section(pantryText("Daily notification")) {
                     DatePicker(pantryText("Digest time"), selection: $time, displayedComponents: .hourAndMinute)
                         .accessibilityIdentifier("pantry.digest.time")

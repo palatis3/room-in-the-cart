@@ -91,6 +91,9 @@ public actor LedgerStore {
             if inventoryProjectionsEnabled && version < 3 { try database.migrateInventoryProjections() }
             let finalVersion = try database.integer("PRAGMA user_version")
             guard finalVersion <= (inventoryProjectionsEnabled ? 3 : 2) else { throw LedgerStoreError.unsupportedSchema(finalVersion) }
+            if try database.integer("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='first_list_draft'") == 1 {
+                try database.run("DELETE FROM first_list_draft WHERE expires_at <= ?", [.real(Date().timeIntervalSinceReferenceDate)])
+            }
             self.workspaceID = try database.workspace().id
             self.database = database
             self.inventoryProjectionsEnabled = inventoryProjectionsEnabled
@@ -128,12 +131,19 @@ public actor LedgerStore {
     /// A reused operation ID with different bytes or base throws operationConflict.
     /// No result is returned until SQLite COMMIT succeeds.
     @discardableResult
-    public func save(payload: Data, expectedRevision: Int64, operationID: UUID, savedAt: Date) throws -> LedgerRecord {
+    public func save(payload: Data, expectedRevision: Int64, operationID: UUID, savedAt: Date,
+                     consuming draft: FirstListDraftVersion? = nil) throws -> LedgerRecord {
         guard payload.count <= Self.maximumPayloadBytes else { throw LedgerStoreError.payloadTooLarge }
         guard expectedRevision >= 0, savedAt.timeIntervalSinceReferenceDate.isFinite
         else { throw LedgerStoreError.invalidInput }
         return try database.transaction {
             guard try !database.hasInventoryProjectionOperation(operationID) else { throw LedgerStoreError.operationConflict }
+            if let draft {
+                guard draft.token == operationID, draft.workspaceID == workspaceID else { throw LedgerStoreError.operationConflict }
+                if try database.record(operationID: operationID, workspaceID: workspaceID) == nil {
+                    try consumeFirstListDraft(draft, base: expectedRevision, now: Date())
+                }
+            }
             return try saveSnapshot(payload: payload, expectedRevision: expectedRevision, operationID: operationID, savedAt: savedAt)
         }
     }

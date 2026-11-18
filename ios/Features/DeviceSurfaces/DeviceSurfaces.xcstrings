@@ -1799,6 +1799,246 @@
           }
         }
       }
+    },
+    "Add grocery item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add grocery item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un artículo"
+          }
+        }
+      }
+    },
+    "Append to saved draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append to saved draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir al borrador guardado"
+          }
+        }
+      }
+    },
+    "Item wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto del artículo"
+          }
+        }
+      }
+    },
+    "Open an editable draft and confirm before adding anything.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open an editable draft and confirm before adding anything."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre un borrador editable y confirma antes de añadir artículos."
+          }
+        }
+      }
+    },
+    "Open shopping list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir lista de compras"
+          }
+        }
+      }
+    },
+    "Shortcut item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo del atajo"
+          }
+        }
+      }
+    },
+    "Show on my Home Screen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show on my Home Screen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en mi pantalla de inicio"
+          }
+        }
+      }
+    },
+    "Could not update the Home Screen setting. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not update the Home Screen setting. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar el ajuste de la pantalla de inicio. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Anyone who can see your unlocked Home Screen may see this summary. iOS may briefly keep a previous widget image after you turn it off or change accounts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone who can see your unlocked Home Screen may see this summary. iOS may briefly keep a previous widget image after you turn it off or change accounts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quien vea tu pantalla de inicio desbloqueada podrá ver este resumen. iOS puede conservar brevemente una imagen anterior del widget después de desactivarlo o cambiar de cuenta."
+          }
+        }
+      }
+    },
+    "Use soon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use soon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar pronto"
+          }
+        }
+      }
+    },
+    "Tonight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta noche"
+          }
+        }
+      }
+    },
+    "Batches to check today or earlier: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batches to check today or earlier: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lotes con fecha de revisión de hoy o anterior: %lld"
+          }
+        }
+      }
+    },
+    "Reviewed meal options: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed meal options: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opciones de comida revisadas: %lld"
+          }
+        }
+      }
+    },
+    "Show a private summary after turning it on in the app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show a private summary after turning it on in the app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra un resumen privado tras activarlo en la app."
+          }
+        }
+      }
+    },
+    "Shows the first reviewed meal title and the number of fully covered options.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the first reviewed meal title and the number of fully covered options."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra el título de la primera comida revisada y cuántas opciones tienen todos los ingredientes disponibles."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

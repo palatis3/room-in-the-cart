@@ -5,7 +5,7 @@ This module implements the bounded B09 surface boundary. It does not claim compl
 ## Targets and resources
 
 - App links `DeviceSurfaces` and includes `ios/Features/DeviceSurfaces/*.swift`, `DeviceSurfaces.xcstrings` and `AppShortcuts.xcstrings`.
-- `RoomInTheCartWidget` uses `ios/Extensions/Widget`, suffix `.widget`, its Info.plist and the shared `DeviceSurfaces.xcstrings`; link only `DeviceSurfaces` and platform frameworks. The widget entry point is `@main RoomInTheCartWidget`; kind is `RoomInTheCartCapture`.
+- `RoomInTheCartWidget` uses `ios/Extensions/Widget`, suffix `.widget`, its Info.plist and the shared `DeviceSurfaces.xcstrings`; link only `DeviceSurfaces` and platform frameworks. Its `GroceryWidgets` bundle registers `RoomInTheCartCapture` and the two medium Home Screen summaries, `RoomInTheCartAdult-useSoon` and `RoomInTheCartAdult-tonight`.
 - `RoomInTheCartShare` uses `ios/Extensions/Share`, suffix `.share`, its Info.plist and the shared `DeviceSurfaces.xcstrings`; principal class `$(PRODUCT_MODULE_NAME).ShareViewController`. Link only `DeviceSurfaces` and platform frameworks.
 - Both extensions require `APPLICATION_EXTENSION_API_ONLY=YES`. The package's SQLite system module is named `CDeviceSQLite` to avoid the existing LocalStore module name. Embedded extensions require the root-owned target/product/signing setup.
 - Plist keys: `RITCWidgetAppGroup = $(RITC_WIDGET_APP_GROUP)`, `RITCShareInboxAppGroup = $(RITC_SHARE_INBOX_APP_GROUP)`, `RITCSurfaceURLScheme = $(RITC_SURFACE_URL_SCHEME)`. Widget sees only its group + scheme; Share sees only its inbox group. App needs all three and URL registration. No actual App Group is fabricated or registered by these files. Missing, unexpanded or invalid values fail closed.

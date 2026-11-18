@@ -552,6 +552,12 @@ extension PantryModelTests {
         let first = try MealDay(year: 2027, month: 12, day: 11, timeZoneIdentifier: zone.identifier)
         let later = try MealDay(year: 2027, month: 12, day: 12, timeZoneIdentifier: zone.identifier)
         try await digest.saveDay(scope, lot: lot, day: first, authorized: { true })
+        let document = try digest.document(scope)
+        let checkDay = try XCTUnwrap(ISO8601DateFormatter().date(from: "2027-12-11T05:00:00Z"))
+        XCTAssertEqual(try document.homeSummaryCount(lots: [lot], now: checkDay, zone: zone), 1)
+        XCTAssertEqual(try document.homeSummaryCount(lots: [lot], now: checkDay.addingTimeInterval(-1), zone: zone), 0)
+        XCTAssertEqual(try document.homeSummaryCount(lots: [], now: checkDay, zone: zone), 0)
+        XCTAssertFalse(document.enabled, "Reviewed dates can be summarized independently of notification permission")
         var allowed = true
         scheduler.onRequest = { allowed = false }
         do {

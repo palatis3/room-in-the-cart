@@ -267,6 +267,7 @@
       "CoreDomainTests.StapleRecallTests/testReopeningEarlierDraftDoesNotSuggestItemsFromAFutureShop"
     ],
     "DeviceSurfaces": [
+      "DeviceSurfacesTests.DeviceSurfacesTests/testAdultHomeProjectionExpiresAtCivilMidnightAndRejectsPrivateExtras",
       "DeviceSurfacesTests.DeviceSurfacesTests/testAutomaticReconciliationLeavesInFlightConfirmationToItsOwnAuthorization",
       "DeviceSurfacesTests.DeviceSurfacesTests/testBoundedBytesLinesAndPendingCapacityPreserveExistingRows",
       "DeviceSurfacesTests.DeviceSurfacesTests/testCancelSessionNeverWritesAndCannotLaterSave",
