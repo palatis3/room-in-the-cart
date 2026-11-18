@@ -22,9 +22,9 @@ public struct SharedFoodCoverage: Decodable, Equatable, Sendable {
         public var issues: [String] { base.issues }
         public var reservations: [SharedDeliveryCoverage.Reservation]? { base.reservations }
         public let allocations: [Allocation]
-        public let delivered, pantry, freezer: SharedDeliveryCoverage.Fraction?
+        public let delivered, pantry, freezer, fridge: SharedDeliveryCoverage.Fraction?
 
-        enum CodingKeys: CodingKey { case allocations, delivered, pantry, freezer }
+        enum CodingKeys: CodingKey { case allocations, delivered, pantry, freezer, fridge }
         public init(from decoder: Decoder) throws {
             base = try .init(from: decoder)
             let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -32,6 +32,7 @@ public struct SharedFoodCoverage: Decodable, Equatable, Sendable {
             delivered = try values.decode(SharedDeliveryCoverage.Fraction?.self, forKey: .delivered)
             pantry = try values.decode(SharedDeliveryCoverage.Fraction?.self, forKey: .pantry)
             freezer = try values.decode(SharedDeliveryCoverage.Fraction?.self, forKey: .freezer)
+            fridge = try values.decodeIfPresent(SharedDeliveryCoverage.Fraction.self, forKey: .fridge)
         }
     }
     public let shopId: UUID
@@ -86,6 +87,7 @@ public struct SharedFoodCoverage: Decodable, Equatable, Sendable {
             for (kind, stated) in [("delivery", need.delivered), ("pantry", need.pantry), ("freezer", need.freezer)] {
                 guard let stated, stated.valid, stated.compare(totals[kind] ?? .zero) == .orderedSame else { throw ClientError.invalidResponse }
             }
+            guard (need.fridge ?? .zero).compare(totals["fridge"] ?? .zero) == .orderedSame else { throw ClientError.invalidResponse }
             guard totals.values.reduce(Fraction.zero, { $0.adding($1) }).compare(covered) == .orderedSame else { throw ClientError.invalidResponse }
         }
         for (id, sum) in consumed {

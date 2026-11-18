@@ -238,6 +238,9 @@ private struct FamilyDecisionServiceView: View {
                     confirming = .init(shopID: record.shopId, recordID: record.id, action: .observe(version:record.version,text:observation))
                 }.disabled(!model.canWrite || cleanDecisionField(observation) == nil || observation.utf16.count > 500)
             }
+            if record.kind == .preference, household.mealPreferenceScope?.administer == true {
+                HouseholdMealPreferencesLink(household: household, source: record)
+            }
             if record.kind == .preference && record.scope == .oneShop {
                 Button(fd("Review keeping this preference")) {
                     confirming = .init(shopID: record.shopId, recordID: record.id, action: .promote(version:record.version))

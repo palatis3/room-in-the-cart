@@ -592,7 +592,76 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(combined.pantry?.formatted, "7")
         XCTAssertEqual(combined.delivered?.formatted, "0")
         XCTAssertEqual(combined.covered?.formatted, "9")
-        try await exerciseRecovery(service, scope: scope, occurrence: occurrence, delivery: delivery, lot: lot)
+        let cookReview = try await service.sharedCookReview(shopID: delivery.shopId.uuidString.lowercased(), occurrence: occurrence.id)
+        let chosen = try XCTUnwrap(cookReview.needs.first(where: { $0.lots.contains(where: { $0.id == source }) }))
+        let chosenLot = try XCTUnwrap(chosen.lots.first(where: { $0.id == source }))
+        XCTAssertEqual(chosenLot.quantity?.amount.numerator, 7)
+        let output = UUID(), uses: [JSONValue] = cookReview.needs.map { need in
+            var fields: [String: JSONValue] = ["rowId": .string(UUID().uuidString), "needId": .string(need.id.uuidString)]
+            if need.id == chosen.id {
+                fields["kind"] = .string("known"); fields["lotId"] = .string(source.uuidString); fields["headId"] = .string(chosenLot.headId.uuidString)
+                fields["quantity"] = .object(["unit": .string("gram"), "amount": .object(["numerator": .integer(1), "denominator": .integer(1)]), "originalLiteral": .string("1")])
+            } else { fields["kind"] = .string("unknown"); fields["lotId"] = .null; fields["headId"] = .null }
+            return .object(fields)
+        }
+        var cooking = cookReview.base.fields()
+        cooking["uses"] = .array(uses); cooking["servings"] = .integer(3)
+        cooking["outputs"] = .array([.object(["lotId": .string(output.uuidString), "name": .string("Cooked beans"), "portions": .integer(2), "location": .string("fridge")])])
+        let cookCommand = try await operation("cook.complete", fields: cooking)
+        let cooked = try await service.executeSharedShop(cookCommand), replayed = try await service.executeSharedShop(cookCommand)
+        XCTAssertEqual(cooked, replayed)
+        let afterCook = try await service.sharedCookReview(shopID: delivery.shopId.uuidString.lowercased(), occurrence: occurrence.id)
+        XCTAssertEqual(afterCook.completion?.servings, 3)
+        // The household purchase screen must review received food, not this cook balance.
+        let pantryActor = try await service.householdPantrySession(for: scope)
+        let householdStock = try await service.householdPantryPage(for: pantryActor)
+        let physicalDelivery = try XCTUnwrap(householdStock.lots.first { $0.id == source })
+        XCTAssertEqual(physicalDelivery.observation?.quantity?.amount.numerator, 6)
+        let purchaseEvidence = try XCTUnwrap(physicalDelivery.purchaseObservation)
+        XCTAssertEqual(purchaseEvidence.quantity?.amount.numerator, 7)
+        XCTAssertNotEqual(purchaseEvidence.observationId, physicalDelivery.observation?.observationId)
+        let staples = try await service.householdStaples(for: pantryActor, zone: "America/New_York")
+        let enabledStaples = try await service.changeHouseholdStaples(.enable(true), reviewed: staples, session: pantryActor)
+        let purchaseDay = "2020-01-01"
+        let purchasedStaples = try await service.changeHouseholdStaples(.purchase(group: nil, name: "Beans", lot: source,
+            reviewed: purchaseEvidence.observationId, day: purchaseDay), reviewed: enabledStaples, session: pantryActor)
+        XCTAssertEqual(purchasedStaples.groups.first?.purchases.first?.lotId, source)
+        let stockAfterPurchase = try await service.householdPantryPage(for: pantryActor)
+        XCTAssertEqual(stockAfterPurchase.lots, householdStock.lots)
+        XCTAssertEqual(stockAfterPurchase.pantryRevision, householdStock.pantryRevision)
+        let cookID = try XCTUnwrap(afterCook.completion?.cookId)
+        let feedbackShop = delivery.shopId.uuidString.lowercased()
+        let feedback = try await service.sharedMealFeedback(shopID: feedbackShop, occurrence: occurrence.id, cook: cookID)
+        XCTAssertEqual(feedback.own, [])
+        let shared = try await service.setSharedMealFeedback(shopID: feedbackShop, reviewed: feedback, reactions: [.makeAgain, .tooManyLeftovers])
+        XCTAssertEqual(Set(shared.shared), [.makeAgain, .tooManyLeftovers])
+        let removed = try await service.setSharedMealFeedback(shopID: feedbackShop, reviewed: shared, reactions: [])
+        XCTAssertTrue(removed.own.isEmpty)
+        XCTAssertTrue(removed.shared.isEmpty)
+        _ = try await service.setSharedMealFeedback(shopID: feedbackShop, reviewed: removed, reactions: [.childrenLikedIt])
+        let withdrawal = try await service.reviewMyMealFeedbackWithdrawal()
+        XCTAssertEqual(withdrawal.count, 1)
+        let withdrawn = try await service.withdrawMyMealFeedback(withdrawal)
+        XCTAssertEqual(withdrawn.count, 0)
+        let afterWithdrawal = try await service.sharedMealFeedback(shopID: feedbackShop, occurrence: occurrence.id, cook: cookID)
+        XCTAssertTrue(afterWithdrawal.shared.isEmpty)
+
+        let currentDelivery = try await service.deliveryEvidence(shopID: delivery.shopId.uuidString.lowercased())
+        let currentPantry = try await service.pantryLots(reviewed: currentDelivery)
+        let captured = try await service.sharedRecordHistory(shopID: delivery.shopId)
+        let batch = try XCTUnwrap(captured.record.stockHistory).events.filter { $0.pantryRevision == cooked.pantryRevision }
+        XCTAssertEqual(batch.count, 2)
+        XCTAssertEqual(Set(batch.compactMap(\.eventId)).count, 2)
+        XCTAssertEqual(currentDelivery.sources.first(where: { $0.id == source })?.confirmed?.quantity.amount.numerator, 6)
+        XCTAssertEqual(currentPantry.lots.first(where: { $0.id == output })?.observation?.quantity?.amount.numerator, 2)
+        var undo = afterCook.base.fields()
+        undo["cookId"] = .string(try XCTUnwrap(cooked.cookId).uuidString.lowercased())
+        let undoCommand = try await operation("cook.undo", fields: undo)
+        _ = try await service.executeSharedShop(undoCommand)
+        let restoredDelivery = try await service.deliveryEvidence(shopID: delivery.shopId.uuidString.lowercased())
+        let restoredPantry = try await service.pantryLots(reviewed: restoredDelivery)
+        XCTAssertFalse(restoredPantry.lots.contains(where: { $0.id == output }))
+        try await exerciseRecovery(service, scope: scope, occurrence: occurrence, delivery: restoredDelivery, lot: lot)
     }
 
     private func exerciseRecovery(_ service: HouseholdService, scope: HouseholdBootstrap, occurrence: SharedMealOccurrence,
@@ -618,7 +687,7 @@ final class SharedMealNativeWireTests: XCTestCase {
         }
         let intent = SharedRecoveryIntent(occurrenceId: occurrence.id, targetDigest: try original.targetDigest(), replacement: replacement,
             reviewedAt: desk.asOf, repeatOfOccurrenceId: nil, agreesToRepeat: false, proposesExtraTrip: false,
-            agreesToExtraTrip: false, acceptsUnresolved: true)
+            agreesToExtraTrip: false, acceptsUnresolved: true, dinnerSwap: true)
         let coverage = try await service.effectiveCoverage(reviewed: desk)
         XCTAssertEqual(Set(coverage.needs.map(\.needId)), Set(original.needs.map(\.id)))
         let preview = try await service.previewMealRecovery(intent, reviewed: desk)
@@ -645,6 +714,7 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(updated.page.base.pantryRevision, desk.base.pantryRevision + 1)
         XCTAssertEqual(updated.page.meals.first, replacement)
         XCTAssertEqual(updated.delivery.meals, delivery.meals)
+        XCTAssertEqual(updated.page.undoOffers?.first?.operationId.uuidString.lowercased(), first.operationId.lowercased())
         let current = try await service.effectiveCoverage(reviewed: updated.page)
         XCTAssertEqual(Set(current.needs.map(\.needId)), Set(replacement.needs.map(\.id)))
         XCTAssertEqual(current.needs.first(where: { $0.protected })?.reservations?.first?.backed.formatted, "2")
@@ -659,6 +729,35 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(history.first?.recoveryRevision, first.recoveryRevision)
         XCTAssertEqual(history.first?.text, replacement.notes)
         XCTAssertTrue(history.contains { $0.revisionId == nil && $0.text == "Keep five grams apart" })
+        let afterCopy = try await service.mealRecoveryFacts(shopID: id)
+        XCTAssertEqual(afterCopy.page.undoOffers?.count, 0)
+
+        // A different recipe can be changed and restored without undoing the previously distributed copy.
+        var next = replacement
+        next.title = "Sunday bean dish"
+        next.revisionId = UUID()
+        for index in next.needs.indices where next.needs[index].priority == "required" {
+            next.needs[index].id = UUID(); next.needs[index].ingredientId = UUID()
+        }
+        let swap = SharedRecoveryIntent(occurrenceId: occurrence.id, targetDigest: try replacement.targetDigest(), replacement: next,
+            reviewedAt: afterCopy.page.asOf, repeatOfOccurrenceId: nil, agreesToRepeat: false, proposesExtraTrip: false,
+            agreesToExtraTrip: false, acceptsUnresolved: true, dinnerSwap: true)
+        let reviewedSwap = try await service.previewMealRecovery(swap, reviewed: afterCopy.page)
+        let save = try await operation("mealRecovery.apply", swap.commandBody(reviewed: afterCopy.page, preview: reviewedSwap))
+        _ = try await service.executeSharedShop(save)
+        let changed = try await service.mealRecoveryFacts(shopID: id)
+        let undo = try XCTUnwrap(changed.page.undoOffers?.first).intent(in: changed.page)
+            .withFallbackAgreements(repeatMeal: false, extraTrip: false, unresolved: true)
+        let reviewedUndo = try await service.previewMealRecovery(undo, reviewed: changed.page)
+        let restore = try await operation("mealRecovery.apply", undo.commandBody(reviewed: changed.page, preview: reviewedUndo))
+        let restored = try await service.executeSharedShop(restore)
+        let replayedRestore = try await service.executeSharedShop(restore)
+        XCTAssertEqual(replayedRestore, restored)
+        let final = try await service.mealRecoveryFacts(shopID: id)
+        XCTAssertEqual(final.page.meals.first, undo.replacement)
+        XCTAssertEqual(final.page.meals.first?.needs, replacement.needs)
+        XCTAssertEqual(final.delivery.meals, delivery.meals)
+        XCTAssertEqual(final.page.undoOffers?.count, 0)
     }
 
     private func writeCookCopy(_ change: SharedCookCopyEdit, service: HouseholdService, scope: HouseholdBootstrap,

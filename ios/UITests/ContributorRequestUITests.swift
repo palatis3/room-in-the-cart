@@ -12,6 +12,67 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("Contributor-request-failure") }
         app.terminate()
     }
+    func testHouseholdMealPreferencesOrganizerReviewsAndAdultReads() {
+        app.launchArguments = ["--ui-testing", "--household-meal-organizer", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        func open() { tap(app.buttons["household.mealPreferences"]) }
+        open()
+        let edit = app.buttons["household.preferences.edit"]
+        tap(edit)
+        let field = element("preferences.exclusions")
+        tap(field)
+        field.typeText("peanut")
+        let done = app.buttons["preferences.keyboardDone"]
+        tap(done)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "preferences.keyboardDone"))
+        tap(element("preferences.review"))
+        tap(element("preferences.save"))
+        let rule = NSPredicate(format: "label CONTAINS %@", "peanut")
+        XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
+        let grant = app.switches["Alex"]
+        reveal(grant, fullyVisible: true)
+        grant.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        let granted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: grant)
+        XCTAssertEqual(XCTWaiter.wait(for: [granted], timeout: 8), .completed)
+        tap(app.navigationBars.buttons.firstMatch)
+        open()
+        XCTAssertTrue(grant.waitForExistence(timeout: 10))
+        XCTAssertEqual(grant.value as? String, "1")
+        app.terminate()
+
+        app.launchArguments = ["--ui-testing", "--household-meal-reader", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
+        app.launch()
+        open()
+        XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Exigir que las comidas estén listas dentro de este tiempo"].exists)
+        XCTAssertFalse(edit.exists)
+        XCTAssertFalse(app.switches["Alex"].exists)
+    }
+
+    func testAdultReviewsHouseholdStaplePurchaseAndAnswersQuestionAcrossReopen() {
+        app.launchArguments = ["--ui-testing", "--household-staple-reminders", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["household.pantry"])
+        let entry = app.buttons["householdPantry.staples"]
+        tap(entry)
+        let have = app.buttons["householdStaple.stillHave"]
+        tap(have)
+        XCTAssertFalse(have.exists)
+        tap(app.buttons["householdStaple.purchase"])
+        tap(element("householdStaple.delivery"))
+        tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Oats")).firstMatch)
+        fill("Oats", into: "householdStaple.name")
+        tap(app.buttons["householdStaple.review"])
+        XCTAssertTrue(app.staticTexts["Received usable quantity"].waitForExistence(timeout: 10))
+        tap(app.buttons["householdStaple.confirmPurchase"])
+        XCTAssertTrue(app.staticTexts["1 reviewed purchase"].waitForExistence(timeout: 10))
+        tap(app.buttons["Done"])
+        tap(entry)
+        XCTAssertTrue(app.staticTexts["1 reviewed purchase"].waitForExistence(timeout: 10))
+        XCTAssertFalse(have.exists)
+        XCTAssertTrue(app.staticTexts["3 reviewed purchases"].exists)
+    }
+
     func testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen() {
         app.launchArguments = ["--ui-testing", "--household-pantry-correction", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
@@ -39,6 +100,52 @@ import XCTest
         tap(entry)
         tap(correct)
         XCTAssertEqual(element("householdPantry.correctedQuantity").value as? String, "0")
+    }
+
+    func testEditableCookReportPreservesCorrectionDraftAndReadOnlyGrantCannotWriteStock() {
+        app.launchArguments = ["--ui-testing", "--cook-report-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 30))
+        tap(app.buttons["Cook instructions"])
+        let correction = element("helper.correction")
+        reveal(correction, fullyVisible: true)
+        XCTAssertEqual(correction.value as? String, "Keep the original correction draft", app.debugDescription)
+        XCTAssertEqual(element("fixture.reportPosts").label, "Report POSTs: 0")
+        tap(app.buttons["Report what you cooked"])
+        fill("3", into: "helper.cookingReport.servings")
+        let ingredients = "Used 2 wraps; substituted rice for the remaining wrap. Salt amount unknown."
+        let leftovers = "1 portion in the fridge. No freezer portions."
+        fill(ingredients, into: "helper.cookingReport.ingredients")
+        fill(leftovers, into: "helper.cookingReport.leftovers")
+        let done = app.buttons["helper.cookingReport.done"]
+        if done.exists && done.isHittable { done.tap() }
+        XCTAssertFalse(app.buttons["helper.cookingReport.send"].exists)
+        tap(app.buttons["helper.cookingReport.review"])
+        let expected = "Cooking report\n\nServings made\n3\n\nIngredients used and substitutions\n" + ingredients +
+            "\n\nLeftovers and storage location\n" + leftovers
+        let preview = element("helper.cookingReport.preview")
+        reveal(preview)
+        XCTAssertEqual(preview.label, expected, app.debugDescription)
+        XCTAssertEqual(element("fixture.reportPosts").label, "Report POSTs: 0", "Review cannot send the report")
+        XCTAssertEqual(element("fixture.reportOtherWrites").label, "Other writes: 0")
+        tap(app.buttons["helper.cookingReport.send"])
+        let received = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Report POSTs: 1"), object: element("fixture.reportPosts"))
+        XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 10), .completed, app.debugDescription)
+        XCTAssertEqual(element("fixture.reportText").label, expected, "Only the explicitly reviewed report should be sent")
+        reveal(correction, fullyVisible: true)
+        XCTAssertEqual(correction.value as? String, "Keep the original correction draft", "Sending a report must not overwrite another draft")
+        XCTAssertEqual(element("fixture.reportOtherWrites").label, "Other writes: 0", "Cook-only reporting cannot call basket or pantry mutation routes")
+        tap(app.buttons["fixture.reportReadOnly"])
+        let downgraded = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture grant is read-only"), object: app.buttons["fixture.reportReadOnly"])
+        XCTAssertEqual(XCTWaiter.wait(for: [downgraded], timeout: 10), .completed, app.debugDescription)
+        XCTAssertFalse(app.buttons["Report what you cooked"].exists)
+        XCTAssertFalse(app.buttons["helper.cookingReport.send"].exists)
+        XCTAssertFalse(element("helper.correction").exists)
+        let instruction = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Save two")).firstMatch
+        XCTAssertTrue(instruction.exists, "The report and grant change must not alter the shared instructions")
+        XCTAssertEqual(element("fixture.reportPosts").label, "Report POSTs: 1")
+        XCTAssertEqual(element("fixture.reportOtherWrites").label, "Other writes: 0")
+        capture("Cook-only-report-explicit-send-preserved-draft-read-only")
     }
 
     func testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages() {

@@ -452,7 +452,7 @@ test('self-serve adult household creation is atomic, idempotent and rejects chil
   await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Sam.id]);
   assert.equal((await f.http('Sam','POST','/v1/households',{...input,clientKey:randomUUID()})).status,503);
   const enrolled=await f.http('Mia','POST','/v1/households/'+h+'/devices',{});assert.equal(enrolled.status,201);
-  const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['household_pantry','household_pantry_grants','request_queue_permission','own_requests','household_admin']);
+  const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['meal_preferences_read','meal_preferences_admin','household_pantry','my_feedback_withdrawal','household_pantry_grants','request_queue_permission','own_requests','household_admin']);
 });
 
 test('invitation display names use the new member’s language and preserve existing names on blank joins',async()=>{
@@ -1262,4 +1262,65 @@ test('standalone household pantry checks a live adult grant and device before an
   assert.equal((await write('Mia',keep)).data.error.code,'refresh_required');
   await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
   assert.equal((await write('Mia',keep)).status,403);
+});
+
+test('private household preference grants, reviewed updates and revoked retries are isolated from pantry',async()=>{
+  const f=await fixture({createShop:false}), other=await fixture({createShop:false});
+  const path='/meal-preferences', get=(name,headers={})=>f.http(name,'GET',path,undefined,headers);
+  const grant=(enabled,expectedGrantEpoch)=>f.http('Mia','POST',path+'/grants',
+    {v:1,memberId:f.actors.Alex.id,enabled,expectedGrantEpoch});
+  const command={v:1,clientKey:randomUUID(),replayWindow:f.actors.Mia.window,grantEpoch:0,expectedRevision:null,
+    settings:{exclusions:['peanut'],dislikes:[],preferredBrands:['Casa'],availableAppliances:['stove'],timeLimit:{maximumMinutes:20,strict:true},
+      strictDislikes:false,strictBrands:false,strictEffort:false}};
+  const write=(command)=>f.http('Mia','POST',path,command);
+  assert.equal((await get('Mia',{'X-Shop-ID':randomUUID()})).data.revision,null);
+  assert.equal((await get('Alex')).status,404);assert.equal((await get('Sam')).status,404);
+  assert.equal((await get('Mia',{'X-View-Grant-ID':randomUUID()})).status,404);
+  assert.equal((await f.http('Mia','POST','/pantry/grants',{v:1,memberId:f.actors.Alex.id,enabled:true,expectedGrantEpoch:0})).status,200);
+  assert.equal((await get('Alex')).status,404);
+  const stored=await write(command);assert.equal(stored.status,200,JSON.stringify(stored.data));
+  assert.deepEqual(stored.data.settings,command.settings);assert.deepEqual((await write(command)).data,stored.data);
+  assert.equal((await write({...command,settings:null})).status,409);
+  assert.equal((await grant(true,0)).status,200);
+  const reader=await get('Alex');assert.equal(reader.data.canWrite,false);assert.deepEqual(reader.data.settings,command.settings);
+  assert.deepEqual((await other.http('Mia','GET',path)).data.settings,null);
+  assert.equal((await f.http('Alex','POST',path,command)).status,404);
+  assert.equal((await grant(false,1)).status,200);assert.equal((await get('Alex')).status,404);
+  assert.equal((await grant(true,2)).status,200);assert.equal((await get('Alex')).data.grantEpoch,3);
+  assert.equal((await grant(false,1)).status,409);
+  assert.equal((await write({...command,clientKey:randomUUID(),expectedRevision:stored.data.revision,
+    settings:{...command.settings,exclusions:['pin','PIN']}})).status,422);
+  const removed=await write({...command,clientKey:randomUUID(),expectedRevision:stored.data.revision,settings:null});
+  assert.equal(removed.status,200);assert.equal(removed.data.settings,null);assert.notEqual(removed.data.revision,stored.data.revision);
+  assert.equal((await write(command)).status,409);
+  assert.equal((await write({...command,expectedRevision:removed.data.revision})).status,409);
+  const restored=await write({...command,clientKey:randomUUID(),expectedRevision:removed.data.revision});
+  assert.equal(restored.status,200);
+  // A second organizer keeps one existing rule and adds another. Erasing the
+  // original author must remove the inherited inputs while preserving the new rule.
+  await admin.query("UPDATE ritc.member SET organizer=true WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Alex.id]);
+  const transferred=(await get('Alex')).data;
+  const updated=await f.http('Alex','POST',path,{...command,clientKey:randomUUID(),replayWindow:f.actors.Alex.window,
+    expectedRevision:transferred.revision,grantEpoch:transferred.grantEpoch,settings:{...command.settings,exclusions:['Peanut','mushroom']}});
+  assert.equal(updated.status,200,JSON.stringify(updated.data));
+  const client=await admin.connect(),job=randomUUID(),lease=randomUUID();
+  try {
+    await client.query('BEGIN');
+    const hash=tokenHash(issuer+'\n'+f.actors.Mia.subject);
+    await client.query(`INSERT INTO ritc.privacy_job(job_id,identity_hash,issuer,subject,receipt_hash,payload_digest,state,receipt_retention_days,marker_retention_days,receipt_until,marker_until,lease_id,lease_until)
+      VALUES($1,$2,$3,$4,$5,$5,'processing',1,1,now()+interval '1 day',now()+interval '1 day',$6,now()+interval '1 hour')`,
+      [job,hash,issuer,f.actors.Mia.subject,tokenHash(job),lease]);
+    await client.query("SELECT set_config('app.erasure_job',$1,true),set_config('app.erasure_lease',$2,true)",[job,lease]);
+    await client.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.actors.Mia.id]);
+    await client.query('COMMIT');
+  } catch(e) { await client.query('ROLLBACK');throw e; } finally {client.release();}
+  const erased=await get('Alex');
+  assert.deepEqual(erased.data.settings.exclusions,['mushroom']);
+  assert.deepEqual(erased.data.settings.preferredBrands,[]);
+  assert.equal(erased.data.settings.availableAppliances,undefined);
+  assert.notEqual(erased.data.revision,updated.data.revision);
+  assert.equal(erased.data.settings.timeLimit,undefined);
+  assert.equal((await write(command)).status,409);
+  await admin.query('UPDATE ritc.device SET revoked_at=clock_timestamp() WHERE household_id=$1 AND device_id=$2',[f.h,f.actors.Mia.deviceId]);
+  assert.equal((await write(command)).status,403);
 });

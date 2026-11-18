@@ -23,7 +23,7 @@ const changed = () => new ServiceError(409,'decision_changed','Read the current 
 const reused = () => new ServiceError(409,'key_reused','Retry the original action or use a fresh key.');
 
 interface DecisionRow {
-  decision_id:string; shop_id:string; version:number; kind:'approval'|'exclusion'|'preference';
+  decision_id:string; shop_id:string; author_id:string; version:number; kind:'approval'|'exclusion'|'preference';
   product:string|null; dish:string|null; occasion:string|null; decision:string; outcome:string|null;
   recorded_at:Date; observed_at:Date|null; promoted_at:Date|null; observer_id:string|null; promoter_id:string|null;
 }
@@ -68,6 +68,12 @@ export class DecisionHistory {
   async read(ctx:Context, shopId:string, decisionId:string) {
     await this.assignedShop(ctx,shopId);
     return record(await this.row(ctx,shopId,decisionId));
+  }
+
+  async preferenceSource(ctx:Context, shopId:string, decisionId:string) {
+    await this.assignedShop(ctx,shopId);
+    await this.paid(ctx);
+    return this.row(ctx,shopId,decisionId);
   }
 
   // HouseholdRepository serializes these writes, their receipts, and current authority in one transaction.

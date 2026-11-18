@@ -65,6 +65,7 @@ public struct SharedRecoveryCoverage: Decodable, Equatable, Sendable {
                     guard let stated, stated.valid, stated.compare(totals[kind] ?? .zero) == .orderedSame else { throw ClientError.invalidResponse }
                 }
             }
+            guard (row.fridge ?? .zero).compare(totals["fridge"] ?? .zero) == .orderedSame else { throw ClientError.invalidResponse }
             let deadline = householdTimestamp(need.due).map { $0 < now ? "pastDue" : "notPastDue" } ?? "unknown"
             demands.append(.init(needId: row.needId, due: need.due, deadlineStatus: deadline, allocated: row.covered, shortfall: row.missing,
                                  unit: row.required?.unit, issues: row.issues, sourceIssues: [], reservations: pins))

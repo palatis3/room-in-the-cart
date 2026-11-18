@@ -77,10 +77,11 @@ function validateBasis(input:unknown):RecoveryBasis {
  const pantryRows = b.pantryObservations ?? [];
  unique([...b.arrivals, ...b.usable].map(row => row.shopId + "/" + row.id));
  unique(pantryRows.map(row => row.id));
- unique(pantryRows.map(row => String(row.revision)));
+ unique(pantryRows.map(row => row.sourceId+"/"+row.revision));
  for (const row of pantryRows) {
    requireThat(row.householdId === b.householdId, 'wrong_scope');
-   const source = manual.find(source => source.id === row.sourceId);
+   const source = row.deliveryUsableId ? b.sources.find(s=>s.id===row.sourceId && s.origin.kind==='delivery'
+     && b.usable.some(u=>u.sourceId===s.id && u.id===row.deliveryUsableId)) : manual.find(source => source.id === row.sourceId);
    requireThat(source && row.identityRevision <= source.identityRevision, 'invalid_pantry_observation');
    requireThat(row.revision <= b.base.pantryRevision!);
  }
@@ -112,7 +113,7 @@ function validateBasis(input:unknown):RecoveryBasis {
 export interface CanonicalLot {sourceId:string;foodId:string;identityRevision:number;quantity:Quantity;availableAt:string;arrivalId:string;usableId:string}
 interface ManualLot {
   sourceId:string; foodId:string; identityRevision:number; quantity:Quantity; availableAt:string;
-  location:'pantry'|'freezer'; observationId:string;
+  location:'pantry'|'freezer'|'fridge'; observationId:string;
 }
 type PhysicalLot = CanonicalLot | ManualLot;
 type ArrivalHead = Pick<RecoveryBasis['arrivals'][number], 'id'|'received'|'arrivedAt'|'recordedAt'|'identityRevision'>;
@@ -143,7 +144,11 @@ function supply(b:RecoveryBasis,asOf:string):PhysicalLot[]{
      continue;
    }
    const lot = confirmedLot(source, latest(b.arrivals), latest(b.usable), asOf);
-   if (lot) lots.push(lot);
+   if (lot) {
+     const head=latest((b.pantryObservations??[]).filter(r=>r.deliveryUsableId===lot.usableId));
+     if(!head) lots.push(lot);
+     else if(head.quantity && instant(head.recordedAt)<=instant(asOf)) lots.push({...lot,quantity:head.quantity});
+   }
  }
  return lots.sort((a,c)=>a.sourceId<c.sourceId?-1:1);
 }
@@ -396,7 +401,7 @@ export function projectRecovery(input:unknown,asOf:string){requireThat(Number.is
 
 /** Pure preview only: caller must load trusted complete state inside an authorized
  * transaction. No persistence, actor assertion, receipt or cook publication occurs. */
-export function previewRecovery(input:unknown,requestInput:unknown,asOf:string){
+export function previewRecovery(input:unknown,requestInput:unknown,asOf:string,restoring?:RecoveryMeal){
  requireThat(Number.isFinite(instant(asOf)),'invalid_time');const b=validateBasis(input),request=recoveryPreviewSchema.parse(requestInput),i=request.intent;
  requireThat(equal(request.base,b.base),'stale_basis');requireThat(instant(i.reviewedAt)<=instant(asOf),'future_review');
  const old=b.meals.find(m=>m.occurrenceId===i.occurrenceId);requireThat(old&&recoveryDigest(old)===i.targetDigest,'stale_target');const next=i.replacement;checkMeal(next);
@@ -411,7 +416,9 @@ export function previewRecovery(input:unknown,requestInput:unknown,asOf:string){
  requireThat(equal(old.groups,next.groups),'changed_groups');
  requireThat(equal(old.needs.filter(n=>n.priority==='protected'),next.needs.filter(n=>n.priority==='protected')),'protected_need');
  const removed=old.needs.filter(n=>n.priority!=='protected');const added=next.needs.filter(n=>n.priority!=='protected');requireThat(removed.length&&added.length,'empty_replacement');
- requireThat(added.every(n=>!b.usedNeedIds.includes(n.id)),'reused_need');requireThat(!b.reservations.some(r=>removed.some(n=>n.id===r.needId)),'pinned_target');
+ // Only an exact, server-retained before image may reclaim its retired demand identities.
+ const restoresPrior = restoring !== undefined && equal({...next,revisionId:restoring.revisionId},restoring);
+ requireThat(added.every(n=>!b.usedNeedIds.includes(n.id)) || restoresPrior,'reused_need');requireThat(!b.reservations.some(r=>removed.some(n=>n.id===r.needId)),'pinned_target');
  const preservesGroupDemands = removed.every(need => {
    const ids = groupIds(need);
    return ids.length ? ids.every(id => added.some(row => groupIds(row).includes(id))) : added.some(row => !groupIds(row).length);

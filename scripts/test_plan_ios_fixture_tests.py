@@ -105,6 +105,10 @@ class PlanIOSFixtureTests(unittest.TestCase):
         correction = f"{UI_TARGET}/ContributorRequestUITests/testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen"
         contributor = plans["contributor"]["shards"]["contributor-balanced-02"]["test_identifiers"]
         self.assertEqual([selector.removesuffix("()") for selector in contributor].count(correction), 1)
+        preferences = f"{UI_TARGET}/ContributorRequestUITests/testHouseholdMealPreferencesOrganizerReviewsAndAdultReads"
+        self.assertEqual([selector.removesuffix("()") for selector in contributor].count(preferences), 1)
+        staples = f"{UI_TARGET}/ContributorRequestUITests/testAdultReviewsHouseholdStaplePurchaseAndAnswersQuestionAcrossReopen"
+        self.assertEqual([selector.removesuffix("()") for selector in contributor].count(staples), 1)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
@@ -193,6 +197,12 @@ class PlanIOSFixtureTests(unittest.TestCase):
             with self.subTest(case=identifier, state="disabled"):
                 with self.assertRaisesRegex(ValueError, "Fixture tests must not be disabled"):
                     make_plan(enumeration(remaining, [STOREKIT_TEST, identifier]), "contributor", self.inventory)
+
+    def test_cooking_report_uses_contributor_enrollment_fixture(self):
+        enabled = self.enabled_for("contributor")
+        plan = make_plan(enumeration(enabled), "contributor", self.inventory)
+        report = f"{UI_TARGET}/ContributorRequestUITests/testEditableCookReportPreservesCorrectionDraftAndReadOnlyGrantCannotWriteStock"
+        self.assertIn(report + "()", plan["shards"]["contributor-balanced-02"]["test_identifiers"])
 
     def test_new_method_in_balanced_suite_keeps_its_whole_suite_and_all_other_methods(self):
         inventory = {suite: set(methods) for suite, methods in self.inventory.items()}

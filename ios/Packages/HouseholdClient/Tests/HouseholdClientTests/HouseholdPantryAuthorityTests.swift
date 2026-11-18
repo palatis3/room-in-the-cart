@@ -2,6 +2,31 @@ import XCTest
 @testable import HouseholdClient
 
 extension HouseholdClientTests {
+    func testHouseholdPurchaseEvidenceIsDistinctFromCurrentCookBalanceAndMissingOnOlderServers() throws {
+        let time = "2026-11-17T12:00:00Z", purchaseID = UUID(), currentID = UUID()
+        func quantity(_ count: Int) -> [String: Any] {
+            ["amount": ["numerator": count, "denominator": 1], "unit": "count", "originalLiteral": String(count)]
+        }
+        var body: [String: Any] = ["lotId": UUID().uuidString, "origin": "delivery", "location": "pantry",
+            "foodName": "Wraps", "storedAt": time, "useFirstAt": NSNull(), "exclusionTags": [],
+            "observation": ["observationId": currentID.uuidString, "confirmedAt": time, "quantity": quantity(0)],
+            "purchaseObservation": ["observationId": purchaseID.uuidString, "confirmedAt": time, "quantity": quantity(5)]]
+        let lot: HouseholdPantryPage.Lot = try TrackingWriteFixture.decode(body)
+        try lot.validate()
+        XCTAssertEqual(lot.observation?.quantity?.amount.numerator, 0)
+        XCTAssertEqual(lot.purchaseObservation?.quantity?.amount.numerator, 5)
+        XCTAssertEqual(lot.purchaseObservation?.observationId, purchaseID)
+        XCTAssertNotEqual(lot.observation?.observationId, purchaseID)
+        body["origin"] = "manual"
+        let manual: HouseholdPantryPage.Lot = try TrackingWriteFixture.decode(body)
+        XCTAssertThrowsError(try manual.validate())
+        body["origin"] = "delivery"
+        body.removeValue(forKey: "purchaseObservation")
+        let legacy: HouseholdPantryPage.Lot = try TrackingWriteFixture.decode(body)
+        try legacy.validate()
+        XCTAssertNil(legacy.purchaseObservation, "A missing purchase is never inferred from a current count")
+    }
+
     func testHouseholdPantryRetryKeepsOriginalIntentAcrossShopSelectionAndRejectsAnotherDevice() async throws {
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),

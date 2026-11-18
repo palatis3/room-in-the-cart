@@ -91,11 +91,35 @@ The household endpoints below use the normal live session and enrolled device. A
 | --- | --- | --- |
 | GET | `/pantry?cursor={lotId}` | A version 1 page with `householdId`, `grantEpoch`, `pantryRevision`, `asOf`, up to 50 `lots`, and `nextCursor`. |
 | POST | `/pantry/commands` | A version 1 receipt with `kind`, `householdId`, `operationId`, `lotId`, `grantEpoch`, and committed `pantryRevision`. |
+| GET | `/pantry/staples?zone={IANA time zone}` | The current adult’s opt-in, revision, reviewed purchase groups and eligible questions in this household. |
+| POST | `/pantry/staples` | Applies a reviewed opt-in, recall, purchase-group edit or answer and returns the current projection. |
 | GET | `/pantry/grants` | The organizer’s version 1 `adults` list. Each active non-organizer adult has `memberId`, `label`, `enabled`, and `grantEpoch`. |
 | POST | `/pantry/grants` | Send `{v:1, memberId, enabled, expectedGrantEpoch}` and receive the current grants list. |
 
 Each lot includes its physical `observation` (observation ID, confirmation time and quantity), `foodName`, `origin`, `location`, `storedAt`, `useFirstAt`, and `exclusionTags`. A missing or unquantified observation means the physical quantity is unknown. Zero is an explicit count. A placed shop’s separate coverage projection accounts for meal commitments.
 
+The separately authorized household page also includes nullable `purchaseObservation` for delivery lots: the reviewed usable receipt observation ID, confirmation time and original usable quantity. A later cook balance (including zero remaining) does not replace this purchase evidence. Manual lots have no purchase observation. Older servers may omit this additive field; clients must then withhold purchase review rather than infer it from the physical count. The shop-only pantry projection does not include this field.
+
 To add a lot, submit `{v:1, kind:"pantry.addLot", clientKey, replayWindow, grantEpoch, pantryRevision, body}`. The body contains `foodName`, `location` (`pantry`, `fridge` or `freezer`), nullable `storedAt` and `useFirstAt`, `exclusionTags`, `confirmedAt`, and nullable `quantity`. A quantity uses the existing exact rational amount, unit and original literal. The server commits one lot and its initial observation together under the household stock revision. A retry from the same device with the original live grant and replay window returns the original receipt. A changed intent needs a new client key. After a grant changes or a stock review goes stale, read the current page before submitting a new intent.
 
 The placed-shop pantry endpoint retains its pantry/freezer location vocabulary. A shopper with standalone pantry authority can select compatible standalone lots through the existing shop commands. The joint allocator uses those same physical observations for reservations and shortfalls.
+
+## Reviewed household meal preferences
+
+Migration 052 stores one revisioned household profile. An enrolled organizer opens Household Settings to edit it and separately choose which active adult members can read it. The service checks household membership, the current device and the preference grant on each request. A pantry or shop-planning grant conveys no permission to read the profile. Private iPhone preferences have their own storage and revision.
+
+- `GET /v1/households/:household/meal-preferences` returns `v:1`, household ID, grant epoch, revision, settings and `canWrite`. An erased profile retains its new revision and returns null settings. The selected shop has no bearing on this household read.
+- `POST /v1/households/:household/meal-preferences` requires an organizer, a live device-bound replay window, a fresh client key, the reviewed grant epoch, exact expected revision and new settings or null. A repeated original command can confirm its accepted revision. A newer write requires another review.
+- `GET` and `POST` to `meal-preferences/grants` manage read access for active non-organizer adults. A change sends the member ID, enabled state and expected grant epoch. Revoking access takes effect on the next request.
+- A historical note may supply one explicitly chosen rule through optional `sourceDecision`. It binds the shop, decision ID, version, field and exact new term. The organizer must also be the currently assigned shopper with a current paid seat. Removing either source author's data removes dependent rules and leaves unrelated rules in place.
+- A shared idea shows eligible, blocked, unresolved and soft categories for the meal being reviewed. An approval binds the current preference revision. A new occurrence based on that approval rechecks it. A changed ingredient in an existing occurrence requires a current revision and any necessary reviewed ingredient, appliance or brand evidence. Previous receipts and exact derived undo retain their historical evidence.
+
+The optional cooking-time limit contains `maximumMinutes` and `strict`. It compares the same recipe’s reviewed total elapsed preparation or lead time. Missing time remains unknown. The page advertises `supportsTimeLimit`. An organizer who reviews the limit sends `timeLimitReviewed:true`, which permits an explicit removal. Earlier clients preserve a limit when saving their known fields.
+
+### Personal staple reminders in a household
+
+The write envelope includes `v: 1`, `zone`, `grantEpoch`, `pantryRevision`, `expectedRevision` (null on first use), `clientKey`, `replayWindow` and a discriminated `action`. The service locks the household and checks the current membership, pantry grant, enrolled device and replay window. Replaying an accepted command returns the current projection. Turning reminders off forgets that adult’s groups and answers.
+
+An adult can `remember` a name for manual recall. The `purchase` action records the receipt day and the exact usable observation of a stored, confirmed delivery lot. It takes an existing `groupId` or a new `name`, with the other field set to null. One physical lot contributes once per adult. `removePurchase` unlinks a reviewed purchase, and `forget` removes the group.
+
+Three comparable purchase days establish an interval. Split lots on one day count together, and a change in usable amount starts a new series. Unresolved source corrections and equivalent or unclassified open demand withhold the question. The pantry projection omits other shoppers’ request details. The `answer` action binds Still have it, Dismiss or a seven-day Snooze to the current question’s basis. Each adult’s enrolled devices read the same answer.

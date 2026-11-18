@@ -5,6 +5,7 @@ import HouseholdClient
 struct SharedMealChangesView: View {
     @ObservedObject var household: HouseholdModel
     var seed: SharedMealChangeSeed? = nil
+    var dinnerID: UUID? = nil
     var onReviewOpened: () -> Void = {}
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: SharedMealChangeModel?
@@ -12,7 +13,7 @@ struct SharedMealChangesView: View {
     var body: some View {
         Group {
             if let model, model.scope == scope {
-                SharedMealChangeContent(model: model, household: household, seed: seed, onReviewOpened: onReviewOpened)
+                SharedMealChangeContent(model: model, household: household, seed: seed, dinnerID: dinnerID, onReviewOpened: onReviewOpened)
             } else { ContentUnavailableView(ht("Shared meal changes"), systemImage: "person.2", description: Text(ht("Refresh the household and check meal planning access."))) }
         }
         .navigationTitle(ht("Shared meal changes"))
@@ -82,9 +83,11 @@ private struct SharedMealChangeContent: View {
     @ObservedObject var model: SharedMealChangeModel
     @ObservedObject var household: HouseholdModel
     let seed: SharedMealChangeSeed?
+    let dinnerID: UUID?
     let onReviewOpened: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var selected: UUID?
+    @State private var evidence = MealEligibilityEvidence()
     @State private var candidate: SharedMeal?
     @State private var reason = ""
     @State private var clearing = false
@@ -94,7 +97,7 @@ private struct SharedMealChangeContent: View {
     var body: some View {
         Form {
             if let page = model.page {
-                if (!page.shopper || seed != nil) && model.review == nil && !model.hasPending { editor(page) }
+                if (!page.shopper || seed != nil || dinnerID != nil) && model.review == nil && !model.hasPending { editor(page) }
                 if let review = model.review {
                     Section(ht("Review exact proposal")) {
                         if let original = page.meals.first(where: { $0.id == review.request.occurrenceId }) { Text(ht("Current shared meal")); SharedMealFacts(meal: original.meal) }
@@ -156,6 +159,8 @@ private struct SharedMealChangeContent: View {
                 Text(ht("Choose a meal")).tag(nil as UUID?)
                 ForEach(page.meals) { Text(verbatim: "\($0.meal.title) · \(sharedMealScheduleText($0.meal.day)) · \($0.id.uuidString.prefix(8))").tag(Optional($0.id)) }
             }.accessibilityIdentifier("meal-change-occurrence")
+            .disabled(dinnerID != nil)
+            .onAppear { if let dinnerID { selected = dinnerID } }
             .onChange(of: selected) { _, id in
                 candidate = page.meals.first(where: { $0.id == id })?.meal
                 if let seed, let original = candidate {
@@ -163,7 +168,7 @@ private struct SharedMealChangeContent: View {
                     replacement.deadline = original.planning?.deadline
                     candidate?.title = seed.title; candidate?.portions = seed.portions; candidate?.planning = replacement
                 }
-                reason = ""; model.cancelReview()
+                evidence = .init(); reason = ""; model.cancelReview()
             }
             if page.phase != "draft" { Text(ht("The order is frozen or placed. This remains an amendment proposal; it cannot change the placed basket.")) }
         }
@@ -171,18 +176,26 @@ private struct SharedMealChangeContent: View {
             Section(ht("Proposed meal")) {
                 TextField(ht("Meal name"), text: field(\.title)).focused($inputFocus, equals: "meal-name")
                 Stepper(value: field(\.portions), in: 1...1000) { LabeledContent(ht("Portions"), value: candidate.portions.formatted()) }
+                    .disabled(dinnerID != nil)
                 Text(ht("The shared date stays unchanged. Use the separate date proposal for a calendar move."))
                 if let planning = candidate.planning { SharedMealPreparationFacts(planning: planning) }
                 SharedMealPlanningEditor(planning: Binding(get: { self.candidate?.planning ?? .init(groups: [], ingredients: []) }, set: { self.candidate?.planning = $0 }), inputFocus: $inputFocus)
+                if page.preferenceRevision != nil {
+                    MealEvidenceFields(draft: $evidence)
+                        .onChange(of: candidate.planning?.ingredients) { _,_ in evidence = .init(); model.cancelReview() }
+                }
                 TextField(ht("Reason for change"), text: $reason, axis: .vertical).focused($inputFocus, equals: "reason").accessibilityIdentifier("meal-change-reason")
                 Text(ht("Changing portions does not scale ingredient quantities or calculate packs here. Review each entered amount."))
                 if page.shopper {
                     Text(ht("As the assigned shopper, review this mapped meal with the actual shared packs and checkout quote before applying."))
                     Button(ht("Review mapped meal with shared packs")) { Task {
-                        if let edit = await model.reviewedShopperSeed(occurrenceID: selected, meal: candidate) { openDraft(edit) }
+                        if var edit = await model.reviewedShopperSeed(occurrenceID: selected, meal: candidate, evidence: evidence.shared) {
+                            if dinnerID != nil { edit.dinnerSwap = true }
+                            openDraft(edit)
+                        }
                     } }.disabled(model.busy || page.phase != "draft").accessibilityIdentifier("meal-change-shopper-seed")
                 } else {
-                    Button(ht("Review shared proposal")) { Task { await model.prepare(occurrenceID: selected, meal: candidate, reason: reason) } }
+                    Button(ht("Review shared proposal")) { Task { await model.prepare(occurrenceID: selected, meal: candidate, reason: reason, evidence: evidence.shared) } }
                         .disabled(!model.canPropose).accessibilityIdentifier("meal-change-prepare")
                 }
             }
@@ -192,6 +205,7 @@ private struct SharedMealChangeContent: View {
         Binding(get: { candidate![keyPath: key] }, set: { candidate?[keyPath: key] = $0; model.cancelReview() })
     }
     private func status(_ proposal: SharedMealChangePage.Proposal, _ page: SharedMealChangePage) -> String {
+        if proposal.requiresPreferenceReview == true { return dinnerText("Household meal preferences changed. Review the ingredients again.") }
         switch proposal.state {
         case "applied": return ht("Applied once by the shopper.")
         case "dismissed": return ht("Dismissed by the shopper.")

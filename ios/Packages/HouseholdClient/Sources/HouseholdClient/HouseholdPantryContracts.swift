@@ -1,6 +1,8 @@
 import Foundation
 
-public struct HouseholdPantrySession: Codable, Equatable, Sendable {
+public typealias HouseholdPantrySession = HouseholdDeviceSession
+
+public struct HouseholdDeviceSession: Codable, Equatable, Sendable {
     public let householdID: UUID
     public let memberID: UUID
     public let deviceID: UUID
@@ -24,12 +26,19 @@ public struct HouseholdPantryPage: Decodable, Equatable, Sendable {
         public let useFirstAt: String?
         public let exclusionTags: [String]
         public let observation: SharedPantryPage.Observation?
+        /// Original received usable evidence, distinct from a current cook balance.
+        /// Missing on older servers; never infer a purchase from the live count.
+        public let purchaseObservation: SharedPantryPage.Observation?
 
         func validate() throws {
             guard sharedMealText(foodName, 240), exclusionTags.count <= 20,
                   exclusionTags.allSatisfy({ sharedMealText($0, 240) }),
                   storedAt.map(validHelperTimestamp) != false,
                   useFirstAt.map(validHelperTimestamp) != false else { throw ClientError.invalidResponse }
+            if let purchaseObservation {
+                guard origin == .delivery, validHelperTimestamp(purchaseObservation.confirmedAt),
+                      let quantity = purchaseObservation.quantity, quantity.validStockQuantity else { throw ClientError.invalidResponse }
+            }
             if let observation {
                 guard validHelperTimestamp(observation.confirmedAt), observation.quantity?.validStockQuantity != false else {
                     throw ClientError.invalidResponse
@@ -225,7 +234,9 @@ public struct HouseholdPantryReceipt: Decodable, Equatable, Sendable {
     }
 }
 
-public struct HouseholdPantryGrants: Decodable, Equatable, Sendable {
+public typealias HouseholdPantryGrants = HouseholdAdultGrants
+
+public struct HouseholdAdultGrants: Decodable, Equatable, Sendable {
     public struct Adult: Decodable, Equatable, Identifiable, Sendable {
         public var id: UUID { memberId }
         public let memberId: UUID

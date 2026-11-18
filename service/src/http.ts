@@ -1,3 +1,7 @@
+import {readMealPreferences, writeMealPreferences, preferenceGrants, changePreferenceGrant} from './meal-preferences.js';
+import {readMealFeedback,updateMealFeedback,reviewMyFeedbackWithdrawal,withdrawMyFeedback} from './household-meal-feedback.js';
+import {cookReview} from './shared-cook-completion.js';
+import { changeHouseholdStaples, householdStaples } from './household-staples.js';
 import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
@@ -258,7 +262,7 @@ export function createHTTPServer(options:HTTPOptions) {
       // A selected shop is a navigation preference on the explicit household pantry surface.
       // The authenticated household, device and any restricted grant still apply.
       const {selectedShopId: _selectedShop,...householdAuth}=auth;
-      const scopedAuth=('/pantry'===path||path.startsWith('/pantry/'))?householdAuth:historicalReportShopId?{...auth,historicalReportShopId}:auth;
+      const scopedAuth=('/pantry'===path||path.startsWith('/pantry/')||path==='/meal-preferences'||path.startsWith('/meal-preferences/'))?householdAuth:historicalReportShopId?{...auth,historicalReportShopId}:auth;
       const output=await repository.authorized(householdId,scopedAuth,async ctx=>{
         if(path==='/devices/current/request-queue' && method==='PUT'){
           const {enabled}=z.object({enabled:z.boolean()}).strict().parse(payload);
@@ -275,10 +279,18 @@ export function createHTTPServer(options:HTTPOptions) {
           if(path==='/billing/purchase-context'&&method==='POST'){z.object({}).strict().parse(payload);return options.billing.prepare(ctx);}
           if(path==='/billing/seats'&&method==='PUT')return options.billing.replaceSeats(ctx,billingSeatsSchema.parse(payload));
         }
+        if(path==='/meal-preferences' && method==='GET')return readMealPreferences(ctx);
+        if(path==='/meal-preferences' && method==='POST')return writeMealPreferences(ctx,payload,decisions);
+        if(path==='/meal-preferences/grants' && method==='GET')return preferenceGrants(ctx);
+        if(path==='/meal-preferences/grants' && method==='POST')return changePreferenceGrant(ctx,payload);
         if(path==='/pantry' && method==='GET') {
           const cursor=url.searchParams.get('cursor');
           return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));
         }
+        if(path==='/pantry/my-feedback-withdrawal' && method==='GET')return reviewMyFeedbackWithdrawal(ctx);
+        if(path==='/pantry/my-feedback-withdrawal' && method==='POST')return withdrawMyFeedback(ctx,payload);
+        if(path==='/pantry/staples' && method==='GET')return householdStaples(ctx,url.searchParams.get('zone')??'UTC');
+        if(path==='/pantry/staples' && method==='POST')return changeHouseholdStaples(ctx,payload);
         if(path==='/pantry/commands' && method==='POST')return recordHouseholdPantryCommand(ctx,payload);
         if(path==='/pantry/grants' && method==='GET')return pantryGrants(ctx);
         if(path==='/pantry/grants' && method==='POST')return changePantryGrant(ctx,payload);
@@ -365,6 +377,13 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          const feedback = /^\/cook-feedback\/([^/]+)$/.exec(tail ?? '');
+          if(feedback && (method==='GET' || method==='PUT')){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            const occurrence=uuid.parse(feedback[1]).toLowerCase();
+            return method==='GET' ? readMealFeedback(ctx,shop,occurrence) : updateMealFeedback(ctx,shop,occurrence,payload);
+          }
           if (tail === '/measurement-feedback') {
             if (method === 'GET') return measurement.read(ctx, shopId);
             if (method === 'POST') return measurement.feedback(ctx, shopId, payload);
@@ -412,7 +431,11 @@ export function createHTTPServer(options:HTTPOptions) {
             if(tail==='/pantry-lots/coverage') return readJointCoverage(ctx,shop);
             if(tail==='/pantry-lots/observation-preview') return previewCurrentPantryObservation(ctx,shop,payload,loadRecoveryPublication);
             const cursor=url.searchParams.get('cursor');
-            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor));
+            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor),url.searchParams.get('refrigerated')==='1');
+          }
+          if(tail==='/cook-completion' && method==='GET'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return cookReview(ctx,shop,uuid.parse(url.searchParams.get('occurrenceId')).toLowerCase());
           }
           if(tail==='/cook-copies' && method==='GET') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);

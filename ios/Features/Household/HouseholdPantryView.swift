@@ -19,9 +19,9 @@ private struct HouseholdPantryView: View {
     @State private var sheet: Sheet?
     @State private var clearingRetry = false
     private enum Sheet: Identifiable {
-        case addition(HouseholdPantryPage), correction(HouseholdPantryPage, HouseholdPantryPage.Lot), grants
+        case addition(HouseholdPantryPage), correction(HouseholdPantryPage, HouseholdPantryPage.Lot), grants, staples
         var id: Int {
-            switch self { case .addition: 0; case .grants: 1; case .correction: 2 }
+            switch self { case .addition: 0; case .grants: 1; case .correction: 2; case .staples: 3 }
         }
     }
     init(household: HouseholdModel, scope: HouseholdPantryRuntime, service: HouseholdService) {
@@ -40,6 +40,13 @@ private struct HouseholdPantryView: View {
                                 Button(ht("Add food to storage")) { sheet = .addition(page) }
                                     .accessibilityIdentifier("householdPantry.add")
                             }
+                            if household.projection?.capabilities.contains("my_feedback_withdrawal") == true, let service = household.service {
+                                NavigationLink(cookingText("Review my shared meal feedback")) {
+                                    SharedFeedbackWithdrawalView(household: household, scope: model.scope, service: service)
+                                }
+                            }
+                            Button(householdPantryText("Staple reminders")) { sheet = .staples }
+                                .accessibilityIdentifier("householdPantry.staples")
                             if model.scope.managesGrants {
                                 Button(householdPantryText("Manage pantry access")) { sheet = .grants }
                                     .accessibilityIdentifier("householdPantry.manage")
@@ -109,6 +116,7 @@ private struct HouseholdPantryView: View {
                     switch item {
                     case .addition(let reviewed): HouseholdPantryEditor(model: model, page: reviewed)
                     case .correction(let page, let lot): HouseholdPantryCountEditor(model: model, page: page, lot: lot)
+                    case .staples: HouseholdStaplesView(model: model)
                     case .grants: HouseholdPantryGrantsView(model: model)
                     }
                 }.interactiveDismissDisabled(model.busy)

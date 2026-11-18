@@ -23,6 +23,40 @@ private final class LoopbackTrust: NSObject, URLSessionDelegate, @unchecked Send
 }
 
 final class NativeServiceWireTests: XCTestCase {
+    private struct WireLimit: Codable, Equatable, Sendable {
+        var maximumMinutes = 20
+        var strict = true
+    }
+    private struct WirePreferences: Codable, Equatable, Sendable {
+        var timeLimit: WireLimit? = .init()
+        var exclusions = ["peanut"]
+        var dislikes: [String] = []
+        var preferredBrands = ["Casa"]
+        var availableAppliances = ["stove"]
+        var strictDislikes = false
+        var strictBrands = false
+        var strictEffort = false
+    }
+    private func exerciseMealPreferences(_ service: HouseholdService, scope: HouseholdBootstrap) async throws {
+        let session = try await service.preferenceSession(for: scope)
+        let initial = try await service.preferencePage(WirePreferences.self, session: session)
+        XCTAssertNil(initial.settings)
+        let preferences = WirePreferences()
+        XCTAssertEqual(initial.supportsTimeLimit, true)
+        let intent = try await service.preparePreferenceWrite(preferences, reviewed: initial, session: session, timeLimitReviewed: true)
+        let written = try await service.savePreferences(intent, as: WirePreferences.self)
+        let retry = try await service.savePreferences(intent, as: WirePreferences.self)
+        XCTAssertEqual(retry, written)
+        XCTAssertEqual(written.settings, preferences)
+        let reopened = try await service.preferencePage(WirePreferences.self, session: session)
+        XCTAssertEqual(reopened, written)
+        let grants = try await service.preferenceGrants(session: session)
+        XCTAssertFalse(grants.adults.contains(where: { $0.memberId == session.memberID }))
+        let clear = try await service.preparePreferenceWrite(nil, reviewed: written, session: session)
+        let erased = try await service.savePreferences(clear, as: WirePreferences.self)
+        XCTAssertNil(erased.settings)
+        XCTAssertNotEqual(erased.revision, written.revision)
+    }
     private func exerciseHouseholdPantry(_ service: HouseholdService, scope: HouseholdBootstrap) async throws {
         let actor = try await service.householdPantrySession(for: scope)
         let firstPage = try await service.householdPantryPage(for: actor)
@@ -57,6 +91,16 @@ final class NativeServiceWireTests: XCTestCase {
         let reopened = try await service.householdPantryPage(for: actor)
         XCTAssertEqual(reopened.pantryRevision, after.pantryRevision)
         XCTAssertEqual(reopened.lots, after.lots)
+        let reminders = try await service.householdStaples(for: actor, zone: "America/New_York")
+        XCTAssertFalse(reminders.enabled)
+        XCTAssertTrue(reminders.groups.isEmpty)
+        let on = try await service.changeHouseholdStaples(.enable(true), reviewed: reminders, session: actor)
+        XCTAssertTrue(on.enabled)
+        let synced = try await service.householdStaples(for: actor, zone: reminders.zone)
+        XCTAssertEqual(synced, on)
+        let off = try await service.changeHouseholdStaples(.enable(false), reviewed: synced, session: actor)
+        XCTAssertFalse(off.enabled)
+        XCTAssertTrue(off.groups.isEmpty)
         let grants = try await service.householdPantryGrants(for: actor)
         XCTAssertTrue(grants.adults.isEmpty)
     }
@@ -104,6 +148,7 @@ final class NativeServiceWireTests: XCTestCase {
         }
         if env["RITC_WIRE_PAID"] == "0" {
             try await exerciseHouseholdPantry(service, scope: scope)
+            try await exerciseMealPreferences(service, scope: scope)
         }
         let other = try XCTUnwrap(env["RITC_WIRE_OTHER"])
         let mealPlan = try await service.mealPlan(shopID: XCTUnwrap(UUID(uuidString: shop)))

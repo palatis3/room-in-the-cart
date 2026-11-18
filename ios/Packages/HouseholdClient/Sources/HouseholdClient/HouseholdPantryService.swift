@@ -10,7 +10,7 @@ extension HouseholdService {
             guard start == generation else { throw ClientError.cancelled }
             let cursor = record?.nextCursor
             let page: SharedPantryPage = try await perform("shops/\(shopID)/pantry-lots", method: "GET",
-                query: cursor.map { [URLQueryItem(name: "cursor", value: $0.uuidString.lowercased())] } ?? [])
+                query: [URLQueryItem(name: "refrigerated", value: "1")] + (cursor.map { [URLQueryItem(name: "cursor", value: $0.uuidString.lowercased())] } ?? []))
             try page.validateScope(delivery: delivery)
             if let record, record.pantryRevision != page.pantryRevision {
                 throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
