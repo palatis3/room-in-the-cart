@@ -23,6 +23,20 @@ final class RoomInTheCartUITests: XCTestCase {
         let editor = app.textViews["ledgerImportText"]
         XCTAssertTrue(editor.waitForExistence(timeout: 30))
         XCTAssertEqual(editor.value as? String, "2 kg rice")
+        tap(app.buttons["Close"])
+        XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12))
+        app.terminate()
+        launch(reset: false)
+        tap(app.buttons["shop.addFirstList"])
+        XCTAssertTrue(editor.waitForExistence(timeout: 10))
+        XCTAssertEqual(editor.value as? String, "", "Closing untouched Shortcut wording must not save it in a seven-day draft")
+        tap(app.buttons["Close"])
+        app.terminate()
+
+        app.launchArguments.append("--test-shopping-add-intent")
+        app.launch()
+        XCTAssertTrue(editor.waitForExistence(timeout: 30))
+        XCTAssertEqual(editor.value as? String, "2 kg rice")
         tap(editor)
         editor.typeText(" noodles")
         let edited = editor.value as? String

@@ -67,6 +67,17 @@ struct FirstListContents: Equatable, Codable {
         return version
     }
 
+    func closeSavingEdits(_ next: FirstListContents, prefill: String) async -> Bool {
+        // A Shortcut initially displays transient wording. Closing that initial
+        // screen is not an edit, but a pending write or failed edit still needs flushing.
+        if version == nil, writer == nil, !failed {
+            var untouched = content
+            untouched.original = prefill
+            if next == untouched { return true }
+        }
+        return await flush(next) != nil
+    }
+
     func reviewAgain() async {
         guard stale, authorize() else { return }
         var current = FirstListContents()

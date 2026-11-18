@@ -38,10 +38,12 @@ struct LedgerImportView: View {
     let firstDraft: FirstListEditor?
     let onFirstSave: ((UUID) -> Void)?
     let authorizeEntry: @MainActor () -> Bool
+    private let prefill: String
     @State private var incomingWording: String?
     init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
         self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onFirstSave = onFirstSave
         self.authorizeEntry = authorizeEntry
+        self.prefill = prefill
         _original = State(initialValue: prefill)
         if let firstDraft { _importID = State(initialValue: firstDraft.content.importID) }
         if let content = firstDraft?.content, firstDraft?.version != nil {
@@ -186,8 +188,8 @@ struct LedgerImportView: View {
                 }
                 .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText(firstDraft == nil ? "Cancel" : "Close")) {
-                    if let firstDraft, !original.isEmpty || firstDraft.version != nil {
-                        Task { if await firstDraft.flush(firstContents) != nil { dismiss() } }
+                    if let firstDraft {
+                        Task { if await firstDraft.closeSavingEdits(firstContents, prefill: prefill) { dismiss() } }
                     } else { dismiss() }
                 }.disabled(model.saving) } }
                 .interactiveDismissDisabled(model.saving || firstDraft != nil)
