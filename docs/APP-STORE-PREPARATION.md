@@ -51,8 +51,8 @@ Use these notes with the signed build once the walkthroughs below have passed on
 
 **What to test**
 
-1. In Shop, tap Compare packs. Enter “Demo wraps” and a need of 12. Compare a pack of 8 for $3.20 with a pack of 6 for $2.70. Each option needs two packs. Look for totals of $6.40 and $5.40. Save, quit the app, and reopen the app. Find the saved comparison in Records.
-2. Open Settings from a tab’s main screen, then Support. Review the support summary and choose Copy in the share sheet. The copied text should match the preview. Your groceries, prices, and pickup name should stay private.
+1. In Shop, tap Compare packs. Enter “Demo wraps” and a need of 12. Enter a pack of 8 for $3.20 and a pack of 6 for $2.70, then tap Compare enough food. Each option needs two packs. Look for totals of $6.40 and $5.40. Save, quit the app, and reopen the app. Find the saved comparison in Records.
+2. Open Settings from a tab’s main screen, then Support. Review the support summary, tap Share support summary, then choose Copy in the share sheet. The copied text should match the preview. Your groceries, prices, and pickup name should stay private.
 3. In Shop, open My Pantry and complete setup if prompted. Tap Scan products. Type “Demo oats” as the product name and add it. Open that product and enter 1 unit per package and 2 packages received. If asked for a stock action, choose Add a separate physical batch. Return to the batch, enter “Demo Market” as the store, confirm receipt, review, and save. Quit and reopen My Pantry. Look for one Demo oats batch with 2 units.
 4. If something differs, send feedback through TestFlight. Include the language, the step you reached, and what appeared. Use fictional groceries in any screenshot.
 
@@ -62,8 +62,8 @@ Use these notes with the signed build once the walkthroughs below have passed on
 
 **Qué probar**
 
-1. En Compras, toca Comparar paquetes. Escribe «Demo wraps» e indica que necesitas 12 unidades. Compara un paquete de 8 por $3.20 con uno de 6 por $2.70. En ambos casos necesitas dos paquetes. Los totales deberían ser $6.40 y $5.40. Guarda la comparación, cierra la app y vuelve a abrirla. Busca la comparación guardada en Historial.
-2. Abre Configuración desde la pantalla principal de una pestaña y entra en Soporte. Revisa el resumen de soporte. Abre la hoja para compartir y elige Copiar. El texto copiado debería coincidir con el resumen. Los alimentos, los precios y el nombre de tu compra deben seguir siendo privados.
+1. En Compras, toca Comparar paquetes. Escribe «Demo wraps» e indica que necesitas 12 unidades. Ingresa un paquete de 8 por $3.20 y otro de 6 por $2.70. Toca Comparar la cantidad necesaria. En ambos casos necesitas dos paquetes. Los totales deberían ser $6.40 y $5.40. Guarda la comparación, cierra la app y vuelve a abrirla. Busca la comparación guardada en Historial.
+2. Abre Configuración desde la pantalla principal de una pestaña y entra en Soporte. Revisa el resumen de soporte. Toca Compartir resumen de soporte y elige Copiar en la hoja para compartir. El texto copiado debería coincidir con el resumen. Los alimentos, los precios y el nombre de tu compra deben seguir siendo privados.
 3. En Compras, abre Mi despensa y completa la configuración si se te pide. Toca Escanear productos. Escribe «Avena de prueba» como nombre del producto y agrégalo. Abre el producto e indica que recibiste 2 envases con 1 unidad cada uno. Si se te pide elegir cómo registrar las existencias, selecciona Añadir un lote físico aparte. Vuelve al lote, escribe «Mercado de prueba» como tienda, confirma que recibiste los productos, revisa los datos y guarda. Cierra la app y vuelve a abrir Mi despensa. Deberías ver un solo lote de Avena de prueba con 2 unidades.
 4. Si algo sale distinto, envía tus comentarios por TestFlight. Indica el idioma, el paso en el que estabas y qué apareció. Usa alimentos ficticios en las capturas de pantalla.
 
