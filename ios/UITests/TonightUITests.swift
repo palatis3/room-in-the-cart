@@ -52,6 +52,23 @@ import XCTest
         XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8), "Browse and canceled recipe review must leave the workspace without a pickup")
         XCTAssertFalse(app.buttons["tonight.apply"].exists)
     }
+    func testMealExplanationOfflineFallbackInEnglishAndSpanishDoesNotRequireAccount() throws {
+        for spanish in [false, true] {
+            app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
+            app.launch()
+            tap(app.buttons["shop.myPantry"])
+            tap(app.buttons["pantry.setup.apply"])
+            tap(app.buttons["pantry.tonight"])
+            let text = spanish ? "La ayuda en línea requiere una cuenta de adulto autorizada. Puedes seguir revisando coincidencias locales sin iniciar sesión." : "Online help requires an authorized adult account. Keep reviewing local matches without signing in."
+            let fallback = app.staticTexts[text]
+            revealText(fallback)
+            XCTAssertTrue(fallback.exists, app.debugDescription)
+            XCTAssertFalse(app.buttons["tonight.explanations.send"].exists)
+            XCTAssertFalse(app.buttons["tonight.explanations.open"].exists)
+            XCTAssertFalse(app.buttons["tonight.apply"].exists)
+            app.terminate()
+        }
+    }
     private func revealText(_ element: XCUIElement) {
         for _ in 0..<12 {
             let top = app.navigationBars.firstMatch.frame.maxY
