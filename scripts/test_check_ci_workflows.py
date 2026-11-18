@@ -4,8 +4,8 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from check_ci_workflows import (BITRISE_LABEL, M4_LABEL, M4_RUNNER, CORE_BUILD_JOB, RELEASE_BUILD_JOB,
-                                STOREKIT_JOB, FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, ROUTED_NATIVE_JOBS,
+from check_ci_workflows import (A1_LABEL, A2_LABEL, A2_RUNNER, CORE_BUILD_JOB, RELEASE_BUILD_JOB,
+                                STOREKIT_JOB, PRODUCER_JOBS, FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, ROUTED_NATIVE_JOBS,
                                 POLICY, QUEUE_ERROR, bitrise_group, lint_workflows, parse_workflow, validate_workflows)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,10 +32,10 @@ QUEUE_BLOCK = """    concurrency:
 GITHUB_TEXT = TEXT.replace(QUEUE_BLOCK, '')
 GITHUB_POLICY = {('probe.yml', 'native'): None}
 FIXTURE_JOB = ('ios-fixtures.yml', 'build-contributor')
-FIXTURE_GROUP = bitrise_group(FIXTURE_JOB, 0)
+FIXTURE_GROUP = bitrise_group(FIXTURE_JOB, 'provider')
 FIXTURE_TEXT = TEXT.replace('  native:', '  build-contributor:').replace(
     'runs-on: macos-15', 'runs-on: ' + FIXTURE_RUNNER).replace('ritc-macos-slot-0', FIXTURE_GROUP)
-FIXTURE_POLICY = {FIXTURE_JOB: 0}
+FIXTURE_POLICY = {FIXTURE_JOB: 'provider'}
 
 
 class WorkflowGuardTests(unittest.TestCase):
@@ -68,9 +68,9 @@ class WorkflowGuardTests(unittest.TestCase):
         canonical = 'palatis3/room-in-the-cart'
         fixture = ('ios-fixtures.yml', 'contributor-tests')
         core = ('ci.yml', 'ios-tests')
-        fixed_groups = {FIXTURE_JOB: 'ritc-bitrise-slot-0', ('ios-fixtures.yml', 'build-dinner'): 'ritc-bitrise-slot-1',
-                        CORE_BUILD_JOB: 'ritc-bitrise-slot-2', RELEASE_BUILD_JOB: 'ritc-bitrise-m4-slot-1',
-                        STOREKIT_JOB: 'ritc-bitrise-slot-2'}
+        fixed_groups = {identity: f'ritc-bitrise-producer-{identity[0][:-4]}-{identity[1]}-1635-2'
+                        for identity in PRODUCER_JOBS}
+        fixed_groups[STOREKIT_JOB] = 'ritc-bitrise-a2-slot-2'
         # Exercise canonical PRs, forks, outage mode, and every allowed/denied event.
         cases = [(canonical, event, canonical, '') for event in
                  ('push', 'schedule', 'workflow_dispatch', 'workflow_call', 'pull_request')]
@@ -79,17 +79,17 @@ class WorkflowGuardTests(unittest.TestCase):
                   (canonical, 'pull_request', canonical, 'true')]
         cases += [(canonical, event, canonical, '') for event in ('pull_request_target', 'repository_dispatch', '')]
         for i, (repository, event, head, github_only) in enumerate(cases):
-            for provider in ('github', 'bitrise', 'bitrise-m4', 'unknown', 'bitrise-runner-more ci'):
+            for provider in ('github', 'bitrise-A1', 'bitrise-A2', 'bitrise', 'bitrise-m4', 'unknown', 'bitrise-runner-more ci'):
                 with self.subTest(repository=repository, event=event, head=head, github_only=github_only, provider=provider):
                     context = {'github.event.pull_request.head.repo.full_name': head, 'github.event_name': event,
                                'vars.RITC_GITHUB_MAC_ONLY': github_only, 'github.repository': repository,
                                'github.run_id': 1635, 'github.run_attempt': 2, 'matrix.locale': 'es',
-                               'matrix.provider': provider, 'matrix.macos_slot': 2, 'matrix.m4_slot': 0,
+                               'matrix.provider': provider, 'matrix.macos_slot': 2, 'matrix.pool_slot': 0,
                                'matrix.profile': 'contributor', 'matrix.shard': 'ui-03'}
                     trusted = i < 5
-                    self.assertEqual(evaluate(FIXTURE_RUNNER, context), BITRISE_LABEL if trusted else 'xcode-27')
-                    self.assertEqual(evaluate(M4_RUNNER, context), M4_LABEL if trusted else 'xcode-27')
-                    runner = {'bitrise': BITRISE_LABEL, 'bitrise-m4': M4_LABEL}.get(provider, 'xcode-27')
+                    self.assertEqual(evaluate(FIXTURE_RUNNER, context), A1_LABEL if trusted else 'xcode-27')
+                    self.assertEqual(evaluate(A2_RUNNER, context), A2_LABEL if trusted else 'xcode-27')
+                    runner = {'bitrise-A1': A1_LABEL, 'bitrise-A2': A2_LABEL}.get(provider, 'xcode-27')
                     self.assertEqual(evaluate(FIXTURE_CONSUMER_RUNNER, context), runner if trusted else 'xcode-27')
                     groups = {}
                     for identity in ROUTED_NATIVE_JOBS:
@@ -98,7 +98,7 @@ class WorkflowGuardTests(unittest.TestCase):
                         groups[identity] = group
                         native = fixed_groups.get(identity)
                         if not native:
-                            native = {'bitrise': 'ritc-bitrise-slot-2', 'bitrise-m4': 'ritc-bitrise-m4-slot-0'}.get(provider)
+                            native = {'bitrise-A1': 'ritc-bitrise-a1-slot-0', 'bitrise-A2': 'ritc-bitrise-a2-slot-0'}.get(provider)
                         if trusted and native:
                             self.assertEqual(group, native)
                             continue
@@ -116,14 +116,61 @@ class WorkflowGuardTests(unittest.TestCase):
                     fallbacks = [value.casefold() for value in groups.values() if value.startswith('ritc-github-job-')]
                     self.assertEqual(len(fallbacks), len(set(fallbacks)))
 
+    def test_product_jobs_seek_pool_capacity_without_cross_run_slot_blocking(self):
+        groups = set()
+        for run in (100, 101):
+            for attempt in (1, 2):
+                for identity in PRODUCER_JOBS:
+                    self.assertEqual(POLICY[identity], 'provider')
+                    expression = bitrise_group(identity, POLICY[identity])
+                    context = {'github.event.pull_request.head.repo.full_name': 'palatis3/room-in-the-cart',
+                               'github.event_name': 'push', 'vars.RITC_GITHUB_MAC_ONLY': '',
+                               'github.repository': 'palatis3/room-in-the-cart',
+                               'github.run_id': run, 'github.run_attempt': attempt}
+                    for token, value in context.items(): expression = expression.replace(token, repr(value))
+                    expression = expression.removeprefix('${{ ').removesuffix(' }}').replace('&&', 'and').replace('||', 'or')
+                    group = eval(expression, {'__builtins__': {}}, {'format': str.format})
+                    self.assertEqual(group, f'ritc-bitrise-producer-{identity[0][:-4]}-{identity[1]}-{run}-{attempt}')
+                    self.assertNotIn('-slot-', group)
+                    groups.add(group)
+        self.assertEqual(len(groups), 16)
+        # Product admission never changes the consumers' twelve shared lanes.
+        self.assertEqual(POLICY[STOREKIT_JOB], 2)
+
+    def test_twelve_lanes_are_shared_across_workflows_and_disjoint_between_pools(self):
+        context = {'github.event.pull_request.head.repo.full_name': 'palatis3/room-in-the-cart',
+                   'github.event_name': 'push', 'vars.RITC_GITHUB_MAC_ONLY': '',
+                   'github.repository': 'palatis3/room-in-the-cart', 'github.run_id': 1,
+                   'github.run_attempt': 1, 'matrix.profile': 'contributor', 'matrix.shard': 'ui-01'}
+        lanes = set()
+        for pool in ('A1', 'A2'):
+            for slot in range(6):
+                evaluated = set()
+                for identity in (('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
+                                 ('ios-fixtures.yml', 'dinner-tests')):
+                    expression = bitrise_group(identity, POLICY[identity])
+                    for token, value in {**context, 'matrix.provider': 'bitrise-' + pool,
+                                         'matrix.pool_slot': slot}.items():
+                        expression = expression.replace(token, repr(value))
+                    expression = expression.removeprefix('${{ ').removesuffix(' }}').replace('&&', 'and').replace('||', 'or')
+                    evaluated.add(eval(expression, {'__builtins__': {}}, {'format': str.format}))
+                self.assertEqual(evaluated, {f'ritc-bitrise-{pool.lower()}-slot-{slot}'})
+                lanes.update(evaluated)
+        self.assertEqual(len(lanes), 12)
+        self.assertEqual({p: sum(f'bitrise-{p}-' in lane for lane in lanes) for p in ('a1', 'a2')},
+                         {'a1': 6, 'a2': 6})
+
     def test_provider_and_admission_route_cannot_escape_inventory(self):
         self.path = Path(self.temp.name) / FIXTURE_JOB[0]
         self.assertEqual(len(self.validate(FIXTURE_TEXT, FIXTURE_POLICY)), 1)
-        for changed in (FIXTURE_TEXT.replace(FIXTURE_RUNNER, "'" + BITRISE_LABEL + "'"),
+        for changed in (FIXTURE_TEXT.replace(FIXTURE_RUNNER, "'" + A1_LABEL + "'"),
                         FIXTURE_TEXT.replace(FIXTURE_GROUP, 'ritc-macos-slot-0'),
-                        FIXTURE_TEXT.replace('ritc-bitrise-slot-0', 'ritc-bitrise-slot-3'),
+                        FIXTURE_TEXT.replace(FIXTURE_GROUP, "${{ 'ritc-bitrise-a1-slot-0' }}"),
                         FIXTURE_TEXT.replace("github.repository == 'palatis3/room-in-the-cart'", 'true'),
-                        FIXTURE_TEXT.replace('bitrise-runner-room in cart', 'bitrise-runner-other')):
+                        FIXTURE_TEXT.replace('bitrise-runner-A1', 'bitrise-runner-other'),
+                        FIXTURE_TEXT.replace('bitrise-runner-A1', 'bitrise-runner-room in cart'),
+                        FIXTURE_TEXT.replace('bitrise-runner-A1', 'bitrise-runner-ci 2'),
+                        FIXTURE_TEXT.replace('ritc-bitrise-producer-', 'ritc-bitrise-slot-')):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 self.validate(changed, FIXTURE_POLICY)
         core = ('ci.yml', 'ios-tests')
@@ -136,22 +183,22 @@ class WorkflowGuardTests(unittest.TestCase):
         core_policy = {core: POLICY[core]}
         self.assertEqual(len(self.validate(consumer, core_policy)), 1)
         for changed in (consumer.replace(FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER),
-                        consumer.replace("matrix.provider == 'bitrise'", 'true'),
+                        consumer.replace("matrix.provider == 'bitrise-A1'", 'true'),
                         consumer.replace(core_group, 'ritc-macos-slot-${{ matrix.macos_slot }}'),
-                        consumer.replace('matrix.m4_slot', 'matrix.macos_slot'),
-                        consumer.replace("matrix.provider == 'bitrise-m4'", 'true'),
-                        consumer.replace('ritc-bitrise-m4-slot-', 'ritc-bitrise-slot-'),
+                        consumer.replace('matrix.pool_slot', 'matrix.macos_slot'),
+                        consumer.replace("matrix.provider == 'bitrise-A2'", 'true'),
+                        consumer.replace('ritc-bitrise-a2-slot-', 'ritc-bitrise-a1-slot-'),
                         consumer.replace('github.run_attempt', 'github.run_id'),
                         consumer.replace('matrix.shard', 'matrix.macos_slot'),
-                        consumer.replace('bitrise-runner-ci 2', 'bitrise-runner-more ci'),
-                        consumer.replace('bitrise-runner-ci 2', 'bitrise-runner-tessss'),
+                        consumer.replace('bitrise-runner-A2', 'bitrise-runner-more ci'),
+                        consumer.replace('bitrise-runner-A2', 'bitrise-runner-tessss'),
                         consumer.replace('needs.ios-build.outputs.test_matrix', 'needs.other.outputs.test_matrix'),
                         consumer.replace('  ios-tests:', '  ios-build:')):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 self.validate(changed, core_policy)
         for identity, runner, slot, wrong_slot in [
-            (CORE_BUILD_JOB, FIXTURE_RUNNER, 'ritc-bitrise-slot-2', 'ritc-bitrise-slot-3'),
-            (RELEASE_BUILD_JOB, M4_RUNNER, 'ritc-bitrise-m4-slot-1', 'ritc-bitrise-m4-slot-6'),
+            (CORE_BUILD_JOB, A2_RUNNER, 'ritc-bitrise-a2-slot-0', 'ritc-bitrise-a2-slot-6'),
+            (RELEASE_BUILD_JOB, A2_RUNNER, 'ritc-bitrise-a2-slot-1', 'ritc-bitrise-a2-slot-6'),
         ]:
             name = identity[1]
             group = bitrise_group(identity, POLICY[identity])
@@ -160,11 +207,11 @@ class WorkflowGuardTests(unittest.TestCase):
             producer_policy = {identity: POLICY[identity]}
             self.assertEqual(len(self.validate(producer, producer_policy)), 1)
             for changed in (producer.replace(group, slot),
-                            producer.replace(slot, wrong_slot),
+                            producer.replace('github.run_attempt', '0'),
                             producer.replace('github.run_id', 'github.ref'),
                             producer.replace(runner, FIXTURE_CONSUMER_RUNNER),
-                            producer.replace(runner, M4_RUNNER if name == 'ios-build' else FIXTURE_RUNNER),
-                            producer.replace(runner, M4_LABEL),
+                            producer.replace(runner, FIXTURE_RUNNER),
+                            producer.replace(runner, A2_LABEL),
                             producer.replace(runner, "'bitrise-runner-tessss'"),
                             producer.replace(runner, "'bitrise-runner-more ci'"),
                             producer.replace("github.repository == 'palatis3/room-in-the-cart'", 'true'),
@@ -172,7 +219,7 @@ class WorkflowGuardTests(unittest.TestCase):
                 with self.subTest(changed=changed), self.assertRaises(ValueError):
                     self.validate(changed, producer_policy)
         self.path = Path(self.temp.name) / 'probe.yml'
-        for label in (FIXTURE_RUNNER, BITRISE_LABEL, 'xcode-27-xlarge', 'macos-15-xlarge'):
+        for label in (FIXTURE_RUNNER, A1_LABEL, 'xcode-27-xlarge', 'macos-15-xlarge'):
             with self.assertRaisesRegex(ValueError, 'Expected standard GitHub runner'):
                 self.validate(GITHUB_TEXT.replace('runs-on: macos-15', 'runs-on: ' + label))
 
@@ -214,7 +261,7 @@ class WorkflowGuardTests(unittest.TestCase):
             self.validate(text, {})
 
     def test_slots_cannot_be_owned_by_workflow_caller_or_linux_job(self):
-        for text in (GITHUB_TEXT.replace('original-pr-${{ github.ref }}', 'ritc-bitrise-slot-0'),
+        for text in (GITHUB_TEXT.replace('original-pr-${{ github.ref }}', 'ritc-bitrise-a1-slot-0'),
                      GITHUB_TEXT.replace('  cancel-in-progress: true\n', '  cancel-in-progress: true\n  queue: max\n'),
                      TEXT.replace('runs-on: macos-15', 'runs-on: ubuntu-24.04'),
                      TEXT.replace('runs-on: macos-15', 'uses: ./.github/workflows/ci.yml')):
@@ -224,8 +271,8 @@ class WorkflowGuardTests(unittest.TestCase):
     def test_nonleaf_namespace_is_case_insensitive_and_computed_prefixes_are_proven_disjoint(self):
         groups = ('RITC-MACOS-SLOT-0', 'RiTc-MaCoS-sLoT-4', 'RITC-BITRISE-SLOT-0', 'RITC-BITRISE-M4-SLOT-0', 'RITC-BITRISE-M4-SLOT-5',
                   'RITC-GITHUB-JOB-CI-IOS-TESTS-10-2-UI-01', "ritc-github-${{ 'job-ci-ios-tests-10-2-ui-01' }}",
-                  'ritc-bitrise-m4-slot-${{ matrix.m4_slot }}', "ritc-bitrise-m${{ '4-slot-0' }}",
-                  'ritc-bitrise-slot-${{ matrix.macos_slot }}', "ritc-bitri${{ 'se-slot-0' }}",
+                  'ritc-bitrise-a2-slot-${{ matrix.pool_slot }}', "ritc-bitrise-m${{ '4-slot-0' }}",
+                  'ritc-bitrise-a1-slot-${{ matrix.macos_slot }}', "ritc-bitri${{ 'se-slot-0' }}",
                   "${{ 'ritc-macos-' }}slot-0", "${{ format('ritc-macos-slot-{0}', 0) }}",
                   "ritc-${{ 'macos-slot-0' }}", "RITC-MACOS-SLO${{ 't-0' }}")
         for group in groups:

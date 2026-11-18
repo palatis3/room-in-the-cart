@@ -1,7 +1,7 @@
 import Foundation
 import CoreDomain
 
-enum StructuredCaptureFailure: Error, Equatable { case invalidAmount, invalidPackCount, reviewRequired, destinationMismatch, guestReviewRequired }
+enum StructuredCaptureFailure: Error, Equatable { case invalidAmount, invalidPackCount, reviewRequired, destinationMismatch, guestReviewRequired, timingReviewRequired }
 enum CaptureInterpretationWarning: String, Equatable, Sendable { case quantityUnknown, packUnknown, negation, destination, ambiguous }
 
 struct CaptureLineDraft: Identifiable, Equatable, Sendable {
@@ -68,6 +68,12 @@ enum CaptureNumber {
 }
 
 enum StructuredCaptureParser {
+    // Quoted product wording may contain labels such as “for” or “sin”. Skip
+    // those spans before collecting the suffixes outside the product name.
+    private static let fieldLabels = try! NSRegularExpression(
+        pattern: #""[^"]*"|“[^”]*”|«[^»]*»|\([^()]*\)|\s+(for|para|to|destination:?|destino:?|without|except|sin|excepto)\s+"#,
+        options: .caseInsensitive)
+
     static let guestNouns: Set<String> = ["guest", "guests", "invitado", "invitada", "invitados", "invitadas", "comensal", "comensales"]
 
     static func isGuestProposal(_ text: String) -> Bool {
@@ -79,13 +85,31 @@ enum StructuredCaptureParser {
         guard explicitlyTreatAsItems || !isGuestProposal(text) else { throw StructuredCaptureFailure.guestReviewRequired }
         return text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.map { parse($0, destination: destination) }
     }
-    private static func parse(_ original: String, destination: String) -> CaptureLineDraft {
+    static func naturalList(_ text: String, destination: String, explicitlyTreatAsItems: Bool = false) throws
+        -> (lines: [CaptureLineDraft], timing: String?) {
+        try CaptureLimits.validate(text)
+        guard explicitlyTreatAsItems || !isGuestProposal(text) else { throw StructuredCaptureFailure.guestReviewRequired }
+        let proposal = try NaturalListSegmenter.propose(text, maximumItems: CaptureLimits.lines)
+        guard !proposal.requiresTimingReview, !proposal.items.isEmpty else { throw StructuredCaptureFailure.timingReviewRequired }
+        let drafts = proposal.items.map { item in
+            var draft = parse(String(item.wording), destination: destination, naturalList: true)
+            if item.needsBoundaryReview && !draft.warnings.contains(.ambiguous) { draft.warnings.append(.ambiguous) }
+            return draft
+        }
+        return (drafts, proposal.timing.map(String.init))
+    }
+
+    private static func parse(_ original: String, destination: String, naturalList: Bool = false) -> CaptureLineDraft {
         var body = original.trimmingCharacters(in: .whitespacesAndNewlines)
+        // The recognizer may append sentence punctuation. Keep the exact span in originalText.
+        if naturalList, let last = body.last, ".!?".contains(last) {
+            body.removeLast()
+        }
         var purpose = "", requestedDestination = "", exclusions = ""
         // Split bounded suffix labels in their actual order, preserving every source word.
-        let expression = try! NSRegularExpression(pattern: #"\s+(for|para|to|destination:?|destino:?|without|except|sin|excepto)\s+"#, options: .caseInsensitive)
         let source = body
-        let labels = expression.matches(in: source, range: NSRange(source.startIndex..., in: source))
+        let labels = fieldLabels.matches(in: source, range: NSRange(source.startIndex..., in: source))
+            .filter { $0.range(at: 1).location != NSNotFound }
         let matches = suffixLabels(in: source, candidates: labels)
         if let first = matches.first, let range = Range(first.range, in: source) { body = String(source[..<range.lowerBound]) }
         for (index, match) in matches.enumerated() {
@@ -103,9 +127,9 @@ enum StructuredCaptureParser {
         var warnings: [CaptureInterpretationWarning] = []
         let originalTokens = tokens
         let ranged = ListQuantityParser.takeRange(from: &tokens)
-        let number = ranged ? nil : try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true)
+        let number = ranged ? nil : try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true, allowingDecimalComma: naturalList)
         if ranged || number.map({ $0 > .zero }) == true {
-            if let label = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original) {
+            if let label = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original, allowingDecimalComma: naturalList) {
                 if let count = label.count { packCount = String(count) }
                 if let contents = label.amountPerPack, contents.amount > .zero {
                     perPack = contents.amount.description
@@ -120,6 +144,12 @@ enum StructuredCaptureParser {
                 } else { warnings.append(.ambiguous) }
             } else { warnings.append(.quantityUnknown) }
         } else { tokens = originalTokens; warnings.append(.quantityUnknown) }
+        // An omitted amount can stay unknown. An explicitly spoken range, zero
+        // or unreadable number needs the shopper's review before batch import.
+        if naturalList, warnings.contains(.quantityUnknown),
+           ranged || number != nil || originalTokens.first?.first?.isNumber == true {
+            warnings.append(.ambiguous)
+        }
         if tokens.contains(where: ListQuantityParser.isPackMarker) {
             if !warnings.contains(.packUnknown) { warnings.append(.packUnknown) }
             amount = ""; perPack = ""
@@ -169,10 +199,4 @@ enum StructuredCaptureParser {
         return labels
     }
 
-    private static func suffix(_ text: String, pattern: String) -> (String, String)? {
-        guard let expression = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-              let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range, in: text) else { return nil }
-        return (String(text[..<range.lowerBound]), String(text[range.upperBound...]))
-    }
 }

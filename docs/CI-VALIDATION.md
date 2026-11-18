@@ -429,27 +429,46 @@ and the final required result on the next candidate; local checks do not
 measure hosted savings. Before dispatching a diagnostic, check existing runs
 for the same source and selectors and use the smallest missing group.
 
-The reviewed capacity is five GitHub jobs, three M2 Pro Bitrise jobs and six
-M4 Large Bitrise jobs: up to **14 simultaneous native jobs** when work is ready
-and providers have capacity. The M2 pool is `bitrise-runner-room in cart`; the
-M4 pool is `bitrise-runner-ci 2`. Its space is part of the label. The Bitrise
-queues remain `ritc-bitrise-slot-0..2` and `ritc-bitrise-m4-slot-0..5`. Keep
-compilation caching enabled in both pools. The workspace has 36 M2 Pro vCPUs
-and 30 M4 vCPUs; the unused M4 pools share the same allowance.
-Configuration evidence is in `.build/BitriseM4Nov11/capacity-review.json`.
+The reviewed Bitrise configuration now contains only `bitrise-runner-A1`
+(M4 Large, 5 cores/14 GB, six machines) and `bitrise-runner-A2`
+(M2 Pro Large, 6 cores/14 GB, six machines), both on `osx-tahoe-27`.
+The twelve repository-wide queues are `ritc-bitrise-a1-slot-0..5` and
+`ritc-bitrise-a2-slot-0..5`. These match the separate 30 M4 and 36 M2 Pro
+vCPU budgets. Five standard GitHub macOS jobs remain available for GitHub-only
+jobs and trusted-outage/untrusted fallback. Configured limits are not proof of
+live availability or seventeen simultaneous executions.
 
-The app/model producer uses M2 slot 2. The contributor and Dinner producers
-use M2 slots 0 and 1 respectively; core UI04 uses M2 slot 1 and UI05 uses M2
-slot 0. The following jobs share the six M4 slots.
+The contributor and Dinner producers use A1 provider admission; the app/model
+and unsigned Release producers use A2 provider admission. Their concurrency
+keys contain the workflow, job, run and attempt, so another candidate's producer
+or consumer cannot block them behind an artificial slot 0/1 while a machine is
+free. The real provider pools still limit total execution to six machines each.
+StoreKit retains A2 slot 2.
+Core and fixture consumers use their existing duration estimates to assign
+whole shards longest-first to the least-loaded of twelve lanes, preserving
+selector membership and matrix order. Ties alternate pools, starting with A2
+for core and A1 for fixtures. This spreads estimated long work without claiming
+a measured speed ratio between the different CPUs. Plans are generated per
+workflow; consumer queue names remain shared when separate matrices choose the
+same lane. Producers bypass those consumer queues, but remain in the same
+six-machine provider pool. GitHub fallback remains independent provider admission
+within its existing five-job platform limit. Queue admission remains `max`
+with job cancellation disabled, and superseded workflow cancellation remains
+unchanged. Collect actual queue, execution and final-gate timings before
+claiming improvement or changing the estimates. The producer-only change follows
+observed idle A1/A2 machines while products from separate candidate runs waited
+behind shared slots 0/1; it makes no throughput claim until the next grouped run.
+It does not change selectors, test groups, cache gates or required checks.
 
-| Job or group | M4 slot |
-| --- | --- |
-| Full core UI01, UI03, known-trip quote adoption and Spanish created-meal Undo | 0 |
-| Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 |
-| Contributor balanced-03, core UI10 and delivery stock/purchase | 2 |
-| Delivery recovery/cook/closeout, core UI07 and UI08, and Dinner Decision Sheet | 3 |
-| Core UI02, English expired quote, filled financial fields, Spanish skipped-dinner Undo, and Shared Records | 4 |
-| Core UI09, stale quote save and contributor balanced-01 and balanced-05 | 5 |
+Both pools retain gated compilation caching on the four build producers.
+The source migration does not enable provider settings or establish a cache
+hit: fresh pool execution and cold/warm invocation evidence must be verified
+separately. Existing source, build configuration, toolchain and product identity
+checks remain required for Debug, Release and every fixture profile.
+
+The routing observations below describe the retired nine-machine configuration.
+Their labels, slot assignments and timing comparisons are historical evidence,
+not instructions for current runs.
 
 On the November 17 UTC candidate, Spanish created-meal Undo and delivery
 stock/purchase stopped before XCTest because the GitHub runner's existing
@@ -532,8 +551,9 @@ job times for expired quote, filled financial fields and stale save were 5m34s,
 and 16m36s. These times cover each job individually. The full batch also
 depends on other suites. [GitHub fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43191347210) · [M4 fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43203604221)
 
-Bitrise consumer rows use `macos_slot` for M2 or a separate `m4_slot` for M4.
-GitHub admission does not depend on either field. Canonical trusted events select
+Current Bitrise consumer rows use `provider` (`bitrise-A1` or `bitrise-A2`)
+and `pool_slot` (0–5). `macos_slot` remains legacy GitHub matrix metadata;
+GitHub admission does not depend on it. Unknown providers fall back to GitHub. Canonical trusted events select
 the exact pool label and queue; external forks, other repositories and unsupported
 events remain on GitHub. The complete source/compiled inventories, row ordering,
 selectors, model-result gate, artifacts, timeouts and toolchain/runtime checks
@@ -549,7 +569,7 @@ slots 1 and 5 frees their former M2 slots for jobs such as UI05 and the
 Spanish created-dinner Undo check. Measure the effect on the next combined run.
 [Core jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43203604405) · [Fixture jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43203604221)
 
-The two M2 fixture producers, main producer and M4 unsigned Release producer
+The two A1 fixture producers and A2 main and unsigned Release producers
 activate Xcode compilation caching before their build in a separate step.
 The CLI is pinned to 3.19.5 and its official archive SHA256; Build Hub supplies
 workspace authentication without a repository token. Cache activation is optional
@@ -590,7 +610,7 @@ slots3/4 and only two executing on slots0/3, while core UI09 occupied slot4.
 The next quote rows for available slots1/2 had not been admitted. Removing that
 redundant window let all rows reach their existing slot queues without changing
 the then-five-job cap, coverage or cancellation policy. The Bitrise addition
-above supplies separately capped M2 and M4 native slots.
+above supplies six A1 and six A2 native slots.
 Confirm utilization on the next combined run; no speedup is claimed from local
 workflow validation alone. GitHub documents the separate
 [matrix limit](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#defining-the-maximum-number-of-concurrent-jobs)

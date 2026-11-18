@@ -343,8 +343,22 @@ import CoreDomain
         XCTAssertTrue(model.prepare([.choose(PlannedDinner(template: try recipe()))])); _ = await model.applyPreview()
         let before = model.shop
         let day = try MealDay(year: 2026, month: 11, day: 8, timeZoneIdentifier: "America/Los_Angeles")
-        let saved = await model.saveNote(DinnerWeekNote(shopID: model.shop!.id, day: day, kind: .away, text: "Away"))
+        let note = DinnerWeekNote(shopID: model.shop!.id, day: day, kind: .away, text: "Away")
+        let editor = try XCTUnwrap(model.editorIdentity)
+        let saved = await model.saveNote(note, editor: editor)
         XCTAssertTrue(saved); XCTAssertEqual(model.shop, before); XCTAssertEqual(try model.week(start: day).days[0].notes.count, 1)
+    }
+    func testDayNoteEditorLosesWriteAccessWhenAnotherPickupIsSelected() async throws {
+        let (store, model) = fixture()
+        let editor = try XCTUnwrap(model.editorIdentity)
+        let day = try MealDay(year: 2026, month: 11, day: 1, timeZoneIdentifier: "America/New_York")
+        let note = DinnerWeekNote(shopID: editor.shopID, day: day, kind: .guests, text: "Nine")
+        let other = ShoppingLedger()
+        store.workspace.shops.append(other)
+        store.workspace.selectedShopID = other.id
+        let saved = await model.saveNote(note, editor: editor)
+        XCTAssertFalse(saved)
+        XCTAssertTrue(store.workspace.dinnerPlanning.weekNotes.isEmpty)
     }
     func testLockedBasketPreviewOnlyAndCalendarRemainsManual() async throws {
         let (store, _) = fixture()

@@ -51,6 +51,7 @@ struct ShopperInboxContent: View {
                                             if let quantity = request.ownQuantity { Text(quantity) }
                                             if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                                             Text(householdTime(request.receivedAt)).font(.caption)
+                                            RequestReadTimeLabel(asOf: model.requestReadTimes.rows[request.id])
                                         }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                                             .contentShape(Rectangle())
                                     }.disabled(model.busy || model.pending != nil)
@@ -63,7 +64,10 @@ struct ShopperInboxContent: View {
                                     .id(request.id)
                             }
                         }
-                        if model.requests.isEmpty, !model.busy { Text(ht("No requests are available in this shop.")) }
+                        if model.requests.isEmpty, !model.busy {
+                            Text(ht("No requests are available in this shop."))
+                            RequestReadTimeLabel(asOf: model.requestReadTimes.emptyPage)
+                        }
                         if model.nextCursor != nil { Button(ht("Load more requests")) { Task { await model.load(more: true) } }.disabled(model.busy) }
                     }
                     if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.inbox.notice") } }
@@ -157,6 +161,7 @@ struct HouseholdRequestDecisionView: View {
                 if let selected = model.selected, selected.id == request.id {
                     Section(ht("Request")) {
                         Text(selected.originalItem).font(.headline)
+                        RequestReadTimeLabel(asOf: model.requestReadTimes.rows[selected.id])
                         if let alias = selected.authorAlias { LabeledContent(ht("Requested by"), value: alias) }
                         if let quantity = selected.ownQuantity { Text(quantity) }
                         Text(shopperRequestStatus(selected))
@@ -402,6 +407,16 @@ func householdMoney(_ amount: Int?, currency: String) -> String {
     guard let amount else { return ht("Unknown") }
     return (Decimal(amount) / 100).formatted(.currency(code: currency))
 }
+struct RequestReadTimeLabel: View {
+    let asOf: String?
+    var body: some View {
+        if let asOf, let date = serviceDate(asOf) {
+            LabeledContent(ht("Checked on server"), value: date.formatted(date: .abbreviated, time: .standard))
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
 func householdTime(_ value: String) -> String {
     serviceDate(value)?.formatted(date: .abbreviated, time: .shortened) ?? ht("Time unavailable")
 }

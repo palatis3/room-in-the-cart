@@ -844,6 +844,72 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: registryURL), before)
     }
 
+    @MainActor func testRecipeLinkStagesEditableDraftAndRejectsDismissedReader() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let link = try XCTUnwrap(model.beginImport(.recipePage))
+        let data = Data(#"{"@type":"Recipe","name":"Sopa","url":"https://www.example.org/sopa"}"#.utf8)
+        try await model.importRecipePage("https://www.example.org/sopa", from: link) { _ in data }
+        let row = try XCTUnwrap(model.review?.rows.first)
+        XCTAssertEqual(row.record.title, "Sopa")
+        model.dismissImport(link)
+        let editor = try XCTUnwrap(model.beginRecipeCorrection(row))
+        XCTAssertEqual(editor.initialRecipe?.missingFields, [.servings, .ingredients, .instructions])
+        XCTAssertEqual(editor.initialRecipe?.sourceURL, "https://www.example.org/sopa")
+        model.dismissImport(editor)
+        model.cancelReview()
+        let stale = try XCTUnwrap(model.beginImport(.recipePage))
+        do {
+            try await model.importRecipePage("https://www.example.org/sopa", from: stale) { _ in
+                model.dismissImport(stale)
+                return data
+            }
+            XCTFail("A dismissed reader cannot open a recipe review")
+        } catch { XCTAssertEqual(error as? ArchiveError, .unavailable) }
+        XCTAssertNil(model.review)
+        let saved = try await registry.refreshList()
+        XCTAssertTrue(saved.isEmpty)
+    }
+
+    @MainActor func testPartialRecipeCorrectionPreservesBatchAndOriginalSourceOnRetry() async throws {
+        let directory = try temporaryDirectory()
+        let manifest = directory.appendingPathComponent("manifest.json")
+        let registry = try RecoveryRegistry(url: manifest)
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let file = directory.appendingPathComponent("recipes.json")
+        try Data(#"[{"@type":"Recipe","name":"Arroz","url":"https://example.org/arroz"},{"@type":"Recipe","name":"Sopa"},{"@type":"Recipe","name":"Flan"}]"#.utf8).write(to: file)
+        await model.importFile(file, recipes: true)
+        let row = try XCTUnwrap(model.review?.rows.first { $0.record.title == "Arroz" })
+        let skipped = try XCTUnwrap(model.review?.rows.first { $0.record.title == "Flan" })
+        await model.skipRecipe(skipped)
+        let editor = try XCTUnwrap(model.beginRecipeCorrection(row))
+        var draft = try XCTUnwrap(editor.initialRecipe)
+        XCTAssertEqual(draft.missingFields, [.servings, .ingredients, .instructions])
+        draft.yieldText = "2–3 porciones"
+        draft.ingredients = ["1 taza de arroz"]
+        draft.steps = ["Lavar.", "Cocer."]
+        try await model.stageManualRecipe(draft, from: editor)
+        model.dismissImport(editor)
+        let pending = try await registry.refreshList()
+        XCTAssertTrue(pending.isEmpty)
+        XCTAssertEqual(Set(model.review?.rows.map(\.record.title) ?? []), ["Arroz", "Sopa"])
+        await model.applyReviewedImport()
+        let reopened = try RecoveryRegistry(url: manifest)
+        let recovered = try await reopened.refreshList()
+        let corrected = try XCTUnwrap(recovered.first { $0.record.id == row.record.id }?.record)
+        XCTAssertEqual(corrected.parentRevision, row.record.id)
+        XCTAssertEqual(try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(corrected.nativePayload)), draft)
+        await model.importFile(file, recipes: true)
+        XCTAssertEqual(model.review?.rows.map(\.record.title), ["Flan"])
+        XCTAssertEqual(model.recipeReport?.duplicateCount, 2)
+        await model.undoImport()
+        let afterUndo = try await reopened.refreshList()
+        XCTAssertTrue(afterUndo.isEmpty)
+    }
+
     @MainActor func testOversizedIngredientSkipsOnlyItsRecipeAndTheReviewedBatchReopens() async throws {
         let directory = try temporaryDirectory()
         let manifest = directory.appendingPathComponent("manifest.json")

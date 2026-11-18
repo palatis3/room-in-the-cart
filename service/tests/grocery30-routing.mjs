@@ -229,6 +229,7 @@ async function runVector(t,vector,f,admin,origin) {
   const states={},lookup=new Map([...requests].map(([key,value])=>[value,key]));
   for(const r of rows){
     const key=lookup.get(r.requestId);assert(key);assert.equal(r.authorAlias,key.split('/')[0]);
+    assert.equal(r.draftBasketLineId,current.phase==='draft' && r.status==='added'?id('basket/'+key):undefined);
     assert.equal(r.linkedLineId,current.phase==='placed' && r.status==='added'?id('basket/'+key):undefined);
     assert.equal(r.ownQuantity,reviewedSends.get(key));assert.equal(r.purchaseOutcome,undefined);states[key]=routeState(r);
   }
@@ -239,7 +240,7 @@ async function runVector(t,vector,f,admin,origin) {
     }
     const mine=ok(res).requests;
     mine.forEach(r=>sameFields(r,ownFields));
-    assert.deepEqual(mine,rows.filter(r=>r.authorAlias===actor).map(({authorAlias,linkedLineId,...r})=>r));
+    assert.deepEqual(mine,rows.filter(r=>r.authorAlias===actor).map(({authorAlias,linkedLineId,draftBasketLineId,...r})=>r));
     if(actor!==shopper)assert.equal((await inbox(actor)).status,404);
   }
   const mutations=(await admin.query("SELECT operation_id FROM ritc.operation WHERE household_id=$1 AND kind<>'shop.create'",[f.h])).rows;

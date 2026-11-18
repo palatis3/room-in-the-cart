@@ -306,6 +306,44 @@ import DeviceSurfaces
         XCTAssertEqual(reopened.item, "Do not silently replace the pending request")
         XCTAssertEqual(fixture.privateReads, 0)
     }
+    func testCachedRequestAndQueuedEditKeepTheirReadTimeUntilExactRetryConfirmsCurrentRevision() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), device = ContributorCaptureVault()
+        let firstRead = "2026-01-02T03:04:05.000Z", laterRead = "2026-01-03T04:05:06.000Z"
+        fixture.asOf = firstRead
+        fixture.offersQueuePermission = true
+        fixture.queueGrant = UUID()
+        let first = try await model(fixture, queue: queue, deviceVault: device)
+        XCTAssertEqual(first.requestReadTimes.emptyPage, firstRead)
+        first.item = "Beans"
+        await first.sendRequest()
+        let received = try XCTUnwrap(first.requests.first)
+        XCTAssertEqual(first.requestReadTimes.rows[received.id], firstRead)
+        first.edit(received)
+        first.item = "Pinto beans"
+        fixture.loseReply = true
+        await first.sendRequest()
+        guard case .waiting = first.delivery else { return XCTFail("Expected an unresolved delivery") }
+        XCTAssertEqual(first.requests.first?.originalItem, "Beans")
+        XCTAssertEqual(first.pendingCorrection(for: received), "Pinto beans")
+        XCTAssertEqual(first.requestReadTimes.rows[received.id], firstRead)
+        let command = try XCTUnwrap(fixture.commands.last)
+        fixture.rows[0]["status"] = "deferred"
+        fixture.rows[0]["revision"] = 3
+        fixture.rows[0]["ownActionAllowed"] = false
+        fixture.asOf = laterRead
+        let reopened = try await model(fixture, queue: queue, deviceVault: device)
+        await reopened.retry()
+        XCTAssertEqual(fixture.commands.last, command)
+        guard case .received(let receipt) = reopened.delivery else { return XCTFail("Missing the original receipt") }
+        XCTAssertEqual(receipt.request.revision, 2)
+        XCTAssertEqual(reopened.requests.first?.status, "deferred")
+        XCTAssertEqual(reopened.requests.first?.revision, 3)
+        XCTAssertNil(reopened.pendingCorrection(for: received))
+        XCTAssertEqual(reopened.requestReadTimes.rows[received.id], laterRead)
+    }
+
     func testRetryingQueuedSendPreservesLaterTypingAndClearsAnUnchangedDraft() async throws {
         for changeDraft in [false, true] {
             let queue = location()
@@ -896,6 +934,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
     let childDeviceToken = Data(repeating: 1, count: 32).base64EncodedString().replacingOccurrences(of: "=", with: "")
     var windowExpiry = "2099-01-01T00:00:00.000Z", windowFailure: WindowFailure?
     var offersQueuePermission = false, queueGrant: UUID?, queueExpiry: String?
+    var asOf: String?
     var failRequestRead = false
     var dropBeforeCommit = false, attemptedGrants: [UUID?] = []
     var enrollmentRevoked = false, revokedBootstrapChecks = 0
@@ -959,7 +998,9 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
                 privateReads += 1
                 return try response(["error": ["code": "access_ended"]], 403)
             }
-            return try response(["requests":rows,"nextCursor":NSNull()])
+            var page: [String: Any] = ["requests":rows,"nextCursor":NSNull()]
+            page["asOf"] = asOf
+            return try response(page)
         }
         if path.hasSuffix("/replay-windows") {
             replayStarted?.fulfill(); _ = replayGate?.wait(timeout: .now() + 5)
@@ -984,6 +1025,17 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
                let target = rows.first(where: { $0["requestId"] as? String == body["requestId"] as? String }),
                target["ownActionAllowed"] as? Bool == false {
                 return try response(["error": ["code": "followup_required"]], 409)
+            }
+            if json["kind"] as? String == "request.edit",
+               let body = json["body"] as? [String:Any],
+               let index = rows.firstIndex(where: { $0["requestId"] as? String == body["requestId"] as? String }) {
+                rows[index]["revision"] = (rows[index]["revision"] as? Int ?? 0) + 1
+                rows[index]["originalItem"] = body["originalItem"]
+                rows[index]["ownQuantity"] = body["ownQuantity"]
+                let receipt: [String:Any] = ["operationId":key, "kind":"request.edit", "request":rows[index]]
+                receipts[key] = receipt
+                if loseReply { loseReply = false; throw URLError(.networkConnectionLost) }
+                return try response(receipt)
             }
             if json["kind"] as? String == "request.withdraw" {
                 guard let target = json["body"] as? [String:Any], let i = rows.firstIndex(where: { $0["requestId"] as? String == target["requestId"] as? String }) else { throw URLError(.badServerResponse) }

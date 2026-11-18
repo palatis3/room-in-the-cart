@@ -83,7 +83,7 @@ test('Refresh reconciles a queued request after IndexedDB eviction without resen
   const pending = page.getByRole('article').filter({ hasText: 'Fixture oats' });
   await pending.getByRole('button', { name: 'Retry', exact: true }).waitFor();
   const status = page.getByRole('status');
-  assert.equal((await status.textContent()).trim(), 'Waiting to send from this browser');
+  assert.equal((await status.textContent()).trim(), 'Saved on this browser. Receipt unconfirmed.');
   assert.deepEqual(posts, [commandsPath]);
   assert.deepEqual(commandGrants, [grant], 'The persisted command must use the grant acknowledged by this device');
 

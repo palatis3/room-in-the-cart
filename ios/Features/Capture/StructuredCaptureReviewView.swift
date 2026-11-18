@@ -47,6 +47,10 @@ struct StructuredCaptureField: Hashable {
     @ObservedObject var corrections: CaptureCorrectionsModel
     let correctionScope: CaptureCorrectionScope?
     let fieldFocus: FocusState<StructuredCaptureField?>.Binding
+    var naturalBatch: Binding<NaturalCaptureBatch?> = .constant(nil)
+    var currentPickupID: UUID? = nil
+    var availablePickups: [CapturePickup] = []
+    var authorizePickup: (CapturePickup) -> Bool = { _ in false }
     let destination: String
     let source: CaptureSource
     let context: Context
@@ -75,17 +79,32 @@ struct StructuredCaptureField: Hashable {
                 Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 240)
                     .accessibilityLabel(captureText("Selected source photo"))
             }
-            Text(captureText("Actual destination") + ": " + destination).font(.headline)
-            Text(captureText(copy.destination))
+            if naturalBatch.wrappedValue == nil {
+                Text(captureText("Actual destination") + ": " + destination).font(.headline)
+                Text(captureText(copy.destination))
+            }
         }
+        pickupSection
         ForEach(lines) { snapshot in
             let placeholder = CaptureLineDraft(id: snapshot.id, proposedLineID: snapshot.proposedLineID,
                 originalText: "", originalName: "", name: "")
             let line = captureDraftBinding(placeholder, in: $lines)
             Section {
-                CaptureStructuredRow(line: line, corrections: corrections, fieldFocus: fieldFocus, destination: destination, source: source,
+                let editor = CaptureStructuredRow(line: line, corrections: corrections, fieldFocus: fieldFocus,
+                    destination: destination, source: source, batchReview: naturalBatch.wrappedValue != nil,
                     authorizeSpelling: { liveSpellingScope != nil && !spellingWorking && !corrections.failed }) { original, replacement in
-                    changeSpellings { await corrections.remember(original: original, replacement: replacement) }
+                        changeSpellings { await corrections.remember(original: original, replacement: replacement) }
+                    }
+                if naturalBatch.wrappedValue != nil {
+                    DisclosureGroup {
+                        editor
+                    } label: {
+                        naturalSummary(snapshot)
+                    }
+                    .accessibilityHint(captureText("Edit or skip this item."))
+                    .accessibilityIdentifier("capture.naturalRow")
+                } else {
+                    editor
                 }
             }
         }
@@ -141,7 +160,16 @@ struct StructuredCaptureField: Hashable {
             Button(captureText(copy.action)) {
                 guard authorize() else { validationMessage = copy.changed; return }
                 do {
-                    let reviewed = try lines.compactMap { try $0.reviewed(expectedDestination: destination) }
+                    let reviewed: [CaptureImportLine]
+                    if let batch = naturalBatch.wrappedValue {
+                        guard let pickup = batch.pickup, authorizePickup(pickup) else {
+                            validationMessage = "Choose an available pickup before continuing."
+                            return
+                        }
+                        reviewed = try batch.reviewed(lines, availablePickups: availablePickups)
+                    } else {
+                        reviewed = try lines.compactMap { try $0.reviewed(expectedDestination: destination) }
+                    }
                     guard !reviewed.isEmpty else { throw StructuredCaptureFailure.reviewRequired }
                     if context == .request, reviewed.count != 1 {
                         validationMessage = "Keep exactly one reviewed item for this request. Skip other lines or cancel; nothing has been sent."
@@ -154,7 +182,7 @@ struct StructuredCaptureField: Hashable {
                 } catch {
                     validationMessage = "Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers."
                 }
-            }.disabled(!authorize() || lines.isEmpty || !lines.contains(where: { !$0.skip }) || !lines.allSatisfy { $0.skip || $0.confirmed })
+            }.disabled(!authorize() || lines.isEmpty || !lines.contains(where: { !$0.skip }) || !reviewComplete)
                 .accessibilityIdentifier("capture.continue")
             Button(captureText("Back to captured words")) { fieldFocus.wrappedValue = nil; onBack() }
             Text(captureText(copy.next))
@@ -164,6 +192,77 @@ struct StructuredCaptureField: Hashable {
             requestedDisableScope = nil
             confirmDisable = false
         }
+    }
+
+    private var reviewComplete: Bool {
+        if let batch = naturalBatch.wrappedValue {
+            return batch.pickup != nil && lines.allSatisfy { $0.skip || !$0.needsNaturalClarification || $0.confirmed }
+        }
+        return lines.allSatisfy { $0.skip || $0.confirmed }
+    }
+
+    @ViewBuilder private var pickupSection: some View {
+        if let batch = naturalBatch.wrappedValue {
+            let pickupTitles = Dictionary(grouping: availablePickups, by: \.title)
+            Section(captureText("Pickup for all items")) {
+                if let timing = batch.timing {
+                    Text(captureText("Timing in your wording") + ": " + timing)
+                }
+                ForEach(Array(Set(lines.filter { $0.warnings.contains(.destination) }.map(\.destination))).sorted(), id: \.self) { wording in
+                    Text(captureText("Destination wording") + ": " + wording)
+                }
+                Picker(captureText("Pickup for all items"), selection: Binding(get: { batch.pickup }, set: { pickup in
+                    naturalBatch.wrappedValue?.pickup = pickup
+                    validationMessage = nil
+                })) {
+                    Text(captureText("Choose a pickup")).tag(nil as CapturePickup?)
+                    ForEach(Array(availablePickups.enumerated()), id: \.element.id) { index, pickup in
+                        let duplicate = (pickupTitles[pickup.title]?.count ?? 0) > 1
+                        let name = pickup.title + (duplicate ? " (#" + String(index + 1) + ")" : "")
+                        Text(pickup.id == currentPickupID ? name + " (" + captureText("Current pickup") + ")" : name)
+                            .tag(Optional(pickup))
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .accessibilityLabel(captureText("Pickup for all items"))
+                .accessibilityIdentifier("capture.batchPickup")
+            }
+        }
+    }
+
+    private func naturalSummary(_ line: CaptureLineDraft) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(line.name).font(.headline)
+            if line.skip {
+                Text(captureText("Skipped"))
+            } else {
+                if !line.amount.isEmpty {
+                    Text(naturalAmount(line.amount, unit: line.unit))
+                }
+                if !line.packCount.isEmpty || !line.amountPerPack.isEmpty {
+                    Text(captureText("Number of packs") + ": " + (line.packCount.isEmpty ? captureText("Unknown") : line.packCount))
+                    if !line.amountPerPack.isEmpty {
+                        Text(captureText("Usable amount in each pack") + ": " + naturalAmount(line.amountPerPack, unit: line.packUnit))
+                    }
+                }
+                if line.amount.isEmpty && (line.packCount.isEmpty || line.amountPerPack.isEmpty) {
+                    Text(captureText("Amount unknown"))
+                }
+                if !line.purpose.isEmpty { Text(captureText("Purpose or meal") + ": " + line.purpose) }
+                if !line.exclusions.isEmpty { Text(captureText("Exclusions") + ": " + line.exclusions) }
+                if line.needsNaturalClarification && !line.confirmed {
+                    Label(captureText("Check this wording"), systemImage: "questionmark.circle")
+                    Text(line.originalText).font(.footnote)
+                }
+            }
+        }
+        .foregroundStyle(.primary)
+    }
+
+    private func naturalAmount(_ literal: String, unit: UnitOfMeasure) -> String {
+        guard let amount = try? CaptureNumber.parse(literal) else { return literal + " " + unit.displayName }
+        return literal + " " + unit.comparisonLabel(for: amount)
     }
 
     private func changeSpellings(_ change: @escaping @MainActor () async -> Void) {
@@ -184,6 +283,7 @@ struct StructuredCaptureField: Hashable {
     let fieldFocus: FocusState<StructuredCaptureField?>.Binding
     let destination: String
     let source: CaptureSource
+    let batchReview: Bool
     let authorizeSpelling: () -> Bool
     let rememberSpelling: (String, String) -> Void
     var body: some View {
@@ -224,14 +324,16 @@ struct StructuredCaptureField: Hashable {
                         .accessibilityIdentifier("capture.field.purpose")
                         .focused(fieldFocus, equals: focus(.purpose))
                 }
-                labeledField(captureText("Destination wording")) {
-                    TextField(captureText("Destination wording"), text: field(\.destination), axis: .vertical)
-                        .accessibilityLabel(captureText("Destination wording"))
-                        .accessibilityIdentifier("capture.field.destination")
-                        .focused(fieldFocus, equals: focus(.destination))
+                if !batchReview {
+                    labeledField(captureText("Destination wording")) {
+                        TextField(captureText("Destination wording"), text: field(\.destination), axis: .vertical)
+                            .accessibilityLabel(captureText("Destination wording"))
+                            .accessibilityIdentifier("capture.field.destination")
+                            .focused(fieldFocus, equals: focus(.destination))
+                    }
+                    Button(captureText("Use the displayed destination")) { line.destination = destination; line.confirmed = false }
+                        .buttonStyle(.borderless)
                 }
-                Button(captureText("Use the displayed destination")) { line.destination = destination; line.confirmed = false }
-                    .buttonStyle(.borderless)
                 labeledField(captureText("Exclusions")) {
                     TextField(captureText("Exclusions, one per line"), text: field(\.exclusions), axis: .vertical)
                         .accessibilityLabel(captureText("Exclusions, one per line"))
@@ -254,7 +356,11 @@ struct StructuredCaptureField: Hashable {
                         Text(captureText("Remember this corrected product spelling")).frame(minHeight: 44)
                     }.buttonStyle(.borderless)
                 }
-                Toggle(captureText("I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns."), isOn: $line.confirmed)
+                if batchReview && line.needsNaturalClarification {
+                    Toggle(captureText("I checked this wording and amount."), isOn: $line.confirmed)
+                } else if !batchReview {
+                    Toggle(captureText("I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns."), isOn: $line.confirmed)
+                }
             }
         }.onChange(of: line.skip) { _, skip in
             if skip, fieldFocus.wrappedValue?.lineID == line.id { fieldFocus.wrappedValue = nil }

@@ -172,6 +172,30 @@ final class DinnerPlanningTests: XCTestCase {
         XCTAssertEqual(week.days[1].notes, [note])
         XCTAssertTrue(week.unscheduled.isEmpty)
     }
+    func testWeekNoteChangesOnlyTheReviewedNoteAndExactRetryPreservesRevision() throws {
+        let shop = ShoppingLedger(), other = ShoppingLedger()
+        let day = try MealDay(year: 2026, month: 11, day: 1, timeZoneIdentifier: "America/New_York")
+        let initial = DinnerWeekNote(shopID: shop.id, day: day, kind: .guests, text: "Eight")
+        let updated = DinnerWeekNote(id: initial.id, shopID: shop.id, day: day, kind: .guests, text: "Nine")
+        let unrelated = DinnerWeekNote(shopID: shop.id, day: day, kind: .side, text: "Save lunch")
+        var state = DinnerPlanningState()
+        try state.recordWeekNote(initial, access: access(shop), at: now)
+        try state.recordWeekNote(unrelated, access: access(shop), at: now)
+        try state.recordWeekNote(updated, replacing: initial, access: access(shop), at: now)
+        let committed = state
+        try state.recordWeekNote(updated, replacing: initial, access: access(shop), at: now)
+        let stale = DinnerWeekNote(id: initial.id, shopID: shop.id, day: day, kind: .away, text: "Away")
+        XCTAssertThrowsError(try state.recordWeekNote(stale, replacing: initial, access: access(shop), at: now)) {
+            XCTAssertEqual($0 as? DinnerPlanningError, .stalePreview)
+        }
+        let wrongShop = DinnerWeekNote(id: initial.id, shopID: other.id, day: day, kind: .away, text: "Away")
+        XCTAssertThrowsError(try state.recordWeekNote(wrongShop, replacing: updated, access: access(other), at: now)) {
+            XCTAssertEqual($0 as? DinnerPlanningError, .forbidden)
+        }
+        XCTAssertEqual(state, committed)
+        XCTAssertEqual(state.weekNotes, [updated, unrelated])
+    }
+
     func testPairingRetainsProtectedBindingIdentityAndQuantityAfterReplacingNamedGroup() throws {
         var ledger = ShoppingLedger(), state = DinnerPlanningState()
         let supper = ServingGroup(name: "Supper", servings: try Rational(2))

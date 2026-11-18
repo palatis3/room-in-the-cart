@@ -215,6 +215,7 @@ private enum LedgerDeletionJournal {
         do {
             var candidate = workspace
             try edit(&candidate)
+            candidate.listLayout.applyDepartmentMemory(to: candidate.shops, previous: workspace.shops)
             try candidate.validate()
             guard candidate != workspace else { error = nil; return true }
             guard let store else { return false }

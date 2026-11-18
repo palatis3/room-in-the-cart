@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Adjust plans for this day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust plans for this day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustar los planes de este día"
+          }
+        }
+      }
+    },
     "Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50.": {
       "extractionState": "manual",
       "localizations": {

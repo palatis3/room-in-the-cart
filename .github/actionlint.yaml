@@ -1,6 +1,7 @@
-# Reviewed native labels; the independent validator enforces provider routing
-# and separate five-GitHub/three-Bitrise slot limits.
+# Only the two reviewed Bitrise pools. Independent policy validates trust gates
+# and twelve repository-wide admission lanes, six per pool.
 self-hosted-runner:
   labels:
     - xcode-27
-    - "bitrise-runner-room in cart"
+    - bitrise-runner-A1
+    - bitrise-runner-A2

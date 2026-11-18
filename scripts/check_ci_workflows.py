@@ -16,37 +16,41 @@ GITHUB_JOB_PREFIX = 'ritc-github-job-'
 # Keep the old namespace reserved so a new job cannot bring back a fixed GitHub queue.
 LEGACY_GITHUB_SLOT_PREFIX = 'ritc-macos-slot-'
 GITHUB_RUNNERS = ('xcode-27', 'macos-15')
-BITRISE_SLOT_PREFIX = 'ritc-bitrise-slot-'
-BITRISE_LABEL = 'bitrise-runner-room in cart'
-M4_SLOT_PREFIX = 'ritc-bitrise-m4-slot-'
-M4_LABEL = 'bitrise-runner-ci 2'
+A1_SLOT_PREFIX = 'ritc-bitrise-a1-slot-'
+A1_LABEL = 'bitrise-runner-A1'
+A2_SLOT_PREFIX = 'ritc-bitrise-a2-slot-'
+A2_LABEL = 'bitrise-runner-A2'
 CORE_BUILD_JOB = ('ci.yml', 'ios-build')
 RELEASE_BUILD_JOB = ('ci.yml', 'ios-release')
 STOREKIT_JOB = ('ios-deep.yml', 'storekit')
+A2_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB, STOREKIT_JOB}
+PRODUCER_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB,
+                 ('ios-fixtures.yml', 'build-contributor'), ('ios-fixtures.yml', 'build-dinner')}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
 FIXTURE_TRUSTED = ("vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && "
                    "(github.event_name == 'push' || github.event_name == 'workflow_dispatch' || "
                    "github.event_name == 'workflow_call' || github.event_name == 'schedule' || "
                    "(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))")
-FIXTURE_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_LABEL + "' || 'xcode-27' }}"
-M4_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + M4_LABEL + "' || 'xcode-27' }}"
+FIXTURE_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + A1_LABEL + "' || 'xcode-27' }}"
+A2_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + A2_LABEL + "' || 'xcode-27' }}"
 FIXTURE_CONSUMER_RUNNER = ("${{ " + FIXTURE_TRUSTED +
-    " && (matrix.provider == 'bitrise-m4' && '" + M4_LABEL +
-    "' || matrix.provider == 'bitrise' && '" + BITRISE_LABEL + "') || 'xcode-27' }}")
+    " && (matrix.provider == 'bitrise-A2' && '" + A2_LABEL +
+    "' || matrix.provider == 'bitrise-A1' && '" + A1_LABEL + "') || 'xcode-27' }}")
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
-# Integers pin Bitrise producer slots. Matrices retain their reviewed identities
+# Provider admission lets four product jobs use any free machine in their pool.
+# Integers retain fixed consumer lanes. Matrices retain their reviewed identities
 # and producers. GitHub-only leaves use the platform's five macOS slots directly.
 POLICY = {
     ('ci.yml', 'swift-packages'): None,
-    RELEASE_BUILD_JOB: 1,
+    RELEASE_BUILD_JOB: 'provider',
     ('release-checks.yml', 'staging-iphone'): None,
     ('ci.yml', 'ios-swift-codeql'): None,
-    CORE_BUILD_JOB: 2,
+    CORE_BUILD_JOB: 'provider',
     ('ci.yml', 'ios-tests'): ('${{ fromJSON(needs.ios-build.outputs.test_matrix) }}', ('shard',)),
-    ('ios-fixtures.yml', 'build-contributor'): 0,
-    ('ios-fixtures.yml', 'build-dinner'): 1,
+    ('ios-fixtures.yml', 'build-contributor'): 'provider',
+    ('ios-fixtures.yml', 'build-dinner'): 'provider',
     ('ios-fixtures.yml', 'contributor-tests'): ('${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}', ('profile', 'shard')),
     ('ios-fixtures.yml', 'dinner-tests'): ('${{ fromJSON(needs.fixture-plan.outputs.dinner_matrix) }}', ('profile', 'shard')),
     ('ios-performance.yml', 'performance-build'): None,
@@ -71,13 +75,18 @@ def github_job_group(identity, matrix_fields=()):
 
 
 def bitrise_group(identity, expected):
-    if type(expected) is int:
-        prefix = M4_SLOT_PREFIX if identity == RELEASE_BUILD_JOB else BITRISE_SLOT_PREFIX
+    if expected == 'provider':
+        workflow, job = identity
+        route = (f"format('ritc-bitrise-producer-{workflow.removesuffix('.yml')}-{job}-{{0}}-{{1}}', "
+                 "github.run_id, github.run_attempt)")
+        fields = ()
+    elif type(expected) is int:
+        prefix = A2_SLOT_PREFIX if identity in A2_JOBS else A1_SLOT_PREFIX
         route = f"'{prefix}{expected}'"
         fields = ('locale',) if identity == STOREKIT_JOB else ()
     else:
-        route = ("(matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot)" +
-                 " || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot))")
+        route = ("(matrix.provider == 'bitrise-A2' && format('ritc-bitrise-a2-slot-{0}', matrix.pool_slot)" +
+                 " || matrix.provider == 'bitrise-A1' && format('ritc-bitrise-a1-slot-{0}', matrix.pool_slot))")
         fields = expected[1]
     return "${{ " + FIXTURE_TRUSTED + " && " + route + " || " + github_job_group(identity, fields) + " }}"
 
@@ -150,7 +159,7 @@ def parse_workflow(path):
 
 def native_job(job):
     labels = job.get('runs-on', [])
-    if labels in (FIXTURE_RUNNER, M4_RUNNER, FIXTURE_CONSUMER_RUNNER):
+    if labels in (FIXTURE_RUNNER, A2_RUNNER, FIXTURE_CONSUMER_RUNNER):
         return True
     if isinstance(labels, str):
         labels = [labels]
@@ -169,7 +178,7 @@ def nonleaf_group_is_disjoint(group):
     if not isinstance(group, str) or not group:
         return False
     folded = group.casefold()
-    reserved = (LEGACY_GITHUB_SLOT_PREFIX, GITHUB_JOB_PREFIX, BITRISE_SLOT_PREFIX, M4_SLOT_PREFIX)
+    reserved = (LEGACY_GITHUB_SLOT_PREFIX, GITHUB_JOB_PREFIX, "ritc-bitrise-", A1_SLOT_PREFIX, A2_SLOT_PREFIX)
     if any(prefix in folded for prefix in reserved):
         return False
     prefix = folded.split('${{', 1)[0]
@@ -232,7 +241,7 @@ def validate_workflows(paths, policy=POLICY):
                 require(job.get('runs-on') in GITHUB_RUNNERS, f'Expected standard GitHub runner: {identity}')
                 require('concurrency' not in job, f'GitHub native job must use provider admission: {identity}')
                 continue
-            runner = M4_RUNNER if identity == RELEASE_BUILD_JOB else FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
+            runner = A2_RUNNER if identity in A2_JOBS else FIXTURE_RUNNER if identity in PRODUCER_JOBS else FIXTURE_CONSUMER_RUNNER
             require(job.get('runs-on') == runner, f'Unreviewed native provider routing: {identity}')
             require(isinstance(concurrency, dict) and set(concurrency) == {'group', 'queue', 'cancel-in-progress'},
                     f'Bitrise job needs exactly group, queue and cancel-in-progress: {identity}')
