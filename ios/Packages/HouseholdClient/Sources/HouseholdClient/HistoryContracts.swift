@@ -52,7 +52,25 @@ public struct HistoryUsablePack: Codable, Equatable, Sendable {
         guard HistoryValidation.text(originalLiteral, 512) else { throw ClientError.configuration }
     }
 }
+public enum HistoryPriceKind: String, Codable, CaseIterable, Sendable {
+    case paidManual, paidReceipt, shelf, quote
+    public var isPaid: Bool { self == .paidManual || self == .paidReceipt }
+}
+
+/// A shared-shop-specific reference. Private pantry, receipt and lot identifiers are never sent.
+public struct HistoryPriceSourceRevision: Codable, Equatable, Sendable {
+    public let sourceId: String
+    public let revision: Int
+    public let shopRevision: Int
+    public let authorityEpoch: Int
+    public init(sourceId: String, revision: Int, shopRevision: Int, authorityEpoch: Int) {
+        self.sourceId = sourceId; self.revision = revision; self.shopRevision = shopRevision; self.authorityEpoch = authorityEpoch
+    }
+}
 public struct HistoryPriceObservation: Codable, Equatable, Identifiable, Sendable {
+    public var evidenceKind: HistoryPriceKind?
+    public var sourceRevision: HistoryPriceSourceRevision?
+    public var variant: String?
     public var id: String; public var shopId: String; public var itemName: String; public var packLabel: String
     public var usablePack: HistoryUsablePack?; public var price: HistoryCostEvidence; public var currency: String
     public var store: String; public var branch: String; public var channel: HistoryPriceChannel; public var mode: HistoryFulfillmentMode
@@ -60,7 +78,9 @@ public struct HistoryPriceObservation: Codable, Equatable, Identifiable, Sendabl
     public init(id: String = UUID().uuidString.lowercased(), shopId: String, itemName: String, packLabel: String,
                 usablePack: HistoryUsablePack?, price: HistoryCostEvidence, store: String, branch: String,
                 channel: HistoryPriceChannel, mode: HistoryFulfillmentMode, eligibility: String,
-                observedAt: String, sourceText: String, sourceLocale: String) throws {
+                observedAt: String, sourceText: String, sourceLocale: String, evidenceKind: HistoryPriceKind? = nil,
+                sourceRevision: HistoryPriceSourceRevision? = nil, variant: String? = nil) throws {
+        self.evidenceKind = evidenceKind; self.sourceRevision = sourceRevision; self.variant = variant
         self.id = id; self.shopId = shopId; self.itemName = itemName; self.packLabel = packLabel; self.usablePack = usablePack
         self.price = price; currency = "USD"; self.store = store; self.branch = branch; self.channel = channel; self.mode = mode
         self.eligibility = eligibility; self.observedAt = observedAt; self.sourceText = sourceText; self.sourceLocale = sourceLocale
@@ -70,11 +90,22 @@ public struct HistoryPriceObservation: Codable, Equatable, Identifiable, Sendabl
         guard HistoryValidation.ids([id, shopId]), currency == "USD", HistoryValidation.date(observedAt) != nil,
               [itemName, packLabel, store, branch, sourceLocale].allSatisfy({ HistoryValidation.text($0, 512) }),
               HistoryValidation.text(eligibility, 2048, empty: true), HistoryValidation.text(sourceText, 8192) else { throw ClientError.configuration }
+        if let ref = sourceRevision {
+            guard evidenceKind != nil, HistoryValidation.ids([ref.sourceId]), (1...1_000_000_000).contains(ref.revision), ref.shopRevision > 0, ref.authorityEpoch > 0 else { throw ClientError.configuration }
+        }
+        if evidenceKind == .paidReceipt, sourceRevision == nil { throw ClientError.configuration }
+        if evidenceKind?.isPaid == true {
+            guard case .exact = price else { throw ClientError.configuration }
+        }
+        if let variant, !HistoryValidation.text(variant, 512) { throw ClientError.configuration }
         try usablePack?.validate(); try price.validate()
     }
-    private enum CodingKeys: String, CodingKey { case id, shopId, itemName, packLabel, usablePack, price, currency, store, branch, channel, mode, eligibility, observedAt, sourceText, sourceLocale }
+    private enum CodingKeys: String, CodingKey { case id, shopId, itemName, packLabel, usablePack, price, currency, store, branch, channel, mode, eligibility, observedAt, sourceText, sourceLocale, evidenceKind, sourceRevision, variant }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(evidenceKind, forKey: .evidenceKind)
+        try c.encodeIfPresent(sourceRevision, forKey: .sourceRevision)
+        try c.encodeIfPresent(variant, forKey: .variant)
         try c.encode(id, forKey: .id); try c.encode(shopId, forKey: .shopId); try c.encode(itemName, forKey: .itemName); try c.encode(packLabel, forKey: .packLabel)
         try c.encode(usablePack, forKey: .usablePack); try c.encode(price, forKey: .price); try c.encode(currency, forKey: .currency)
         try c.encode(store, forKey: .store); try c.encode(branch, forKey: .branch); try c.encode(channel, forKey: .channel); try c.encode(mode, forKey: .mode)

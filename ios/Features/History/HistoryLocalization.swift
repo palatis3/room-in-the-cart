@@ -34,6 +34,15 @@ enum HistoryCopy {
         default: HistoryCopy.text("Assigned shop", bundle: bundle)
         }
     }
+    static func priceKind(_ kind: HistoryPriceKind?) -> String {
+        switch kind {
+        case .paidManual: pantryText("Manually confirmed paid price")
+        case .paidReceipt: pantryText("Paid on receipt")
+        case .shelf: pantryText("Shelf observation")
+        case .quote: pantryText("Checkout quote")
+        case nil: text("Observation with unspecified price source")
+        }
+    }
     static func channel(_ value: String, bundle: Bundle = .main) -> String {
         switch value {
         case "storeShelf": HistoryCopy.text("Store shelf", bundle: bundle)
