@@ -1,5 +1,6 @@
 import XCTest
 import CoreDomain
+import CryptoKit
 import CoreGraphics
 import CoreText
 import ImageIO
@@ -279,11 +280,28 @@ import UniformTypeIdentifiers
                        CaptureTextPosition(midY: 0.5, minX: 0.1)]
         XCTAssertEqual(CaptureReadingOrder.indices(sameRow), [1,2,0])
     }
-    func testActualVisionOCRReadsLocalSyntheticImage() async throws {
-        let context = CGContext(data: nil, width: 700, height: 180, bitsPerComponent: 8, bytesPerRow: 0,
+    func testPriceImageOCRPreservesMembershipWordingAndNeverInfersCheckoutTotalFromSubtotal() async throws {
+        let image = try imageOfPriceText([("Members only 2 for $5", 110), ("Subtotal $18", 40)])
+        let evidence = try await OnDeviceTextCapture().recognize(image)
+        let text = evidence.text.split(separator: "\n").map(String.init)
+        let label = try XCTUnwrap(text.first(where: { $0.localizedCaseInsensitiveContains("members") }))
+        let proposal = ReviewedShelfImage.propose(label)
+        XCTAssertEqual(proposal.packages, 2)
+        XCTAssertEqual(proposal.amount?.minorUnits, 500)
+        XCTAssertEqual(proposal.conditions, label)
+        let i = try XCTUnwrap(text.firstIndex(where: { $0.localizedCaseInsensitiveContains("subtotal") }))
+        let line = try PriceImageLine(digest: Data(SHA256.hash(data: image)), ordinal: i, wording: text[i],
+            uncertain: evidence.uncertainLines.contains(text[i]))
+        let checkout = try ReviewedCheckoutImage(charges: [.init(field: .subtotal, amount: .init(minorUnits: 1800), inclusion: .unknown, line: line)])
+        XCTAssertNil(checkout.displayedTotal)
+        XCTAssertEqual(checkout.charges.first?.line.wording, text[i])
+    }
+
+    private func imageOfPriceText(_ rows: [(String, CGFloat)]) throws -> Data {
+        let context = CGContext(data: nil, width: 1000, height: 180, bitsPerComponent: 8, bytesPerRow: 0,
             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-        context.setFillColor(CGColor(gray: 1, alpha: 1)); context.fill(CGRect(x: 0, y: 0, width: 700, height: 180))
-        for (text, y) in [("12 wraps", 110), ("2 kg rice", 40)] {
+        context.setFillColor(CGColor(gray: 1, alpha: 1)); context.fill(CGRect(x: 0, y: 0, width: 1000, height: 180))
+        for (text, y) in rows {
             let font = CTFontCreateWithName("Helvetica" as CFString, 42, nil)
             let value = NSAttributedString(string: text, attributes: [NSAttributedString.Key(kCTFontAttributeName as String): font,
                 NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0, alpha: 1)])
@@ -294,7 +312,11 @@ import UniformTypeIdentifiers
         let output = NSMutableData()
         let destination = CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil)!
         CGImageDestinationAddImage(destination, image, nil); XCTAssertTrue(CGImageDestinationFinalize(destination))
-        let evidence = try await OnDeviceTextCapture().recognize(output as Data)
+        return output as Data
+    }
+    func testActualVisionOCRReadsLocalSyntheticImage() async throws {
+        let image = try imageOfPriceText([("12 wraps", 110), ("2 kg rice", 40)])
+        let evidence = try await OnDeviceTextCapture().recognize(image)
         XCTAssertTrue(evidence.text.contains("12 wraps")); XCTAssertTrue(evidence.text.contains("2 kg rice"))
         XCTAssertEqual(evidence.source, .photoOCR)
         XCTAssertNotNil(evidence.previewImageData)

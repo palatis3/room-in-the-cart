@@ -41,6 +41,7 @@ import RecordArchive
         var sharedReceiptCount: Int = 0
         var aliasCount: Int = 0
         var receiptRevisionCount: Int = 0
+        var priceRevisionCount: Int = 0
         let foodNames: [String]
         let pickupIDs: [UUID]
         let pickupTitles: [String]
@@ -114,7 +115,7 @@ import RecordArchive
         try access(); try idle()
         let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }
         let catalogue = try await catalogue()
-        return catalogue.food + catalogue.pickups + [.init(selection: .wholeOrigin, title: "")]
+        return catalogue.food + catalogue.pickups + catalogue.prices + [.init(selection: .wholeOrigin, title: "")]
     }
 
     private struct Catalogue {
@@ -122,6 +123,7 @@ import RecordArchive
         let token: InventorySourceToken
         var food: [Choice] = []
         var pickups: [Choice] = []
+        var prices: [Choice] = []
         var reservationNames: [String] = []
     }
     /// Whole-origin retirement covers every row regardless of its schema. Use
@@ -146,6 +148,17 @@ import RecordArchive
                 cursor = last.key.id
             }
         }
+        var priceCursor: InventoryPriceRow?
+        repeat {
+            let page = try await inventory.priceRows(after: priceCursor, limit: 100)
+            try access()
+            for row in page {
+                result.prices.append(.init(selection: .price(row.id, revision: row.revision),
+                    title: (try? PantryPriceCodec.evidence(row).name) ?? row.id.uuidString))
+            }
+            guard result.prices.count <= 250_000 else { throw Failure.invalid }
+            priceCursor = page.count == 100 ? page.last : nil
+        } while priceCursor != nil
         cursor = nil
         while true {
             let page = try await inventory.inventorySourcePage(token: token, after: cursor, limit: 4); try access()
@@ -183,11 +196,14 @@ import RecordArchive
             pending: inspection.allFiles, sharedReceipts: claimed.isEmpty ? nil : claimed)
         let reviewDigest = try Self.reviewDigest(selection: selection, basis: basis)
         let operation = try Self.operationID(nonce: id, reviewDigest: reviewDigest, cleanup: cleanup, chain: chain)
+        let price: InventoryErasureManifest.Price?
+        if case .price(let id, let revision) = selection { price = .init(id: id, revision: revision) }
+        else { price = nil }
         let manifest = InventoryErasureManifest(workspaceID: inventory.workspaceID, operationID: operation, expectedRevision: impact.revision,
-            sourceToken: impact.token, scope: whole ? .origin : .sourceGraph, chunkCount: Int64(chunks.count),
+            sourceToken: impact.token, scope: whole ? .origin : .sourceGraph, price: price, chunkCount: Int64(chunks.count),
             entryCount: Int64(impact.entries.count), manifestDigest: chain)
         try await verify(basis)
-        return Review(id: id, selection: selection, sharedReceiptCount: affected.count, aliasCount: impact.aliasCount, receiptRevisionCount: impact.receiptRevisionCount, foodNames: impact.foodNames,
+        return Review(id: id, selection: selection, sharedReceiptCount: affected.count, aliasCount: impact.aliasCount, receiptRevisionCount: impact.receiptRevisionCount, priceRevisionCount: impact.priceRevisionCount, foodNames: impact.foodNames,
             pickupIDs: cleanup.pickupIDs, pickupTitles: impact.pickups.map(\.title), collateralPickupIDs: impact.collateral.map(\.id),
             collateralPickupTitles: impact.collateral.map(\.title), retainedReceiptFoodNames: impact.retainedReceiptNames,
             affectedReservationNames: impact.affectedReservationNames,
@@ -206,6 +222,7 @@ import RecordArchive
         let blockers: Set<Blocker>
         var aliasCount: Int = 0
         var receiptRevisionCount: Int = 0
+        var priceRevisionCount: Int = 0
         let foodNames: [String]
         let pickups: [(id: UUID, title: String)]
         let collateral: [(id: UUID, title: String)]
@@ -213,6 +230,21 @@ import RecordArchive
         let affectedReservationNames: [String]
     }
     private func sqlImpact(_ selection: Selection, at date: Date) async throws -> SQLImpact {
+        if case .price(let id, let revision) = selection {
+            let state = try await inventory.inventoryState()
+            try access()
+            let token = try await inventory.inventorySourceToken()
+            try access()
+            guard state.active, try await inventory.priceRows(id: id, limit: 1).first?.revision == revision else { throw Failure.stale }
+            try access()
+            var rules = PantryArchivePrivacyValidator.LocalRules(origin: inventory.workspaceID, retiredOrigin: false)
+            rules.prices = [id]
+            let count = try await inventory.priceRevisionCount(for: id)
+            try access()
+            return SQLImpact(revision: state.revision, token: token, rules: rules, links: [], ledgerOrigins: [], entries: [],
+                blockers: [], priceRevisionCount: count, foodNames: [], pickups: [], collateral: [], retainedReceiptNames: [],
+                affectedReservationNames: [])
+        }
         if selection == .wholeOrigin {
             let all = try await catalogue(includeReservations: true)
             let pickups = all.pickups.compactMap { choice -> (UUID, String)? in
@@ -222,7 +254,8 @@ import RecordArchive
             let receipts = try await receiptImpact(lots: nil, pickups: [])
             return SQLImpact(documentDigests: receipts.digests, revision: all.state.revision, token: all.token,
                 rules: .init(origin: inventory.workspaceID, retiredOrigin: true), links: [], ledgerOrigins: [], entries: [], blockers: [],
-                aliasCount: try await inventory.receiptAliasCount(), receiptRevisionCount: receipts.count, foodNames: all.food.map(\.title), pickups: pickups, collateral: [], retainedReceiptNames: [],
+                aliasCount: try await inventory.receiptAliasCount(), receiptRevisionCount: receipts.count,
+                priceRevisionCount: try await inventory.priceRevisionCount(), foodNames: all.food.map(\.title), pickups: pickups, collateral: [], retainedReceiptNames: [],
                 affectedReservationNames: all.reservationNames)
         }
         let base = try await sourceBasis(at: date), context = base.context
@@ -234,6 +267,7 @@ import RecordArchive
         case .wholeOrigin: pickups = Set(base.heads.map(\.id))
         case .pickup(let id, _, _): pickups = [id]
         case .lot: pickups = []
+        case .price: throw Failure.invalid
         }
         var blockers = Set<Blocker>()
         if !scan.sqlDependenciesVerified { blockers.insert(.unknownContent) }
@@ -261,7 +295,8 @@ import RecordArchive
         }
         return SQLImpact(documentDigests: receipts.digests, revision: context.inventoryRevision, token: context.sourceToken, rules: rules,
             links: context.mapping.sourceLinks, ledgerOrigins: scan.ledgerOrigins, entries: graph.entries, blockers: blockers,
-            aliasCount: try await inventory.receiptAliasCount(lotIDs: lots), receiptRevisionCount: receipts.count, foodNames: context.lots.filter { lots.contains($0.id) }.map(\.name), pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
+            aliasCount: try await inventory.receiptAliasCount(lotIDs: lots), receiptRevisionCount: receipts.count,
+            priceRevisionCount: try await inventory.priceRevisionCount(lotIDs: lots), foodNames: context.lots.filter { lots.contains($0.id) }.map(\.name), pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
             retainedReceiptNames: context.lots.filter { scan.retainedReceiptLotIDsInCollateralPickups.contains($0.id) || receipts.retainedLots.contains($0.id) }.map(\.name),
             affectedReservationNames: context.claims.filter { graph.reservations.contains($0.id) }.map(\.name))
     }

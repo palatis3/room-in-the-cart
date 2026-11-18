@@ -85,6 +85,107 @@ import RecordArchive
         return draft
     }
 
+    func testRepeatedReviewedShelfImageKeepsOneSourceAndNoPaidPurchase() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
+        f.cleanup.track(repository)
+        let wording = "Members only 2 for $5"
+        let printed = try PriceImageLine(digest: Data(repeating: 7, count: 32), ordinal: 3, wording: wording, uncertain: true)
+        let shelf = PrivatePriceEvidence(id: printed.shelfID, source: .shelf, name: "Cashews", store: "South",
+            mode: .inStore, date: now, currencyCode: "CAD", amountMinor: 500, pack: nil, eligibility: wording,
+            sourceText: wording, shelfImage: .init(printed: printed, basis: .bundle))
+        let initial = try await f.store.inventoryState()
+        let lotsBefore = try await f.store.inventoryRecords(kind: .lot)
+        try await repository.savePrice(shelf, expected: initial, at: now)
+        let page = try await repository.pricePage()
+        XCTAssertEqual(page.standalone, [shelf])
+        XCTAssertFalse(shelf.isPaidPrice)
+        XCTAssertNil(try shelf.unitPrice(in: .gram))
+        do {
+            try await repository.savePrice(shelf, expected: page.state, at: now)
+            XCTFail("The shopper should see that the selected image line is already saved")
+        } catch PantryPriceError.imageAlreadySaved {}
+        let reopened = try await repository.pricePage()
+        let lotsAfter = try await f.store.inventoryRecords(kind: .lot)
+        let ledger = try await f.ledger.load()
+        XCTAssertEqual(reopened.state, page.state)
+        XCTAssertEqual(reopened.standalone, [shelf])
+        XCTAssertEqual(lotsBefore, lotsAfter)
+        XCTAssertNil(ledger)
+    }
+
+    func testReviewedPrivatePriceCorrectionsRestoreAndErasureFencesEarlierExports() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
+        f.cleanup.track(repository)
+        let id = UUID()
+        let unit = Quantity(amount: try Rational(500), unit: .gram, originalLiteral: "500 g")
+        func manual(_ revision: Int64, _ minor: Int64) -> PrivatePriceEvidence {
+            .init(id: id, revision: revision, source: .paidManual, name: "Rice", variant: "Brown", store: "East market",
+                branch: "South", mode: .inStore, date: now, currencyCode: "USD", amountMinor: minor, pack: .init(count: 2, perPackage: unit),
+                sourceText: "Reviewed at the till")
+        }
+        let original = manual(1, 500), corrected = manual(2, 460)
+        try await repository.savePrice(original, expected: f.store.inventoryState(), at: now)
+        try await repository.savePrice(corrected, expected: f.store.inventoryState(), at: now)
+        let credit = PrivatePriceEvidence(id: UUID(), source: .adjustment(target: id, revision: 2, kind: .refund),
+            name: "Rice", store: "East market", date: now, currencyCode: "USD", amountMinor: 40, pack: nil, sourceText: "Damaged bag")
+        try await repository.savePrice(credit, expected: f.store.inventoryState(), at: now)
+        let page = try await repository.pricePage()
+        XCTAssertEqual(Set(page.standalone.map(\.id)), [id, credit.id])
+        let firstRecorded = try await repository.recordedPriceRevision(corrected, revision: 1, expected: page.state)
+        XCTAssertEqual(firstRecorded, original)
+        XCTAssertEqual(firstRecorded.mode, .inStore)
+        let adjustments = try await repository.priceAdjustments(for: id, expected: page.state)
+        XCTAssertEqual(try corrected.unitPrice(in: .kilogram, adjustments: adjustments), try Rational(420))
+        let lots = try await f.store.inventoryRecords(kind: .lot)
+        let ledger = try await f.ledger.load()
+        XCTAssertEqual(lots.count, 1)
+        XCTAssertNil(ledger)
+        let handle = try await f.capture.captureHandle(worker: f.worker, at: now)
+        let key = Data(repeating: 0x41, count: 32).base64EncodedString()
+        let bundle = try await f.worker.encryptedExport(handle, key: key)
+        let reader = try PantryArchiveWorker(root: f.directory.appendingPathComponent("price-reader"))
+        let imported = try await reader.prepareImport(url: bundle.url, key: key)
+        let target = try ComparisonStore(url: f.directory.appendingPathComponent("other-price.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(target)
+        let restored = try await reader.prepareRestoration(source: imported.handle, context: .init(version: 1,
+            copyID: UUID(), reference: imported.handle.reference, workspaceID: target.workspaceID,
+            restorationID: UUID(), preparedAt: now), sourceToken: target.inventorySourceToken())
+        _ = try await target.beginInventoryMigration(restored.plan)
+        for index in 0..<restored.plan.expectedChunkCount {
+            let chunk = try await reader.restorationChunk(restored, index: index)
+            _ = try await target.stageInventoryMigration(id: restored.plan.migrationID, chunk: chunk)
+        }
+        _ = try await target.finishInventoryMigration(id: restored.plan.migrationID, at: now)
+        let priceHistory = try await target.priceRows(id: id, latestOnly: false)
+        XCTAssertEqual(try priceHistory.map(PantryPriceCodec.evidence), [original, corrected])
+        let credits = try await target.priceRows(adjustmentsFor: id)
+        XCTAssertEqual(try credits.map(PantryPriceCodec.evidence), [credit])
+        let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("price-registry.json"))
+        let coordinator = eraser(f, registry, cleanup: { _, _ in })
+        let reviewed = try await coordinator.prepare(.price(id, revision: 2))
+        XCTAssertTrue(reviewed.canCommit)
+        XCTAssertEqual(reviewed.priceRevisionCount, 3)
+        _ = try await coordinator.commit(reviewed)
+        let after = try await repository.pricePage()
+        XCTAssertTrue(after.standalone.isEmpty)
+        do {
+            try await PantryArchivePrivacyValidator.validate(imported.handle, worker: reader, inventory: f.store,
+                ledger: f.ledger, gate: f.gate, authorize: { true })
+            XCTFail("Reimport must honor a price and its credits erased at the original store")
+        } catch PantryArchivePrivacyValidator.Failure.retired {}
+        let quote = PrivatePriceEvidence(id: UUID(), source: .currentQuote, name: "Rice", store: "East market",
+            mode: .pickup, date: now, currencyCode: "USD", amountMinor: 440, pack: nil, sourceText: "Entered from checkout")
+        try await repository.savePrice(quote, expected: after.state, at: now)
+        let quoted = try await repository.pricePage()
+        XCTAssertEqual(quoted.standalone, [quote])
+        XCTAssertFalse(quote.isPaidPrice)
+        try await reader.discardRestoration(restored)
+        try await reader.discardImport(imported, registry: registry)
+        try await f.worker.discardExport(bundle)
+    }
+
     func testReceiptPartialReviewRetryPriceCorrectionRecoveryAndErasure() async throws {
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })
@@ -126,6 +227,9 @@ import RecordArchive
         XCTAssertEqual(rows.count, 3)
         let corrected = try XCTUnwrap(rows.first(where: { $0.supersedesID == first.id }))
         XCTAssertEqual(corrected.paidLineTotal, paid)
+        let receiptPrice = try PrivatePriceEvidence(receipt: corrected)
+        let originalPrice = try await repository.recordedPriceRevision(receiptPrice, revision: 1, expected: f.store.inventoryState())
+        XCTAssertEqual(originalPrice, try PrivatePriceEvidence(receipt: first))
         try await repository.rememberReceiptAlias(corrected, wording: "RICE", language: "en",
             expected: f.store.inventoryState(), at: now)
         let handle = try await f.capture.captureHandle(worker: f.worker, at: now)
@@ -369,6 +473,12 @@ import RecordArchive
         let corrected = try fact.correctingPaidTotal(Money(decimal: "1.15"))
         XCTAssertEqual(corrected.documentLine, fact.documentLine)
         XCTAssertEqual(fact.documentLine?.method, .textFile)
+        try await repo.correctPaidTotal(fact, total: Money(decimal: "1.15"), state: f.store.inventoryState(), at: now)
+        let price = try PrivatePriceEvidence(receipt: corrected)
+        let refund = PrivatePriceEvidence(id: UUID(), source: .adjustment(target: price.id, revision: price.revision, kind: .refund),
+            foodID: price.foodID, linkedLotID: price.linkedLotID, name: price.name, store: price.store, date: now,
+            currencyCode: price.currencyCode, amountMinor: 15, pack: nil, sourceText: "Reviewed damaged package refund")
+        try await repo.savePrice(refund, expected: f.store.inventoryState(), at: now)
         let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json"))
         let coordinator = PantryErasureCoordinator(inventory: f.store, ledger: f.ledger, gate: f.gate,
             pendingDirectory: f.pending.fileURL.deletingLastPathComponent(), registry: registry, worker: f.worker,
@@ -379,8 +489,14 @@ import RecordArchive
             }, authorize: { true }, clock: { self.now })
         let erase = try await coordinator.prepare(.lot(fact.lotID, revision: 1))
         XCTAssertEqual(erase.sharedReceiptCount, 2)
+        XCTAssertEqual(erase.receiptRevisionCount, 2)
+        XCTAssertEqual(erase.priceRevisionCount, 1)
         XCTAssertEqual(erase.receiptRevisionCount, 1)
         _ = try await coordinator.commit(erase)
+        let removed = try await f.store.priceRows(id: refund.id, latestOnly: false)
+        XCTAssertTrue(removed.isEmpty)
+        let retired = try await f.store.priceWasErased(refund.id)
+        XCTAssertTrue(retired)
         let surviving = try await inbox.pendingReceiptFiles(scope: scope, now: now)
         XCTAssertEqual(surviving.map(\.id), [other])
         let unaffected = try await inbox.openReceipt(otherItem, scope: otherScope, now: now)

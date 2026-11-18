@@ -5,6 +5,7 @@ import SwiftUI
 struct PantrySetupView: View {
     @ObservedObject var pickup: PickupModel
     @ObservedObject var ledger: LedgerModel
+    var opensPriceHistory = false
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scene
@@ -37,7 +38,8 @@ struct PantrySetupView: View {
             if scope == nil {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if case .ready(let original, let model) = phase, original == scope, model.phase != .accessDenied {
-                PantryHomeView(model: model, accessAllowed: true)
+                if opensPriceHistory { PantryPriceHistoryView(model: model) }
+                else { PantryHomeView(model: model, accessAllowed: true) }
             } else {
                 List {
                     if busy { ProgressView(pantryText("Working…")) }
@@ -68,7 +70,7 @@ struct PantrySetupView: View {
             }
         }
         .privacySensitive()
-        .navigationTitle(pantryText("My Pantry"))
+        .navigationTitle(opensPriceHistory ? pantryText("Private price history") : pantryText("My Pantry"))
         .task(id: scope) {
             if case .ready(let original, let model) = phase {
                 if original == scope && model.phase != .accessDenied { return }

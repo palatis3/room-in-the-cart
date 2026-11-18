@@ -510,6 +510,9 @@ struct LedgerFactsView: View {
     @State private var cap: String
     @State private var reserve: String
     @State private var fees: String
+    @State private var choosingScreenshot = false
+    @State private var screenshotTerms: ShopBasis.RetailerTerms?
+    @State private var screenshot: ReviewedCheckoutImage?
     @State private var hasRetailerPreview: Bool
     @State private var retailerTotal: String
     @State private var retailerSource: String
@@ -532,6 +535,7 @@ struct LedgerFactsView: View {
         _cap = State(initialValue: shop.basis.cap.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? "")
         _reserve = State(initialValue: shop.basis.fixedReserve.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? "")
         _fees = State(initialValue: shop.basis.knownFees.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? "")
+        _screenshot = State(initialValue: shop.basis.retailerPreview?.screenshot)
         _hasRetailerPreview = State(initialValue: shop.basis.retailerPreview != nil)
         _retailerTotal = State(initialValue: shop.basis.retailerPreview?.total.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? "")
         _retailerSource = State(initialValue: shop.basis.retailerPreview?.source ?? "")
@@ -618,12 +622,24 @@ struct LedgerFactsView: View {
                         Text(ledgerText("Earlier fees and retailer evidence belong to different pickup details. The proposed fees and preview are unknown."))
                         Button(ledgerText("Enter evidence for these pickup details")) {
                             fees = ""; hasRetailerPreview = false; retailerTotal = ""; retailerSource = ""
-                            retailerDate = Date(); includedCharges = ""; evidenceTerms = currentTerms
+                            retailerDate = Date(); includedCharges = ""; evidenceTerms = currentTerms; screenshot = nil
                         }
                     } else {
+                        Button(pantryText("Read a checkout screenshot")) {
+                            screenshotTerms = currentTerms
+                            choosingScreenshot = true
+                        }.accessibilityIdentifier("priceImage.readCheckout")
                         Toggle(ledgerText("Record a retailer preview"), isOn: $hasRetailerPreview)
                     }
                     if hasRetailerPreview && !needsFreshEvidence {
+                        if let screenshot {
+                            imageSummary(screenshot)
+                            DatePicker(ledgerText("When this preview was shown"), selection: $retailerDate)
+                                .environment(\.timeZone, TimeZone(identifier: basis.timeZoneIdentifier) ?? .current)
+                            Button(pantryText("Replace screenshot with manual evidence")) {
+                                self.screenshot = nil; retailerTotal = ""; retailerSource = ""; includedCharges = ""
+                            }
+                        } else {
                         TextField(ledgerText("Retailer total (USD, unknown if blank)"), text: $retailerTotal).keyboardType(.decimalPad)
                             .focused($inputFocus, equals: .retailerTotal)
                         TextField(ledgerText("Source of the retailer preview"), text: $retailerSource, axis: .vertical)
@@ -632,6 +648,7 @@ struct LedgerFactsView: View {
                             .environment(\.timeZone, TimeZone(identifier: basis.timeZoneIdentifier) ?? .current)
                         TextField(ledgerText("Included charges, separated by commas"), text: $includedCharges, axis: .vertical)
                             .focused($inputFocus, equals: .includedCharges)
+                        }
                         Text(ledgerText("This records what the retailer displayed. It is not a calculated whole-pickup quote."))
                     }
                 }.disabled(model.saving || model.hasPendingSave)
@@ -656,6 +673,22 @@ struct LedgerFactsView: View {
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Describe this pickup"))
+            .sheet(isPresented: $choosingScreenshot) {
+                NavigationStack {
+                    if isCurrent, let screenshotTerms, screenshotTerms == currentTerms {
+                        PriceImageReview(purpose: .checkout, authorized: { isCurrent && screenshotTerms == currentTerms }, acceptCheckout: { reviewed in
+                            guard isCurrent, screenshotTerms == currentTerms else { return }
+                            screenshot = reviewed
+                            hasRetailerPreview = true
+                            retailerTotal = reviewed.displayedTotal.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
+                            retailerSource = pantryText("Checkout screenshot")
+                            includedCharges = reviewed.charges.filter { $0.inclusion == .included }.map { priceImageField($0.field) }.joined(separator: ", ")
+                            retailerDate = Date()
+                            evidenceTerms = currentTerms
+                        })
+                    }
+                }
+            }
             .onChange(of: currentTerms) { old, new in
                 if old == evidenceTerms, !hasRetailerPreview, fees.isEmpty, retailerSource.isEmpty, retailerTotal.isEmpty, includedCharges.isEmpty {
                     evidenceTerms = new; retailerDate = Date()
@@ -684,7 +717,7 @@ struct LedgerFactsView: View {
                     charges = includedCharges.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
                 }
                 basis.retailerPreview = LedgerRetailerPreview(total: try ComparisonModel.money(retailerTotal), source: retailerSource,
-                                                              capturedAt: retailerDate, includedCharges: charges)
+                                                              capturedAt: retailerDate, includedCharges: charges, screenshot: screenshot)
             } else { basis.retailerPreview = nil }
             basis.slot = hasSlot ? slot : nil
             try basis.validate()
@@ -693,6 +726,16 @@ struct LedgerFactsView: View {
             reviewing = true
         } catch { validation = ledgerText("Use a nonnegative USD amount with no more than two decimal places.") }
     }
+    private func imageSummary(_ screenshot: ReviewedCheckoutImage) -> some View {
+        ForEach(screenshot.charges, id: \.field) { charge in
+            VStack(alignment: .leading) {
+                LabeledContent(priceImageField(charge.field), value: charge.amount.map(moneyText) ?? ledgerText("Unknown"))
+                Text(verbatim: charge.line.wording)
+                if charge.field != .total { Text(priceImageInclusion(charge.inclusion)).font(.caption) }
+            }
+        }
+    }
+
     private func summary(_ value: ShopBasis) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(value.branch.isEmpty ? ledgerText("Store not set") : value.branch)
@@ -707,6 +750,7 @@ struct LedgerFactsView: View {
             if let preview = value.retailerPreview {
                 Text(ledgerFormat("Retailer preview: %@", preview.total.map(moneyText) ?? ledgerText("Unknown")))
                 Text(preview.source)
+                if let screenshot = preview.screenshot { imageSummary(screenshot) }
                 Text(ledgerDate(preview.capturedAt, zone: value.timeZoneIdentifier))
                 Text(ledgerFormat("Included charges: %@", preview.includedCharges.joined(separator: ", ")))
             } else { Text(ledgerFormat("Retailer preview: %@", ledgerText("Unknown"))) }

@@ -6,9 +6,11 @@ public struct InventoryMigrationChunk: Codable, Equatable, Sendable {
     public let index: Int
     public let records: [InventoryRecord]
     public let acquisitions: [InventoryAcquisitionRow]?
-    var itemCount: Int { records.count + (acquisitions?.count ?? 0) }
-    public init(index: Int, records: [InventoryRecord], acquisitions: [InventoryAcquisitionRow] = []) {
+    public let prices: [InventoryPriceRow]?
+    var itemCount: Int { records.count + (acquisitions?.count ?? 0) + (prices?.count ?? 0) }
+    public init(index: Int, records: [InventoryRecord], acquisitions: [InventoryAcquisitionRow] = [], prices: [InventoryPriceRow] = []) {
         self.index = index
+        self.prices = prices.isEmpty ? nil : prices
         self.records = records
         self.acquisitions = acquisitions.isEmpty ? nil : acquisitions
     }
@@ -64,6 +66,15 @@ func validateInventoryMigrationChunk(_ chunk: InventoryMigrationChunk) throws {
         for row in rows {
             guard row.revision > 0, (row.revision == 1) == (row.supersedesID == nil),
                   !row.payload.isEmpty, row.payload.count <= InventoryPersistenceLimits.recordBytes else { throw ComparisonStoreError.invalidInput }
+            raw += row.payload.count
+        }
+    }
+    if let prices = chunk.prices {
+        guard !prices.isEmpty else { throw ComparisonStoreError.invalidInput }
+        for row in prices {
+            guard row.revision > 0, !row.payload.isEmpty, row.payload.count <= InventoryPersistenceLimits.recordBytes else {
+                throw ComparisonStoreError.invalidInput
+            }
             raw += row.payload.count
         }
     }
@@ -210,6 +221,11 @@ extension ComparisonStore {
                      .integer(Int64(chunk.index)), .integer(Int64(ordinal)), record.source.map { .text($0.originID.uuidString) } ?? .null, record.source.map { .text($0.sourceID) } ?? .null,
                      .blob(try inventoryCanonical(record))])
             }
+            for (ordinal, row) in (chunk.prices ?? []).enumerated() {
+                try database.run("INSERT INTO inventory_staged_prices (migration_id,id,revision,chunk_index,ordinal,row) VALUES (?,?,?,?,?,?)",
+                    [.text(id.uuidString), .text(row.id.uuidString), .integer(row.revision), .integer(Int64(chunk.index)),
+                     .integer(Int64(ordinal)), .blob(try inventoryCanonical(row))])
+            }
             for (ordinal, row) in (chunk.acquisitions ?? []).enumerated() {
                 try database.run("INSERT INTO inventory_staged_acquisitions (migration_id,id,revision,chunk_index,ordinal,row) VALUES (?,?,?,?,?,?)",
                     [.text(id.uuidString), .text(row.id.uuidString), .integer(row.revision), .integer(Int64(chunk.index)),
@@ -258,6 +274,11 @@ extension ComparisonStore {
                     after = records.last?.key.id
                 }
             }
+            try database.forEachStagedPrice(id) { row in
+                try database.insertPrice(row)
+                try database.run("INSERT OR IGNORE INTO inventory_migration_keys(migration_id,kind,id) VALUES (?,?,?)",
+                    [.text(id.uuidString), .text("price"), .text(row.id.uuidString)])
+            }
             try database.forEachStagedAcquisition(id) { row in
                 try database.insertAcquisition(row)
                 try database.run("INSERT INTO inventory_migration_keys (migration_id,kind,id) VALUES (?,?,?)",
@@ -269,6 +290,7 @@ extension ComparisonStore {
                 [.text(id.uuidString), .blob(header.digest), .blob(header.digest), .blob(try inventoryCanonical(receipt))])
             try database.run("UPDATE inventory_state SET revision = ?, active = 1 WHERE singleton = 1", [.integer(receipt.revision)])
             try database.run("UPDATE inventory_migrations SET status = 'active', plan = NULL WHERE id = ?", [.text(id.uuidString)])
+            try database.run("DELETE FROM inventory_staged_prices WHERE migration_id = ?", [.text(id.uuidString)])
             try database.run("DELETE FROM inventory_staged_acquisitions WHERE migration_id = ?", [.text(id.uuidString)])
             try database.run("DELETE FROM inventory_staged_records WHERE migration_id = ?", [.text(id.uuidString)])
             return receipt
@@ -285,6 +307,7 @@ extension ComparisonStore {
             if header.status == .cancelled { return try migrationProgress(header) }
             // Source mutations do not prevent cancellation; cancellation never touches original comparisons or canonical food.
             try database.run("UPDATE inventory_migrations SET status = 'cancelled', plan = NULL WHERE id = ?", [.text(id.uuidString)])
+            try database.run("DELETE FROM inventory_staged_prices WHERE migration_id = ?", [.text(id.uuidString)])
             try database.run("DELETE FROM inventory_staged_acquisitions WHERE migration_id = ?", [.text(id.uuidString)])
             try database.run("DELETE FROM inventory_staged_records WHERE migration_id = ?", [.text(id.uuidString)])
             try database.run("DELETE FROM inventory_migration_sources WHERE migration_id = ?", [.text(id.uuidString)])

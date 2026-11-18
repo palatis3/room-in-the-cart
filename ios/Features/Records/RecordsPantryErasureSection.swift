@@ -78,6 +78,7 @@ private struct PantryErasureReviewView: View {
         switch choice.selection {
         case .lot(let id, _): return recordsText("Food batch") + " · " + id.uuidString.suffix(8)
         case .pickup(let id, _, _): return recordsText("Pickup") + " · " + id.uuidString.suffix(8)
+        case .price(let id, _): return pantryText("Private price history") + " · " + id.uuidString.suffix(8)
         case .wholeOrigin: return nil
         }
     }
@@ -104,12 +105,16 @@ private struct PantryErasureImpactView: View {
             switch review.selection {
             case .lot: Text(recordsText("You selected one food batch."))
             case .pickup: Text(recordsText("You selected one pickup and its pantry records."))
+            case .price: Text(pantryText("You selected one price and its corrections and credits."))
             case .wholeOrigin: Text(recordsText("You selected the entire local pantry and its history."))
             }
         }
         rows(recordsText("Food batches to delete"), review.foodNames)
         if review.sharedReceiptCount > 0 {
             LabeledContent(pantryText("Pending shared receipt files to delete"), value: review.sharedReceiptCount.formatted())
+        }
+        if review.priceRevisionCount > 0 {
+            LabeledContent(pantryText("Price revisions to delete"), value: review.priceRevisionCount.formatted())
         }
         if review.aliasCount > 0 {
             LabeledContent(pantryText("Saved receipt spellings to delete"), value: review.aliasCount.formatted())

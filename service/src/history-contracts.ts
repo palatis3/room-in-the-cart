@@ -8,7 +8,16 @@ export const costEvidenceSchema=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('bounded'),lowerMinor:cents,upperMinor:cents,reason:text(2048)}).strict().refine(v=>v.lowerMinor<=v.upperMinor),
  z.object({kind:z.literal('unknown'),reason:text(2048)}).strict()
 ]);
-export const observationSchema=z.object({id:uuid,shopId:uuid,itemName:text(512),packLabel:text(512),usablePack:z.object({amount:z.object({numerator:z.number().int().positive().max(1e12),denominator:z.number().int().positive().max(1e12)}).strict(),unit:z.enum(['count','gram','kilogram','ounce','pound','milliliter','liter','fluidOunce','cup']),originalLiteral:text(512)}).strict().nullable(),price:costEvidenceSchema,currency:z.literal('USD'),store:text(512),branch:text(512),channel:z.enum(['storeShelf','warehouse','retailerWebsite','retailerApp','other','unspecified']),mode:z.enum(['pickup','delivery','inStore']),eligibility:text(2048,true),observedAt:date,sourceText:text(8192),sourceLocale:text(512)}).strict();
+export const observationSchema=z.object({
+ evidenceKind:z.enum(['paidManual','paidReceipt','shelf','quote']).optional(),
+ sourceRevision:z.object({sourceId:uuid,revision:z.number().int().positive().max(1_000_000_000),
+   shopRevision:z.number().int().positive(),authorityEpoch:z.number().int().positive()}).strict().optional(),
+ variant:text(512).optional(),id:uuid,shopId:uuid,itemName:text(512),packLabel:text(512),usablePack:z.object({amount:z.object({numerator:z.number().int().positive().max(1e12),denominator:z.number().int().positive().max(1e12)}).strict(),unit:z.enum(['count','gram','kilogram','ounce','pound','milliliter','liter','fluidOunce','cup']),originalLiteral:text(512)}).strict().nullable(),price:costEvidenceSchema,currency:z.literal('USD'),store:text(512),branch:text(512),channel:z.enum(['storeShelf','warehouse','retailerWebsite','retailerApp','other','unspecified']),mode:z.enum(['pickup','delivery','inStore']),eligibility:text(2048,true),observedAt:date,sourceText:text(8192),sourceLocale:text(512)}).strict().superRefine((value,ctx)=>{
+ if(value.sourceRevision&&!value.evidenceKind || value.evidenceKind==='paidReceipt'&&!value.sourceRevision ||
+    (value.evidenceKind==='paidReceipt'||value.evidenceKind==='paidManual')&&value.price.kind!=='exact'){
+  ctx.addIssue({code:'custom',message:'A confirmed paid price requires an exact reviewed amount and a receipt record needs its source revision.'});
+ }
+});
 export const observationWriteSchema=z.object({clientKey:uuid,observation:observationSchema}).strict();
 export const financialEntrySchema=z.object({id:uuid,evidenceKey:uuid,kind:z.enum(['postedCharge','postedTopUp','pendingCredit','postedCredit','includedCredit','paymentHold','holdRelease']),amountMinor:cents,currency:z.literal('USD'),occurredAt:date,creditId:uuid.nullable(),chargeEvidenceKey:uuid.nullable(),holdEvidenceKey:uuid.nullable(),sourceText:text(8192)}).strict();
 export const financialAppendSchema=z.object({clientKey:uuid,sourceVersion:sourceVersionSchema,entry:financialEntrySchema}).strict();
