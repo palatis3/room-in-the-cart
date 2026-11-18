@@ -64,8 +64,14 @@ private extension AdultFoodWidget {
             VStack(alignment: .leading, spacing: 8) {
                 Text(title).font(.headline)
                 if let summary = entry.summary, summary.isFresh(at: Date(), zone: .current) {
-                    let format = SurfaceCopy.text(kind == .useSoon ? "Batches to check today or earlier: %lld" : "Reviewed meal options: %lld")
-                    Text(String(format: format, locale: Locale.current, Int64(summary.count)))
+                    if summary.plannedDinner == true && summary.count == 1 {
+                        Text(SurfaceCopy.text("Planned for tonight"))
+                    } else {
+                        let format = kind == .useSoon ? SurfaceCopy.text("Batches to check today or earlier: %lld")
+                            : summary.plannedDinner == true ? SurfaceCopy.text("%lld dinners planned")
+                            : SurfaceCopy.text("Reviewed meal options: %lld")
+                        Text(String(format: format, locale: Locale.current, Int64(summary.count)))
+                    }
                     if let title = summary.reviewedTitle { Text(verbatim: title).lineLimit(2) }
                 } else { Text(SurfaceCopy.text("Open the app to review this item")) }
             }.privacySensitive()

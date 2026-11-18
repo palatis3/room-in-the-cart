@@ -49,7 +49,7 @@ extension PantryDigestAccess {
     }
     private func refreshHome(_ current: PantryDigestAccess?) {
         guard let current, current.authorized(), let snapshot = pickup.pantrySnapshot else { return }
-        try? home.checkTonightSource(ledger: ledger, pickup: pickup)
+        refreshTonight(current)
         do {
             try home.reconcileOwner(current)
             let now = Date(), zone = TimeZone.current
@@ -57,6 +57,10 @@ extension PantryDigestAccess {
             let count = try doc.homeSummaryCount(lots: snapshot.lots, now: now, zone: zone)
             try home.update(.useSoon, access: current, count: count, now: now, zone: zone)
         } catch { try? home.invalidate(.useSoon, origin: current.scope.origin, forget: false) }
+    }
+    private func refreshTonight(_ current: PantryDigestAccess?) {
+        if let current, (try? home.refreshPlannedTonight(access: current, ledger: ledger, pickup: pickup)) == true { return }
+        try? home.checkTonightSource(ledger: ledger, pickup: pickup)
     }
     private struct Basis: Equatable {
         let scope: PantryDigestScope?
@@ -102,9 +106,11 @@ extension PantryDigestAccess {
 
     private func observingHomeChanges(_ content: some View, current: PantryDigestAccess?) -> some View {
         content
-            .onChange(of: ledger.revision) { _, _ in try? home.checkTonightSource(ledger: ledger, pickup: pickup) }
+            .onChange(of: ledger.revision) { _, _ in refreshTonight(current) }
+            .onChange(of: ledger.saving) { _, saving in if !saving { refreshTonight(current) } }
+            .onChange(of: pickup.saving) { _, saving in if !saving { refreshTonight(current) } }
             .onChange(of: pickup.pantrySnapshot?.state.revision) { _, _ in
-                if current != nil { try? home.checkTonightSource(ledger: ledger, pickup: pickup) }
+                refreshTonight(current)
             }
             .onChange(of: store.generation) { _, _ in refreshHome(current) }
             .onChange(of: home.generation) { _, _ in refreshHome(current) }

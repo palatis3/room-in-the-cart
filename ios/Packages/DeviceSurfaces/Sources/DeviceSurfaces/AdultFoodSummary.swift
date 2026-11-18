@@ -15,17 +15,19 @@ public struct AdultFoodSummaryProjection: Codable, Equatable, Sendable {
     public let timeZoneID: String
     public let count: Int
     public let reviewedTitle: String?
+    public let plannedDinner: Bool?
     public let route: RouteHandle
     public static let maximumAge: TimeInterval = 6 * 60 * 60
 
     public init(kind: AdultFoodSummaryKind, scope: UUID, now: Date, zone: TimeZone,
-                count: Int, reviewedTitle: String? = nil) throws {
+                count: Int, reviewedTitle: String? = nil, plannedDinner: Bool = false) throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = zone
         guard let day = calendar.dateInterval(of: .day, for: now) else { throw SurfaceError.invalidCivilTime }
         self.kind = kind; self.scope = scope; self.generation = UUID()
         self.writtenAt = now; self.expiresAt = min(now.addingTimeInterval(Self.maximumAge), day.end)
         self.timeZoneID = zone.identifier; self.count = count; self.reviewedTitle = reviewedTitle
+        self.plannedDinner = plannedDinner ? true : nil
         self.route = .random()
         try validate()
     }
@@ -36,6 +38,9 @@ public struct AdultFoodSummaryProjection: Codable, Equatable, Sendable {
               expiresAt.timeIntervalSince(writtenAt) <= Self.maximumAge else { throw SurfaceError.invalid }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = zone
         guard let day = calendar.dateInterval(of: .day, for: writtenAt), expiresAt <= day.end else { throw SurfaceError.invalid }
+        if plannedDinner == true {
+            guard kind == .tonight, count > 0, count == 1 || reviewedTitle == nil else { throw SurfaceError.invalid }
+        }
         if let title = reviewedTitle {
             guard kind == .tonight, count > 0, !title.isEmpty, title.count <= 64, title.utf8.count <= 256,
                   title.rangeOfCharacter(from: .controlCharacters) == nil else { throw SurfaceError.invalid }
@@ -46,7 +51,7 @@ public struct AdultFoodSummaryProjection: Codable, Equatable, Sendable {
     }
     public static func decode(_ data: Data) throws -> Self {
         guard data.count <= 2048, let keys = (try JSONSerialization.jsonObject(with: data) as? [String: Any])?.keys,
-              Set(keys).isSubset(of: ["kind","scope","generation","writtenAt","expiresAt","timeZoneID","count","reviewedTitle","route"]) else {
+              Set(keys).isSubset(of: ["kind","scope","generation","writtenAt","expiresAt","timeZoneID","count","reviewedTitle","plannedDinner","route"]) else {
             throw SurfaceError.corrupt
         }
         let result = try JSONDecoder().decode(Self.self, from: data)

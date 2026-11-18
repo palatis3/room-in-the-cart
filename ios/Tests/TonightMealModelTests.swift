@@ -17,6 +17,33 @@ import RecordArchive
             freeLots: [.init(id: food, foodID: food, name: "Wraps", usable: q(3), confirmedAt: now, source: .pantry)],
             unresolvedFoods: [], sources: [])
     }
+    func testCalendarSummaryUsesChosenDinnerAndCountsAmbiguityWithoutPickingATitle() throws {
+        let origin = UUID(), zone = TimeZone.gmt
+        var shop = ShoppingLedger(basis: .init(timeZoneIdentifier: zone.identifier))
+        let suggested = MealTemplate(title: "Recommended wraps", ingredients: [.init(name: "Wraps", quantity: q(2))])
+        let chosen = MealTemplate(title: "Chosen soup", ingredients: [.init(name: "Beans", quantity: q(1))])
+        let original = try shop.chooseMeal(chosen, on: now)
+        var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [suggested, chosen])
+        func summary(at date: Date) throws -> TonightPlannedDinners {
+            try TonightPlannedDinners.current(workspace: workspace, ledgerID: origin, journeys: [], now: date, zone: zone)
+        }
+        XCTAssertEqual(try summary(at: now), .init(count: 1, title: "Chosen soup"))
+        XCTAssertEqual(try summary(at: now.addingTimeInterval(86_400)).count, 0)
+        let other = try workspace.shops[0].chooseMeal(suggested, on: now)
+        XCTAssertEqual(try summary(at: now), .init(count: 2, title: nil))
+        try workspace.shops[0].removeMeal(occurrenceID: original)
+        XCTAssertEqual(try summary(at: now), .init(count: 1, title: "Recommended wraps"))
+        try workspace.shops[0].setMealHidden(occurrenceID: other, hidden: true)
+        XCTAssertEqual(try summary(at: now).count, 0)
+        try workspace.shops[0].setMealHidden(occurrenceID: other, hidden: false)
+        let context = DinnerAccessContext(scope: .local(workspaceID: origin), actorID: "adult", shopID: shop.id,
+            assignedShopperID: "adult", canPlan: true, canReadBudget: false, hasPaidTools: false, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let away = DinnerWeekNote(shopID: shop.id, day: try MealDay(date: now, timeZoneIdentifier: zone.identifier), kind: .away, text: "Eating away")
+        try workspace.dinnerPlanning.recordWeekNote(away, access: context, at: now)
+        XCTAssertEqual(try summary(at: now).count, 0)
+    }
+
     func testHomeSummaryOnlyUsesReviewedFullyCoveredMealsAndCurrentPrivateEvidence() async throws {
         let food = UUID(), ingredient = MealIngredient(name: "Wraps", quantity: q(2))
         var recipe = MealTemplate(title: "Dinner wraps", ingredients: [ingredient])
@@ -57,6 +84,17 @@ import RecordArchive
         XCTAssertTrue(home.permitsTonight(projection.route, access: access, basis: basis))
         let changed = try TonightHomeBasis(ledger: origin, revision: reviewed.ledgerRevision + 1, stock: reviewed.basis)
         XCTAssertFalse(home.permitsTonight(projection.route, access: access, basis: changed))
+        let privateFile = root.appendingPathComponent("private/tonight.json")
+        var previous = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: privateFile)) as? [String: Any])
+        previous.removeValue(forKey: "includesPlannedDinners")
+        try JSONSerialization.data(withJSONObject: previous).write(to: privateFile)
+        XCTAssertFalse(home.includesPlannedDinners(scope: access.scope, ledgerID: origin))
+        XCTAssertThrowsError(try home.update(.tonight, access: access, count: 1, reviewedTitle: "Private chosen dinner",
+                                             plannedDinner: true, tonightBasis: basis))
+        XCTAssertEqual(try widget.read(), projection)
+        try home.setEnabled(true, kind: .tonight, access: access, ledgerID: origin)
+        XCTAssertTrue(home.includesPlannedDinners(scope: access.scope, ledgerID: origin))
+        XCTAssertFalse(home.includesPlannedDinners(scope: access.scope, ledgerID: UUID()))
         let admittedConsent = try XCTUnwrap(home.tonightConsentToken(scope: access.scope, ledger: origin))
         XCTAssertNil(home.tonightConsentToken(scope: access.scope, ledger: UUID()))
         try home.invalidateLedger(origin, forget: false)

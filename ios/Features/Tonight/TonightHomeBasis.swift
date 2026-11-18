@@ -27,6 +27,39 @@ struct TonightHomeBasis: Codable, Equatable {
     }
 }
 
+/// The private calendar can contain more than one pickup on a civil day. In
+/// that case the widget shows a count, without choosing a dinner for the adult.
+struct TonightPlannedDinners: Equatable {
+    let count: Int
+    let title: String?
+
+    static func current(workspace: LedgerWorkspace, ledgerID: UUID, journeys: [PickupJourney],
+                        now: Date, zone: TimeZone) throws -> Self {
+        let day = try MealDay(date: now, timeZoneIdentifier: zone.identifier)
+        let away = Set(workspace.dinnerPlanning.weekNotes.filter { $0.kind == .away && $0.day.hasSameCivilDate(as: day) }.map(\.shopID))
+        var titles: [String] = []
+        for shop in workspace.shops where !away.contains(shop.id) {
+            let journey = journeys.first { $0.id == shop.id }
+            var recovered = Set<UUID>()
+            var definitions: [PickupRecoveryMealDefinition] = []
+            if let journey, let history = journey.mealRecovery, !history.domain.events.isEmpty {
+                let checked = try journey.checkedMealRecoveryHistory(shop: shop, workspaceID: ledgerID, at: now)
+                recovered = Set(checked.domain.events.map { $0.request.target.id })
+                definitions = try recovered.compactMap { try checked.definition(for: $0) }
+            }
+            let current = try DinnerCurrentMeals.project(shop: shop, definitions: definitions, recovered: recovered)
+            for meal in current.on(day) where !meal.isHidden {
+                if case let .original(original) = meal, original.carryover != nil { continue }
+                titles.append(meal.title)
+            }
+        }
+        guard titles.count == 1 else { return Self(count: titles.count, title: nil) }
+        let title = String(titles[0].prefix(64))
+        let displayable = !title.isEmpty && title.utf8.count <= 256 && title.rangeOfCharacter(from: .controlCharacters) == nil
+        return Self(count: 1, title: displayable ? title : nil)
+    }
+}
+
 @MainActor extension AdultHomeSummaryStore {
     func refreshTonight(_ model: TonightMealModel, access: PantryDigestAccess, ledgerID: UUID,
                         liveBasis: () throws -> TonightHomeBasis) {

@@ -1992,6 +1992,70 @@
         }
       }
     },
+    "Planned for tonight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned for tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena planificada para hoy"
+          }
+        }
+      }
+    },
+    "%lld dinners planned": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dinners planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld cenas planificadas"
+          }
+        }
+      }
+    },
+    "Include my planned dinners": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include my planned dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir mis cenas planificadas"
+          }
+        }
+      }
+    },
+    "Shows today’s planned dinner title, or a count if several are planned. With no planned dinner, shows reviewed options.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows today’s planned dinner title, or a count if several are planned. With no planned dinner, shows reviewed options."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra el nombre de la cena planificada para hoy, o cuántas hay si se planificaron varias. Si no hay ninguna, muestra opciones revisadas."
+          }
+        }
+      }
+    },
     "Reviewed meal options: %lld": {
       "localizations": {
         "en": {

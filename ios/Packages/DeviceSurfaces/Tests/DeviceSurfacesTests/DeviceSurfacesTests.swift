@@ -12,6 +12,20 @@ final class DeviceSurfacesTests: XCTestCase {
         addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
         return directory.appendingPathComponent(name)
     }
+    func testPlannedDinnerProjectionKeepsLegacyOptionsDistinctAndOmitsAmbiguousTitles() throws {
+        let scope = UUID()
+        let options = try AdultFoodSummaryProjection(kind: .tonight, scope: scope, now: now, zone: .gmt, count: 1, reviewedTitle: "Wraps")
+        let oldPayload = try JSONEncoder().encode(options)
+        XCTAssertNil((try JSONSerialization.jsonObject(with: oldPayload) as? [String: Any])?["plannedDinner"])
+        XCTAssertNil(try AdultFoodSummaryProjection.decode(oldPayload).plannedDinner)
+        let planned = try AdultFoodSummaryProjection(kind: .tonight, scope: scope, now: now, zone: .gmt, count: 1,
+                                                     reviewedTitle: "Soup", plannedDinner: true)
+        XCTAssertEqual(try AdultFoodSummaryProjection.decode(JSONEncoder().encode(planned)), planned)
+        XCTAssertThrowsError(try AdultFoodSummaryProjection(kind: .tonight, scope: scope, now: now, zone: .gmt,
+                                                            count: 2, reviewedTitle: "Soup", plannedDinner: true))
+        XCTAssertThrowsError(try AdultFoodSummaryProjection(kind: .useSoon, scope: scope, now: now, zone: .gmt,
+                                                            count: 2, plannedDinner: true))
+    }
     func testAdultHomeProjectionExpiresAtCivilMidnightAndRejectsPrivateExtras() throws {
         let zone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
         let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-02T04:45:00Z"))

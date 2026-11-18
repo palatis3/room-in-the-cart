@@ -38,7 +38,8 @@ struct TonightEntry: View {
         return .current(pickup: pickup, access: access, household: household, child: child)
     }
     private func refreshHome() {
-        guard let current = homeAccess, let ledgerID = ledger.sourceWorkspaceID else { return }
+        guard model.batch == nil, let current = homeAccess, let ledgerID = ledger.sourceWorkspaceID,
+              (try? home.refreshPlannedTonight(access: current, ledger: ledger, pickup: pickup)) == false else { return }
         home.refreshTonight(model, access: current, ledgerID: ledgerID) {
             try TonightHomeBasis.current(ledger: ledger, pickup: pickup)
         }

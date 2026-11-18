@@ -199,14 +199,10 @@ extension PickupJourney {
     }
 }
 
-extension PickupModel {
-    private func recoverySourceState(at contextInstant: Date? = nil) throws -> (PickupJourney, PickupMealRecoveryHistory, UUID, ShoppingLedger) {
-        guard ready, let current = journey,
-              let ledger = recoveryLedger, ledger.ready, !ledger.saving, !ledger.hasPendingSave,
-              let workspaceID = ledger.sourceWorkspaceID,
-              let shop = ledger.workspace.shops.first(where: { $0.id == current.id }) else { throw PickupMealRecoveryError.unavailable }
-        let instant = contextInstant ?? stockReviewDate
-        var history = try current.initialMealRecoveryHistory(at: instant)
+extension PickupJourney {
+    func checkedMealRecoveryHistory(shop: ShoppingLedger, workspaceID: UUID, at instant: Date) throws -> PickupMealRecoveryHistory {
+        guard id == shop.id else { throw PickupMealRecoveryError.sourceChanged }
+        var history = try initialMealRecoveryHistory(at: instant)
         guard history.source.ledgerWorkspaceID == workspaceID else { throw PickupMealRecoveryError.sourceChanged }
         let recovered = Set(history.domain.events.map { $0.request.target.id })
         for sourceMeal in history.source.shop.mealOccurrences where history.domain.originalMeals.contains(where: { $0.id == sourceMeal.id }) {
@@ -220,7 +216,7 @@ extension PickupModel {
                 guard basis?.day == live.scheduledDay else { throw PickupMealRecoveryError.sourceChanged }
             } else if let meal = try MealRecoveryEngine.project(history.domain).meals.first(where: { $0.id == live.id }), meal.scheduledDay != live.scheduledDay {
                 let operation = PickupCheckoutMealSource.identity("source-calendar", [shop.revisionID, live.id])
-                let request = MealRecoveryContextRequest(id: operation, shopID: current.id,
+                let request = MealRecoveryContextRequest(id: operation, shopID: id,
                     baseRevisionID: try MealRecoveryEngine.project(history.domain).revisionID,
                     revisionID: PickupCheckoutMealSource.identity("source-calendar-revision", [operation]),
                     change: .moveMeal(occurrenceID: live.id, from: meal.scheduledDay, to: live.scheduledDay), reviewedAt: instant)
@@ -230,7 +226,18 @@ extension PickupModel {
                 history.ledgerCalendarBasis.append(.init(occurrenceID: live.id, day: live.scheduledDay))
             }
         }
-        try current.validateRecoveryRawBasis(history)
+        try validateRecoveryRawBasis(history)
+        return history
+    }
+}
+
+extension PickupModel {
+    private func recoverySourceState(at contextInstant: Date? = nil) throws -> (PickupJourney, PickupMealRecoveryHistory, UUID, ShoppingLedger) {
+        guard ready, let current = journey,
+              let ledger = recoveryLedger, ledger.ready, !ledger.saving, !ledger.hasPendingSave,
+              let workspaceID = ledger.sourceWorkspaceID,
+              let shop = ledger.workspace.shops.first(where: { $0.id == current.id }) else { throw PickupMealRecoveryError.unavailable }
+        let history = try current.checkedMealRecoveryHistory(shop: shop, workspaceID: workspaceID, at: contextInstant ?? stockReviewDate)
         return (current, history, workspaceID, shop)
     }
     func recoveryDefinitions() throws -> [PickupRecoveryMealDefinition] {

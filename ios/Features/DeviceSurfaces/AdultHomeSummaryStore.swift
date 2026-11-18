@@ -13,6 +13,7 @@ import CoreDomain
         var projection: AdultFoodSummaryProjection?
         var tonightBasis: TonightHomeBasis?
         var reviewedLedger: UUID?
+        var includesPlannedDinners: Bool?
         func belongs(to scope: PantryDigestScope) -> Bool { origin == scope.origin && owner == scope.owner }
     }
 
@@ -62,24 +63,25 @@ import CoreDomain
         _ = try file(kind)
         guard kind != .tonight || ledgerID != nil else { throw SurfaceError.unavailable }
         if let existing = try consent(kind), existing.belongs(to: access.scope),
-           kind != .tonight || existing.reviewedLedger == ledgerID { return }
+           kind != .tonight || (existing.reviewedLedger == ledgerID && existing.includesPlannedDinners == true) { return }
         try revoke(kind)
-        try persist(Consent(origin: access.scope.origin, owner: access.scope.owner, token: UUID(), reviewedLedger: ledgerID), kind)
+        try persist(Consent(origin: access.scope.origin, owner: access.scope.owner, token: UUID(), reviewedLedger: ledgerID, includesPlannedDinners: kind == .tonight ? true : nil), kind)
         generation = UUID()
     }
     func update(_ kind: AdultFoodSummaryKind, access: PantryDigestAccess, count: Int,
-                reviewedTitle: String? = nil, tonightBasis: TonightHomeBasis? = nil, now: Date = Date(), zone: TimeZone = .current) throws {
+                reviewedTitle: String? = nil, plannedDinner: Bool = false, tonightBasis: TonightHomeBasis? = nil, now: Date = Date(), zone: TimeZone = .current) throws {
         guard access.authorized(), UIApplication.shared.isProtectedDataAvailable,
               var receipt = try consent(kind) else { return }
         guard receipt.belongs(to: access.scope) else { try revoke(kind); return }
         guard (kind == .tonight) == (tonightBasis != nil) else { throw SurfaceError.invalid }
         if kind == .tonight, receipt.reviewedLedger != tonightBasis?.ledger { try revoke(kind); return }
+        guard !plannedDinner || receipt.includesPlannedDinners == true else { throw SurfaceError.unavailable }
         let projected = try file(kind)
-        if let old = receipt.projection, old.count == count, old.reviewedTitle == reviewedTitle, receipt.tonightBasis == tonightBasis,
+        if let old = receipt.projection, old.count == count, old.reviewedTitle == reviewedTitle, (old.plannedDinner == true) == plannedDinner, receipt.tonightBasis == tonightBasis,
            old.isFresh(at: now, zone: zone),
            (try? projected.read()) == old { return }
         let fresh = try AdultFoodSummaryProjection(kind: kind, scope: receipt.token, now: now, zone: zone,
-            count: count, reviewedTitle: reviewedTitle)
+            count: count, reviewedTitle: reviewedTitle, plannedDinner: plannedDinner)
         receipt.tonightBasis = tonightBasis
         receipt.reviewedLedger = tonightBasis?.ledger
         receipt.projection = fresh
@@ -103,6 +105,11 @@ import CoreDomain
               let receipt = try? consent(.tonight) else { return false }
         return receipt.tonightBasis == basis
     }
+    func includesPlannedDinners(scope: PantryDigestScope, ledgerID: UUID) -> Bool {
+        guard let receipt = try? consent(.tonight), receipt.belongs(to: scope),
+              receipt.reviewedLedger == ledgerID else { return false }
+        return receipt.includesPlannedDinners == true
+    }
     func tonightConsentToken(scope: PantryDigestScope, ledger: UUID) -> UUID? {
         guard let receipt = try? consent(.tonight), receipt.belongs(to: scope),
               receipt.reviewedLedger == ledger else { return nil }
@@ -112,6 +119,36 @@ import CoreDomain
         guard access.authorized() else { return }
         for kind in AdultFoodSummaryKind.allCases {
             if let receipt = try consent(kind), !receipt.belongs(to: access.scope) { try revoke(kind) }
+        }
+    }
+    /// A planned title is a different disclosure from the older option-only widget.
+    /// Opening Tonight is unnecessary after the adult opts into this summary.
+    @discardableResult
+    func refreshPlannedTonight(access: PantryDigestAccess, ledger: LedgerModel, pickup: PickupModel,
+                               now: Date = Date(), zone: TimeZone = .current) throws -> Bool {
+        guard access.authorized(), let origin = ledger.sourceWorkspaceID,
+              includesPlannedDinners(scope: access.scope, ledgerID: origin) else { return false }
+        do {
+            guard ledger.ready, !ledger.saving, !ledger.hasPendingSave, !ledger.hasPendingLedgerDeletion,
+                  pickup.ready, !pickup.saving, !pickup.hasPendingSave, pickup.pantryReadIsCurrent,
+                  pickup.sourceWorkspaceID == access.scope.origin else {
+                throw SurfaceError.unavailable
+            }
+            let plan = try TonightPlannedDinners.current(workspace: ledger.workspace, ledgerID: origin,
+                journeys: pickup.journeys, now: now, zone: zone)
+            guard plan.count > 0 else {
+                if try consent(.tonight)?.projection?.plannedDinner == true {
+                    try invalidate(.tonight, origin: access.scope.origin, forget: false)
+                }
+                return false
+            }
+            let basis = try TonightHomeBasis.current(ledger: ledger, pickup: pickup)
+            try update(.tonight, access: access, count: plan.count, reviewedTitle: plan.title, plannedDinner: true,
+                       tonightBasis: basis, now: now, zone: zone)
+            return true
+        } catch {
+            try invalidate(.tonight, origin: access.scope.origin, forget: false)
+            throw error
         }
     }
     func checkTonightSource(ledger: LedgerModel, pickup: PickupModel) throws {
@@ -188,10 +225,14 @@ struct AdultHomeSummaryPreference: View {
         Section {
             Toggle(SurfaceCopy.text("Show on my Home Screen"), isOn: enabled)
                 .accessibilityIdentifier("adultHomeSummary." + kind.rawValue)
+            if kind == .tonight, enabled.wrappedValue, let ledgerID,
+               !home.includesPlannedDinners(scope: access.scope, ledgerID: ledgerID) {
+                Button(SurfaceCopy.text("Include my planned dinners")) { enabled.wrappedValue = true }
+            }
             if error { Text(SurfaceCopy.text("Could not update the Home Screen setting. Try again.")) }
         } footer: {
             if kind == .tonight {
-                Text(SurfaceCopy.text("Shows the first reviewed meal title and the number of fully covered options."))
+                Text(SurfaceCopy.text("Shows today’s planned dinner title, or a count if several are planned. With no planned dinner, shows reviewed options."))
             }
             Text(SurfaceCopy.text("Anyone who can see your unlocked Home Screen may see this summary. iOS may briefly keep a previous widget image after you turn it off or change accounts."))
         }

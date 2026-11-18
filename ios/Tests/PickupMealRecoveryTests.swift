@@ -1,5 +1,6 @@
 import XCTest
 import CoreDomain
+import DeviceSurfaces
 import SQLite3
 import LocalStore
 @testable import RoomInTheCart
@@ -656,11 +657,47 @@ import LocalStore
         XCTAssertEqual(restarted.allocation, f.model.allocation)
     }
 
+    func testOptedInHomePublishesActualPlanOutsideTonightAndRejectsOtherScope() async throws {
+        let f = try await fixture(canonical: true)
+        let origin = try XCTUnwrap(f.ledger.sourceWorkspaceID)
+        let stock = try XCTUnwrap(f.model.sourceWorkspaceID)
+        let directory = f.directory.appendingPathComponent("widget")
+        let home = AdultHomeSummaryStore(directory: f.directory.appendingPathComponent("home"), widgetDirectory: { directory }, reload: { _ in })
+        func access() -> PantryDigestAccess {
+            let identity = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+            return .init(scope: .init(origin: stock, identity: identity), authorized: { true })
+        }
+        let owner = access(), other = access()
+        let meal = try XCTUnwrap(f.ledger.shop?.mealOccurrences.first { $0.id == f.wednesday })
+        let day = try XCTUnwrap(meal.scheduledDay), date = try XCTUnwrap(day.date), zone = try XCTUnwrap(TimeZone(identifier: day.timeZoneIdentifier))
+        let file = try AdultFoodSummaryFile(directory: directory, kind: .tonight)
+        func publish(_ access: PantryDigestAccess, at when: Date) throws -> Bool {
+            try home.refreshPlannedTonight(access: access, ledger: f.ledger, pickup: f.model, now: when, zone: zone)
+        }
+        XCTAssertFalse(try publish(owner, at: date))
+        try home.setEnabled(true, kind: .tonight, access: owner, ledgerID: origin)
+        XCTAssertFalse(try publish(other, at: date))
+        XCTAssertFalse(try publish(.init(scope: owner.scope, authorized: { false }), at: date))
+        XCTAssertTrue(try publish(owner, at: date))
+        let plan = try file.read()
+        XCTAssertEqual(plan.reviewedTitle, meal.title)
+        XCTAssertEqual(plan.plannedDinner, true)
+        XCTAssertEqual(plan.count, 1)
+        XCTAssertFalse(try publish(owner, at: date.addingTimeInterval(86_400)))
+        XCTAssertThrowsError(try file.read())
+    }
+
     func testDinnersAllChosenAndWeekShareCurrentIdentityMetadataAndDate() async throws {
         let f = try await fixture(), dinners = dinnerModel(f)
         let originalShop = try XCTUnwrap(f.ledger.shop)
         let originalTuesday = try XCTUnwrap(originalShop.mealOccurrences.first { $0.id == f.tuesday })
         let originalWednesday = try XCTUnwrap(originalShop.mealOccurrences.first { $0.id == f.wednesday })
+        func widgetPlan(_ day: MealDay) throws -> TonightPlannedDinners {
+            try TonightPlannedDinners.current(workspace: f.ledger.workspace, ledgerID: XCTUnwrap(f.ledger.sourceWorkspaceID),
+                journeys: f.model.journeys, now: XCTUnwrap(day.date), zone: XCTUnwrap(TimeZone(identifier: day.timeZoneIdentifier)))
+        }
+        let wednesday = try XCTUnwrap(originalWednesday.scheduledDay)
+        XCTAssertEqual(try widgetPlan(wednesday).title, originalWednesday.title)
         let initial = try dinners.currentMeals(pickup: f.model)
         XCTAssertEqual(initial.all, originalShop.mealOccurrences.map(DinnerCurrentMeal.original))
         XCTAssertEqual(try dinners.currentMealDestination(f.wednesday, pickup: f.model), .original(originalWednesday))
@@ -671,6 +708,7 @@ import LocalStore
         XCTAssertEqual(try current.occurrence(f.tuesday), .original(originalTuesday))
         XCTAssertEqual(try current.occurrence(f.wednesday), .recovered(original: originalWednesday, current: replacement.definition))
         XCTAssertFalse(current.all.map(\.title).contains(originalWednesday.title))
+        XCTAssertEqual(try widgetPlan(wednesday).title, replacement.definition.meal.title)
         XCTAssertEqual(try dinners.currentMealDestination(f.wednesday, pickup: f.model), .recovered(shopID: originalShop.id, occurrenceID: f.wednesday))
         XCTAssertEqual(current.on(try XCTUnwrap(originalWednesday.scheduledDay)).map(\.id), [f.wednesday])
         let beforeMove = try XCTUnwrap(f.model.journey), ledgerBefore = f.ledger.workspace
@@ -682,6 +720,8 @@ import LocalStore
         let moved = await f.model.applyRecoveryMove(preview, currentAuthority: { f.authority }); XCTAssertTrue(moved)
         let after = try dinners.currentMeals(pickup: f.model)
         XCTAssertTrue(after.on(try XCTUnwrap(originalWednesday.scheduledDay)).isEmpty)
+        XCTAssertEqual(try widgetPlan(wednesday).count, 0)
+        XCTAssertEqual(try widgetPlan(day).title, replacement.definition.meal.title)
         XCTAssertEqual(after.on(day).map(\.id), [f.wednesday])
         guard case .recovered(_, let definition) = try after.occurrence(f.wednesday) else { return XCTFail("Calendar route resurrected the original meal") }
         XCTAssertEqual(definition, replacement.definition.withMeal(try XCTUnwrap(preview.domain.after.meals.first { $0.id == f.wednesday })))
