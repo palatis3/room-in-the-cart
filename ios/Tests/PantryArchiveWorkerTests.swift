@@ -147,6 +147,67 @@ import RecordArchive
         do { try await repository.applyReceipt(review, at: now); XCTFail("An erased receipt cannot be replayed") } catch {}
     }
 
+    func testReceiptBatchProtectsLunchBeforePricingDinnerWithCurrentPackOffer() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, authorize: { true })
+        f.cleanup.track(repository)
+        var draft = try receiptDraft(f.store)
+        draft.lines[0].received = "6"
+        draft.lines[0].usable = "5"
+        draft.lines[0].paid = "9.50"
+        let initial = try await f.store.inventoryState()
+        let review = try await repository.reviewReceipt(draft, expected: initial, at: now)
+        try await repository.applyReceipt(review, at: now)
+        let acquired = try XCTUnwrap(review.facts.first)
+        let saved = try await repository.load(at: now)
+        let lot = try XCTUnwrap(saved.lots.first { $0.id == acquired.lotID })
+
+        func count(_ amount: Int64) throws -> Quantity {
+            Quantity(amount: try Rational(amount), unit: .count, originalLiteral: String(amount))
+        }
+        let lunchID = UUID()
+        let hold = InventoryCommand(id: UUID(), originID: f.store.workspaceID, lotID: lot.id, eventID: UUID(),
+            expectedRevision: lot.revision, occurredAt: now, change: .reservation(.reserve(id: lunchID,
+                purpose: "Tomorrow's lunch", amount: try count(2), day: nil)))
+        let held = try await repository.apply(hold, reviewedInventoryRevision: saved.state.revision, at: now)
+        try await repository.applyReceipt(review, at: now)
+        let current = try await repository.load(at: now)
+        XCTAssertEqual(current.state, held.current.state)
+        let mapping = try PantryLegacyMigration.map(originID: f.store.workspaceID, heads: [], ledger: .unavailable, at: now)
+        let supply = try DinnerPantrySupply.build(context: .init(snapshot: current, mapping: mapping, asOf: now), shopID: UUID())
+        XCTAssertEqual(supply.reservations[lot.foodID]?.filter(\.protected).map(\.id), [lunchID])
+        let stock = DinnerLibraryPairings.unreservedLots(canonical: supply).filter { $0.foodID == lot.foodID }
+        XCTAssertEqual(stock.map(\.id), [lot.id])
+        XCTAssertEqual(stock.first?.usable.amount, try Rational(3))
+
+        let ingredient = MealIngredient(name: "Rice", quantity: try count(5))
+        let dinner = AcceptedDinner(id: UUID(), template: .init(title: "Rice bowls", servings: .one,
+            ingredients: [ingredient]), acceptedAt: now)
+        let meal = DinnerCommitment(name: dinner.template.title, kind: .dinner, portions: .one)
+        let commitments = DinnerCommitmentSet(commitments: [meal])
+        let demand = DinnerDemand(commitmentID: meal.id, foodID: lot.foodID, name: ingredient.name,
+            quantity: ingredient.quantity, acceptedDinnerID: dinner.id, ingredientID: ingredient.id)
+        let pack = PackOffer(id: "rice-pair", label: "Two rice portions", usableQuantity: try count(2),
+            price: try Money(decimal: "4.00"))
+        let context = CheckoutContext(storeID: "East market", branchID: "Main", mode: .pickup, slot: "today",
+            commitmentsID: commitments.id, observedAt: now, source: "Current reviewed shelf offer")
+        let scenario = DinnerScenario(commitments: commitments, acceptedDinnerIDs: [dinner.id], demands: [demand],
+            stock: stock, packs: [.init(foodID: lot.foodID, offer: pack, availability: .confirmed(maximumPacks: 1))],
+            baselineComplete: true, fees: [], tax: .exact(.zero), deposits: .exact(.zero), context: context,
+            preparation: .init(handsOnMinutes: 5, remainingLeadMinutes: 10, availableMinutes: 20))
+        let priced = try DinnerScenarioEngine.evaluate(scenario, acceptedDinners: [dinner])
+        let topUp = try XCTUnwrap(priced.packs.first?.result)
+        XCTAssertEqual(topUp.amountToBuy, try Rational(2))
+        XCTAssertEqual(topUp.packsToBuy, 1)
+        XCTAssertEqual(priced.checkout.total.exact?.minorUnits, 400)
+        XCTAssertEqual(priced.ingredientValues[meal.id]?.total.minorUnits, 1_000)
+        let historical = try await repository.acquisitionHistory(receiptID: acquired.receiptID)
+        XCTAssertEqual(historical.map(\.paidLineTotal), [try Money(decimal: "9.50")])
+        let afterPricing = try await repository.load(at: now)
+        XCTAssertEqual(afterPricing.reservations, current.reservations)
+        XCTAssertEqual(afterPricing.state, current.state)
+    }
+
     func testReceiptLinkedEvidenceKeepsDeliveredStockAndRejectsChangedDuplicate() async throws {
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, authorize: { true })
