@@ -5,7 +5,13 @@ import CSQLite
 public struct InventoryMigrationChunk: Codable, Equatable, Sendable {
     public let index: Int
     public let records: [InventoryRecord]
-    public init(index: Int, records: [InventoryRecord]) { self.index = index; self.records = records }
+    public let acquisitions: [InventoryAcquisitionRow]?
+    var itemCount: Int { records.count + (acquisitions?.count ?? 0) }
+    public init(index: Int, records: [InventoryRecord], acquisitions: [InventoryAcquisitionRow] = []) {
+        self.index = index
+        self.records = records
+        self.acquisitions = acquisitions.isEmpty ? nil : acquisitions
+    }
 }
 
 /// Review metadata is bounded; the manifest describes arbitrarily many bounded chunks without
@@ -50,9 +56,17 @@ public struct InventoryMigrationProgress: Equatable, Sendable {
 
 func validateInventoryMigrationChunk(_ chunk: InventoryMigrationChunk) throws {
     guard chunk.index >= 0, chunk.index < 1_000_000,
-          !chunk.records.isEmpty, chunk.records.count <= InventoryPersistenceLimits.batchItems,
+          chunk.itemCount > 0, chunk.itemCount <= InventoryPersistenceLimits.batchItems,
           Set(chunk.records.map(\.key)).count == chunk.records.count else { throw ComparisonStoreError.invalidInput }
     var raw = 0
+    if let rows = chunk.acquisitions {
+        guard !rows.isEmpty, Set(rows.map(\.id)).count == rows.count else { throw ComparisonStoreError.invalidInput }
+        for row in rows {
+            guard row.revision > 0, (row.revision == 1) == (row.supersedesID == nil),
+                  !row.payload.isEmpty, row.payload.count <= InventoryPersistenceLimits.recordBytes else { throw ComparisonStoreError.invalidInput }
+            raw += row.payload.count
+        }
+    }
     for record in chunk.records {
         // Original chronology belongs in provenance. Never fabricate missing SQL revision history.
         guard record.revision == 1, (1...10_000).contains(record.payloadVersion),
@@ -188,7 +202,7 @@ extension ComparisonStore {
             try validateStagingPlan(plan)
             if previousDigest != nil { return try migrationProgress(header) }
             guard chunk.index == header.nextChunk, chunk.index < plan.expectedChunkCount,
-                  header.recordCount + chunk.records.count <= plan.expectedRecordCount else { throw ComparisonStoreError.staleInventory }
+                  header.recordCount + chunk.itemCount <= plan.expectedRecordCount else { throw ComparisonStoreError.staleInventory }
             for (ordinal, record) in chunk.records.enumerated() {
                 if try database.inventoryErased(record.key) { throw ComparisonStoreError.erased }
                 try database.run("INSERT INTO inventory_staged_records (migration_id,kind,id,chunk_index,record_ordinal,source_origin,source_id,record) VALUES (?,?,?,?,?,?,?,?)",
@@ -196,10 +210,15 @@ extension ComparisonStore {
                      .integer(Int64(chunk.index)), .integer(Int64(ordinal)), record.source.map { .text($0.originID.uuidString) } ?? .null, record.source.map { .text($0.sourceID) } ?? .null,
                      .blob(try inventoryCanonical(record))])
             }
+            for (ordinal, row) in (chunk.acquisitions ?? []).enumerated() {
+                try database.run("INSERT INTO inventory_staged_acquisitions (migration_id,id,revision,chunk_index,ordinal,row) VALUES (?,?,?,?,?,?)",
+                    [.text(id.uuidString), .text(row.id.uuidString), .integer(row.revision), .integer(Int64(chunk.index)),
+                     .integer(Int64(ordinal)), .blob(try inventoryCanonical(row))])
+            }
             try database.run("INSERT INTO inventory_migration_chunks (migration_id,chunk_index,digest,record_count) VALUES (?,?,?,?)",
-                [.text(id.uuidString), .integer(Int64(chunk.index)), .blob(digest), .integer(Int64(chunk.records.count))])
+                [.text(id.uuidString), .integer(Int64(chunk.index)), .blob(digest), .integer(Int64(chunk.itemCount))])
             try database.run("UPDATE inventory_migrations SET next_chunk = ?, record_count = ?, chain_digest = ? WHERE id = ?",
-                [.integer(Int64(header.nextChunk + 1)), .integer(Int64(header.recordCount + chunk.records.count)),
+                [.integer(Int64(header.nextChunk + 1)), .integer(Int64(header.recordCount + chunk.itemCount)),
                  .blob(inventoryDigest(header.chainDigest + digest)), .text(id.uuidString)])
             guard let updated = try database.migrationHeader(id) else { throw ComparisonStoreError.corruptRecord }
             return try migrationProgress(updated)
@@ -239,12 +258,18 @@ extension ComparisonStore {
                     after = records.last?.key.id
                 }
             }
+            try database.forEachStagedAcquisition(id) { row in
+                try database.insertAcquisition(row)
+                try database.run("INSERT INTO inventory_migration_keys (migration_id,kind,id) VALUES (?,?,?)",
+                    [.text(id.uuidString), .text("acquisition"), .text(row.id.uuidString)])
+            }
             let receipt = InventoryOperationReceipt(workspaceID: workspaceID, operationID: id, revision: plan.expectedRevision + 1,
                 heads: [], comparisonHeads: [:], committedAt: date, migrationID: id)
             try database.run("INSERT INTO inventory_operations (id,digest,request_digest,receipt) VALUES (?,?,?,?)",
                 [.text(id.uuidString), .blob(header.digest), .blob(header.digest), .blob(try inventoryCanonical(receipt))])
             try database.run("UPDATE inventory_state SET revision = ?, active = 1 WHERE singleton = 1", [.integer(receipt.revision)])
             try database.run("UPDATE inventory_migrations SET status = 'active', plan = NULL WHERE id = ?", [.text(id.uuidString)])
+            try database.run("DELETE FROM inventory_staged_acquisitions WHERE migration_id = ?", [.text(id.uuidString)])
             try database.run("DELETE FROM inventory_staged_records WHERE migration_id = ?", [.text(id.uuidString)])
             return receipt
         }
@@ -260,6 +285,7 @@ extension ComparisonStore {
             if header.status == .cancelled { return try migrationProgress(header) }
             // Source mutations do not prevent cancellation; cancellation never touches original comparisons or canonical food.
             try database.run("UPDATE inventory_migrations SET status = 'cancelled', plan = NULL WHERE id = ?", [.text(id.uuidString)])
+            try database.run("DELETE FROM inventory_staged_acquisitions WHERE migration_id = ?", [.text(id.uuidString)])
             try database.run("DELETE FROM inventory_staged_records WHERE migration_id = ?", [.text(id.uuidString)])
             try database.run("DELETE FROM inventory_migration_sources WHERE migration_id = ?", [.text(id.uuidString)])
             guard let cancelled = try database.migrationHeader(id) else { throw ComparisonStoreError.corruptRecord }

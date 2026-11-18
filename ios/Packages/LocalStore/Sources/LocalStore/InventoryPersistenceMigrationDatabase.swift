@@ -169,8 +169,25 @@ extension ComparisonDatabase {
         }
     }
 
+    func forEachStagedAcquisition(_ id: UUID, chunk: Int? = nil, _ body: (InventoryAcquisitionRow) throws -> Void) throws {
+        var query = "SELECT row FROM inventory_staged_acquisitions WHERE migration_id=?"
+        var args: [ComparisonSQLValue] = [.text(id.uuidString)]
+        if let chunk {
+            query += " AND chunk_index=? ORDER BY ordinal"
+            args.append(.integer(Int64(chunk)))
+        } else { query += " ORDER BY revision,id" }
+        let cursor = try statement(query, values: args)
+        defer { sqlite3_finalize(cursor) }
+        while true {
+            let status = sqlite3_step(cursor)
+            if status == SQLITE_DONE { return }
+            guard status == SQLITE_ROW else { throw ComparisonStoreError.database(status) }
+            try body(JSONDecoder().decode(InventoryAcquisitionRow.self, from: inventoryBlob(cursor, column: 0, maximum: 131_072)))
+        }
+    }
+
     func validateStagedManifest(_ header: InventoryMigrationHeader) throws {
-        guard try integer("SELECT count(*) FROM inventory_staged_records WHERE migration_id = '\(header.id.uuidString)'") == Int64(header.recordCount),
+        guard try integer("SELECT (SELECT count(*) FROM inventory_staged_records WHERE migration_id = '\(header.id.uuidString)') + (SELECT count(*) FROM inventory_staged_acquisitions WHERE migration_id = '\(header.id.uuidString)')") == Int64(header.recordCount),
               try integer("SELECT count(*) FROM inventory_migration_chunks WHERE migration_id = '\(header.id.uuidString)'") == Int64(header.nextChunk) else {
             throw ComparisonStoreError.corruptRecord
         }
@@ -178,10 +195,15 @@ extension ComparisonDatabase {
         for index in 0..<header.nextChunk {
             let records = try decodedStagedRecords("SELECT kind,id,record FROM inventory_staged_records WHERE migration_id = ? AND chunk_index = ? ORDER BY record_ordinal LIMIT 257",
                 values: [.text(header.id.uuidString), .integer(Int64(index))])
-            let chunk = InventoryMigrationChunk(index: index, records: records)
+            var acquisitions: [InventoryAcquisitionRow] = []
+            try forEachStagedAcquisition(header.id, chunk: index) { row in
+                guard records.count + acquisitions.count < InventoryPersistenceLimits.batchItems else { throw ComparisonStoreError.corruptRecord }
+                acquisitions.append(row)
+            }
+            let chunk = InventoryMigrationChunk(index: index, records: records, acquisitions: acquisitions)
             try validateInventoryMigrationChunk(chunk)
             guard try migrationChunkDigest(header.id, index: index) == inventoryDigest(inventoryCanonical(chunk)) else { throw ComparisonStoreError.corruptRecord }
-            digest = try InventoryMigrationManifest.appending(chunk, to: digest); count += records.count
+            digest = try InventoryMigrationManifest.appending(chunk, to: digest); count += chunk.itemCount
         }
         guard count == header.recordCount, digest == header.chainDigest else { throw ComparisonStoreError.corruptRecord }
     }

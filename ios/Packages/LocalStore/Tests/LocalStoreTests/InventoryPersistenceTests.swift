@@ -35,9 +35,9 @@ final class InventoryPersistenceTests: XCTestCase {
         XCTAssertEqual(store.workspaceID, workspace)
         let snapshot = try await store.inventoryCutoverSnapshot()
         XCTAssertEqual(snapshot.sources, [saved])
-        XCTAssertEqual(try scalar("PRAGMA user_version"), 4)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 5)
         try await store.close()
-        XCTAssertThrowsError(try ComparisonStore(url: url)) { XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(4)) }
+        XCTAssertThrowsError(try ComparisonStore(url: url)) { XCTAssertEqual($0 as? ComparisonStoreError, .unsupportedSchema(5)) }
         let other = directory.appendingPathComponent("comparisons.sqlite")
         let generic = try ComparisonStore(url: other)
         _ = try await generic.save(id: UUID(), title: "Pack", payload: Data([1]), savedAt: Date())
@@ -45,6 +45,54 @@ final class InventoryPersistenceTests: XCTestCase {
         catch { XCTAssertEqual(error as? ComparisonStoreError, .inventoryDisabled) }
         try await generic.close()
         XCTAssertEqual(try scalar("PRAGMA user_version", at: other), 2)
+    }
+
+    func testReceiptEvidenceIdentitiesAreAtomicAndRemainRetiredAcrossReopen() async throws {
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        _ = try await activate(store, writes: [])
+        let parent = lot(), receipt = UUID(), line = UUID(), image = UUID(), transaction = UUID()
+        let row = InventoryAcquisitionRow(id: UUID(), receiptID: receipt, lineID: line, lotID: parent.record.key.id,
+            revision: 1, supersedesID: nil, payload: Data([1, 2]), imageIdentity: image, transactionIdentity: transaction)
+        let batch = InventoryBatch(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 1,
+            request: Data([11]), writes: [parent], acquisitions: [row])
+        let committed = try await store.commitInventory(batch)
+        let replay = try await store.commitInventory(batch)
+        XCTAssertEqual(replay, committed)
+        let other = lot(), alias = UUID()
+        let conflict = InventoryAcquisitionRow(id: UUID(), receiptID: UUID(), lineID: UUID(), lotID: other.record.key.id,
+            revision: 1, supersedesID: nil, payload: Data([5]), imageIdentity: alias, transactionIdentity: transaction)
+        do {
+            _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 2,
+                request: Data([7]), writes: [other], acquisitions: [conflict]))
+            XCTFail("Identity reuse cannot create stock")
+        } catch { XCTAssertEqual(error as? ComparisonStoreError, .operationConflict) }
+        let absent = try await store.acquisitionReceiptID(for: alias)
+        XCTAssertNil(absent)
+        let lotRows = try await store.inventoryRecords(kind: .lot, limit: 5)
+        XCTAssertEqual(lotRows.count, 1)
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        let same = try await reopened.acquisitionRows(receiptID: receipt, lineIDs: [line], firstRevisionOnly: true)
+        XCTAssertEqual(same, [row])
+        let id = try await reopened.acquisitionReceiptID(for: image)
+        XCTAssertEqual(id, receipt)
+        _ = try await reopened.commitInventory(.init(workspaceID: reopened.workspaceID, operationID: UUID(),
+            expectedRevision: 2, request: Data([4]), erasures: [.init(key: parent.record.key, expectedRevision: 1)]))
+        let erased = try await reopened.acquisitionRows()
+        XCTAssertTrue(erased.isEmpty)
+        do { _ = try await reopened.commitInventory(batch); XCTFail("Retired evidence cannot replay") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .erased) }
+        let replacement = lot()
+        let oldLine = InventoryAcquisitionRow(id: UUID(), receiptID: receipt, lineID: line, lotID: replacement.record.key.id,
+            revision: 1, supersedesID: nil, payload: Data([3]))
+        do {
+            _ = try await reopened.commitInventory(.init(workspaceID: reopened.workspaceID, operationID: UUID(), expectedRevision: 3,
+                request: Data([8]), writes: [replacement], acquisitions: [oldLine]))
+            XCTFail("A retired line cannot be rebound to another lot")
+        } catch {}
+        let replacementLots = try await reopened.inventoryRecords(kind: .lot, limit: 10)
+        XCTAssertTrue(replacementLots.isEmpty)
+        try await reopened.close()
     }
 
     func testCutoverRejectsInsertedAndErasedSourcesAcrossInstancesWithoutPartialImport() async throws {
