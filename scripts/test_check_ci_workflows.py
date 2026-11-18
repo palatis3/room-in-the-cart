@@ -97,7 +97,7 @@ class WorkflowGuardTests(unittest.TestCase):
                         group = evaluate(expression, context)
                         groups[identity] = group
                         native = fixed_groups.get(identity)
-                        if not native:
+                        if not native and identity != core:
                             native = {'bitrise-A1': 'ritc-bitrise-a1-slot-0', 'bitrise-A2': 'ritc-bitrise-a2-slot-0'}.get(provider)
                         if trusted and native:
                             self.assertEqual(group, native)
@@ -134,10 +134,10 @@ class WorkflowGuardTests(unittest.TestCase):
                     self.assertNotIn('-slot-', group)
                     groups.add(group)
         self.assertEqual(len(groups), 16)
-        # Product admission never changes the consumers' twelve shared lanes.
+        # The StoreKit fixture still shares its assigned lane.
         self.assertEqual(POLICY[STOREKIT_JOB], 2)
 
-    def test_twelve_lanes_are_shared_across_workflows_and_disjoint_between_pools(self):
+    def test_twelve_fixture_lanes_are_shared_and_disjoint_between_pools(self):
         context = {'github.event.pull_request.head.repo.full_name': 'palatis3/room-in-the-cart',
                    'github.event_name': 'push', 'vars.RITC_GITHUB_MAC_ONLY': '',
                    'github.repository': 'palatis3/room-in-the-cart', 'github.run_id': 1,
@@ -146,7 +146,7 @@ class WorkflowGuardTests(unittest.TestCase):
         for pool in ('A1', 'A2'):
             for slot in range(6):
                 evaluated = set()
-                for identity in (('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
+                for identity in (('ios-fixtures.yml', 'contributor-tests'),
                                  ('ios-fixtures.yml', 'dinner-tests')):
                     expression = bitrise_group(identity, POLICY[identity])
                     for token, value in {**context, 'matrix.provider': 'bitrise-' + pool,
@@ -185,9 +185,9 @@ class WorkflowGuardTests(unittest.TestCase):
         for changed in (consumer.replace(FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER),
                         consumer.replace("matrix.provider == 'bitrise-A1'", 'true'),
                         consumer.replace(core_group, 'ritc-macos-slot-${{ matrix.macos_slot }}'),
-                        consumer.replace('matrix.pool_slot', 'matrix.macos_slot'),
+                        consumer.replace(core_group, 'ritc-bitrise-a2-slot-2'),
                         consumer.replace("matrix.provider == 'bitrise-A2'", 'true'),
-                        consumer.replace('ritc-bitrise-a2-slot-', 'ritc-bitrise-a1-slot-'),
+                        consumer.replace(core_group, bitrise_group(FIXTURE_JOB, POLICY[FIXTURE_JOB])),
                         consumer.replace('github.run_attempt', 'github.run_id'),
                         consumer.replace('matrix.shard', 'matrix.macos_slot'),
                         consumer.replace('bitrise-runner-A2', 'bitrise-runner-more ci'),

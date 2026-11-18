@@ -1,5 +1,11 @@
 # Local CI validation
 
+## November 18 ordinary iPhone test scheduling
+
+In the [November 18 core run](https://github.com/palatis3/room-in-the-cart/actions/runs/44259710342), UI03 waited 77.5 minutes after the shared build and executed for 19.1 minutes. During 68.2 minutes of that wait, the recorded jobs from the feature branch, main and Dependabot occupied fewer than six A2 machines. UI04 waited 70.8 minutes, including 54.2 minutes with fewer than six A1 assignments. Assignment counts cannot distinguish a free machine from one still provisioning.
+
+Ordinary UI jobs now request their existing A1 or A2 pool as soon as their shared products are ready. Each Actions concurrency group is unique to the run, attempt and shard. Fixture scheduling, the GitHub fallback and required checks keep their existing configuration. Compare build-to-start wait and the last required completion on the next full run, including any overlapping revisions.
+
 ## November 16 GitHub runtime replacement
 
 The `b17cb89b` core producer selected iOS27.0/24A434, then both Xcode and simctl

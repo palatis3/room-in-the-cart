@@ -718,8 +718,9 @@ jobs:
 
   ios-tests:
     name: ios-tests (${{ matrix.shard }}, ${{ matrix.expected_count }})
+    # Ask for the next available machine in the assigned pool as soon as the build is ready.
     concurrency:
-      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-A2' && format('ritc-bitrise-a2-slot-{0}', matrix.pool_slot) || matrix.provider == 'bitrise-A1' && format('ritc-bitrise-a1-slot-{0}', matrix.pool_slot)) || format('ritc-github-job-ci-ios-tests-{0}-{1}-{2}', github.run_id, github.run_attempt, matrix.shard) }}
+      group: ${{ format('ritc-github-job-ci-ios-tests-{0}-{1}-{2}', github.run_id, github.run_attempt, matrix.shard) }}
       queue: max
       cancel-in-progress: false
     needs: ios-build

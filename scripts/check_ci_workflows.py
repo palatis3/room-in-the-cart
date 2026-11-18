@@ -67,7 +67,7 @@ ROUTED_NATIVE_JOBS = {CORE_BUILD_JOB, RELEASE_BUILD_JOB, STOREKIT_JOB, ('ci.yml'
 
 
 def github_job_group(identity, matrix_fields=()):
-    """A non-shared group for expressions whose Bitrise branch needs a group."""
+    """A unique Actions job group across workflow runs, attempts and matrix rows."""
     workflow, job = identity
     arguments = ('github.run_id', 'github.run_attempt', *(f'matrix.{field}' for field in matrix_fields))
     placeholders = '-'.join('{' + str(index) + '}' for index in range(len(arguments)))
@@ -75,6 +75,8 @@ def github_job_group(identity, matrix_fields=()):
 
 
 def bitrise_group(identity, expected):
+    if identity == ('ci.yml', 'ios-tests'):
+        return "${{ " + github_job_group(identity, ('shard',)) + " }}"
     if expected == 'provider':
         workflow, job = identity
         route = (f"format('ritc-bitrise-producer-{workflow.removesuffix('.yml')}-{job}-{{0}}-{{1}}', "
