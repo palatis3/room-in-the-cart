@@ -4833,6 +4833,193 @@
           }
         }
       }
+    },
+    "Get online help with item wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get online help with item wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener ayuda en línea con el texto de los artículos"
+          }
+        }
+      }
+    },
+    "Use selected wording in editable items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use selected wording in editable items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el texto seleccionado en los artículos editables"
+          }
+        }
+      }
+    },
+    "Select up to eight items. Edit each excerpt to remove personal details. Sending shares just those excerpts, their reference IDs and the selected language.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select up to eight items. Edit each excerpt to remove personal details. Sending shares just those excerpts, their reference IDs and the selected language."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona hasta ocho artículos. Edita cada fragmento para quitar los datos personales. Al enviar, solo se comparten esos fragmentos, sus identificadores de referencia y el idioma seleccionado."
+          }
+        }
+      }
+    },
+    "Wording to share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wording to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto para compartir"
+          }
+        }
+      }
+    },
+    "Send selected wording for suggestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send selected wording for suggestions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar el texto seleccionado para recibir sugerencias"
+          }
+        }
+      }
+    },
+    "No item wording was suggested.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No item wording was suggested."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se sugirió texto para los artículos."
+          }
+        }
+      }
+    },
+    "The suggestion could not be read. Keep editing your local items or try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The suggestion could not be read. Keep editing your local items or try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer la sugerencia. Sigue editando tus artículos en este dispositivo o inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Online help is unavailable. You can review every item on this device.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online help is unavailable. You can review every item on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ayuda en línea no está disponible. Puedes revisar cada artículo en este dispositivo."
+          }
+        }
+      }
+    },
+    "Review proposed wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review proposed wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el texto propuesto"
+          }
+        }
+      }
+    },
+    "Choose wording to share with OpenAI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose wording to share with OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el texto que quieras compartir con OpenAI"
+          }
+        }
+      }
+    },
+    "Item wording suggestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item wording suggestions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerencias de texto para los artículos"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

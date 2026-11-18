@@ -1,9 +1,33 @@
 import XCTest
 import CoreDomain
+import HouseholdClient
 @testable import RoomInTheCart
 
 final class StructuredCaptureTests: XCTestCase {
     private let destination = "Saturday pickup"
+    func testOnlineWordingNeedsExplicitReviewAndPreservesSourceDestinationQuantityAndExclusions() throws {
+        let proposal = try StructuredCaptureParser.naturalList("2 litros de leche sin lactosa", destination: destination)
+        var line = try XCTUnwrap(proposal.lines.first)
+        let original = line
+        let request = try LanguageAssistanceRequest(consentingTo: [.init(id: line.id, text: line.originalText)], locale: "es")
+        let value: [String: Any] = ["version":1,"requestID":request.requestID.uuidString,
+            "suggestions":[["sourceLineID":line.id.uuidString,"itemName":"leche","purpose":NSNull(),"exclusion":"sin lactosa"]]]
+        let reply = try JSONDecoder().decode(NaturalListReply.self, from: JSONSerialization.data(withJSONObject: value))
+        try reply.validate(for: request)
+        XCTAssertEqual(line, original)
+        line.confirmed = true
+        line.useLanguageSuggestion(try XCTUnwrap(reply.suggestions.first))
+        XCTAssertEqual(line.originalText, original.originalText)
+        XCTAssertEqual(line.proposedLineID, original.proposedLineID)
+        XCTAssertEqual(line.destination, original.destination)
+        XCTAssertEqual(line.amount, original.amount)
+        XCTAssertEqual(line.exclusions, original.exclusions)
+        XCTAssertEqual(line.name, "leche")
+        XCTAssertFalse(line.confirmed)
+        XCTAssertTrue(line.needsNaturalClarification)
+        XCTAssertThrowsError(try line.reviewed(expectedDestination: destination))
+    }
+
     func testNaturalReviewImportsOnceAndKeepsTimingOutOfIngredientPurpose() throws {
         let text = "Two milks, bread and cereal for next week"
         let proposed = try StructuredCaptureParser.naturalList(text, destination: destination)
