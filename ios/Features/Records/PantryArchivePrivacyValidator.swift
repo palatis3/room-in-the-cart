@@ -413,6 +413,26 @@ import RecordArchive
                 try legacyLot(row.id, ns)
             }
             for row in value.carriedMeals { try need(row.id, row.orderLineID, ns) }
+            for record in value.cookedMeals ?? [] {
+                try ledger(record.draft.ledgerID)
+                for row in record.priorCounts {
+                    try key(.lot, row.lotID, record.draft.inventoryID)
+                    try key(.observation, row.observationID, record.draft.inventoryID)
+                }
+                for (lotID, observationID) in record.resultingObservations {
+                    try key(.lot, lotID, record.draft.inventoryID)
+                    try key(.observation, observationID, record.draft.inventoryID)
+                }
+                if let undo = record.undo {
+                    for id in undo.observations.values { try key(.observation, id, record.draft.inventoryID) }
+                }
+                for amendment in record.resolutions ?? [] {
+                    try key(.lot, amendment.decision.lotID, record.draft.inventoryID)
+                    try key(.observation, amendment.basis?.observationID, record.draft.inventoryID)
+                    try key(.observation, amendment.resultObservationID, record.draft.inventoryID)
+                }
+                for claim in record.priorClaims { try key(.reservation, claim.id, record.draft.inventoryID) }
+            }
             for row in value.stockLots { try legacyLot(row.id, ns) }
             for row in value.pickup?.receipts ?? [] { try source(.receipt(originID: ns, key: row.key)) }
             for row in value.pickup?.usableObservations ?? [] {

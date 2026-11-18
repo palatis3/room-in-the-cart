@@ -258,10 +258,17 @@ extension PantryLegacyMigration.SourceHead {
             expectedRevision: beforeHeads[$0.id]?.revision ?? 0, title: "Pickup", payload: $0.payload) }
         let batch = InventoryBatch(workspaceID: originID, operationID: operationID, expectedRevision: inventory.state.revision,
             request: try requestBytes(request), writes: writes, comparisons: comparisons)
-        guard writes.count + comparisons.count <= InventoryPersistenceLimits.batchItems,
-              writes.allSatisfy({ $0.record.payload.count <= InventoryPersistenceLimits.recordBytes }),
-              batch.request.count + writes.reduce(0, { $0 + $1.record.payload.count + ($1.record.source?.sourceID.utf8.count ?? 0) }) +
-                comparisons.reduce(0, { $0 + $1.payload.count + $1.title.utf8.count }) <= InventoryPersistenceLimits.batchBytes else { throw Failure.capacity }
+        guard writes.count + comparisons.count <= InventoryPersistenceLimits.batchItems else { throw Failure.capacity }
+        var batchBytes = batch.request.count
+        for write in writes {
+            let record = write.record
+            guard record.payload.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.capacity }
+            batchBytes += record.payload.count + (record.source?.sourceID.utf8.count ?? 0)
+        }
+        for comparison in comparisons {
+            batchBytes += comparison.payload.count + comparison.title.utf8.count
+        }
+        guard batchBytes <= InventoryPersistenceLimits.batchBytes else { throw Failure.capacity }
         return Review(request: request, preparedAt: now, changedHeads: changed, batch: batch, lots: resultingLots, reservations: resultingClaims, availability: availability,
             affectedReservations: availability.reservations.filter { priorCoverage[$0.id] != $0 })
     }

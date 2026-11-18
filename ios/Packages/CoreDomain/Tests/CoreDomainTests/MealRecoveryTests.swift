@@ -124,6 +124,11 @@ final class MealRecoveryTests: XCTestCase {
         try MealRecoveryEngine.apply(second, to: &f.state, stockEvidence: f.stock, reservations: [], at: now)
         XCTAssertEqual(f.state.events.count, 2)
         XCTAssertEqual(try MealRecoveryEngine.project(f.state).demands.map(\.id), [id(31), id(71), id(33)])
+        let checked = try MealRecoveryEngine.project(f.state, verifyingReplacements: [current, secondRequest.replacement])
+        XCTAssertTrue(checked.meals.contains(secondRequest.replacement))
+        XCTAssertThrowsError(try MealRecoveryEngine.project(f.state, verifyingReplacements: [f.wednesday]))
+        let wrongPortions = replacement(current, revision: 70, need: 81)
+        XCTAssertThrowsError(try MealRecoveryEngine.project(f.state, verifyingReplacements: [wrongPortions]))
         let two = f.state
         let stale = try request(f.state, target: f.wednesday, replacement: replacement(f.wednesday, revision: 80, need: 81), operation: 82)
         XCTAssertThrowsError(try preview(stale, f)) { XCTAssertEqual($0 as? MealRecoveryError, .stale) }

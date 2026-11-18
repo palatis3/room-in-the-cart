@@ -12,6 +12,7 @@ private enum PantrySheet: Identifiable {
 struct PantryHomeView: View {
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
+    var offersTonight = false
     @State private var sheet: PantrySheet?
     @AccessibilityFocusState private var resultFocused: Bool
 
@@ -27,6 +28,10 @@ struct PantryHomeView: View {
                     }
                     if model.phase == .ready, let snapshot = model.snapshot {
                         Section {
+                            if offersTonight {
+                                NavigationLink(tonightText("Tonight")) { TonightEntry() }
+                                    .accessibilityIdentifier("pantry.tonight")
+                            }
                             Button(pantryText("Add food")) { sheet = .add }
                                 .frame(minHeight: 44).disabled(!model.canEdit)
                                 .accessibilityIdentifier("pantry.add")

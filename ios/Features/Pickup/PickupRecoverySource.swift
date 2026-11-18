@@ -189,7 +189,7 @@ struct PickupMealRecoveryHistory: Codable, Equatable {
         let recorded = domain.events.last { $0.request.target.id == occurrenceID }.flatMap { event in definitions.first { $0.operationID == event.id }?.definition }
         return try (recorded ?? source.definitions().first { $0.meal.id == occurrenceID })?.withMeal(current)
     }
-    func validate() throws {
+    func validate(recordedReplacements: [RecoveryMeal] = []) throws {
         try source.validate()
         let originals = try source.definitions()
         guard domain.shopID == source.shop.id, domain.originalRevisionID == source.shop.revisionID,
@@ -198,7 +198,7 @@ struct PickupMealRecoveryHistory: Codable, Equatable {
               Set(ledgerCalendarBasis.map(\.occurrenceID)).count == ledgerCalendarBasis.count,
               Set(definitions.map(\.operationID)).count == definitions.count,
               Set(definitions.map(\.operationID)) == Set(domain.events.map(\.id)) else { throw PickupMealRecoveryError.invalid }
-        _ = try MealRecoveryEngine.project(domain)
+        _ = try MealRecoveryEngine.project(domain, verifyingReplacements: recordedReplacements)
         var previous = Dictionary(uniqueKeysWithValues: originals.map { ($0.meal.id, $0) })
         for event in domain.events {
             guard let record = definitions.first(where: { $0.operationID == event.id }),

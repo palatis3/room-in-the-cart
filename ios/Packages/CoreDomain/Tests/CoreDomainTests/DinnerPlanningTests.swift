@@ -20,6 +20,86 @@ final class DinnerPlanningTests: XCTestCase {
     }
     private func roundTrip<T: Codable>(_ value: T) throws -> T { try JSONDecoder().decode(T.self, from: JSONEncoder().encode(value)) }
 
+    func testMealPreferencesPreserveReviewedRevisionAndHistoricalReceipts() throws {
+        var ledger = ShoppingLedger(title: "Dinner"), state = DinnerPlanningState()
+        let context = access(ledger)
+        let meal = try meal()
+        let before = try DinnerPlanningEngine.preview(changes: [.choose(PlannedDinner(template: meal))], tool: .manual,
+            ledger: ledger, state: state, access: context, phase: .draft, at: now)
+        var settings = MealPreferenceSettings()
+        settings.exclusions = ["peanut"]; settings.availableAppliances = ["stove"]
+        try state.updateMealPreferences(settings, expectedRevision: nil)
+        XCTAssertThrowsError(try DinnerPlanningEngine.apply(before.proposal, ledger: &ledger, state: &state, access: context, phase: .draft, at: now))
+        XCTAssertThrowsError(try state.updateMealPreferences(.init(), expectedRevision: nil))
+        let profile = try XCTUnwrap(state.preferences(for: context))
+        XCTAssertNil(state.preferences(for: access(ledger, shared: true)))
+        let missing = MealEligibilityPolicy.evaluate(profile: profile, template: meal)
+        XCTAssertEqual(missing.unresolved, [.ingredientsUnknown, .appliancesUnknown])
+        var checked = meal
+        var evidence = MealEligibilityEvidence()
+        evidence.reviewedIngredientDetails = []; evidence.requiredAppliances = ["stove"]
+        checked.eligibilityEvidence = evidence
+        let preview = try DinnerPlanningEngine.preview(changes: [.choose(PlannedDinner(template: checked))], tool: .manual,
+            ledger: ledger, state: state, access: context, phase: .draft, at: now)
+        XCTAssertEqual(preview.proposal.preferenceRevision, profile.revision)
+        let applied = try DinnerPlanningEngine.apply(preview.proposal, ledger: &ledger, state: &state, access: context, phase: .draft, at: now)
+        try state.updateMealPreferences(.init(), expectedRevision: profile.revision)
+        let restored = try JSONDecoder().decode(DinnerPlanningState.self, from: JSONEncoder().encode(state))
+        XCTAssertEqual(restored.applyReceipts.first, applied)
+        XCTAssertEqual(restored.privateMealPreferences, state.privateMealPreferences)
+        XCTAssertNotEqual(restored.privateMealPreferences?.revision, profile.revision)
+    }
+
+    func testPreferenceRulePriorityUnknownEvidenceAndSoftBrandAlternative() throws {
+        var s = MealPreferenceSettings()
+        s.exclusions = ["peanut"]; s.preferredBrands = ["Casa"]; s.dislikes = ["celery"]; s.maximumEffort = .low
+        let p = MealPreferenceProfile(settings: s)
+        var details = MealEligibilityEvidence()
+        details.reviewedIngredientDetails = []; details.brands = ["Other"]; details.effort = .high
+        let alternative = MealEligibilityPolicy.evaluate(profile: p, ingredients: ["celery"], evidence: details)
+        XCTAssertTrue(alternative.eligible)
+        XCTAssertEqual(alternative.softDifferences, [.disliked("celery"), .brandMismatch, .effortAboveLimit])
+        XCTAssertFalse(MealEligibilityPolicy.evaluate(profile: p, ingredients: ["Roasted PEANUT oil"], evidence: details).eligible)
+        XCTAssertEqual(MealEligibilityPolicy.evaluateFood(profile: p, labels: ["Sauce"], evidence: nil).unresolved, [.ingredientsUnknown])
+        s.strictBrands = true
+        XCTAssertFalse(MealEligibilityPolicy.evaluateFood(profile: .init(settings: s), labels: ["Sauce"], evidence: details).eligible)
+        s.strictDislikes = true; s.strictEffort = true; s.exclusions = []
+        XCTAssertEqual(MealEligibilityPolicy.evaluate(profile: .init(settings: s), ingredients: ["food"], evidence: nil).unresolved,
+                       [.ingredientsUnknown, .brandsUnknown, .effortUnknown])
+    }
+
+    func testReviewedTimeLimitUsesOnlyThisRecipesElapsedMinutesAndInvalidatesProposals() throws {
+        var settings = MealPreferenceSettings()
+        settings.timeLimit = .init(maximumMinutes: 20)
+        var recipe = try meal()
+        var evidence = MealEligibilityEvidence()
+        evidence.effort = .low
+        recipe.eligibilityEvidence = evidence
+        recipe.leadTimeMinutes = nil
+        func check() -> MealEligibilityPolicy.Result { MealEligibilityPolicy.evaluate(profile: .init(settings: settings), template: recipe) }
+        XCTAssertEqual(check().softDifferences, [.durationUnknown])
+        recipe.leadTimeMinutes = 25
+        XCTAssertEqual(check().softDifferences, [.durationAboveLimit])
+        settings.timeLimit?.strict = true
+        XCTAssertEqual(check().blocked, [.durationAboveLimit])
+        recipe.leadTimeMinutes = nil
+        XCTAssertEqual(check().unresolved, [.durationUnknown])
+        recipe.leadTimeMinutes = 20
+        XCTAssertTrue(check().eligible)
+        let food = MealEligibilityPolicy.evaluateFood(profile: .init(settings: settings), labels: ["rice"], evidence: nil)
+        XCTAssertTrue(food.eligible)
+        var state = DinnerPlanningState(), ledger = ShoppingLedger(title: "Time review")
+        let context = access(ledger)
+        try state.updateMealPreferences(settings, expectedRevision: nil)
+        let preview = try DinnerPlanningEngine.preview(changes: [.choose(PlannedDinner(template: recipe))], tool: .manual,
+            ledger: ledger, state: state, access: context, phase: .draft, at: now)
+        settings.timeLimit?.maximumMinutes = 15
+        try state.updateMealPreferences(settings, expectedRevision: preview.proposal.preferenceRevision)
+        XCTAssertThrowsError(try DinnerPlanningEngine.apply(preview.proposal, ledger: &ledger, state: &state, access: context, phase: .draft, at: now))
+        XCTAssertThrowsError(try DinnerPlanningEngine.preview(changes: [.choose(PlannedDinner(template: recipe))], tool: .manual,
+            ledger: ledger, state: state, access: context, phase: .draft, at: now))
+    }
+
     func testPreviewCancelHasZeroMutationAndAtomicApplyUsesReviewedIDs() throws {
         var ledger = ShoppingLedger(), state = DinnerPlanningState()
         _ = try ledger.addManualLine(name: "soap", quantity: q(1), at: now)
@@ -172,6 +252,30 @@ final class DinnerPlanningTests: XCTestCase {
         XCTAssertEqual(week.days[1].notes, [note])
         XCTAssertTrue(week.unscheduled.isEmpty)
     }
+    func testWeekNoteChangesOnlyTheReviewedNoteAndExactRetryPreservesRevision() throws {
+        let shop = ShoppingLedger(), other = ShoppingLedger()
+        let day = try MealDay(year: 2026, month: 11, day: 1, timeZoneIdentifier: "America/New_York")
+        let initial = DinnerWeekNote(shopID: shop.id, day: day, kind: .guests, text: "Eight")
+        let updated = DinnerWeekNote(id: initial.id, shopID: shop.id, day: day, kind: .guests, text: "Nine")
+        let unrelated = DinnerWeekNote(shopID: shop.id, day: day, kind: .side, text: "Save lunch")
+        var state = DinnerPlanningState()
+        try state.recordWeekNote(initial, access: access(shop), at: now)
+        try state.recordWeekNote(unrelated, access: access(shop), at: now)
+        try state.recordWeekNote(updated, replacing: initial, access: access(shop), at: now)
+        let committed = state
+        try state.recordWeekNote(updated, replacing: initial, access: access(shop), at: now)
+        let stale = DinnerWeekNote(id: initial.id, shopID: shop.id, day: day, kind: .away, text: "Away")
+        XCTAssertThrowsError(try state.recordWeekNote(stale, replacing: initial, access: access(shop), at: now)) {
+            XCTAssertEqual($0 as? DinnerPlanningError, .stalePreview)
+        }
+        let wrongShop = DinnerWeekNote(id: initial.id, shopID: other.id, day: day, kind: .away, text: "Away")
+        XCTAssertThrowsError(try state.recordWeekNote(wrongShop, replacing: updated, access: access(other), at: now)) {
+            XCTAssertEqual($0 as? DinnerPlanningError, .forbidden)
+        }
+        XCTAssertEqual(state, committed)
+        XCTAssertEqual(state.weekNotes, [updated, unrelated])
+    }
+
     func testPairingRetainsProtectedBindingIdentityAndQuantityAfterReplacingNamedGroup() throws {
         var ledger = ShoppingLedger(), state = DinnerPlanningState()
         let supper = ServingGroup(name: "Supper", servings: try Rational(2))

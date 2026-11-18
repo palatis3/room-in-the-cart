@@ -211,6 +211,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var needDetails: [PickupNeedDetail] = []
     var mealSource: PickupCheckoutMealSource?
     var mealRecovery: PickupMealRecoveryHistory?
+    var cookedMeals: [PantryCookRecord]?
     var ledgerBasis: ShopBasis?
     var ledgerSourceRevisionID: UUID?
     var ledgerPackSelections: [LedgerPackSelection] = []
@@ -264,7 +265,7 @@ extension PickupJourney {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case recipientSends, mealSource, mealRecovery, earlierQuotes, basketPriceTerms
+        case recipientSends, mealSource, mealRecovery, cookedMeals, earlierQuotes, basketPriceTerms
         case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, frozenCaps, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
@@ -306,6 +307,7 @@ extension PickupJourney {
         recipientSends = try container.decodeIfPresent([RecipientSend].self, forKey: .recipientSends)
         mealSource = try container.decodeIfPresent(PickupCheckoutMealSource.self, forKey: .mealSource)
         mealRecovery = try container.decodeIfPresent(PickupMealRecoveryHistory.self, forKey: .mealRecovery)
+        cookedMeals = try container.decodeIfPresent([PantryCookRecord].self, forKey: .cookedMeals)
         if let decoded = try container.decodeIfPresent([PickupCookShareEvent].self, forKey: .cookShareEvents) { cookShareEvents = decoded }
         if let decoded = try container.decodeIfPresent(SettlementLedger.self, forKey: .settlement) { settlement = decoded }
         feedback = try container.decodeIfPresent(PickupFeedback.self, forKey: .feedback)
@@ -473,6 +475,10 @@ struct PickupPersistenceLocation {
         await load()
     }
     var sourceWorkspaceID: UUID? { store?.workspaceID }
+
+    func sourceHeads(for journeyIDs: Set<UUID>) -> [UUID: Int64] {
+        storeRevisions.filter { journeyIDs.contains($0.key) }
+    }
     /// Records must be able to complete a durable erasure after ordinary reads
     /// of the retired origin have been fenced by SQLite.
     var pantryErasureStores: (inventory: ComparisonStore, configuration: PantryConfiguration)? {
@@ -829,6 +835,17 @@ struct PickupPersistenceLocation {
         }
     }
 
+    func cookCompletionPort(ledger: LedgerModel, authorize: @escaping @MainActor () -> Bool) throws -> PantryCookPort {
+        guard let store, let configuration = pantryConfiguration, pantryIsActive, ready, !saving, !hasPendingSave,
+              ledger.pantryBackingStore(gate: configuration.gate) === configuration.ledger, configuration.authorize(), authorize() else {
+            throw PantryCookPort.Failure.unavailable
+        }
+        return PantryCookPort(store: store, ledger: configuration.ledger, gate: configuration.gate, authorize: { [weak self, weak ledger] in
+            guard let self, let ledger else { return false }
+            return configuration.authorize() && authorize() && !self.saving && !self.hasPendingSave &&
+                !ledger.saving && !ledger.hasPendingSave && ledger.pantryBackingStore(gate: configuration.gate) === configuration.ledger
+        }, clock: clock)
+    }
     /// Unlike load(), refreshes an already-ready model. It never replaces a
     /// pending submission, acknowledges it, or copies its old authorization.
     @discardableResult func refreshPantryStock() async -> Bool {
@@ -1553,18 +1570,27 @@ struct PickupPersistenceLocation {
     }
     nonisolated static func validate(_ value: PickupJourney) throws {
         guard value.feedback == nil || value.eligibleForFeedback, value.version == 1, value.revision >= 0, value.savedAt.timeIntervalSinceReferenceDate.isFinite,
-              value.basket != nil || !value.urgent.isEmpty || value.stockLots.contains(where: { $0.id == $0.foodID && $0.source != .manual }),
+              value.basket != nil || value.cookedMeals?.isEmpty == false || !value.urgent.isEmpty || value.stockLots.contains(where: { $0.id == $0.foodID && $0.source != .manual }),
               value.basket == nil || value.basket?.id == value.id,
               Set(value.urgent.map(\.id)).count == value.urgent.count,
               Set(value.notes.map(\.id)).count == value.notes.count,
               Set(value.repairs.map(\.id)).count == value.repairs.count,
               Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
+        if let cooked = value.cookedMeals {
+            let active = cooked.filter(\.isActive)
+            let operationIDs = cooked.map(\.draft.id) + cooked.compactMap { $0.undo?.id }
+            guard !cooked.isEmpty, cooked.count <= 500, Set(active.map(\.draft.meal.id)).count == active.count,
+                  Set(operationIDs).count == operationIDs.count else { throw PickupModelError.invalid }
+            for record in cooked { try record.validate(shopID: value.id) }
+            _ = try value.remainingPhysicalNeeds()
+        }
         try value.validateRecipientSends()
         try value.mealSource?.validate()
+        let recordedReplacements = (value.cookedMeals ?? []).compactMap { $0.draft.recoveredMeal }
         if let history = value.mealRecovery {
-            try history.validate()
+            try history.validate(recordedReplacements: recordedReplacements)
             try value.validateRecoveryRawBasis(history)
-        }
+        } else if !recordedReplacements.isEmpty { throw PickupModelError.invalid }
         try value.validateAwayCarryovers()
         try value.ledgerBasis?.validate()
         guard value.ledgerPackSelections.count <= 10_000,

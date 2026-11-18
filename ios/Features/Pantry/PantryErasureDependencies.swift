@@ -206,6 +206,21 @@ import RecordArchive
             }
         }
         mutating func journey(_ value: PickupJourney) throws {
+            for record in value.cookedMeals ?? [] {
+                guard record.draft.inventoryID == context.originID else { unresolved.insert(.foreignLineage); continue }
+                ledgerOrigins.insert(record.draft.ledgerID)
+                for part in record.draft.parts {
+                    if case .lot(let id, _, _) = part.use { add(.lot(id), .incidentalCopy) }
+                }
+                for amendment in record.resolutions ?? [] {
+                    if let id = amendment.decision.lotID { add(.lot(id), .incidentalCopy) }
+                }
+                for output in record.draft.leftovers {
+                    add(.lot(output.id), .sourceFact)
+                    sourceFacts.insert(output.id)
+                }
+                for claim in record.priorClaims { add(.claim(claim.id), .incidentalCopy) }
+            }
             try PickupModel.validate(value)
             add(.journey(value.id), .sourceFact)
             if let ledger = value.mealSource?.ledgerWorkspaceID { ledgerOrigins.insert(ledger) }

@@ -35,6 +35,12 @@ struct PickupMealRecoveryEntry: View {
                     ForEach(values.filter { occurrenceID == nil || $0.meal.id == occurrenceID }, id: \.meal.id) { value in
                         Section(value.meal.title) {
                             PickupRecoveryMealSummary(definition: value, allocation: model.stockAllocation, carryovers: model.journey?.awayCarryovers ?? [])
+                            if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true,
+                               model.pantryIsActive {
+                                NavigationLink(cookCompletionText("Record cooking and leftovers")) {
+                                    CookCompletionEntry(ledger: ledger, pickup: model, shopID: pickupID, mealID: value.meal.id)
+                                }.accessibilityIdentifier("dinner.cookCompletion")
+                            }
                             if model.journey?.closedAt == nil {
                                 if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true {
                                     NavigationLink(dinnerText("Move this dinner")) {

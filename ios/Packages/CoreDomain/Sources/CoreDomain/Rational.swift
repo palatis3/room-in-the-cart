@@ -68,6 +68,12 @@ public struct Rational: Codable, Hashable, Sendable, Comparable, CustomStringCon
         return try Self(checkedAdd(left, right), checkedMultiply(denominator, other.denominator / divisor))
     }
 
+    /// Used for shortages and free stock, where complete coverage leaves zero.
+    public func subtractingClampedToZero(_ other: Self) throws -> Self {
+        guard self > other else { return .zero }
+        return try subtracting(other)
+    }
+
     public func subtracting(_ other: Self) throws -> Self {
         guard self >= other else { throw DomainError.negativeQuantity }
         let divisor = Self.gcd(denominator, other.denominator)

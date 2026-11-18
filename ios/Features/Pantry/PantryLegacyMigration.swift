@@ -154,12 +154,10 @@ import LocalStore
                     fragment: fragment, observations: journey.pickup!.usableObservations.filter { $0.receipt == fragment.key }))
             }
             // Never combine the old raw baseline with its accepted recovery replacement.
-            let effective: [StockNeed]
             if let history = journey.mealRecovery {
                 try history.validate(); try journey.validateRecoveryRawBasis(history)
-                effective = try MealRecoveryEngine.project(history.domain).demands
-            } else { effective = journey.rawPhysicalStockNeeds }
-            for need in effective where need.amount.amount > .zero {
+            }
+            for need in try journey.remainingPhysicalNeeds() where need.amount.amount > .zero {
                 claims[need.id, default: []].append(.init(journey: journey.id, need: need, pin: nil,
                     unresolved: brokenAncestry.contains(journey.id)))
             }

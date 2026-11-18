@@ -294,8 +294,8 @@ private final class S26FixtureServer: @unchecked Sendable {
             }
             let required = try amount(item["required"]), stock = try amount(item["stock"]), pack = try amount(item["pack"])
             var remaining: Rational?, shortage: Rational?, packs: Int?
-            if let stock { remaining = max(.zero, try stock.subtracting(reserved)) }
-            if let required, let remaining { shortage = max(.zero, try required.subtracting(remaining)) }
+            if let stock { remaining = try stock.subtractingClampedToZero(reserved) }
+            if let required, let remaining { shortage = try required.subtractingClampedToZero(remaining) }
             if let shortage, let pack, let numerator = item["usableNumerator"] as? Int, let denominator = item["usableDenominator"] as? Int {
                 let usable = try pack.multiplied(by: Rational(Int64(numerator), Int64(denominator)))
                 if usable > .zero { let ratio = try shortage.divided(by: usable); packs = Int((ratio.numerator + ratio.denominator - 1) / ratio.denominator) }

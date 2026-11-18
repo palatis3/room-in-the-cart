@@ -1,0 +1,342 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "All reviewed ingredients are covered by currently free food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All reviewed ingredients are covered by currently free food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los ingredientes revisados están cubiertos por alimentos disponibles y sin reservar."
+          }
+        }
+      }
+    },
+    "Amounts above still need to be obtained; zero means covered. All figures come from the current local review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amounts above still need to be obtained; zero means covered. All figures come from the current local review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía falta conseguir las cantidades indicadas arriba; cero significa que están cubiertas. Todas las cifras provienen de la revisión local actual."
+          }
+        }
+      }
+    },
+    "Choose this meal for the usual preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose this meal for the usual preview"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir esta comida para la vista previa habitual"
+          }
+        }
+      }
+    },
+    "Choose what to share with OpenAI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what to share with OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir qué compartir con OpenAI"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Meal explanations": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal explanations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explicaciones de comidas"
+          }
+        }
+      }
+    },
+    "Meals, pantry or access changed. Close this review and refresh Tonight.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meals, pantry or access changed. Close this review and refresh Tonight."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiaron las comidas, la despensa o el acceso. Cierra esta revisión y actualiza Esta noche."
+          }
+        }
+      }
+    },
+    "No meal was proposed. Continue with your local matches.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No meal was proposed. Continue with your local matches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se propuso ninguna comida. Continúa con tus coincidencias locales."
+          }
+        }
+      }
+    },
+    "Online help is unavailable. Your local meal matches are unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online help is unavailable. Your local meal matches are unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ayuda en línea no está disponible. Tus coincidencias locales no han cambiado."
+          }
+        }
+      }
+    },
+    "Online help requires an authorized adult account. Keep reviewing local matches without signing in.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online help requires an authorized adult account. Keep reviewing local matches without signing in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ayuda en línea requiere una cuenta de adulto autorizada. Puedes seguir revisando coincidencias locales sin iniciar sesión."
+          }
+        }
+      }
+    },
+    "Optional meal explanations": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional meal explanations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explicaciones opcionales de comidas"
+          }
+        }
+      }
+    },
+    "Preparation time has been reviewed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation time has been reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El tiempo de preparación está revisado."
+          }
+        }
+      }
+    },
+    "Review meals to share": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review meals to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar comidas para compartir"
+          }
+        }
+      }
+    },
+    "Review proposed meals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review proposed meals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar comidas propuestas"
+          }
+        }
+      }
+    },
+    "Select up to eight reviewed meals. Sending shares only their displayed titles, reference IDs, language and the explanation labels below. Ingredient names, quantities, prices and your preference profile stay on this device. Do not select a title containing details you do not want to share.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select up to eight reviewed meals. Sending shares only their displayed titles, reference IDs, language and the explanation labels below. Ingredient names, quantities, prices and your preference profile stay on this device. Do not select a title containing details you do not want to share."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona hasta ocho comidas revisadas. Al enviar, solo se comparten los títulos mostrados, sus identificadores de referencia, el idioma y las etiquetas de explicación de abajo. Los nombres de ingredientes, cantidades, precios y tu perfil de preferencias permanecen en este dispositivo. No selecciones un título con detalles que no quieras compartir."
+          }
+        }
+      }
+    },
+    "Send selected meals for a proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send selected meals for a proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar comidas seleccionadas para una propuesta"
+          }
+        }
+      }
+    },
+    "Some ingredients still need to be obtained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some ingredients still need to be obtained."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía falta conseguir algunos ingredientes."
+          }
+        }
+      }
+    },
+    "The proposal could not be verified. Local matches are unchanged. You may retry or close this review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The proposal could not be verified. Local matches are unchanged. You may retry or close this review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar la propuesta. Las coincidencias locales no han cambiado. Puedes reintentar o cerrar esta revisión."
+          }
+        }
+      }
+    },
+    "This proposal has not saved a dinner or changed any food. Review the destination and confirm in Tonight.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This proposal has not saved a dinner or changed any food. Review the destination and confirm in Tonight."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta propuesta no ha guardado una cena ni cambiado ningún alimento. Revisa el destino y confirma en Esta noche."
+          }
+        }
+      }
+    },
+    "Tonight’s matches work on this device. Online help can propose among meals you have already reviewed; it cannot change stock, prices or preferences.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tonight’s matches work on this device. Online help can propose among meals you have already reviewed; it cannot change stock, prices or preferences."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las coincidencias de Esta noche funcionan en este dispositivo. La ayuda en línea puede proponer comidas que ya revisaste; no puede cambiar existencias, precios ni preferencias."
+          }
+        }
+      }
+    },
+    "Uses some reviewed, unreserved pantry food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses some reviewed, unreserved pantry food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa algunos alimentos revisados y sin reservar de la despensa."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

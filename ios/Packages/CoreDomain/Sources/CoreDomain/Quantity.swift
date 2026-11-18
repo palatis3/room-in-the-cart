@@ -91,7 +91,7 @@ public struct Quantity: Codable, Hashable, Sendable {
         self.confirmedConversion = confirmedConversion
     }
 
-    func validate() throws {
+    public func validate() throws {
         // A reviewed list quantity can carry the entire source label.
         guard originalLiteral.utf8.count <= StagedListImport.maximumOriginalLineBytes else { throw DomainError.invalidInput("quantityLiteral") }
         try confirmedConversion?.validate()
