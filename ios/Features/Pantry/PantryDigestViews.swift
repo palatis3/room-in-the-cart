@@ -65,6 +65,21 @@ extension PantryDigestAccess {
     }
     func body(content: Content) -> some View {
         let current = context
+        let scoped = scopeAware(content, current: current)
+        let basis = Basis(scope: current?.scope, revision: pickup.pantrySnapshot?.state.revision,
+                          zone: TimeZone.current.identifier)
+        let reconciled = scoped.task(id: basis) { await reconcile(current) }
+        return observingHomeChanges(reconciled, current: current)
+            .onChange(of: store.tapped) { _, _ in if let current { acceptTap(current) } }
+            .sheet(isPresented: Binding(get: { openScope != nil && current?.scope == openScope && !suspended },
+                                       set: { if !$0 { openScope = nil; shownModel = nil } })) {
+                if let current, current.scope == openScope, current.authorized(), let shownModel {
+                    NavigationStack { PantryDigestList(model: shownModel, access: current) }
+                }
+            }
+    }
+
+    private func scopeAware(_ content: Content, current: PantryDigestAccess?) -> some View {
         content.environment(\.pantryDigestAccess, current)
             .onChange(of: household.deviceReminderPersona) { _, _ in clearScope() }
             .onChange(of: child.presented, initial: true) { _, active in if active { clearScope() } }
@@ -72,16 +87,21 @@ extension PantryDigestAccess {
             .onChange(of: pickup.sourceWorkspaceID) { previous, next in
                 if let previous, next != nil && previous != next { clearScope() }
             }
-            .task(id: Basis(scope: current?.scope, revision: pickup.pantrySnapshot?.state.revision, zone: TimeZone.current.identifier)) {
-                guard let current, current.authorized(), let snapshot = pickup.pantrySnapshot else { return }
-                do {
-                    try await store.reconcile(current.scope, lots: snapshot.lots)
-                    guard current.authorized(), !Task.isCancelled else { return }
-                    refreshHome(current)
-                    suspended = false
-                    acceptTap(current)
-                } catch { await store.failClosed() }
-            }
+    }
+
+    private func reconcile(_ current: PantryDigestAccess?) async {
+        guard let current, current.authorized(), let snapshot = pickup.pantrySnapshot else { return }
+        do {
+            try await store.reconcile(current.scope, lots: snapshot.lots)
+            guard current.authorized(), !Task.isCancelled else { return }
+            refreshHome(current)
+            suspended = false
+            acceptTap(current)
+        } catch { await store.failClosed() }
+    }
+
+    private func observingHomeChanges(_ content: some View, current: PantryDigestAccess?) -> some View {
+        content
             .onChange(of: ledger.revision) { _, _ in try? home.checkTonightSource(ledger: ledger, pickup: pickup) }
             .onChange(of: pickup.pantrySnapshot?.state.revision) { _, _ in
                 if current != nil { try? home.checkTonightSource(ledger: ledger, pickup: pickup) }
@@ -91,14 +111,8 @@ extension PantryDigestAccess {
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in refreshHome(current) }
             .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in refreshHome(current) }
             .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in refreshHome(current) }
-            .onChange(of: store.tapped) { _, _ in if let current { acceptTap(current) } }
-            .sheet(isPresented: Binding(get: { openScope != nil && current?.scope == openScope && !suspended },
-                                       set: { if !$0 { openScope = nil; shownModel = nil } })) {
-                if let current, current.scope == openScope, current.authorized(), let shownModel {
-                    NavigationStack { PantryDigestList(model: shownModel, access: current) }
-                }
-            }
     }
+
     private func acceptTap(_ access: PantryDigestAccess) {
         guard let token = store.tapped, access.authorized(), let snapshot = pickup.pantrySnapshot else { return }
         store.tapped = nil
