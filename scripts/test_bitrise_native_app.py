@@ -25,12 +25,18 @@ class BitriseNativeAppTests(unittest.TestCase):
         self.assertEqual(pipeline['workflows'], {'compact-cooking': {}, 'large-tonight': {}})
         self.assertEqual(set(CONFIG['workflows']), set(pipeline['workflows']))
         for lane, workflow in CONFIG['workflows'].items():
-            self.assertEqual(workflow, {'envs': [{'RITC_NATIVE_LANE': lane}],
+            self.assertEqual(workflow, {'envs': [{'RITC_NATIVE_LANE': lane},
+                                                 {'BITRISE_BUILD_CACHE_BENCHMARK_PHASE_XCODE': 'established'}],
                                         'steps': [{'bundle::native-app': {}}]})
         steps = CONFIG['step_bundles']['native-app']['steps']
-        self.assertEqual(len(steps), 1)
-        self.assertEqual(list(steps[0]), ['script@1.2.1'])
-        self.assertEqual(steps[0]['script@1.2.1']['timeout'], 1800)
+        checkout, cache, test = steps
+        self.assertEqual(list(checkout), ['script@1.2.1'])
+        self.assertEqual(cache, {'activate-build-cache-for-xcode@1.10.1': {
+            'run_if': '{{ enveq "BITRISEIO_BUILD_CACHE_ENABLED" "true" }}', 'is_skippable': True}})
+        self.assertEqual(list(test), ['script@1.2.1'])
+        self.assertEqual(test['script@1.2.1']['timeout'], 1800)
+        self.assertNotIn('run_if', test['script@1.2.1'])
+        self.assertNotIn('is_skippable', test['script@1.2.1'])
         text = (ROOT / 'bitrise.yml').read_text()
         for forbidden in ('activate-ssh-key', 'deploy-to', 'certificate-and-profile', 'bitrise-runner-',
                           'pull_request:', 'tag:', 'secrets:', 'sudo ', 'curl '):
@@ -183,9 +189,24 @@ elif name=='bash':
         self.assertIn(['git','-c','credential.helper=','fetch','--quiet','--no-tags','--depth=1',
                        'https://github.com/palatis3/room-in-the-cart.git',SHA],calls)
         self.assertNotIn('refs/heads/', content)
-        env['MOCK_HEAD']='b'*40
-        result=subprocess.run(['/bin/bash','-c',content],cwd=self.path,env=env,text=True,capture_output=True)
-        self.assertNotEqual(result.returncode,0)
+        verified = self.path / 'ritc-native'
+        self.assertTrue(verified.is_dir())
+        verify = CONFIG['step_bundles']['native-app']['steps'][-1]['script@1.2.1']['inputs'][0]['content']
+        result = subprocess.run(['/bin/bash', '-c', verify], cwd=self.path, env=env, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [json.loads(line) for line in (self.path/'calls.jsonl').read_text().splitlines()]
+        self.assertEqual(calls[-1], ['bash', 'scripts/run_bitrise_native_app.sh', 'compact-cooking'])
+        result = subprocess.run(['/bin/bash', '-c', content], cwd=self.path, env=env, text=True, capture_output=True)
+        self.assertNotEqual(result.returncode, 0, 'A pre-existing checkout must not be reused')
+        verified.rmdir()
+        for change in [{'MOCK_HEAD': 'b'*40}, {'BITRISE_GIT_BRANCH': 'another'},
+                       {'BITRISE_PULL_REQUEST': '42'}, {'BITRISEIO_PULL_REQUEST_REPOSITORY_URL': 'https://example.com'}]:
+            with self.subTest(change=change):
+                result = subprocess.run(['/bin/bash', '-c', content], cwd=self.path, env={**env, **change},
+                                        text=True, capture_output=True)
+                self.assertNotEqual(result.returncode, 0)
+                if verified.exists():
+                    verified.rmdir()
 
 
 if __name__ == '__main__': unittest.main()

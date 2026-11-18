@@ -33,14 +33,15 @@ and `bitrise yml update --file bitrise.yml` from this checkout. The local
 `.bitrise-cli.yml` selects Room in the Cart. Use `bitrise build list` to check
 which jobs actually started on a push. Build Hub and Buildkite run separately.
 
-There are no SSH-key, signing, secret, deployment, third-party upload, remote
-cache or artifact-distribution steps. Source fetch is public HTTPS with Git
-credential helpers disabled. Do not add account tokens. The only uploads
-inherent to the CI service are its ordinary build logs/status. Retain result
-bundles and logs on the build VM for inspection; this source does not publish
-them elsewhere or claim long-term artifact retention. Each lane owns and deletes
-only its newly created simulator. No sudo, global simulator cleanup, or runtime
-installation is performed.
+Both lanes fetch the public source over HTTPS with Git credential helpers disabled.
+After the checkout verifies the exact commit on an allowed push branch, Bitrise
+activates its Xcode compilation cache when the project has cache access. The
+activation step is skippable. The build and selected tests run in either case.
+On `c1dcae3a`, Xcode reported 213 hits from 288 cacheable tasks on the SE and
+240 from 282 on the Pro Max. [Compact build](https://app.bitrise.io/build/e42d550e-10f4-4b28-a939-4d411a0038fd) · [Large build](https://app.bitrise.io/build/2b4c4ef1-3b23-4023-8a8b-beabb71c0fbe)
+
+Bitrise retains ordinary build logs and status. Result bundles stay on the
+build VM. Each lane creates and removes its own simulator using the installed runtime.
 
 ## Evidence and validation
 

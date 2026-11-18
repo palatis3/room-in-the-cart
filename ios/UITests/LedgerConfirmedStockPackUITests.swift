@@ -55,6 +55,31 @@ import XCTest
         tap(app.buttons["Use-at-home plan"])
         assertText("No retailer order was created.")
         capture("use-at-home-plan-durable-without-retailer-placement")
+
+        tap(app.buttons["Confirm pantry or freezer food"])
+        let batch = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "stockBatch-")).firstMatch
+        tap(batch)
+        let amount = app.textFields["stockReview.amount"]
+        tap(amount)
+        amount.typeText("12")
+        dismissKeyboard()
+        enable("stockReview.identityChecked")
+        tap(app.buttons["stockReview.preview"])
+        enable("stockReview.effectsChecked")
+        tap(app.buttons["stockReview.apply"])
+        let stock = app.navigationBars["Confirm pantry or freezer food"]
+        XCTAssertTrue(stock.waitForExistence(timeout: 8))
+        stock.buttons.element(boundBy: 0).tap()
+        assertText("Current quantities still cover the meal needs.")
+        assertText("Confirmed at home for this need: 12")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Confirmed food no longer covers every need")).firstMatch.exists)
+        capture("same-twelve-recount-requires-review-and-still-covers-meals")
+
+        app.terminate(); launch(reset: false, spanish: true); shopRoot(spanish: true)
+        tap(app.buttons["Recogida, ajustes y entregas"])
+        tap(app.buttons["Plan para usar comida en casa"])
+        assertText("Las cantidades actuales aún cubren lo que necesitan estas comidas.")
+        capture("es-recuento-de-doce-cubre-las-comidas")
     }
 
     func testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock() {
@@ -134,11 +159,11 @@ import XCTest
         app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(element("ledgerPackChoice").waitForExistence(timeout: 8))
     }
-    private func launch(reset: Bool) {
-        app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+    private func launch(reset: Bool, spanish: Bool = false) {
+        app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Shop"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.tabBars.buttons[spanish ? "Compras" : "Shop"].waitForExistence(timeout: 15))
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func editableElement(_ id: String) -> XCUIElement {
@@ -198,8 +223,8 @@ import XCTest
         }
         XCTFail("Could not reveal " + target.debugDescription)
     }
-    private func shopRoot() {
-        tap(app.tabBars.buttons["Shop"])
+    private func shopRoot(spanish: Bool = false) {
+        tap(app.tabBars.buttons[spanish ? "Compras" : "Shop"])
         for _ in 0..<8 {
             if element("newComparison").exists && element("newComparison").isHittable { return }
             let back = app.navigationBars.buttons.element(boundBy: 0)

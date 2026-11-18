@@ -18,7 +18,7 @@ private struct HouseholdPantryView: View {
     @StateObject private var model: HouseholdPantryModel
     @State private var sheet: Sheet?
     @State private var clearingRetry = false
-    private enum Sheet: Identifiable {
+    private enum Sheet: Identifiable, Equatable {
         case receipt(HouseholdPantryPage), addition(HouseholdPantryPage), correction(HouseholdPantryPage, HouseholdPantryPage.Lot), grants, staples
         var id: Int {
             switch self { case .addition: 0; case .grants: 1; case .correction: 2; case .staples: 3; case .receipt: 4 }
@@ -121,17 +121,47 @@ private struct HouseholdPantryView: View {
         .onChange(of: model.page == nil) { _, empty in if empty { sheet = nil } }
         .sheet(item: $sheet) { item in
             if household.householdPantryScope == model.scope, model.page != nil {
+                // Refresh or access loss can already have closed this editor while its command was in flight.
+                let closeEditor = { if sheet == item { sheet = nil } }
                 NavigationStack {
                     switch item {
                     case .receipt(let reviewed): HouseholdReceiptEntry(model: model, page: reviewed,
-                        household: household.projection?.household.label ?? householdPantryText("Household pantry"))
-                    case .addition(let reviewed): HouseholdPantryEditor(model: model, page: reviewed)
-                    case .correction(let page, let lot): HouseholdPantryCountEditor(model: model, page: page, lot: lot)
+                        household: household.projection?.household.label ?? householdPantryText("Household pantry"), closeEditor: closeEditor)
+                    case .addition(let reviewed): HouseholdPantryEditor(model: model, page: reviewed, closeEditor: closeEditor)
+                    case .correction(let page, let lot): HouseholdPantryCountEditor(model: model, page: page, lot: lot, closeEditor: closeEditor)
                     case .staples: HouseholdStaplesView(model: model)
                     case .grants: HouseholdPantryGrantsView(model: model)
                     }
                 }.interactiveDismissDisabled(model.busy)
             }
+        }
+    }
+}
+
+struct HouseholdPantryConfirmButton: View {
+    @ObservedObject var model: HouseholdPantryModel
+    let page: HouseholdPantryPage
+    let change: HouseholdPantryChange
+    let title: String
+    let identifier: String
+    let closeEditor: () -> Void
+    @State private var retryPreparation = false
+
+    var body: some View {
+        Button(title) {
+            Task {
+                switch await model.confirmChange(change, reviewed: page) {
+                case .savedForSubmission: closeEditor()
+                case .retryPreparation: retryPreparation = true
+                case .unavailable: break
+                }
+            }
+        }
+        .disabled(!model.permitsReceiptReview(page))
+        .accessibilityIdentifier(identifier)
+        if retryPreparation {
+            Text(householdPantryText("Your change is still open. Try confirming again when the service is available."))
+                .accessibilityIdentifier("householdPantry.confirmationNotice")
         }
     }
 }
@@ -186,7 +216,7 @@ struct HouseholdPantryDraft {
 private struct HouseholdPantryEditor: View {
     @ObservedObject var model: HouseholdPantryModel
     let page: HouseholdPantryPage
-    @Environment(\.dismiss) private var dismiss
+    let closeEditor: () -> Void
     @State private var draft = HouseholdPantryDraft()
     @State private var reviewed: HouseholdPantryAddition?
     @State private var invalid = false
@@ -196,9 +226,8 @@ private struct HouseholdPantryEditor: View {
             if let reviewed {
                 Section(householdPantryText("Review pantry addition")) { PantryAdditionFacts(addition: reviewed) }
                 Button(householdPantryText("Edit addition")) { self.reviewed = nil }
-                Button(householdPantryText("Confirm and add food")) {
-                    Task { await model.confirm(reviewed, reviewed: page); dismiss() }
-                }.accessibilityIdentifier("householdPantry.confirm")
+                HouseholdPantryConfirmButton(model: model, page: page, change: .addition(reviewed),
+                    title: householdPantryText("Confirm and add food"), identifier: "householdPantry.confirm", closeEditor: closeEditor)
             } else {
                 Section {
                     TextField(ht("Food name"), text: $draft.name).accessibilityIdentifier("householdPantry.name")
@@ -224,7 +253,7 @@ private struct HouseholdPantryEditor: View {
             }
         }.disabled(model.busy)
             .navigationTitle(ht("Add food to storage"))
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(model.busy) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel"), action: closeEditor).disabled(model.busy) } }
     }
 }
 
@@ -239,16 +268,17 @@ private struct HouseholdPantryCountEditor: View {
     @ObservedObject var model: HouseholdPantryModel
     let page: HouseholdPantryPage
     let lot: HouseholdPantryPage.Lot
-    @Environment(\.dismiss) private var dismiss
+    let closeEditor: () -> Void
     @State private var literal: String
     @State private var unit: UnitOfMeasure
     @State private var reviewed: HouseholdPantryCountCorrection?
     @State private var invalid = false
 
-    init(model: HouseholdPantryModel, page: HouseholdPantryPage, lot: HouseholdPantryPage.Lot) {
+    init(model: HouseholdPantryModel, page: HouseholdPantryPage, lot: HouseholdPantryPage.Lot, closeEditor: @escaping () -> Void) {
         self.model = model
         self.page = page
         self.lot = lot
+        self.closeEditor = closeEditor
         let count = lot.observation?.quantity
         _literal = State(initialValue: count?.originalLiteral ?? "")
         _unit = State(initialValue: count.flatMap { UnitOfMeasure(rawValue: $0.unit) } ?? .count)
@@ -264,9 +294,8 @@ private struct HouseholdPantryCountEditor: View {
             }
             if let reviewed {
                 Button(householdPantryText("Edit count")) { self.reviewed = nil }
-                Button(householdPantryText("Confirm corrected count")) {
-                    Task { await model.confirmChange(.correction(reviewed), reviewed: page); dismiss() }
-                }.accessibilityIdentifier("householdPantry.confirmCount")
+                HouseholdPantryConfirmButton(model: model, page: page, change: .correction(reviewed),
+                    title: householdPantryText("Confirm corrected count"), identifier: "householdPantry.confirmCount", closeEditor: closeEditor)
             } else {
                 Section {
                     TextField(householdPantryText("Corrected count"), text: $literal).accessibilityIdentifier("householdPantry.correctedQuantity")
@@ -285,7 +314,7 @@ private struct HouseholdPantryCountEditor: View {
             }
         }.disabled(model.busy)
             .navigationTitle(householdPantryText("Correct count"))
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(model.busy) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel"), action: closeEditor).disabled(model.busy) } }
     }
 }
 

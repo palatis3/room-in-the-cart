@@ -75,7 +75,13 @@ import XCTest
             fill(title, into: "tonight.recipe.title")
             fill("1", into: "tonight.recipe.servings")
             fill("Tortillas", into: "tonight.recipe.ingredient")
-            fill("2", into: "Amount, unknown if blank")
+            // Two tortillas remain after the first meal. The third needs a purchase.
+            fill("3", into: "Amount, unknown if blank")
+            if app.keyboards.firstMatch.exists {
+                app.typeText(XCUIKeyboardKey.return.rawValue)
+                XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+            }
+            XCTAssertEqual(app.textFields["Amount, unknown if blank"].value as? String, "3")
             enableSwitch("I reviewed required appliances")
             tap(element("tonight.recipe.review"))
             tap(element("tonight.recipe.save"))
@@ -152,10 +158,7 @@ import XCTest
         saveFreeRecipe(secondTitle)
         XCTAssertTrue(row(firstTitle).waitForExistence(timeout: 10), app.debugDescription)
         let global = match(secondTitle)
-        enableSwitch("adultHomeSummary.tonight", position: {
-            self.revealScrollableContent($0, initiallyUpward: false, entireRow: true)
-        })
-        XCTAssertEqual(home.value as? String, "1")
+        optInToHomeSummary("adultHomeSummary.tonight")
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         tap(app.buttons[lotID])
         tap(app.buttons["pantry.batch.meals"])
@@ -169,7 +172,23 @@ import XCTest
         checkAmount("tonight.batch.remaining." + first.recipe, "2 items")
         tap(follow)
         checkAmount("tonight.batch.secondRemaining." + second.recipe, "0 items")
-        XCTAssertTrue(element("tonight.batch.second." + second.recipe).exists, app.debugDescription)
+        let secondMeal = element("tonight.batch.second." + second.recipe)
+        XCTAssertTrue(secondMeal.exists, app.debugDescription)
+        let fees = secondMeal.buttons["tonight.second.fees"]
+        let cash = secondMeal.descendants(matching: .any).matching(identifier: "tonight.second.cash").firstMatch
+        XCTAssertFalse(cash.exists, "Neither a package price nor an added charge has been reviewed")
+        tap(fees)
+        fill("1.25", into: "tonight.second.feeAmount")
+        tap(app.buttons["Cancel"])
+        XCTAssertFalse(cash.exists, "Cancel must discard the draft")
+        tap(fees)
+        fill("1.25", into: "tonight.second.feeAmount")
+        tap(app.buttons["Use in estimate"])
+        reveal(cash)
+        XCTAssertTrue([cash.label, cash.value as? String ?? ""].joined(separator: " ").contains("$1.25"), cash.debugDescription)
+        XCTAssertTrue(cash.label.contains("Known additional cash so far"), cash.debugDescription)
+        XCTAssertTrue(secondMeal.staticTexts["Additional charges still need review."].exists)
+        captureSystemScreen("Second meal – reviewed charge with package price still unknown")
         tap(app.buttons["Close second-meal suggestions"])
         tap(app.buttons["tonight.choose." + first.recipe])
         let prepare = app.buttons["Preview dinner choice"]
@@ -446,6 +465,28 @@ import XCTest
         XCTAssertTrue(summary.contains("Green lentils") && summary.contains("2 items"), summary)
     }
 
+    private func optInToHomeSummary(_ identifier: String) {
+        let setting = app.switches[identifier]
+        let knob = CGVector(dx: 0.92, dy: 0.5)
+        reveal(setting, initiallyUpward: false, requiredHit: knob)
+        // A lazy switch can already be hittable while its list is still moving under the navigation bar.
+        var previous: CGRect?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard setting.exists, setting.isEnabled, setting.isHittable,
+                  let frame = try? setting.snapshot().frame, !frame.isEmpty,
+                  self.scrollableArea().contains(setting.coordinate(withNormalizedOffset: knob).screenPoint) else {
+                previous = nil
+                return false
+            }
+            defer { previous = frame }
+            return previous == frame
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 4), .completed, setting.debugDescription)
+        XCTAssertEqual(setting.value as? String, "0")
+        setting.coordinate(withNormalizedOffset: knob).tap()
+        XCTAssertEqual(setting.value as? String, "1")
+    }
+
     #if ADULT_WIDGET_LIVE_ACCEPTANCE
     /// Uses the real widget group and SpringBoard. Run on a freshly created dedicated simulator.
     func testOptedInUseSoonHomeWidgetReopensTheAuthorizedPantryAfterTermination() {
@@ -516,14 +557,6 @@ import XCTest
         if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
         tap(app.buttons["pantry.review"])
         tap(app.buttons["pantry.confirm"])
-    }
-
-    private func optInToHomeSummary(_ identifier: String) {
-        let setting = app.switches[identifier]
-        reveal(setting, initiallyUpward: false)
-        XCTAssertEqual(setting.value as? String, "0")
-        setting.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        XCTAssertEqual(setting.value as? String, "1")
     }
 
     private func placeWidgetAndColdTap(widgetTitle: String, expectedCount: String, reviewedTitle: String? = nil) {
@@ -4024,20 +4057,24 @@ import XCTest
             geometry.name = evidence.name + "-geometry"; geometry.lifetime = .keepAlways; add(geometry)
         }
     }
-    private func reveal(_ target: XCUIElement, initiallyUpward: Bool = true) {
+    private func reveal(_ target: XCUIElement, initiallyUpward: Bool = true, requiredHit: CGVector? = nil) {
         for attempt in 0..<24 {
             // Offscreen lazy rows can be absent from the accessibility tree.
             // Check once before asking for hittability, which otherwise makes
             // XCTest retry the missing element before each bounded scroll.
             let exists = target.exists
-            if exists && target.isHittable { return }
+            if exists && target.isHittable {
+                if let requiredHit {
+                    if scrollableArea().contains(target.coordinate(withNormalizedOffset: requiredHit).screenPoint) { return }
+                } else { return }
+            }
             let area = scrollableArea()
             let upward: Bool
             if exists {
                 let frame = target.frame
                 upward = frame.isEmpty ? (attempt < 16 ? initiallyUpward : !initiallyUpward) : frame.midY > area.midY
             } else { upward = attempt < 16 ? initiallyUpward : !initiallyUpward }
-            scrollContent(upward: upward, area: area)
+            scrollContent(upward: upward, area: area, positioningDistance: requiredHit == nil ? nil : area.height * 0.6)
         }
         XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }

@@ -80,7 +80,8 @@ public actor ComparisonStore {
                     try database.checkIntegrity()
                 } else {
                     try database.validate(version: version, beforeMigration: version == 1)
-                    if version >= 3 { try database.validateInventory() }
+                    // The base validator already checked SQLite integrity in this read transaction.
+                    if version >= 3 { try database.validateInventorySchemaAndRecords() }
                     if version >= 4 { try database.validateInventoryErasure() }
                     if version >= 5 { try database.validateAcquisitions() }
                     if version >= 6 {

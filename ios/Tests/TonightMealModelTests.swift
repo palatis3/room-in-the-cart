@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 import CoreDomain
 import DeviceSurfaces
 import LocalStore
@@ -17,6 +18,49 @@ import RecordArchive
             freeLots: [.init(id: food, foodID: food, name: "Wraps", usable: q(3), confirmedAt: now, source: .pantry)],
             unresolvedFoods: [], sources: [])
     }
+    func testSecondMealPriceViewUsesTheFirstMealsReviewedPack() async throws {
+        let wrapID = UUID(), cheeseID = UUID()
+        let shop = ShoppingLedger(title: "Market")
+        let shelfDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let wrap = MealIngredient(name: "Wrap", quantity: q(1))
+        let first = MealTemplate(title: "First", ingredients: [wrap, .init(name: "Cheese", quantity: q(1))])
+        let second = MealTemplate(title: "Second", ingredients: [wrap, .init(name: "Cheese", quantity: q(1))])
+        let stock = input(recipe: first, food: wrapID)
+        let origin = stock.basis.originID
+        let access = DinnerAccessContext(scope: .local(workspaceID: origin), actorID: "a", shopID: shop.id, assignedShopperID: "a",
+            canPlan: true, canReadBudget: true, hasPaidTools: false, roleRevision: 0, verifiedAt: shelfDate, validUntil: shelfDate.addingTimeInterval(60))
+        var workspace = LedgerWorkspace(shops: [shop], selectedShopID: shop.id)
+        for meal in [first, second] {
+            var idea = DinnerIdeaDraft(requestID: UUID(), catalogVersion: "reviewed", template: meal, createdAt: shelfDate)
+            let pack = PackOffer(id: "slices", label: "Four slices", usableQuantity: q(4), price: Money(minorUnits: 400))
+            idea.supplyEvidence = [DinnerIdeaFoodEvidence(ingredient: meal.ingredients[1], workspaceID: origin, shopID: shop.id,
+                basisRevision: shop.basisRevision, foodID: cheeseID, pack: pack, source: "Shelf label", observedAt: shelfDate)]
+            try workspace.dinnerPlanning.saveIdea(idea, access: access, at: shelfDate)
+            try workspace.dinnerPlanning.accept(AcceptedDinner(id: UUID(), template: meal, acceptedAt: shelfDate, sourceIdeaID: idea.id),
+                                               access: access, at: shelfDate)
+        }
+        let read = TonightMealModel.Input(workspace: workspace, ledgerRevision: 8, basis: stock.basis,
+            foods: stock.foods, freeLots: stock.freeLots, unresolvedFoods: [], sources: [])
+        let model = TonightMealModel(batch: .init(originID: origin, lotID: wrapID))
+        await model.refresh(authorize: { true }, load: { read })
+        for meal in [first, second] { try model.match(recipeID: meal.id, ingredientID: wrap.id, foodID: wrapID) }
+        try model.showFollowingMeals(after: first.id)
+        let card = try SecondMealPricesView(first: XCTUnwrap(model.reviews.first { $0.id == first.id }),
+            second: XCTUnwrap(model.followingMeals.first { $0.id == second.id }), input: read,
+            workspaceID: origin, ledgerRevision: 8, pairingRevision: model.pairingRevision)
+        let estimate = try XCTUnwrap(card.estimate)
+        XCTAssertTrue(estimate.complete)
+        XCTAssertTrue(estimate.packages.isEmpty)
+        XCTAssertEqual(estimate.subtotal, .zero)
+        let view = VStack(alignment: .leading) { card }.padding().frame(width: 350)
+            .foregroundStyle(.black).background(.white).environment(\.locale, Locale(identifier: "en_US"))
+        let rendered = try XCTUnwrap(ImageRenderer(content: view).uiImage)
+        let proof = XCTAttachment(image: rendered)
+        proof.name = "Second meal covered by the first reviewed package"
+        proof.lifetime = .keepAlways
+        add(proof)
+    }
+
     func testCalendarSummaryUsesChosenDinnerAndCountsAmbiguityWithoutPickingATitle() throws {
         let origin = UUID(), zone = TimeZone.gmt
         var shop = ShoppingLedger(basis: .init(timeZoneIdentifier: zone.identifier))
@@ -305,6 +349,13 @@ import RecordArchive
         try model.match(recipeID: second.id, ingredientID: bigger.id, foodID: food)
         XCTAssertEqual(model.suggestions.map(\.id), [second.id, first.id])
         try model.showFollowingMeals(after: first.id)
+        let reviewedPair = model.pairingRevision
+        await model.refresh(authorize: { true }, load: { read })
+        XCTAssertEqual(model.pairingRevision, reviewedPair)
+        model.clearPairing()
+        XCTAssertNotEqual(model.pairingRevision, reviewedPair)
+        try model.showFollowingMeals(after: first.id)
+        let reopenedPair = model.pairingRevision
         let next = try XCTUnwrap(model.followingMeals.first)
         XCTAssertEqual(next.id, second.id)
         XCTAssertEqual(next.batchUse?.used.amount, .one)
@@ -332,6 +383,7 @@ import RecordArchive
         let changed = try TonightMealModel.input(workspace: library, ledgerRevision: 0,
             context: .init(snapshot: after, mapping: mapping, asOf: now), sources: [])
         await model.refresh(authorize: { true }, load: { changed })
+        XCTAssertNotEqual(model.pairingRevision, reopenedPair)
         XCTAssertFalse(offered.isCurrent())
         XCTAssertThrowsError(try offered.select(second.id))
         XCTAssertNil(model.firstRecipeID)

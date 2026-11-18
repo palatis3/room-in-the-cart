@@ -218,16 +218,27 @@ struct LedgerPackChoiceView: View {
 struct LedgerAtHomePlanView: View {
     @ObservedObject var model: PickupModel
     @Environment(\.pickupLedger) private var ledger
-    private var coverageIsCurrent: Bool { model.hasCurrentBasketStockBasis && model.allocation?.confirmedCoverageComplete == true }
+    var reviewNotice: String? {
+        let allocation = model.allocation
+        if allocation?.confirmedCoverageComplete == true {
+            return model.hasCurrentBasketStockBasis ? nil : ledgerText("Current quantities still cover the meal needs. Review the updated stock before relying on this plan.")
+        }
+        if allocation?.demands.contains(where: { $0.issues.isEmpty && ($0.shortfall ?? .zero) > .zero }) == true {
+            return ledgerText("Confirmed food no longer covers every need. Review the current allocation and purchase needs again.")
+        }
+        return ledgerText("Stock coverage is uncertain. Review the available amounts for these meals.")
+    }
+
     var body: some View {
+        let notice = reviewNotice
         List {
             PickupSaveStatus(model: model)
             Section {
-                Text(ledgerText(coverageIsCurrent
+                Text(ledgerText(notice == nil
                     ? "Use confirmed food at home · no purchase needed" : "Review ingredient and purchase needs")).font(.headline)
                 Text(ledgerText("No retailer order was created. Meal needs and protected portions stay recorded."))
-                if !coverageIsCurrent {
-                    Text(ledgerText("Confirmed food no longer covers every need. Review the current allocation and purchase needs again."))
+                if let notice {
+                    Text(notice)
                         .foregroundStyle(Theme.warning)
                 }
             }

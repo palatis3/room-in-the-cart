@@ -52,6 +52,10 @@ protocol HouseholdPantryServing: Sendable {
 }
 extension HouseholdService: HouseholdPantryServing {}
 
+enum HouseholdPantryConfirmation {
+    case unavailable, retryPreparation, savedForSubmission
+}
+
 @MainActor final class HouseholdPantryModel: ObservableObject {
     let scope: HouseholdPantryRuntime
     private let service: any HouseholdPantryServing
@@ -179,21 +183,40 @@ extension HouseholdService: HouseholdPantryServing {}
     func confirm(_ addition: HouseholdPantryAddition, reviewed: HouseholdPantryPage) async {
         await confirmChange(.addition(addition), reviewed: reviewed)
     }
-    func confirmChange(_ change: HouseholdPantryChange, reviewed: HouseholdPantryPage) async {
-        guard let session, let storeEpoch, pending == nil, page == reviewed else { return }
+    @discardableResult
+    func confirmChange(_ change: HouseholdPantryChange, reviewed: HouseholdPantryPage) async -> HouseholdPantryConfirmation {
+        guard let session, let storeEpoch, pending == nil, page == reviewed else { return .unavailable }
         if case .correction(let correction) = change {
             guard lots.contains(where: { $0.id == correction.lotId && $0.origin == .manual &&
-                $0.observation?.observationId == correction.predecessorId }) else { return }
+                $0.observation?.observationId == correction.predecessorId }) else { return .unavailable }
         }
+        var result = HouseholdPantryConfirmation.unavailable
         await perform { start in
-            let intent = try await service.prepareHouseholdPantryChange(change, reviewed: reviewed, session: session)
+            let intent: HouseholdPantryIntent
+            do {
+                intent = try await service.prepareHouseholdPantryChange(change, reviewed: reviewed, session: session)
+            } catch let error as ClientError {
+                switch error {
+                case .transport, .service(status: 408, code: _, correlationID: _, retryAfter: _),
+                     .service(status: 429, code: _, correlationID: _, retryAfter: _),
+                     .service(status: 500...599, code: _, correlationID: _, retryAfter: _):
+                    // The replay window is requested before any pantry command is saved or sent.
+                    guard await store.epoch() == storeEpoch else { throw ClientError.cancelled }
+                    try check(start)
+                    result = .retryPreparation
+                    return
+                default: throw error
+                }
+            }
             try check(start)
             let record = PendingPantryAddition(subject: scope.subject, intent: intent)
             try await store.save(record, expectedEpoch: storeEpoch)
             try check(start)
+            result = .savedForSubmission
             pending = record
             try await submit(record, session: session, epoch: storeEpoch, start: start)
         }
+        return result
     }
     func retry() async {
         guard let session, let storeEpoch, let pending, page?.grantEpoch == pending.intent.grantEpoch else { return }

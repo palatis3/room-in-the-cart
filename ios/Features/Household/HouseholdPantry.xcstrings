@@ -1312,6 +1312,22 @@
           }
         }
       }
+    },
+    "Your change is still open. Try confirming again when the service is available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your change is still open. Try confirming again when the service is available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cambio sigue abierto. Vuelve a confirmarlo cuando el servicio esté disponible."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -11674,6 +11674,22 @@
         }
       }
     },
+    "Type only the words you want OpenAI to read. Leave out names and personal details. Review the suggestion before saving it to household preferences.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type only the words you want OpenAI to read. Leave out names and personal details. Review the suggestion before saving it to household preferences."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe solo las palabras que quieras que lea OpenAI. Omite nombres y datos personales. Revisa la sugerencia antes de guardarla en las preferencias del hogar."
+          }
+        }
+      }
+    },
     "My words": {
       "localizations": {
         "en": {

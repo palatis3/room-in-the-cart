@@ -74,10 +74,13 @@ import LocalStore
             pantryContext: f.pickup.canonicalPackContext(for: f.shop), pantryIsActive: true)
     }
     private func recount(_ f: Fixture, _ count: InventoryCount) async throws {
+        try await changeLot(f, .count(count, observationID: UUID()))
+    }
+    private func changeLot(_ f: Fixture, _ change: InventoryChange) async throws {
         let repository = PantryRepository(store: f.inventory, authorize: { true }); f.cleanup.track(repository)
         let before = try await repository.load(at: now), lot = try XCTUnwrap(before.lots.first)
         _ = try await repository.apply(.init(id: UUID(), originID: f.inventory.workspaceID, lotID: lot.id, eventID: UUID(),
-            expectedRevision: lot.revision, occurredAt: now, change: .count(count, observationID: UUID())),
+            expectedRevision: lot.revision, occurredAt: now, change: change),
             reviewedInventoryRevision: before.state.revision, at: now)
     }
 
@@ -129,6 +132,33 @@ import LocalStore
         XCTAssertFalse(f.pickup.hasCurrentBasketStockBasis)
         XCTAssertEqual(changed.needs, review.needs)
         XCTAssertEqual(f.pickup.journey?.stockLots.first?.usable.amount, try Rational(12), "Copied source count stays historical.")
+    }
+
+    func testAtHomePlanDistinguishesChangedEvidenceShortfallAndUnknownStock() async throws {
+        let stillCovered = ledgerText("Current quantities still cover the meal needs. Review the updated stock before relying on this plan.")
+        let changes: [(InventoryChange, String)] = [
+            (.count(.exact(q(12)), observationID: UUID()), stillCovered),
+            (.move(.fridge), stillCovered),
+            (.count(.exact(q(3)), observationID: UUID()), ledgerText("Confirmed food no longer covers every need. Review the current allocation and purchase needs again.")),
+            (.count(.someLeft, observationID: UUID()), ledgerText("Stock coverage is uncertain. Review the available amounts for these meals."))
+        ]
+        for (change, expectedNotice) in changes {
+            let f = try await fixture(stock: 12)
+            _ = try await choose(f)
+            let review = try checkout(f)
+            let applied = try await LedgerCheckoutAdapter.apply(review, ledger: f.ledger, pickup: f.pickup)
+            XCTAssertTrue(applied)
+            let screen = LedgerAtHomePlanView(model: f.pickup)
+            XCTAssertNil(screen.reviewNotice)
+
+            try await changeLot(f, change)
+            let refreshed = await f.pickup.refreshPantryStock()
+            XCTAssertTrue(refreshed)
+            XCTAssertFalse(f.pickup.hasCurrentBasketStockBasis)
+            XCTAssertEqual(screen.reviewNotice, expectedNotice)
+            XCTAssertEqual(f.pickup.journey?.plannedNeeds, review.needs)
+            XCTAssertEqual(f.pickup.journey?.isAtHomeOnlyPlan, true)
+        }
     }
 
     func testAppliedMaterialExceptionCannotBeAdoptedForDifferentCheckoutChange() async throws {

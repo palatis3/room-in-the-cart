@@ -6,8 +6,8 @@ Room in the Cart has its own Supabase organization and project. Its Vercel team 
 - Project: `uwjxrotnocxxomqdetzk` (Room in the Cart Staging), US West Oregon.
 - Auth URL: `https://uwjxrotnocxxomqdetzk.supabase.co`.
 - PostgreSQL transaction pooler: `aws-1-us-west-2.pooler.supabase.com:6543/postgres`, verified in the project dashboard.
-- Staging runs migrations 001–058. The 049→058 upgrade preserved the original data and added 17 tables with forced row-level security. The service and its scheduled worker use separate staging logins. The previous deployment’s logins are disabled. [Deployment evidence](evidence/b11/staging-058-20261118/deployment.json)
-- Once the new pantry records exist, the 049 service can read lots outside their intended scope. Recover with an 058-compatible service or reconcile subsequent writes and erasures as part of a coordinated restore.
+- Staging runs migrations 001–062. The service at `21df1581` and its daily worker reopened on schema 062 after the upgrade preserved all 144 existing rows across 168 tables. The service and worker use separate logins. The previous deployment’s credentials are retired. [Deployment receipt](evidence/b11/staging-062-request-pairs-and-buyers-20261118/deployment.json)
+- After a shopper compares two open requests or records a purchaser, recovery must preserve those writes. Service 060 hides both details and cannot undo a comparison or accept a named-buyer retry. Keep affected workflows closed until a compatible service is serving them. A database restore requires reconciliation of intervening writes and erasures. See the older [058 pantry access boundary](evidence/b11/staging-058-20261118/deployment.json) before considering an earlier service.
 
 The public client configuration in `config/staging.json` contains a publishable key, never the database password or a service-role key. Debug and Staging builds receive this configuration; Release requires its own production configuration.
 
@@ -27,7 +27,7 @@ Required server variables: `DATABASE_URL`, `DATABASE_CA_PEM`, `JWT_ISSUER`, `JWT
 
 ## Evidence and open gates
 
-The installed Staging app at `e5fbc5f9` reached schema 058 on an iPhone 15 simulator running iOS 17.0. Its anonymous session succeeded, the protected workspace required sign-in, and Spanish Help and English Support opened in Mobile Safari. All three tests passed with zero runtime warnings. [Staging 058 evidence](evidence/b11/staging-058-20261118/deployment.json)
+On an iPhone 15 simulator running iOS 17.0, the installed Staging app at `1355115e` reached the schema 062 deployment. The anonymous health and session reads returned HTTP 200. The session reported signed out and the protected workspace returned HTTP 401. All three responses disabled caching. Spanish Help and English Support opened in Mobile Safari. All three tests passed once with zero runtime warnings. [Verified app source](https://github.com/palatis3/room-in-the-cart/commit/1355115e583484a25f1b4347c951df1559c0b223) · [Staging deployment](evidence/b11/staging-062-request-pairs-and-buyers-20261118/deployment.json)
 
 The owner deferred Apple Developer membership and email-provider configuration on November 3, 2026. Development continues; signed distribution and live email-code sign-in are pending those setups. The current Supabase default email sends a magic link without a code, and its dashboard requires custom SMTP or a paid plan to edit that template. `emailOTPEnabled` remains false until the configured email includes a token and delivery is verified. Native builds receive an explicit disabled availability setting; service/BFF enablement must follow the same gate.
 
