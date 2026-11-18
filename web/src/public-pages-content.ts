@@ -129,8 +129,8 @@ export const publicPages = {
         },
         "paragraphs": [
           {
-            "en": "Open Household requests in Settings to sign in or manage connected access. Signing in does not upload your existing private workspace. If sign-in is unavailable in this build, keep using the private tools.",
-            "es": "Abre Solicitudes del hogar en Configuración para iniciar sesión o administrar el acceso conectado. Iniciar sesión no sube tu espacio privado existente. Si esta versión no permite iniciar sesión, sigue usando las herramientas privadas."
+            "en": "In Settings, open Household requests to sign in. Your private lists and plans stay on this iPhone. You can use them without an account.",
+            "es": "Para iniciar sesión, abre Solicitudes del hogar en Configuración. Tus listas y planes privados se guardan en este iPhone. Puedes usarlos sin una cuenta."
           },
           {
             "en": "A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private.",
@@ -197,8 +197,8 @@ export const publicPages = {
             "es": "El plan gratuito cubre una recogida habitual, la planificación manual, una cena reutilizable, los registros guardados y las exportaciones. Household agrega herramientas de planificación recurrente para hasta dos adultos designados. Los comestibles se compran en tu tienda."
           },
           {
-            "en": "Open Household membership in Settings for Apple’s actual localized offer, Restore Purchases and Manage Subscription. If the offer or account setup is unavailable, continue with Free.",
-            "es": "Abre Membresía del hogar en Configuración para ver la oferta localizada real de Apple, Restaurar compras y Administrar suscripción. Si la oferta o la configuración de la cuenta no está disponible, continúa con el plan gratuito."
+            "en": "In Settings, open Household membership to see the App Store price and renewal period, restore a purchase or manage your subscription. You can keep planning for free.",
+            "es": "En Configuración, abre Membresía del hogar para ver el precio del App Store y cada cuánto se renueva la suscripción, restaurar una compra o administrar tu suscripción. Puedes seguir planeando gratis."
           },
           {
             "en": "Restore with the original purchasing account and household. A pending or unverified purchase adds no paid access. If delivery is uncertain, retry delivery or restore rather than buying again. Ending membership preserves permitted Free work.",
@@ -253,12 +253,20 @@ export const publicPages = {
             "es": "Las funciones conectadas opcionales usan la información necesaria para la acción que revisas: correo e identidad de la cuenta, alias de miembros, identificadores de dispositivo o sesión inscritos, solicitudes e instrucciones del hogar, presupuesto y pruebas de precios de compras compartidas, y pruebas de transacciones de membresía de Apple. Los permisos limitan lo que cada persona puede leer o cambiar."
           },
           {
+            "en": "The household service saves a shopper’s question with the contributor’s request. When you save shared instructions for a cook, it stores the wording and your member ID. If you mark the instructions as sent, it also saves the recipient you entered and the time.",
+            "es": "El servicio del hogar guarda la pregunta de quien hace la compra junto con la solicitud de quien la envió. Cuando guardas instrucciones compartidas para quien cocina, el servicio guarda el texto y tu identificador de miembro. Si marcas las instrucciones como enviadas, también guarda el destinatario que indicaste y la hora."
+          },
+          {
             "en": "When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone.",
             "es": "Al confirmar un recibo para la despensa del hogar, los adultos con acceso a la despensa pueden ver la tienda, la fecha de compra, la referencia que ingreses y, de cada renglón seleccionado, el texto original, el alimento, las cantidades, el lugar de almacenamiento y el precio si lo ingresaste. El archivo original se queda en este iPhone."
           },
           {
             "en": "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion.",
             "es": "Cuando guardas una receta en «Esta noche en casa», envías al servicio del hogar los ingredientes, las porciones, los lotes que elegiste y las restricciones o los datos del paquete que hayas revisado. Los adultos con acceso a la despensa pueden ver el nombre de la receta y sus ingredientes cuando se les sugiere esa cena."
+          },
+          {
+            "en": "When you share a reaction to a meal you shopped for, the household service saves it with your member ID. For up to 90 days, Household Tonight can use your latest reaction to that version of the recipe to break ties between dinner suggestions for you. To withdraw your reactions, open Household pantry and choose Review my shared meal feedback.",
+            "es": "Cuando compartes tu opinión sobre una comida para la que hiciste la compra, el servicio del hogar la guarda con tu identificador de miembro. Durante un máximo de 90 días, «Esta noche en casa» puede usar tu opinión más reciente sobre esa versión de la receta para decidir qué cena mostrarte primero si hay un empate. Para retirar tus opiniones, abre «Despensa del hogar» y elige «Revisar mis opiniones compartidas sobre comidas»."
           },
           {
             "en": "If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place.",
@@ -289,8 +297,8 @@ export const publicPages = {
             "es": "Cuando la asistencia en línea está disponible, un adulto autorizado puede revisar y enviar un fragmento de texto, una imagen recortada o una grabación de voz independiente a OpenAI a través de Room in the Cart. Escucha la grabación o revisa el recorte antes de enviarlo. También puedes seguir usando el editor local."
           },
           {
-            "en": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself.",
-            "es": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
+            "en": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. Its privacy policy says it keeps visitor IP addresses and logs for three years for security, technical analysis and measuring popularity. You can enter the product name and package size yourself.",
+            "es": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Según su política de privacidad, conserva las direcciones IP de los visitantes y los registros de visitas durante tres años por motivos de seguridad, para realizar análisis técnicos y para medir la popularidad. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
           },
           {
             "en": "For optional online language help, review what will go to OpenAI through Room in the Cart. Depending on the task, this can include your wording, possible matches, or selected meal titles and reasons. For a FoodKeeper match, you share the label wording and the names and IDs of the guide entries shown. You choose whether to use a suggestion.",

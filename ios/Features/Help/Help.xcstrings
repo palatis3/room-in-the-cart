@@ -924,19 +924,19 @@
         }
       }
     },
-    "Open Household requests in Settings to sign in or manage connected access. Signing in does not upload your existing private workspace. If sign-in is unavailable in this build, keep using the private tools.": {
+    "In Settings, open Household requests to sign in. Your private lists and plans stay on this iPhone. You can use them without an account.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Household requests in Settings to sign in or manage connected access. Signing in does not upload your existing private workspace. If sign-in is unavailable in this build, keep using the private tools."
+            "value": "In Settings, open Household requests to sign in. Your private lists and plans stay on this iPhone. You can use them without an account."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre Solicitudes del hogar en Configuración para iniciar sesión o administrar el acceso conectado. Iniciar sesión no sube tu espacio privado existente. Si esta versión no permite iniciar sesión, sigue usando las herramientas privadas."
+            "value": "Para iniciar sesión, abre Solicitudes del hogar en Configuración. Tus listas y planes privados se guardan en este iPhone. Puedes usarlos sin una cuenta."
           }
         }
       }
@@ -1111,19 +1111,19 @@
         }
       }
     },
-    "Open Household membership in Settings for Apple’s actual localized offer, Restore Purchases and Manage Subscription. If the offer or account setup is unavailable, continue with Free.": {
+    "In Settings, open Household membership to see the App Store price and renewal period, restore a purchase or manage your subscription. You can keep planning for free.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Household membership in Settings for Apple’s actual localized offer, Restore Purchases and Manage Subscription. If the offer or account setup is unavailable, continue with Free."
+            "value": "In Settings, open Household membership to see the App Store price and renewal period, restore a purchase or manage your subscription. You can keep planning for free."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre Membresía del hogar en Configuración para ver la oferta localizada real de Apple, Restaurar compras y Administrar suscripción. Si la oferta o la configuración de la cuenta no está disponible, continúa con el plan gratuito."
+            "value": "En Configuración, abre Membresía del hogar para ver el precio del App Store y cada cuánto se renueva la suscripción, restaurar una compra o administrar tu suscripción. Puedes seguir planeando gratis."
           }
         }
       }
@@ -1400,19 +1400,19 @@
         }
       }
     },
-    "The privacy policy link is unavailable in this build.": {
+    "The privacy policy link is unavailable.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The privacy policy link is unavailable in this build."
+            "value": "The privacy policy link is unavailable."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El enlace a la política de privacidad no está disponible en esta versión."
+            "value": "El enlace a la política de privacidad no está disponible."
           }
         }
       }
@@ -1434,19 +1434,19 @@
         }
       }
     },
-    "The terms link is unavailable in this build.": {
+    "The terms link is unavailable.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The terms link is unavailable in this build."
+            "value": "The terms link is unavailable."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El enlace a los términos no está disponible en esta versión."
+            "value": "El enlace a los términos de uso no está disponible."
           }
         }
       }
@@ -1502,19 +1502,19 @@
         }
       }
     },
-    "An online support destination is unavailable in this build. Offline help and the support summary are still available.": {
+    "Online support is unavailable. You can read the help articles here or share your support summary.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "An online support destination is unavailable in this build. Offline help and the support summary are still available."
+            "value": "Online support is unavailable. You can read the help articles here or share your support summary."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No hay un destino de soporte en línea disponible en esta versión. La ayuda sin conexión y el resumen de soporte siguen disponibles."
+            "value": "El soporte en línea no está disponible. Aquí puedes consultar los artículos de ayuda o compartir tu resumen de soporte."
           }
         }
       }
@@ -1966,18 +1966,50 @@
         }
       }
     },
-    "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself.": {
+    "The household service saves a shopper’s question with the contributor’s request. When you save shared instructions for a cook, it stores the wording and your member ID. If you mark the instructions as sent, it also saves the recipient you entered and the time.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself."
+            "value": "The household service saves a shopper’s question with the contributor’s request. When you save shared instructions for a cook, it stores the wording and your member ID. If you mark the instructions as sent, it also saves the recipient you entered and the time."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
+            "value": "El servicio del hogar guarda la pregunta de quien hace la compra junto con la solicitud de quien la envió. Cuando guardas instrucciones compartidas para quien cocina, el servicio guarda el texto y tu identificador de miembro. Si marcas las instrucciones como enviadas, también guarda el destinatario que indicaste y la hora."
+          }
+        }
+      }
+    },
+    "When you share a reaction to a meal you shopped for, the household service saves it with your member ID. For up to 90 days, Household Tonight can use your latest reaction to that version of the recipe to break ties between dinner suggestions for you. To withdraw your reactions, open Household pantry and choose Review my shared meal feedback.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you share a reaction to a meal you shopped for, the household service saves it with your member ID. For up to 90 days, Household Tonight can use your latest reaction to that version of the recipe to break ties between dinner suggestions for you. To withdraw your reactions, open Household pantry and choose Review my shared meal feedback."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando compartes tu opinión sobre una comida para la que hiciste la compra, el servicio del hogar la guarda con tu identificador de miembro. Durante un máximo de 90 días, «Esta noche en casa» puede usar tu opinión más reciente sobre esa versión de la receta para decidir qué cena mostrarte primero si hay un empate. Para retirar tus opiniones, abre «Despensa del hogar» y elige «Revisar mis opiniones compartidas sobre comidas»."
+          }
+        }
+      }
+    },
+    "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. Its privacy policy says it keeps visitor IP addresses and logs for three years for security, technical analysis and measuring popularity. You can enter the product name and package size yourself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. Its privacy policy says it keeps visitor IP addresses and logs for three years for security, technical analysis and measuring popularity. You can enter the product name and package size yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Según su política de privacidad, conserva las direcciones IP de los visitantes y los registros de visitas durante tres años por motivos de seguridad, para realizar análisis técnicos y para medir la popularidad. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
           }
         }
       }

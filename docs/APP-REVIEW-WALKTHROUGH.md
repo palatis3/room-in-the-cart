@@ -11,7 +11,8 @@ Prepared from native source on 2026-11-03; staging status updated on 2026-11-06.
 | Operating support owner and public destination | User-supplied contact: hello@roominthecart.com. [Public mail-routing DNS exists](evidence/b11/support-dns-20261106/README.md), but verify this exact mailbox’s delivery/monitoring with the operating owner before release; no test email has been sent |
 | Privacy and terms pages | Supply operator-reviewed HTTPS URLs and both launch languages |
 | Demo environment | State the exact isolated service environment; use fictional records only |
-| Demo adult accounts | Provide two verified adults through App Store Connect's private review fields, outside this repository |
+| Demo access | Supply working fictional credentials for each role in App Store Connect’s private review information. Include the email-code access Apple will actually use throughout review. Test it from a fresh installation without help from staff. |
+| Subscription review account | Supply a fictional account with an expired subscription so Apple can see the actual purchase and restore screens. |
 | Shopper and second adult | Identify the assigned shopper and a separate named planning seat |
 | Contributor and cook | Provide the exact invitation/current-view review path, expiry and permitted scope |
 | Guardian consent | Document the actual verified guardian path and revocation test; do not use real children |
@@ -19,6 +20,12 @@ Prepared from native source on 2026-11-03; staging status updated on 2026-11-06.
 | Open gates | List unconfigured or failed behavior explicitly; exclude its claim from the listing |
 
 Release metadata is wired through [the native configuration guide](../config/README.md). Blank URLs produce visible unavailable states. The staging `/help`, `/privacy`, `/terms` and `/support` paths now resolve after the approved 2026-11-06 deployment; all 27 public API/page/asset checks passed. [Staging rollout evidence](evidence/b11/staging-rollout-20261106/summary.json). After the owner re-enabled browser access, the public pages were also checked in English and Spanish at narrow and wide widths, including keyboard skip navigation, section links and the support contact. The invited sign-in screens correctly remain unavailable while email setup is deferred; authenticated journeys were not exercised. [Rendered browser scope and evidence](evidence/b11/staging-browser-walkthrough-20261106/REVIEW.md). These checks do not establish operator policy approval, production URL readiness or a functioning support mailbox. The owner must finish those operating checks, identity/email setup, signing and actual App Store configuration before a distribution submission that advertises those paths.
+
+### Notes for App Review
+
+Identify the signed build, iPhone models and OS versions actually tested, US availability and any regional differences. Describe the free offline pickup tools, the annual Household subscription for up to two named adults, and the retailer’s separate checkout. Identify each external service enabled for that build, including authentication, grocery data, guardian verification and optional AI assistance.
+
+Give the reviewer a short route to each restricted feature. Start with **Shop → Compare packs** without an account, then **Settings → Household requests** for the shopper and contributor, and **Settings → Household membership** for the expired subscriber. Include the invited cook’s route, the verified guardian’s account-deletion route and a private reporting example after those routes pass on the configured candidate. Supply fictional review data and role-specific credentials privately. [Apple’s instructions for a complete review](https://developer.apple.com/help/app-review/before-submitting-for-review/complete-review/)
 
 ## Fictional local demo, no account required
 
