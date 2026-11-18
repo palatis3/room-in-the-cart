@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {ServiceError} from './errors.js';
-import type {Context} from './repository.js';
+import type {Context, HouseholdRepository} from './repository.js';
 import type {ReceiptAssistance} from './receipt-assistance.js';
 
 const wording=z.string().trim().min(1).max(500).refine(s=>Buffer.byteLength(s)<=512 && !/\p{Cc}/u.test(s));
@@ -13,10 +13,10 @@ export type LanguageInput=z.infer<typeof languageRequest>;
 
 export function languageRoute<T extends LanguageInput>(kind:string, schema:z.ZodType<T>,
   suggest:(transport:ReceiptAssistance,input:T,signal:AbortSignal)=>Promise<unknown>,
-  checkScope?:(ctx:Context,input:T)=>Promise<void>) {
+  checkScope?:(ctx:Context,input:T,repository:HouseholdRepository)=>Promise<void>) {
   return {kind,parse(raw:unknown) {
     const input=schema.parse(raw);
-    return {requestID:input.requestID,issuedAt:input.issuedAt,checkScope:(ctx:Context)=>checkScope?.(ctx,input),run:(transport:ReceiptAssistance,signal:AbortSignal)=>suggest(transport,input,signal)};
+    return {requestID:input.requestID,issuedAt:input.issuedAt,checkScope:(ctx:Context,repository:HouseholdRepository)=>checkScope?.(ctx,input,repository),run:(transport:ReceiptAssistance,signal:AbortSignal)=>suggest(transport,input,signal)};
   }};
 }
 

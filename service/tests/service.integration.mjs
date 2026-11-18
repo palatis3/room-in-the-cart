@@ -1173,3 +1173,47 @@ test('deferred request pages contain only eligible current grants and exclude ol
   assert.equal((await f.http('Mia','POST','/commands',carry)).data.error.code,'authority_changed');
   assert.equal((await page(dest)).data.requests[0].sourceAuthorityEpoch,3);
 });
+
+test('duplicate help rechecks the assigned shopper and exact basket candidates before and after matching',async t=>{
+  const f=await fixture(), {request}=await f.send('Alex',{originalItem:f.line.originalItem});
+  let calls=0, changeAfterSend=false;
+  const transport={budget:{dailyAccountRequests:12,dailyMicros:200,maxRequestMicros:5,maxLanguageMicros:5},
+    structuredText:async text=>{
+      const body=JSON.parse(text);
+      calls++;
+      assert.equal(body.sourceLines[0].text,f.line.originalItem);
+      assert.notEqual(body.sourceLines[0].id,request.requestId);
+      assert.equal(body.candidates[0].text,f.line.originalItem);
+      assert.notEqual(body.candidates[0].id,f.lineId);
+      if(changeAfterSend) await admin.query('UPDATE ritc.basket_line SET original_item=$1 WHERE household_id=$2 AND shop_id=$3 AND line_id=$4',
+        ['Changed label',f.h,f.shopId,f.lineId]);
+      return {suggestions:[{sourceLineID:body.sourceLines[0].id,candidateID:body.candidates[0].id}]};
+    }};
+  const mock=createHTTPServer({repository:repo,verifier,receiptAssistance:transport,webOrigin:'https://web.fixture.invalid',maxRequestsPerMinute:10000});
+  await new Promise(resolve=>mock.listen(0,'127.0.0.1',resolve));
+  t.after(()=>new Promise(resolve=>mock.close(resolve)));
+  const route='http://127.0.0.1:'+mock.address().port+'/v1/households/'+f.h+'/language-assistance/request-duplicate';
+  const sourceLines=[{id:request.requestId,text:f.line.originalItem}], candidates=[{id:f.lineId,text:f.line.originalItem}];
+  const post=async(actor,overrides={},headers={})=>{
+    const user=f.actors[actor];
+    return fetch(route,{method:'POST',headers:{authorization:'Bearer '+user.token,'X-Device-Token':user.deviceToken,
+      'X-Shop-ID':f.shopId,'Content-Type':'application/json',...headers},body:JSON.stringify({
+        version:1,requestID:randomUUID(),issuedAt:Date.now(),consent:true,locale:'en',shopID:f.shopId,shopRevision:1,
+        authorityEpoch:1,requestRevision:1,sourceLines,candidates,...overrides})});
+  };
+  for(const actor of ['Sam','Alex']) assert.equal((await post(actor)).ok,false);
+  assert.equal((await post('Mia',{}, {'X-View-Grant-Id':randomUUID()})).ok,false);
+  for(const changed of [{shopID:randomUUID()},{requestRevision:2},{shopRevision:2},
+    {sourceLines:[{id:request.requestId,text:'Other words'}]},{candidates:[{id:randomUUID(),text:f.line.originalItem}]},
+    {candidates:[{id:f.lineId,text:'Other label'}]}]) assert.equal((await post('Mia',changed)).ok,false);
+  assert.equal(calls,0);
+  const accepted=await post('Mia');
+  const reply=await accepted.json();
+  assert.equal(accepted.status,200,JSON.stringify(reply));
+  assert.deepEqual(reply.suggestions,[{sourceLineID:request.requestId,candidateID:f.lineId}]);
+  changeAfterSend=true;
+  assert.equal((await post('Mia')).ok,false);
+  assert.equal(calls,2);
+  const row=await admin.query('SELECT status FROM ritc.request WHERE household_id=$1 AND request_id=$2',[f.h,request.requestId]);
+  assert.equal(row.rows[0].status,'pending');
+});

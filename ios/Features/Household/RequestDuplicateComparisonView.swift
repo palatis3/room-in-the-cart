@@ -73,6 +73,20 @@ struct RequestDuplicateComparisonSection: View {
                             .disabled(model.busy || (model.choice == .link && model.linkedLineID == line.id))
                         }
                     }
+                    if let requestUUID = UUID(uuidString: request.id), let shopUUID = UUID(uuidString: shop.shopId) {
+                        DuplicateAssistanceView(source: .init(id: requestUUID, text: request.originalItem),
+                            candidates: lines.compactMap { line in
+                                UUID(uuidString: line.id).map { .init(id: $0, text: line.originalItem) }
+                            }, family: .init(shopID: shopUUID, shopRevision: shop.shopRevision,
+                                            authorityEpoch: shop.authorityEpoch, requestRevision: request.revision),
+                            authorized: {
+                                model.authorized && !model.busy && model.pending == nil && model.selected == request &&
+                                model.shop == shop && model.availableChoices.contains(.link)
+                            }, familyHouseholdID: model.householdID, familyMemberID: model.memberID) { id in
+                                guard let line = lines.first(where: { UUID(uuidString: $0.id) == id }) else { return }
+                                model.selectDuplicateLine(line, for: request, shopRevision: shop.shopRevision)
+                            }
+                    }
                     Button(requestDuplicateText("Review additional packs")) {
                         model.choice = .add
                     }

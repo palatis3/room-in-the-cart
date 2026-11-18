@@ -75,6 +75,7 @@ private struct GroceryWindow: View {
                 Theme.canvas.ignoresSafeArea()
             } else { root }
         }.environment(\.pickupLedger, ledger)
+            .environment(\.offersDuplicateAssistance, true)
             .environment(\.privatePantryRetry, pantryRetry)
             .environmentObject(model)
             .environmentObject(ledger).environmentObject(pickup)
