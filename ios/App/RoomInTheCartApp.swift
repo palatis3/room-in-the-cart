@@ -123,6 +123,7 @@ private struct GroceryWindow: View {
                                               ledger: ledger, pickup: pickup, household: household)
                 }.environment(\.pickupLedger, ledger)
                     .environment(\.guardianChildCoordinator, guardianChild)
+                    .environmentObject(model)
                     .environmentObject(ledger).environmentObject(pickup)
                     .environmentObject(household).environmentObject(access)
                     .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
