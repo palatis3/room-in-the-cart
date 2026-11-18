@@ -1,6 +1,7 @@
 import copy
 import unittest
-from ci_mac_slots import validate_macos_slots, with_macos_slots
+from ci_mac_slots import (validate_macos_slots, with_macos_slots, with_bitrise_slots,
+                          BITRISE_POOLS, BITRISE_SLOTS_PER_POOL)
 from plan_ios_tests import make_plan
 from test_plan_ios_tests import MODEL, DURATIONS, UI_TARGET, enumeration
 from plan_ios_fixture_tests import matrix as fixture_matrix
@@ -39,16 +40,35 @@ class MacSlotMetadataTests(unittest.TestCase):
                          [(r['profile'], r['shard']) for r in outage])
         self.assertEqual({r['provider'] for r in outage}, {'github'})
         self.assertEqual({r['macos_slot'] for r in outage}, set(range(5)))
-        changes = {b['shard']: (a['macos_slot'], b['macos_slot'])
-                   for a, b in zip(normal, outage) if a['macos_slot'] != b['macos_slot']}
-        self.assertEqual(changes, {
-            'SharedOperationUndoUITests-testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives': (0, 1),
-            'contributor-balanced-05': (2, 4),
-            'SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave': (2, 3),
-            'SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable': (2, 3),
-            'SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption': (0, 4),
-            'DinnerDecisionSheetUITests': (1, 3),
-        })
+        self.assertTrue(all('pool_slot' not in row for row in outage))
+        self.assertEqual([{k: v for k, v in row.items() if k not in ('provider', 'pool_slot')} for row in normal],
+                         [{k: v for k, v in row.items() if k != 'provider'} for row in outage])
+
+    def test_twelve_pool_lanes_balance_long_jobs_without_changing_rows(self):
+        rows = [{'shard': f'job-{i:02d}', 'macos_slot': i % 5} for i in range(26)]
+        weights = list(range(26, 0, -1))
+        saved = copy.deepcopy(rows)
+        routed = with_bitrise_slots(rows, ('shard',), weights)
+        self.assertEqual(rows, saved)
+        self.assertEqual([{k: v for k, v in r.items() if k not in ('provider', 'pool_slot')} for r in routed], rows)
+        self.assertEqual({(r['provider'], r['pool_slot']) for r in routed},
+                         {(f'bitrise-{p}', n) for p in BITRISE_POOLS for n in range(6)})
+        self.assertEqual(len({(r['provider'], r['pool_slot']) for r in routed[:12]}), 12)
+        self.assertEqual(routed[0]['provider'], 'bitrise-A1')
+        self.assertEqual(with_bitrise_slots(rows, ('shard',), weights, first_pool='A2')[0]['provider'], 'bitrise-A2')
+        self.assertEqual(routed, with_bitrise_slots(rows, ('shard',), weights))
+        totals = {}
+        for row, seconds in zip(routed, weights):
+            key = row['provider'], row['pool_slot']
+            totals[key] = totals.get(key, 0) + seconds
+        self.assertLessEqual(max(totals.values()) - min(totals.values()), max(weights))
+        self.assertEqual(BITRISE_SLOTS_PER_POOL, 6)
+        for bad in ([1], [True]*26, [0]*26, [1.5]*26):
+            with self.assertRaises(ValueError): with_bitrise_slots(rows, ('shard',), bad)
+        for bad in ([], [rows[0], rows[0]], [{'shard': 'a', 'provider': 'bitrise'}],
+                    [{'shard': 'a', 'pool_slot': 6}], [{'shard': 'a', 'm4_slot': 0}]):
+            with self.assertRaises(ValueError): with_bitrise_slots(bad, ('shard',), [1]*len(bad))
+        with self.assertRaises(ValueError): with_bitrise_slots(rows, ('shard',), weights, first_pool='retired')
 
     def test_all_three_planners_keep_complete_cases_and_emit_valid_slots(self):
         methods = [f'{UI_TARGET}/JourneyTests/test{i:02d}()' for i in range(10)]
@@ -57,55 +77,19 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual([r['shard'] for r in plan['include']], ['models', *[f'ui-{i:02d}' for i in range(1, 11)]])
         self.assertCountEqual([c for s in plan['shards'].values() for c in s['test_identifiers']], [MODEL, *methods])
         fixtures = fixture_matrix()['include']
-        self.assertEqual({row['provider'] for row in fixtures}, {'bitrise', 'bitrise-m4'})
-        # Lock the provider and concurrency group for each planned fixture.
-        self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
-            ('bitrise', 1), ('bitrise-m4', 2), ('bitrise-m4', 3), ('bitrise-m4', 0),
-            ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 2), ('bitrise-m4', 2),
-            ('bitrise-m4', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
-            ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('bitrise', 0), ('bitrise', 0), ('bitrise-m4', 2), ('bitrise-m4', 3),
-            ('bitrise-m4', 4), ('bitrise-m4', 0), ('bitrise', 2), ('bitrise', 2),
-            ('bitrise-m4', 0), ('bitrise-m4', 1),
-        ])
-        self.assertEqual({row['shard']: (row['provider'], row['macos_slot'])
-                          for row in fixtures if row['shard'] in {
-                              'contributor-balanced-04', 'contributor-balanced-02', 'contributor-balanced-05',
-                              'SharedFallbackUITests'}}, {
-            'contributor-balanced-04': ('bitrise-m4', 0),
-            'contributor-balanced-02': ('bitrise', 1),
-            'contributor-balanced-05': ('bitrise-m4', 2),
-            'SharedFallbackUITests': ('bitrise', 2),
-        })
+        self.assertEqual({row['provider'] for row in fixtures}, {'bitrise-A1', 'bitrise-A2'})
+        self.assertEqual({(row['provider'], row['pool_slot']) for row in fixtures},
+                         {(f'bitrise-{pool}', slot) for pool in BITRISE_POOLS for slot in range(6)})
         for row in fixtures:
-            self.assertIs(type(row['macos_slot']), int)
-            self.assertIn(row['macos_slot'], range(3 if row['provider'] == 'bitrise' else 5))
-            if row['provider'] == 'bitrise-m4':
-                self.assertIs(type(row['m4_slot']), int)
-                self.assertIn(row['m4_slot'], range(6))
-            else:
-                self.assertNotIn('m4_slot', row)
+            self.assertIs(type(row['pool_slot']), int)
+            self.assertIn(row['pool_slot'], range(6))
+            self.assertIn(row['macos_slot'], range(5))
+            self.assertNotIn('m4_slot', row)
         self.assertEqual(len({(row['profile'], row['shard']) for row in fixtures}), 26)
         self.assertEqual(len(fixtures), 26)
-        self.assertEqual([(r['shard'], r['macos_slot'], r['m4_slot']) for r in fixtures if 'm4_slot' in r], [
-            ('contributor-balanced-05', 2, 5),
-            ('contributor-balanced-01', 3, 5),
-            ('contributor-balanced-04', 0, 1),
-            ('contributor-balanced-03', 4, 2),
-            ('SharedCreatedMealUndoUITests-testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple', 2, 0),
-            ('SharedDeliveryUITests-stock-and-purchase', 0, 2),
-            ('SharedDeliveryUITests-recovery-cook-and-closeout', 1, 3),
-            ('SharedFoodEditorUITests-testExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 3, 4),
-            ('SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 4, 1),
-            ('SharedOperationUndoUITests-testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple', 2, 4),
-            ('SharedRecordsUITests', 3, 4),
-            ('SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult', 4, 4),
-            ('SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption', 0, 0),
-            ('SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction', 0, 5),
-            ('DinnerDecisionSheetUITests', 1, 3)])
-        self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedRecordsUITests'], ['contributor'])
-        self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedFallbackUITests'], ['contributor'])
-        self.assertEqual(set(fixtures[0]), {'profile', 'shard', 'provider', 'macos_slot'})
+        for suite in ('SharedRecordsUITests', 'SharedFallbackUITests'):
+            self.assertEqual([row['profile'] for row in fixtures if row['shard'] == suite], ['contributor'])
+        self.assertEqual(set(fixtures[0]), {'profile', 'shard', 'provider', 'macos_slot', 'pool_slot'})
         performance = performance_matrix('\n'.join(COMPILED))['include']
         validate_macos_slots(performance, ('case',))
         self.assertEqual([r['case'] for r in performance], ['launch', 'rendered', 'scroll'])

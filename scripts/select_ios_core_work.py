@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import shutil
 
-from ci_mac_slots import with_macos_slots
+from ci_mac_slots import with_macos_slots, with_bitrise_slots
 from plan_ios_tests import DURATIONS_PATH, make_plan, selector, write_plan
 
 DINNER = (
@@ -56,34 +56,12 @@ def main():
             for path in args.plan_dir.glob('*.txt'):
                 path.unlink()
             write_plan(selected, args.plan_dir)
-        # The producer already has the simulator and compiled model tests.
-        # Route UI jobs independently while keeping the fallback for every row.
-        m4_slots = {
-            'ui-02': 4, 'ui-03': 0, 'ui-06': 1,
-            'ui-07': 3, 'ui-08': 3, 'ui-09': 5, 'ui-10': 2,
-        }
-        github_slots = {'ui-04': 1, 'ui-09': 3}
-        # The full UI01 group finished last on two combined builds. Its shorter
-        # manual Dinner diagnostic retains its original GitHub runner.
-        if scope == 'full':
-            m4_slots['ui-01'] = 0
-            # During the outage, slot 4 finished while UI01 still waited behind UI04.
-            github_slots['ui-01'] = 4
-        # M4 slot 3 finished at least 16 minutes before UI07 on three full runs.
-        # External PRs still use the GitHub slot assigned by the core plan.
-        consumers = []
-        for planned in selected['include']:
-            shard = planned['shard']
-            if shard == 'models':
-                continue
-            row = dict(planned)
-            row['macos_slot'] = github_slots.get(shard, row['macos_slot'])
-            if shard in m4_slots:
-                row.update(provider='bitrise-m4', m4_slot=m4_slots[shard])
-            else:
-                # UI04 and UI08 formerly queued behind each other on M4 slot 3.
-                row['provider'] = 'bitrise' if shard in ('ui-04', 'ui-05') else 'github'
-            consumers.append(row)
+        # The producer keeps its model work. Preserve all UI rows and balance
+        # their existing estimates across A1/A2; GitHub routing remains in YAML.
+        consumers = [dict(row) for row in selected['include'] if row['shard'] != 'models']
+        seconds = [selected['shards'][row['shard']].get('estimated_seconds',
+                   len(selected['shards'][row['shard']]['test_identifiers']) * 300) for row in consumers]
+        consumers = with_bitrise_slots(consumers, ('shard',), seconds, first_pool='A2')
         provider = os.environ.get('IOS_PROVIDER', 'github')
         if provider == 'circleci':
             delegated = {'ui-01', 'ui-02', 'ui-03'}

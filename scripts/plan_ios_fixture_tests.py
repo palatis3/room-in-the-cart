@@ -7,7 +7,8 @@ from pathlib import Path
 import re
 
 
-from plan_ios_tests import UI_TARGET, read_identifiers, selector, write_plan
+from ci_mac_slots import with_macos_slots, with_bitrise_slots
+from plan_ios_tests import UI_TARGET, DURATIONS_PATH, estimated_test_seconds, read_identifiers, selector, write_plan
 
 
 UI_SOURCES = Path(__file__).resolve().parents[1] / "ios" / "UITests"
@@ -162,81 +163,15 @@ def shard_members(profile, inventory):
 
 def matrix(inventory=None, *, github_mac_only=False):
     inventory = source_inventory(UI_SOURCES) if inventory is None else inventory
-    rows = [{"profile": profile, "shard": shard}
-            for profile in PROFILES for shard in shard_members(profile, inventory)]
-    # Five GitHub, three M2 and six M4 slots serve the reviewed fixture tail.
-    # Keep row identity/order and exact selections; only admission metadata changes.
-    # The first combined run exhausted Bitrise's short rows while GitHub still
-    # queued long contributor groups. Give each Bitrise lane one existing group.
-    lane_overrides = {
-        # Let StoreKit start on slot 2 as soon as its products are ready.
-        "contributor-balanced-01": 3,
-        "contributor-balanced-04": 5,
-        "contributor-balanced-02": 6,
-        "contributor-balanced-05": 7,
-        # GitHub lost the Spanish saved-change runner. M2 slot 0 had spare tail
-        # capacity in both recent combined runs; preserve its GitHub fallback below.
-        "SharedOperationUndoUITests-testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives": 5,
-        # English skipped-dinner Undo was the last fixture after a 31-minute GitHub wait.
-        # M2 lane 5 and its GitHub fallback both use slot 0.
-        "SharedOperationUndoUITests-testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple": 5,
-        # The English meal Undo ran ahead of core UI04 on M2 slot 1 in three full runs.
-        "SharedCreatedMealUndoUITests-testCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple": 7,
-        # In run 43408449245 this case waited 38 minutes for M2 slot 2.
-        # GitHub slot 2 had already finished building the StoreKit products.
-        "SharedCreatedMealUndoUITests-testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple": 2,
-        # Avoid the observed UI02 wait after the Bitrise work had finished.
-        "SharedFallbackUITests": 7,
-        # Move the quote retry off the M2 queue shared with contributor group 02.
-        "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 7,
-    }
-    m4_slots = {
-        # Both the original job and one scoped retry failed before XCTest on
-        # GitHub's runtime retirement guard. Keep its whole 13-case group.
-        "contributor-balanced-01": 5,
-        # Dinner hit the same GitHub runtime retirement failure. Shared Records'
-        # runtime queries and owned cleanup also timed out on GitHub. Lanes 3
-        # and 4 finished early while required fixture groups were still running.
-        "DinnerDecisionSheetUITests": 3,
-        "SharedRecordsUITests": 4,
-        # Both groups hit the GitHub watchOS runtime retirement guard before tests.
-        # These M4 lanes freed first in that batch and use the pinned fixture runtime.
-        "SharedCreatedMealUndoUITests-testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple": 0,
-        "SharedDeliveryUITests-stock-and-purchase": 2,
-        # This fixture shared M2 slot 0 with the last-finishing core UI05 job.
-        "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 0,
-        "contributor-balanced-03": 2,
-        "contributor-balanced-04": 1,
-        "contributor-balanced-05": 5,
-        "SharedDeliveryUITests-recovery-cook-and-closeout": 3,
-        # This journey otherwise queues directly ahead of the bilingual StoreKit run.
-        "SharedOperationUndoUITests-testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple": 4,
-        "SharedFoodEditorUITests-testExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney": 4,
-        "SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney": 1,
-        "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": 4,
-        "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": 5,
-    }
-    # On the GitHub-only fallback, slot 2 also runs billing and UI07.
-    # Use the capacity observed on slots 3 and 4 in run 43596663919.
-    outage_slots = {
-        "SharedOperationUndoUITests-testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives": 1,
-        "contributor-balanced-05": 4,
-        "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 3,
-        "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": 3,
-        "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 4,
-        # In run 43770727863, slot 3 finished while UI07 still held slot 2
-        # ahead of DinnerDecision and the Spanish StoreKit infrastructure retry.
-        "DinnerDecisionSheetUITests": 3,
-    }
-    for index, row in enumerate(rows):
-        lane = lane_overrides.get(row["shard"], index % 8)
-        row.update(provider="github" if lane < 5 else "bitrise",
-                   macos_slot=lane if lane < 5 else lane - 5)
-        if github_mac_only:
-            row.update(provider="github", macos_slot=outage_slots.get(row["shard"], row["macos_slot"]))
-        elif row["shard"] in m4_slots:
-            row.update(provider="bitrise-m4", m4_slot=m4_slots[row["shard"]])
-    return {"include": rows}
+    groups = [(profile, shard, members) for profile in PROFILES
+              for shard, (_, members) in shard_members(profile, inventory).items()]
+    rows = with_macos_slots([{"profile": profile, "shard": shard}
+                            for profile, shard, _ in groups], ("profile", "shard"))
+    if github_mac_only:
+        return {"include": [{**row, "provider": "github"} for row in rows]}
+    durations = json.loads(DURATIONS_PATH.read_text(encoding="utf-8"))
+    seconds = [sum(estimated_test_seconds(members, durations).values()) for _, _, members in groups]
+    return {"include": with_bitrise_slots(rows, ("profile", "shard"), seconds)}
 
 
 def read_enabled_identifiers(configuration, profile, seen):
