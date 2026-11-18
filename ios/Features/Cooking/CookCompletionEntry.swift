@@ -177,19 +177,24 @@ private struct CookCompletionPartView: View {
     }
 
     @ViewBuilder private var batchFields: some View {
-        Picker(cookCompletionText("Actual batch used"), selection: $part.lotID) {
+        Picker(cookCompletionText("Actual batch used"), selection: Binding(get: { part.lotID }, set: { id in
+            part.selectBatch(model.context?.inventory.lots.first { $0.id == id })
+        })) {
             Text(cookCompletionText("Choose a batch")).tag(UUID?.none)
             ForEach(model.context?.inventory.lots ?? []) { lot in
                 Text(cookBatchLabel(lot)).tag(Optional(lot.id))
             }
-        }.onChange(of: part.lotID) { _, id in
-            if let lot = model.context?.inventory.lots.first(where: { $0.id == id }) { part.unit = lot.unit }
         }
         if let lot = model.context?.inventory.lots.first(where: { $0.id == part.lotID }) {
             Text(pantryCount(lot.count))
             Text(lot.confirmedAt.formatted(date: .abbreviated, time: .shortened)).font(.caption)
         }
-        if part.use == .measured { LedgerQuantityFields(amount: $part.amount, unit: $part.unit) }
+        if part.use == .measured {
+            LedgerQuantityFields(amount: $part.amount, unit: $part.unit)
+            if part.needsNewMeasurement && part.amount.isEmpty {
+                Text(cookCompletionText("The previous amount could not be converted. Enter how much you used from this batch."))
+            }
+        }
         else { Text(cookCompletionText("The selected batch’s remaining quantity will become unknown. Existing holds are retained for review.")) }
     }
 
