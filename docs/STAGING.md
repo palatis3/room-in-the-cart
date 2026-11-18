@@ -27,7 +27,7 @@ Required server variables: `DATABASE_URL`, `DATABASE_CA_PEM`, `JWT_ISSUER`, `JWT
 
 ## Evidence and open gates
 
-The installed Staging app at `e5fbc5f9` reached schema 058 on an iPhone 15 simulator running iOS 17.0. Its anonymous session succeeded, the protected workspace required sign-in, and Spanish Help and English Support opened in Mobile Safari. All three tests passed with zero runtime warnings. [Staging 058 evidence](evidence/b11/staging-058-20261118/deployment.json)
+On an iPhone 15 simulator running iOS 17.0, the installed Staging app at `1355115e` reached the schema 062 deployment. The anonymous health and session reads returned HTTP 200. The session reported signed out and the protected workspace returned HTTP 401. All three responses disabled caching. Spanish Help and English Support opened in Mobile Safari. All three tests passed once with zero runtime warnings. [Verified app source](https://github.com/palatis3/room-in-the-cart/commit/1355115e583484a25f1b4347c951df1559c0b223) · [Staging deployment](evidence/b11/staging-062-request-pairs-and-buyers-20261118/deployment.json)
 
 The owner deferred Apple Developer membership and email-provider configuration on November 3, 2026. Development continues; signed distribution and live email-code sign-in are pending those setups. The current Supabase default email sends a magic link without a code, and its dashboard requires custom SMTP or a paid plan to edit that template. `emailOTPEnabled` remains false until the configured email includes a token and delivery is verified. Native builds receive an explicit disabled availability setting; service/BFF enablement must follow the same gate.
 
