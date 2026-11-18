@@ -444,10 +444,16 @@ struct ShopView: View {
                                 NavigationLink(pTr("Prepare retailer handoff")) {
                                     pickupDestination(journey.id) { PickupHandoffView(model: pickup, shopID: journey.id) }
                                 }.frame(minHeight: 44)
-                            } else if journey.nextUnfilledOffer(at: .now) == nil, journey.pickup?.receipts.isEmpty == true {
-                                NavigationLink(pTr("Record what came home")) {
-                                    pickupDestination(journey.id) { PickupArrivalView(model: pickup) }
-                                }.frame(minHeight: 44)
+                            } else {
+                                let now = Date()
+                                let arrivals = journey.pickup?.receipts.map(\.receivedAt).filter { $0 > now } ?? []
+                                TimelineView(.explicit([now] + arrivals.sorted())) { context in
+                                    if journey.shouldResumeArrival(at: context.date) {
+                                        NavigationLink(pTr("Record what came home")) {
+                                            pickupDestination(journey.id) { PickupArrivalView(model: pickup) }
+                                        }.frame(minHeight: 44)
+                                    }
+                                }
                             }
                         }
                     }

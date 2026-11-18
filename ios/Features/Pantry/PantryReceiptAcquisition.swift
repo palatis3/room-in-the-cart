@@ -74,6 +74,16 @@ struct ReceiptImportDraft {
         }
     }
 
+    var selectedPurchaseDate: Date {
+        get { purchaseDate }
+        set {
+            if purchaseDate != newValue {
+                purchaseDate = newValue
+                dateConfirmed = false
+            }
+        }
+    }
+
     mutating func clearAliases() {
         for index in lines.indices { lines[index].clearAlias() }
     }

@@ -300,6 +300,10 @@ private actor PantryTestService: HouseholdPantryServing {
             draft.lines[index].treatment = .add; draft.lines[index].received = "2"; draft.lines[index].usable = index == 0 ? "1" : "0"
         }
         draft.lines[0].paid = "4.10"
+        draft.selectedPurchaseDate = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: -1, to: draft.purchaseDate))
+        XCTAssertFalse(draft.dateConfirmed)
+        XCTAssertThrowsError(try draft.householdReceipt(for: page, deliveries: []))
+        draft.dateConfirmed = true
         let reviewed = try draft.householdReceipt(for: page, deliveries: [])
         XCTAssertEqual(reviewed.lines.map(\.ordinal), [0, 2])
         XCTAssertEqual(reviewed.lines.map(\.paidUSDMinor), [410, nil])

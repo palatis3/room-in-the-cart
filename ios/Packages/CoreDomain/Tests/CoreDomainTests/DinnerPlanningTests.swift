@@ -20,6 +20,29 @@ final class DinnerPlanningTests: XCTestCase {
     }
     private func roundTrip<T: Codable>(_ value: T) throws -> T { try JSONDecoder().decode(T.self, from: JSONEncoder().encode(value)) }
 
+    func testGuestChangeKeepsServingsOutsideNamedGroups() throws {
+        var ledger = ShoppingLedger()
+        var state = DinnerPlanningState()
+        let dinner = ServingGroup(name: "Bean entrée", servings: .one)
+        let lunch = ServingGroup(name: "Lunch", servings: .one, isProtected: true)
+        let recipe = MealTemplate(title: "Rice bowls", servings: try Rational(4),
+            ingredients: [.init(name: "Beans", quantity: try q(3))], servingGroups: [dinner, lunch])
+        let id = try ledger.chooseMeal(recipe, at: now)
+        let ingredient = try XCTUnwrap(ledger.mealOccurrences.first?.ingredientContributionIDs.first)
+        let actor = access(ledger)
+        try state.setPortionBindings([
+            .init(occurrenceID: id, contributionID: ingredient, groupID: dinner.id, quantity: try q(2), servings: .one),
+            .init(occurrenceID: id, contributionID: ingredient, groupID: lunch.id, quantity: try q(1), servings: .one)
+        ], for: id, ledger: ledger, access: actor, at: now)
+        let review = try DinnerPlanningEngine.previewGuests(occurrenceID: id, servingsByGroup: [dinner.id: try Rational(2)],
+            ledger: ledger, state: state, access: actor, phase: .draft, at: now)
+        XCTAssertEqual(review.projectedMeals.first?.servings, try Rational(5))
+        _ = try DinnerPlanningEngine.apply(review.proposal, ledger: &ledger, state: &state, access: actor, phase: .draft, at: now)
+        XCTAssertEqual(ledger.mealOccurrences.first?.servings, try Rational(5))
+        XCTAssertEqual(ledger.contributions.first?.quantity?.amount, try Rational(5))
+        XCTAssertEqual(state.portionBindings.first { $0.groupID == lunch.id }?.quantity.amount, .one)
+    }
+
     func testMealPreferencesPreserveReviewedRevisionAndHistoricalReceipts() throws {
         var ledger = ShoppingLedger(title: "Dinner"), state = DinnerPlanningState()
         let context = access(ledger)

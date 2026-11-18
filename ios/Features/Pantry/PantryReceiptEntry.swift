@@ -32,7 +32,7 @@ struct PantryReceiptEntry: View {
     @State private var review: PantryReceiptReview?
     @State private var working = false
     @State private var message: String?
-    @State private var finished = false
+    @State private var savedLotIDs: Set<UUID>?
     @FocusState private var field: String?
     @State private var targetID = UUID()
     @AccessibilityFocusState private var resultFocused: Bool
@@ -43,8 +43,22 @@ struct PantryReceiptEntry: View {
             if let message {
                 Text(message).accessibilityFocused($resultFocused).accessibilityIdentifier("receipt.status")
             }
-            if finished {
+            if let savedLotIDs {
                 Button(pantryText("Done")) { dismiss() }
+                let lots = model.snapshot?.lots.filter { savedLotIDs.contains($0.id) } ?? []
+                if model.permitsReceiptSource, !lots.isEmpty {
+                    Section {
+                        if lots.count == 1 {
+                            storageGuideLinks(lots)
+                        } else {
+                            DisclosureGroup(pantryText("Choose a saved food")) { storageGuideLinks(lots) }
+                        }
+                    } header: {
+                        Text(helpText("Food storage guide"))
+                    } footer: {
+                        Text(pantryText("Choose a matching food and confirm its storage history to estimate a quality date range."))
+                    }
+                }
             } else if let review {
                 Section(pantryText("Confirm receipt lines")) {
                     if let first = review.facts.first {
@@ -106,13 +120,7 @@ struct PantryReceiptEntry: View {
                     }
                     TextField(pantryText("Confirmed transaction reference, if printed"), text: value.reference).focused($field, equals: "reference")
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
-                    if let printed = displayed.printedDate {
-                        LabeledContent(pantryText("Date wording on the receipt"), value: printed.wording)
-                    } else { Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review.")) }
-                    DatePicker(pantryText("Purchase date"), selection: Binding(get: { value.wrappedValue.purchaseDate }, set: { date in
-                        value.wrappedValue.purchaseDate = date; value.wrappedValue.dateConfirmed = false
-                    }), in: ...Date(), displayedComponents: .date)
-                    Toggle(pantryText("I checked the purchase date."), isOn: value.dateConfirmed)
+                    ReceiptPurchaseDateFields(draft: value)
                 }
                 Text(pantryText("Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped."))
                 ForEach(displayed.lines) { line in
@@ -152,7 +160,7 @@ struct PantryReceiptEntry: View {
         .interactiveDismissDisabled(working || draft != nil)
         .task {
             if model.snapshot == nil { await model.load() }
-            if draft == nil, let initialSource {
+            if draft == nil, savedLotIDs == nil, let initialSource {
                 do {
                     try await verifySource()
                     accept(initialSource, fromSavedPickup: true)
@@ -160,7 +168,7 @@ struct PantryReceiptEntry: View {
             }
         }
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
-            if origin == nil { reviewedSourceImage = nil; assistance = nil; draft = nil; review = nil; rescan = nil; scan = false; fileSource = false; sharedSource = nil }
+            if origin == nil { reviewedSourceImage = nil; assistance = nil; draft = nil; review = nil; rescan = nil; scan = false; fileSource = false; sharedSource = nil; savedLotIDs = nil }
         }
         .task(id: aliasScope) {
             let scope = aliasScope
@@ -199,6 +207,17 @@ struct PantryReceiptEntry: View {
                         }
                 }
             }
+        }
+    }
+
+    private func storageGuideLinks(_ lots: [InventoryLot]) -> some View {
+        ForEach(lots) { lot in
+            NavigationLink {
+                PantryLotStorageReference(model: model, lotID: lot.id, accessAllowed: model.permitsReceiptSource)
+            } label: {
+                LabeledContent(lot.name, value: pantryLocationName(lot.location))
+            }
+            .accessibilityIdentifier("receipt.storageGuide." + lot.id.uuidString)
         }
     }
 
@@ -248,7 +267,8 @@ struct PantryReceiptEntry: View {
             do {
                 try await verifySource()
                 try await model.saveReceipt(value)
-                review = nil; draft = nil; reviewedSourceImage = nil; finished = true
+                review = nil; draft = nil; reviewedSourceImage = nil
+                savedLotIDs = Set(value.facts.map(\.lotID))
                 message = value.batch == nil ? pantryText("These lines were already saved.") : pantryText("Reviewed receipt lines saved.")
                 if let sharedSource {
                     do { try await model.finishSharedReceipt(sharedSource, committed: true) }
@@ -264,6 +284,20 @@ struct PantryReceiptEntry: View {
             }
             resultFocused = true
         }
+    }
+}
+
+struct ReceiptPurchaseDateFields: View {
+    @Binding var draft: ReceiptImportDraft
+
+    var body: some View {
+        if let printed = draft.printedDate {
+            LabeledContent(pantryText("Date wording on the receipt"), value: printed.wording)
+        } else {
+            Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review."))
+        }
+        DatePicker(pantryText("Purchase date"), selection: $draft.selectedPurchaseDate, in: ...Date(), displayedComponents: .date)
+        Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
     }
 }
 
@@ -347,7 +381,7 @@ struct PantryReceiptLineEditor: View {
                     } else { Text(pantryText("Choose where you put this food. The initial selection is cupboard.")).font(.caption) }
                     Picker(pantryText("Storage"), selection: $line.location) {
                         ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
-                    }
+                    }.accessibilityIdentifier("receipt.storage.\(line.ordinal)")
                 }
                 if let printed = line.printed, let amount = printed.amount, let wording = printed.priceWording, line.documentLine?.stage != .order {
                     LabeledContent(pantryText("Possible printed line total"), value: wording)

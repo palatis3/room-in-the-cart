@@ -4,6 +4,8 @@ Updated November 18, 2026. Goal: **finish Foundation 2.1: all 52 requirements, 2
 
 Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md), [RELEASE-EXECUTION](RELEASE-EXECUTION.md) and [CI-VALIDATION](CI-VALIDATION.md). Historical statements that the app is unbuilt are superseded by inspected code and results.
 
+For the November 18 workflow and App Review pass, see the [pre-branding review](PRE-BRANDING-REVIEW.md). It records the proposed navigation, observed failure modes, human test tasks and release checks still open.
+
 ## Expansion integration
 
 PR #29 merged into main at `bcca63b0` after all 61 checks passed. Its tree matches qualified head `500c1937`. PR #60 merged at `0fd1b656` after all 63 checks passed. Its tree matches qualified head `75abd20c` and includes the combined receipts, pantry, pricing, dinners, cooking, household access and Home widgets. [PR #29](https://github.com/palatis3/room-in-the-cart/pull/29) · [PR #60](https://github.com/palatis3/room-in-the-cart/pull/60)

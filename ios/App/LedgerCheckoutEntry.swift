@@ -12,8 +12,15 @@ extension EnvironmentValues {
     }
 }
 
+extension PickupJourney {
+    var isFreshNextShopDraft: Bool {
+        originShopID != nil && basket?.phase == .draft && context == nil && quote == nil && pickup == nil
+    }
+}
+
 enum LedgerCheckoutError: Error, Equatable {
     case missingQuantity, emptyList, ambiguousServingGroups, staleSource, staleCheckout, placedOrder
+    case changedDeferredLine(String)
 }
 
 struct LedgerCheckoutReview {
@@ -23,6 +30,8 @@ struct LedgerCheckoutReview {
     let previousBasketRevision: UUID?
     let lines: [BasketLine]
     let needs: [AllocationNeed]
+    let sourceNeeds: [AllocationNeed]
+    let deferredLineIDs: Set<UUID>
     let details: [PickupNeedDetail]
     let packSelections: [LedgerPackSelection]
     let unreviewedPackLineIDs: [UUID]
@@ -47,8 +56,10 @@ enum LedgerCheckoutAdapter {
                        canonicalEvidence: [UUID: LedgerCanonicalPackStockEvidence] = [:], pantryIsActive: Bool = false) throws -> LedgerCheckoutReview {
         try shop.validate()
         let activeLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
-        let clearingHandledBasket = previous?.id == shop.id && previous?.basket?.phase == .draft && !shop.handled.isEmpty
-        guard !activeLines.isEmpty || clearingHandledBasket else { throw LedgerCheckoutError.emptyList }
+        // Trashed and handled rows both leave the editable list. A saved basket
+        // still needs a review that can remove its final purchase.
+        let canReviewRemovals = previous?.id == shop.id && previous?.basket != nil && !shop.lines.isEmpty
+        guard !activeLines.isEmpty || canReviewRemovals else { throw LedgerCheckoutError.emptyList }
         let sameBasis = previous?.ledgerBasis == shop.basis
         var selectedPacks: [UUID: LedgerPackSelection] = [:]
         for selection in packSelections where selection.shopID == shop.id {
@@ -68,7 +79,7 @@ enum LedgerCheckoutAdapter {
         let reviewedPackLineIDs = Set(packSelections.filter { $0.shopID == shop.id }.map(\.lineID)).union(priorPackLineIDs)
         let itemExclusions = shop.itemExclusions
         let itemPackages = shop.itemPackages
-        let lines = try activeLines.compactMap { line -> BasketLine? in
+        let sourceLines = try activeLines.compactMap { line -> BasketLine? in
             if selectedPacks[line.id]?.isNoPurchase == true { return nil }
             guard let quantity = try shop.quantity(forLineID: line.id) else { throw LedgerCheckoutError.missingQuantity }
             let exclusions = itemExclusions[line.id] ?? []
@@ -104,6 +115,28 @@ enum LedgerCheckoutAdapter {
                 details.append(PickupNeedDetail(id: line.id, mealName: line.name, exclusions: shop.contributions(forLineID: line.id).flatMap(\.exclusions), scheduledDay: nil, leadTimeMinutes: nil, completedSteps: []))
             }
         }
+        // A checkout deferral belongs to this shop even though its source line
+        // stays in the editable list. Undo is the explicit way to buy it again.
+        var deferredLineIDs = Set<UUID>()
+        if let previous, previous.id == shop.id, let basket = previous.basket {
+            let basketIDs = Set(basket.current.lines.map(\.id))
+            let sourceIDs = Set(shop.lines.map(\.id))
+            let linesByID = Dictionary(uniqueKeysWithValues: sourceLines.map { ($0.id, $0) })
+            let needsByLine = Dictionary(grouping: needs, by: \.orderLineID)
+            let carriedByLine = Dictionary(grouping: previous.carriedMeals, by: \.orderLineID)
+            for deferred in previous.deferred where deferred.sourceShopID == shop.id && deferred.status == "review" {
+                let original = deferred.line
+                guard sourceIDs.contains(original.id), !basketIDs.contains(original.id) else { continue }
+                guard let line = linesByID[original.id], line.name == original.name, line.quantity == original.quantity,
+                      line.itemExclusions == original.itemExclusions, line.packages == original.packages,
+                      needsByLine[line.id] == carriedByLine[line.id] else {
+                    throw LedgerCheckoutError.changedDeferredLine(original.name)
+                }
+                deferredLineIDs.insert(line.id)
+            }
+        }
+        let lines = sourceLines.filter { !deferredLineIDs.contains($0.id) }
+        let plannedNeeds = needs.filter { !deferredLineIDs.contains($0.orderLineID) }
         let preview = shop.basis.retailerPreview
         guard let observedAt = preview?.capturedAt ?? shop.revisions.last?.createdAt else { throw LedgerCheckoutError.staleSource }
         let mode: ShoppingMode
@@ -116,7 +149,9 @@ enum LedgerCheckoutAdapter {
         switch shop.basis.capScope { case .wholeShop: scope = .wholeCheckout; case .dinnersOnly: scope = .dinner; case .selectedItems: scope = .item }
         let cap = shop.basis.cap.map { CheckoutCap(scope: scope, commitmentsID: shop.id, amount: $0) }
         let currentPacks = activeLines.compactMap { selectedPacks[$0.id] }
-        let unchanged = previous?.ledgerSourceRevisionID == shop.revisionID && sameBasis && previous?.basket?.current.lines == lines && previous?.plannedNeeds == needs && previous?.needDetails == details && previous?.ledgerPackSelections == currentPacks && previous?.context == context && previous?.cap == cap
+        // A later quote can refine the store, slot and cap in checkout itself.
+        // Reopening the same purchased lines and source evidence retains those terms.
+        let unchanged = previous?.ledgerSourceRevisionID == shop.revisionID && sameBasis && previous?.basket?.current.lines == lines && previous?.plannedNeeds == plannedNeeds && previous?.needDetails == details && previous?.ledgerPackSelections == currentPacks && previous?.context != nil
         // A retained application permits reopening its exact unchanged basket only.
         // Another checkout change requires a fresh review of its stock choices.
         let reused = Set(currentPacks.filter { selection in
@@ -139,10 +174,11 @@ enum LedgerCheckoutAdapter {
         } else { proposal = nil }
         return LedgerCheckoutReview(source: shop, workspaceRevision: workspaceRevision,
             previousJourneyRevision: previous?.revision, previousBasketRevision: previous?.basket?.current.id,
-            lines: lines, needs: needs, details: details, packSelections: currentPacks,
+            lines: lines, needs: plannedNeeds, sourceNeeds: needs, deferredLineIDs: deferredLineIDs, details: details, packSelections: currentPacks,
             unreviewedPackLineIDs: activeLines.filter { line in
                 selectedPacks[line.id] == nil && reviewedPackLineIDs.contains(line.id)
-            }.map(\.id), context: context, cap: cap, proposal: proposal, needsApplication: !unchanged)
+            }.map(\.id), context: unchanged ? previous?.context ?? context : context, cap: unchanged ? previous?.cap : cap,
+            proposal: proposal, needsApplication: !unchanged)
     }
 
     /// Live app entry point. A missing canonical proof makes that choice
@@ -233,7 +269,7 @@ enum LedgerCheckoutAdapter {
         guard let ledgerWorkspaceID = ledger.sourceWorkspaceID else { throw LedgerCheckoutError.staleSource }
         let occurrenceIDs = Set(review.source.mealOccurrences.map(\.id))
         let mealSource = PickupCheckoutMealSource(ledgerWorkspaceID: ledgerWorkspaceID, shop: review.source,
-            needs: review.needs, details: review.details,
+            needs: review.sourceNeeds, details: review.details,
             bindings: ledger.workspace.dinnerPlanning.portionBindings.filter { occurrenceIDs.contains($0.occurrenceID) })
         try mealSource.validate()
         if let previous {
@@ -267,8 +303,7 @@ enum LedgerCheckoutAdapter {
     /// The editable list owns its own fresh contribution IDs. Its next explicit
     /// checkout review reconciles those with the provisional carried basket.
     @MainActor static func openNextShop(_ journey: PickupJourney, ledger: LedgerModel) async -> Bool {
-        guard journey.originShopID != nil, let basket = journey.basket, basket.phase == .draft, journey.context == nil,
-              journey.quote == nil, journey.pickup == nil else { return false }
+        guard journey.isFreshNextShopDraft, let basket = journey.basket else { return false }
         if !ledger.ready { await ledger.open() }
         guard ledger.ready else { return false }
         return await ledger.change(key: "open-next-shop-\(journey.id.uuidString)") { workspace in
@@ -319,6 +354,9 @@ struct LedgerCheckoutEntry: View {
                             NavigationLink { LedgerIngredientView(model: ledger, shopID: shop.id, lineID: line.id) } label: {
                                 VStack(alignment: .leading) {
                                     Text(line.name)
+                                    if review?.deferredLineIDs.contains(line.id) == true {
+                                        Text(ledgerText("Deferred to a later shop"))
+                                    }
                                     if let exclusion = restrictions[line.id] { Text(verbatim: exclusion) }
                                     Text((try? shop.quantity(forLineID: line.id)).map { pQuantity($0) } ?? pTr("Quantity unresolved"))
                                 }
@@ -372,7 +410,7 @@ struct LedgerCheckoutEntry: View {
                             if !review.packSelections.isEmpty { Text(ledgerText("Pack choices supply whole purchased amounts. The named meal needs stay unchanged, and the whole checkout still needs its complete charges.")) }
                             Text(pTr("This review includes source, time zone, fees, reserve, cap scope and named portions, even when the list quantities did not change."))
                             if review.lines.isEmpty && review.needs.isEmpty {
-                                Text(ledgerText("All remaining items are marked handled. Applying this review removes them from the checkout copy."))
+                                Text(ledgerText("Your list has no items to buy. Apply this review to clear the checkout copy."))
                                 Button(pTr("Apply reviewed checkout copy")) { Task { await apply(review) } }.buttonStyle(PrimaryAction())
                             } else if review.lines.isEmpty {
                                 Text(ledgerText("All list needs are covered by confirmed food at home. Save the plan, then review instructions for the cook."))
@@ -429,6 +467,8 @@ struct LedgerCheckoutEntry: View {
             else if pickup.journeys.first(where: { $0.id == shop.id })?.basket?.phase == .reportedPlaced {
                 error = pTr("This order was reported placed. Its original lines and terms remain locked; review retailer-confirmed amendments separately.")
             } else { review = value; error = nil }
+        } catch LedgerCheckoutError.changedDeferredLine(let name) {
+            self.error = ledgerFormat("%@ changed on the list after it was deferred. Open the saved checkout and undo its deferral before reviewing these changes.", name)
         } catch { self.error = pTr("Review quantities, units and named portions. Unknown or overallocated amounts have not been replaced with zero.") }
     }
     @MainActor private func apply(_ review: LedgerCheckoutReview) async {

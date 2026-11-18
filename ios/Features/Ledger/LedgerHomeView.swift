@@ -194,9 +194,9 @@ struct LedgerHomeView: View {
     private var importButton: some View {
         Button { sheet = .entry } label: {
             if dynamicTypeSize.isAccessibilitySize {
-                Text(ledgerText("Type or paste a list"))
+                Text(ledgerText("Add an item or paste a list"))
             } else {
-                Label(ledgerText("Type or paste a list"), systemImage: "plus")
+                Label(ledgerText("Add an item or paste a list"), systemImage: "plus")
             }
         }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
             .accessibilityIdentifier("ledgerImport")

@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Type or paste receipt lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type or paste receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe o pega las líneas del recibo"
+          }
+        }
+      }
+    },
+    "Enter one printed line per row.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter one printed line per row."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe cada línea del recibo en un renglón distinto."
+          }
+        }
+      }
+    },
     "Use each instruction line as a cooking step": {
       "extractionState": "manual",
       "localizations": {
