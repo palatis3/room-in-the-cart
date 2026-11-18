@@ -44,15 +44,19 @@ export async function requireReceiptAdult(repository: HouseholdRepository, ctx: 
   repository.requireShopper(ctx, await repository.shop(ctx, ctx.selectedShopId));
 }
 
-interface Budget { dailyAccountRequests:number; dailyMicros:number; maxRequestMicros:number; maxCropMicros?:number }
+export interface AssistanceBudget { dailyAccountRequests:number; dailyMicros:number; maxRequestMicros:number; maxCropMicros?:number }
 
 // The existing account-rate table scopes each opaque key with RLS and purges expired windows.
 // Reserve the full operator-priced worst-case request in one transaction, before any provider call.
-export async function reserveReceiptAssistance(ctx: Context, identity: VerifiedIdentity, input: Input, budget: Budget) {
+export async function reserveReceiptAssistance(ctx: Context, identity: VerifiedIdentity, input: Input, budget: AssistanceBudget) {
+  return reserveCaptureAssistance(ctx, identity, input, budget, input.crop ? budget.maxCropMicros : budget.maxRequestMicros);
+}
+
+export async function reserveCaptureAssistance(ctx: Context, identity: VerifiedIdentity,
+    input: {requestID:string; issuedAt:number}, budget: AssistanceBudget, cost: number | undefined) {
   const age = ctx.now.getTime() - input.issuedAt;
   if (age < -15_000 || age > 300_000) throw failure();
-  const cost = input.crop ? budget.maxCropMicros : budget.maxRequestMicros;
-  if (!cost || cost > budget.dailyMicros) throw failure();
+  if (cost === undefined || !Number.isSafeInteger(cost) || cost < 1 || cost > budget.dailyMicros) throw failure();
   const day = ctx.now.toISOString().slice(0,10);
   const account = fingerprint([identity.issuer,identity.subject]);
   const buckets: [string, number, number][] = [
@@ -70,7 +74,7 @@ export async function reserveReceiptAssistance(ctx: Context, identity: VerifiedI
 }
 
 export class ReceiptAssistance {
-  constructor(readonly budget: Budget, private readonly model: string, private readonly key: string,
+  constructor(readonly budget: AssistanceBudget, private readonly model: string, private readonly key: string,
               private readonly transport: typeof fetch = fetch) {}
 
   static configured(env: NodeJS.ProcessEnv): ReceiptAssistance | undefined {
