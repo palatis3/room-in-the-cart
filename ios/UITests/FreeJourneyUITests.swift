@@ -809,7 +809,7 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
-    func testReviewedCheckoutCropClearsSubtotalAndKeepsOriginalWithEditedTotal() {
+    func testReviewedCheckoutCropClearsSubtotalAndKeepsOriginalWithEditedTotal() throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--checkout-crop-photo", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         saveSourcePhoto()
@@ -821,11 +821,7 @@ import XCTest
         tap(details)
         tap(app.buttons["priceImage.readCheckout"])
         tap(app.buttons["priceImage.choose"])
-        let photoName = NSPredicate(format: "label BEGINSWITH[c] %@", "Photo,")
-        let image = app.images.matching(photoName).firstMatch
-        let asset = image.waitForExistence(timeout: 4) ? image : app.cells.matching(photoName).firstMatch
-        XCTAssertTrue(asset.waitForExistence(timeout: 12), app.debugDescription)
-        asset.tap()
+        try chooseNewestSourcePhoto()
         let subtotal = app.textFields["priceImage.amount.subtotal"]
         XCTAssertTrue(subtotal.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertEqual(subtotal.value as? String, "12.5")
@@ -866,27 +862,7 @@ import XCTest
         capture("Checkout review preserves original OCR, accepted crop and shopper amount")
     }
 
-    private func saveSourcePhoto() {
-        let add = app.buttons["Add sample receipt to simulator Photos"]
-        XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
-        add.tap()
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let allow = springboard.alerts.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
-        if allow.waitForExistence(timeout: 6) { allow.tap() }
-        let saved = app.staticTexts["fixture.receipt.photoResult"]
-        XCTAssertTrue(saved.waitForExistence(timeout: 12), app.debugDescription)
-        XCTAssertEqual(saved.label, "Test photo saved")
-    }
-
-    func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
-        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
-        app.launch()
-        saveSourcePhoto()
-        app.terminate()
-        launch(reset: true)
-        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
-        tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
-        tap(app.buttons["Choose a receipt from Photos"])
+    private func chooseNewestSourcePhoto() throws {
         // The system picker can group its thumbnails in one accessible grid.
         // Its snapshot still exposes each photo's label and actual tap target.
         func firstPhoto(in node: any XCUIElementSnapshot) -> CGRect? {
@@ -908,6 +884,30 @@ import XCTest
         let origin = app.frame.origin
         app.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: frame.midX - origin.x, dy: frame.midY - origin.y)).tap()
+    }
+
+    private func saveSourcePhoto() {
+        let add = app.buttons["Add sample receipt to simulator Photos"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
+        add.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.alerts.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
+        if allow.waitForExistence(timeout: 6) { allow.tap() }
+        let saved = app.staticTexts["fixture.receipt.photoResult"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(saved.label, "Test photo saved")
+    }
+
+    func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        saveSourcePhoto()
+        app.terminate()
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
+        tap(app.buttons["Choose a receipt from Photos"])
+        try chooseNewestSourcePhoto()
         let oats = app.switches["receipt.document.line.1.1"]
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
