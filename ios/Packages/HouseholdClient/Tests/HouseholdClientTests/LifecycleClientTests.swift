@@ -112,6 +112,22 @@ extension HouseholdClientTests {
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         XCTAssertNil(try vault.read())
     }
+    func testCookingReportKeepsExactReviewedTextAcrossRetryAndHonorsWireLength() throws {
+        let report = "Informe de cocina\n\nIngredientes utilizados\nDos tortillas. No sé cuánto aceite usé.\n\nSobras\nUna porción en el refrigerador."
+        func intent(_ text: String) throws -> HelperProposalIntent {
+            try HelperProposalIntent(householdID: "h", memberID: "cook", deviceID: "d", grantID: "g",
+                                     baseRevision: 7, correction: text)
+        }
+        let first = try intent(report)
+        let reopened = try JSONDecoder().decode(HelperProposalIntent.self, from: JSONEncoder().encode(first))
+        XCTAssertEqual(reopened.bytes, first.bytes)
+        XCTAssertEqual(reopened.reviewedCorrection, report)
+        XCTAssertEqual(reopened.reviewedRevision, 7)
+        let limit = String(repeating: "🥣", count: 500)
+        XCTAssertNoThrow(try intent(limit))
+        XCTAssertThrowsError(try intent(limit + "a"))
+    }
+
     func testHelperCurrentViewAndProposalStayWithinEnrolledShopRoleAndExpiry() async throws {
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),

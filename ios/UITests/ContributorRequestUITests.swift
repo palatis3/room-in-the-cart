@@ -101,6 +101,52 @@ import XCTest
         XCTAssertEqual(element("householdPantry.correctedQuantity").value as? String, "0")
     }
 
+    func testEditableCookReportPreservesCorrectionDraftAndReadOnlyGrantCannotWriteStock() {
+        app.launchArguments = ["--ui-testing", "--cook-report-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 30))
+        tap(app.buttons["Cook instructions"])
+        let correction = element("helper.correction")
+        reveal(correction, fullyVisible: true)
+        XCTAssertEqual(correction.value as? String, "Keep the original correction draft", app.debugDescription)
+        XCTAssertEqual(element("fixture.reportPosts").label, "Report POSTs: 0")
+        tap(app.buttons["Report what you cooked"])
+        fill("3", into: "helper.cookingReport.servings")
+        let ingredients = "Used 2 wraps; substituted rice for the remaining wrap. Salt amount unknown."
+        let leftovers = "1 portion in the fridge. No freezer portions."
+        fill(ingredients, into: "helper.cookingReport.ingredients")
+        fill(leftovers, into: "helper.cookingReport.leftovers")
+        let done = app.buttons["helper.cookingReport.done"]
+        if done.exists && done.isHittable { done.tap() }
+        XCTAssertFalse(app.buttons["helper.cookingReport.send"].exists)
+        tap(app.buttons["helper.cookingReport.review"])
+        let expected = "Cooking report\n\nServings made\n3\n\nIngredients used and substitutions\n" + ingredients +
+            "\n\nLeftovers and storage location\n" + leftovers
+        let preview = element("helper.cookingReport.preview")
+        reveal(preview)
+        XCTAssertEqual(preview.label, expected, app.debugDescription)
+        XCTAssertEqual(element("fixture.reportPosts").label, "Report POSTs: 0", "Review cannot send the report")
+        XCTAssertEqual(element("fixture.reportOtherWrites").label, "Other writes: 0")
+        tap(app.buttons["helper.cookingReport.send"])
+        let received = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Report POSTs: 1"), object: element("fixture.reportPosts"))
+        XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 10), .completed, app.debugDescription)
+        XCTAssertEqual(element("fixture.reportText").label, expected, "Only the explicitly reviewed report should be sent")
+        reveal(correction, fullyVisible: true)
+        XCTAssertEqual(correction.value as? String, "Keep the original correction draft", "Sending a report must not overwrite another draft")
+        XCTAssertEqual(element("fixture.reportOtherWrites").label, "Other writes: 0", "Cook-only reporting cannot call basket or pantry mutation routes")
+        tap(app.buttons["fixture.reportReadOnly"])
+        let downgraded = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture grant is read-only"), object: app.buttons["fixture.reportReadOnly"])
+        XCTAssertEqual(XCTWaiter.wait(for: [downgraded], timeout: 10), .completed, app.debugDescription)
+        XCTAssertFalse(app.buttons["Report what you cooked"].exists)
+        XCTAssertFalse(app.buttons["helper.cookingReport.send"].exists)
+        XCTAssertFalse(element("helper.correction").exists)
+        let instruction = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Save two")).firstMatch
+        XCTAssertTrue(instruction.exists, "The report and grant change must not alter the shared instructions")
+        XCTAssertEqual(element("fixture.reportPosts").label, "Report POSTs: 1")
+        XCTAssertEqual(element("fixture.reportOtherWrites").label, "Other writes: 0")
+        capture("Cook-only-report-explicit-send-preserved-draft-read-only")
+    }
+
     func testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages() {
         for (language, entry, label, refresh) in [
             ("en", "Cook instructions", "Current instruction revision", "Refresh instructions"),

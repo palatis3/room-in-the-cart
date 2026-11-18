@@ -107,13 +107,16 @@ public struct HelperProposalIntent: Codable, Equatable, Identifiable, Sendable {
         let baseRevision: Int
         let correction: String
     }
-    /// Read the reviewed revision from the exact saved request, including intents from older app versions.
-    public var reviewedRevision: Int? {
-        guard let input = try? JSONDecoder().decode(Input.self, from: bytes), input.clientKey == id, input.baseRevision > 0 else { return nil }
-        return input.baseRevision
+    /// Recover the exact submitted wording and revision from a durable retry.
+    private var reviewedInput: Input? {
+        guard let input = try? JSONDecoder().decode(Input.self, from: bytes),
+              input.clientKey == id, input.baseRevision > 0 else { return nil }
+        return input
     }
+    public var reviewedCorrection: String? { reviewedInput?.correction }
+    public var reviewedRevision: Int? { reviewedInput?.baseRevision }
     init(householdID: String, memberID: String, deviceID: String, grantID: String, baseRevision: Int, correction: String) throws {
-        guard baseRevision > 0, !correction.isEmpty, correction.count <= 1000 else { throw ClientError.configuration }
+        guard baseRevision > 0, !correction.isEmpty, correction.utf16.count <= 1000 else { throw ClientError.configuration }
         id = UUID().uuidString.lowercased(); self.householdID = householdID; self.memberID = memberID; self.deviceID = deviceID; self.grantID = grantID
         bytes = try encoded(Input(clientKey: id, baseRevision: baseRevision, correction: correction))
     }
