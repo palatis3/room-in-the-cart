@@ -79,6 +79,7 @@ import SwiftUI
                             if noteExcerpt != nil {
                                 TextField(recordsText("Words to read aloud"), text: Binding(get: { noteExcerpt ?? "" },
                                     set: { noteExcerpt = $0; readback = nil }), axis: .vertical)
+                                    .autocorrectionDisabled().textInputAutocapitalization(.never)
                                     .focused($focusedInput, equals: .noteExcerpt)
                                     .accessibilityIdentifier("cooking.noteExcerpt")
                                 Button(recordsText("Prepare selected words for read-aloud")) {
