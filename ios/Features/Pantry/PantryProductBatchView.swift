@@ -9,6 +9,7 @@ struct PantryProductBatchView: View {
     @State private var merchant = ""
     @State private var date = Calendar.current.startOfDay(for: Date())
     @State private var confirmed = false
+    @State private var photoConsent = false
     @State private var review: PantryReceiptReview?
     @State private var result: String?
     @State private var saved = false
@@ -38,6 +39,7 @@ struct PantryProductBatchView: View {
                             Text(row.name).font(.headline)
                             Text(row.originalLine)
                             Text(pantryFormat("Received %@", pantryQuantity(row.received)))
+                            Text(pantryFormat("Usable %@", pantryQuantity(row.usable)))
                             if case .added(let location) = row.stock { Text(pantryLocationName(location)) }
                         }.accessibilityElement(children: .combine)
                     }
@@ -59,7 +61,7 @@ struct PantryProductBatchView: View {
                             code = ""; name = ""; focus = nil; confirmed = false
                         } catch { result = pantryText("Check the product wording and the 12-product batch limit.") }
                     }.disabled(name.isEmpty && code.isEmpty).accessibilityIdentifier("productBatch.add")
-                    PantryProductPhotoInput(authorized: { authorized && review == nil && !saved }, add: { source in
+                    PantryProductPhotoInput(consent: $photoConsent, authorized: { authorized && review == nil && !saved }, add: { source in
                         let added = try batch.addPhoto(source)
                         confirmed = false
                         result = added == 0 ? pantryText("Already in this batch. Change its package count to add another.") : nil
@@ -95,6 +97,7 @@ struct PantryProductBatchView: View {
             }
             if authorized, let result { Text(result).accessibilityIdentifier("productBatch.status") }
         }
+        .disabled(working)
         .navigationTitle(pantryText("Scan products")).privacySensitive().scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focus != nil, title: pantryText("Done"), identifier: "productBatch.keyboardDone") { focus = nil }
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() }.disabled(working) } }
@@ -113,9 +116,10 @@ struct PantryProductBatchView: View {
         Task {
             defer { working = false }
             do {
+                let rows = batch.candidates
                 let draft = try batch.draft(merchant: merchant, purchaseDate: date, confirmed: confirmed)
                 let proposal = try await model.reviewReceipt(draft)
-                guard authorized else { return }
+                guard authorized, confirmed, batch.candidates == rows, merchant == draft.merchant, date == draft.purchaseDate else { return }
                 review = proposal; result = nil
             } catch { result = pantryText("Check the name, amount per package and whole package count for every included product.") }
         }
@@ -176,6 +180,14 @@ private struct PantryProductCandidateEditor: View {
                         }
                         TextField(pantryText("Packages received"), text: $row.packages).keyboardType(.numberPad)
                             .focused($field, equals: "count").accessibilityIdentifier("productBatch.packCount")
+                        if let total = row.total {
+                            LabeledContent(pantryText("Amount usable")) {
+                                TextField(total.description, text: $row.usable)
+                                    .multilineTextAlignment(.trailing).focused($field, equals: "usable")
+                                    .accessibilityIdentifier("productBatch.usable")
+                                Text(pantryUnit(row.unit))
+                            }
+                        }
                         Picker(pantryText("Storage location"), selection: $row.location) {
                             ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
                         }
@@ -231,10 +243,10 @@ private struct PantryProductCandidateEditor: View {
 }
 
 private struct PantryProductPhotoInput: View {
+    @Binding var consent: Bool
     let authorized: () -> Bool
     let add: (ScannedSource) throws -> Void
     let revoke: () -> Void
-    @State private var consent = false
     @State private var selection: PhotosPickerItem?
     @State private var camera = false
     @State private var busy = false
@@ -248,20 +260,6 @@ private struct PantryProductPhotoInput: View {
             .onChange(of: consent) { _, enabled in
                 if !enabled { invalidate(); camera = false; selection = nil; revoke() }
             }
-        if consent {
-            PhotosPicker(selection: $selection, matching: .images, preferredItemEncoding: .current) {
-                Text(pantryText("Choose a product photo"))
-            }.disabled(busy).accessibilityIdentifier("productBatch.photo")
-            Button(pantryText("Photograph a package")) {
-                run {
-                    try await CameraCapturePermission.request()
-                    return nil
-                } then: { _ in camera = true }
-            }.disabled(busy)
-            if busy { ProgressView(pantryText("Reading product photo…")) }
-        }
-        if let message { Text(message) }
-        Color.clear.frame(height: 0).accessibilityHidden(true)
             .onChange(of: selection) { _, item in
                 guard let item else { return }
                 run {
@@ -277,6 +275,19 @@ private struct PantryProductPhotoInput: View {
                 }.ignoresSafeArea()
             }
             .onDisappear { if !camera { invalidate() } }
+        if consent {
+            PhotosPicker(selection: $selection, matching: .images, preferredItemEncoding: .current) {
+                Text(pantryText("Choose a product photo"))
+            }.disabled(busy).accessibilityIdentifier("productBatch.photo")
+            Button(pantryText("Photograph a package")) {
+                run {
+                    try await CameraCapturePermission.request()
+                    return nil
+                } then: { _ in camera = true }
+            }.disabled(busy)
+            if busy { ProgressView(pantryText("Reading product photo…")) }
+        }
+        if let message { Text(message) }
     }
     private func invalidate() { generation = UUID(); request?.cancel(); request = nil; busy = false }
     private func run(_ prepare: @escaping () async throws -> ScannedSource?, then finish: @escaping (ScannedSource?) throws -> Void) {

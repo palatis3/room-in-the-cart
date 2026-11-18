@@ -15,6 +15,7 @@ struct PantryProductBatch {
         var perPack: String
         var unit: UnitOfMeasure
         var packages = ""
+        var usable = ""
         var location = InventoryLocation.cupboard
         var included = true
         var catalog: ProductCatalogProposal?
@@ -38,7 +39,7 @@ struct PantryProductBatch {
             let units: [(String, UnitOfMeasure)] = [("fl oz", .fluidOunce), ("kg", .kilogram), ("ml", .milliliter),
                 ("oz", .ounce), ("lb", .pound), ("ct", .count), ("g", .gram), ("l", .liter)]
             for (suffix, unit) in units where parts.hasSuffix(suffix) {
-                let number = String(parts.dropLast(suffix.count)).trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+                let number = String(parts.dropLast(suffix.count)).trimmingCharacters(in: .whitespaces)
                 if let quantity = try? ComparisonModel.quantity(number, unit), quantity.amount > .zero { return (number, unit) }
             }
             return nil
@@ -103,13 +104,17 @@ struct PantryProductBatch {
             guard let total = candidate.total, !candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw ProductBatchError.invalid
             }
+            let amountUsable = candidate.usable.trimmingCharacters(in: .whitespacesAndNewlines)
+            let usable = amountUsable.isEmpty ? total.description : amountUsable
+            guard let quantity = try ComparisonModel.quantity(usable, candidate.unit), quantity.amount >= .zero,
+                  quantity.amount <= total else { throw ProductBatchError.invalid }
             var evidence = [candidate.barcode?.value, candidate.original.isEmpty ? nil : candidate.original,
                             "\(candidate.packages) × \(candidate.perPack) \(candidate.unit.rawValue)"].compactMap { $0 }
             if let proposal = candidate.appliedCatalog {
                 evidence.append(proposal.attribution)
             }
             return .init(id: candidate.id, ordinal: candidate.ordinal, original: evidence.joined(separator: " · "), name: candidate.name,
-                         treatment: .add, received: total.description, usable: total.description, unit: candidate.unit, location: candidate.location)
+                         treatment: .add, received: total.description, usable: usable, unit: candidate.unit, location: candidate.location)
         }
         guard confirmed, !rows.isEmpty else { throw ProductBatchError.invalid }
         return ReceiptImportDraft(batchID: id, workspaceID: workspaceID, merchant: merchant, purchaseDate: purchaseDate, lines: rows)
