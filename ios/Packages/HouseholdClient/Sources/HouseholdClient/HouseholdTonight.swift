@@ -23,6 +23,7 @@ public struct HouseholdTonightPage: Decodable, Equatable, Sendable {
         public let ingredients: [Ingredient]
         public let reviewToken: String?
         public let checkoutEstimate: Estimate
+        public let reviewedRecipe: HouseholdTonightRecipeWrite.Recipe?
     }
     public let v: Int
     public let householdId: UUID
@@ -39,12 +40,19 @@ public struct HouseholdTonightPage: Decodable, Equatable, Sendable {
               Set(recipes.map(\.id)).count == recipes.count else { throw ClientError.invalidResponse }
         for recipe in recipes {
             guard sharedMealText(recipe.title, 240), recipe.recipeRevision > 0, (1...1000).contains(recipe.portions),
-                  recipe.minutes.map({ $0 >= 0 }) != false, (1...60).contains(recipe.ingredients.count),
+                  recipe.minutes.map({ (0...525600).contains($0) }) != false, (1...60).contains(recipe.ingredients.count),
                   Set(recipe.ingredients.map(\.id)).count == recipe.ingredients.count,
                   (recipe.status == .eligible) == (recipe.reviewToken != nil),
                   recipe.reviewToken.map(Self.validToken) != false,
                   recipe.checkoutEstimate != .noPurchaseNeeded || recipe.ingredients.allSatisfy({ $0.status == .covered })
             else { throw ClientError.invalidResponse }
+            if let editable = recipe.reviewedRecipe {
+                guard canReviewRecipes, editable.title == recipe.title, editable.portions == recipe.portions,
+                      editable.minutes == recipe.minutes, editable.ingredients.map(\.id) == recipe.ingredients.map(\.id),
+                      editable.ingredients.map(\.name) == recipe.ingredients.map(\.name),
+                      editable.ingredients.allSatisfy({ $0.reviewedLotIds.count <= 12 && Set($0.reviewedLotIds).count == $0.reviewedLotIds.count &&
+                          $0.quantity.map({ $0.validStockQuantity }) != false }) else { throw ClientError.invalidResponse }
+            }
             for row in recipe.ingredients {
                 guard sharedMealText(row.name, 240), row.evidenceAt.map(validHelperTimestamp) != false, (row.status == .missing) == (row.missing != nil),
                       row.missing.map({ $0.validStockQuantity && $0.amount.numerator > 0 }) != false else {
@@ -67,8 +75,8 @@ public struct HouseholdTonightPage: Decodable, Equatable, Sendable {
 
 /// Carries the exact reviewed recipe and its retry key across a lost response.
 public struct HouseholdTonightRecipeWrite: Encodable, Sendable {
-    public struct Recipe: Encodable, Sendable {
-        public struct Ingredient: Encodable, Sendable {
+    public struct Recipe: Codable, Equatable, Sendable {
+        public struct Ingredient: Codable, Equatable, Sendable {
             public let id: UUID, name: String, quantity: SharedMealQuantity?
             public let reviewedLotIds: [UUID]
             public func encode(to encoder: Encoder) throws {
@@ -88,13 +96,14 @@ public struct HouseholdTonightRecipeWrite: Encodable, Sendable {
     }
     public let v = 1, reviewed = true
     public let clientKey: UUID, replayWindow: UUID, grantEpoch: Int, recipeId: UUID, recipe: Recipe
+    public let baseRevision: Int?
     public let session: HouseholdPantrySession
     private enum CodingKeys: String, CodingKey { case v, reviewed, clientKey, replayWindow, grantEpoch, recipeId, baseRevision, recipe }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(v, forKey: .v); try c.encode(reviewed, forKey: .reviewed); try c.encode(clientKey, forKey: .clientKey)
         try c.encode(replayWindow, forKey: .replayWindow); try c.encode(grantEpoch, forKey: .grantEpoch)
-        try c.encode(recipeId, forKey: .recipeId); try c.encodeNil(forKey: .baseRevision); try c.encode(recipe, forKey: .recipe)
+        try c.encode(recipeId, forKey: .recipeId); try c.encode(baseRevision, forKey: .baseRevision); try c.encode(recipe, forKey: .recipe)
     }
 }
 
@@ -109,22 +118,24 @@ extension HouseholdService {
     }
 
     public func prepareTonightRecipe(_ meal: SharedMeal, evidence: SharedMealPreferenceEvidence?, reviewedLots: [UUID: [UUID]],
-            page: HouseholdTonightPage, session: HouseholdPantrySession) async throws -> HouseholdTonightRecipeWrite {
+            page: HouseholdTonightPage, session: HouseholdPantrySession, replacing: HouseholdTonightPage.Recipe? = nil) async throws -> HouseholdTonightRecipeWrite {
         try page.validate(session: session)
         try meal.validatePlanning()
         guard try currentHouseholdPantrySession() == session, page.canReviewRecipes, meal.kind == "dinner",
               !meal.protected, meal.day == nil, let planning = meal.planning, !planning.ingredients.isEmpty else {
             throw ClientError.configuration
         }
-        guard Set(reviewedLots.keys).isSubset(of: Set(planning.ingredients.map(\.id))),
-              reviewedLots.values.allSatisfy({ Set($0).count == $0.count }) else { throw ClientError.configuration }
+        guard replacing.map({ page.recipes.contains($0) && $0.reviewedRecipe != nil }) != false,
+              planning.leadTimeMinutes.map({ (0...525600).contains($0) }) != false,
+              Set(reviewedLots.keys).isSubset(of: Set(planning.ingredients.map(\.id))),
+              reviewedLots.values.allSatisfy({ $0.count <= 12 && Set($0).count == $0.count }) else { throw ClientError.configuration }
         let start = generation
         let window: ReplayWindow = try await perform("replay-windows", method: "POST", body: Data("{}".utf8), omitSelectedShop: true)
         guard start == generation, try currentHouseholdPantrySession() == session else { throw ClientError.accessEnded }
         guard let windowID = UUID(uuidString: window.id), validHelperTimestamp(window.expiresAt) else { throw ClientError.invalidResponse }
         let recipe = HouseholdTonightRecipeWrite.Recipe(title: meal.title, portions: meal.portions, minutes: planning.leadTimeMinutes,
             ingredients: planning.ingredients.map { .init(id: $0.id, name: $0.name, quantity: $0.quantity, reviewedLotIds: reviewedLots[$0.id] ?? []) }, preferenceEvidence: evidence)
-        return .init(clientKey: UUID(), replayWindow: windowID, grantEpoch: page.grantEpoch, recipeId: UUID(), recipe: recipe, session: session)
+        return .init(clientKey: UUID(), replayWindow: windowID, grantEpoch: page.grantEpoch, recipeId: replacing?.id ?? UUID(), recipe: recipe, baseRevision: replacing?.recipeRevision, session: session)
     }
 
     public func saveTonightRecipe(_ write: HouseholdTonightRecipeWrite) async throws {
@@ -133,6 +144,6 @@ extension HouseholdService {
         guard try currentHouseholdPantrySession() == write.session else { throw ClientError.accessEnded }
         let result: Receipt = try await perform("pantry/tonight/recipes", method: "POST", body: encoded(write), omitSelectedShop: true)
         guard start == generation, try currentHouseholdPantrySession() == write.session else { throw ClientError.accessEnded }
-        guard result.recipeId == write.recipeId, result.recipeRevision == 1 else { throw ClientError.invalidResponse }
+        guard result.recipeId == write.recipeId, result.recipeRevision == (write.baseRevision ?? 0) + 1 else { throw ClientError.invalidResponse }
     }
 }

@@ -140,7 +140,7 @@ import HouseholdClient
 struct ContributorRequestUIFixtureRoot: View {
     @StateObject private var fixture = ContributorRequestUIFixtureState()
     var body: some View {
-        if ProcessInfo.processInfo.arguments.contains("--household-receipt-fixture") {
+        if !Set(["--household-receipt-fixture", "--household-tonight-fixture"]).isDisjoint(with: ProcessInfo.processInfo.arguments) {
             if let household = fixture.household {
                 GroceryWindow(notificationDelegate: SurfaceNotificationDelegate(), household: household)
             } else {
@@ -197,9 +197,16 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     private var profile: [String: Any]?
     private let reader = UUID().uuidString.lowercased()
     private var readerEnabled = false
+    private let tonightFixture = ProcessInfo.processInfo.arguments.contains("--household-tonight-fixture")
+    private let tonightHasShop = ProcessInfo.processInfo.arguments.contains("--tonight-assigned-shop")
+    private var savedTonight: [String: Any]?
+    private var tonightReads = 0
+    private var chosenTonight: [String: Any]?
+    private let tonightRecipeID = UUID().uuidString
+    private let tonightIngredientID = UUID().uuidString
     private let receiptFixture = ProcessInfo.processInfo.arguments.contains("--household-receipt-fixture")
     private var receiptLots: [[String: Any]] = []
-    var pantryCorrection: Bool { receiptFixture || ProcessInfo.processInfo.arguments.contains("--household-pantry-correction") ||
+    var pantryCorrection: Bool { tonightFixture || receiptFixture || ProcessInfo.processInfo.arguments.contains("--household-pantry-correction") ||
         ProcessInfo.processInfo.arguments.contains("--household-staple-reminders") }
     private let stapleFixture = ProcessInfo.processInfo.arguments.contains("--household-staple-reminders")
     private var stapleRevision = UUID().uuidString
@@ -263,7 +270,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
         }
         if pantryCorrection {
-            if receiptFixture, path.contains("/pantry") {
+            if receiptFixture || tonightFixture, path.contains("/pantry") {
                 guard path.hasPrefix("/v1/households/" + household + "/pantry"),
                       request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-sam",
                       request.value(forHTTPHeaderField: "X-Device-Token") == "fixture-token" else {
@@ -274,9 +281,61 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                 return try response(["workspaces": [["householdId": household, "label": "Fixture home", "role": "organizer"]]])
             }
             if path.hasSuffix("/devices") { return try response(["deviceId": pantryDevice, "deviceToken": "fixture-token"], 201) }
+            if tonightFixture, path.hasSuffix("/bootstrap") {
+                var projection: [String: Any] = ["household": ["id": household, "label": "Fixture home"], "memberId": member,
+                    "role": tonightHasShop ? "shopper" : "organizer", "enrolled": true, "queueConsent": false,
+                    "capabilities": ["household_pantry", "household_pantry_grants", "household_admin"] +
+                        (tonightHasShop ? ["shopper_commands", "shopper_inbox", "request_preview"] : [])]
+                if tonightHasShop { projection["shopId"] = shop }
+                return try response(projection)
+            }
             if path.hasSuffix("/bootstrap") {
                 return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member, "role": "organizer",
                                      "enrolled": true, "queueConsent": false, "capabilities": ["household_pantry", "household_pantry_grants"]])
+            }
+            if tonightFixture, path.hasSuffix("/pantry/tonight/recipes"), request.httpMethod == "POST" {
+                guard let recipe = json["recipe"] as? [String: Any], let id = json["recipeId"] as? String,
+                      let title = recipe["title"], let portions = recipe["portions"], json["reviewed"] as? Bool == true,
+                      let rows = recipe["ingredients"] as? [[String: Any]], rows.count == 1,
+                      let line = rows.first, let name = line["name"], let ingredient = line["id"],
+                      line["reviewedLotIds"] as? [String] == [] else { return try response([:], 400) }
+                let previous = savedTonight?["recipeRevision"] as? Int
+                guard (json["baseRevision"] as? Int) == previous, savedTonight == nil || savedTonight?["recipeId"] as? String == id else {
+                    return try response([:], 409)
+                }
+                let revision = (previous ?? 0) + 1
+                savedTonight = ["recipeId": id, "recipeRevision": revision, "title": title, "portions": portions, "reviewedRecipe": recipe,
+                    "status": "eligible", "ingredients": [["id": ingredient, "name": name, "status": "unknown", "useSoon": false]],
+                    "reviewToken": String(repeating: "a", count: 64), "checkoutEstimate": "incomplete"]
+                return try response(["recipeId": id, "recipeRevision": revision])
+            }
+            if tonightFixture, path.hasSuffix("/pantry/tonight") {
+                tonightReads += 1
+                let revised = tonightReads > 1 && ProcessInfo.processInfo.arguments.contains("--tonight-stock-changed")
+                let existing: [String: Any] = ["recipeId": tonightRecipeID, "recipeRevision": 1, "title": "Household bean bowls",
+                    "portions": 3, "minutes": 20, "status": "eligible", "reviewToken": String(repeating: "b", count: 64),
+                    "ingredients": [["id": tonightIngredientID, "name": "Beans", "status": "covered", "useSoon": true]],
+                    "checkoutEstimate": "noPurchaseNeeded"]
+                let recipes = savedTonight.map { [$0] } ?? (tonightHasShop ? [existing] : [])
+                return try response(["v": 1, "householdId": household, "grantEpoch": 0, "pantryRevision": revised ? 1 : 0,
+                    "asOf": "2026-11-17T10:00:00Z", "canReviewRecipes": !tonightHasShop, "recipes": recipes, "excludedCount": 0])
+            }
+            if tonightFixture, tonightHasShop, path.hasSuffix("/shops/" + shop) {
+                let quote: [String: Any] = ["currency": "USD", "scope": "wholeCheckout", "complete": false,
+                    "capScope": "unknown", "fee": ["kind": "fixed"], "observedAt": "2026-11-16T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z"]
+                return try response(["shopId": shop, "shopRevision": chosenTonight == nil ? 1 : 2, "authorityEpoch": 1,
+                    "phase": "draft", "meals": chosenTonight.map { [$0] } ?? [], "quote": quote, "lines": []])
+            }
+            if tonightFixture, path.hasSuffix("/commands") {
+                guard tonightHasShop, chosenTonight == nil, json["shopId"] as? String == shop, json["kind"] as? String == "meal.chooseTonight",
+                      let body = json["body"] as? [String: Any], let id = body["occurrenceId"] as? String,
+                      (body["recipeId"] as? String)?.lowercased() == tonightRecipeID.lowercased(),
+                      body["reviewToken"] as? String == String(repeating: "b", count: 64),
+                      let day = body["day"] as? String else { return try response([:], 409) }
+                chosenTonight = ["occurrenceId": id, "revision": 1, "meal": ["title": "Household bean bowls", "kind": "dinner",
+                    "day": day, "portions": 3, "protected": false]]
+                return try response(["operationId": UUID().uuidString, "occurrenceId": id, "kind": "meal.chooseTonight", "shopId": shop,
+                    "shopRevision": 2, "authorityEpoch": 1, "disposition": "meal_chosen"])
             }
             if stapleFixture && path.hasSuffix("/pantry/staples") {
                 let zone: String

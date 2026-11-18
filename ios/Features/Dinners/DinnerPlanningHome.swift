@@ -28,6 +28,7 @@ extension LedgerModel: DinnerWorkspaceStore {}
 struct DinnerWorkspaceView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
     @Environment(\.pickupLedger) private var liveLedger
+    @Environment(\.dinnerHousehold) private var household
     let startPickup: () -> Void
     @ViewBuilder let saveStatus: () -> SaveStatus
     @State private var weekStart = Date()
@@ -40,6 +41,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     if let shop = model.shop { Text(shop.title).font(.headline) }
                     Text(dinnerText("Manual dinners and calendar changes stay available on Free. A preview changes nothing until you apply it."))
                 }
+                if let household { HouseholdTonightLink(household: household) }
                 if let liveLedger, liveLedger.ready, model.store === liveLedger {
                     Section {
                         NavigationLink(dinnerText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: liveLedger) }
