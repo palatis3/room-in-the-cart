@@ -3,6 +3,7 @@ import CoreDomain
 
 struct TonightPricesView: View {
     let estimate: TonightPurchaseEstimate?
+    var followsFirstMeal = false
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if let estimate, let subtotal = estimate.subtotal {
@@ -14,7 +15,7 @@ struct TonightPricesView: View {
                         .font(.caption)
                 }
                 if estimate.packages.isEmpty {
-                    Text(tonightText("Confirmed pantry food covers these recipe amounts."))
+                    Text(tonightText(followsFirstMeal ? "No extra packages are needed for the second meal." : "Confirmed pantry food covers these recipe amounts."))
                 } else {
                     Text(tonightText("Based on observed package prices. Check current prices, fees and taxes at checkout."))
                 }
@@ -27,7 +28,28 @@ struct TonightPricesView: View {
     }
 }
 
-struct SecondMealCashReview: View {
+struct SecondMealPricesView: View {
+    let first: PantryMealMatcher.Review
+    let second: PantryMealMatcher.Review
+    let input: TonightMealModel.Input
+    let workspaceID: UUID
+    let ledgerRevision: Int64
+    let pairingRevision: UUID
+
+    var estimate: TonightPurchaseEstimate? {
+        guard input.ledgerRevision == ledgerRevision else { return nil }
+        return try? TonightPurchaseEstimate.estimate(second, after: first, workspace: input.workspace,
+            workspaceID: workspaceID, shopID: input.workspace.selectedShopID, at: Date())
+    }
+
+    var body: some View {
+        let estimate = estimate
+        TonightPricesView(estimate: estimate, followsFirstMeal: true)
+        if let estimate { SecondMealCashReview(estimate: estimate).id(pairingRevision) }
+    }
+}
+
+private struct SecondMealCashReview: View {
     let estimate: TonightPurchaseEstimate
     @State private var entered = ""
     @State private var allReviewed = false
@@ -58,6 +80,11 @@ struct SecondMealCashReview: View {
                 .buttonStyle(.borderless)
                 .accessibilityIdentifier("tonight.second.fees")
             }
+        }
+        .onChange(of: estimate) { _, _ in
+            entered = ""
+            allReviewed = false
+            editing = false
         }
         .sheet(isPresented: $editing) {
             NavigationStack {

@@ -79,6 +79,86 @@ final class TonightPurchaseEstimateTests: XCTestCase {
         }
     }
 
+    func testSecondMealPricesOnlyPackagesBeyondTheFirstMeal() throws {
+        let house = UUID(), wraps = UUID(), cheese = UUID()
+        let shop = ShoppingLedger(title: "Market")
+        let access = DinnerAccessContext(scope: .local(workspaceID: house), actorID: "a", shopID: shop.id,
+            assignedShopperID: "a", canPlan: true, canReadBudget: true, hasPaidTools: false, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let offer = PackOffer(id: "slices", label: "Four cheese slices", usableQuantity: try quantity(4),
+                              price: Money(minorUnits: 400))
+        var workspace = LedgerWorkspace(shops: [shop])
+        func meal(_ title: String, slices: Int64, pack: PackOffer?, foodID: UUID = cheese,
+                  extra: Bool = false, unit: UnitOfMeasure = .count, quoteSource: String = "Shelf label") throws -> MealTemplate {
+            let wrap = MealIngredient(name: "Wrap", quantity: try quantity(1))
+            let filling = MealIngredient(name: "Cheese", quantity: Quantity(amount: try Rational(slices), unit: unit, originalLiteral: String(slices)))
+            let sauce = MealIngredient(name: "Sauce", quantity: try quantity(1))
+            let result = MealTemplate(title: title, ingredients: [wrap, filling] + (extra ? [sauce] : []))
+            var idea = DinnerIdeaDraft(requestID: UUID(), catalogVersion: "reviewed", template: result, createdAt: now)
+            if let pack {
+                idea.supplyEvidence = [DinnerIdeaFoodEvidence(ingredient: filling, workspaceID: house, shopID: shop.id,
+                    basisRevision: shop.basisRevision, foodID: foodID, pack: pack, source: quoteSource, observedAt: now)]
+            }
+            try workspace.dinnerPlanning.saveIdea(idea, access: access, at: now)
+            try workspace.dinnerPlanning.accept(AcceptedDinner(id: UUID(), template: result, acceptedAt: now,
+                sourceIdeaID: idea.id), access: access, at: now)
+            return result
+        }
+        // Only the two unreserved wraps enter the matcher. The protected stock cannot fund this pair.
+        let confirmed = try quantity(5)
+        let lot = ConfirmedStockLot(id: UUID(), foodID: wraps, name: "Wraps", usable: confirmed, confirmedAt: now)
+        let protected = StockNeed(id: UUID(), foodID: wraps, name: "Protected dinner", amount: try quantity(3), priority: .protected)
+        let allocation = try ConfirmedStockAllocator.allocate(lots: [lot], needs: [protected])
+        let free = try XCTUnwrap(allocation.remainingLots.first)
+        let unreserved = ConfirmedStockLot(id: lot.id, foodID: wraps, name: lot.name,
+            usable: Quantity(amount: free.remainingUnallocated, unit: free.unit, originalLiteral: "2"), confirmedAt: now)
+        XCTAssertEqual(unreserved.usable.amount, try Rational(2))
+        func paired(_ first: MealTemplate, _ next: MealTemplate) throws -> TonightPurchaseEstimate {
+            let review = try PantryMealMatcher.review(recipe: first, reviewedFoods: [first.ingredients[0].id: wraps],
+                globallyFreeLots: [unreserved], unresolvedFoods: [], profile: nil, firstLotID: lot.id, projectRemainder: true)
+            let remaining = try XCTUnwrap(review.stockAfterMeal)
+            XCTAssertEqual(remaining.count, 1)
+            XCTAssertEqual(remaining[0].usable.amount, .one)
+            let second = try PantryMealMatcher.review(recipe: next, reviewedFoods: [next.ingredients[0].id: wraps],
+                globallyFreeLots: remaining, unresolvedFoods: [], profile: nil, firstLotID: lot.id)
+            return try TonightPurchaseEstimate.estimate(second, after: review, workspace: workspace,
+                                                        workspaceID: house, shopID: shop.id, at: now)
+        }
+        let first = try meal("First", slices: 1, pack: offer)
+        let shared = try paired(first, meal("Second", slices: 1, pack: offer))
+        XCTAssertTrue(shared.complete)
+        XCTAssertTrue(shared.packages.isEmpty)
+        XCTAssertEqual(shared.subtotal, .zero)
+        let crossing = try paired(first, meal("Second with extra slices", slices: 4, pack: offer))
+        XCTAssertTrue(crossing.complete)
+        XCTAssertEqual(crossing.packages.map(\.count), [1])
+        XCTAssertEqual(crossing.subtotal?.minorUnits, 400)
+        let charged = try crossing.additionalCash(addedCharges: Money(minorUnits: 125), chargesComplete: true)
+        XCTAssertEqual(charged.known?.minorUnits, 525)
+        XCTAssertTrue(charged.complete)
+        let partial = try paired(first, meal("Second with unpriced sauce", slices: 4, pack: offer, extra: true))
+        XCTAssertFalse(partial.complete)
+        XCTAssertEqual(partial.subtotal?.minorUnits, 400)
+        let conflict = try paired(first, meal("Different offer", slices: 1,
+            pack: PackOffer(id: "other", label: "Two cheese slices", usableQuantity: try quantity(2), price: Money(minorUnits: 350))))
+        XCTAssertFalse(conflict.complete)
+        XCTAssertNil(conflict.subtotal)
+        let incomparable = try paired(first, meal("Unconverted weight", slices: 1, pack: offer, unit: .gram))
+        XCTAssertFalse(incomparable.complete)
+        XCTAssertNil(incomparable.subtotal)
+        let unverifiedOffer = try paired(first, meal("Separate observation", slices: 1, pack: offer, quoteSource: "Unrelated listing"))
+        XCTAssertFalse(unverifiedOffer.complete)
+        XCTAssertNil(unverifiedOffer.subtotal)
+        let unidentifiedFirst = try meal("Unidentified filling", slices: 1, pack: nil)
+        let uncertain = try paired(unidentifiedFirst, meal("Quoted second", slices: 1, pack: offer))
+        XCTAssertFalse(uncertain.complete)
+        XCTAssertNil(uncertain.subtotal)
+        let distinct = try paired(first, meal("Separately identified filling", slices: 1, pack: offer, foodID: UUID()))
+        XCTAssertTrue(distinct.complete)
+        XCTAssertEqual(distinct.subtotal?.minorUnits, 400)
+        XCTAssertEqual(unreserved.usable.amount, try Rational(2))
+    }
+
     func testAllIngredientsCoveredNeedsZeroAdditionalPackagesEvenWithoutAPickup() throws {
         let food = UUID(), ingredient = MealIngredient(name: "Lime", quantity: try quantity(1))
         let recipe = MealTemplate(title: "Lime wedges", ingredients: [ingredient])

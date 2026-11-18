@@ -31,19 +31,61 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
         let details: MealEligibilityEvidence?
     }
 
-    /// Estimates ingredient purchases at the selected shop. A balanced pantry
-    /// needs zero additional packs regardless of whether a shop has been created.
-    public static func estimate(_ review: PantryMealMatcher.Review, workspace: LedgerWorkspace,
-                                workspaceID: UUID, shopID: UUID?, at now: Date) throws -> Self {
-        guard review.eligibility.eligible, !review.ingredients.isEmpty,
-              workspace.dinnerPlanning.privateMealPreferences?.revision == review.preferenceRevision else {
-            return Self(packages: [], subtotal: nil, complete: false)
+    private struct QuotedNeed {
+        let observation: Observation
+        let packs: Rational // Exact shortfall divided by usable package size, before rounding.
+        let price: Money
+    }
+
+    private struct Needs {
+        var quoted: [UUID: QuotedNeed] = [:]
+        var unpricedFoods: Set<UUID> = []
+        var hasUnidentifiedFood = false
+    }
+
+    /// A following meal is reviewed against the free pantry stock remaining after the first.
+    /// Compare whole packages for both meals with those already needed for the first meal.
+    public static func estimate(_ review: PantryMealMatcher.Review, after first: PantryMealMatcher.Review? = nil,
+                                workspace: LedgerWorkspace, workspaceID: UUID, shopID: UUID?, at now: Date) throws -> Self {
+        let unknown = Self(packages: [], subtotal: nil, complete: false)
+        let revision = workspace.dinnerPlanning.privateMealPreferences?.revision
+        for meal in [first, review].compactMap({ $0 }) {
+            guard meal.eligibility.eligible, !meal.ingredients.isEmpty, meal.preferenceRevision == revision else { return unknown }
         }
-        let missing = review.ingredients.filter { !$0.covered }
-        if missing.isEmpty { return Self(packages: [], subtotal: .zero, complete: true) }
-        guard let shopID, let shop = workspace.shops.first(where: { $0.id == shopID }) else {
-            return Self(packages: [], subtotal: nil, complete: false)
+        if let first {
+            guard first.recipe.id != review.recipe.id, first.canProjectRemainder,
+                  let batch = first.batchUse, batch.lotID == review.batchUse?.lotID else { return unknown }
         }
+        if review.ingredients.allSatisfy(\.covered) { return Self(packages: [], subtotal: .zero, complete: true) }
+        guard let shopID, let shop = workspace.shops.first(where: { $0.id == shopID }) else { return unknown }
+        let next = try needs(review, workspace: workspace, workspaceID: workspaceID, shop: shop, at: now)
+        let prior = try first.map { try needs($0, workspace: workspace, workspaceID: workspaceID, shop: shop, at: now) } ?? Needs()
+        // An unidentified baseline purchase might supply any of the second meal's missing food.
+        guard !prior.hasUnidentifiedFood else { return unknown }
+
+        var lines: [Line] = []
+        var cents: Int64 = 0
+        var complete = !next.hasUnidentifiedFood && next.unpricedFoods.isEmpty
+        for (foodID, need) in next.quoted.sorted(by: { $0.key.uuidString < $1.key.uuidString }) {
+            let baseline = prior.quoted[foodID]
+            guard !prior.unpricedFoods.contains(foodID), baseline == nil || baseline?.observation == need.observation else {
+                complete = false
+                continue
+            }
+            let previous = baseline?.packs ?? .zero
+            let count = try previous.adding(need.packs).roundedUp() - previous.roundedUp()
+            guard count > 0 else { continue }
+            let cost = try need.price.multiplied(by: count)
+            cents = try checkedAdd(cents, cost.minorUnits)
+            lines.append(Line(id: foodID, package: need.observation.offer.label, count: count,
+                              cost: cost, source: need.observation.source, observedAt: need.observation.date))
+        }
+        return Self(packages: lines, subtotal: !lines.isEmpty || complete ? Money(minorUnits: cents) : nil, complete: complete)
+    }
+
+    private static func needs(_ review: PantryMealMatcher.Review, workspace: LedgerWorkspace,
+                              workspaceID: UUID, shop: ShoppingLedger, at now: Date) throws -> Needs {
+        let shopID = shop.id
         let accepted = workspace.dinnerPlanning.acceptedDinners.filter { $0.template == review.recipe }
         let sources = Set(accepted.compactMap(\.sourceIdeaID))
         let evidence = workspace.dinnerPlanning.ideas.filter { sources.contains($0.id) }
@@ -51,19 +93,16 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
             .filter { $0.workspaceID == workspaceID && $0.shopID == shopID && $0.basisRevision == shop.basisRevision }
         let profile = workspace.dinnerPlanning.privateMealPreferences
         var groups: [UUID: [PantryMealMatcher.IngredientReview]] = [:]
-        var complete = true
-        for row in missing {
+        var result = Needs()
+        for row in review.ingredients where !row.covered {
             let savedFoodIDs = Set(evidence.filter {
                 $0.id == row.id && $0.ingredientName == row.ingredient.name && $0.pack != nil
             }.compactMap(\.foodID))
             if let foodID = row.foodID ?? (savedFoodIDs.count == 1 ? savedFoodIDs.first : nil) {
                 groups[foodID, default: []].append(row)
-            } else { complete = false }
+            } else { result.hasUnidentifiedFood = true }
         }
-        var lines: [Line] = []
-        var cents: Int64 = 0
-        for foodID in groups.keys.sorted(by: { $0.uuidString < $1.uuidString }) {
-            let rows = groups[foodID] ?? []
+        for (foodID, rows) in groups {
             var quotes: [Observation] = []
             for row in rows {
                 quotes += evidence.compactMap { entry in
@@ -80,17 +119,15 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
             }
             guard let quote = quotes.first, quotes.allSatisfy({ $0 == quote }),
                   MealEligibilityPolicy.evaluateFood(profile: profile, labels: [quote.offer.label], evidence: quote.details).eligible,
-                  let line = try purchase(foodID: foodID, rows: rows, quote: quote, exclusions: review.recipe.exclusions)
-            else { complete = false; continue }
-            lines.append(line)
-            cents = try checkedAdd(cents, line.cost.minorUnits)
+                  let need = try quotedNeed(rows: rows, quote: quote, exclusions: review.recipe.exclusions)
+            else { result.unpricedFoods.insert(foodID); continue }
+            result.quoted[foodID] = need
         }
-        let subtotal = !lines.isEmpty || complete ? Money(minorUnits: cents) : nil
-        return Self(packages: lines, subtotal: subtotal, complete: complete)
+        return result
     }
 
-    private static func purchase(foodID: UUID, rows: [PantryMealMatcher.IngredientReview], quote: Observation,
-                                 exclusions: [String]) throws -> Line? {
+    private static func quotedNeed(rows: [PantryMealMatcher.IngredientReview], quote: Observation,
+                                   exclusions: [String]) throws -> QuotedNeed? {
         guard let usable = quote.offer.usableQuantity, usable.amount > .zero, let price = quote.offer.price else { return nil }
         var needed = Rational.zero
         for row in rows {
@@ -108,8 +145,6 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
             guard let converted = try quantity.converted(to: usable.unit, using: quote.offer.confirmedConversion) else { return nil }
             needed = try needed.adding(converted)
         }
-        let count = try needed.divided(by: usable.amount).roundedUp()
-        return Line(id: foodID, package: quote.offer.label, count: count, cost: try price.multiplied(by: count),
-                    source: quote.source, observedAt: quote.date)
+        return QuotedNeed(observation: quote, packs: try needed.divided(by: usable.amount), price: price)
     }
 }

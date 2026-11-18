@@ -32,7 +32,7 @@ import RecordArchive
         let template: MealTemplate
         let acceptedAt: Date?
     }
-    struct Input {
+    struct Input: Equatable {
         let workspace: LedgerWorkspace
         let ledgerRevision: Int64
         let basis: LedgerCanonicalPackStockEvidence.Basis
@@ -126,12 +126,13 @@ import RecordArchive
             let next = try await load()
             guard token == generation else { return }
             guard authorize() else { invalidate(); return }
-            if let old = input, old.basis != next.basis || old.workspace.withoutMealFeedback() != next.workspace.withoutMealFeedback() || old.sources != next.sources {
+            let identicalInput = input == next
+            if !identicalInput, let old = input, old.basis != next.basis || old.workspace.withoutMealFeedback() != next.workspace.withoutMealFeedback() || old.sources != next.sources {
                 clearPairing()
                 matches = [:]; foodEvidence = [:]; selectedVersions = [:]
             }
             input = next
-            try rebuild()
+            try rebuild(retainingCharges: identicalInput)
             failed = false
         } catch {
             guard token == generation else { return }
@@ -184,10 +185,13 @@ import RecordArchive
         guard let input, original.basis == input.basis, original.workspace == input.workspace,
               original.sources == input.sources, recipes.contains(recipe), matches[recipe.id, default: [:]] == originalMatches else { throw Failure.stale }
     }
-    private func rebuild() throws {
+    private func rebuild(retainingCharges: Bool = false) throws {
         guard let input else { return }
         reviews = try evaluate(recipes, lots: input.freeLots, input: input)
-        if let firstRecipeID { try showFollowingMeals(after: firstRecipeID) }
+        if let firstRecipeID {
+            if retainingCharges { try updateFollowingMeals(after: firstRecipeID) }
+            else { try showFollowingMeals(after: firstRecipeID) }
+        }
     }
     private func evaluate(_ recipes: [MealTemplate], lots: [ConfirmedStockLot], input: Input) throws -> [PantryMealMatcher.Review] {
         try recipes.map {
@@ -203,13 +207,16 @@ import RecordArchive
     }
     func showFollowingMeals(after recipeID: UUID) throws {
         clearPairing()
+        try updateFollowingMeals(after: recipeID)
+    }
+    private func updateFollowingMeals(after recipeID: UUID) throws {
         guard let input, let lot = selectedLot, let first = reviews.first(where: { $0.id == recipeID }),
-              first.batchUse?.lotID == lot.id, first.canProjectRemainder else { return }
+              first.batchUse?.lotID == lot.id, first.canProjectRemainder else { clearPairing(); return }
         let projected = try PantryMealMatcher.review(recipe: first.recipe, reviewedFoods: matches[first.id, default: [:]],
             globallyFreeLots: input.freeLots, unresolvedFoods: input.unresolvedFoods,
             profile: input.workspace.dinnerPlanning.privateMealPreferences, foodEvidence: foodEvidence,
             firstLotID: lot.id, projectRemainder: true)
-        guard let remaining = projected.stockAfterMeal else { return }
+        guard let remaining = projected.stockAfterMeal else { clearPairing(); return }
         let candidates = try evaluate(recipes.filter { $0.id != recipeID }, lots: remaining, input: input)
         followingMeals = DinnerLibraryPairings.usingBatch(lot.id, reviews: candidates.filter { Self.canChoose($0) })
         firstRecipeID = recipeID

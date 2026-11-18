@@ -279,7 +279,7 @@ struct TonightEntry: View {
                     .accessibilityIdentifier("tonight.batch.remaining." + review.id.uuidString)
                 if review.canProjectRemainder {
                     if model.firstRecipeID == review.id {
-                        followingMeals
+                        followingMeals(after: review)
                         Button(tonightText("Close second-meal suggestions")) { model.clearPairing() }
                     } else {
                         Button(tonightText("Find a second meal for the remainder")) {
@@ -317,9 +317,9 @@ struct TonightEntry: View {
             .accessibilityIdentifier("tonight.result." + review.id.uuidString)
         }
     }
-    @ViewBuilder private var followingMeals: some View {
+    @ViewBuilder private func followingMeals(after first: PantryMealMatcher.Review) -> some View {
         Text(tonightText("If you make the first meal")).font(.headline)
-        Text(tonightText("These estimates use the pantry food left after the first recipe’s reviewed matches. Prices cover the second meal separately."))
+        Text(tonightText("The second meal uses the remaining pantry food. Its cost includes only extra packages beyond those needed for the first meal."))
             .font(.caption)
         if model.followingMeals.isEmpty {
             Text(tonightText("No other reviewed recipe uses this remainder yet. Check the ingredient matches in your recipe library."))
@@ -347,13 +347,8 @@ struct TonightEntry: View {
                     LabeledContent(row.ingredient.name, value: ledgerQuantity(TonightMealModel.missingQuantity(row)))
                 }
                 if let input = model.input, let workspaceID = ledger.sourceWorkspaceID {
-                    let estimate = input.ledgerRevision == ledger.revision ? try? TonightPurchaseEstimate.estimate(next,
-                        workspace: input.workspace, workspaceID: workspaceID, shopID: input.workspace.selectedShopID, at: Date()) : nil
-                    TonightPricesView(estimate: estimate)
-                    if let estimate {
-                        SecondMealCashReview(estimate: estimate)
-                            .id(model.pairingRevision)
-                    }
+                    SecondMealPricesView(first: first, second: next, input: input, workspaceID: workspaceID,
+                                         ledgerRevision: ledger.revision, pairingRevision: model.pairingRevision)
                 }
             }.accessibilityElement(children: .contain)
                 .accessibilityIdentifier("tonight.batch.second.\(next.id)")

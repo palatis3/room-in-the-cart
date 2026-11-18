@@ -1633,6 +1633,23 @@
         }
       }
     },
+    "No extra packages are needed for the second meal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No extra packages are needed for the second meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hacen falta paquetes adicionales para la segunda comida."
+          }
+        }
+      }
+    },
     "Confirmed pantry food covers these recipe amounts.": {
       "extractionState": "manual",
       "localizations": {
@@ -1973,19 +1990,19 @@
         }
       }
     },
-    "These estimates use the pantry food left after the first recipe’s reviewed matches. Prices cover the second meal separately.": {
+    "The second meal uses the remaining pantry food. Its cost includes only extra packages beyond those needed for the first meal.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "These estimates use the pantry food left after the first recipe’s reviewed matches. Prices cover the second meal separately."
+            "value": "The second meal uses the remaining pantry food. Its cost includes only extra packages beyond those needed for the first meal."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Estas estimaciones usan lo que quedaría en la despensa tras descontar los ingredientes vinculados a la primera receta. Los precios corresponden solo a la segunda comida."
+            "value": "La segunda comida usa lo que queda en la despensa. Su costo incluye solo los paquetes adicionales que se necesitan además de los de la primera comida."
           }
         }
       }
