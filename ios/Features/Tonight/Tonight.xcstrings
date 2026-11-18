@@ -2550,6 +2550,227 @@
           }
         }
       }
+    },
+    "Package labels for this recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package labels for this recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiquetas de los productos para esta receta"
+          }
+        }
+      }
+    },
+    "Review the physical package for each selected batch. These statements apply only to this recipe and the current observation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the physical package for each selected batch. These statements apply only to this recipe and the current observation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el envase de cada lote seleccionado. Estos datos se aplican solo a esta receta y a la observación actual."
+          }
+        }
+      }
+    },
+    "This batch has a newer observation. Review the label again or remove the earlier statement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch has a newer observation. Review the label again or remove the earlier statement."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay una observación más reciente del lote. Vuelve a revisar la etiqueta o elimina los datos anteriores."
+          }
+        }
+      }
+    },
+    "Remove label statement from draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove label statement from draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar los datos de la etiqueta del borrador"
+          }
+        }
+      }
+    },
+    "Package ingredients and brands have not been reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package ingredients and brands have not been reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se han revisado los ingredientes ni las marcas del envase."
+          }
+        }
+      }
+    },
+    "Review this package label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this package label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la etiqueta de este producto"
+          }
+        }
+      }
+    },
+    "Package ingredients": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package ingredients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes del envase"
+          }
+        }
+      }
+    },
+    "Package brands": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package brands"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcas del envase"
+          }
+        }
+      }
+    },
+    "Reviewed, none listed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed, none listed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisado, no figura ninguno"
+          }
+        }
+      }
+    },
+    "Earlier package statement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier package statement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos anteriores de la etiqueta"
+          }
+        }
+      }
+    },
+    "Current package label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current package label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta actual del producto"
+          }
+        }
+      }
+    },
+    "Check the label entries before adding them to this recipe.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the label entries before adding them to this recipe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprueba los datos de la etiqueta antes de añadirlos a esta receta."
+          }
+        }
+      }
+    },
+    "Use this label in the recipe draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this label in the recipe draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta etiqueta en el borrador de la receta"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

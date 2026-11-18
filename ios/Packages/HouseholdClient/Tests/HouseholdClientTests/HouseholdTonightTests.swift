@@ -122,4 +122,20 @@ extension HouseholdClientTests {
         XCTAssertNil(reader.excludedReviewedRecipes)
     }
 
+    func testHouseholdTonightPackageReviewKeepsUnknownSeparateAndExpiresOnRecount() throws {
+        let id = UUID(), first = UUID()
+        let label = try HouseholdTonightProductReview(lotId: id, observationId: first, reviewedIngredientDetails: [], brands: nil)
+        XCTAssertThrowsError(try HouseholdTonightProductReview(lotId: id, observationId: first, reviewedIngredientDetails: nil, brands: nil))
+        func lot(_ observation: UUID) throws -> HouseholdPantryPage.Lot {
+            try TrackingWriteFixture.decode(["lotId": id.uuidString, "origin": "manual", "location": "pantry",
+                "foodName": "Rice", "exclusionTags": [], "observation": ["observationId": observation.uuidString, "confirmedAt": "2026-11-17T00:00:00Z"]])
+        }
+        XCTAssertTrue(label.matches(try lot(first)))
+        XCTAssertFalse(label.matches(try lot(UUID())))
+        let bytes = try JSONEncoder().encode(label)
+        let copy = try JSONDecoder().decode(HouseholdTonightProductReview.self, from: bytes)
+        XCTAssertEqual(copy.reviewedIngredientDetails, [])
+        XCTAssertNil(copy.brands)
+    }
+
 }

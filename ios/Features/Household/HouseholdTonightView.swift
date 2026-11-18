@@ -77,8 +77,8 @@ private struct HouseholdTonightView: View {
         .sheet(isPresented: $editingRecipe, onDismiss: { if live { Task { await load() } } }) {
             if live, let page, page.canReviewRecipes {
                 NavigationStack {
-                    HouseholdTonightRecipeEditor(householdName: household.projection?.household.label ?? "", lots: recipeLots, original: originalRecipe?.reviewedRecipe) { meal, evidence, lots in
-                        try await save(meal, evidence: evidence, lots: lots, page: page)
+                    HouseholdTonightRecipeEditor(householdName: household.projection?.household.label ?? "", lots: recipeLots, original: originalRecipe?.reviewedRecipe) { meal, evidence, lots, labels in
+                        try await save(meal, evidence: evidence, lots: lots, labels: labels, page: page)
                     }
                 }
             }
@@ -245,11 +245,11 @@ private struct HouseholdTonightView: View {
         } catch { if current(start) { await fail(error) } }
     }
 
-    @MainActor private func save(_ meal: SharedMeal, evidence: SharedMealPreferenceEvidence, lots: [UUID: [UUID]], page: HouseholdTonightPage) async throws {
+    @MainActor private func save(_ meal: SharedMeal, evidence: SharedMealPreferenceEvidence, lots: [UUID: [UUID]], labels: [HouseholdTonightProductReview], page: HouseholdTonightPage) async throws {
         guard live, self.page == page, page.canReviewRecipes, let projection = household.projection, let service = household.service else { throw ClientError.accessEnded }
         let start = generation
         let session = try await service.householdPantrySession(for: projection)
-        if recipeWrite == nil { recipeWrite = try await service.prepareTonightRecipe(meal, evidence: evidence, reviewedLots: lots, page: page, session: session, replacing: originalRecipe) }
+        if recipeWrite == nil { recipeWrite = try await service.prepareTonightRecipe(meal, evidence: evidence, reviewedLots: lots, productReviews: labels, page: page, session: session, replacing: originalRecipe) }
         guard current(start), let recipeWrite, recipeWrite.session == session else { throw ClientError.cancelled }
         // Retain exact bytes for a lost reply. A different draft needs a fresh explicit review.
         do { try await service.saveTonightRecipe(recipeWrite) }

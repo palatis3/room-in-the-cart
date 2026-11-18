@@ -58,10 +58,11 @@ private struct MealEffortPicker: View {
 struct MealEvidenceFields: View {
     @Binding var draft: MealEligibilityEvidence
     var foodOnly = false
+    var focus: FocusState<String?>.Binding? = nil
     var body: some View {
-        ReviewedTermsField(title: dinnerText("Ingredient details reviewed"), field: dinnerText("Additional ingredients, one per line"), value: $draft.reviewedIngredientDetails)
-        if !foodOnly { ReviewedTermsField(title: dinnerText("Required appliances reviewed"), field: dinnerText("Required appliances, one per line"), value: $draft.requiredAppliances) }
-        ReviewedTermsField(title: dinnerText("Brands reviewed"), field: dinnerText("Brands used, one per line"), value: $draft.brands)
+        ReviewedTermsField(title: dinnerText("Ingredient details reviewed"), field: dinnerText("Additional ingredients, one per line"), value: $draft.reviewedIngredientDetails, focus: focus)
+        if !foodOnly { ReviewedTermsField(title: dinnerText("Required appliances reviewed"), field: dinnerText("Required appliances, one per line"), value: $draft.requiredAppliances, focus: focus) }
+        ReviewedTermsField(title: dinnerText("Brands reviewed"), field: dinnerText("Brands used, one per line"), value: $draft.brands, focus: focus)
         if !foodOnly { MealEffortPicker(title: dinnerText("Recipe effort"), effort: $draft.effort) }
     }
 }
