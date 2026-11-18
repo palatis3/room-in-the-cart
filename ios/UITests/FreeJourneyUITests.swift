@@ -1020,14 +1020,8 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
-    func testSystemShareSheetStagesReceiptForExplicitPrivateReview() throws {
-        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--receipt-share-test-sender", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
-        app.launch()
-        let marker = app.staticTexts["fixture.receipt.shareToken"]
-        XCTAssertTrue(marker.waitForExistence(timeout: 12), app.debugDescription)
-        let token = marker.label
-        XCTAssertEqual(token.count, 64)
-        let share = app.buttons["Share sample receipt PDF"]
+    private func openShareExtension(from source: String) {
+        let share = app.buttons[source]
         XCTAssertTrue(share.waitForExistence(timeout: 12)); share.tap()
         let destination = app.cells.matching(NSPredicate(format: "identifier == %@ AND label == %@", "shareCell", "Room in the Cart")).firstMatch
         if !destination.waitForExistence(timeout: 4) {
@@ -1037,12 +1031,14 @@ import XCTest
         let namedDestination = app.cells.matching(NSPredicate(format: "label == %@", "Room in the Cart")).firstMatch
         XCTAssertTrue(namedDestination.waitForExistence(timeout: 10), app.debugDescription)
         namedDestination.tap()
-        let stage = app.buttons["Save receipt file for review"]
+    }
+
+    private func tapSettledShareControl(_ control: XCUIElement) {
         // The remote extension publishes its button while the sheet is still sliding into place.
         var previousFrame: CGRect?
         let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard stage.exists, stage.isEnabled, stage.isHittable,
-                  let frame = try? stage.snapshot().frame, !frame.isEmpty, self.app.frame.contains(frame) else {
+            guard control.exists, control.isEnabled, control.isHittable,
+                  let frame = try? control.snapshot().frame, !frame.isEmpty, self.app.frame.contains(frame) else {
                 previousFrame = nil
                 return false
             }
@@ -1050,7 +1046,36 @@ import XCTest
             return previousFrame == frame
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 15), .completed, app.debugDescription)
-        stage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    }
+
+    func testSystemShareSheetCanReviewAPlainTextFileAsAShoppingList() {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--shopping-list-text-file",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        openShareExtension(from: "Share sample grocery text file")
+        let list = app.buttons["Use the selected text as a shopping list"]
+        XCTAssertTrue(app.buttons["Save receipt file for review"].waitForExistence(timeout: 12), app.debugDescription)
+        tapSettledShareControl(list)
+        let editor = app.textViews["Review text"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(editor.value as? String, "2 cajas de arroz\nCafé")
+        XCTAssertTrue(app.buttons["Save for review"].exists)
+        XCTAssertFalse(app.buttons["Save receipt file for review"].exists)
+        tapSettledShareControl(app.buttons["Cancel"])
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 12))
+    }
+
+    func testSystemShareSheetStagesReceiptForExplicitPrivateReview() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--receipt-share-test-sender", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let marker = app.staticTexts["fixture.receipt.shareToken"]
+        XCTAssertTrue(marker.waitForExistence(timeout: 12), app.debugDescription)
+        let token = marker.label
+        XCTAssertEqual(token.count, 64)
+        openShareExtension(from: "Share sample receipt PDF")
+        let stage = app.buttons["Save receipt file for review"]
+        tapSettledShareControl(stage)
         XCTAssertTrue(stage.waitForNonExistence(timeout: 12), app.debugDescription)
         app.terminate()
         launch(reset: true, sharedReceiptToken: token)
