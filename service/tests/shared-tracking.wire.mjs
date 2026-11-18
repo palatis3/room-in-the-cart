@@ -241,7 +241,8 @@ const linesOf=p=>p.state.basket.map(l=>({lineId:l.id,originalItem:l.name,packs:l
 const head=async f=>ok(await call(f.owner,f.path));
 async function partialStoreSelection(f){
  const s=await head(f),at=new Date(Date.now()+3600000).toISOString();
- const option={label:'Reviewed partial pickup store',store:'Entered shop',branch:'A',mode:'pickup',slot:at,observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true};
+ const option={label:'Reviewed partial pickup store',store:'Entered shop',branch:'A',mode:'pickup',slot:at,observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true,
+  orderMinimum:{kind:'noneRequired'}};
  const pair={operationId:randomUUID(),shopRevision:s.shopRevision,authorityEpoch:s.authorityEpoch,grantRevision:0,options:{first:option,second:{...option,branch:'B'}}};
  ok(await call(f.owner,f.path+'/store-quotes/pairs','POST',pair));
  return ok(await call(f.owner,f.path+'/store-quotes/adoptions','POST',{operationId:randomUUID(),shopRevision:s.shopRevision,authorityEpoch:s.authorityEpoch,grantRevision:0,pairId:pair.operationId,choice:'first',proposalId:null}));

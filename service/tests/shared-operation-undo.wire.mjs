@@ -251,7 +251,8 @@ async function setupSameStoreUndoWire(){
  const f=await fixture();await adopt(f);const author=await invited(f),shop=await mealWireShop(f),path=f.path+'/store-quotes';
  const envelope=(extra,grantRevision=0)=>({operationId:randomUUID(),shopRevision:shop.shopRevision,authorityEpoch:shop.authorityEpoch,grantRevision,...extra});
  ok(await call(f.owner,path+'/grants','POST',envelope({adultId:author.id,enabled:true,targetRevision:0})));
- const option={label:'Selected store',store:'Private original store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Explicitly entered complete quote',currency:'USD',terms:'No conditions',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true};
+ const option={label:'Selected store',store:'Private original store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Explicitly entered complete quote',currency:'USD',terms:'No conditions',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true,
+  orderMinimum:{kind:'noneRequired'}};
  const saved=envelope({options:{first:option,second:{...option,branch:'B'}}},1);ok(await call(author,path+'/pairs','POST',saved));
  const proposal=envelope({pairId:saved.operationId,choice:'first'},1);ok(await call(author,path+'/proposals','POST',proposal));
  const selected=ok(await call(f.owner,path+'/adoptions','POST',envelope({pairId:saved.operationId,choice:'first',proposalId:proposal.operationId})));
