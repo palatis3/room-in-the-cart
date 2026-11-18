@@ -29,7 +29,7 @@ step_bundles:
   native-app:
     steps:
       - script@1.2.1:
-          title: Check out exact public source and verify native app journey
+          title: Check out exact public source
           timeout: 1800
           inputs:
             - content: |-
@@ -40,11 +40,23 @@ step_bundles:
                 test -z "${BITRISEIO_PULL_REQUEST_REPOSITORY_URL:-}"
                 [[ "${BITRISE_GIT_COMMIT:-}" =~ ^[0-9a-f]{40}$ ]]
                 export GIT_TERMINAL_PROMPT=0
-                source_dir=$(mktemp -d "${BITRISE_SOURCE_DIR:?}/ritc-native.XXXXXX")
+                source_dir="${BITRISE_SOURCE_DIR:?}/ritc-native"
+                mkdir -m 700 "$source_dir"
                 git init --quiet "$source_dir"
                 cd "$source_dir"
                 git -c credential.helper= fetch --quiet --no-tags --depth=1 \
                   https://github.com/palatis3/room-in-the-cart.git "$BITRISE_GIT_COMMIT"
                 test "$(git rev-parse FETCH_HEAD)" = "$BITRISE_GIT_COMMIT"
                 git checkout --quiet --detach FETCH_HEAD
+      - activate-build-cache-for-xcode@1.10.1:
+          run_if: '{{ enveq "BITRISEIO_BUILD_CACHE_ENABLED" "true" }}'
+          is_skippable: true
+      - script@1.2.1:
+          title: Verify native app journey
+          timeout: 1800
+          inputs:
+            - content: |-
+                #!/bin/bash
+                set -euo pipefail
+                cd "${BITRISE_SOURCE_DIR:?}/ritc-native"
                 bash scripts/run_bitrise_native_app.sh "$RITC_NATIVE_LANE"
