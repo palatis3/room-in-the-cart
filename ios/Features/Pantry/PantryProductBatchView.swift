@@ -10,6 +10,7 @@ struct PantryProductBatchView: View {
     @State private var date = Calendar.current.startOfDay(for: Date())
     @State private var confirmed = false
     @State private var photoConsent = false
+    @State private var editingProduct: PantryProductBatch.Candidate?
     @State private var review: PantryReceiptReview?
     @State private var result: String?
     @State private var inputMessage: String?
@@ -62,8 +63,15 @@ struct PantryProductBatchView: View {
                 Section(pantryText("Add a product")) {
                     TextField(pantryText("Barcode, if available"), text: $code).focused($focus, equals: "code")
                         .autocorrectionDisabled().textInputAutocapitalization(.never).accessibilityIdentifier("productBatch.code")
-                    TextField(pantryText("Product name or label text"), text: $name, axis: .vertical).focused($focus, equals: "name")
-                        .accessibilityIdentifier("productBatch.label")
+                    VStack(alignment: .leading) {
+                        let title = pantryText("Product name or label text")
+                        Text(title).font(.caption)
+                        TextEditor(text: $name)
+                            .frame(minHeight: 58)
+                            .focused($focus, equals: "name")
+                            .accessibilityLabel(title)
+                            .accessibilityIdentifier("productBatch.label")
+                    }
                     Button(pantryText("Add typed product")) {
                         do {
                             let added = try batch.addManual(name: name, code: code)
@@ -83,9 +91,9 @@ struct PantryProductBatchView: View {
                 if !batch.candidates.isEmpty {
                     Section(pantryText("Products to review")) {
                         ForEach(batch.candidates) { row in
-                            NavigationLink {
-                                PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
-                                    deliveries: model.productDeliveries, scope: catalogScope.id, authorized: { authorized })
+                            Button {
+                                focus = nil
+                                editingProduct = row
                             } label: {
                                 VStack(alignment: .leading) {
                                     Text(row.name.isEmpty ? (row.barcode?.value ?? pantryText("Product photo")) : row.name)
@@ -93,7 +101,9 @@ struct PantryProductBatchView: View {
                                     else if let total = row.total { Text(total.description + " " + pantryUnit(row.unit)).font(.caption) }
                                     else { Text(pantryText("Choose a package size and count.")).font(.caption) }
                                 }
-                            }.accessibilityIdentifier("productBatch.row." + String(row.ordinal))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                            }.buttonStyle(.plain).accessibilityIdentifier("productBatch.row." + String(row.ordinal))
                         }
                     }
                     Section(pantryText("Confirm receipt")) {
@@ -115,11 +125,31 @@ struct PantryProductBatchView: View {
         .keyboardDoneAction(visible: focus != nil, title: pantryText("Done"), identifier: "productBatch.keyboardDone") { focus = nil }
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() }.disabled(working) } }
         .interactiveDismissDisabled(working)
+        .sheet(item: $editingProduct) { selection in
+            NavigationStack {
+                if authorized, let row = batch.candidates.first(where: { $0.id == selection.id }) {
+                    PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
+                        deliveries: model.productDeliveries, scope: catalogScope.id, authorized: {
+                            authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
+                        })
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button(pantryText("Close")) { editingProduct = nil }
+                                    .accessibilityIdentifier("productBatch.finishEditing")
+                            }
+                        }
+                }
+            }
+        }
         .onChange(of: batch.candidates) { _, _ in confirmed = false }
         .onChange(of: merchant) { _, _ in confirmed = false }
         .onChange(of: date) { old, new in if !Calendar.current.isDate(old, inSameDayAs: new) { confirmed = false } }
         .onChange(of: authorized) { _, allowed in
-            if !allowed { let scope = catalogScope.id; Task { await PantryProductCatalog.shared.close(scope: scope) } }
+            if !allowed {
+                editingProduct = nil
+                let scope = catalogScope.id
+                Task { await PantryProductCatalog.shared.close(scope: scope) }
+            }
         }
     }
 

@@ -416,11 +416,12 @@ struct ShopView: View {
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
                     if pickup.pantryRouteAvailable {
-                        if household.projection?.canBrowseHouseholdTonight == true {
-                            Button { showingPantry = true } label: { pantryLabel }
+                        if #available(iOS 18, *), household.projection?.canBrowseHouseholdTonight != true {
+                            NavigationLink { PantrySetupView(pickup: pickup, ledger: ledger) } label: { pantryLabel }
                                 .accessibilityIdentifier("shop.myPantry")
                         } else {
-                            NavigationLink { PantrySetupView(pickup: pickup, ledger: ledger) } label: { pantryLabel }
+                            // iOS 17 can repeatedly rebuild Shop while pushing the observed pantry setup.
+                            Button { showingPantry = true } label: { pantryLabel }
                                 .accessibilityIdentifier("shop.myPantry")
                         }
                     } else if pickup.pantryRestartAvailable {

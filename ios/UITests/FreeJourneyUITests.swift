@@ -219,9 +219,9 @@ import XCTest
         fill("2", into: "productBatch.packCount", requireDone: true, control: app.textFields["productBatch.packCount"])
         tap(app.buttons["productBatch.stockAction"])
         tap(app.buttons["Add a separate physical batch"])
-        tap(app.navigationBars["Review product"].buttons.firstMatch)
+        closeReviewedProduct()
 
-        let label = app.textFields["productBatch.label"]
+        let label = app.textViews["productBatch.label"]
         tap(label); label.typeText("Wraps")
         tap(app.buttons["productBatch.add"])
         tap(app.buttons["productBatch.row.1"])
@@ -233,7 +233,7 @@ import XCTest
         XCTAssertTrue(deliveredWraps.waitForExistence(timeout: 5))
         XCTAssertTrue(deliveredWraps.label.contains("8 units"), deliveredWraps.label)
         tap(deliveredWraps)
-        tap(app.navigationBars["Review product"].buttons.firstMatch)
+        closeReviewedProduct()
         let store = app.textFields["productBatch.merchant"]
         tap(store); store.typeText("Market")
         tap(app.buttons["productBatch.keyboardDone"])
@@ -295,7 +295,7 @@ import XCTest
                 toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
                 XCTAssertEqual(toggle.value as? String, "0")
             }
-            tap(app.navigationBars["Review product"].buttons.firstMatch)
+            closeReviewedProduct()
         }
 
         choose(day: 10)
@@ -307,7 +307,7 @@ import XCTest
         XCTAssertTrue(third.waitForExistence(timeout: 15))
         tap(third)
         XCTAssertTrue(app.staticTexts["Barcode, 3017620422003"].waitForExistence(timeout: 5))
-        tap(app.navigationBars["Review product"].buttons.firstMatch)
+        closeReviewedProduct()
         choose(day: 12)
         XCTAssertTrue(app.staticTexts["productBatch.inputStatus"].waitForExistence(timeout: 12))
         XCTAssertFalse(app.buttons["productBatch.row.3"].exists)
@@ -3816,6 +3816,15 @@ import XCTest
             .matching(NSPredicate(format: "elementType IN %@", editableTypes.map { $0.rawValue })).firstMatch
     }
 
+    private func closeReviewedProduct() {
+        let close = app.navigationBars["Review product"].buttons["productBatch.finishEditing"]
+        // Let the native stock menu dismiss before interacting with the sheet's toolbar.
+        guard close.wait(for: \.isHittable, toEqual: true, timeout: 5) else {
+            XCTFail("The reviewed product must be closable")
+            return
+        }
+        close.tap()
+    }
     private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
     private func enableSwitch(_ label: String, diagnosticName: String? = nil, position: ((XCUIElement) -> Void)? = nil) {
         let control = app.switches[label]
