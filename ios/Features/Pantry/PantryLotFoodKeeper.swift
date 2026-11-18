@@ -55,7 +55,7 @@ struct PantryLotFoodKeeperSection: View {
     }
 }
 
-private struct PantryLotStorageReference: View {
+struct PantryLotStorageReference: View {
     @ObservedObject var model: PantryModel
     let lotID: UUID
     let accessAllowed: Bool

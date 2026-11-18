@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose a saved food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a saved food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un alimento guardado"
+          }
+        }
+      }
+    },
+    "Choose a matching food and confirm its storage history to estimate a quality date range.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a matching food and confirm its storage history to estimate a quality date range."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el alimento que corresponda y confirma cómo se ha conservado para estimar durante qué periodo mantendrá su calidad."
+          }
+        }
+      }
+    },
     "Stock action": {
       "localizations": {
         "en": {

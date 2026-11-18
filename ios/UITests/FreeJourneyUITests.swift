@@ -1081,7 +1081,7 @@ import XCTest
         })
     }
 
-    private func reviewManualOatsAtMarket(checkAssistance: Bool = false) {
+    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil) {
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         receiptTap(wording)
@@ -1114,6 +1114,10 @@ import XCTest
         receiptTap(usable)
         usable.typeText("2")
         if app.buttons["receipt.keyboardDone"].exists { app.buttons["receipt.keyboardDone"].tap() }
+        if let storage {
+            receiptTap(app.buttons["receipt.storage.0"])
+            receiptTap(app.buttons[storage])
+        }
         receiptTap(app.buttons["receipt.review"])
     }
 
@@ -1152,11 +1156,20 @@ import XCTest
         receiptTap(app.buttons["shop.myPantry"])
         receiptTap(app.buttons["pantry.setup.apply"])
         receiptTap(app.buttons["pantry.receipt"])
-        reviewManualOatsAtMarket(checkAssistance: true)
+        reviewManualOatsAtMarket(checkAssistance: true, storage: "Fridge")
         XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
         receiptTap(app.buttons["receipt.commit"])
         XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
         XCTAssertEqual(app.staticTexts["receipt.status"].label, "Reviewed receipt lines saved.")
+        let guide = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "receipt.storageGuide.")).firstMatch
+        XCTAssertTrue(guide.waitForExistence(timeout: 8))
+        XCTAssertTrue(guide.label.contains("Oats"))
+        XCTAssertTrue(guide.label.contains("Fridge") || (guide.value as? String) == "Fridge")
+        receiptTap(guide)
+        let guideBar = app.navigationBars["Food storage guide"]
+        XCTAssertTrue(guideBar.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["foodKeeper.saveRange"].exists)
+        receiptTap(guideBar.buttons.firstMatch)
         receiptTap(app.buttons["Done"])
         let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Oats")).firstMatch
         XCTAssertTrue(lot.waitForExistence(timeout: 8))
