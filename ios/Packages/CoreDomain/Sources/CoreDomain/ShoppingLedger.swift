@@ -1213,6 +1213,32 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
 
+    mutating func restoreSwap(_ effect: DinnerSwapEffect, operationID: UUID, at date: Date) throws {
+        try mutate("undoDinnerSwap-\(operationID)", at: date) { next in
+            guard let originalIndex = next.mealOccurrences.firstIndex(where: { $0.id == effect.original.id }) else { throw LedgerError.notFound(effect.original.id) }
+            let replacementIndex = try next.mealIndex(effect.replacementID)
+            next.mealOccurrences[originalIndex] = effect.original
+            next.mealOccurrences[replacementIndex].removedAt = date
+            let oldSources = Dictionary(uniqueKeysWithValues: effect.before.ingredients.map { ($0.id, $0) })
+            let oldLines = Dictionary(uniqueKeysWithValues: effect.before.lines.map { ($0.id, $0) })
+            let createdSources = Set(effect.replacement.ingredientContributionIDs)
+            let createdLines = Set(effect.after.lines.map(\.id)).subtracting(oldLines.keys)
+            for index in next.contributions.indices {
+                let id = next.contributions[index].id
+                if let original = oldSources[id] { next.contributions[index] = original }
+                else if createdSources.contains(id) { next.contributions[index].removedAt = date }
+            }
+            for index in next.lines.indices {
+                let id = next.lines[index].id
+                if let original = oldLines[id] { next.lines[index] = original }
+                else if createdLines.contains(id) { next.lines[index].trashedAt = date }
+            }
+            let touchedEdges = Set(effect.after.edges.map(\.id))
+            next.allocations.removeAll { touchedEdges.contains($0.id) }
+            next.allocations += effect.before.edges
+        }
+    }
+
     private mutating func mutate<T>(_ operation: String, at: Date, revisionID proposedRevisionID: UUID? = nil, _ action: (inout Self) throws -> T) throws -> T {
         try ledgerDate(at)
         try validate()

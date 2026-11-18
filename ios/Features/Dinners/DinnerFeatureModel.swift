@@ -41,6 +41,12 @@ extension DinnerWorkspaceStore {
     let ideaCatalog: [MealTemplate]
     let clock: () -> Date
     private(set) weak var repeatWeekPickup: PickupModel?
+    private weak var swapPickup: PickupModel?
+    private var swapReview: DinnerSwapReview?
+    var currentSwapReview: DinnerSwapReview? {
+        guard let swapReview, canReviewPreview, swapReview.preview.proposal.id == preview?.proposal.id else { return nil }
+        return swapReview
+    }
     private var observation: AnyCancellable?
     private var runtimeObservation: AnyCancellable?
 
@@ -127,6 +133,91 @@ extension DinnerWorkspaceStore {
         error = nil
         notice = nil
     }
+    @discardableResult func installSwap(_ value: DinnerSwapReview, pickup: PickupModel) -> Bool {
+        let reviewed = value.preview.proposal
+        guard let shop, let id = reviewed.swapOriginalID, id == value.original.id,
+              shop.id == reviewed.shopID, shop.revisionID == reviewed.baseRevisionID,
+              state.revisionID == reviewed.planningRevisionID, phaseProvider(shop.id) == .draft,
+              Self.swapReadAllowed(pickup, store: store, affected: [id], shopID: shop.id) else { fail(DinnerPlanningError.stalePreview); return false }
+        swapPickup = pickup
+        swapReview = value
+        preview = value.preview
+        pantryPreviewReview = value.pantryBasis.map { (reviewed.id, $0) }
+        error = nil
+        notice = nil
+        return true
+    }
+
+    private static func swapReadAllowed(_ pickup: PickupModel, store: any DinnerWorkspaceStore, affected meals: Set<UUID>, shopID: UUID) -> Bool {
+        guard pickup.recoveryLedger === store, pickup.ready, !pickup.hasPendingSave, !pickup.saving,
+              !pickup.pantryIsActive || pickup.pantryReadIsCurrent else { return false }
+        guard let source = pickup.journeys.first(where: { $0.id == shopID }) else { return true }
+        return source.closedAt == nil && source.mealRecovery?.domain.events.contains(where: { meals.contains($0.request.target.id) }) != true &&
+            source.cookedMeals?.contains(where: { $0.isActive && meals.contains($0.draft.meal.id) }) != true
+    }
+
+    func latestUndoableSwap(occurrenceID: UUID) -> DinnerApplyReceipt? {
+        guard let shop, let access = try? access(for: shop.id), case .local = access.scope else { return nil }
+        return state.applyReceipts.last { receipt in
+            receipt.proposal.shopID == shop.id && receipt.appliedBy == access.actorID && receipt.swapUndoRevisionID == nil &&
+                (receipt.swapEffect?.original.id == occurrenceID || receipt.swapEffect?.replacementID == occurrenceID)
+        }
+    }
+
+    private func swapAuthorization(_ proposal: DinnerProposal, pickup: PickupModel?, meals: Set<UUID>,
+                                   usesCanonicalStock: Bool) -> (@MainActor () -> Bool) {
+        let identity = editorIdentity
+        let accessProvider = accessProvider
+        let phase = phaseProvider
+        let clock = clock
+        return { [weak ledger = store as? LedgerModel, weak pickup] in
+            guard let identity, let pickup, let ledger, let access = accessProvider(proposal.shopID),
+                  ledger.workspace.selectedShopID == proposal.shopID,
+                  case .local(let origin) = access.scope, origin == ledger.sourceWorkspaceID,
+                  access.scope == identity.scope, access.actorID == identity.actorID, access.actorID == proposal.authorID,
+                  (try? access.validate(shopID: proposal.shopID, at: clock(), applying: true)) != nil,
+                  phase(proposal.shopID) == .draft, pickup.pantryIsActive == usesCanonicalStock else { return false }
+            return Self.swapReadAllowed(pickup, store: ledger, affected: meals, shopID: proposal.shopID)
+        }
+    }
+
+    @discardableResult func undoSwap(_ reviewed: DinnerApplyReceipt, pickup: PickupModel) async -> Bool {
+        guard let shop, let effect = reviewed.swapEffect, let workspaceID = localIdeaWorkspaceID else { return false }
+        do {
+            let actor = try access(for: shop.id)
+            if let saved = state.applyReceipts.first(where: { $0.id == reviewed.id && $0.swapUndoRevisionID != nil }) {
+                guard saved.proposal == reviewed.proposal, saved.swapEffect == effect, saved.appliedBy == actor.actorID,
+                      saved.proposal.shopID == shop.id, case .local(let origin) = actor.scope, origin == workspaceID
+                else { throw DinnerPlanningError.forbidden }
+                return true
+            }
+            let stock = try DinnerPantrySupply.read(pickup: pickup, workspaceID: workspaceID,
+                linkedWorkspaceID: pickup.recoveryLedger?.sourceWorkspaceID, shopID: shop.id)
+            let authorize = swapAuthorization(reviewed.proposal, pickup: pickup, meals: [effect.original.id, effect.replacementID],
+                                              usesCanonicalStock: stock != nil)
+            return await mutate(key: "undo-dinner-swap-\(reviewed.id)", shopID: shop.id, reviewedPantryBasis: stock?.basis,
+                                reauthorize: authorize) { workspace, index, access, now in
+                let current = workspace.shops[index]
+                let touched = Set(effect.original.ingredientContributionIDs + effect.replacement.ingredientContributionIDs)
+                if let journey = pickup.journeys.first(where: { $0.id == current.id }), let context = try pickup.pantryReviewContext() {
+                    let mealIDs: Set<UUID> = [effect.original.id, effect.replacementID]
+                    let needs = Set(journey.needDetails.filter { $0.sourceOccurrenceID.map(mealIDs.contains) == true }.map(\.id))
+                    let reservations = Set(context.mapping.claimLinks.filter {
+                        $0.journeyIDs.contains(current.id) && needs.contains($0.legacyNeedID)
+                    }.map(\.reservationID))
+                    guard !context.snapshot.reservations.contains(where: { reservations.contains($0.id) && $0.state != .released })
+                    else { throw DinnerPlanningError.reviewRequired("reservedMeal") }
+                }
+                let lineIDs = Set(current.contributions.filter { touched.contains($0.id) }.map(\.lineID))
+                let later = Set(current.revisions.drop(while: { $0.id != reviewed.revisionID }).map(\.id))
+                guard !workspace.packSelections.contains(where: { $0.shopID == current.id && lineIDs.contains($0.lineID) && later.contains($0.shopRevisionID) })
+                else { throw DinnerPlanningError.stalePreview }
+                _ = try DinnerSwapEngine.undo(reviewed, ledger: &workspace.shops[index], state: &workspace.dinnerPlanning,
+                    access: access, phase: self.phaseProvider(shop.id), at: now)
+            }
+        } catch { fail(error); return false }
+    }
+
     func cancelPreview() { preview = nil; pantryPreviewReview = nil; error = nil }
     func endDecision(restoring previous: DinnerPreview?, pantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil) {
         cancelPreview()
@@ -138,9 +229,14 @@ extension DinnerWorkspaceStore {
     }
     @discardableResult func applyPreview() async -> Bool {
         guard canApply, let reviewed = preview else { fail(DinnerPlanningError.forbidden); return false }
+        var authorize = repeatWeekAuthorization(for: reviewed.proposal)
+        if let originalID = reviewed.proposal.swapOriginalID {
+            guard let detail = currentSwapReview, let pickup = swapPickup else { fail(DinnerPlanningError.stalePreview); return false }
+            authorize = swapAuthorization(reviewed.proposal, pickup: pickup, meals: [originalID], usesCanonicalStock: detail.pantryBasis != nil)
+        }
         let ok = await mutate(key: "dinner-apply-\(reviewed.proposal.id)", shopID: reviewed.proposal.shopID,
             reviewedPantryBasis: reviewedPantryBasis,
-            reauthorize: repeatWeekAuthorization(for: reviewed.proposal)) { workspace, index, access, now in
+            reauthorize: authorize) { workspace, index, access, now in
             // The local adapter has no server commit binding. Even a caller-supplied
             // sharedCommitAuthorized bit cannot enable a shared authoritative write.
             guard case .local = access.scope else { throw DinnerPlanningError.forbidden }
