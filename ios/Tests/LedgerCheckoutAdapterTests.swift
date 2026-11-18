@@ -405,7 +405,9 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         let undone = await pickup.undoDeferral(undo)
         XCTAssertTrue(undone)
         let restored = try LedgerCheckoutAdapter.review(shop: edited, workspaceRevision: ledger.revision, previous: pickup.journey)
-        XCTAssertEqual(restored.lines.first(where: { $0.id == coffee })?.quantity, quantity(2))
+        let restoredCoffee = try XCTUnwrap(restored.lines.first(where: { $0.id == coffee }))
+        XCTAssertEqual(restoredCoffee.quantity, try edited.quantity(forLineID: coffee))
+        XCTAssertEqual(restoredCoffee.quantity.amount, quantity(2).amount)
     }
 
     @MainActor func testBasisOnlyChangeRequiresReviewClearsQuoteAndLeavesOldSnapshotImmutable() async throws {
