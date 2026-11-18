@@ -26,6 +26,8 @@ import UniformTypeIdentifiers
         let saved = try JSONDecoder().decode(ReviewedCheckoutImage.self, from: JSONEncoder().encode(unknownTotal))
         XCTAssertEqual(saved.charges.first?.line.wording, original.wording)
         XCTAssertEqual(saved.charges.first?.line.reviewedReading, reading)
+        let repeated = try PriceImageLine(digest: digest, ordinal: 4, wording: "Total?", uncertain: true, reviewedReading: reading)
+        XCTAssertThrowsError(try ReviewedCheckoutImage(charges: saved.charges + [.init(field: .subtotal, amount: nil, inclusion: .unknown, line: repeated)]))
         XCTAssertNil(saved.displayedTotal)
         XCTAssertEqual(saved.charges.first?.inclusion, .unknown)
 

@@ -1,4 +1,5 @@
 import CoreGraphics
+import CryptoKit
 import HouseholdClient
 import SwiftUI
 
@@ -25,6 +26,16 @@ extension ReceiptLineCrop {
         return try Self(width: width, height: height, pixels: data)
     }
 
+    func sourceDigest(in image: CGImage, rectangle: CGRect) -> Data {
+        let region = CGRect(x: rectangle.minX * CGFloat(image.width), y: rectangle.minY * CGFloat(image.height),
+            width: rectangle.width * CGFloat(image.width), height: rectangle.height * CGFloat(image.height)).integral
+        let geometry = [image.width, image.height, Int(region.minX), Int(region.minY), Int(region.width), Int(region.height), width, height]
+        var hash = SHA256()
+        hash.update(data: Data(("gray8/" + geometry.map(String.init).joined(separator: "/") + "/").utf8))
+        hash.update(data: pixels)
+        return Data(hash.finalize())
+    }
+
     var previewImage: CGImage? {
         guard let provider = CGDataProvider(data: pixels as CFData) else { return nil }
         return CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: width,
@@ -35,7 +46,7 @@ extension ReceiptLineCrop {
 
 struct ReceiptLineCropEditor: View {
     let image: CGImage
-    let select: (ReceiptLineCrop) -> Void
+    let select: (ReceiptLineCrop, Data) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var top = 0.35
     @State private var bottom = 0.55
@@ -63,7 +74,7 @@ struct ReceiptLineCropEditor: View {
                     edge("Right edge", $right, min(1, left+0.04)...1)
                 }
                 Button(pantryText("Preview this crop")) {
-                    do { let crop = try ReceiptLineCrop.selected(from: image, rectangle: area); select(crop); dismiss() }
+                    do { let crop = try ReceiptLineCrop.selected(from: image, rectangle: area); select(crop, crop.sourceDigest(in: image, rectangle: area)); dismiss() }
                     catch { failed = true }
                 }.accessibilityIdentifier("receipt.assistance.previewCrop")
                 if failed { Text(pantryText("Choose a smaller box around a legible line.")) }
