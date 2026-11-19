@@ -113,6 +113,27 @@ struct PickupSaveStatus: View {
     }
 }
 
+struct PickupLabeledField: View {
+    let title: String
+    @Binding var text: String
+
+    init(_ title: String, text: Binding<String>) {
+        self.title = title
+        _text = text
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: title)
+                .font(.subheadline).foregroundStyle(Theme.secondary)
+                .accessibilityHidden(true)
+            TextField(title, text: $text, prompt: Text(verbatim: ""))
+                .textFieldStyle(.roundedBorder)
+                .accessibilityLabel(Text(verbatim: title))
+        }
+    }
+}
+
 struct PickupEvidenceField: View {
     let title: String
     @Binding var amount: String
@@ -257,11 +278,11 @@ struct PickupCheckoutView: View {
                 PickupStockBasisNotice(model: model)
             }
             Section(pTr("Retailer preview · source and time")) {
-                TextField(pTr("Store"), text: $draft.store).focused($field, equals: .store)
-                TextField(pTr("Branch"), text: $draft.branch).focused($field, equals: .branch)
-                TextField(pTr("Pickup or delivery slot"), text: $draft.slot).focused($field, equals: .slot)
+                PickupLabeledField(pTr("Store"), text: $draft.store).focused($field, equals: .store)
+                PickupLabeledField(pTr("Branch"), text: $draft.branch).focused($field, equals: .branch)
+                PickupLabeledField(pTr("Pickup or delivery slot"), text: $draft.slot).focused($field, equals: .slot)
                 if !draft.termsNeedFreshPricing {
-                    TextField(pTr("Source of these prices"), text: $draft.source).focused($field, equals: .source)
+                    PickupLabeledField(pTr("Source of these prices"), text: $draft.source).focused($field, equals: .source)
                     DatePicker(pTr("Observed"), selection: $draft.observed)
                 }
                 Picker(pTr("Shopping mode"), selection: $draft.mode) {
@@ -406,7 +427,7 @@ struct PickupCheckoutView: View {
         .onChange(of: model.journey?.cap) { _, _ in populate() }
         .sheet(item: $quoteReview) { review in
             NavigationStack {
-                Form {
+                WorkingForm {
                     if let earlier = review.draft.reviewedQuote {
                         Section(pTr("Earlier checkout quote")) {
                             PickupQuoteTermsView(quote: earlier, cap: review.draft.originalCap)
@@ -421,7 +442,8 @@ struct PickupCheckoutView: View {
                         }
                     }
                     if model.journey.map({ review.draft.matchesSource($0, workspaceID: model.sourceWorkspaceID) }) == true {
-                        Button(pTr("Save reviewed checkout")) { Task { await commit(review) } }.disabled(model.saving || model.hasPendingSave)
+                        Button(pTr("Save reviewed checkout")) { Task { await commit(review) } }
+                            .buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
                     } else {
                         Text(pTr("This checkout changed. Go back and reopen its current details before saving."))
                     }
@@ -434,6 +456,7 @@ struct PickupCheckoutView: View {
                     }
                 }
                 .navigationTitle(pTr("Review checkout changes"))
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pTr("Cancel")) { quoteReview = nil } } }
             }
         }

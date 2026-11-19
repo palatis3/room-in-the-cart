@@ -291,6 +291,26 @@ struct PickupOfferForecastResults: View {
     private func results(_ result: PickupOfferEvaluationResult) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(pTr("Combined-cost forecast")).font(.headline)
+            VStack(alignment: .leading, spacing: 6) {
+                if !result.isCurrent {
+                    Text(pTr("This forecast is stale. Review current offers, meal needs, and checkout evidence before using it."))
+                        .font(.headline)
+                }
+                Text("\(pTr("Combined expected cost")): \(combinedCostText(result))")
+                    .font(.title3.weight(.semibold)).monospacedDigit()
+                    .accessibilityIdentifier("pickup.offer.forecast.combined")
+                Text(checkoutAssessment(result.checkoutAssessment))
+                    .accessibilityIdentifier("pickup.offer.forecast.checkout")
+                if let overage = result.minimumOverage {
+                    Text("\(pTr("Minimum forecast overage")): \(pMoney(overage))")
+                        .font(.headline).monospacedDigit()
+                        .accessibilityIdentifier("pickup.offer.forecast.overage")
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(result.isCurrent && result.checkoutAssessment != .over ? Theme.canvas : Theme.warningSurface,
+                        in: RoundedRectangle(cornerRadius: 12))
             if let input = offer.evaluation?.inputs {
                 Text("\(pTr("Evidence source")): \(input.checkoutSource)")
                 Text("\(pTr("Evidence recorded at")): \(input.checkoutObservedAt.formatted())")
@@ -314,13 +334,6 @@ struct PickupOfferForecastResults: View {
                             .accessibilityIdentifier("pickup.offer.forecast.conversion.\(selected.id.uuidString)")
                     }
                 }
-            }
-            if !result.isCurrent { Text(pTr("This forecast is stale. Review current offers, meal needs, and checkout evidence before using it.")) }
-            Text("\(pTr("Combined expected cost")): \(combinedCostText(result))")
-                .accessibilityIdentifier("pickup.offer.forecast.combined")
-            Text(checkoutAssessment(result.checkoutAssessment)).accessibilityIdentifier("pickup.offer.forecast.checkout")
-            if let overage = result.minimumOverage {
-                Text("\(pTr("Minimum forecast overage")): \(pMoney(overage))").accessibilityIdentifier("pickup.offer.forecast.overage")
             }
             Text("\(pTr("Maximum replacement price after retained original charge")): \(result.lineMaximum.map(pMoney) ?? pTr("Unresolved"))")
                 .accessibilityIdentifier("pickup.offer.forecast.lineMaximum")

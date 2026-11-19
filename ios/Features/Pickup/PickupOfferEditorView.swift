@@ -237,7 +237,7 @@ struct PickupOfferFacts: View {
             Text("\(pickupOfferCutoffText(offer)) · \(offer.deadline.timeZoneID)")
             Text("\(pTr("Household preference")): \(offer.householdPreference.isEmpty ? pTr("Unresolved") : offer.householdPreference)")
             Text("\(pTr("Retailer response")): \(offer.retailerResponse.isEmpty ? pTr("Pending") : offer.retailerResponse)")
-            Text("\(pTr("If short")): \(offer.fallback)")
+            Text("\(pTr("If short")): \(pickupOfferFallbackText(offer))")
             PickupOfferForecastResults(offer: offer, journey: journey)
             let needs = journey.needs.filter { $0.orderLineID == offer.lineID }
             Text(pTr("Linked meal needs to review")).font(.headline)
@@ -277,9 +277,13 @@ func pickupOfferCutoffText(_ offer: PickupOffer) -> String {
     formatter.timeZone = TimeZone(identifier: offer.deadline.timeZoneID)
     return formatter.string(from: offer.deadline.cutoff)
 }
+private func pickupOfferFallbackText(_ offer: PickupOffer) -> String {
+    offer.fallback.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? pTr("Not provided") : offer.fallback
+}
+
 /// Deliberately excludes private meal names, exclusions, household preferences,
 /// whole-checkout caps, and funds. Copy is not a retailer response or fill event.
 func pickupOfferRetailerNote(_ offer: PickupOffer) -> String {
     let maximum = offer.evaluation.map { $0.effectiveNoteCeiling } ?? offer.ceiling
-    return "\(offer.replacement)\n\(pTr("Required usable")): \(pQuantity(offer.required))\n\(pTr("Maximum price")): \(maximum.map(pMoney) ?? pTr("Unresolved"))\n\(pTr("Cutoff")): \(pickupOfferCutoffText(offer)) · \(offer.deadline.timeZoneID)\n\(pTr("If short")): \(offer.fallback)"
+    return "\(offer.replacement)\n\(pTr("Required usable")): \(pQuantity(offer.required))\n\(pTr("Maximum price")): \(maximum.map(pMoney) ?? pTr("Unresolved"))\n\(pTr("Cutoff")): \(pickupOfferCutoffText(offer)) · \(offer.deadline.timeZoneID)\n\(pTr("If short")): \(pickupOfferFallbackText(offer))"
 }
