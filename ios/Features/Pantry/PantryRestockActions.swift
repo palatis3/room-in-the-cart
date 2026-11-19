@@ -148,24 +148,27 @@ struct PantryRestockActions: View {
                 }
             }
         }
-        .sheet(item: $grocery) { review in
-            NavigationStack {
-                if current(review) {
-                    switch review.destination {
-                    case .firstList:
-                        FirstListEntry(model: ledger, prefill: food, pantryFoodPrefill: true,
-                            authorizeEntry: { current(review) }, onSaved: { _ in grocery = nil })
-                    case .shop(let id, _):
-                        LedgerImportView(model: ledger, shopID: id, prefill: food, pantryFoodPrefill: true,
-                            authorizeEntry: { current(review) })
-                    default: EmptyView()
-                    }
-                } else { Text(pantryText("This food is unavailable. Return to My Pantry and refresh.")) }
-            }
-        }
     }
+
+    // A Form expands the Group above into several rows. Only the tapped grocery row presents this sheet.
     private func reviewButton(_ title: String, _ choice: PantryRestockReview) -> some View {
-        Button(title) { open(choice) }.disabled(ledger.saving || ledger.hasPendingSave)
+        Button(title) { open(choice) }
+            .disabled(ledger.saving || ledger.hasPendingSave)
             .accessibilityIdentifier("pantry.restock.review")
+            .sheet(item: $grocery) { review in
+                NavigationStack {
+                    if current(review) {
+                        switch review.destination {
+                        case .firstList:
+                            FirstListEntry(model: ledger, prefill: food, pantryFoodPrefill: true,
+                                authorizeEntry: { current(review) }, onSaved: { _ in grocery = nil })
+                        case .shop(let id, _):
+                            LedgerImportView(model: ledger, shopID: id, prefill: food, pantryFoodPrefill: true,
+                                authorizeEntry: { current(review) })
+                        default: EmptyView()
+                        }
+                    } else { Text(pantryText("This food is unavailable. Return to My Pantry and refresh.")) }
+                }
+            }
     }
 }
