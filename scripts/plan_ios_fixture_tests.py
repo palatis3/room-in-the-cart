@@ -76,10 +76,11 @@ BALANCED_SUITES = {
     # The nine guardian cases took 7–10 minutes in recent GitHub runs.
     # Group 01 finished in 14 minutes while group 05 approached its 40-minute limit.
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "GuardianEnrollmentUITests", "RequestDuplicateComparisonUITests"),
-    "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests", "HouseholdDevicesUITests"),
+    "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "HouseholdDevicesUITests"),
     "contributor-balanced-03": ("HouseholdRequestPackUITests",),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests", "SharedMealCivilDateUITests"),
-    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "SharedMealChangeUITests", "StapleRecallUITests"),
+    # On the two preceding PR 76 runs, measurement and stock took 8–9 minutes in group 02.
+    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "MeasurementUITests", "SharedMealChangeUITests", "StapleRecallUITests", "StockReviewUITests"),
 }
 LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"
 MICROPHONE_PROBE = f"{UI_TARGET}/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable"

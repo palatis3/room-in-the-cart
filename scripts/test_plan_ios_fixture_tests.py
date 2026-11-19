@@ -77,7 +77,8 @@ class PlanIOSFixtureTests(unittest.TestCase):
                 self.assertCountEqual(selectors, enabled)
 
     def test_previously_executed_selectors_keep_their_profile_and_shard(self):
-        # Each row comes from a passing XCTest result in GitHub Actions run 44150889945.
+        # Selector identities come from passing XCTest results in GitHub Actions run 44150889945.
+        # The profile and shard columns specify their expected assignment in the current plan.
         # New methods are covered by the exact current-source test above, without changing this fixture.
         historical = Path(__file__).with_name("fixtures") / "ios-fixture-selectors.tsv"
         remaining = set(historical.read_text(encoding="utf-8").splitlines())
@@ -110,7 +111,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         staples = f"{UI_TARGET}/ContributorRequestUITests/testAdultReviewsHouseholdStaplePurchaseAndAnswersQuestionAcrossReopen"
         self.assertEqual([selector.removesuffix("()") for selector in contributor].count(staples), 1)
         foodkeeper = f"{UI_TARGET}/MeasurementUITests/testAdultConfirmsProposedFoodKeeperIDBeforeReviewingQualityRange"
-        measurement_shard = plans["contributor"]["shards"]["contributor-balanced-02"]["test_identifiers"]
+        measurement_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in measurement_shard].count(foodkeeper), 1)
         removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
         meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
