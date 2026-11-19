@@ -163,18 +163,8 @@ struct LedgerImportView: View {
                             original = values.joined(separator: "\n")
                             source = .paste
                         }.accessibilityLabel(ledgerText("Paste list"))
-                        if !pantryFoodPrefill, let binding = reminderCopyBinding {
-                            Button(applePlanningText("Copy from Reminders")) {
-                                inputFocus = nil
-                                reminderPicker = LedgerReminderPresentation(binding: binding)
-                            }.accessibilityIdentifier("ledger.remindersCopy")
-                        }
                     }.disabled(model.saving || model.hasPendingSave)
                     Section {
-                        Button(firstDraft == nil ? captureText("Capture and review fields") : ledgerText("Add by photo or voice")) { beginCapture() }
-                            .disabled(model.saving || model.hasPendingSave || liveCaptureBinding == nil)
-                            .accessibilityIdentifier("ledger.capture")
-                        Text(captureText("Capture is for this private list. Guest changes use the dinner preview.")).font(.footnote)
                         Button(ledgerText("Review list")) {
                             guard let shop else { return }
                             inputFocus = nil
@@ -203,6 +193,19 @@ struct LedgerImportView: View {
                                 .accessibilityIdentifier("ledgerImportSizeError")
                         }
                     }
+                    Section {
+                        if !pantryFoodPrefill, let binding = reminderCopyBinding {
+                            Button(applePlanningText("Copy from Reminders")) {
+                                inputFocus = nil
+                                reminderPicker = LedgerReminderPresentation(binding: binding)
+                            }.accessibilityIdentifier("ledger.remindersCopy")
+                        }
+                        Button(firstDraft == nil ? captureText("Capture and review fields") : ledgerText("Add by photo or voice")) { beginCapture() }
+                            .disabled(model.saving || model.hasPendingSave || liveCaptureBinding == nil)
+                            .accessibilityIdentifier("ledger.capture")
+                    } footer: {
+                        Text(captureText("Capture is for this private list. Guest changes use the dinner preview."))
+                    }.disabled(model.saving || model.hasPendingSave)
                 }
                 if firstDraft == nil && !showingImportStatus {
                     Section { importSaveStatus }
@@ -628,11 +631,18 @@ private struct LedgerImportRowView: View {
                 Text(captureText("Destination") + ": " + capture.destination)
                 if !line.exclusions.isEmpty { Text(captureText("Exclusions") + ": " + line.exclusions.joined(separator: "; ")) }
             } else {
-                TextField(ledgerText("Item name"), text: $line.name, axis: .vertical)
-                    .focused(inputFocus, equals: .name(line.id))
-                TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
-                    .focused(inputFocus, equals: .amount(line.id))
-                    .accessibilityIdentifier("ledgerImportAmount-\(number)")
+                WorkingField(ledgerText("Item name")) {
+                    TextField(ledgerText("Item name"), text: $line.name, prompt: Text(""), axis: .vertical)
+                        .focused(inputFocus, equals: .name(line.id))
+                        .textFieldStyle(.roundedBorder)
+                }
+                WorkingField(ledgerText("Amount, unknown if blank")) {
+                    TextField(ledgerText("Amount, unknown if blank"), text: $amount, prompt: Text(""))
+                        .keyboardType(.numbersAndPunctuation)
+                        .focused(inputFocus, equals: .amount(line.id))
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityIdentifier("ledgerImportAmount-\(number)")
+                }
                 Picker(ledgerText("Unit"), selection: $unit) {
                     ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
