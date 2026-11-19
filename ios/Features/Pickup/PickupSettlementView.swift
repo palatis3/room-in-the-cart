@@ -148,7 +148,7 @@ struct PickupSettlementView: View {
             }
             if let journey = model.journey {
                 PickupFeedbackSection(model: model, journey: journey) {
-                    proxy.scrollTo("pickup.feedback.heading", anchor: .top)
+                    proxy.scrollTo(PickupFeedbackSection.stopOfferingRow, anchor: .bottom)
                 }
             }
         }.navigationTitle(pTr("Close the pickup"))

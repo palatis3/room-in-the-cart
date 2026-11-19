@@ -102,7 +102,9 @@ struct PickupFeedbackSection: View {
     @ObservedObject private var consent = LocalPickupFeedbackConsent.shared
     @ObservedObject var model: PickupModel
     let journey: PickupJourney
+    static let stopOfferingRow = "pickup.feedback.stopOffering"
     let didRemoveResponse: () -> Void
+    @State private var removedResponseRevision: Int64?
     @AccessibilityFocusState private var feedbackOfferFocused: Bool
 
     var body: some View {
@@ -122,8 +124,7 @@ struct PickupFeedbackSection: View {
                             guard await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: consent),
                                   model.sourceWorkspaceID == workspace, model.journey?.id == journey.id,
                                   consent.enabled(for: workspace) else { return }
-                            didRemoveResponse()
-                            feedbackOfferFocused = true
+                            removedResponseRevision = model.journey?.revision
                         }
                     }
                 } else {
@@ -132,10 +133,22 @@ struct PickupFeedbackSection: View {
                     }
                     .accessibilityFocused($feedbackOfferFocused)
                     Button(pTr("Stop offering feedback")) { consent.setEnabled(false, for: model.sourceWorkspaceID) }
+                        .id(Self.stopOfferingRow)
                 }
             } header: {
                 Text(pTr(journey.feedback == nil ? "Optional pickup feedback" : "Your pickup feedback"))
-                    .id("pickup.feedback.heading")
+            }
+            .onChange(of: removedResponseRevision) { _, revision in
+                let workspace = model.sourceWorkspaceID
+                guard let revision else { return }
+                Task { @MainActor in
+                    await Task.yield()
+                    guard model.sourceWorkspaceID == workspace, model.journey?.id == journey.id,
+                          model.journey?.revision == revision, model.journey?.feedback == nil,
+                          consent.enabled(for: workspace) else { return }
+                    didRemoveResponse()
+                    feedbackOfferFocused = true
+                }
             }
         }
     }
