@@ -24,7 +24,7 @@ import XCTest
         let amount = app.textFields["Amount (required)"]
         XCTAssertTrue(amount.exists)
         tap(app.buttons["tonight.recipe.review"])
-        let error = app.descendants(matching: .any)["tonight.recipe.amountError"]
+        let error = app.staticTexts["tonight.recipe.amountError"]
         XCTAssertTrue(error.waitForExistence(timeout: 5))
         XCTAssertEqual(error.label, "Enter an amount greater than zero for Corn.")
         XCTAssertTrue(amount.isHittable)
