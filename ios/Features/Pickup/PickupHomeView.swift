@@ -659,7 +659,7 @@ private struct PickupPlacedOrderRecordView: View {
     @EnvironmentObject private var access: WorkspaceAccess
 
     var body: some View {
-        Form {
+        WorkingForm {
             if access.unlocked, let journey = model.journeys.first(where: { $0.id == shopID }) {
                 PickupPlacedOrderSections(journey: journey)
             }
@@ -739,7 +739,7 @@ struct PickupHandoffView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             if access.unlocked, let journey = model.journey, journey.id == shopID {
                 if journey.basket?.phase == .reportedPlaced {
@@ -873,7 +873,7 @@ private struct PickupWeightReview: View {
     private func clearRate() { rate = ""; increment = ""; rounding = .unknown }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(pTr("Use the latest saved checkout terms. Choose one item sold by weight. The other items and their charges stay in the calculation."))
                 if let quote = currentQuote {

@@ -136,7 +136,7 @@ struct PickupRepairView: View {
         let showsCoverage = (journey?.pickup != nil && !repairNeeds.isEmpty) || !urgentNeeds.isEmpty
         let demands = showsCoverage ? (model.allocation?.demands ?? []) : []
         let coverageByNeed = Dictionary(demands.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             if let pickup = journey?.pickup {
                 Section(pTr("Meal needs and protected portions")) {
@@ -299,7 +299,7 @@ struct PickupCookView: View {
     @State private var editingSavedID: UUID?
     @State private var sharing: HandoffCopy?
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             CookLiveViewContextLink()
             Picker(pTr("Recipient language"), selection: Binding(get: { language }, set: selectLanguage)) {

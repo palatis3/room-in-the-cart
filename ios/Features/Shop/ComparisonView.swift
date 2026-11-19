@@ -345,7 +345,7 @@ private struct PackConversionEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 Section {
                     Text(tr("Enter two equivalent amounts for this food from the package label, a recipe, or your own measurement."))
                         .foregroundStyle(Theme.secondary)

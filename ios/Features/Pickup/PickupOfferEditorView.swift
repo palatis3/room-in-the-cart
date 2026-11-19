@@ -91,7 +91,7 @@ struct PickupOfferEditorView: View {
     }
     private var scopeMatches: Bool { model.journey?.id == journey.id }
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             if !scopeMatches {
                 Text(pTr("Reopen this pickup and review the saved offer before changing it."))
