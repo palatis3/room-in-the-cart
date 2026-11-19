@@ -23,9 +23,8 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--measurement-fixture", "--foodkeeper-match-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_WORKSPACE"] = UUID().uuidString
         app.launch()
-        let guide = app.buttons["pantry.foodKeeper"]
-        XCTAssertTrue(guide.waitForExistence(timeout: 20), app.debugDescription)
-        tap(guide)
+        XCTAssertTrue(app.navigationBars["Canned chicken"].waitForExistence(timeout: 20), app.debugDescription)
+        tap(app.buttons["pantry.foodKeeper"])
         tap(app.buttons["foodKeeper.assistance"])
         XCTAssertFalse(app.buttons["foodKeeper.assistance.confirm"].exists)
         let wording = app.textFields["foodKeeper.assistance.wording"]

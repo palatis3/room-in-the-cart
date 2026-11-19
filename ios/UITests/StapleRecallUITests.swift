@@ -65,7 +65,12 @@ import XCTest
         checked.tap()
         XCTAssertTrue(checked.waitForNonExistence(timeout: 6))
         app.buttons["Done"].tap()
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerInspect-", "Coffee")).firstMatch.waitForExistence(timeout: 6))
+        // Closing history returns to its footer. The reopened grocery is in the active list above it.
+        let reopened = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "ledgerInspect-", "Inspect Coffee")).firstMatch
+        show(reopened, towardStart: true)
+        XCTAssertEqual(shopPicker.label, "Previous market")
+        reopened.tap()
+        XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 6))
     }
 
     func testInStoreCheckPriceCoverageAndOneHandedUndo() {
@@ -135,10 +140,10 @@ import XCTest
         XCTAssertTrue(app.buttons["ledgerListOptions"].waitForExistence(timeout: 25))
     }
 
-    private func show(_ element: XCUIElement) {
+    private func show(_ element: XCUIElement, towardStart: Bool = false) {
         for _ in 0..<8 {
             if element.exists && element.isHittable { return }
-            app.swipeUp()
+            if towardStart { app.collectionViews.firstMatch.swipeDown() } else { app.swipeUp() }
         }
         XCTAssertTrue(element.exists && element.isHittable, element.debugDescription)
     }

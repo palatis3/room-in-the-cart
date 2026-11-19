@@ -35,7 +35,7 @@ import UIKit
         review(english)
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect arroz"]
-        reveal(food)
+        XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let lineID = food.identifier
         XCTAssertTrue(lineID.hasPrefix("ledgerInspect-"))
         tap(element("ledgerImport"))
@@ -46,7 +46,7 @@ import UIKit
         tap(decision)
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Merge same need")).firstMatch)
         tap(apply)
-        reveal(element(lineID))
+        XCTAssertTrue(element(lineID).wait(for: \.isHittable, toEqual: true, timeout: 8))
         restart()
         let saved = element(lineID)
         if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(app.buttons["openPickupList"]) }
@@ -150,7 +150,7 @@ import UIKit
         commit.tap()
         XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
         let food = app.buttons["Inspect wraps"]
-        reveal(food)
+        XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8))
         let id = food.identifier
         restart()
         if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
@@ -175,7 +175,7 @@ import UIKit
         fill("28", into: "ledgerImportAmount-1", replacing: true)
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect pinto beans"]
-        reveal(food)
+        XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let id = food.identifier
         restart()
         if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
@@ -197,7 +197,7 @@ import UIKit
         XCTAssertEqual(element("ledgerImportAmount-1").value as? String, "24")
         tap(element("ledgerCommitImport"))
         let item = app.buttons["Inspect seltzer"]
-        reveal(item)
+        XCTAssertTrue(item.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let id = item.identifier
         restart()
         if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }

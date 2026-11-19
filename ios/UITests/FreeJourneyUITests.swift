@@ -783,7 +783,7 @@ import XCTest
         tap(app.shopToolButton("shop.myPantry"))
         tap(row)
         let source = element("pantry.foodKeeper.source")
-        XCTAssertTrue(source.waitForExistence(timeout: 8))
+        reveal(source)
         XCTAssertTrue(source.label.contains("v128 · #142"))
         let openingLabel = spanish ? "Fecha de apertura" : "Date opened"
         let opened = app.descendants(matching: .any).matching(NSPredicate(
@@ -1943,7 +1943,8 @@ import XCTest
         tap(firstList)
         assertText(wording)
         tap(element("ledgerCommitImport"))
-        for item in ["milks", "bread", "cereal"] {
+        XCTAssertTrue(app.buttons["Inspect milks"].wait(for: \.isHittable, toEqual: true, timeout: 8))
+        for item in ["bread", "cereal"] {
             reveal(app.buttons["Inspect " + item])
         }
         tap(element("ledgerUndoImport"))
@@ -2848,7 +2849,7 @@ import XCTest
         tap(app.buttons["Save need and repair meal"])
         assertText("Open meal need")
         restart()
-        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.shopToolButton("Pickup, repairs and handoffs"))
         tap(app.buttons["Start the next shop"])
         let shortfall = app.staticTexts["Dinner: Rice · 2 units"]
         XCTAssertTrue(shortfall.waitForExistence(timeout: 5), "Preview only the two units still needed after using one at home")
@@ -2914,7 +2915,7 @@ import XCTest
         enableSwitch("stockReview.effectsChecked")
         tap(element("stockReview.apply"))
         restart()
-        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.shopToolButton("Pickup, repairs and handoffs"))
         tap(app.buttons["Repair a meal"])
         assertText("Still short: 3")
         tap(batch)
@@ -2944,7 +2945,7 @@ import XCTest
         tap(save)
         assertText("Thursday lunch")
         restart()
-        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.shopToolButton("Pickup, repairs and handoffs"))
         tap(app.buttons["Repair a meal"])
         assertText("Open meal need")
         assertText("Wednesday supper")
@@ -2974,7 +2975,7 @@ import XCTest
         tap(element("ledgerReviewImport"))
         tap(element("ledgerCommitImport"))
         let line = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).firstMatch
-        reveal(line)
+        XCTAssertTrue(line.wait(for: \.isHittable, toEqual: true, timeout: 8), "The first reviewed grocery must be actionable when the import sheet closes.")
         let id = line.identifier
         shopRoot()
         XCTAssertTrue(pickup.label.contains("Shopping list"), pickup.label)
@@ -2991,7 +2992,7 @@ import XCTest
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "How to add this line")).firstMatch)
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Merge same need")).firstMatch)
         tap(element("ledgerCommitImport"))
-        reveal(element(id))
+        XCTAssertTrue(element(id).wait(for: \.isHittable, toEqual: true, timeout: 8))
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).count, 1)
         tap(element(id.replacingOccurrences(of: "ledgerInspect-", with: "ledgerCheck-")))
         tap(app.buttons["Recently checked, Handled and Trash"])
@@ -3063,7 +3064,7 @@ import XCTest
         stage("2 wraps")
         tap(commit)
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).firstMatch
-        reveal(first)
+        XCTAssertTrue(first.wait(for: \.isHittable, toEqual: true, timeout: 8), "The first reviewed grocery must be actionable when the import sheet closes.")
         let checkFirst = first.identifier.replacingOccurrences(of: "ledgerInspect-", with: "ledgerCheck-")
 
         stage("3 wraps\n3 wraps")
@@ -3085,7 +3086,7 @@ import XCTest
         tap(addPreview)
         XCTAssertTrue(commit.isEnabled, "The earlier explicit separate choice must survive its amount edit")
         tap(commit)
-        reveal(element(checkFirst))
+        XCTAssertTrue(element(checkFirst).wait(for: \.isHittable, toEqual: true, timeout: 8))
         tap(element(checkFirst))
 
         stage("2 wraps")
