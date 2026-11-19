@@ -69,8 +69,16 @@ struct GuardianChildEntryButton: View {
         if let coordinator {
             Text(GuardianCopy.text("Opening child space locks the private workspace on this iPhone. To return, choose “Leave child space”, confirm sign-out, then unlock the workspace."))
                 .foregroundStyle(Theme.secondary)
-            Button(GuardianCopy.text("Use a child invitation")) {
+            Button {
                 coordinator.open(adult: household, access: access, surfaces: surfaces)
+            } label: {
+                Label {
+                    Text(GuardianCopy.text("Use a child invitation"))
+                        .font(.body.weight(.semibold)).underline()
+                } icon: { Image(systemName: "envelope.open") }
+                    .foregroundStyle(Theme.action)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
             }.accessibilityIdentifier("household.childInvitation")
         } else {
             NavigationLink(GuardianCopy.text("Use a child invitation")) { GuardianChildEntryView() }

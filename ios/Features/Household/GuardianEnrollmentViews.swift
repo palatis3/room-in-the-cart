@@ -66,8 +66,14 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
                     Toggle(GuardianCopy.text("I reviewed this current notice"), isOn: $model.noticeReviewed)
                         .accessibilityIdentifier("guardian.reviewedNotice")
                 } else {
-                    Label(GuardianCopy.text("Child setup is unavailable until the verification service and current notices are approved."), systemImage: "lock.shield")
-                        .accessibilityIdentifier("guardian.unavailable")
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label(GuardianCopy.text("Child setup is unavailable"), systemImage: "lock.shield")
+                            .font(.headline)
+                            .accessibilityIdentifier("guardian.unavailable")
+                        Text(GuardianCopy.text("The verification service and guardian notices need approval first."))
+                            .foregroundStyle(Theme.secondary)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
             }
             if model.hasPending {

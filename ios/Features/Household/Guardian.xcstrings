@@ -785,6 +785,38 @@
         }
       }
     },
+    "Child setup is unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child setup is unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El registro de menores no está disponible"
+          }
+        }
+      }
+    },
+    "The verification service and guardian notices need approval first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The verification service and guardian notices need approval first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primero se deben aprobar el servicio de verificación y los avisos para tutores."
+          }
+        }
+      }
+    },
     "Child setup is unavailable until the verification service and current notices are approved.": {
       "localizations": {
         "en": {

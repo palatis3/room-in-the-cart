@@ -27,9 +27,11 @@ import SwiftUI
                         LabeledContent(GuardianCopy.text("Pickup for this request"), value: pickupLabel ?? String(scope.targetShopID.prefix(8)))
                             .accessibilityIdentifier("guardian.childReviewedPickup")
                     }
-                    Section(ht("Original wording")) { Text(verbatim: review.originalText).textSelection(.enabled) }
+                    if review.structured || review.originalText != review.item {
+                        Section(ht("Original wording")) { Text(verbatim: review.originalText).textSelection(.enabled) }
+                    }
                     Section(ht("Request the household will receive")) {
-                        LabeledContent(ht("Item"), value: review.item)
+                        LabeledContent(ht("Item")) { Text(verbatim: review.item).textSelection(.enabled) }
                         LabeledContent(ht("Quantity"), value: review.quantity.isEmpty ? ht("Unknown amount") : review.quantity)
                         LabeledContent(ht("Destination"), value: scope.destination)
                             .accessibilityIdentifier("household.request.reviewDestination")
