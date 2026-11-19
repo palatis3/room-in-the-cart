@@ -5,6 +5,7 @@ struct StandingListView: View {
     @Environment(\.shoppingListAuthorization) private var authorize
     @ObservedObject var model: LedgerModel
     @State private var store: String?
+    @State private var savedItem: StandingListItem?
     @Environment(\.dismiss) private var dismiss
 
     private var stores: [String] {
@@ -20,7 +21,9 @@ struct StandingListView: View {
     var body: some View {
         let rows = filtered
         List {
-            NavigationLink(shoppingText("Add standing item")) { StandingItemEditor(model: model, original: nil) }
+            NavigationLink(shoppingText("Add standing item")) {
+                StandingItemEditor(model: model, original: nil) { savedItem = $0 }
+            }
             Picker(shoppingText("Store"), selection: $store) {
                 Text(shoppingText("All stores")).tag(String?.none)
                 ForEach(stores, id: \.self) { Text($0).tag(Optional($0)) }
@@ -47,6 +50,10 @@ struct StandingListView: View {
                     } label: {
                         VStack(alignment: .leading) {
                             ShoppingIntentLabel(row: item.row)
+                            if savedItem == item {
+                                Label(ledgerText("Saved on this iPhone"), systemImage: "checkmark.circle")
+                                    .font(.footnote).foregroundStyle(Theme.secondary)
+                            }
                             Text(item.stores.joined(separator: " · ")).font(.footnote)
                         }
                     }
@@ -171,8 +178,11 @@ private struct StandingItemEditor: View {
     @State private var exclusions: String
     @Environment(\.dismiss) private var dismiss
 
-    init(model: LedgerModel, original: StandingListItem?) {
+    private let onSaved: ((StandingListItem) -> Void)?
+
+    init(model: LedgerModel, original: StandingListItem?, onSaved: ((StandingListItem) -> Void)? = nil) {
         self.model = model
+        self.onSaved = onSaved
         _original = State(initialValue: original)
         _id = State(initialValue: original?.id ?? UUID())
         _name = State(initialValue: original?.row.name ?? "")
@@ -205,16 +215,24 @@ private struct StandingItemEditor: View {
                     Button(shoppingFormat("Use %@", branch)) { stores = (entries(stores) + [branch]).joined(separator: "\n") }
                 }
             }
-            LedgerSaveStatus(model: model, onRetried: { dismiss() })
+            if model.saving || model.hasPendingSave || model.error != nil {
+                LedgerSaveStatus(model: model, showsLastSave: false, onRetried: finishSave)
+            }
             Button(shoppingText("Save standing item")) {
                 Task {
                     if await model.change(key: "standing-edit-\(id)", reviewedPantryBasis: nil, authorize: authorize, { workspace in
                         let row = ShoppingKitRow(id: id, name: name.trimmingCharacters(in: .whitespacesAndNewlines),
                             quantity: try LedgerEntry.quantity(amount, unit), notes: notes, exclusions: entries(exclusions))
                         try workspace.shoppingLists.saveStanding(StandingListItem(row: row, stores: entries(stores)), replacing: original)
-                    }) { dismiss() }
+                    }) { finishSave() }
                 }
             }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || entries(stores).isEmpty || model.saving || model.hasPendingSave)
         }.navigationTitle(shoppingText("Standing item"))
+    }
+
+    private func finishSave() {
+        guard let item = model.workspace.shoppingLists.standing.first(where: { $0.id == id }) else { return }
+        onSaved?(item)
+        dismiss()
     }
 }
