@@ -279,11 +279,17 @@ struct DinnerTemplateFields: View {
     let focus: FocusState<String?>.Binding
     var body: some View {
         Section(dinnerText("Dinner")) {
-            workingTextField(dinnerText("Dinner name"), text: $draft.title).focused(focus, equals: "title").accessibilityIdentifier("ledgerDinnerTitle")
-                .accessibilityLabel(dinnerText("Dinner name"))
-            workingTextField(dinnerText("Total servings"), text: $draft.servings).focused(focus, equals: "servings").accessibilityIdentifier("ledgerDinnerServings")
-                .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
-                .accessibilityLabel(dinnerText("Total servings"))
+            WorkingField(dinnerText("Dinner name")) {
+                TextField(dinnerText("Dinner name"), text: $draft.title, prompt: Text(verbatim: "—"))
+                    .focused(focus, equals: "title")
+                    .accessibilityIdentifier("ledgerDinnerTitle")
+            }
+            WorkingField(dinnerText("Total servings")) {
+                TextField(dinnerText("Total servings"), text: $draft.servings, prompt: Text(verbatim: "—"))
+                    .focused(focus, equals: "servings")
+                    .accessibilityIdentifier("ledgerDinnerServings")
+                    .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+            }
             workingTextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical).focused(focus, equals: "notes")
                 .accessibilityLabel(dinnerText("Notes"))
             workingTextField(dinnerText("Source URL, optional"), text: $draft.source).focused(focus, equals: "source")
@@ -328,11 +334,15 @@ struct DinnerTemplateFields: View {
             ForEach(draft.groups) { group in
                 let row = dinnerDraftBinding(group, in: $draft.groups)
                 VStack(alignment: .leading, spacing: 8) {
-                    workingTextField(dinnerText("Group name"), text: row.name).focused(focus, equals: "group.\(group.id).name")
-                        .accessibilityLabel(dinnerText("Group name"))
-                    workingTextField(dinnerText("Group servings"), text: row.servings).focused(focus, equals: "group.\(group.id).servings")
-                        .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
-                        .accessibilityLabel(dinnerText("Group servings"))
+                    WorkingField(dinnerText("Group name")) {
+                        TextField(dinnerText("Group name"), text: row.name, prompt: Text(verbatim: "—"))
+                            .focused(focus, equals: "group.\(group.id).name")
+                    }
+                    WorkingField(dinnerText("Group servings")) {
+                        TextField(dinnerText("Group servings"), text: row.servings, prompt: Text(verbatim: "—"))
+                            .focused(focus, equals: "group.\(group.id).servings")
+                            .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    }
                     Toggle(dinnerText("Protected group"), isOn: row.isProtected)
                     Button(dinnerText("Remove group"), role: .destructive) { draft.groups.removeAll { $0.id == group.id } }
                         .buttonStyle(.borderless).foregroundStyle(Theme.error)

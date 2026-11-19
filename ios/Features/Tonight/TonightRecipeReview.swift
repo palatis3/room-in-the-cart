@@ -84,20 +84,26 @@ struct TonightRecipeReview: View {
                             }
                         }
                         Section(tonightText("Recipe")) {
-                            workingTextField(ledgerText("Dinner title"), text: $title).accessibilityIdentifier("tonight.recipe.title")
-                            LabeledContent {
+                            WorkingField(ledgerText("Dinner title")) {
+                                TextField(ledgerText("Dinner title"), text: $title, prompt: Text(verbatim: "—"))
+                                    .accessibilityIdentifier("tonight.recipe.title")
+                            }
+                            WorkingField(ledgerText("Servings")) {
                                 TextField(ledgerText("Servings"), text: $servings, prompt: Text(verbatim: "—"))
                                     .keyboardType(.numbersAndPunctuation)
-                                    .multilineTextAlignment(.trailing)
-                                    .accessibilityLabel(ledgerText("Servings"))
                                     .accessibilityIdentifier("tonight.recipe.servings")
-                            } label: {
-                                Text(ledgerText("Servings")).accessibilityHidden(true)
                             }
-                            workingTextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes).keyboardType(.numberPad)
+                            WorkingField(tonightText("Preparation minutes, unknown if blank")) {
+                                TextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes, prompt: Text(verbatim: "—"))
+                                    .keyboardType(.numberPad)
+                            }
+                        }
+                        Section(ledgerText("Ingredients")) {
                             ForEach($ingredients) { $ingredient in
-                                workingTextField(tonightText("Ingredient"), text: $ingredient.name).accessibilityIdentifier("tonight.recipe.ingredient")
-                                    .id(ingredient.id)
+                                WorkingField(tonightText("Ingredient")) {
+                                    TextField(tonightText("Ingredient"), text: $ingredient.name, prompt: Text(verbatim: "—"))
+                                        .accessibilityIdentifier("tonight.recipe.ingredient")
+                                }.id(ingredient.id)
                                 if invalidAmountID == ingredient.id {
                                     Label(amountError(for: ingredient), systemImage: "exclamationmark.circle")
                                         .foregroundStyle(Theme.warning)

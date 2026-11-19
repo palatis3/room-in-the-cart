@@ -15,23 +15,32 @@ struct CookCompletionEntry: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var model = CookCompletionEditorModel()
     @StateObject private var lifetime = CookReviewLifetime()
-    private struct Scope: Equatable {
+    private struct Origin: Equatable {
         let identity: CapturePrivateIdentity
         let inventory: UUID
         let ledger: UUID
+        let shop: UUID
+        let meal: UUID
+    }
+    @State private var interruptedOrigin: Origin?
+    private struct Scope: Equatable {
+        let origin: Origin
         let generation: UUID
         let preferences: UUID?
     }
+    private var foreground: Bool { scene == .active && UIApplication.shared.applicationState == .active }
+    private var privateIdentity: CapturePrivateIdentity? {
+        guard UIApplication.shared.isProtectedDataAvailable, child?.presented != true,
+              household.projection?.grantId == nil else { return nil }
+        return CapturePrivateIdentity.current(access: access, household: household)
+    }
     private var scope: Scope? {
-        guard scene == .active, UIApplication.shared.applicationState == .active,
-              UIApplication.shared.isProtectedDataAvailable, child?.presented != true,
-              household.projection?.grantId == nil,
-              let identity = CapturePrivateIdentity.current(access: access, household: household),
+        guard foreground, let identity = privateIdentity,
               pickup.pantryIsActive, pickup.pantryRouteAvailable,
               ledger.workspace.selectedShopID == shopID,
               ledger.workspace.shops.first(where: { $0.id == shopID })?.mealOccurrences.contains(where: { $0.id == mealID && $0.removedAt == nil }) == true,
               let inventory = pickup.sourceWorkspaceID, let ledgerID = ledger.sourceWorkspaceID else { return nil }
-        return Scope(identity: identity, inventory: inventory, ledger: ledgerID,
+        return Scope(origin: Origin(identity: identity, inventory: inventory, ledger: ledgerID, shop: shopID, meal: mealID),
                      generation: pickup.privatePantryGeneration, preferences: ledger.workspace.dinnerPlanning.privateMealPreferences?.revision)
     }
     var body: some View {
@@ -45,7 +54,7 @@ struct CookCompletionEntry: View {
             } else if let review = model.review {
                 CookCompletionReviewView(model: model, review: review)
             } else if model.context != nil {
-                CookCompletionForm(model: model)
+                CookCompletionForm(model: model, draftWasCleared: interruptedOrigin != nil && interruptedOrigin == scope?.origin)
             } else {
                 List {
                     if model.busy { ProgressView(cookCompletionText("Loading current food and dinner…")) }
@@ -64,7 +73,19 @@ struct CookCompletionEntry: View {
                 Button(cookCompletionText(model.hasAttemptedMutation ? "Close" : "Cancel")) { dismiss() }.disabled(model.busy)
             }
         }
-        .onDisappear { lifetime.end(); model.invalidate() }
+        .onChange(of: scope) { old, new in
+            if let old, new == nil {
+                // Only retain where a draft was lost. Its contents and review authority are invalidated below.
+                interruptedOrigin = !foreground && privateIdentity == old.origin.identity && model.hasUnsavedDraft ? old.origin : nil
+            } else if let new, interruptedOrigin != new.origin {
+                interruptedOrigin = nil
+            }
+        }
+        .onChange(of: privateIdentity) { _, _ in interruptedOrigin = nil }
+        .onChange(of: model.hasUnsavedDraft) { _, edited in
+            if edited && foreground { interruptedOrigin = nil }
+        }
+        .onDisappear { interruptedOrigin = nil; lifetime.end(); model.invalidate() }
         .task(id: scope) {
             let token = lifetime.begin()
             model.invalidate()
@@ -78,14 +99,30 @@ struct CookCompletionEntry: View {
 
 private struct CookCompletionForm: View {
     @ObservedObject var model: CookCompletionEditorModel
+    let draftWasCleared: Bool
     var body: some View {
-        Form {
+        WorkingForm {
             if let context = model.context {
+                if draftWasCleared {
+                    Section {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(cookCompletionText("Cooking draft cleared")).font(.headline).accessibilityAddTraits(.isHeader)
+                            Text(cookCompletionText("Nothing was saved when you left. Check the servings, ingredient use and leftovers again."))
+                        }
+                        .padding(.vertical, 4)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("cook.interruptedDraft")
+                    }
+                }
                 Section(cookCompletionText("What you cooked")) {
                     Text(context.title).font(.headline)
                     Text(cookCompletionText("Confirm the actual servings and time. Recipe quantities do not determine what was used."))
-                    TextField(cookCompletionText("Servings made"), text: $model.servings)
-                        .keyboardType(.numbersAndPunctuation).accessibilityIdentifier("cook.servings")
+                    WorkingField(cookCompletionText("Servings made")) {
+                        TextField(cookCompletionText("Servings made"), text: $model.servings, prompt: Text(verbatim: "—"))
+                            .keyboardType(.numbersAndPunctuation)
+                            .accessibilityLabel(cookCompletionText("Servings made"))
+                            .accessibilityIdentifier("cook.servings")
+                    }
                     DatePicker(cookCompletionText("Cooked at"), selection: $model.cookedAt, in: ...Date(), displayedComponents: [.date, .hourAndMinute])
                 }
                 ForEach($model.ingredients) { $ingredient in
@@ -128,7 +165,7 @@ private struct CookCompletionForm: View {
                 CookCompletionNotice(model: model)
                 Section {
                     Button(cookCompletionText("Review cooking and inventory changes")) { Task { await model.prepareReview() } }
-                        .accessibilityIdentifier("cook.review")
+                        .buttonStyle(PrimaryAction()).accessibilityIdentifier("cook.review")
                     Button(cookCompletionText("Discard this draft and reload current counts")) { Task { await model.reload() } }
                 }
             }
@@ -255,7 +292,7 @@ private struct CookCompletionReviewView: View {
     @ObservedObject var model: CookCompletionEditorModel
     let review: CookCompletion.Review
     var body: some View {
-        List {
+        WorkingForm {
             Section(cookCompletionText("Review what was cooked")) {
                 Text(review.draft.cookedTitle).font(.headline)
                 LabeledContent(cookCompletionText("Servings made"), value: review.draft.servingsMade.description)
@@ -293,7 +330,7 @@ private struct CookCompletionReviewView: View {
             CookCompletionNotice(model: model)
             Section {
                 Button(cookCompletionText(model.attemptedApply ? "Retry the same confirmation" : "Confirm cooked meal and inventory changes")) { Task { await model.confirm() } }
-                    .disabled(!model.canConfirm).accessibilityIdentifier("cook.confirm")
+                    .buttonStyle(PrimaryAction()).disabled(!model.canConfirm).accessibilityIdentifier("cook.confirm")
                 if !model.attemptedApply {
                     Button(cookCompletionText("Keep editing")) { model.keepEditing() }.disabled(model.busy)
                 } else {
