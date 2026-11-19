@@ -1171,6 +1171,74 @@
           }
         }
       }
+    },
+    "Check membership again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check membership again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a verificar la membresía"
+          }
+        }
+      }
+    },
+    "Free tools are available while you check your membership.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free tools are available while you check your membership."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes usar las herramientas gratuitas mientras verificas tu membresía."
+          }
+        }
+      }
+    },
+    "Membership needs verification": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership needs verification"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta verificar la membresía"
+          }
+        }
+      }
+    },
+    "Your membership details could not be refreshed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your membership details could not be refreshed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron actualizar los datos de tu membresía."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

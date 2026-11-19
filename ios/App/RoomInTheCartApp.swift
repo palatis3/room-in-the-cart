@@ -167,6 +167,10 @@ struct GroceryWindow: View {
             .task(id: scenePhase) {
                 if scenePhase == .active { try? await PrivateReceiptInbox.expireOnForeground() }
             }
+            .task(id: scenePhase == .active ? membership.model?.renewal : nil) {
+                guard scenePhase == .active, let model = membership.model, let renewal = model.renewal else { return }
+                await model.renewWhileActive(renewal)
+            }
             .task(id: pantryOpenScope) { await openPrivatePantry(pantryOpenScope) }
             .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
             .onChange(of: guardianChild.presented) { _, childActive in

@@ -19,13 +19,28 @@ struct MembershipView: View {
             }
             Section(mtr("Your membership")) {
                 TimelineView(.periodic(from: .now, by: 30)) { _ in
-                    Label(model.hasPaidAccess ? mtr("Household access is active") : mtr("Free access"),
-                          systemImage: model.hasPaidAccess ? "person.2.fill" : "person.fill")
-                }
-                if let snapshot = model.state.snapshot {
-                    Text(status(snapshot.status))
-                    if let until = snapshot.status == .grace ? snapshot.graceExpiresAt : snapshot.expiresAt {
-                        LabeledContent(mtr("Access through"), value: until.formatted(date: .abbreviated, time: .omitted))
+                    VStack(alignment: .leading, spacing: 8) {
+                        if model.verificationIsStale || (model.verificationFailed && model.state.snapshot == nil) {
+                            Label(mtr("Membership needs verification"), systemImage: "arrow.clockwise")
+                            Text(mtr("Free tools are available while you check your membership."))
+                        } else {
+                            Label(model.hasPaidAccess ? mtr("Household access is active") : mtr("Free access"),
+                                  systemImage: model.hasPaidAccess ? "person.2.fill" : "person.fill")
+                            if let snapshot = model.state.snapshot {
+                                Text(status(snapshot.status))
+                                if let until = snapshot.status == .grace ? snapshot.graceExpiresAt : snapshot.expiresAt {
+                                    LabeledContent(mtr("Access through"), value: until.formatted(date: .abbreviated, time: .omitted))
+                                }
+                            }
+                        }
+                        if model.verificationFailed {
+                            Text(mtr("Your membership details could not be refreshed."))
+                        }
+                        if model.verificationIsStale || model.verificationFailed {
+                            Button(mtr("Check membership again")) { Task { await model.verifyMembership() } }
+                                .disabled(model.isVerifyingMembership || model.isBusy)
+                                .accessibilityIdentifier("membership.verify")
+                        }
                     }
                 }
                 Text(mtr("Your saved records, exports, manual planning and one reusable dinner remain available on Free."))
