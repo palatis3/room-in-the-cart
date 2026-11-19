@@ -161,22 +161,37 @@ import SwiftUI
                         let seconds = timer.remaining(at: time.date)
                         if seconds == 0 { Text(recordsText("Timer finished")).font(.headline) }
                         else {
-                            let duration = Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .abbreviated))
-                            Text(verbatim: duration).font(.title2.weight(.medium)).monospacedDigit()
-                            if timer.pausedSeconds != nil {
-                                Text(recordsText("Paused")).accessibilityIdentifier("cooking.paused.\(position)")
-                                Button(recordsText("Resume timer")) { Task { await model.resume(timer) } }
-                                    .accessibilityLabel(label + ", " + recordsText("Resume timer"))
-                            } else {
-                                Button(recordsText("Pause timer")) { model.pause(timer) }
-                                    .accessibilityLabel(label + ", " + recordsText("Pause timer"))
-                                    .accessibilityIdentifier("cooking.pause.\(position)")
+                            VStack(alignment: .leading, spacing: 6) {
+                                let duration = Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .abbreviated))
+                                Text(verbatim: duration).font(.title2.weight(.medium)).monospacedDigit()
+                                if timer.pausedSeconds != nil {
+                                    Text(recordsText("Paused")).accessibilityIdentifier("cooking.paused.\(position)")
+                                    Button(recordsText("Resume timer")) { Task { await model.resume(timer) } }
+                                        .buttonStyle(PrimaryAction())
+                                        .accessibilityLabel(label + ", " + recordsText("Resume timer"))
+                                        .accessibilityIdentifier("cooking.resume.\(position)")
+                                } else {
+                                    Button(recordsText("Pause timer")) { model.pause(timer) }
+                                        .buttonStyle(PrimaryAction())
+                                        .accessibilityLabel(label + ", " + recordsText("Pause timer"))
+                                        .accessibilityIdentifier("cooking.pause.\(position)")
+                                }
                             }
                         }
                     }
-                    Button(recordsText("Remove timer"), role: .destructive) { model.cancel(timer) }
-                        .accessibilityLabel(label + ", " + recordsText("Remove timer"))
-                }.buttonStyle(.borderless).accessibilityElement(children: .contain)
+                    Divider().accessibilityHidden(true)
+                    Button(role: .destructive) { model.cancel(timer) } label: {
+                        Text(recordsText("Remove timer"))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    }
+                    .accessibilityLabel(label + ", " + recordsText("Remove timer"))
+                    .accessibilityIdentifier("cooking.remove.\(position)")
+                }
+                .lineLimit(nil)
+                .multilineTextAlignment(.leading)
+                .buttonStyle(.borderless)
+                .accessibilityElement(children: .contain)
             }
             TextField(recordsText("Timer minutes"), text: $minutes)
                 .keyboardType(.numberPad).focused($focusedInput, equals: .minutes)
