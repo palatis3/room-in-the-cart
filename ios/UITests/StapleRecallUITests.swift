@@ -76,6 +76,8 @@ import XCTest
         inStore.tap()
         let checks = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-"))
         XCTAssertTrue(checks.firstMatch.waitForExistence(timeout: 8))
+        let firstCheckID = checks.firstMatch.identifier
+        let firstLineID = firstCheckID.dropFirst("inStoreCheck-".count)
         checks.firstMatch.tap()
         let subtotal = app.staticTexts["inStoreSubtotal"]
         func waitForSubtotal(_ expected: String) {
@@ -86,6 +88,7 @@ import XCTest
         app.buttons["inStoreLastPrice"].tap()
         let amount = app.textFields["inStoreAmount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts.matching(identifier: "Saved on this iPhone").firstMatch.isHittable)
         enter("4.25", in: amount)
         if app.buttons["inStoreAmountDone"].isHittable { app.buttons["inStoreAmountDone"].tap() }
         let save = app.buttons["Save price"]
@@ -102,6 +105,22 @@ import XCTest
         show(inStore)
         inStore.tap()
         waitForSubtotal("$4.25 for 1 of 1 picked items")
+        checks.firstMatch.tap()
+        waitForSubtotal("$4.25 for 1 of 2 picked items")
+        let firstPrice = app.buttons["inStorePrice-" + firstLineID]
+        XCTAssertTrue(firstPrice.label.contains("Saved price · $4.25"))
+        firstPrice.tap()
+        XCTAssertTrue(amount.waitForExistence(timeout: 8))
+        app.buttons["Cancel"].tap()
+        let firstUncheck = app.buttons["inStoreUncheck-" + firstLineID]
+        XCTAssertTrue(firstUncheck.waitForExistence(timeout: 8))
+        XCTAssertGreaterThanOrEqual(firstUncheck.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(firstUncheck.frame.height, 44)
+        firstUncheck.tap()
+        waitForSubtotal("$0.00 for 0 of 1 picked items")
+        XCTAssertTrue(app.buttons[firstCheckID].exists)
+        app.buttons["inStoreUndo"].tap()
+        waitForSubtotal("$0.00 for 0 of 0 picked items")
     }
 
     private func enter(_ value: String, in field: XCUIElement) {

@@ -353,6 +353,7 @@ struct LedgerHomeView: View {
 
 struct LedgerSaveStatus: View {
     @ObservedObject var model: LedgerModel
+    var showsLastSave = true
     var onRetried: (() -> Void)? = nil
     private enum ResultFocus: Hashable { case failure, saved }
     @AccessibilityFocusState private var resultFocus: ResultFocus?
@@ -372,11 +373,11 @@ struct LedgerSaveStatus: View {
                 Button(ledgerText("Discard unsaved change"), role: .destructive) { Task { await model.discardPendingSave() } }
                     .buttonStyle(.borderless)
                     .disabled(model.saving)
-            } else if let savedAt = model.savedAt {
+            } else if showsLastSave, let savedAt = model.savedAt {
                 Label(ledgerText("Saved on this iPhone"), systemImage: "checkmark.circle")
                     .accessibilityFocused($resultFocus, equals: .saved)
                 Text(savedAt.formatted(date: .complete, time: .shortened)).font(.footnote)
-            } else if model.ready { Text(ledgerText("Local to this iPhone")).font(.footnote) }
+            } else if showsLastSave && model.ready { Text(ledgerText("Local to this iPhone")).font(.footnote) }
         }.fixedSize(horizontal: false, vertical: true)
             .onChange(of: model.error) { _, error in if error != nil { resultFocus = .failure } }
             .onChange(of: model.saving) { _, saving in if !saving && model.error == nil { resultFocus = .saved } }

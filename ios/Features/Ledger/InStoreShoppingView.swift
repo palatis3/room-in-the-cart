@@ -112,8 +112,9 @@ struct InStoreShoppingView: View {
                                             let next = others.isEmpty ? nil : others[min(index, others.count - 1)].id
                                             changePick(line, in: shop, checked: true, next: next)
                                         } label: {
-                                            HStack {
+                                            HStack(alignment: .firstTextBaseline, spacing: 8) {
                                                 Image(systemName: "square").font(.title3).foregroundStyle(Theme.controlEdge)
+                                                    .frame(width: 44)
                                                 VStack(alignment: .leading) {
                                                     Text(line.name).font(.headline)
                                                     if let quantity { Text(quantity).font(.subheadline) }
@@ -135,23 +136,7 @@ struct InStoreShoppingView: View {
                         if !picked.isEmpty {
                             Section(shoppingText("Picked items")) {
                                 ForEach(picked) { line in
-                                    Button { editingPrice = line } label: {
-                                        HStack(alignment: .firstTextBaseline, spacing: 12) {
-                                            Image(systemName: "checkmark.square.fill")
-                                                .foregroundStyle(Theme.action).accessibilityHidden(true)
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(line.name).font(.headline).foregroundStyle(Theme.ink)
-                                                Text(priceLabel(shop.priceForCurrentPick(lineID: line.id)))
-                                                    .foregroundStyle(Theme.secondary).monospacedDigit()
-                                            }
-                                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                            .padding(.horizontal, 4)
-                                            .overlay { GroceryCheckInset(cue: cue, lineID: line.id) }
-                                    }.accessibilityHint(shoppingText("Edit the price for the entire picked amount."))
-                                    .accessibilityIdentifier("inStorePrice-\(line.id)")
-                                    .accessibilityAction(named: Text(shoppingFormat("Undo pick of %@", line.name))) {
-                                        changePick(line, in: shop, checked: false, next: line.id)
-                                    }
+                                    pickedRow(line, in: shop)
                                 }
                             }
                         }
@@ -192,6 +177,45 @@ struct InStoreShoppingView: View {
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
     }
 
+    private func pickedRow(_ line: ShoppingLine, in shop: ShoppingLedger) -> some View {
+        let undo = shoppingFormat("Undo pick of %@", line.name)
+        return HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Button {
+                changePick(line, in: shop, checked: false, next: line.id)
+            } label: {
+                Image(systemName: "checkmark.square.fill").font(.title3)
+                    .foregroundStyle(Theme.action)
+                    .frame(width: 44, height: 44).contentShape(Rectangle())
+            }
+            .accessibilityLabel(shoppingFormat("Uncheck %@", line.name))
+            .accessibilityIdentifier("inStoreUncheck-\(line.id)")
+            .disabled(model.hasPendingSave)
+
+            Button { editingPrice = line } label: {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(line.name).font(.headline).foregroundStyle(Theme.ink)
+                        Text(priceLabel(shop.priceForCurrentPick(lineID: line.id)))
+                            .foregroundStyle(Theme.secondary).monospacedDigit()
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 4)
+                    Image(systemName: "pencil").font(.footnote).foregroundStyle(Theme.action)
+                        .accessibilityHidden(true)
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .accessibilityHint(shoppingText("Edit the price for the entire picked amount."))
+            .accessibilityIdentifier("inStorePrice-\(line.id)")
+            .accessibilityAction(named: Text(undo)) {
+                changePick(line, in: shop, checked: false, next: line.id)
+            }
+        }
+        .buttonStyle(.borderless)
+        .overlay { GroceryCheckInset(cue: cue, lineID: line.id).allowsHitTesting(false) }
+    }
+
     private func subtotalSummary(_ shop: ShoppingLedger, last: ShoppingLine?) -> some View {
         let subtotal = shop.pickedCartSubtotal
         return VStack(alignment: .leading, spacing: 5) {
@@ -220,7 +244,7 @@ struct InStoreShoppingView: View {
 
     private func priceLabel(_ price: PickedLinePrice?) -> String {
         guard let price else { return shoppingText("Price unknown · enter total") }
-        var parts = [price.total.map(moneyText) ?? shoppingText("Price unknown")]
+        var parts = [price.total.map { shoppingFormat("Saved price · %@", moneyText($0)) } ?? shoppingText("Price unknown")]
         if price.membership { parts.append(shoppingText("Member price")) }
         if price.weighted { parts.append(shoppingText("Sold by weight")) }
         if price.includedTotal == nil { parts.append(shoppingText("Excluded from subtotal")) }
@@ -266,9 +290,9 @@ private struct PickedPriceEditor: View {
     }
 
     var body: some View {
-        Form {
-            Section(line.name) {
-                TextField(shoppingText("Total for this picked amount ($)"), text: $amount).keyboardType(.decimalPad)
+        WorkingForm {
+            Section {
+                workingTextField(shoppingText("Total for this picked amount ($)"), text: $amount).keyboardType(.decimalPad)
                     .focused($editingAmount).accessibilityIdentifier("inStoreAmount")
                 Text(shoppingText("Enter the total for all packs or the weighed amount. Leave blank for unknown.")).font(.footnote)
                 Toggle(shoppingText("Member price"), isOn: $membership)
@@ -277,9 +301,16 @@ private struct PickedPriceEditor: View {
                     Toggle(shoppingText("I confirmed the applicable total"), isOn: $confirmed)
                     Text(shoppingText("The subtotal includes this price once you confirm the membership conditions and actual weight that apply.")).font(.footnote)
                 }
+            } header: {
+                Text(verbatim: line.name).font(.headline).foregroundStyle(Theme.ink).textCase(nil)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if !validAmount { Text(shoppingText("Enter a nonnegative dollar amount with up to two decimal places.")) }
-            LedgerSaveStatus(model: model, onRetried: { dismiss() })
+            if model.hasPendingSave || model.error != nil {
+                LedgerSaveStatus(model: model, showsLastSave: false, onRetried: { dismiss() })
+            } else if model.saving {
+                ProgressView(shoppingText("Saving price…"))
+            }
             Button(shoppingText("Save price")) {
                 Task {
                     if await model.editShop(key: "picked-price-\(line.id)", shopID: shopID, authorize: authorize, { current in
@@ -290,7 +321,7 @@ private struct PickedPriceEditor: View {
                     }) { dismiss() }
                 }
             }.disabled(!validAmount || model.hasPendingSave || model.saving)
-        }.navigationTitle(shoppingText("Picked item price"))
+        }.navigationTitle(shoppingText("Picked item price")).navigationBarTitleDisplayMode(.inline)
         .keyboardDoneAction(visible: editingAmount, title: ledgerText("Done"), identifier: "inStoreAmountDone") { editingAmount = false }
         .onChange(of: amount) { _, _ in confirmed = false }
         .onChange(of: membership) { _, _ in confirmed = false }

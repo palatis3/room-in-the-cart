@@ -769,6 +769,38 @@
         }
       }
     },
+    "Saved price · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved price · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio guardado · %@"
+          }
+        }
+      }
+    },
+    "Saving price…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving price…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando el precio…"
+          }
+        }
+      }
+    },
     "Save price": {
       "localizations": {
         "en": {
@@ -1085,6 +1117,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trasladar a la recogida"
+          }
+        }
+      }
+    },
+    "Uncheck %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uncheck %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desmarcar %@"
           }
         }
       }
