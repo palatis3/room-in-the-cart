@@ -19,8 +19,22 @@ struct PantryHomeView: View {
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
     @State private var sheet: PantrySheet?
     @AccessibilityFocusState private var resultFocused: Bool
+    @AccessibilityFocusState private var focusedLot: UUID?
 
     var body: some View {
+        ScrollViewReader { reader in
+            pantryList.modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet,
+                handlesReview: sheet != nil, didFinishReceipt: { id in
+                    guard accessAllowed, model.phase == .ready, model.snapshot?.lots.contains(where: { $0.id == id }) == true else { return }
+                    reader.scrollTo(id, anchor: .center)
+                    focusedLot = id
+                }, didSave: { resultFocused = true }))
+        }
+        .navigationTitle(pantryText("My Pantry"))
+        .privacySensitive()
+    }
+
+    private var pantryList: some View {
         Group {
             if accessAllowed {
                 List {
@@ -104,7 +118,10 @@ struct PantryHomeView: View {
                                                            household: household, recoveredHistoryAccess: recoveredHistoryAccess)
                                     } label: {
                                         PantryLotSummary(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id })
-                                    }.accessibilityIdentifier("pantry.lot.\(lot.id)")
+                                    }
+                                    .accessibilityIdentifier("pantry.lot.\(lot.id)")
+                                    .accessibilityFocused($focusedLot, equals: lot.id)
+                                    .id(lot.id)
                                 }
                             }
                         }
@@ -126,13 +143,6 @@ struct PantryHomeView: View {
                 }
             } else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
         }
-        .navigationTitle(pantryText("My Pantry"))
-        .privacySensitive()
-
-        .modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet,
-                                          handlesReview: sheet != nil) {
-            resultFocused = true
-        })
     }
 }
 
@@ -221,7 +231,9 @@ struct PantryEntryPresentation: ViewModifier {
     // The list owns its add and purchase sheets. A pushed lot owns its own actions.
     var handlesReview = true
     var availabilityNeedsReview = false
+    var didFinishReceipt: (UUID) -> Void = { _ in }
     var didSave: () -> Void = {}
+    @State private var receiptLotToReveal: UUID?
 
     func body(content: Content) -> some View {
         content
@@ -246,7 +258,10 @@ struct PantryEntryPresentation: ViewModifier {
                 if case .review = sheet, model.pending == nil { model.cancelReview() }
                 sheet = nil
             }
-        })) {
+        }), onDismiss: {
+            if let id = receiptLotToReveal, accessAllowed { didFinishReceipt(id) }
+            receiptLotToReveal = nil
+        }) {
             NavigationStack {
                 if let value = sheet {
                     switch value {
@@ -256,7 +271,7 @@ struct PantryEntryPresentation: ViewModifier {
                     case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
                     case .products:
                         if let state = model.snapshot?.state { PantryProductBatchView(model: model, workspaceID: state.workspaceID) }
-                    case .receipt: PantryReceiptEntry(model: model)
+                    case .receipt: PantryReceiptEntry(model: model, didFinishWithLot: { receiptLotToReveal = $0 })
                     case .aliases: PantryReceiptAliasList(model: model)
                     case .prices: PantryReceiptHistory(model: model)
                     case .review: PantryReviewView(model: model, accessAllowed: accessAllowed,

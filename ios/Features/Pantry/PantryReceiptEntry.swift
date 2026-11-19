@@ -6,6 +6,7 @@ import SwiftUI
 
 struct PantryReceiptEntry: View {
     @ObservedObject var model: PantryModel
+    var didFinishWithLot: (UUID) -> Void = { _ in }
     var initialSource: SourceMediaRecord? = nil
     var verifySource: @MainActor () async throws -> Void = {}
     @State private var aliases: [InventoryReceiptAlias] = []
@@ -34,7 +35,7 @@ struct PantryReceiptEntry: View {
     @State private var review: PantryReceiptReview?
     @State private var working = false
     @State private var message: String?
-    @State private var savedLotIDs: Set<UUID>?
+    @State private var savedLotIDs: [UUID]?
     @FocusState private var field: String?
     @State private var targetID = UUID()
     @AccessibilityFocusState private var resultFocused: Bool
@@ -46,8 +47,12 @@ struct PantryReceiptEntry: View {
                 Text(message).accessibilityFocused($resultFocused).accessibilityIdentifier("receipt.status")
             }
             if let savedLotIDs {
-                Button(pantryText("Done")) { dismiss() }
-                let lots = model.snapshot?.lots.filter { savedLotIDs.contains($0.id) } ?? []
+                let byID = Dictionary(uniqueKeysWithValues: (model.snapshot?.lots ?? []).map { ($0.id, $0) })
+                let lots = savedLotIDs.compactMap { byID[$0] }
+                Button(pantryText("Done")) {
+                    if model.permitsReceiptSource, let lot = lots.first { didFinishWithLot(lot.id) }
+                    dismiss()
+                }
                 if model.permitsReceiptSource, !lots.isEmpty {
                     Section {
                         if lots.count == 1 {
@@ -311,7 +316,8 @@ struct PantryReceiptEntry: View {
                 try await verifySource()
                 try await model.saveReceipt(value)
                 review = nil; draft = nil; reviewedSourceImage = nil
-                savedLotIDs = Set(value.facts.map(\.lotID))
+                var seen = Set<UUID>()
+                savedLotIDs = value.facts.map(\.lotID).filter { seen.insert($0).inserted }
                 message = value.batch == nil ? pantryText("These lines were already saved.") : pantryText("Reviewed receipt lines saved.")
                 if let sharedSource {
                     do { try await model.finishSharedReceipt(sharedSource, committed: true) }
