@@ -12872,6 +12872,108 @@
           }
         }
       }
+    },
+    "Edit package count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit package count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar la cantidad de paquetes"
+          }
+        }
+      }
+    },
+    "Review skipped product": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review skipped product"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el producto omitido"
+          }
+        }
+      }
+    },
+    "Edit barcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit barcode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar el código de barras"
+          }
+        }
+      }
+    },
+    "Save barcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save barcode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el código"
+          }
+        }
+      }
+    },
+    "Another product in this batch already has that barcode. Check the code on the package.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another product in this batch already has that barcode. Check the code on the package."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otro producto de este lote ya tiene ese código de barras. Revisa el código en el envase."
+          }
+        }
+      }
+    },
+    "Enter a barcode from the package.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a barcode from the package."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa el código de barras del envase."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

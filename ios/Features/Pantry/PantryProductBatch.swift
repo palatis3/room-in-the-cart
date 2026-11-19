@@ -2,13 +2,13 @@ import CoreDomain
 import CryptoKit
 import Foundation
 
-enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery }
+enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode }
 
 struct PantryProductBatch {
     struct Candidate: Identifiable, Equatable {
         let id = UUID()
         let ordinal: Int
-        let barcode: CapturedBarcode?
+        fileprivate(set) var barcode: CapturedBarcode?
         let photoID: String?
         let original: String
         var name: String
@@ -80,6 +80,35 @@ struct PantryProductBatch {
         code.validGTIN ? String(repeating: "0", count: 14 - code.value.count) + code.value : code.value
     }
 
+    func candidate(matching code: CapturedBarcode) -> Candidate? {
+        let key = codeKey(code)
+        return candidates.first { $0.barcode.map(codeKey) == key }
+    }
+
+    mutating func correctManualBarcode(_ value: String, for id: UUID) throws {
+        guard let index = candidates.firstIndex(where: { $0.id == id }),
+              candidates[index].photoID == nil, candidates[index].barcode?.symbology == "manual" else {
+            throw ProductBatchError.invalid
+        }
+        let corrected = CapturedBarcode(symbology: "manual", value: value.trimmingCharacters(in: .whitespacesAndNewlines))
+        try corrected.validate()
+        if let other = candidate(matching: corrected), other.id != id { throw ProductBatchError.duplicateBarcode }
+        guard candidates[index].barcode != corrected else { return }
+
+        var row = candidates[index]
+        row.barcode = corrected
+        if let proposal = row.appliedCatalog {
+            if row.name == proposal.name { row.name = "" }
+            if let quantity = proposal.quantity, let pack = Candidate.pack(quantity), row.perPack == pack.0, row.unit == pack.1 {
+                row.perPack = ""
+            }
+        }
+        row.catalog = nil
+        row.appliedCatalog = nil
+        if row.linkedDelivery != nil { row.stockAction = nil }
+        candidates[index] = row
+    }
+
     mutating func addManual(name: String, code: String?) throws -> Bool {
         let text = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let raw = code?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -107,7 +136,7 @@ struct PantryProductBatch {
     }
 
     private mutating func add(code: CapturedBarcode?, photo: String?, original: String) throws -> Bool {
-        if let code, candidates.contains(where: { $0.barcode.map(codeKey) == codeKey(code) }) { return false }
+        if let code, candidate(matching: code) != nil { return false }
         if code == nil, let photo, candidates.contains(where: { $0.photoID == photo && $0.barcode == nil }) { return false }
         guard candidates.count < 12, nextOrdinal < 200 else { throw ProductBatchError.full }
         let truncated = original.utf8.count > 512

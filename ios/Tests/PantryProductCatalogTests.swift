@@ -13,6 +13,60 @@ private actor CatalogTestTransport {
 }
 
 final class PantryProductCatalogTests: XCTestCase {
+    func testManualBarcodeCorrectionKeepsOneReviewedPackageAndRejectsAnEquivalentPhotoCode() throws {
+        var batch = PantryProductBatch(workspaceID: UUID())
+        XCTAssertTrue(try batch.addManual(name: "Rye crispbread", code: "LOCAL-3317"))
+        batch.candidates[0].perPack = "3"
+        batch.candidates[0].packages = "1"
+        let original = batch.candidates[0]
+        let captured = CapturedBarcode(symbology: "EAN13", value: "3017620422003")
+        let photo = ScannedSource(originalText: "", uncertainLines: [], originalImageData: Data([1]), referenceJPEG: Data(), barcodes: [captured])
+        XCTAssertEqual(try batch.addPhoto(photo), 1)
+        batch.candidates[1].included = false
+        let before = batch.candidates
+        XCTAssertThrowsError(try batch.correctManualBarcode("03017620422003", for: original.id)) {
+            guard case ProductBatchError.duplicateBarcode = $0 else { return XCTFail("Expected a duplicate barcode") }
+        }
+        XCTAssertThrowsError(try batch.correctManualBarcode(" ", for: original.id))
+        XCTAssertThrowsError(try batch.correctManualBarcode("LOCAL-3314", for: before[1].id))
+        XCTAssertEqual(batch.candidates, before)
+
+        try batch.correctManualBarcode(" LOCAL-3314 ", for: original.id)
+        XCTAssertFalse(try batch.addManual(name: "", code: "LOCAL-3314"))
+        XCTAssertEqual(batch.candidates.count, 2)
+        XCTAssertEqual(batch.candidates[0].id, original.id)
+        XCTAssertEqual(batch.candidates[0].ordinal, original.ordinal)
+        XCTAssertEqual(batch.candidates[1], before[1])
+        let draft = try batch.draft(merchant: "Test market", purchaseDate: Date(), confirmed: true)
+        XCTAssertEqual(draft.lines.count, 1)
+        let line = try XCTUnwrap(draft.lines.first)
+        XCTAssertEqual(line.id, original.id)
+        XCTAssertEqual(line.name, "Rye crispbread")
+        XCTAssertEqual(line.received, "3")
+        XCTAssertEqual(line.usable, "3")
+        XCTAssertTrue(line.original.contains("LOCAL-3314"))
+        XCTAssertFalse(line.original.contains("LOCAL-3317"))
+    }
+
+    func testCorrectingBarcodeDropsPreviousCatalogEvidenceAndKeepsManuallyEditedPackageValues() throws {
+        var batch = PantryProductBatch(workspaceID: UUID())
+        let proposal = ProductCatalogProposal(barcode: "3017620422003", name: "Suggested jar", quantity: "375 g", fetched: Date(), modified: nil)
+        XCTAssertTrue(try batch.addManual(name: "", code: proposal.barcode))
+        let id = batch.candidates[0].id
+        batch.candidates[0].catalog = proposal
+        batch.candidates[0].use(proposal)
+        batch.candidates[0].name = "My jar"
+        batch.candidates[0].packages = "2"
+        try batch.correctManualBarcode("LOCAL-JAR", for: id)
+        let row = batch.candidates[0]
+        XCTAssertNil(row.catalog)
+        XCTAssertNil(row.appliedCatalog)
+        XCTAssertEqual(row.name, "My jar")
+        XCTAssertEqual(row.packages, "2")
+        XCTAssertTrue(row.perPack.isEmpty)
+        XCTAssertThrowsError(try batch.draft(merchant: "Test market", purchaseDate: Date(), confirmed: true))
+    }
+
     func testExplicitPublicLookupCoalescesByScopeAndLanguageAndSendsOnlyBarcode() async throws {
         let transport = CatalogTestTransport()
         let catalog = PantryProductCatalog(read: { try await transport.send($0) })
