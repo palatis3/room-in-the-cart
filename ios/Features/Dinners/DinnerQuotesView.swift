@@ -312,7 +312,7 @@ struct EnteredQuoteValueField: View {
     let focus: FocusState<String?>.Binding
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(Theme.secondary)
             TextField(title, text: $value).focused(focus, equals: identifier).accessibilityIdentifier(identifier)
         }
     }

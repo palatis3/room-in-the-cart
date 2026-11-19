@@ -102,7 +102,7 @@ import CoreDomain
                         .overlay(alignment: .topLeading) {
                             if kind == .receipt, model.text.isEmpty {
                                 Text(captureText("Enter one printed line per row."))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Theme.secondary)
                                     .padding(.horizontal, 5).padding(.vertical, 8)
                                     .allowsHitTesting(false).accessibilityHidden(true)
                             }

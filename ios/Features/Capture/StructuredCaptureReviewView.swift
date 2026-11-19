@@ -380,7 +380,7 @@ struct StructuredCaptureField: Hashable {
     }
     private func labeledField<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+            Text(title).font(.caption).foregroundStyle(Theme.secondary).accessibilityHidden(true)
             content()
         }
     }

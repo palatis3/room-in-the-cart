@@ -65,7 +65,7 @@ struct PickupHomeView: View {
                         Button { model.selectedID = value.id } label: {
                             VStack(alignment: .leading) {
                                 Text(value.basket?.current.lines.first?.name ?? value.urgent.first?.meal ?? value.stockLots.first?.name ?? pTr("Pickup"))
-                                Text(value.savedAt.formatted()).font(.caption).foregroundStyle(.secondary)
+                                Text(value.savedAt.formatted()).font(.caption).foregroundStyle(Theme.secondary)
                             }
                         }
                     }
@@ -643,7 +643,7 @@ private struct PickupPlacedOrdersView: View {
                             Text(record.placement.reportedAt, format: .dateTime.month().day().year().hour().minute())
                                 .font(.subheadline)
                             if let line = journey.basket?.reportedOrderLines?.first {
-                                Text(verbatim: line.name).font(.subheadline).foregroundStyle(.secondary)
+                                Text(verbatim: line.name).font(.subheadline).foregroundStyle(Theme.secondary)
                             }
                         }
                     }.accessibilityIdentifier("records.placedOrder.\(record.placement.id)")

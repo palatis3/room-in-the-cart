@@ -82,7 +82,7 @@ struct HouseholdStaplesView: View {
                 ForEach(group.purchases, id: \.lotId) { purchase in
                     VStack(alignment: .leading) {
                         Text(verbatim: purchase.foodName ?? group.name)
-                        Text(verbatim: purchase.day).foregroundStyle(.secondary)
+                        Text(verbatim: purchase.day).foregroundStyle(Theme.secondary)
                         Button(householdPantryText("Remove from this staple"), role: .destructive) {
                             removing = (group.id, purchase.lotId)
                         }

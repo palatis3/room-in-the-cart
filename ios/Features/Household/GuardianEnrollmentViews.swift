@@ -107,7 +107,7 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(enrollment.childAlias ?? GuardianCopy.text("Child setup"))
-                                Text(GuardianCopy.state(enrollment.state.rawValue)).font(.caption).foregroundStyle(.secondary)
+                                Text(GuardianCopy.state(enrollment.state.rawValue)).font(.caption).foregroundStyle(Theme.secondary)
                                 Text(String(enrollment.enrollmentId.suffix(8))).font(.caption.monospaced())
                             }
                         }.buttonStyle(.borderless)

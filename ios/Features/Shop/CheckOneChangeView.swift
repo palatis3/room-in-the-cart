@@ -182,7 +182,7 @@ struct CheckOneChangeView: View {
 
     private func changeField(_ title: String, _ value: Binding<String>, id: String, money: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(Theme.secondary)
             TextField(title, text: value)
                 .keyboardType(money ? .decimalPad : .default)
                 .focused($field, equals: id)

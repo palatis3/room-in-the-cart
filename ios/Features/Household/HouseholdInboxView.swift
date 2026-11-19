@@ -40,7 +40,7 @@ struct ShopperInboxContent: View {
                     Section {
                         Button(ht("Refresh requests")) { Task { await model.load() } }.disabled(model.busy)
                         Text(ht("Each request keeps its own outcome. Linking a line does not add another pack."))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.secondary)
                     }
                     Section(ht("Requests for this shop")) {
                         ForEach(model.duplicateRequestGroups) { group in
@@ -67,7 +67,7 @@ struct ShopperInboxContent: View {
                                         SharedSafetyButton(channel: model.sharedSafetyChannel, fields: SharedMessageField.request(request))
                                     }
                                     if let household { AdultProductReferenceLink(household: household, request: request) }
-                                    Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
+                                    Text(shopperRequestStatus(request)).foregroundStyle(Theme.secondary)
                                         .accessibilityIdentifier("household.request.outcome.\(request.id)")
                                         .accessibilityFocused($focusedOutcome, equals: request.id)
                                 }.accessibilityElement(children: .contain)
@@ -455,7 +455,7 @@ struct RequestReadTimeLabel: View {
     var body: some View {
         if let asOf, let date = serviceDate(asOf) {
             LabeledContent(ht("Checked on server"), value: date.formatted(date: .abbreviated, time: .standard))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Theme.secondary)
         }
     }
 }
