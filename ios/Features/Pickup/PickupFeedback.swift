@@ -102,11 +102,13 @@ struct PickupFeedbackSection: View {
     @ObservedObject private var consent = LocalPickupFeedbackConsent.shared
     @ObservedObject var model: PickupModel
     let journey: PickupJourney
+    let didRemoveResponse: () -> Void
+    @AccessibilityFocusState private var feedbackOfferFocused: Bool
 
     var body: some View {
-        if journey.eligibleForFeedback {
-            if let answer = journey.feedback {
-                Section(pTr("Your pickup feedback")) {
+        if journey.eligibleForFeedback, journey.feedback != nil || consent.enabled(for: model.sourceWorkspaceID) {
+            Section {
+                if let answer = journey.feedback {
                     Text(answer.decision.label)
                     LabeledContent(pTr("Usual workflow"), value: answer.baseline.label)
                     LabeledContent(pTr("Compared with your usual workflow"), value: answer.comparison.label)
@@ -115,16 +117,25 @@ struct PickupFeedbackSection: View {
                             .font(.footnote)
                     }
                     Button(pTr("Remove this response"), role: .destructive) {
-                        Task { _ = await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: consent) }
+                        let workspace = model.sourceWorkspaceID
+                        Task {
+                            guard await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: consent),
+                                  model.sourceWorkspaceID == workspace, model.journey?.id == journey.id,
+                                  consent.enabled(for: workspace) else { return }
+                            didRemoveResponse()
+                            feedbackOfferFocused = true
+                        }
                     }
-                }
-            } else if consent.enabled(for: model.sourceWorkspaceID) {
-                Section(pTr("Optional pickup feedback")) {
+                } else {
                     NavigationLink(pTr("Record how this pickup turned out")) {
                         PickupFeedbackEditor(model: model, shopID: journey.id, revision: journey.revision)
                     }
+                    .accessibilityFocused($feedbackOfferFocused)
                     Button(pTr("Stop offering feedback")) { consent.setEnabled(false, for: model.sourceWorkspaceID) }
                 }
+            } header: {
+                Text(pTr(journey.feedback == nil ? "Optional pickup feedback" : "Your pickup feedback"))
+                    .id("pickup.feedback.heading")
             }
         }
     }

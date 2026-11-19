@@ -2505,9 +2505,18 @@ import XCTest
         tap(app.buttons["Save my response"])
         assertText("I kept my plan")
         assertText("This pickup counts as zero additional benefit")
-        tap(app.buttons["Remove this response"])
-        tap(app.buttons["Stop offering feedback"])
-        XCTAssertFalse(app.buttons["Record how this pickup turned out"].exists)
+        let removeResponse = app.buttons["Remove this response"]
+        let feedbackOffer = app.buttons["Record how this pickup turned out"]
+        let stopFeedback = app.buttons["Stop offering feedback"]
+        tap(removeResponse)
+        XCTAssertTrue(removeResponse.waitForNonExistence(timeout: 8))
+        // After saving the removal, the feedback section keeps the shopper at the next choices.
+        let offerReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true AND enabled == true"), object: stopFeedback)
+        XCTAssertEqual(XCTWaiter.wait(for: [offerReady], timeout: 10), .completed)
+        XCTAssertTrue(feedbackOffer.exists)
+        capture("Free-removed-response-offer-still-in-view")
+        stopFeedback.tap()
+        XCTAssertTrue(feedbackOffer.waitForNonExistence(timeout: 8))
         capture("Free-settlement-keeps-food-separate")
         tap(app.buttons["Review next shop"])
         tap(app.buttons["Create fresh next-shop draft"])

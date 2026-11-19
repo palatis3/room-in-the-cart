@@ -38,6 +38,10 @@ struct PickupSettlementView: View {
     @State private var nextShopRequested = false
     @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
+        ScrollViewReader { proxy in settlementForm(proxy) }
+    }
+
+    private func settlementForm(_ proxy: ScrollViewProxy) -> some View {
         WorkingForm {
             PickupSaveStatus(model: model)
             if let summary = try? model.journey?.settlement.summary(asOf: model.stockReviewDate) {
@@ -142,7 +146,11 @@ struct PickupSettlementView: View {
                 if let closed = model.journey?.closedAt { Text("\(pTr("Closed")): \(closed.formatted())") }
                 Button(pTr("Review next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused)
             }
-            if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
+            if let journey = model.journey {
+                PickupFeedbackSection(model: model, journey: journey) {
+                    proxy.scrollTo("pickup.feedback.heading", anchor: .top)
+                }
+            }
         }.navigationTitle(pTr("Close the pickup"))
         .keyboardDoneAction(visible: field != nil, title: pTr("Done"), identifier: "pickup.settlement.doneTyping") { field = nil }
         .alert(pTr("Evidence not saved"), isPresented: Binding(
