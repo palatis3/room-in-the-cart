@@ -31,6 +31,10 @@ import XCTest
         amount.typeText("1")  // Validation focuses the ingredient needing correction.
         dismissRecipeKeyboard()
         XCTAssertTrue(error.waitForNonExistence(timeout: 5))
+        let correctedAmount = XCTAttachment(screenshot: app.screenshot())
+        correctedAmount.name = "Corrected recipe ingredient with a persistent amount label"
+        correctedAmount.lifetime = .keepAlways
+        add(correctedAmount)
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
         let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.savedRecipe.")).firstMatch
