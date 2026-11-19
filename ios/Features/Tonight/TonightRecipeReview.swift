@@ -84,7 +84,7 @@ struct TonightRecipeReview: View {
                             }
                         }
                         Section(tonightText("Recipe")) {
-                            TextField(ledgerText("Dinner title"), text: $title).accessibilityIdentifier("tonight.recipe.title")
+                            workingTextField(ledgerText("Dinner title"), text: $title).accessibilityIdentifier("tonight.recipe.title")
                             LabeledContent {
                                 TextField(ledgerText("Servings"), text: $servings, prompt: Text(verbatim: "—"))
                                     .keyboardType(.numbersAndPunctuation)
@@ -94,9 +94,9 @@ struct TonightRecipeReview: View {
                             } label: {
                                 Text(ledgerText("Servings")).accessibilityHidden(true)
                             }
-                            TextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes).keyboardType(.numberPad)
+                            workingTextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes).keyboardType(.numberPad)
                             ForEach($ingredients) { $ingredient in
-                                TextField(tonightText("Ingredient"), text: $ingredient.name).accessibilityIdentifier("tonight.recipe.ingredient")
+                                workingTextField(tonightText("Ingredient"), text: $ingredient.name).accessibilityIdentifier("tonight.recipe.ingredient")
                                     .id(ingredient.id)
                                 if invalidAmountID == ingredient.id {
                                     Label(amountError(for: ingredient), systemImage: "exclamationmark.circle")

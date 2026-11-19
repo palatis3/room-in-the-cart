@@ -60,7 +60,7 @@ struct PantryReceiptDocuments: View {
                 Button(pantryText("Cancel reading")) { cancel() }
             } else if let document {
                 Section(pantryText("Receipt source")) {
-                    TextField(pantryText("Store or branch"), text: $merchant).focused($merchantFocused)
+                    workingTextField(pantryText("Store or branch"), text: $merchant).focused($merchantFocused)
                     Picker(pantryText("Document type"), selection: $stage) {
                         ForEach(ReceiptAcquisition.DocumentLine.Stage.allCases, id: \.self) { Text(receiptStage($0)).tag($0) }
                     }

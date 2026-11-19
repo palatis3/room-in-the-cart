@@ -588,7 +588,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio del artículo en el carrito"
+            "value": "Precio del artículo"
           }
         }
       }
