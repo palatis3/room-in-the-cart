@@ -120,7 +120,12 @@ import XCTest
         XCTAssertTrue(preview.label.contains("1:30"))
         XCTAssertTrue(preview.label.contains("America/New_York (UTC−04:00)"))
         tap(element("sharedMeal.deadlineZone"))
-        XCTAssertTrue(app.navigationBars["Scheduled time zone"].waitForExistence(timeout: 8))
+        let zoneList = app.navigationBars["Scheduled time zone"]
+        XCTAssertTrue(zoneList.waitForExistence(timeout: 8))
+        zoneList.buttons.firstMatch.tap()
+        assertElementContains("sharedMeal.deadlinePreview", "America/New_York (UTC−04:00)")
+        tap(element("sharedMeal.deadlineZone"))
+        XCTAssertTrue(zoneList.waitForExistence(timeout: 8))
         let zoneSearch = app.searchFields.firstMatch
         if !zoneSearch.exists { app.swipeDown() }
         tap(zoneSearch)

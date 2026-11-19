@@ -13,9 +13,7 @@ struct SharedMealDeadlineEditor: View {
             .accessibilityIdentifier("sharedMeal.editDeadline")
             .disabled(meal.day == nil)
             .sheet(isPresented: $editing) {
-                NavigationStack {
-                    SharedMealDeadlinePicker(meal: meal) { deadline in save(deadline); editing = false }
-                }
+                SharedMealDeadlinePicker(meal: meal) { deadline in save(deadline); editing = false }
             }
         if meal.planning?.deadline != nil {
             Button(sharedRecoveryText("Clear meal deadline")) { save(nil) }
@@ -31,6 +29,7 @@ private struct SharedMealDeadlinePicker: View {
     @Environment(\.locale) private var locale
     @State private var zoneID: String
     @State private var selected: Date?
+    @State private var path: [Destination] = []
 
     init(meal: SharedMeal, save: @escaping (SharedMealDeadline) -> Void) {
         self.meal = meal; self.save = save
@@ -57,6 +56,23 @@ private struct SharedMealDeadlinePicker: View {
     }
 
     var body: some View {
+        NavigationStack(path: $path) {
+            Group {
+                // On iOS 17, retaining the repeated-time controls during this push can keep layout running.
+                // The civil time and selected occurrence stay in this view's state while the list is open.
+                if path.isEmpty { editor }
+                else { Color.clear.accessibilityHidden(true) }
+            }
+            .navigationTitle(sharedRecoveryText("Meal deadline"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
+            .navigationDestination(for: Destination.self) { _ in
+                ScheduledTimeZoneList(selected: zoneID, choose: changeZone)
+            }
+        }
+    }
+
+    private var editor: some View {
         WorkingForm {
             LabeledContent(sharedRecoveryText("Scheduled day"), value: sharedMealScheduleText(meal.day, locale: locale))
             NavigationLink(value: Destination.timeZone) {
@@ -85,12 +101,6 @@ private struct SharedMealDeadlinePicker: View {
                     .accessibilityIdentifier("sharedMeal.useDeadline")
             } else { Text(sharedRecoveryText("This date does not occur in the selected time zone.")) }
         }
-        .navigationDestination(for: Destination.self) { _ in
-            ScheduledTimeZoneList(selected: zoneID, choose: changeZone)
-        }
-        .navigationTitle(sharedRecoveryText("Meal deadline"))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
     }
 
     private enum Destination: Hashable { case timeZone }
