@@ -231,6 +231,11 @@ struct HouseholdSettingsView: View {
                     }
                 }
             }
+            if model.projection?.grantId == nil {
+                Section(GuardianCopy.text("Child sign-in")) {
+                    GuardianChildEntryButton(household: model)
+                }
+            }
             accountControls
             // Shop selection briefly clears the projection. Keep this destination
             // mounted while it rechecks the new scope before showing records.
@@ -246,9 +251,6 @@ struct HouseholdSettingsView: View {
                     NavigationLink(PlacementCopy.text("Shared placement reports")) { PlacementRecordsEntryView(household: model) }
                         .accessibilityIdentifier("household.placementReports")
                 }
-            }
-            if model.projection?.grantId == nil {
-                Section { GuardianChildEntryButton(household: model) }
             }
             HelpSettingsSection().environmentObject(model)
             if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
@@ -356,15 +358,19 @@ struct ContributorCorrectionButton: View {
 struct OwnRequestEditActions: View {
     @ObservedObject var model: HouseholdModel
     let request: OwnRequest
-    @Environment(\.dynamicTypeSize) private var type
-
     var body: some View {
-        let layout = type.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout())
-        layout {
-            Button(ht("Edit request")) { model.edit(request) }
-                .buttonStyle(.borderless).frame(minHeight: 44)
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                model.edit(request)
+            } label: {
+                Label(ht("Edit request"), systemImage: "pencil")
+                    .foregroundStyle(Theme.action)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            Divider()
             ContributorWithdrawalButton(model: model, request: request)
-                .frame(minHeight: 44)
         }
     }
 }
@@ -375,7 +381,14 @@ struct ContributorWithdrawalButton: View {
     @State private var reviewed: OwnRequest?
 
     var body: some View {
-        Button(ht("Withdraw request"), role: .destructive) { reviewed = request }
+        Button(role: .destructive) {
+            reviewed = request
+        } label: {
+            Label(ht("Withdraw request"), systemImage: "minus.circle")
+                .foregroundStyle(Theme.error)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
             .accessibilityIdentifier("household.withdrawRequest")
             .buttonStyle(.borderless)
             .disabled(model.busy)

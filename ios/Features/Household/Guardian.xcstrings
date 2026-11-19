@@ -65,6 +65,54 @@
         }
       }
     },
+    "Opening child space locks the private workspace on this iPhone. To return, choose “Leave child space”, confirm sign-out, then unlock the workspace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening child space locks the private workspace on this iPhone. To return, choose “Leave child space”, confirm sign-out, then unlock the workspace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir el espacio del menor bloquea el espacio privado en este iPhone. Para volver, elige «Salir del espacio del menor», confirma el cierre de sesión y desbloquea el espacio privado."
+          }
+        }
+      }
+    },
+    "Next shop only · created %@ · ID %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next shop only · created %@ · ID %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo la próxima compra · creada el %1$@ · ID %2$@"
+          }
+        }
+      }
+    },
+    "This pickup · created %@ · ID %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup · created %@ · ID %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta recogida · creada el %1$@ · ID %2$@"
+          }
+        }
+      }
+    },
     "On the child’s device": {
       "localizations": {
         "en": {

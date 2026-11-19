@@ -67,6 +67,8 @@ struct GuardianChildEntryButton: View {
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     var body: some View {
         if let coordinator {
+            Text(GuardianCopy.text("Opening child space locks the private workspace on this iPhone. To return, choose “Leave child space”, confirm sign-out, then unlock the workspace."))
+                .foregroundStyle(Theme.secondary)
             Button(GuardianCopy.text("Use a child invitation")) {
                 coordinator.open(adult: household, access: access, surfaces: surfaces)
             }.accessibilityIdentifier("household.childInvitation")
@@ -280,7 +282,10 @@ struct GuardianChildRequestsView: View {
         let id = pickup.shopId.uuidString.lowercased()
         let prefix = String(id.prefix(8))
         let collision = household.requestPickups.contains { $0.shopId != pickup.shopId && $0.shopId.uuidString.lowercased().hasPrefix(prefix) }
-        return GuardianCopy.date(pickup.createdAt) + " · " + (collision ? id : prefix)
+        let format = pickup.nextShopOnly
+            ? GuardianCopy.text("Next shop only · created %@ · ID %@")
+            : GuardianCopy.text("This pickup · created %@ · ID %@")
+        return String(format: format, locale: .current, GuardianCopy.date(pickup.createdAt), collision ? id : prefix)
     }
 
 }
