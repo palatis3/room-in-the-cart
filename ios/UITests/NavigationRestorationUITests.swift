@@ -49,6 +49,19 @@ import XCTest
         let eggs = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "eggs")).firstMatch
         XCTAssertTrue(milk.waitForExistence(timeout: 10))
         let milkID = milk.identifier, eggsID = eggs.identifier
+        let inspect = app.buttons["Inspect milk"]
+        XCTAssertTrue(inspect.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        XCTAssertGreaterThanOrEqual(inspect.frame.height, 44)
+        inspect.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        let detail = app.navigationBars["Inspect ingredient"]
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["milk"].exists)
+        tap(detail.buttons.firstMatch)
+        let department = app.buttons["Department for milk"]
+        tap(department)
+        tap(app.buttons["Bakery"])
+        let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Bakery"), object: department)
+        XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
         tap(milk)
         let undo = app.buttons["ledgerUndoCheck"]
         XCTAssertTrue(undo.waitForExistence(timeout: 10))

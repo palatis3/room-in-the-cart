@@ -342,6 +342,8 @@ struct LedgerHomeView: View {
                         if let exclusions { Text(verbatim: exclusions) }
                         if !line.notes.isEmpty { Text(line.notes) }
                     }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                 }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
                     .accessibilityValue(Text(verbatim: details))
                     .accessibilityIdentifier("ledgerInspect-\(line.id)")
