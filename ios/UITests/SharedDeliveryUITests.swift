@@ -88,27 +88,18 @@ import XCTest
         XCTAssertTrue(retry.waitForExistence(timeout:10))
         XCTAssertEqual(retry.label, retryLabel)
 
-        // The restored row can overlap the navigation bar. XCTest may throw
-        // when resolving its activation point even though its center is visible.
-        let bounds = app.frame
-        let navigationBar = app.navigationBars.firstMatch
-        XCTAssertTrue(navigationBar.waitForExistence(timeout: 5))
-        let contentTop = navigationBar.frame.maxY
-        let viewport = CGRect(x: bounds.minX, y: contentTop, width: bounds.width,
-                              height: bounds.maxY - contentTop).insetBy(dx: 0, dy: 8)
-        func retryCenter() -> CGPoint {
-            let frame = retry.frame
-            return CGPoint(x: frame.midX, y: frame.midY)
+        // Read through the full restored history before retrying. SwiftUI may
+        // recycle the first section of the Form once the shopper scrolls away.
+        let refresh = app.buttons[spanishLargestText ? "Actualizar el pedido confirmado" : "Refresh confirmed order"]
+        for _ in 0..<16 {
+            if refresh.exists && refresh.isHittable { break }
+            app.swipeUp()
         }
-        var center = retryCenter()
-        for _ in 0..<4 where !viewport.contains(center) {
-            if center.y < viewport.minY { app.swipeDown() } else { app.swipeUp() }
-            center = retryCenter()
-        }
-        XCTAssertTrue(viewport.contains(center), "The retry action must be visible below the navigation bar")
-        XCTAssertTrue(retry.isEnabled)
-        app.coordinate(withNormalizedOffset: .zero)
-            .withOffset(CGVector(dx: center.x - bounds.minX, dy: center.y - bounds.minY)).tap()
+        XCTAssertTrue(refresh.exists && refresh.isHittable, "Reach the end of the order history")
+        XCTAssertTrue(retry.exists && retry.isHittable && retry.isEnabled,
+                      "The saved action must remain available while reviewing the order history")
+        XCTAssertTrue(app.frame.contains(retry.frame), "Show the entire retry action at the current text size")
+        retry.tap()
         XCTAssertTrue(retry.waitForNonExistence(timeout:10))
         reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("\(packsLabel) 1"))
         reveal(row("sharedOrder.current"));XCTAssertTrue(row("sharedOrder.current").label.contains("\(packsLabel) 3"))

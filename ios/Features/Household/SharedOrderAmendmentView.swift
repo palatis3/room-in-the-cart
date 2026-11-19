@@ -22,16 +22,10 @@ struct SharedOrderAmendmentView: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
         Form {
             if canRead {
                 if model.pending != nil {
                     Section(OrderAmendmentCopy.text("Pending confirmation")) {
-                        if model.delivery == .waiting {
-                            Button(ht("Retry the same shared shop action")) { Task { await model.retry(); await refresh() } }
-                                .id("shared-order-retry").accessibilityFocused($retryFocused)
-                                .accessibilityIdentifier("sharedOrder.retry")
-                        }
                         Text(OrderAmendmentCopy.text("The result is not confirmed. Retry the saved action without creating another confirmation."))
                     }
                 }
@@ -46,6 +40,15 @@ struct SharedOrderAmendmentView: View {
         }
         .navigationTitle(OrderAmendmentCopy.text("Confirmed order"))
         .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if canRead, model.pending != nil, model.delivery == .waiting {
+                Button(ht("Retry the same shared shop action")) { Task { await model.retry(); await refresh() } }
+                    .buttonStyle(PrimaryAction())
+                    .accessibilityFocused($retryFocused)
+                    .accessibilityIdentifier("sharedOrder.retry")
+                    .padding(.horizontal, 16).padding(.vertical, 8).background(Theme.canvas)
+            }
+        }
         .disabled(model.busy || loading)
         .keyboardDoneAction(visible: referenceFocused, title: ht("Done")) { referenceFocused = false }
         .task { await refresh() }
@@ -65,9 +68,7 @@ struct SharedOrderAmendmentView: View {
             guard let id = readyRetryID else { return }
             await Task.yield()
             guard !Task.isCancelled, readyRetryID == id else { return }
-            proxy.scrollTo("shared-order-retry", anchor: .top)
             retryFocused = true
-        }
         }
     }
     @ViewBuilder private func history(_ page: SharedConfirmedOrder) -> some View {
