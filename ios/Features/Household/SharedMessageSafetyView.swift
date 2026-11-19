@@ -152,7 +152,7 @@ private struct SharedSafetyEditor: View {
     @State private var selected = 0
     @Environment(\.dismiss) private var dismiss
     var body: some View {
-        Form {
+        WorkingForm {
             if channel.scoped() {
                 switch review.status {
                 case .ready:

@@ -24,6 +24,10 @@ struct ShopperInboxContent: View {
         ScrollViewReader { scroll in
             List {
                 if model.authorized {
+                    if let scope = household?.projection, scope.household.id == model.householdID,
+                       scope.memberId == model.memberID, scope.shopId == model.shopID {
+                        Section { HouseholdScopeHeading(scope: scope) }
+                    }
                     ShopperDeliverySection(model: model)
                     if model.trackingAllowed, model.pending == nil {
                         NavigationLink(ru("Accepted request changes")) { SharedRequestUndoInboxView(owner: model) }
@@ -167,7 +171,11 @@ struct HouseholdRequestDecisionView: View {
                 ShopperDeliverySection(model: model)
                 if let selected = model.selected, selected.id == request.id {
                     Section(ht("Request")) {
-                        Text(selected.originalItem).font(.headline)
+                        Text(selected.originalItem).font(.title2.weight(.semibold))
+                        if let scope = sharedShop?.scope, scope.shopId == selected.shopId {
+                            Text(verbatim: scope.household.label)
+                        }
+                        LabeledContent(ht("Pickup"), value: String(selected.shopId.prefix(8)))
                         RequestReadTimeLabel(asOf: model.requestReadTimes.rows[selected.id])
                         if let alias = selected.authorAlias { LabeledContent(ht("Requested by"), value: alias) }
                         if let quantity = selected.ownQuantity { Text(quantity) }

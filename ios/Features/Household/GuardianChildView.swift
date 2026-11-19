@@ -6,16 +6,20 @@ struct GuardianChildView: View {
     @ObservedObject var model: GuardianChildModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var forget = false
+    @AccessibilityFocusState private var focusedStep: Step?
+    private enum Step: Hashable { case pairingCode, finish }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
-                Text(GuardianCopy.text("This space is for your own requests. Your guardian must confirm this device before access can begin."))
+                Label(GuardianCopy.text("On the child’s device"), systemImage: "iphone").font(.headline)
+                Text(GuardianCopy.text("Your guardian will confirm this phone before you can send a request."))
             }
-            if let code = model.pairingCode {
+            if let code = model.pairingCode, model.status == .awaitingGuardian {
                 Section(GuardianCopy.text("Show this code to your guardian")) {
                     Text(code).font(.title.monospaced()).textSelection(.enabled).privacySensitive()
                         .accessibilityIdentifier("guardian.childPairingCode")
-                    Text(GuardianCopy.text("Show it on this device to your guardian. An invitation alone does not activate access."))
+                        .accessibilityFocused($focusedStep, equals: .pairingCode)
+                    Text(GuardianCopy.text("Your guardian enters this pairing code on their own phone."))
                 }
             }
             if model.hasPending {
@@ -25,7 +29,7 @@ struct GuardianChildView: View {
                     Button(GuardianCopy.text("Check guardian confirmation")) { Task { await model.refreshStatus() } }
                         .accessibilityIdentifier("guardian.childRefresh")
                 }
-            } else if !model.completed {
+            } else if !model.completed && !(model.coveredAuthentication && model.status == .ended) {
                 Section(GuardianCopy.text("Invitation from your guardian")) {
                     if model.coveredAuthentication {
                         Text(GuardianCopy.text("Your guardian's invitation is approved for this sign-in. Continue to show the pairing code on this device."))
@@ -45,7 +49,8 @@ struct GuardianChildView: View {
                     case .approved:
                         Text(GuardianCopy.text("Your guardian confirmed this device. Finish setup to open your own requests."))
                         Button(GuardianCopy.text("Finish child setup")) { Task { await model.finishSetup() } }
-                            .disabled(!model.canFinish).accessibilityIdentifier("guardian.childFinish")
+                            .buttonStyle(PrimaryAction()).disabled(!model.canFinish).accessibilityIdentifier("guardian.childFinish")
+                            .accessibilityFocused($focusedStep, equals: .finish)
                     case .active:
                         Text(GuardianCopy.text("Your own-request access was confirmed by the household service."))
                     case .ended:
@@ -69,6 +74,13 @@ struct GuardianChildView: View {
         .task { await model.load() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { model.suspend() } else { Task { await model.load() } } }
         .onDisappear { model.suspend() }
+        .onChange(of: model.status) { _, status in
+            switch status {
+            case .awaitingGuardian: focusedStep = .pairingCode
+            case .approved: focusedStep = .finish
+            default: focusedStep = nil
+            }
+        }
         .confirmationDialog(GuardianCopy.text("Remove saved setup secrets?"), isPresented: $forget, titleVisibility: .visible) {
             Button(GuardianCopy.text("Remove setup secrets from this device"), role: .destructive) { Task { await model.forgetThisDevice() } }
             Button(GuardianCopy.text("Cancel")) { forget = false }.accessibilityIdentifier("guardian.childForgetCancel")

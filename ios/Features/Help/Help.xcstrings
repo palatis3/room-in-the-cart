@@ -1,6 +1,182 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "About": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acerca de"
+          }
+        }
+      }
+    },
+    "About Room in the Cart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Room in the Cart"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acerca de Room in the Cart"
+          }
+        }
+      }
+    },
+    "Choose a date to check food quality or look up a food in the offline storage guide. A reminder can ask you to open My Pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a date to check food quality or look up a food in the offline storage guide. A reminder can ask you to open My Pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una fecha para revisar la calidad de un alimento o búscalo en la guía de conservación sin conexión. Puedes recibir un recordatorio para abrir Mi despensa."
+          }
+        }
+      }
+    },
+    "In Shop, choose Add a grocery to start your private list. Pantry, Dinners and Records are also available without an account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Shop, choose Add a grocery to start your private list. Pantry, Dinners and Records are also available without an account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Compras, elige Agregar un producto para comenzar tu lista privada. También puedes usar Despensa, Cenas e Historial sin una cuenta."
+          }
+        }
+      }
+    },
+    "In Shop, choose Add a grocery. Enter the item and any amount you know. You can also review pasted text and check possible duplicates before adding them.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Shop, choose Add a grocery. Enter the item and any amount you know. You can also review pasted text and check possible duplicates before adding them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Compras, elige Agregar un producto. Ingresa el producto y la cantidad si la sabes. También puedes revisar el texto que pegaste y comprobar si hay duplicados antes de agregar los productos."
+          }
+        }
+      }
+    },
+    "Open Pantry to see the food you have and where you keep it. Add food by hand or review the lines from a receipt. Check each amount before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Pantry to see the food you have and where you keep it. Add food by hand or review the lines from a receipt. Check each amount before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Despensa para ver qué alimentos tienes y dónde los guardas. Agrega alimentos manualmente o revisa las líneas de un recibo. Comprueba las cantidades antes de guardar."
+          }
+        }
+      }
+    },
+    "A pale pear rests behind the rim of a plum cart with two wheels.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pale pear rests behind the rim of a plum cart with two wheels."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una pera de color claro asoma sobre el borde de un carrito color ciruela con dos ruedas."
+          }
+        }
+      }
+    },
+    "View cart illustration": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View cart illustration"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver la ilustración del carrito"
+          }
+        }
+      }
+    },
+    "Replay the pear": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replay the pear"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a animar la pera"
+          }
+        }
+      }
+    },
+    "Track food in Pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track food in Pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llevar el control de alimentos en Despensa"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión"
+          }
+        }
+      }
+    },
     "If last calls are available, the shopper can set a cutoff that eligible adults see in the app. The service records your response and whether you mute the invitation. Requests after the cutoff go to the next trip.": {
       "localizations": {
         "en": {

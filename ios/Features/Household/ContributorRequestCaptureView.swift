@@ -16,16 +16,21 @@ import SwiftUI
     private var authorized: Bool { !sending && household.contributorRequestScope == scope }
     var body: some View {
         Group {
-            if let review {
-                Form {
-                    Section(ht("Original wording")) { Text(review.originalText).textSelection(.enabled) }
+            if sending {
+                ProgressView(ht("Waiting for the household to confirm receipt"))
+            } else if let review, authorized {
+                WorkingForm {
+                    Section {
+                        if let scope = household.projection {
+                            Text(verbatim: scope.household.label).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                        }
+                        LabeledContent(GuardianCopy.text("Pickup for this request"), value: pickupLabel ?? String(scope.targetShopID.prefix(8)))
+                            .accessibilityIdentifier("guardian.childReviewedPickup")
+                    }
+                    Section(ht("Original wording")) { Text(verbatim: review.originalText).textSelection(.enabled) }
                     Section(ht("Request the household will receive")) {
                         LabeledContent(ht("Item"), value: review.item)
                         LabeledContent(ht("Quantity"), value: review.quantity.isEmpty ? ht("Unknown amount") : review.quantity)
-                        if let pickupLabel {
-                            LabeledContent(GuardianCopy.text("Pickup for this request"), value: pickupLabel)
-                                .accessibilityIdentifier("guardian.childReviewedPickup")
-                        }
                         LabeledContent(ht("Destination"), value: scope.destination)
                             .accessibilityIdentifier("household.request.reviewDestination")
                         if scope.editing != nil { Text(ht("This edits only your selected request.")) }
@@ -33,7 +38,8 @@ import SwiftUI
                         Text(ht("Only the shopper can change the basket. Sending a request does not buy an item or confirm its price."))
                     }
                     Section {
-                        Toggle(ht("I reviewed the original wording, item, quantity, packs, exclusions and destination."), isOn: $approved)
+                        Toggle(review.structured ? ht("I reviewed the original wording, item, quantity, packs, exclusions and destination.") :
+                            ht("I checked the item, amount and pickup."), isOn: $approved)
                             .disabled(sending)
                             .accessibilityIdentifier("household.request.approve")
                         Button(ht("Send reviewed request")) { Task {
@@ -48,14 +54,14 @@ import SwiftUI
                             case .waiting, .received, .needsReview: dismiss()
                             default: approved = false; failure = household.notice
                             }
-                        } }.disabled(!authorized || !approved).accessibilityIdentifier("household.request.sendReviewed")
+                        } }.buttonStyle(PrimaryAction()).disabled(!authorized || !approved).accessibilityIdentifier("household.request.sendReviewed")
                         if let failure { Text(failure).accessibilityIdentifier("household.request.reviewError") }
                         Text(sending ? ht("Waiting for the household to confirm receipt")
                                      : ht("Cancelling leaves your request unsent. No captured photo or audio is sent with this request."))
                     }
                 }.navigationTitle(ht("Review your request"))
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(sending) } }
-            } else if capture {
+            } else if capture, authorized {
                 let captureLanguage = CaptureCorrectionScope.appLanguage()
                 CaptureReviewView(initialText: scope.quantity.isEmpty ? scope.item : scope.quantity + " " + scope.item,
                     localeIdentifier: captureLanguage, destination: scope.destination, requestMode: true, dismissOnReview: false,
@@ -66,7 +72,7 @@ import SwiftUI
                         catch { failure = message(error) }
                     }
             } else {
-                Form { if let failure { Text(failure) } }
+                WorkingForm { if let failure { Text(failure) } }
                     .navigationTitle(ht("Review your request"))
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
             }

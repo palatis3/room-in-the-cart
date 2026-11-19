@@ -17,33 +17,36 @@ struct HelpSettingsSection: View {
 struct HelpCenterView: View {
     private let configuration = HelpConfiguration.fromBundle()
     var body: some View {
-        List {
+        WorkingForm {
             Section {
-                Text(helpText("Start with a pack comparison. No account or connection is needed for your private shopping tools."))
+                Text(helpText("In Shop, choose Add a grocery to start your private list. Pantry, Dinners and Records are also available without an account."))
             }
             Section(helpText("Using Room in the Cart")) {
-                NavigationLink(helpText("Food storage guide")) { FoodKeeperLookupView() }
-                    .accessibilityIdentifier("help.foodKeeper")
                 ForEach(HelpTopic.allCases) { topic in
                     NavigationLink { HelpArticleView(topic: topic) } label: { Text(topic.title) }
                         .accessibilityIdentifier("help.topic." + topic.rawValue)
                 }
+                NavigationLink(helpText("Food storage guide")) { FoodKeeperLookupView() }
+                    .accessibilityIdentifier("help.foodKeeper")
             }
             Section {
                 NavigationLink(helpText("Privacy and data")) { HelpPrivacyView() }
                 NavigationLink(helpText("Support")) { HelpSupportView() }
+                NavigationLink(helpText("About Room in the Cart")) { AboutRoomInTheCartView() }
+                    .accessibilityIdentifier("help.about")
                 if let url = configuration.helpURL { Link(helpText("Online help"), destination: url) }
             }
-        }.workingSurface().navigationTitle(helpText("Help"))
+        }.navigationTitle(helpText("Help"))
     }
 }
 
 enum HelpTopic: String, CaseIterable, Identifiable {
-    case comparison, list, dinners, handoff, household, records, shortcuts, membership
+    case list, pantry, dinners, records, comparison, handoff, household, shortcuts, membership
     var id: String { rawValue }
     var title: String {
         switch self {
         case .comparison: return helpText("Compare two packs")
+        case .pantry: return helpText("Track food in Pantry")
         case .list: return helpText("Build a list and check the budget")
         case .dinners: return helpText("Plan dinners and protect lunches")
         case .handoff: return helpText("Hand off a pickup and record what arrived")
@@ -58,14 +61,18 @@ enum HelpTopic: String, CaseIterable, Identifiable {
 private struct HelpArticleView: View {
     let topic: HelpTopic
     var body: some View {
-        List {
+        WorkingForm {
             switch topic {
             case .comparison:
                 paragraph(helpText("Open Compare packs in Shop. Enter the amount you need, the usable amount in each pack and the price. If the package uses a different kind of unit, enter two equivalent amounts from its label or your own measurement, such as 120 grams of this flour for 1 cup. Without that information, leave the conversion blank."))
                 paragraph(helpText("Review the whole packs needed, the usable food and the cost. An unknown usable amount or missing price stays unresolved. Save the comparison to reopen it in Records."))
                 paragraph(helpText("A pack comparison covers that item only. To judge the whole pickup, review the shopping list and its checkout costs."))
+            case .pantry:
+                paragraph(helpText("Open Pantry to see the food you have and where you keep it. Add food by hand or review the lines from a receipt. Check each amount before saving."))
+                paragraph(helpText("Choose a date to check food quality or look up a food in the offline storage guide. A reminder can ask you to open My Pantry."))
+                NavigationLink(helpText("Food storage guide")) { FoodKeeperLookupView() }
             case .list:
-                paragraph(helpText("In Shop, open your shopping list. Type items or review pasted text before adding it. Review possible duplicates; meal needs and everyday staples remain separate."))
+                paragraph(helpText("In Shop, choose Add a grocery. Enter the item and any amount you know. You can also review pasted text and check possible duplicates before adding them."))
                 paragraph(helpText("Set a spending cap and review the expected checkout with known fees, taxes and discounts. Missing prices remain visible. A payment hold and a posted charge are separate amounts."))
                 paragraph(helpText("To compare stores, enter two quotes for the same needs. Include fees, extra travel cost and time, and check when each quote was observed. This is a manual comparison, not live retailer pricing."))
             case .dinners:
@@ -95,7 +102,7 @@ private struct HelpArticleView: View {
                 paragraph(helpText("In Settings, open Household membership to see the App Store price and renewal period, restore a purchase or manage your subscription. You can keep planning for free."))
                 paragraph(helpText("Restore with the original purchasing account and household. A pending or unverified purchase adds no paid access. If delivery is uncertain, retry delivery or restore rather than buying again. Ending membership preserves permitted Free work."))
             }
-        }.workingSurface().navigationTitle(topic.title).navigationBarTitleDisplayMode(.inline)
+        }.navigationTitle(topic.title).navigationBarTitleDisplayMode(.inline)
     }
     private func paragraph(_ value: String) -> some View { Text(value).fixedSize(horizontal: false, vertical: true) }
 }
@@ -104,7 +111,7 @@ struct HelpPrivacyView: View {
     @EnvironmentObject private var household: HouseholdModel
     private let configuration = HelpConfiguration.fromBundle()
     var body: some View {
-        List {
+        WorkingForm {
             Section(helpText("Your private workspace")) {
                 Text(helpText("Private comparisons, lists, dinners, capture reviews and pickup records are stored on this iPhone. Joining a household does not upload that existing work. An owner export can include private content and recipient history."))
                 Text(helpText("You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names."))
@@ -146,7 +153,7 @@ struct HelpPrivacyView: View {
                 if let url = configuration.termsURL { Link(helpText("Terms of use"), destination: url) }
                 else { Text(helpText("The terms link is unavailable.")) }
             }
-        }.workingSurface().navigationTitle(helpText("Privacy and data"))
+        }.navigationTitle(helpText("Privacy and data"))
     }
 }
 
@@ -158,7 +165,7 @@ struct HelpSupportView: View {
     private let diagnostics = SupportDiagnostics(systemVersion: UIDevice.current.systemVersion,
         language: Bundle.main.preferredLocalizations.first ?? "unknown")
     var body: some View {
-        List {
+        WorkingForm {
             Section(helpText("Get help")) {
                 Text(helpText("Describe the steps, what you expected and what happened. Leave out grocery details, budgets, names, receipts, sign-in codes and invitation links."))
                 if let url = configuration.supportEmailURL, let address = configuration.supportEmailAddress {
@@ -199,6 +206,56 @@ struct HelpSupportView: View {
                     .accessibilityIdentifier("help.support.share")
                 Text(helpText("Nothing is sent automatically. Review the summary and choose its destination in the share sheet. A personal recovery file is a separate private export; support does not need it by default."))
             }
-        }.workingSurface().navigationTitle(helpText("Support"))
+        }.navigationTitle(helpText("Support"))
+    }
+}
+
+private struct AboutRoomInTheCartView: View {
+    @State private var replay: BrandCartMotion.Cue?
+    @State private var showingCaption = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var phase
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                BrandCartMotion(cue: replay, kind: .aboutReplay)
+                    .frame(width: 144, height: 144)
+                    .accessibilityHidden(true)
+                Text(verbatim: "Room in the Cart")
+                    .font(.system(.largeTitle, design: .serif).weight(.semibold))
+                    .accessibilityAddTraits(.isHeader)
+                if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
+                    Text(helpText("Version") + " " + version)
+                        .foregroundStyle(Theme.secondary)
+                }
+                if reduceMotion {
+                    DisclosureGroup(helpText("View cart illustration"), isExpanded: $showingCaption) {
+                        Text(helpText("A pale pear rests behind the rim of a plum cart with two wheels."))
+                    }
+                    .disclosureGroupStyle(LabeledFormDisclosureStyle(label: helpText("View cart illustration"), identifier: "about.viewIllustration"))
+                } else {
+                    Button { replay = .init() } label: {
+                        Label(helpText("Replay the pear"), systemImage: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(PrimaryAction())
+                    .accessibilityIdentifier("about.replay")
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+        }
+        .workingSurface()
+        .navigationTitle(helpText("About"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(ht("Done")) { dismiss() }.accessibilityIdentifier("about.done")
+            }
+        }
+        .onChange(of: phase) { _, value in if value != .active { replay = nil } }
+        .onChange(of: reduceMotion) { _, value in if value { replay = nil } }
+        .onDisappear { replay = nil }
     }
 }

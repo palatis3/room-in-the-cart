@@ -36,6 +36,22 @@ struct DeviceReminderPersona: Equatable {
     @Published private(set) var selectedRequestPickupID: UUID?
     @Published private(set) var nextRequestPickupCursor: UUID?
     @Published private(set) var delivery: DeliveryState = .localDraft
+    private var unsentOfflineRequestID: String?
+    var waitingRequestText: String {
+        if case .waiting(let id) = delivery, unsentOfflineRequestID == id {
+            return ht("Waiting on this iPhone. The household hasn’t received it yet.")
+        }
+        return ht("Delivery hasn’t been confirmed. Check this same request.")
+    }
+    /// The borrowed-device lock screen may only display these fixed recovery messages.
+    var protectedAccessNotice: String? {
+        guard case .accessEnded = delivery else { return nil }
+        let ended = ht("Access has ended. Choose an available workspace.")
+        let cleanup = ht("Access has ended. Local retry cleanup could not be confirmed.")
+        if notice == ended { return ended }
+        if notice == cleanup { return cleanup }
+        return ht("Access needs to be checked again. Your private work stays on this phone.")
+    }
     @Published private(set) var busy = false
     @Published private(set) var locked = false
     @Published private(set) var codeSent = false
@@ -533,7 +549,8 @@ struct DeviceReminderPersona: Equatable {
                 offline = false
             } catch ClientError.transport {
                 guard projection.requestQueueEnabled else {
-                    notice = ht("Enable offline requests while connected before saving a request offline.")
+                    notice = guardianChildOnly ? ht("Connect to send your request to the shopper.") :
+                        ht("Enable offline requests while connected before saving a request offline.")
                     return
                 }
                 guard let cached = contributorReplayWindow, cached.expiresAt > Date() else { throw ClientError.transport }
@@ -629,6 +646,7 @@ struct DeviceReminderPersona: Equatable {
             guard start == generation else { return }
         }
         pending = operation
+        unsentOfflineRequestID = offline ? operation.id : nil
         submittedDraft = draft
         attempts = 0; retryAfter = .distantPast; delivery = .waiting(operationID: operation.id)
         if offline { notice = ht("Saved on this iPhone. Retry when you are connected.") }
@@ -641,6 +659,7 @@ struct DeviceReminderPersona: Equatable {
     }
     private func deliver(_ operation: PendingOperation, start: UUID) async {
         guard let service else { return }
+        unsentOfflineRequestID = nil
         attempts += 1
         do {
             let receipt = try await service.execute(operation)
@@ -999,6 +1018,7 @@ struct DeviceReminderPersona: Equatable {
             suspendedReminderPersona = nil
         }
         lifecycle?.clearScope()
+        unsentOfflineRequestID = nil
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
         clearRequestPickups()
         projection = nil; contributorDeviceID = nil; requests = []; requestReadTimes = RequestReadTimes(); nextRequestCursor = nil; pending = nil
@@ -1087,7 +1107,8 @@ struct DeviceReminderPersona: Equatable {
         case .accessEnded, .sessionNeeded:
             onScopeChange?()
             invalidateSessionActions(); clearProjection(); clearWorkspaceList(); delivery = .accessEnded; locked = identity != nil
-            notice = ht("Access needs to be checked again. Your private work stays on this phone.")
+            notice = (error as? ClientError) == .accessEnded ? ht("Access has ended. Choose an available workspace.") :
+                ht("Access needs to be checked again. Your private work stays on this phone.")
             await service?.clearScope()
             do { try await outbox.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }

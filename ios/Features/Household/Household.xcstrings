@@ -1,6 +1,374 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Access has ended. Choose an available workspace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access has ended. Choose an available workspace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminó el acceso. Elige un espacio disponible."
+          }
+        }
+      }
+    },
+    "Account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta"
+          }
+        }
+      }
+    },
+    "Household invitation code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household invitation code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de invitación al hogar"
+          }
+        }
+      }
+    },
+    "I checked the item, amount and pickup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the item, amount and pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé el producto, la cantidad y la compra."
+          }
+        }
+      }
+    },
+    "Invite an adult to request groceries. You’ll assign a shopper separately. Paid planning seats are managed separately.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite an adult to request groceries. You’ll assign a shopper separately. Paid planning seats are managed separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invita a una persona adulta a pedir productos. Tú eliges quién hará la compra. Los lugares de pago para planificar se administran por separado."
+          }
+        }
+      }
+    },
+    "Open confirmed household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open confirmed household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir el hogar confirmado"
+          }
+        }
+      }
+    },
+    "Pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra"
+          }
+        }
+      }
+    },
+    "Purchase still unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase still unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se sabe si se compró."
+          }
+        }
+      }
+    },
+    "Return to private shopping": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to private shopping"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a las compras privadas"
+          }
+        }
+      }
+    },
+    "Share invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir invitación"
+          }
+        }
+      }
+    },
+    "Signed in as": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in as"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta actual"
+          }
+        }
+      }
+    },
+    "The shopper reviews suggestions before changing the instructions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shopper reviews suggestions before changing the instructions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quien hace las compras revisa las sugerencias antes de cambiar las instrucciones."
+          }
+        }
+      }
+    },
+    "This invitation is unavailable. Ask the person who invited you for a current code.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This invitation is unavailable. Ask the person who invited you for a current code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta invitación no está disponible. Pídele un código vigente a quien te invitó."
+          }
+        }
+      }
+    },
+    "Use another account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use another account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar otra cuenta"
+          }
+        }
+      }
+    },
+    "You can read and suggest changes for this pickup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can read and suggest changes for this pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes leer y sugerir cambios para esta compra."
+          }
+        }
+      }
+    },
+    "You can read the instructions for this pickup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can read the instructions for this pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes leer las instrucciones para esta compra."
+          }
+        }
+      }
+    },
+    "You can send grocery requests.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can send grocery requests."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes enviar solicitudes de productos."
+          }
+        }
+      }
+    },
+    "Your lists and meal plans stay on this iPhone when you join.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your lists and meal plans stay on this iPhone when you join."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus listas y planes de comidas permanecen en este iPhone cuando te unes."
+          }
+        }
+      }
+    },
+    "You’re doing the shopping for this pickup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re doing the shopping for this pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tú te encargas de esta compra."
+          }
+        }
+      }
+    },
+    "Waiting on this iPhone. The household hasn’t received it yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting on this iPhone. The household hasn’t received it yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En espera en este iPhone. El hogar todavía no ha recibido la solicitud."
+          }
+        }
+      }
+    },
+    "Delivery hasn’t been confirmed. Check this same request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivery hasn’t been confirmed. Check this same request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha confirmado el envío. Comprueba esta misma solicitud."
+          }
+        }
+      }
+    },
+    "Draft on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador en este iPhone."
+          }
+        }
+      }
+    },
+    "Connect to send your request to the shopper.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to send your request to the shopper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conéctate para enviarle tu solicitud a quien hace las compras."
+          }
+        }
+      }
+    },
     "Remove the crop to share text alone, or remove a photo from an earlier reference.": {
       "localizations": {
         "en": {

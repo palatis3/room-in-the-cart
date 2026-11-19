@@ -6,8 +6,11 @@ struct HouseholdSettingsView: View {
     @ObservedObject var model: HouseholdModel
     var continuesAfterWorkspaceLock = false
     @State private var visibleEntry: UUID?
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var workspace: WorkspaceAccess
     @Environment(\.scenePhase) private var scenePhase
     @FocusState private var lastCallItemFocused: Bool
+    @AccessibilityFocusState private var resultFocused: Bool
     @State private var requestReview: RequestReviewPresentation?
     private struct RequestReviewPresentation: Identifiable {
         let id = UUID()
@@ -15,19 +18,36 @@ struct HouseholdSettingsView: View {
         let capture: Bool
     }
     var body: some View {
-        Form {
-            HelpSettingsSection().environmentObject(model)
-            Section {
-                Text(ht("Your private work stays on this phone. Signing in does not upload it."))
-                    .foregroundStyle(.secondary)
-            }
-            // Shop selection briefly clears the projection. Keep this destination
-            // mounted while it rechecks the new scope before showing records.
-            if !model.locked, model.identity != nil, model.projection?.grantId == nil {
+        Group {
+            if !model.locked, let scope = model.projection, scope.grantId != nil {
+                if let lifecycle = model.lifecycle {
+                    HouseholdHelperView(model: lifecycle, expectedScope: scope)
+                        .id(scope.grantId)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                NavigationLink {
+                                    WorkingForm { accountControls }
+                                        .navigationTitle(ht("Account"))
+                                } label: { Label(ht("Account"), systemImage: "person.crop.circle") }
+                                    .accessibilityIdentifier("household.cookAccount")
+                            }
+                        }
+                } else {
+                    ProgressView(ht("Checking service…"))
+                }
+            } else { householdForm }
+        }
+        .onChange(of: scenePhase) { _, value in if value == .background { model.lock() } }
+    }
+
+    private var householdForm: some View {
+        WorkingForm {
+            if let scope = model.projection, !scope.enrolled {
+                Section { Text(ht("Access has ended. Choose an available workspace.")) }
+            } else if model.projection == nil {
                 Section {
-                    NavigationLink(HistoryCopy.text("Prices and period budgets")) {
-                        HistoryRecordsEntryView(household: model)
-                    }.accessibilityIdentifier("household.priceBudgetHistory")
+                    Text(ht("Your lists and meal plans stay on this iPhone when you join."))
+                        .foregroundStyle(Theme.secondary)
                 }
             }
             if !model.configured {
@@ -44,21 +64,21 @@ struct HouseholdSettingsView: View {
                 Section(ht("Adult sign-in")) {
                     Button(ht("Resume saved account")) { Task { await model.unlock() } }
                     if model.emailOTPEnabled {
-                    TextField(ht("Email"), text: $model.email).textContentType(.emailAddress)
-                        .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    Button(ht("Email me a code")) { Task { await model.sendCode() } }
-                        .disabled(model.email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    if model.codeSent {
-                        SecureField(ht("Email sign-in code"), text: $model.code).textContentType(.oneTimeCode)
-                        Button(ht("Verify code")) {
-                            let entry = visibleEntry
-                            Task {
-                                await model.verifyCode {
-                                    continuesAfterWorkspaceLock && entry != nil && entry == visibleEntry
+                        TextField(ht("Email"), text: $model.email).textContentType(.emailAddress)
+                            .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        Button(ht("Email me a code")) { Task { await model.sendCode() } }
+                            .disabled(model.email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        if model.codeSent {
+                            SecureField(ht("Email sign-in code"), text: $model.code).textContentType(.oneTimeCode)
+                            Button(ht("Verify code")) {
+                                let entry = visibleEntry
+                                Task {
+                                    await model.verifyCode {
+                                        continuesAfterWorkspaceLock && entry != nil && entry == visibleEntry
+                                    }
                                 }
-                            }
-                        }.disabled(model.code.isEmpty)
-                    }
+                            }.disabled(model.code.isEmpty)
+                        }
                     } else {
                         Text(ht("Email sign-in is unavailable. You can still use your private shopping tools."))
                     }
@@ -71,88 +91,14 @@ struct HouseholdSettingsView: View {
                             .accessibilityIdentifier("household.workspaces.retry")
                     }
                 }
-                if let projection = model.projection {
-                    Section(ht("Connected household")) {
-                        Text(projection.household.label)
-                        HouseholdPantryLink(household: model)
-                        HouseholdMealPreferencesLink(household: model)
-                        if model.membershipSession != nil {
-                            NavigationLink(tr("Household membership")) { MembershipEntryView(household: model) }
-                                .accessibilityIdentifier("household.membership")
-                        }
-                        Text(ht("Access is checked by the household service."))
+                if let projection = model.projection, projection.enrolled {
+                    Section {
+                        HouseholdScopeHeading(scope: projection)
                         if projection.canSelectShop == true || projection.selectionRequired == true {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
                         }
-                        if projection.canSetRequestQueue == true {
-                            Button(ht(projection.requestQueueEnabled ? "Turn off and clear unsent offline requests" : "Allow offline requests on this iPhone for up to 24 hours")) {
-                                Task { await model.setRequestQueuePermission(!projection.requestQueueEnabled) }
-                            }.disabled(model.busy).accessibilityIdentifier("household.request.queuePermission")
-                        }
-                        Button(ht("Refresh household")) { Task { await model.refresh() } }
-                        if model.sharedShop != nil { NavigationLink(ht("Open shared household shop")) { HouseholdShopView(model: model) } }
-                        if model.storeQuoteScope != nil {
-                            NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: model) }
-                                .accessibilityIdentifier("sharedShop.storeQuotes")
-                        }
-                        if projection.capabilities.contains("meal_proposals") {
-                            NavigationLink(ht("Propose a meal move")) { SharedMealMovesView(household: model) }
-                        }
                         if model.canReviewHouseholdRequests {
                             NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: model) }
-                        }
-                    }
-                    if let lifecycle = model.lifecycle {
-                        Section(ht("Household access")) {
-                            if lifecycle.isHelper { NavigationLink(ht("Cook instructions")) { HouseholdHelperView(model: lifecycle) } }
-                            if lifecycle.canAdminister { NavigationLink(ht("People and invitations")) { HouseholdPeopleView(model: lifecycle) } }
-                            if lifecycle.canShare || lifecycle.canAdminister { NavigationLink(ht("Manage shared views")) { HouseholdManagedViewsView(model: lifecycle) } }
-                            if !lifecycle.isHelper { NavigationLink(ht("Guardian controls")) { GuardianControlsEntry(household: model, lifecycle: lifecycle) } }
-                            if lifecycle.canReviewDevices {
-                                NavigationLink(DeviceManagementCopy.text("Household devices")) {
-                                    if let devices = lifecycle.makeDevicesModel() { HouseholdDevicesView(model: devices) }
-                                }.accessibilityIdentifier("household.devices.settingsEntry")
-                            }
-                        }
-                    }
-                    if projection.capabilities.contains("own_requests"), projection.shopId != nil || !model.requests.isEmpty {
-                        Section(ht("My requests")) {
-                            ForEach(model.requests) { request in
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(request.originalItem).font(.headline)
-                                    if let quantity = request.ownQuantity { Text(quantity) }
-                                    RequestReadTimeLabel(asOf: model.requestReadTimes.rows[request.id])
-                                    if let proposed = model.pendingCorrection(for: request) {
-                                        LabeledContent(ht("Correction on this device"), value: proposed)
-                                    }
-                                    AdultProductReferenceLink(household: model, request: request)
-                                    if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
-                                    Text(status(request)).foregroundStyle(.secondary)
-                                    if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
-                                    if let clarification = request.clarification {
-                                        Text(verbatim: clarification)
-                                        if request.canReportClarification == true, let field = SharedMessageField(.clarification, request.id, request.revision, .question, clarification) {
-                                            SharedSafetyButton(channel: model.sharedSafetyChannel(), fields: [field])
-                                        }
-                                    }
-                                    if request.ownActionAllowed {
-                                        HStack {
-                                            Button(ht("Edit request")) { model.edit(request) }.buttonStyle(.borderless)
-                                            ContributorWithdrawalButton(model: model, request: request)
-                                        }
-                                    } else if request.status != "withdrawn" {
-                                        Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
-                                    }
-                                }.accessibilityElement(children: projection.supportsSharedContentSafety || projection.capabilities.contains("adult_product_reference") ? .contain : .combine)
-                                .accessibilityIdentifier("household.ownRequest." + request.id)
-                            }
-                            if model.requests.isEmpty {
-                                Text(ht("No received requests in this view."))
-                                RequestReadTimeLabel(asOf: model.requestReadTimes.emptyPage)
-                            }
-                            if model.nextRequestCursor != nil {
-                                Button(ht("Load more requests")) { Task { await model.loadMoreRequests() } }
-                            }
                         }
                     }
                     if projection.capabilities.contains("own_requests"), projection.shopId != nil || model.selectedRequestPickupID != nil || model.editing != nil || model.followingUp != nil {
@@ -176,7 +122,7 @@ struct HouseholdSettingsView: View {
                             }
                             Button(ht("Review request before sending")) {
                                 openRequestReview(capture: false)
-                            }.disabled(!canSend).accessibilityIdentifier("household.request.review")
+                            }.buttonStyle(PrimaryAction()).disabled(!canSend).accessibilityIdentifier("household.request.review")
                             Button(ht("Capture and review a request")) {
                                 openRequestReview(capture: true)
                             }.disabled(model.contributorRequestScope == nil).accessibilityIdentifier("household.request.capture")
@@ -189,7 +135,85 @@ struct HouseholdSettingsView: View {
                         default: EmptyView()
                         }
                     }
+                    if projection.capabilities.contains("own_requests"), projection.shopId != nil || !model.requests.isEmpty {
+                        Section(ht("My requests")) {
+                            ForEach(model.requests) { request in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(request.originalItem).font(.headline)
+                                    if let quantity = request.ownQuantity { Text(quantity) }
+                                    RequestReadTimeLabel(asOf: model.requestReadTimes.rows[request.id])
+                                    if let proposed = model.pendingCorrection(for: request) {
+                                        LabeledContent(ht("Correction on this device"), value: proposed)
+                                    }
+                                    AdultProductReferenceLink(household: model, request: request)
+                                    if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
+                                    Text(shopperRequestStatus(request)).font(.body.weight(.semibold))
+                                    if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
+                                    else if request.status == "added" { Text(ht("Purchase still unknown.")).foregroundStyle(Theme.secondary) }
+                                    if let clarification = request.clarification {
+                                        Text(verbatim: clarification)
+                                        if request.canReportClarification == true, let field = SharedMessageField(.clarification, request.id, request.revision, .question, clarification) {
+                                            SharedSafetyButton(channel: model.sharedSafetyChannel(), fields: [field])
+                                        }
+                                    }
+                                    if request.ownActionAllowed {
+                                        OwnRequestEditActions(model: model, request: request)
+                                    } else if request.status != "withdrawn" {
+                                        Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
+                                    }
+                                }.accessibilityElement(children: projection.supportsSharedContentSafety || projection.capabilities.contains("adult_product_reference") ? .contain : .combine)
+                                .accessibilityIdentifier("household.ownRequest." + request.id)
+                            }
+                            if model.requests.isEmpty {
+                                Text(ht("No received requests in this view."))
+                                RequestReadTimeLabel(asOf: model.requestReadTimes.emptyPage)
+                            }
+                            if model.nextRequestCursor != nil {
+                                Button(ht("Load more requests")) { Task { await model.loadMoreRequests() } }
+                            }
+                        }
+                    }
+                    Section(ht("Connected household")) {
+                        HouseholdPantryLink(household: model)
+                        HouseholdMealPreferencesLink(household: model)
+                        if model.membershipSession != nil {
+                            NavigationLink(tr("Household membership")) { MembershipEntryView(household: model) }
+                                .accessibilityIdentifier("household.membership")
+                        }
+                        if projection.canSetRequestQueue == true {
+                            Button(ht(projection.requestQueueEnabled ? "Turn off and clear unsent offline requests" : "Allow offline requests on this iPhone for up to 24 hours")) {
+                                Task { await model.setRequestQueuePermission(!projection.requestQueueEnabled) }
+                            }.disabled(model.busy).accessibilityIdentifier("household.request.queuePermission")
+                        }
+                        Button(ht("Refresh household")) { Task { await model.refresh() } }
+                        if model.sharedShop != nil { NavigationLink(ht("Open shared household shop")) { HouseholdShopView(model: model) } }
+                        if model.storeQuoteScope != nil {
+                            NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: model) }
+                                .accessibilityIdentifier("sharedShop.storeQuotes")
+                        }
+                        if projection.capabilities.contains("meal_proposals") {
+                            NavigationLink(ht("Propose a meal move")) { SharedMealMovesView(household: model) }
+                        }
+                    }
+                    if let lifecycle = model.lifecycle {
+                        Section(ht("Household access")) {
+                            if lifecycle.canAdminister { NavigationLink(ht("People and invitations")) { HouseholdPeopleView(model: lifecycle) } }
+                            if lifecycle.canShare || lifecycle.canAdminister { NavigationLink(ht("Manage shared views")) { HouseholdManagedViewsView(model: lifecycle) } }
+                            if !lifecycle.isHelper { NavigationLink(ht("Guardian controls")) { GuardianControlsEntry(household: model, lifecycle: lifecycle) } }
+                            if lifecycle.canReviewDevices {
+                                NavigationLink(DeviceManagementCopy.text("Household devices")) {
+                                    if let devices = lifecycle.makeDevicesModel() { HouseholdDevicesView(model: devices) }
+                                }.accessibilityIdentifier("household.devices.settingsEntry")
+                            }
+                        }
+                    }
                 } else {
+                    if let email = model.identity?.email {
+                        Section(ht("Signed in as")) {
+                            Text(verbatim: email).privacySensitive()
+                            Button(ht("Use another account")) { Task { await model.signOut() } }
+                        }
+                    }
                     if !model.workspaces.isEmpty {
                         Section(ht("Choose household")) {
                             Toggle(ht("Keep my existing work private on this phone"), isOn: $model.keepLocalPrivate)
@@ -205,36 +229,27 @@ struct HouseholdSettingsView: View {
                         HouseholdSetupSections(model: lifecycle, showsNewSetup: model.workspaceListState == .loaded)
                     }
                 }
+            }
+            accountControls
+            // Shop selection briefly clears the projection. Keep this destination
+            // mounted while it rechecks the new scope before showing records.
+            if !model.locked, model.identity != nil, model.projection?.grantId == nil {
                 Section {
-                    Button(ht("Sign out"), role: .destructive) { Task { await model.signOut() } }
-                    Button(ht("Sign out all devices"), role: .destructive) { Task { await model.signOut(allDevices: true) } }
+                    NavigationLink(HistoryCopy.text("Prices and period budgets")) {
+                        HistoryRecordsEntryView(household: model)
+                    }.accessibilityIdentifier("household.priceBudgetHistory")
                 }
             }
-            Section {
-                if let exit = model.householdExit, model.identity != nil, !model.locked, model.projection?.grantId == nil {
-                    NavigationLink(ht("Leave a household")) { HouseholdExitView(account: model, exit: exit) }
-                }
-                NavigationLink(ht("Account deletion")) {
-                    if let deletion = model.accountDeletion {
-                        AccountDeletionView(account: model, deletion: deletion)
-                    } else {
-                        Form {
-                            Section { Text(ht("Account deletion is unavailable on this iPhone. Open Support in Settings for help.")) }
-                            AccountDeletionScope()
-                            GuardianDeletionSupportSection()
-                        }.navigationTitle(ht("Account deletion"))
-                    }
-                }.accessibilityIdentifier("household.accountDeletion")
-            }
-            if model.identity != nil {
+            if !model.locked, model.identity != nil, model.projection?.grantId == nil {
                 Section {
                     NavigationLink(PlacementCopy.text("Shared placement reports")) { PlacementRecordsEntryView(household: model) }
                         .accessibilityIdentifier("household.placementReports")
                 }
             }
-            Section {
-                GuardianChildEntryButton(household: model)
+            if model.projection?.grantId == nil {
+                Section { GuardianChildEntryButton(household: model) }
             }
+            HelpSettingsSection().environmentObject(model)
             if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
             if model.busy { ProgressView(ht("Checking service…")) }
         }
@@ -242,11 +257,48 @@ struct HouseholdSettingsView: View {
         .onDisappear { visibleEntry = nil }
         .disabled(model.busy)
         .navigationTitle(ht("Household"))
-        .sheet(item: $requestReview) { selected in
+        .sheet(item: $requestReview, onDismiss: {
+            switch model.delivery {
+            case .waiting, .received: resultFocused = true
+            default: break
+            }
+        }) { selected in
             NavigationStack { ContributorRequestCaptureView(household: model, scope: selected.scope, capture: selected.capture) }
         }
-        .onChange(of: scenePhase) { _, value in if value == .background { model.lock() } }
     }
+
+    @ViewBuilder private var accountControls: some View {
+        if !model.locked, model.identity != nil {
+            Section(ht("Account")) {
+                if let scope = model.projection, scope.enrolled, scope.grantId == nil, ["shopper", "organizer"].contains(scope.role) {
+                    Button(ht("Return to private shopping")) {
+                        workspace.protect()
+                        model.lock()
+                        dismiss()
+                    }.accessibilityIdentifier("household.returnToPrivate")
+                }
+                Button(ht("Sign out"), role: .destructive) { Task { await model.signOut() } }
+                Button(ht("Sign out all devices"), role: .destructive) { Task { await model.signOut(allDevices: true) } }
+            }
+        }
+        Section {
+            if let exit = model.householdExit, model.identity != nil, !model.locked, model.projection?.grantId == nil {
+                NavigationLink(ht("Leave a household")) { HouseholdExitView(account: model, exit: exit) }
+            }
+            NavigationLink(ht("Account deletion")) {
+                if let deletion = model.accountDeletion {
+                    AccountDeletionView(account: model, deletion: deletion)
+                } else {
+                    WorkingForm {
+                        Section { Text(ht("Account deletion is unavailable on this iPhone. Open Support in Settings for help.")) }
+                        AccountDeletionScope()
+                        GuardianDeletionSupportSection()
+                    }.navigationTitle(ht("Account deletion"))
+                }
+            }.accessibilityIdentifier("household.accountDeletion")
+        }
+    }
+
     private func openRequestReview(capture: Bool) {
         // Finish the draft field's editing callbacks before presenting its review.
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -254,13 +306,13 @@ struct HouseholdSettingsView: View {
     }
     private var canSend: Bool {
         guard !model.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
-        switch model.delivery { case .waiting, .needsReview, .accessEnded: return false; default: return true }
+        return model.contributorRequestScope != nil
     }
     @ViewBuilder private var delivery: some View {
         switch model.delivery {
-        case .localDraft: Text(ht("Draft on screen. Send to ask the household."))
+        case .localDraft: Text(ht("Draft on this iPhone."))
         case .waiting:
-            Label(ht("Waiting for the household to confirm receipt"), systemImage: "clock")
+            Label(model.waitingRequestText, systemImage: "clock").accessibilityFocused($resultFocused)
             Button(ht("Retry the same request")) { Task { await model.retry() } }
         case .needsReview:
             Text(ht("Review needed. Check received requests before creating a new request."))
@@ -268,23 +320,11 @@ struct HouseholdSettingsView: View {
                 ContributorCorrectionButton(model: model)
             }
             Button(ht("I checked received requests; clear this retry")) { Task { await model.discardPendingAfterReview() } }
-        case .received(let receipt): Label(receipt.contributorDeliveryLabel, systemImage: "checkmark.circle")
+        case .received(let receipt): Label(receipt.contributorDeliveryLabel, systemImage: "checkmark.circle").accessibilityFocused($resultFocused)
         case .accessEnded: Text(ht("Household access has ended or needs sign-in."))
         }
     }
-    private func status(_ request: OwnRequest) -> String {
-        if request.carriedForward == true { return ht("Moved to a later pickup for review") }
-        switch request.status {
-        case "pending": return request.route == "next" ? ht("Received for next shop") : ht("Received, waiting for review")
-        case "clarified": return ht("Clarification requested")
-        case "added": return ht("Added to the plan")
-        case "deferred": return ht("Saved for next shop")
-        case "handled": return ht("Handled")
-        case "dismissed": return ht("Not included")
-        case "withdrawn": return ht("Withdrawn")
-        default: return ht("Check current status")
-        }
-    }
+
 }
 
 struct ContributorCorrectionButton: View {
@@ -311,6 +351,22 @@ struct ContributorCorrectionButton: View {
     }
 }
 
+struct OwnRequestEditActions: View {
+    @ObservedObject var model: HouseholdModel
+    let request: OwnRequest
+    @Environment(\.dynamicTypeSize) private var type
+
+    var body: some View {
+        let layout = type.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout())
+        layout {
+            Button(ht("Edit request")) { model.edit(request) }
+                .buttonStyle(.borderless).frame(minHeight: 44)
+            ContributorWithdrawalButton(model: model, request: request)
+                .frame(minHeight: 44)
+        }
+    }
+}
+
 struct ContributorWithdrawalButton: View {
     @ObservedObject var model: HouseholdModel
     let request: OwnRequest
@@ -332,5 +388,32 @@ struct ContributorWithdrawalButton: View {
                 Text(verbatim: [original.originalItem, original.ownQuantity].compactMap { $0 }.joined(separator: " · "))
             }
             .onChange(of: request) { _, _ in reviewed = nil }
+    }
+}
+
+
+/// Uses only the household and pickup returned for the current adult workspace.
+struct HouseholdScopeHeading: View {
+    let scope: HouseholdBootstrap
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(verbatim: scope.household.label)
+                .font(.title2.weight(.semibold))
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("household.scope.name")
+            if let shop = scope.shopId {
+                BrandScopeLabel(ht("Pickup") + " · " + String(shop.prefix(8)), systemImage: "bag")
+                .accessibilityIdentifier("household.scope.pickup")
+            }
+            if scope.role == "shopper", scope.shopId != nil {
+                Text(ht("You’re doing the shopping for this pickup."))
+            } else if scope.capabilities.contains("household_admin") {
+                Text(mtr("Household organizer"))
+            } else if scope.capabilities.contains("own_requests") {
+                Text(ht("You can send grocery requests."))
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.vertical, 4)
     }
 }

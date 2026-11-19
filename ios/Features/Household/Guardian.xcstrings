@@ -1,6 +1,198 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Check your approved email and enter its sign-in code on this phone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your approved email and enter its sign-in code on this phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el correo que aprobó tu tutor e ingresa aquí el código de acceso."
+          }
+        }
+      }
+    },
+    "Child access is unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child access is unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso infantil no está disponible"
+          }
+        }
+      }
+    },
+    "Enter the invitation from your guardian and the email they approved for you.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the invitation from your guardian and the email they approved for you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa la invitación de tu tutor y el correo electrónico que aprobó para ti."
+          }
+        }
+      }
+    },
+    "Look at the pairing code on the child’s phone. Enter it here, on your phone, to confirm that device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look at the pairing code on the child’s phone. Enter it here, on your phone, to confirm that device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca el código de vinculación en el teléfono del menor. Ingrésalo aquí, en tu teléfono, para confirmar ese dispositivo."
+          }
+        }
+      }
+    },
+    "On the child’s device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the child’s device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el dispositivo del menor"
+          }
+        }
+      }
+    },
+    "On the guardian’s device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the guardian’s device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el dispositivo del tutor"
+          }
+        }
+      }
+    },
+    "Send this invitation privately to the child’s device. The child will use the email you approved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this invitation privately to the child’s device. The child will use the email you approved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envía esta invitación en privado al dispositivo del menor. El menor usará el correo electrónico que aprobaste."
+          }
+        }
+      }
+    },
+    "Verify your adulthood, give permission for this child’s own requests, then confirm the child’s device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify your adulthood, give permission for this child’s own requests, then confirm the child’s device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica que eres mayor de edad, da permiso para que este menor envíe sus propias solicitudes y luego confirma su dispositivo."
+          }
+        }
+      }
+    },
+    "You can send a request to the shopper. Only your own requests appear here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can send a request to the shopper. Only your own requests appear here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes enviarle una solicitud a quien hace las compras. Aquí solo aparecen tus propias solicitudes."
+          }
+        }
+      }
+    },
+    "You confirmed the child’s device. On that device, the child can now choose Finish child setup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirmed the child’s device. On that device, the child can now choose Finish child setup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmaste el dispositivo del menor. Ahora el menor puede seleccionar Terminar la configuración infantil en ese dispositivo."
+          }
+        }
+      }
+    },
+    "Your guardian enters this pairing code on their own phone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your guardian enters this pairing code on their own phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu tutor ingresa este código de vinculación en su propio teléfono."
+          }
+        }
+      }
+    },
+    "Your guardian will confirm this phone before you can send a request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your guardian will confirm this phone before you can send a request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu tutor confirmará este teléfono antes de que puedas enviar una solicitud."
+          }
+        }
+      }
+    },
     "A child invitation requires the child's own live authenticated session from an approved guardian setup. This app cannot create or substitute an adult account for that session.": {
       "localizations": {
         "en": {

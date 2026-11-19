@@ -17,11 +17,10 @@ private struct SharedShopContent: View {
     @State private var clearingRetry = false
     @State private var mealDaySelection: SharedMealDaySelection?
     var body: some View {
-        Form {
+        WorkingForm {
             if model.authorized {
                 Section {
-                    Text(model.scope.household.label).font(.headline)
-                    Text(ht("This is the household service's shared shop. Private lists, meals and records on this phone are not uploaded."))
+                    HouseholdScopeHeading(scope: model.scope)
                     if model.scope.shopId == nil { HouseholdPantryLink(household: household) }
                     Button(ht("Refresh shared shop")) { Task { await model.load() } }
                     if household.storeQuoteScope != nil {
@@ -125,6 +124,7 @@ private struct SharedShopContent: View {
                         Section(ht("Review shared shop change")) {
                             Text(actionName(review.kind)).font(.headline)
                             if let transfer = review.transfer {
+                                HouseholdScopeHeading(scope: model.scope)
                                 LabeledContent(ht("Current shopper"), value: transfer.fromLabel)
                                 LabeledContent(ht("New shopper"), value: transfer.toLabel)
                                 Text(ht("This adult will control shared basket changes. A frozen basket stays frozen. Existing planning access must be granted again."))
@@ -141,7 +141,8 @@ private struct SharedShopContent: View {
                             if review.kind == "shop.freeze" { Text(ht("Freeze the displayed revision. This records a shared snapshot; it does not place an order with a retailer. Later requests go to next shop.")) }
                             if review.kind == "shop.reopen" { Text(ht("Reopen the frozen shop for review. Existing next-shop requests stay there until you explicitly review bringing them into this shop.")) }
                             Toggle(ht("I reviewed these exact shared fields and this action"), isOn: $model.acknowledged)
-                            Button(actionName(review.kind)) { Task { await model.applyReviewed() } }.disabled(!model.acknowledged)
+                            Button(actionName(review.kind)) { Task { await model.applyReviewed() } }
+                                .buttonStyle(PrimaryAction()).disabled(!model.acknowledged)
                         }
                     }
                 }

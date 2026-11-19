@@ -30,10 +30,12 @@ struct GuardianChildRootView: View {
                             .onChange(of: model.completed) { _, completed in if completed { coordinator.showOwnRequests() } }
                     }
                 case .requests:
-                    if let household = coordinator.household { GuardianChildRequestsView(household: household) }
+                    if let household = coordinator.household {
+                        GuardianChildRequestsView(household: household, recheckAccess: { await coordinator.resume() })
+                    }
                 case .unavailable, .blocked:
-                    Form {
-                        Text(GuardianCopy.text("Child sign-in is not available yet"))
+                    WorkingForm {
+                        Label(GuardianCopy.text("Child access is unavailable"), systemImage: "lock.shield").font(.headline)
                         if let message = coordinator.message { Text(message).accessibilityIdentifier("guardian.childRootResult") }
                         Button(GuardianCopy.text("Check child access again")) { Task { await coordinator.resume() } }
                         GuardianChildDeletionHelp()
@@ -79,17 +81,18 @@ struct GuardianNativeAuthenticationView: View {
     @ObservedObject var model: GuardianNativeAuthenticationModel
     @Environment(\.scenePhase) private var phase
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
-                Text(GuardianCopy.text("Use only the email your guardian approved for this invitation. This child sign-in is separate from any adult account on the device."))
+                Label(GuardianCopy.text("On the child’s device"), systemImage: "iphone").font(.headline)
+                Text(GuardianCopy.text("Enter the invitation from your guardian and the email they approved for you."))
             }
             if model.availability?.available != true {
                 Section {
-                    Label(GuardianCopy.text("Child sign-in is unavailable until the covered email service and current notices are approved."), systemImage: "lock.shield")
+                    Label(GuardianCopy.text("Child sign-in is not available yet"), systemImage: "lock.shield")
                         .accessibilityIdentifier("guardian.nativeAuthUnavailable")
+                    Button(GuardianCopy.text("Check child access again")) { Task { await model.load() } }
                 }
-            }
-            if model.hasSavedAction {
+            } else if model.hasSavedAction {
                 Section(GuardianCopy.text("Saved child sign-in")) {
                     Text(GuardianCopy.text("Resume the same saved sign-in. An uncertain request must not send a new email."))
                     Button(GuardianCopy.text("Resume the same saved sign-in")) { Task { await model.resumeSavedSignIn() } }
@@ -107,13 +110,14 @@ struct GuardianNativeAuthenticationView: View {
                         .disabled(!model.canStart).accessibilityIdentifier("guardian.nativeAuthStart")
                 }
             }
-            if model.challengeReady {
+            if model.challengeReady, model.availability?.available == true {
                 Section(GuardianCopy.text("Verify the child sign-in code")) {
+                    Text(GuardianCopy.text("Check your approved email and enter its sign-in code on this phone."))
                     SecureField(GuardianCopy.text("Email sign-in code"), text: $model.code)
                         .textContentType(.oneTimeCode).keyboardType(.numberPad).privacySensitive()
                         .accessibilityIdentifier("guardian.nativeAuthCode")
                     Button(GuardianCopy.text("Verify child code and continue")) { Task { await model.verifyCode() } }
-                        .disabled(!model.canVerify).accessibilityIdentifier("guardian.nativeAuthVerify")
+                        .buttonStyle(PrimaryAction()).disabled(!model.canVerify).accessibilityIdentifier("guardian.nativeAuthVerify")
                 }
             }
             if let message = model.message {
@@ -132,6 +136,8 @@ struct GuardianNativeAuthenticationView: View {
 /// S22 exposes only typed own-request work and status. It has no adult navigation, purchase, roster, deletion or guardian destination.
 struct GuardianChildRequestsView: View {
     @ObservedObject var household: HouseholdModel
+    var recheckAccess: (() async -> Void)? = nil
+    @AccessibilityFocusState private var resultFocused: Bool
     @State private var review: ReviewDestination?
     private struct ReviewDestination: Identifiable {
         let id = UUID()
@@ -139,51 +145,24 @@ struct GuardianChildRequestsView: View {
         let pickupLabel: String
     }
     var body: some View {
-        Form {
-            Section { Text(GuardianCopy.text("Only your own requests and their status appear here. The shopper decides what goes into the basket.")) }
+        WorkingForm {
             if household.locked || household.projection == nil {
-                Section { Text(GuardianCopy.text("Your child access is being checked. Adult work remains locked.")) }
+                Section {
+                    if case .accessEnded = household.delivery {
+                        Label(GuardianCopy.text("Child access is unavailable"), systemImage: "lock.shield")
+                        if let recheckAccess {
+                            Button(GuardianCopy.text("Check child access again")) { Task { await recheckAccess() } }
+                        }
+                    } else {
+                        Text(GuardianCopy.text("Your child access is being checked. Adult work remains locked."))
+                    }
+                }
             } else if let scope = household.projection {
                 Section {
                     Text(verbatim: scope.household.label)
-                        .font(.headline)
+                        .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
                         .accessibilityIdentifier("guardian.childHousehold")
-                }
-                Section(GuardianCopy.text("My requests")) {
-                    Button(GuardianCopy.text("Refresh my requests")) { Task { await household.refresh() } }
-                        .accessibilityIdentifier("guardian.childRequestsRefresh")
-                    ForEach(household.requests) { request in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(request.originalItem).font(.headline)
-                            if let quantity = request.ownQuantity { Text(quantity) }
-                            RequestReadTimeLabel(asOf: household.requestReadTimes.rows[request.id])
-                            if let proposed = household.pendingCorrection(for: request) {
-                                LabeledContent(ht("Correction on this device"), value: proposed)
-                            }
-                            if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
-                            Text(requestStatus(request)).foregroundStyle(.secondary)
-                            if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
-                            if let clarification = request.clarification {
-                                Text(verbatim: clarification)
-                                if request.canReportClarification == true, let field = SharedMessageField(.clarification, request.id, request.revision, .question, clarification) {
-                                    SharedSafetyButton(channel: household.sharedSafetyChannel(), fields: [field])
-                                }
-                            }
-                            if request.ownActionAllowed {
-                                HStack {
-                                    Button(ht("Edit request")) { household.edit(request) }.buttonStyle(.borderless)
-                                    ContributorWithdrawalButton(model: household, request: request)
-                                }
-                            } else if request.status != "withdrawn" {
-                                Button(ht("Send a follow-up")) { household.followUp(request) }.buttonStyle(.borderless)
-                            }
-                        }
-                    }
-                    if household.requests.isEmpty {
-                        Text(ht("No received requests in this view."))
-                        RequestReadTimeLabel(asOf: household.requestReadTimes.emptyPage)
-                    }
-                    if household.nextRequestCursor != nil { Button(ht("Load more requests")) { Task { await household.loadMoreRequests() } } }
+                    Text(GuardianCopy.text("You can send a request to the shopper. Only your own requests appear here."))
                 }
                 Section(household.contributorDraftTitle) {
                     if household.editing != nil || household.followingUp != nil { Button(ht("Cancel edit")) { household.cancelEdit() } }
@@ -203,11 +182,11 @@ struct GuardianChildRequestsView: View {
                             let pickup = household.requestPickups.first { $0.shopId == UUID(uuidString: scope.targetShopID) }
                             review = .init(scope: scope, pickupLabel: pickup.map(pickupLabel) ?? String(scope.targetShopID.prefix(8)))
                         }
-                    }.disabled(household.contributorRequestScope == nil || household.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }.buttonStyle(PrimaryAction()).disabled(household.contributorRequestScope == nil || household.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("guardian.childRequestReview")
                     switch household.delivery {
                     case .waiting:
-                        Text(ht("Waiting for the household to confirm receipt"))
+                        Text(household.waitingRequestText).accessibilityFocused($resultFocused)
                         Button(ht("Retry the same request")) { Task { await household.retry() } }
                     case .needsReview:
                         Text(ht("Review needed. Check received requests before creating a new request."))
@@ -215,10 +194,44 @@ struct GuardianChildRequestsView: View {
                             ContributorCorrectionButton(model: household)
                         }
                         Button(ht("I checked received requests; clear this retry")) { Task { await household.discardPendingAfterReview() } }
-                    case .received(let receipt): Text(receipt.contributorDeliveryLabel)
+                    case .received(let receipt): Text(receipt.contributorDeliveryLabel).accessibilityFocused($resultFocused)
                     case .accessEnded: Text(ht("Household access has ended or needs sign-in."))
-                    case .localDraft: Text(ht("Draft on screen. Send to ask the household."))
+                    case .localDraft: Text(ht("Draft on this iPhone."))
                     }
+                }
+                Section(GuardianCopy.text("My requests")) {
+                    Button(GuardianCopy.text("Refresh my requests")) { Task { await household.refresh() } }
+                        .accessibilityIdentifier("guardian.childRequestsRefresh")
+                    ForEach(household.requests) { request in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(request.originalItem).font(.headline)
+                            if let quantity = request.ownQuantity { Text(quantity) }
+                            RequestReadTimeLabel(asOf: household.requestReadTimes.rows[request.id])
+                            if let proposed = household.pendingCorrection(for: request) {
+                                LabeledContent(ht("Correction on this device"), value: proposed)
+                            }
+                            if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
+                            Text(shopperRequestStatus(request)).font(.body.weight(.semibold))
+                            if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
+                            else if request.status == "added" { Text(ht("Purchase still unknown.")).foregroundStyle(Theme.secondary) }
+                            if let clarification = request.clarification {
+                                Text(verbatim: clarification)
+                                if request.canReportClarification == true, let field = SharedMessageField(.clarification, request.id, request.revision, .question, clarification) {
+                                    SharedSafetyButton(channel: household.sharedSafetyChannel(), fields: [field])
+                                }
+                            }
+                            if request.ownActionAllowed {
+                                OwnRequestEditActions(model: household, request: request)
+                            } else if request.status != "withdrawn" {
+                                Button(ht("Send a follow-up")) { household.followUp(request) }.buttonStyle(.borderless)
+                            }
+                        }
+                    }
+                    if household.requests.isEmpty {
+                        Text(ht("No received requests in this view."))
+                        RequestReadTimeLabel(asOf: household.requestReadTimes.emptyPage)
+                    }
+                    if household.nextRequestCursor != nil { Button(ht("Load more requests")) { Task { await household.loadMoreRequests() } } }
                 }
             }
             if let message = household.notice { Section { Text(message).accessibilityIdentifier("guardian.childRequestsResult") } }
@@ -226,7 +239,12 @@ struct GuardianChildRequestsView: View {
             GuardianChildDeletionHelp()
         }.disabled(household.busy)
         .navigationTitle(GuardianCopy.text("My requests"))
-        .sheet(item: $review) { value in
+        .sheet(item: $review, onDismiss: {
+            switch household.delivery {
+            case .waiting, .received: resultFocused = true
+            default: break
+            }
+        }) { value in
             NavigationStack {
                 ContributorRequestCaptureView(household: household, scope: value.scope, capture: false, pickupLabel: value.pickupLabel)
             }
@@ -265,17 +283,4 @@ struct GuardianChildRequestsView: View {
         return GuardianCopy.date(pickup.createdAt) + " · " + (collision ? id : prefix)
     }
 
-    private func requestStatus(_ request: OwnRequest) -> String {
-        if request.carriedForward == true { return ht("Moved to a later pickup for review") }
-        switch request.status {
-        case "pending": return request.route == "next" ? ht("Received for next shop") : ht("Received, waiting for review")
-        case "clarified": return ht("Clarification requested")
-        case "added": return ht("Added to the plan")
-        case "deferred": return ht("Saved for next shop")
-        case "handled": return ht("Handled")
-        case "dismissed": return ht("Not included")
-        case "withdrawn": return ht("Withdrawn")
-        default: return ht("Check current status")
-        }
-    }
 }

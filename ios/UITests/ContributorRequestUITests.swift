@@ -194,7 +194,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-tonight-fixture", "--tonight-package-review",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["household.tonight"])
         let choose = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.choose.")).firstMatch
         XCTAssertTrue(app.staticTexts["Reviewed rice supper"].waitForExistence(timeout: 8))
@@ -257,7 +257,7 @@ import XCTest
             XCTAssertTrue(app.staticTexts["No confirmed receipt lines yet."].waitForExistence(timeout: 8), app.debugDescription)
             tap(app.buttons["Done"])
         }
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
         fill("Private lentils", into: "pantry.foodName")
@@ -347,7 +347,7 @@ import XCTest
         XCTAssertEqual(allBatchIDs(prefix: "householdPantry.correct.").count, 2)
         back(from: "Household pantry")
         tap(app.navigationBars["Settings"].buttons["Done"])
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         let samePrivateLot = app.buttons[privateID]
         reveal(samePrivateLot)
         XCTAssertEqual(samePrivateLot.label, privateLabel)
@@ -388,7 +388,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--cook-report-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 30))
-        tap(app.buttons["Cook instructions"])
+        XCTAssertTrue(app.navigationBars["Cook instructions"].waitForExistence(timeout: 15))
         let correction = element("helper.correction")
         reveal(correction, fullyVisible: true)
         XCTAssertEqual(correction.value as? String, "Keep the original correction draft", app.debugDescription)
@@ -435,7 +435,7 @@ import XCTest
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 30))
-        tap(app.buttons["Cook instructions"])
+        XCTAssertTrue(app.navigationBars["Cook instructions"].waitForExistence(timeout: 15))
         tap(app.buttons["safety.open"])
         let send = app.buttons["safety.confirm"]
         XCTAssertFalse(send.isEnabled)
@@ -466,10 +466,10 @@ import XCTest
         ] {
             app.launchArguments = ["--ui-testing", "--helper-revision-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", language + "_US"]
             app.launch()
-            // The helper link can be below the visible rows of the settings Form.
+            // A cook grant opens its own instructions directly.
             XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 30))
             XCTAssertFalse(app.buttons["household.priceBudgetHistory"].exists)
-            tap(app.buttons[entry])
+            XCTAssertTrue(app.navigationBars[entry].waitForExistence(timeout: 15))
             func read(_ number: Int, _ action: String) {
                 let instruction = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", action)).firstMatch
                 XCTAssertTrue(instruction.waitForExistence(timeout: 10))
@@ -521,7 +521,7 @@ import XCTest
         XCTAssertTrue(destination.contains("2026"), destination)
         let route = element("household.request.reviewDestination")
         XCTAssertTrue((route.label + (route.value as? String ?? "")).contains("Request for next shop"))
-        enableSwitch("I reviewed the original wording, item, quantity, packs, exclusions and destination.")
+        enableSwitch("I checked the item, amount and pickup.")
         tap(app.buttons["household.request.sendReviewed"])
         let saved = app.staticTexts["fixture.requestRows"]
         let received = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture saved requests: 1"), object: saved)
@@ -553,7 +553,8 @@ import XCTest
         XCTAssertTrue(bought.label.contains("La persona que hizo la compra confirm\u{00f3} que se compr\u{00f3}"), bought.label)
         reveal(unconfirmed)
         XCTAssertTrue(unconfirmed.label.contains("Fruta"), unconfirmed.label)
-        XCTAssertFalse(unconfirmed.label.contains("se compr\u{00f3}"), unconfirmed.label)
+        XCTAssertTrue(unconfirmed.label.contains("Aún no se sabe si se compró"), unconfirmed.label)
+        XCTAssertFalse(unconfirmed.label.contains("confirmó que se compró"), unconfirmed.label)
         XCTAssertFalse(element("delivery.requestPurchases").exists)
         XCTAssertFalse(element("household.decision.after-total").exists)
         XCTAssertFalse(app.buttons["household.decision.checkoutDetails"].exists)
