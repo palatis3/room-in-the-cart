@@ -44,14 +44,22 @@ import XCTest
         active.firstMatch.tap()
         XCTAssertTrue(app.staticTexts["Office"].waitForExistence(timeout: 5))
         app.navigationBars.buttons.firstMatch.tap()
-        app.buttons["ledgerHistory"].tap()
+        let shopPicker = app.buttons["ledgerShopPicker"]
+        XCTAssertEqual(shopPicker.label, "This trip")
+        app.buttons["ledgerListOptions"].tap()
+        app.buttons["List history"].tap()
         let handled = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Handled by Ana")).firstMatch
         XCTAssertTrue(handled.waitForExistence(timeout: 5))
         app.buttons["Done"].tap()
-        app.buttons["ledgerShopPicker"].tap()
+        shopPicker.tap()
         app.buttons["Previous market"].tap()
+        let previousMarket = app.buttons.matching(identifier: "ledgerShopPicker")
+            .matching(NSPredicate(format: "label == %@", "Previous market")).firstMatch
+        XCTAssertTrue(previousMarket.waitForExistence(timeout: 8))
         let checked = app.buttons["Reopen Coffee"]
-        app.buttons["ledgerHistory"].tap()
+        let footerHistory = app.buttons["ledgerHistory"]
+        show(footerHistory)
+        footerHistory.tap()
         show(checked)
         XCTAssertFalse(handled.exists)
         checked.tap()

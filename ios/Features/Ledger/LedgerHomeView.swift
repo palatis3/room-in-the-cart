@@ -194,6 +194,7 @@ struct LedgerHomeView: View {
             Button(shoppingText("Shopping kits")) { sheet = .kits(shop.id) }
             Button(shoppingText("Standing list")) { sheet = .standing }
             Button(ledgerText("List order and aisles")) { sheet = .layout }
+            Button(ledgerText("List history")) { sheet = .history }
             Button(ledgerText("Review prior staples")) { stapleRecallShopID = shop.id }
             Button(ledgerText("Large-print list")) { sheet = .printList }
             Button(ledgerText("Cancel"), role: .cancel) {}
