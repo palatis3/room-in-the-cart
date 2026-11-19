@@ -104,11 +104,9 @@ struct RecordsToolsView: View {
             } else {
                 recoveredSection
                 Section(recordsText("Privacy and support")) {
-                    Text(recordsText("Only explicitly selected source references are included in encrypted recovery. Readable and helper copies contain no attachment bytes. No file is uploaded automatically. Shared copies cannot be recalled."))
-                        .font(.footnote)
-                    ShareLink(item: model.supportText) { Label(recordsText("Share redacted support details"), systemImage: "lifepreserver") }
                     Text(recordsText("Support details include only format, record count and an error code. They omit food names, receipts, account details and file paths."))
                         .font(.footnote).foregroundStyle(.secondary)
+                    ShareLink(item: model.supportText) { Label(recordsText("Share redacted support details"), systemImage: "lifepreserver") }
                 }
                 if model.canReviewWholeLedgerDeletion {
                     Section(recordsText("Delete local shopping data")) {
@@ -275,6 +273,8 @@ struct RecordsToolsView: View {
                     .accessibilityIdentifier("records.prepareRecovery")
             }
             .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Encrypted personal recovery"), identifier: "records.encryptedRecovery"))
+            Text(recordsText("Only explicitly selected source references are included in encrypted recovery. Readable and helper copies contain no attachment bytes. No file is uploaded automatically. Shared copies cannot be recalled."))
+                .font(.footnote).foregroundStyle(.secondary)
         }
     }
     @ViewBuilder private func preparedExportActions(_ document: RecordsFileDocument) -> some View {
