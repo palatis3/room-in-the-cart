@@ -1480,6 +1480,25 @@ test('shared receipt reprints cannot append shifted lines or change saved stock 
   assert.equal(final.pantryRevision,6);
   assert.equal(final.lots.length,6);
   assert.equal(final.lots.reduce((sum,l)=>sum+l.receiptEvidence.line.paidUSDMinor,0),2520);
+  // An exact file can gain a missing transaction reference once. Check every saved row,
+  // including after a previous row without a reference has already been acquired.
+  const imageId=randomUUID(),unidentified={...original,receiptId:imageId,imageId,reference:null};
+  const originalCommand=make(6,unidentified,[row(0)]),unreferenced=await send(originalCommand);
+  assert.equal(unreferenced.status,200);
+  const identified={...unidentified,receiptId:randomUUID(),reference:'Confirmed 123'};
+  const identifiedCommand=make(7,identified,[row(1)]),linked=await send(identifiedCommand);
+  assert.equal(linked.status,200);
+  assert.equal(linked.data.receiptId,imageId);
+  assert.deepEqual((await send(originalCommand)).data,unreferenced.data);
+  assert.deepEqual((await send(identifiedCommand)).data,linked.data);
+  const conflicting={...identified,receiptId:randomUUID(),reference:'Different 456'};
+  await expectReview(make(8,conflicting,[row(2)]));
+  assert.equal((await stock()).pantryRevision,8);
+  const missing=await admin.query('SELECT 1 FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=$2',[f.h,conflicting.receiptId]);
+  assert.equal(missing.rowCount,0);
+  const independent=await send(make(8,{...conflicting,imageId:randomUUID()},[row(0)]));
+  assert.equal(independent.data.receiptId,conflicting.receiptId);
+  assert.equal(independent.data.savedCount,1);
 });
 
 test('fifty long reviewed receipt lines remain one bounded household stock revision',async()=>{

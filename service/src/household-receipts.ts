@@ -53,10 +53,13 @@ export async function acquireHouseholdReceipt(ctx:Context,body:Body,operationId:
   await ctx.db.query(`INSERT INTO ritc.receipt_source_key(household_id,source_id,receipt_id,original_layout_digest)
     SELECT $1,source,$3,CASE WHEN source=$3::uuid THEN $4::text END FROM unnest($2::uuid[]) source
     ON CONFLICT DO NOTHING`,[h,sources,receiptId,isNewReceipt?layout:null]);
-  const header=(await ctx.db.query(`SELECT evidence->>'merchant' AS merchant,evidence->>'purchaseDay' AS day,
-    evidence->>'reference' AS reference FROM ritc.household_receipt_line WHERE household_id=$1 AND receipt_id=$2 LIMIT 1`,[h,receiptId])).rows[0];
-  if(header && (header.merchant!==body.merchant || header.day!==body.purchaseDay ||
-                (header.reference && body.reference && header.reference!==body.reference))) throw conflict();
+  // A later partial selection may be the first to carry a confirmed reference.
+  // Any contradicting retained line is sufficient to reject an alternate source key.
+  const mismatch=(await ctx.db.query(`SELECT evidence->>'reference' AS reference FROM ritc.household_receipt_line
+    WHERE household_id=$1 AND receipt_id=$2 AND (evidence->>'merchant'<>$3 OR evidence->>'purchaseDay'<>$4
+      OR ($5::text IS NOT NULL AND evidence->>'reference'<>$5)) LIMIT 1`,
+    [h,receiptId,body.merchant,body.purchaseDay,body.reference])).rows[0];
+  if(mismatch) throw mismatch.reference && body.reference && mismatch.reference!==body.reference ? layoutReview() : conflict();
   const ordinals=body.lines.map(l=>l.ordinal);
   if((await ctx.db.query('SELECT 1 FROM ritc.retired_receipt_line WHERE household_id=$1 AND receipt_id=$2 AND ordinal=ANY($3::int[]) LIMIT 1',[h,receiptId,ordinals])).rowCount) throw refresh();
   // On another layout, even identical evidence at a known position could be a different printed copy.
