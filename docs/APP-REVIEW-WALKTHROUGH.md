@@ -93,7 +93,8 @@ Run these steps with the submitted build and the isolated review household. The 
 
 8. With the enrolled adult, open **Settings → Household pantry → Add receipt to household pantry**. Add two fictional foods there, confirming a price for only one. Reopen the household pantry and check both quantities and the unknown price. Return to the adult’s private My Pantry and check that its original batches and receipt history are unchanged.
 
-   - Use a fictional two-item receipt with a merchant and transaction reference. Import its file and confirm only the first food. Retry that same line and check the quantity stays the same. Reopen a reprinted copy with the same merchant and reference but a different line order. Try adding an item from a new position and check that the app asks you to review the saved receipt and that stock has not changed. Reopen the original file, select its missed line, confirm it and verify that only that food was added.
+   - Import a fictional two-item receipt with a merchant and transaction reference. Confirm only the first food. Reopen the same file with the same extracted rows and submit that food again. Its stock quantity should stay the same. Then select the missed line from the same extraction and verify that only its food is added.
+   - Import a reordered reprint with the same merchant and transaction reference. Try a line that looks identical to a saved one. Check that the app asks you to review the saved receipt and leaves stock unchanged. The same rule applies if reading the original PDF or image produces a different line layout. With a receipt saved before the service recorded layouts, attempt to add a missed line. Review the saved foods and add the missing food manually if its original layout cannot be verified.
 
 ### Choose a household dinner before a shop exists
 
