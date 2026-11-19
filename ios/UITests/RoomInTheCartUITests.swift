@@ -858,7 +858,8 @@ final class RoomInTheCartUITests: XCTestCase {
         // The shipping action is a button. A broad Any query traverses text-field
         // placeholder snapshots while this large-text Form is scrolling.
         tap(app.buttons["compare"])
-        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 5))
+        // At accessibility sizes the first result can fill the screen before List creates its Edit row.
+        XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
     }
 
     private func assertKnownTotals() {
@@ -922,7 +923,7 @@ final class RoomInTheCartUITests: XCTestCase {
         reveal(row)
         XCTAssertTrue(row.label.contains(item), "Original item name should survive restart: \(row.label)")
         row.tap()
-        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
     }
 
     private func comparisonInput(_ id: String) -> XCUIElement {
