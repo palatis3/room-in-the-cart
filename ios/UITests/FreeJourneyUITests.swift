@@ -144,9 +144,9 @@ import XCTest
             tap(foodOption)
             return (id, selectedPickerID)
         }
-        func checkAmount(_ identifier: String, _ expected: String) {
+        func checkAmount(_ identifier: String, _ expected: String, initiallyUpward: Bool = true) {
             let value = element(identifier)
-            reveal(value)
+            reveal(value, initiallyUpward: initiallyUpward)
             XCTAssertTrue([value.label, value.value as? String ?? ""].joined(separator: " ").contains(expected),
                           "\(identifier): \(value.debugDescription)")
         }
@@ -175,7 +175,9 @@ import XCTest
         tap(app.tabBars.buttons["Shop"])
         tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
-        tap(app.buttons["pantry.add"])
+        let addFood = app.buttons["pantry.add"]
+        reveal(addFood, initiallyUpward: false)
+        addFood.tap()
         fill(lotName, into: "pantry.foodName")
         fill("6", into: "pantry.amount")
         tap(app.buttons["pantry.review"])
@@ -208,7 +210,7 @@ import XCTest
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         tap(app.buttons[lotID])
         tap(app.buttons["pantry.batch.meals"])
-        checkAmount("tonight.batch.available", "4 items")
+        checkAmount("tonight.batch.available", "4 items", initiallyUpward: false)
         XCTAssertFalse(home.exists, app.debugDescription)
         let first = match(firstTitle)
         let second = match(secondTitle, pickerID: global.picker)
@@ -251,7 +253,7 @@ import XCTest
         reveal(restoredBacking)
         XCTAssertEqual(restoredBacking.value as? String, "2 units")
         tap(app.buttons["pantry.batch.meals"])
-        checkAmount("tonight.batch.available", "4 items")
+        checkAmount("tonight.batch.available", "4 items", initiallyUpward: false)
         XCTAssertFalse(home.exists, app.debugDescription)
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         tap(app.navigationBars.buttons.firstMatch)
