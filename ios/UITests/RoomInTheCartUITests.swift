@@ -286,6 +286,9 @@ final class RoomInTheCartUITests: XCTestCase {
         openEmptyComparison()
         enterComparison(item: "Family wraps", firstQuantity: "7 1/2", cap: "30")
         compare()
+        let decision = app.descendants(matching: .any).matching(identifier: "comparisonDecision").firstMatch
+        XCTAssertTrue(decision.waitForExistence(timeout: 5) && decision.isHittable)
+        XCTAssertTrue(decision.label.contains("Pack B"))
         assertScope("Item-only comparison")
         assertContains("whole pickup fits your budget")
         assertContains("Confirmed at home for this need: Not entered")
@@ -309,10 +312,10 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("English-reopened-same-result")
         let edit = app.buttons["editComparison"]
         let results = element("comparisonResultsScroll")
-        // Edit is the first results row. Reveal it fully below the navigation bar.
+        // The entire visible Edit row, including the space beside the word, must activate.
         for _ in 0..<8 where !edit.exists { results.swipeDown(velocity: .slow) }
         revealFullyInComparison(edit)
-        edit.tap()
+        edit.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         XCTAssertTrue(results.waitForNonExistence(timeout: 5), "Edit must open the saved comparison's input form")
         let savedYield = app.textFields["aQuantity"]
         reveal(savedYield)
