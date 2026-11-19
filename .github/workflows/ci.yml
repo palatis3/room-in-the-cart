@@ -808,7 +808,7 @@ jobs:
       - name: Select an iPhone simulator
         timeout-minutes: 8
         run: |
-          if [[ "${RUNNER_ENVIRONMENT:-}" == github-hosted || "$TEST_SHARD" == ui-01 || "$TEST_SHARD" == ui-05 ]]; then
+          if [[ "${RUNNER_ENVIRONMENT:-}" == github-hosted || "$TEST_SHARD" == ui-01 || "$TEST_SHARD" == ui-05 || "$TEST_SHARD" == ui-11 ]]; then
             xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
               --create-owned .build/test-simulator-ownership.json
           else

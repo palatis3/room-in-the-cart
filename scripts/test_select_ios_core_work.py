@@ -8,14 +8,14 @@ import tempfile
 import unittest
 
 from check_ci_workflows import parse_workflow
-from plan_ios_tests import DURATIONS_PATH, make_plan, selector, write_plan
+from plan_ios_tests import ACCESSIBILITY_AUDIT, DURATIONS_PATH, make_plan, selector, write_plan
 from select_ios_core_work import DINNER, select_work
 
 ROOT = Path(__file__).resolve().parents[1]
 MODELS = ['RoomInTheCartTests/ModelTests/testOne()', 'RoomInTheCartTests/ModelTests/testTwo()']
 OTHER_UI = [f'RoomInTheCartUITests/OtherTests/test{i}()' for i in range(10)]
 INVENTORY = {'errors': [], 'values': [{'testPlan': 'RoomInTheCart',
-    'enabledTests': [{'identifier': identifier} for identifier in [*MODELS, *OTHER_UI, *DINNER]],
+    'enabledTests': [{'identifier': identifier} for identifier in [*MODELS, *OTHER_UI, ACCESSIBILITY_AUDIT, *DINNER]],
     'disabledTests': [{'identifier': 'RoomInTheCartTests/StoreKitScenarioTests/testOffer()'}]}]}
 DURATIONS = json.loads(DURATIONS_PATH.read_text())
 
@@ -51,6 +51,11 @@ class SelectCoreWorkTests(unittest.TestCase):
         bad.append(duplicate)
         missing = copy.deepcopy(INVENTORY)
         missing['values'][0]['enabledTests'].pop(); bad.append(missing)
+        for scope in ('full', 'dinner'):
+            missing_audit = copy.deepcopy(INVENTORY)
+            missing_audit['values'][0]['enabledTests'].remove({'identifier': ACCESSIBILITY_AUDIT})
+            with self.subTest(scope=scope), self.assertRaisesRegex(ValueError, 'accessibility audit'):
+                select_work(missing_audit, DURATIONS, 'workflow_dispatch', scope)
         for inventory in bad:
             with self.subTest(inventory=inventory), self.assertRaises(ValueError):
                 select_work(inventory, DURATIONS, 'workflow_dispatch', 'dinner')
@@ -112,13 +117,15 @@ class SelectCoreWorkTests(unittest.TestCase):
             outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
             self.assertEqual(outputs['model_count'], str(len(MODELS)))
             consumers = json.loads(outputs['matrix'])['include']
+            self.assertEqual(full['shards']['ui-11']['test_identifiers'], [ACCESSIBILITY_AUDIT])
+            self.assertEqual([r['expected_count'] for r in consumers if r['shard'] == 'ui-11'], [1])
             original_ui = [row for row in full['include'] if row['shard'] != 'models']
             def test_selection(row):
                 return {k: v for k, v in row.items() if k not in ('provider', 'macos_slot', 'pool_slot')}
             self.assertEqual([test_selection(row) for row in consumers],
                              [test_selection(row) for row in original_ui])
             self.assertEqual({r['provider'] for r in consumers}, {'bitrise-A1', 'bitrise-A2'})
-            self.assertEqual(len({(r['provider'], r['pool_slot']) for r in consumers}), 10)
+            self.assertEqual(len({(r['provider'], r['pool_slot']) for r in consumers}), 11)
             self.assertTrue(all(type(r['pool_slot']) is int and 0 <= r['pool_slot'] < 6 for r in consumers))
             self.assertTrue(all('m4_slot' not in r for r in consumers))
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
@@ -133,6 +140,30 @@ class SelectCoreWorkTests(unittest.TestCase):
                              [row for row in consumers if row['shard'] not in ('ui-01', 'ui-02', 'ui-03')])
             self.assertEqual(outputs['model_count'], str(len(MODELS)))
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
+
+    def test_circleci_consumer_checks_full_shard_membership_before_running_its_selection(self):
+        shell = (ROOT / 'scripts/circle_ios_test.sh').read_text()
+        start = shell.index('EXPECTED_TEST_COUNT=$(jq')
+        command = shell[start:shell.index('export EXPECTED_TEST_COUNT', start)] + 'echo "$EXPECTED_TEST_COUNT"'
+        full, _ = select_work(INVENTORY, DURATIONS, 'pull_request', 'full')
+        malformed = []
+        for field, value in (('shard', 'ui-07'), ('shard', 'unexpected'), ('expected_count', 2)):
+            changed = copy.deepcopy(full)
+            changed['include'][-1][field] = value
+            malformed.append(changed)
+        malformed.append({**full, 'include': full['include'][:-1]})
+        with tempfile.TemporaryDirectory() as folder:
+            manifest = Path(folder) / '.build/test-plan/manifest.json'
+            manifest.parent.mkdir(parents=True)
+            for plan in (full, *malformed):
+                manifest.write_text(json.dumps(plan))
+                for shard in ('ui-01', 'ui-02', 'ui-03'):
+                    with self.subTest(shard=shard, audit=plan['include'][-1]):
+                        result = subprocess.run(['bash', '-ec', command], cwd=folder, capture_output=True,
+                                                text=True, env={**os.environ, 'TEST_SHARD': shard})
+                        self.assertEqual(result.returncode == 0, plan is full)
+                        if plan is full:
+                            self.assertEqual(int(result.stdout), len(plan['shards'][shard]['test_identifiers']))
 
     def test_producer_model_failure_cannot_pass_the_required_gate(self):
         jobs = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]['jobs']

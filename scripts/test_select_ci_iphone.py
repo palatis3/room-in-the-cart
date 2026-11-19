@@ -269,7 +269,7 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
     def test_shell_isolation_selects_only_exact_shards_without_fallback(self):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
-        isolated = [('ci.yml', 'ios-tests', ('ui-01', 'ui-05')),
+        isolated = [('ci.yml', 'ios-tests', ('ui-01', 'ui-05', 'ui-11')),
                     ('ios-fixtures.yml', 'contributor-tests', ('contributor-balanced-01', 'SharedFallbackUITests')),
                     ('ci.yml', 'ios-build', ()),
                     ('ios-fixtures.yml', 'build-contributor', ()),
@@ -290,7 +290,7 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                 workflow, _, _ = parse_workflow(root / '.github/workflows' / workflow_name)
                 shell = next(s['run'] for s in workflow['jobs'][job]['steps'] if '--create-owned' in s.get('run', ''))
                 for provider in (None, 'self-hosted', 'github-hosted'):
-                    for shard in ['models', *[f'ui-{i:02d}' for i in range(1, 11)],
+                    for shard in ['models', *[f'ui-{i:02d}' for i in range(1, 12)],
                                   *[f'contributor-balanced-{i:02d}' for i in range(1, 11)],
                                   'RecordsMediaUITests', 'SharedDeliveryUITests-recovery-cook-and-closeout',
                                   'SharedFallbackUITests', *[shard + '-extra' for shard in owned_shards], '']:
