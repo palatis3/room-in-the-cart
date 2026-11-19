@@ -683,15 +683,15 @@ import XCTest
         XCTAssertFalse(element("pantry.foodKeeper.range").exists)
     }
 
-    func testEnglishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
-        verifyLotFoodKeeper(spanish: false)
+    func testEnglishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() throws {
+        try verifyLotFoodKeeper(spanish: false)
     }
 
-    func testSpanishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
-        verifyLotFoodKeeper(spanish: true)
+    func testSpanishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() throws {
+        try verifyLotFoodKeeper(spanish: true)
     }
 
-    private func verifyLotFoodKeeper(spanish: Bool) {
+    private func verifyLotFoodKeeper(spanish: Bool) throws {
         func openCannedChickenGuide() {
             tapVisibleFormRow(app.buttons["pantry.foodKeeper"], marker: "FOOD_KEEPER_GUIDE_TAP")
             let title = spanish ? "Guía de conservación de alimentos" : "Food storage guide"
@@ -737,7 +737,27 @@ import XCTest
         let source = element("pantry.foodKeeper.source")
         XCTAssertTrue(source.waitForExistence(timeout: 8))
         XCTAssertTrue(source.label.contains("v128 · #142"))
-        XCTAssertTrue(element("pantry.foodKeeper.range").exists)
+        let openingLabel = spanish ? "Fecha de apertura" : "Date opened"
+        let opened = app.descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@ OR label BEGINSWITH %@", openingLabel, openingLabel + ",")).firstMatch
+        reveal(opened)
+        let dateText = [opened.label, opened.value as? String ?? ""].joined(separator: " ")
+        let isoDay = try XCTUnwrap(dateText.range(of: #"[0-9]{4}-[0-9]{2}-[0-9]{2}"#, options: .regularExpression), dateText)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.dateFormat = "yyyy-MM-dd"
+        let start = try XCTUnwrap(formatter.date(from: String(dateText[isoDay])))
+        let expectedDays = try [3, 4].map { days in
+            formatter.string(from: try XCTUnwrap(calendar.date(byAdding: .day, value: days, to: start)))
+        }
+        let savedRange = element("pantry.foodKeeper.range")
+        reveal(savedRange)
+        let rangeText = [savedRange.label, savedRange.value as? String ?? ""].joined(separator: " ")
+        XCTAssertTrue(rangeText.contains(expectedDays.joined(separator: " – ")), rangeText)
         capture(spanish ? "Intervalo de calidad guardado en el lote" : "Saved USDA range on the ordinary lot after relaunch")
         tapVisibleFormRow(app.buttons["pantry.foodKeeper"])
         let chooseAnother = app.buttons["foodKeeper.chooseAnother"]
