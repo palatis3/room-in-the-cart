@@ -47,7 +47,7 @@ final class StoreDepartmentTests: XCTestCase {
         try memory.setDepartment("West", for: other.lines[0], in: other, remember: true)
         memory.applyDepartmentMemory(to: [renamed], previous: [])
         XCTAssertNil(memory.matchedStore(in: renamed))
-        XCTAssertEqual(memory.department(for: renamed.lines[0], in: renamed), "")
+        XCTAssertEqual(memory.department(for: renamed.lines[0], in: renamed), GroceryDepartment.pantry.label(spanish: GroceryDepartment.usesSpanish))
         try memory.matchStore(in: renamed, to: store)
         XCTAssertEqual(memory.matchedStore(in: renamed), store)
         XCTAssertEqual(memory.department(for: renamed.lines[0], in: renamed), "Grains")
@@ -88,7 +88,7 @@ final class StoreDepartmentTests: XCTestCase {
         try changed.updateBasis(ShopBasis(branch: "Unmatched branch"))
         memory.applyDepartmentMemory(to: [changed], previous: [next])
         XCTAssertNil(memory.matchedStore(in: changed))
-        XCTAssertEqual(memory.department(for: changed.lines[0], in: changed), "")
+        XCTAssertEqual(memory.department(for: changed.lines[0], in: changed), GroceryDepartment.dairy.label(spanish: GroceryDepartment.usesSpanish))
         try memory.validate(shops: [original, reopenedName, changed])
     }
 

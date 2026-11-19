@@ -16,8 +16,8 @@ public enum InventoryEngine {
                 throw InventoryError.invalid("observationChronology")
             }
             lot = InventoryLot(id: command.lotID, foodID: seed.foodID, name: seed.name, source: seed.source, revision: 1,
-                location: seed.location, unit: seed.unit, count: seed.count, observationID: observationID,
-                confirmedAt: observedAt, updatedAt: command.occurredAt, useFirst: seed.useFirst)
+                location: seed.location, openedAt: seed.openedAt, unit: seed.unit, count: seed.count, observationID: observationID,
+                confirmedAt: observedAt, updatedAt: command.occurredAt, useFirst: seed.useFirst, splitFromLotID: seed.splitFromLotID)
             observation = InventoryObservation(id: observationID, lotID: lot.id, operationID: command.id, revision: 1,
                 supersedesID: nil, observedAt: observedAt, count: seed.count)
         } else {
@@ -31,6 +31,8 @@ public enum InventoryEngine {
             var location = current.location, openedAt = current.openedAt, unit = current.unit
             var foodID = current.foodID, name = current.name, useFirst = current.useFirst
             var countWording = current.countWording
+            var discardUndo: InventoryDiscardUndo?
+            var discardedTimes = current.discardedTimes
             var recordsObservation = false
             switch command.change {
             case .create: throw InventoryError.stale
@@ -48,6 +50,23 @@ public enum InventoryEngine {
             case .move(let value): location = value
             case .opened(let value): openedAt = value
             case .revise(let revision):
+                if let action = revision.portion {
+                    guard let reading = revision.observation, reading.observedAt == current.confirmedAt, reading.count == (try action.remainder(of: current)),
+                          revision.usage == nil, revision.name == nil, revision.foodID == nil,
+                          revision.location == nil, revision.useFirst == nil else { throw InventoryError.invalid("portion") }
+                    switch action {
+                    case .split: break
+                    case .discard:
+                        guard (discardedTimes ?? 0) < Int.max else { throw DomainError.overflow }
+                        discardedTimes = (discardedTimes ?? 0) + 1
+                        discardUndo = .init(eventID: command.eventID, previousCount: current.count,
+                                            previousWording: current.countWording, previousConfirmedAt: current.confirmedAt)
+                    case .undoDiscard:
+                        guard let total = discardedTimes, total > 0,
+                              reading.countWording == current.discardUndo?.previousWording else { throw InventoryError.stale }
+                        discardedTimes = total == 1 ? nil : total - 1
+                    }
+                }
                 try revision.validateUsage(replacing: current.count)
                 guard revision.observation != nil || revision.foodID != nil || revision.name != nil
                         || revision.useFirst != nil || revision.location != nil else {
@@ -79,7 +98,8 @@ public enum InventoryEngine {
             }
             lot = InventoryLot(id: current.id, foodID: foodID, name: name, source: current.source,
                 revision: next.partialValue, location: location, openedAt: openedAt, unit: unit, count: count,
-                observationID: observationID, confirmedAt: confirmedAt, updatedAt: command.occurredAt, useFirst: useFirst, countWording: countWording)
+                observationID: observationID, confirmedAt: confirmedAt, updatedAt: command.occurredAt, useFirst: useFirst, countWording: countWording,
+                splitFromLotID: current.splitFromLotID, discardUndo: discardUndo, discardedTimes: discardedTimes)
         }
         try lot.validate(); try observation?.validate()
         let event = InventoryEvent(id: command.eventID, operationID: command.id, originID: command.originID,
