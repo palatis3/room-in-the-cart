@@ -566,6 +566,41 @@ extension PantryModelTests {
         try await db.close()
     }
 
+    func testColdPantryOpensWithManualDateWhileSystemNotificationCleanupIsBlocked() async throws {
+        let (directory, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let original = model(db)
+        await original.load()
+        let lot = try await add(original, name: "Cranberry beans")
+        let scope = PantryDigestScope(origin: db.workspaceID, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let folder = directory.appendingPathComponent("digest")
+        let saved = PantryDigestStore(folder: folder, scheduler: DigestSchedulerSpy())
+        let day = try MealDay(year: 2027, month: 3, day: 14, timeZoneIdentifier: "America/New_York")
+        try await saved.saveDay(scope, lot: lot, day: day, authorized: { true })
+        let handle = try XCTUnwrap(saved.document(scope).rules.first?.handle)
+        let identifier = PantryDigestNotifications.prefix + handle.uuidString
+        let started = expectation(description: "Notification cleanup started")
+        let release = DispatchSemaphore(value: 0)
+        let system = PantryDigestNotifications(isolated: false) { pending, delivered in
+            XCTAssertFalse(Thread.isMainThread)
+            XCTAssertEqual(pending, [identifier])
+            XCTAssertEqual(delivered, [identifier])
+            started.fulfill()
+            XCTAssertEqual(release.wait(timeout: .now() + 10), .success)
+        }
+        let reopened = PantryDigestStore(folder: folder, scheduler: system)
+        let cleanup = Task { try await reopened.reconcile(scope, lots: [lot]) }
+        await fulfillment(of: [started], timeout: 5)
+
+        let coldPantry = model(db)
+        await coldPantry.loadOnAppearance(accessAllowed: true)
+        XCTAssertEqual(coldPantry.snapshot?.lots.map(\.id), [lot.id])
+        XCTAssertEqual(try reopened.document(scope).rules.map(\.day), [day])
+        release.signal()
+        try await cleanup.value
+        try await db.close()
+    }
+
     func testDigestDenialKeepsManualDatesAndConfirmedDailyGroupSurvivesReopen() async throws {
         let (dir, db) = try await database()
         defer { try? FileManager.default.removeItem(at: dir) }

@@ -115,8 +115,13 @@ struct ReminderQuietHoursDraft: Equatable {
                 Text(SurfaceCopy.text("Choose a reminder for this item. The notification contains no grocery or budget details."))
                 DatePicker(SurfaceCopy.text("Reminder time"), selection: $fireAt).environment(\.timeZone, TimeZone(identifier: timeZoneID) ?? .gmt)
                     .accessibilityIdentifier("reminder.time")
-                TextField(SurfaceCopy.text("Time zone"), text: $timeZoneID).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    .focused($timeZoneFocused).submitLabel(.done).onSubmit { timeZoneFocused = false }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(SurfaceCopy.text("Time zone")).font(.subheadline).foregroundStyle(Theme.secondary)
+                        .accessibilityHidden(true)
+                    workingTextField(SurfaceCopy.text("Time zone"), text: $timeZoneID)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .focused($timeZoneFocused).submitLabel(.done).onSubmit { timeZoneFocused = false }
+                }
                 Toggle(SurfaceCopy.text("Quiet hours"), isOn: $quiet).accessibilityIdentifier("reminder.quietHours")
                 if quiet {
                     DatePicker(SurfaceCopy.text("Quiet hours start"), selection: $quietTimes.start, displayedComponents: .hourAndMinute)
@@ -137,7 +142,8 @@ struct ReminderQuietHoursDraft: Equatable {
                 Section(SurfaceCopy.text("Review reminder")) {
                     Text(display(reviewed.fireAt)); Text(reviewed.localTime.timeZoneID)
                     Text(SurfaceCopy.text("Nothing is scheduled until you confirm. Quiet hours never move the chosen time automatically."))
-                    Button(SurfaceCopy.text("Schedule reminder")) { save(reviewed) }.frame(minHeight: 44).accessibilityIdentifier("reminder.schedule")
+                    Button(SurfaceCopy.text("Schedule reminder")) { save(reviewed) }
+                        .buttonStyle(PrimaryAction()).accessibilityIdentifier("reminder.schedule")
                 }
             }
             if let message { Text(message).accessibilityAddTraits(.updatesFrequently) }

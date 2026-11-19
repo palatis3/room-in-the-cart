@@ -72,9 +72,11 @@ struct PantrySetupView: View {
                                     .foregroundStyle(Theme.secondary)
                             }
                             .padding(.vertical, 8)
-                            ViewThatFits(in: .horizontal) {
-                                HStack(alignment: .top, spacing: 20) { setupFigures(review) }.fixedSize(horizontal: true, vertical: false)
-                                VStack(alignment: .leading, spacing: 12) { setupFigures(review) }
+                            if !startsEmpty {
+                                ViewThatFits(in: .horizontal) {
+                                    HStack(alignment: .top, spacing: 20) { setupFigures(review) }.fixedSize(horizontal: true, vertical: false)
+                                    VStack(alignment: .leading, spacing: 12) { setupFigures(review) }
+                                }
                             }
                             ForEach(issueRows(review), id: \.label) { row in
                                 LabeledContent(pantryText(row.label), value: row.count.formatted())

@@ -87,9 +87,6 @@ struct PantryHomeView: View {
                                     PantryDigestList(model: model, access: digestAccess)
                                 } label: { Label(pantryText("Use soon"), systemImage: "calendar.badge.clock") }
                                 .accessibilityIdentifier("pantry.digest")
-                                NavigationLink {
-                                    PantryShelfView(model: model, scope: digestAccess.scope)
-                                } label: { Label(pantryText("Count one shelf"), systemImage: "checklist") }
                             }
                             Picker(pantryText("Storage location"), selection: $selectedLocation) {
                                 Text(pantryText("All locations")).tag(nil as InventoryLocation?)
@@ -128,6 +125,11 @@ struct PantryHomeView: View {
                             }
                         }
                         Section(pantryText("Pantry tools")) {
+                            if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID, digestAccess.authorized() {
+                                NavigationLink {
+                                    PantryShelfView(model: model, scope: digestAccess.scope)
+                                } label: { Label(pantryText("Count one shelf"), systemImage: "checklist") }
+                            }
                             if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID, digestAccess.authorized() {
                                 NavigationLink(pantryText("Staple minimums")) {
                                     PantryMinimumsView(model: model, scope: digestAccess.scope)
@@ -358,6 +360,16 @@ private func onlyNeedsRecount(_ lot: InventoryLot, _ availability: InventoryLotA
     lot.countWording != nil && availability?.issues == [.countUnknown]
 }
 
+/// Identifies the physical batch when an editor or history screen has its own navigation title.
+struct PantryBatchHeading: View {
+    let lot: InventoryLot
+
+    var body: some View {
+        let batch = pantryFormat("Batch %@", String(lot.id.uuidString.suffix(8)))
+        WorkingRecordHeading(lot.name, detail: pantryLocationName(lot.location) + " · " + batch, systemImage: "shippingbox")
+    }
+}
+
 struct PantryLotSummary: View {
     let lot: InventoryLot
     let availability: InventoryLotAvailability?
@@ -365,9 +377,16 @@ struct PantryLotSummary: View {
     private var canRecountForMeals: Bool { !availabilityNeedsReview && onlyNeedsRecount(lot, availability) }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(lot.name).font(.title2.weight(.semibold))
-            Text(pantryCount(lot.count, estimate: lot.countWording)).font(.title3).monospacedDigit()
-            Divider()
+            VStack(alignment: .leading, spacing: 5) {
+                Text(lot.name).font(.subheadline.weight(.semibold))
+                Text(pantryCount(lot.count, estimate: lot.countWording))
+                    .font(.title2.weight(.semibold)).monospacedDigit()
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .foregroundStyle(Theme.onSelection)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .top, spacing: 24) { allocation }.fixedSize(horizontal: true, vertical: false)
                 VStack(alignment: .leading, spacing: 10) { allocation }

@@ -138,12 +138,19 @@ private struct SurfaceImportReview: View {
 private struct SurfaceReminderList: View {
     @ObservedObject var composition: DeviceSurfacesComposition
     var body: some View {
-        List {
-            Text(SurfaceCopy.text("Choose a reminder for this item. The notification contains no grocery or budget details."))
-            ForEach(composition.reminderTargets) { target in
-                NavigationLink(target.title) { SurfaceReminderSetup(composition: composition, target: target) }
+        WorkingForm {
+            let targets = composition.reminderTargets
+            if targets.isEmpty {
+                Text(SurfaceCopy.text("Items deferred to your next shop and store offers awaiting a decision appear here."))
+                    .foregroundStyle(Theme.secondary)
+            } else {
+                Text(SurfaceCopy.text("Choose a reminder for this item. The notification contains no grocery or budget details."))
+                    .foregroundStyle(Theme.secondary)
+                ForEach(targets) { target in
+                    NavigationLink(target.title) { SurfaceReminderSetup(composition: composition, target: target) }
+                }
             }
-        }.workingSurface().navigationTitle(SurfaceCopy.text("Local reminders"))
+        }.navigationTitle(SurfaceCopy.text("Local reminders"))
     }
 }
 struct SurfaceUnavailableView: View {

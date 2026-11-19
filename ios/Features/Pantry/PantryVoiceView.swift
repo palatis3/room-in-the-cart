@@ -744,9 +744,10 @@ extension PantryUsageHistoryRow {
     }
 
     var body: some View {
-        List {
+        WorkingForm {
             if revision == nil { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
-            else if loadedRevision == revision, let entries {
+            else if loadedRevision == revision, let entries, let lot = model.snapshot?.lots.first(where: { $0.id == lotID }) {
+                Section { PantryBatchHeading(lot: lot) }
                 Section {
                     LabeledContent(pantryText("Recorded uses"), value: entries.count.formatted())
                         .accessibilityIdentifier("pantry.usageCount")
@@ -761,13 +762,16 @@ extension PantryUsageHistoryRow {
                 }
                 ForEach(Array(entries.enumerated()), id: \.element.id) { index, row in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(row.occurredAt.formatted(date: .abbreviated, time: .shortened))
                         switch row.kind {
                         case .measured(let quantity): LabeledContent(pantryText("Amount used"), value: pantryQuantity(quantity))
                         case .some: Text(pantryText("Used some"))
                         case .all: Text(pantryText("Used all of the selected batch"))
                         }
-                        if let wording = row.remainingWording { Text(pantryFormat("Remaining estimate: %@", wording)) }
+                        if let wording = row.remainingWording {
+                            Text(pantryFormat("Remaining estimate: %@", wording)).font(.headline)
+                        }
+                        Text(row.occurredAt.formatted(date: .abbreviated, time: .shortened))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
                     }.accessibilityElement(children: .combine)
                         .accessibilityIdentifier("pantry.usageEvent.\(index)")
                 }

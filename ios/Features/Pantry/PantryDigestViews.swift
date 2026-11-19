@@ -156,7 +156,7 @@ struct PantryDigestList: View {
     @State private var time = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
 
     var body: some View {
-        Form {
+        WorkingForm {
             if access.authorized(), let snapshot = model.snapshot, snapshot.state.workspaceID == access.scope.origin,
                let doc = currentDocument(snapshot.lots) {
                 Section(pantryText("Foods to check")) {
@@ -168,11 +168,6 @@ struct PantryDigestList: View {
                             }
                         }
                     }
-                }
-                AdultHomeSummaryPreference(kind: .useSoon, access: access)
-                Section {
-                    NavigationLink(tonightText("Tonight")) { TonightEntry() }
-                        .accessibilityIdentifier("pantry.digest.tonight")
                 }
                 Section(pantryText("Daily notification")) {
                     DatePicker(pantryText("Digest time"), selection: $time, displayedComponents: .hourAndMinute)
@@ -186,13 +181,20 @@ struct PantryDigestList: View {
                     if doc.enabled {
                         Button(pantryText("Turn off daily notifications")) { update(enabled: false) }
                     }
-                    if store.notificationsUnavailable {
+                    if let message {
+                        Text(message).accessibilityIdentifier("pantry.digest.status")
+                            .accessibilityAddTraits(.updatesFrequently)
+                    } else if store.notificationsUnavailable {
                         Text(pantryText("Notifications are unavailable. Your check dates are still here."))
                     }
                 }.disabled(busy)
+                AdultHomeSummaryPreference(kind: .useSoon, access: access)
+                Section {
+                    NavigationLink(tonightText("Tonight")) { TonightEntry() }
+                        .accessibilityIdentifier("pantry.digest.tonight")
+                }
             } else if model.busy { ProgressView() }
             else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
-            if let message { Text(message).accessibilityIdentifier("pantry.digest.status") }
         }
         .privacySensitive().navigationTitle(pantryText("Use soon"))
         .task {
@@ -237,17 +239,20 @@ struct PantryDigestDayEditor: View {
     @ObservedObject private var store = PantryDigestStore.shared
 
     var body: some View {
-        Form {
+        WorkingForm {
             if access.authorized(), model.snapshot?.state.workspaceID == access.scope.origin,
                model.snapshot?.lots.first(where: { $0.id == lot.id }) == lot {
-                Text(verbatim: lot.name)
+                PantryBatchHeading(lot: lot)
                 DatePicker(pantryText("Check this food on"), selection: $date, displayedComponents: .date)
                     .environment(\.timeZone, zone)
-                Text(verbatim: zone.identifier)
+                Text(verbatim: zone.identifier).font(.subheadline).foregroundStyle(Theme.secondary)
                 Text(pantryText("Choose a day to check the batch. A check date does not indicate food safety."))
-                Button(pantryText("Save check date")) { save(remove: false) }.accessibilityIdentifier("pantry.digest.saveDate")
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                Button(pantryText("Save check date")) { save(remove: false) }
+                    .buttonStyle(PrimaryAction())
+                    .accessibilityIdentifier("pantry.digest.saveDate")
                 if (try? store.document(access.scope).rules.contains { $0.lotID == lot.id }) == true {
-                    Button(pantryText("Remove check date")) { save(remove: true) }
+                    Button(pantryText("Remove check date"), role: .destructive) { save(remove: true) }
                 }
                 if offersMealIdeas {
                     NavigationLink(tonightText("Find meals that use this batch")) {

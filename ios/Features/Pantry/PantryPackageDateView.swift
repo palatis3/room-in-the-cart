@@ -69,15 +69,15 @@ struct PantryPackageDateSection: View {
         do { try value.validate(); return value } catch { return nil }
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if authorized && loaded {
                 Section {
-                    Text(verbatim: lot.name).font(.headline)
+                    PantryBatchHeading(lot: lot)
                     Text(pantryText("Record what the package says. The storage estimate and reminder are separate."))
                 }
                 source
                 Section(pantryText("Review the label")) {
-                    TextField(pantryText("Printed wording"), text: $wording, axis: .vertical)
+                    workingTextField(pantryText("Printed wording"), text: $wording, axis: .vertical)
                         .focused($editing).accessibilityIdentifier("packageDate.wording")
                     Picker(pantryText("Meaning printed on the package"), selection: $meaning) {
                         ForEach(PrintedDateMeaning.allCases, id: \.self) { Text($0.label).tag($0) }
@@ -95,6 +95,7 @@ struct PantryPackageDateSection: View {
                 }
                 Section {
                     Button(pantryText("Save printed label")) { Task { await save(proposal) } }
+                        .buttonStyle(PrimaryAction())
                         .disabled(proposal == nil || saving || busy)
                         .accessibilityIdentifier("packageDate.save")
                     if previous != nil {

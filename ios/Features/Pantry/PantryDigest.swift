@@ -189,7 +189,33 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
 
 @MainActor struct PantryDigestNotifications: PantryDigestScheduling {
     static let prefix = "pantry.digest."
-    let isolated: Bool
+    typealias SystemRemoval = @Sendable (_ pending: [String], _ delivered: [String]) -> Void
+    private static let removalQueue = DispatchQueue(label: "dev.roominthecart.pantry.notification-cleanup", qos: .utility)
+    private let isolated: Bool
+    private let removeFromSystem: SystemRemoval
+
+    init(isolated: Bool, removeFromSystem: @escaping SystemRemoval = { pending, delivered in
+        let center = UNUserNotificationCenter.current()
+        if !pending.isEmpty { center.removePendingNotificationRequests(withIdentifiers: pending) }
+        if !delivered.isEmpty { center.removeDeliveredNotifications(withIdentifiers: delivered) }
+    }) {
+        self.isolated = isolated
+        self.removeFromSystem = removeFromSystem
+    }
+
+    // UserNotifications can synchronously wait for its service. Keep the store's
+    // ordering and privacy fence without making a slow service freeze the interface.
+    private func retire(pending: [String] = [], delivered: [String] = []) async {
+        guard !pending.isEmpty || !delivered.isEmpty else { return }
+        let remove = removeFromSystem
+        await withCheckedContinuation { continuation in
+            Self.removalQueue.async {
+                remove(pending, delivered)
+                continuation.resume()
+            }
+        }
+    }
+
     func permission(request: Bool) async throws -> Bool {
         guard !isolated else { return false }
         let scheduler = IOSNotificationScheduler()
@@ -202,9 +228,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     func remove(_ handles: Set<UUID>) async {
         guard !isolated, !handles.isEmpty else { return }
         let identifiers = handles.map { Self.prefix + $0.uuidString }
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: identifiers)
-        center.removeDeliveredNotifications(withIdentifiers: identifiers)
+        await retire(pending: identifiers, delivered: identifiers)
     }
     private func identifier(_ handle: UUID) -> String { Self.prefix + handle.uuidString }
 
@@ -214,9 +238,9 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         let pending = Set(keepingPending.map(identifier))
         let delivered = Set(keepingDelivered.map(identifier))
         let requests = await center.pendingNotificationRequests().map(\.identifier)
-        center.removePendingNotificationRequests(withIdentifiers: requests.filter { $0.hasPrefix(Self.prefix) && !pending.contains($0) })
+        await retire(pending: requests.filter { $0.hasPrefix(Self.prefix) && !pending.contains($0) })
         let notifications = await center.deliveredNotifications().map(\.request.identifier)
-        center.removeDeliveredNotifications(withIdentifiers: notifications.filter { $0.hasPrefix(Self.prefix) && !delivered.contains($0) })
+        await retire(delivered: notifications.filter { $0.hasPrefix(Self.prefix) && !delivered.contains($0) })
     }
 
     func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws {
@@ -242,7 +266,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
                 try await center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: trigger))
             }
         } catch {
-            center.removePendingNotificationRequests(withIdentifiers: desired.map(identifier))
+            await retire(pending: desired.map(identifier))
             throw error
         }
     }
