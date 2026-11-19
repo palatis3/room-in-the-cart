@@ -416,7 +416,7 @@ private struct PantryProductCandidateEditor: View {
 private struct ManualBarcodeCorrectionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var code: String
-    @State private var error: String?
+    @State private var validationMessage: String?
     let save: (String) throws -> Void
 
     init(code: String, save: @escaping (String) throws -> Void) {
@@ -431,7 +431,7 @@ private struct ManualBarcodeCorrectionView: View {
                     TextField(pantryText("Barcode"), text: $code)
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
                         .accessibilityIdentifier("productBatch.correctedBarcode")
-                    if let error { Text(error).accessibilityIdentifier("productBatch.correctionError") }
+                    if let validationMessage { Text(validationMessage).accessibilityIdentifier("productBatch.correctionError") }
                 }
             }
             .navigationTitle(pantryText("Edit barcode")).navigationBarTitleDisplayMode(.inline)
@@ -445,9 +445,9 @@ private struct ManualBarcodeCorrectionView: View {
                             try save(code)
                             dismiss()
                         } catch ProductBatchError.duplicateBarcode {
-                            error = pantryText("Another product in this batch already has that barcode. Check the code on the package.")
+                            validationMessage = pantryText("Another product in this batch already has that barcode. Check the code on the package.")
                         } catch {
-                            error = pantryText("Enter a barcode from the package.")
+                            validationMessage = pantryText("Enter a barcode from the package.")
                         }
                     }.disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .accessibilityIdentifier("productBatch.saveBarcode")
