@@ -55,6 +55,7 @@ private struct VoicePantryRow {
     @Environment(\.scenePhase) private var scene
     @Environment(\.pantryVoicePrompt) private var pantryVoicePrompt
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var voice = PantryVoiceSession()
     @FocusState private var editing: Bool
     @State private var identity: CapturePrivateIdentity?
     @State private var generation: UUID?
@@ -83,6 +84,9 @@ private struct VoicePantryRow {
     }
 
     private var authorized: Bool { boundScope && scene == .active }
+    private var canRetainDictation: Bool {
+        boundScope && model.canEdit && !working && startingLot == nil && basis == nil && saved == nil
+    }
 
     var body: some View {
         Form {
@@ -106,7 +110,7 @@ private struct VoicePantryRow {
                 if basis == nil, startingLot != nil {
                     Text(pantryText("This batch changed. Return to My Pantry and review it again."))
                 } else if basis == nil {
-                    PantryVoiceInput(authorized: { boundScope && model.canEdit && !working && basis == nil }) { spoken in
+                    PantryVoiceInput(voice: voice, authorized: { canRetainDictation }) { spoken in
                         guard authorized, model.canEdit, !working, basis == nil else { return }
                         draft = draft.isEmpty ? spoken : draft + " " + spoken
                         resetReview()
@@ -153,6 +157,7 @@ private struct VoicePantryRow {
             }
         }
         .disabled(scene != .active)
+        .onChange(of: canRetainDictation) { _, allowed in if !allowed { voice.cancel() } }
         .onChange(of: boundScope) { _, allowed in if !allowed { erase() } }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.protectedDataWillBecomeUnavailableNotification)) { _ in erase() }
         .onChange(of: model.snapshot?.state.revision) { _, _ in
@@ -160,6 +165,7 @@ private struct VoicePantryRow {
         }
         .onDisappear {
             // A pushed shopping/reminder handoff still needs its saved lot and live identity.
+            voice.cancel()
             draft = ""; resetReview()
         }
     }
@@ -170,11 +176,13 @@ private struct VoicePantryRow {
     }
 
     private func erase() {
+        voice.cancel()
         draft = ""; resetReview(); saved = nil; savedRevision = nil; identity = nil; generation = nil; editing = false
     }
 
     private func parse() {
         guard authorized, model.canEdit, let snapshot = model.snapshot else { return }
+        voice.cancel()
         editing = false; resetReview()
         switch PantryVoiceParser.parse(draft, localeIdentifier: locale.identifier) {
         case .consume(let items):
@@ -295,6 +303,7 @@ private struct VoicePantryRow {
             }
             Button(pantryText("Used it all")) { change(index) { $0.mode = .all; $0.reportsUse = true } }
             Button(pantryText("Not sure")) { change(index) { $0.mode = .skip } }
+                .accessibilityIdentifier("pantry.voiceNotSure.\(index)")
         } label: {
             Text(pantryText("Choose how much is left"))
         }

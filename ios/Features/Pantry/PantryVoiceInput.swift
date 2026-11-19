@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 import UIKit
 
@@ -5,9 +6,11 @@ import UIKit
     @Published private(set) var capture: CaptureModel?
     @Published private(set) var unsupportedLanguage = false
     private var authorized: (() -> Bool)?
+    private var promptReadiness: AnyCancellable?
+    private var releasePrompt: (() -> Void)?
 
     func start(localeIdentifier: String, authorized: @escaping () -> Bool,
-               makeSpeech: @MainActor () -> any CaptureSpeechService = { OnDeviceSpeechCapture() }) {
+               prompt: PantryVoicePromptAccess? = nil, makeSpeech: @MainActor () -> any CaptureSpeechService = { OnDeviceSpeechCapture() }) {
         guard authorized(), capture?.busy != true else { return }
         cancel()
         let language = Locale(identifier: localeIdentifier).language.languageCode?.identifier
@@ -20,7 +23,16 @@ import UIKit
                                  speech: makeSpeech(), ocr: OnDeviceTextCapture())
         self.authorized = authorized
         capture = model
+        // Bind the permission interruption before the system starts its prompt. Its
+        // lifetime follows this capture and the owning screen, independent of visible form rows.
+        let promptID = prompt?.begin()
+        if let prompt, let promptID { releasePrompt = { prompt.cancel(promptID) } }
         model.startSpeech()
+        if let prompt, let promptID {
+            promptReadiness = model.$listening.combineLatest(model.$busy)
+                .first { listening, busy in listening || !busy }
+                .sink { _ in prompt.ready(promptID) }
+        }
     }
 
     func use(_ model: CaptureModel, authorizedNow: () -> Bool, onUse: (String) -> Void) {
@@ -33,6 +45,10 @@ import UIKit
     }
 
     func cancel() {
+        promptReadiness?.cancel()
+        promptReadiness = nil
+        releasePrompt?()
+        releasePrompt = nil
         capture?.close()
         capture = nil
         authorized = nil
@@ -41,25 +57,21 @@ import UIKit
 }
 
 struct PantryVoiceInput: View {
+    @ObservedObject var voice: PantryVoiceSession
     let authorized: () -> Bool
     let onUse: (String) -> Void
     @Environment(\.locale) private var locale
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.pantryVoicePrompt) private var prompt
-    @State private var promptID: UUID?
-    @StateObject private var voice = PantryVoiceSession()
 
     var body: some View {
         Section {
             if authorized() {
                 if let model = voice.capture {
-                    PantryVoiceControls(model: model, start: start, cancel: cancel, use: {
+                    PantryVoiceControls(model: model, start: start, cancel: voice.cancel, use: {
                         guard scenePhase == .active, UIApplication.shared.isProtectedDataAvailable else { return }
                         voice.use(model, authorizedNow: authorized, onUse: onUse)
                     })
-                    .onReceive(model.$listening.combineLatest(model.$busy)) { listening, busy in
-                        if (listening || !busy), let promptID { prompt?.ready(promptID) }
-                    }
                 } else {
                     if voice.unsupportedLanguage {
                         Text(pantryText("On-device dictation is unavailable for this language or device. You can type instead."))
@@ -70,23 +82,11 @@ struct PantryVoiceInput: View {
                 }
             }
         }
-        .onChange(of: authorized()) { _, allowed in if !allowed { cancel() } }
-        .onChange(of: scenePhase) { _, phase in if phase == .background { cancel() } }
-        .onReceive(NotificationCenter.default.publisher(for: UIApplication.protectedDataWillBecomeUnavailableNotification)) { _ in cancel() }
-        .onDisappear { cancel() }
     }
 
     private func start() {
         guard scenePhase == .active, UIApplication.shared.isProtectedDataAvailable else { return }
-        if let promptID { prompt?.cancel(promptID) }
-        voice.start(localeIdentifier: locale.identifier, authorized: authorized)
-        if voice.capture?.busy == true { promptID = prompt?.begin() }
-    }
-
-    private func cancel() {
-        if let promptID { prompt?.cancel(promptID) }
-        promptID = nil
-        voice.cancel()
+        voice.start(localeIdentifier: locale.identifier, authorized: authorized, prompt: prompt)
     }
 }
 
