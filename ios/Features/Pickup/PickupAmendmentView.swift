@@ -192,15 +192,15 @@ private struct AmendmentLineEditor: View {
         NavigationStack {
             WorkingForm {
                 if selection.line == nil {
-                    TextField(pTr("Item name"), text: $name).focused($focused, equals: .name)
+                    PickupLabeledField(pTr("Item name"), text: $name).focused($focused, equals: .name)
                 } else { Text(name) }
-                TextField(pTr("Confirmed ordered amount"), text: $amount)
+                PickupLabeledField(pTr("Confirmed ordered amount"), text: $amount)
                     .focused($focused, equals: .amount).accessibilityIdentifier("pickup.amendment.amount")
                 Picker(pTr("Unit"), selection: $unit) {
                     ForEach(UnitOfMeasure.allCases.filter { selection.line?.quantity.unit.dimension == nil ||
                         $0.dimension == selection.line?.quantity.unit.dimension }, id: \.self) { Text(pTr($0.rawValue)).tag($0) }
                 }
-                TextField(pTr("Confirmed line total (USD), if provided"), text: $price)
+                PickupLabeledField(pTr("Confirmed line total (USD), if provided"), text: $price)
                     .keyboardType(.decimalPad).focused($focused, equals: .price)
                 if invalid { Text(pTr("Enter an item, a positive exact amount and a valid line total if provided.")) }
                 Button(pTr("Keep line for review")) { keepLine() }.accessibilityIdentifier("pickup.amendment.keepLine")

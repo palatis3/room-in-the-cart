@@ -46,7 +46,8 @@ import XCTest
         func prepare() {
             tap(app.buttons["sharedOrder.amend"])
             tap(app.buttons[spanishLargestText ? "Editar Entered soup packs" : "Edit Entered soup packs"])
-            let packs=app.textFields["sharedOrder.packs"]
+            let packs = app.textFields["sharedOrder.packs"]
+            XCTAssertEqual(packs.label, spanishLargestText ? "Paquetes confirmados" : "Confirmed packs")
             tap(packs); packs.typeText(XCUIKeyboardKey.delete.rawValue + "3")
             XCTAssertEqual(packs.value as? String, "3")
             let keep = app.buttons["sharedOrder.keepLine"]
@@ -57,6 +58,11 @@ import XCTest
             XCTAssertEqual(doneButton.label, done)
             doneButton.tap()
             XCTAssertTrue(keyboard.waitForNonExistence(timeout: 8))
+            let priceLabel = spanishLargestText
+                ? "Precio confirmado por paquete (USD), si se proporcionó"
+                : "Confirmed price per pack (USD), if provided"
+            XCTAssertTrue(app.textFields[priceLabel].exists)
+            capture(spanishLargestText ? "Confirmed-order-line-Spanish-largest-text" : "Confirmed-order-line-retailer-pack-count")
             XCTAssertEqual(packs.value as? String, "3")
             tap(keep)
             XCTAssertTrue(packs.waitForNonExistence(timeout: 8))

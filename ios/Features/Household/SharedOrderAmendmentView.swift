@@ -204,11 +204,12 @@ private struct SharedAmendmentLineEditor: View {
     var body: some View {
         NavigationStack {
             WorkingForm {
-                if choice.line == nil { TextField(OrderAmendmentCopy.text("Item name"), text: $name).focused($focus, equals: .name) }
-                else { Text(name) }
-                TextField(OrderAmendmentCopy.text("Confirmed packs"), text: $packs).keyboardType(.numberPad)
+                if choice.line == nil {
+                    PickupLabeledField(OrderAmendmentCopy.text("Item name"), text: $name).focused($focus, equals: .name)
+                } else { Text(name) }
+                PickupLabeledField(OrderAmendmentCopy.text("Confirmed packs"), text: $packs).keyboardType(.numberPad)
                     .focused($focus, equals: .packs).accessibilityIdentifier("sharedOrder.packs")
-                TextField(OrderAmendmentCopy.text("Confirmed price per pack (USD), if provided"), text: $price)
+                PickupLabeledField(OrderAmendmentCopy.text("Confirmed price per pack (USD), if provided"), text: $price)
                     .keyboardType(.decimalPad).focused($focus, equals: .price)
                 Button(OrderAmendmentCopy.text("Keep line for review")) {
                     do {
