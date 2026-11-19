@@ -53,6 +53,9 @@ export function adultPickupTests({fixture,admin,repo}){
     const latePass=await http('Lee','POST',path+'/response',{revision:2,action:'pass'});
     assert.equal(latePass.status,409);assert.equal(latePass.data.error.code,'last_call_ended');
     assert.equal((await read('Lee')).responded,false);
+    assert.equal((await send('Lee')).request.route,'next');
+    assert.equal((await read('Lee')).responded,true);
+    assert.equal((await http('Lee','POST',path+'/response',{revision:2,action:'pass'})).data.error.code,'last_call_ended');
     await admin.query('INSERT INTO ritc.moderation_block(household_id,viewer_id,author_id) VALUES($1,$2,$3)',[h,actors.Lee.id,actors.Mia.id]);
     const hidden=await read('Lee');assert.equal(hidden.revision,0);assert.equal(hidden.cutoffAt,undefined);
     assert.equal(hidden.nextShopOnly,true);assert.equal((await send('Lee')).request.route,'next');

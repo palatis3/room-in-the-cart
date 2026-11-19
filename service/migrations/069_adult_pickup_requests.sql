@@ -7,7 +7,7 @@ CREATE TABLE ritc.pickup_last_call (
 );
 CREATE TABLE ritc.pickup_last_call_recipient (
  household_id uuid NOT NULL, shop_id uuid NOT NULL, member_id uuid NOT NULL,
- response text CHECK(response IN ('pass','sent')), muted boolean NOT NULL DEFAULT false,
+ passed boolean NOT NULL DEFAULT false, sent boolean NOT NULL DEFAULT false, muted boolean NOT NULL DEFAULT false,
  PRIMARY KEY(household_id,shop_id,member_id),
  FOREIGN KEY(household_id,shop_id) REFERENCES ritc.pickup_last_call ON DELETE CASCADE,
  FOREIGN KEY(household_id,member_id) REFERENCES ritc.member ON DELETE CASCADE

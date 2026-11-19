@@ -37,14 +37,14 @@ async function adultScope(repo:HouseholdRepository,ctx:Context,shop:Shop) {
 }
 async function currentLastCall(ctx:Context,shop:Shop) {
   const managed=shop.shopper_id===ctx.member.member_id;
-  const row=(await ctx.db.query(`SELECT c.revision,c.cutoff_at,r.response,r.muted FROM ritc.pickup_last_call c
+  const row=(await ctx.db.query(`SELECT c.revision,c.cutoff_at,(r.passed OR r.sent) AS responded,r.muted FROM ritc.pickup_last_call c
     LEFT JOIN ritc.pickup_last_call_recipient r ON (r.household_id,r.shop_id)=(c.household_id,c.shop_id) AND r.member_id=$3
     WHERE c.household_id=$1 AND c.shop_id=$2 AND c.authority_epoch=$4 AND ($5 OR (r.member_id IS NOT NULL AND ritc.shared_content_visible(c.household_id,$3,c.sender_id,'lastCall',c.shop_id,1,c.revision)))`,
     [ctx.householdId,shop.shop_id,ctx.member.member_id,shop.authority_epoch,managed])).rows[0];
   const late=row?row.cutoff_at<=ctx.now:!managed&&
     (await ctx.db.query('SELECT ritc.pickup_cutoff_passed($1,$2,$3,$4) AS late',[ctx.householdId,shop.shop_id,ctx.member.member_id,ctx.now])).rows[0]?.late;
   return {managed,revision:Number(row?.revision??0),...(row?{cutoffAt:row.cutoff_at.toISOString() as string}:{}),
-    responded:Boolean(row?.response),muted:Boolean(row?.muted),nextShopOnly:shop.phase!=='draft'||Boolean(late)};
+    responded:Boolean(row?.responded),muted:Boolean(row?.muted),nextShopOnly:shop.phase!=='draft'||Boolean(late)};
 }
 export async function lastCallRoute(repo:HouseholdRepository,ctx:Context,shop:Shop,tail:string,method:string,body:unknown) {
   if(!repo.options.adultLastCall)throw unavailable();
@@ -72,10 +72,11 @@ export async function lastCallRoute(repo:HouseholdRepository,ctx:Context,shop:Sh
     const input=respond.parse(body);
     if(current.managed||current.revision===0)throw unavailable();
     if(input.revision!==current.revision)throw stale();
-    if(input.action==='pass'&&current.nextShopOnly&&!current.responded)
-      throw new ServiceError(409,'last_call_ended','The last call has ended. A late request is for the next trip.');
-    if(input.action==='pass')await ctx.db.query(`UPDATE ritc.pickup_last_call_recipient SET response=coalesce(response,'pass') WHERE household_id=$1 AND shop_id=$2 AND member_id=$3`,[h,s,m]);
-    else await ctx.db.query('UPDATE ritc.pickup_last_call_recipient SET muted=$4 WHERE household_id=$1 AND shop_id=$2 AND member_id=$3',[h,s,m,input.action==='mute']);
+    if(input.action==='pass'){
+      const accepted=await ctx.db.query(`UPDATE ritc.pickup_last_call_recipient SET passed=true
+        WHERE household_id=$1 AND shop_id=$2 AND member_id=$3 AND (NOT $4 OR passed)`,[h,s,m,current.nextShopOnly]);
+      if(!accepted.rowCount)throw new ServiceError(409,'last_call_ended','The last call has ended. A late request is for the next trip.');
+    }else await ctx.db.query('UPDATE ritc.pickup_last_call_recipient SET muted=$4 WHERE household_id=$1 AND shop_id=$2 AND member_id=$3',[h,s,m,input.action==='mute']);
   }else throw unavailable();
   return currentLastCall(ctx,shop);
 }
@@ -83,7 +84,7 @@ export async function lastCallRoute(repo:HouseholdRepository,ctx:Context,shop:Sh
 // request.send already serializes all commands against the household and replays the committed receipt.
 export async function respondWithRequest(ctx:Context,shop:Shop) {
   if(ctx.member.kind!=='adult'||shop.shopper_id===ctx.member.member_id)return false;
-  const row=(await ctx.db.query(`UPDATE ritc.pickup_last_call_recipient r SET response='sent'
+  const row=(await ctx.db.query(`UPDATE ritc.pickup_last_call_recipient r SET sent=true
     FROM ritc.pickup_last_call c WHERE (c.household_id,c.shop_id)=(r.household_id,r.shop_id)
     AND r.household_id=$1 AND r.shop_id=$2 AND r.member_id=$3 AND c.authority_epoch=$4 RETURNING c.cutoff_at<=$5 AS late`,
     [ctx.householdId,shop.shop_id,ctx.member.member_id,shop.authority_epoch,ctx.now])).rows[0];
