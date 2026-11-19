@@ -373,6 +373,18 @@ struct PantryReceiptLineEditor: View {
     private func label(_ lot: InventoryLot) -> String {
         PantryReceiptDelivery.label(for: lot, purchase: purchases.first { $0.id == lot.id })
     }
+
+    private func labeledField(_ title: String, text: Binding<String>, focusKey: String,
+                              identifier: String? = nil, keyboard: UIKeyboardType = .default) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
+                .fixedSize(horizontal: false, vertical: true).accessibilityHidden(true)
+            TextField(title, text: text, prompt: Text(""))
+                .keyboardType(keyboard).focused(field, equals: focusKey)
+                .accessibilityLabel(title).accessibilityIdentifier(identifier ?? title)
+        }
+    }
+
     var body: some View {
         Section {
             VStack(alignment: .leading, spacing: 6) {
@@ -431,14 +443,17 @@ struct PantryReceiptLineEditor: View {
                 if line.appliedAlias != nil {
                     Button(pantryText("Undo saved spelling")) { line.clearAlias() }
                 }
-                TextField(pantryText("Food name"), text: Binding(get: { line.name }, set: { line.clearAlias(); line.name = $0 })).focused(field, equals: "name-\(line.ordinal)")
+                labeledField(pantryText("Food name"), text: Binding(get: { line.name }, set: { line.clearAlias(); line.name = $0 }),
+                             focusKey: "name-\(line.ordinal)")
                 if let printed = line.printed, let quantity = printed.quantity, let unit = printed.unit {
                     LabeledContent(pantryText("Printed quantity"), value: quantity + " " + pantryUnit(unit))
                     Button(pantryText("I received the printed quantity")) { line.usePrintedQuantity() }
                         .accessibilityIdentifier("receipt.printedQuantity.\(line.ordinal)")
                 }
-                TextField(pantryText("Amount actually received"), text: $line.received).focused(field, equals: "received-\(line.ordinal)").accessibilityIdentifier("receipt.received.\(line.ordinal)").keyboardType(.numbersAndPunctuation)
-                TextField(pantryText("Amount usable"), text: $line.usable).focused(field, equals: "usable-\(line.ordinal)").accessibilityIdentifier("receipt.usable.\(line.ordinal)").keyboardType(.numbersAndPunctuation)
+                labeledField(pantryText("Amount actually received"), text: $line.received, focusKey: "received-\(line.ordinal)",
+                             identifier: "receipt.received.\(line.ordinal)", keyboard: .numbersAndPunctuation)
+                labeledField(pantryText("Amount usable"), text: $line.usable, focusKey: "usable-\(line.ordinal)",
+                             identifier: "receipt.usable.\(line.ordinal)", keyboard: .numbersAndPunctuation)
                 Picker(pantryText("Unit"), selection: $line.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) } }
                 if line.treatment == .add {
                     if let storage = line.printed?.storage {
