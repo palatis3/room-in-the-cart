@@ -1,6 +1,14 @@
 import SwiftUI
+import Combine
 import CoreDomain
 import DeviceSurfaces
+
+extension NotificationCenter {
+    /// System clock changes can arrive on a worker thread. Deliver on main before SwiftUI subscribes to the output.
+    func pantryClockChanges(for name: Notification.Name) -> Publishers.ReceiveOn<Publisher, DispatchQueue> {
+        publisher(for: name).receive(on: DispatchQueue.main)
+    }
+}
 
 struct PantryDigestAccess {
     let scope: PantryDigestScope
@@ -114,9 +122,9 @@ extension PantryDigestAccess {
             }
             .onChange(of: store.generation) { _, _ in refreshHome(current) }
             .onChange(of: home.generation) { _, _ in refreshHome(current) }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in refreshHome(current) }
-            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in refreshHome(current) }
-            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in refreshHome(current) }
+            .onReceive(NotificationCenter.default.pantryClockChanges(for: UIApplication.significantTimeChangeNotification)) { _ in refreshHome(current) }
+            .onReceive(NotificationCenter.default.pantryClockChanges(for: .NSSystemTimeZoneDidChange)) { _ in refreshHome(current) }
+            .onReceive(NotificationCenter.default.pantryClockChanges(for: .NSCalendarDayChanged)) { _ in refreshHome(current) }
     }
 
     private func acceptTap(_ access: PantryDigestAccess) {
