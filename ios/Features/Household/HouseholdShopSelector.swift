@@ -44,6 +44,7 @@ struct HouseholdShopSelector: View {
                             Text(verbatim: reference(for: shop.id)).font(.caption.monospaced())
                         }
                     }
+                    .accessibilityIdentifier("household.shopChoice." + shop.id.uuidString.lowercased())
                 }
                 if failed { Button(ht("Retry loading shops")) { Task { await load(more: false) } } }
                 else if !busy && shops.isEmpty { Text(ht("No shops in this view.")) }
