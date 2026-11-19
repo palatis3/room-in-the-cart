@@ -18,6 +18,40 @@
         }
       }
     },
+    "Exports include saved lists. To keep a first-list draft, finish and save it before exporting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exports include saved lists. To keep a first-list draft, finish and save it before exporting."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La exportación incluye las listas guardadas. Para conservar un borrador de la primera lista, termínalo y guárdalo antes de exportar."
+          }
+        }
+      }
+    },
+    "First-list drafts to delete: %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First-list drafts to delete: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borradores de la primera lista que se eliminarán: %lld"
+          }
+        }
+      }
+    },
     "Words to read aloud": {
       "extractionState": "manual",
       "localizations": {

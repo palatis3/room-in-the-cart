@@ -1117,6 +1117,12 @@ private struct RecordsLedgerDeletionView: View {
                 Text(recordsText("Delete the entire local ledger")).font(.title2.bold())
                 Text(recordsText("This permanently deletes every shopping list, dinner plan, reusable dinner and saved revision in this ledger."))
                 Text(String(format: recordsText("%lld shopping lists · %lld reusable dinners"), Int64(effectiveReview.shopCount), Int64(effectiveReview.reusableDinnerCount)))
+                if let tokens = effectiveReview.draftTokens {
+                    Text(String(format: recordsText("First-list drafts to delete: %lld"), Int64(tokens.count)))
+                    if !tokens.isEmpty {
+                        Text(recordsText("Exports include saved lists. To keep a first-list draft, finish and save it before exporting."))
+                    }
+                }
                 Text(recordsText("Pack comparisons, pickup histories, imported recipe source files and files already shared are kept."))
                     .font(.footnote)
                 Text(recordsText("Recovered copies from this ledger are also removed. An old backup cannot restore this retired ledger on this iPhone."))
