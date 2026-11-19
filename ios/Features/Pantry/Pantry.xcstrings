@@ -273,6 +273,38 @@
         }
       }
     },
+    "Zoom in": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ampliar"
+          }
+        }
+      }
+    },
+    "Fit page": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fit page"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustar a la pantalla"
+          }
+        }
+      }
+    },
     "Inspect printed line %@": {
       "localizations": {
         "en": {

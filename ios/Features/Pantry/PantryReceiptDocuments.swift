@@ -254,7 +254,7 @@ struct ReceiptPrintedLineInspector: View {
     let index: Int
     let originalPage: () async -> Data?
     @Environment(\.dismiss) private var dismiss
-    @State private var imageData: Data?
+    @State private var pageImage: UIImage?
     @State private var showSource = false
 
     private var selected: ReceiptDocumentPage.Line { lines[index] }
@@ -263,6 +263,31 @@ struct ReceiptPrintedLineInspector: View {
     }
 
     var body: some View {
+        Group {
+            if showSource, let pageImage {
+                ReceiptPageViewer(image: pageImage)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                lineDetails
+            }
+        }
+        .navigationTitle(showSource ? pantryText("Original page") : pantryText("Printed line"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(pantryText("Done")) {
+                    if showSource { showSource = false } else { dismiss() }
+                }
+            }
+        }
+        .privacySensitive()
+        .task {
+            let bytes = await originalPage()
+            if !Task.isCancelled { pageImage = bytes.flatMap { UIImage(data: $0) } }
+        }
+    }
+
+    private var lineDetails: some View {
         WorkingForm {
             Section {
                 if let pageNumber {
@@ -293,22 +318,111 @@ struct ReceiptPrintedLineInspector: View {
                 }
                 .padding(.vertical, 4)
             }
-            if let imageData, let image = UIImage(data: imageData) {
-                Section {
-                    DisclosureGroup(isExpanded: $showSource) {
-                        Image(uiImage: image).resizable().scaledToFit()
-                            .accessibilityLabel(pantryText("Original page"))
-                    } label: { Label(pantryText("Original page"), systemImage: "photo") }
+            if pageImage != nil {
+                Button { showSource = true } label: {
+                    Label(pantryText("Original page"), systemImage: "photo")
                 }
+                .accessibilityIdentifier("receipt.original.open")
             }
         }
-        .navigationTitle(pantryText("Printed line"))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .confirmationAction) { Button(pantryText("Done")) { dismiss() } } }
-        .privacySensitive()
-        .task {
-            let bytes = await originalPage()
-            if !Task.isCancelled { imageData = bytes }
+    }
+}
+
+private struct ReceiptPageViewer: UIViewRepresentable {
+    let image: UIImage
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func makeUIView(context: Context) -> UIStackView {
+        let canvas = ReceiptPageCanvas(image: image)
+        let zoomIn = UIButton(configuration: .tinted(), primaryAction: UIAction(title: pantryText("Zoom in"),
+            image: UIImage(systemName: "plus.magnifyingglass")) { [weak canvas] _ in
+            guard let canvas else { return }
+            canvas.setZoomScale(min(canvas.zoomScale * 2, canvas.maximumZoomScale), animated: !UIAccessibility.isReduceMotionEnabled)
+        })
+        let fit = UIButton(configuration: .tinted(), primaryAction: UIAction(title: pantryText("Fit page"),
+            image: UIImage(systemName: "arrow.down.right.and.arrow.up.left")) { [weak canvas] _ in
+            guard let canvas else { return }
+            canvas.setZoomScale(canvas.minimumZoomScale, animated: !UIAccessibility.isReduceMotionEnabled)
+        })
+        zoomIn.accessibilityIdentifier = "receipt.original.zoomIn"
+        fit.accessibilityIdentifier = "receipt.original.fit"
+        for button in [zoomIn, fit] {
+            button.configuration?.imagePadding = 6
+            button.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
         }
+        canvas.zoomChanged = { [weak zoomIn, weak fit] scale, maximum in
+            zoomIn?.isEnabled = scale < maximum - 0.01
+            fit?.isEnabled = scale > 1.01
+        }
+        let controls = UIStackView(arrangedSubviews: [zoomIn, fit])
+        controls.distribution = .fillEqually
+        controls.spacing = 8
+        controls.isLayoutMarginsRelativeArrangement = true
+        controls.directionalLayoutMargins = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
+        controls.setContentHuggingPriority(.required, for: .vertical)
+
+        let stack = UIStackView(arrangedSubviews: [canvas, controls])
+        stack.axis = .vertical
+        return stack
+    }
+
+    func updateUIView(_ stack: UIStackView, context: Context) {
+        (stack.arrangedSubviews.last as? UIStackView)?.axis = typeSize.isAccessibilitySize ? .vertical : .horizontal
+    }
+}
+
+private final class ReceiptPageCanvas: UIScrollView, UIScrollViewDelegate {
+    private let page: UIImageView
+    private var viewport = CGSize.zero
+    var zoomChanged: ((CGFloat, CGFloat) -> Void)?
+
+    init(image: UIImage) {
+        page = UIImageView(image: image)
+        super.init(frame: .zero)
+        delegate = self
+        backgroundColor = .secondarySystemBackground
+        contentInsetAdjustmentBehavior = .never
+        contentSize = image.size
+        addSubview(page)
+        isAccessibilityElement = true
+        accessibilityTraits = .image
+        accessibilityLabel = pantryText("Original page")
+        accessibilityIdentifier = "receipt.original.canvas"
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let size = page.image?.size, size.width > 0, size.height > 0,
+              bounds.width > 0, bounds.height > 0 else { return }
+        if viewport != bounds.size {
+            let magnification = viewport == .zero ? 1 : zoomScale / minimumZoomScale
+            viewport = bounds.size
+            let fit = min(viewport.width / size.width, viewport.height / size.height)
+            maximumZoomScale = fit * 8
+            minimumZoomScale = fit
+            setZoomScale(min(maximumZoomScale, fit * magnification), animated: false)
+        }
+        centerPage()
+        reportZoom()
+    }
+
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { page }
+
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        centerPage()
+        reportZoom()
+    }
+
+    private func centerPage() {
+        page.center = CGPoint(x: max(bounds.width, contentSize.width) / 2,
+                              y: max(bounds.height, contentSize.height) / 2)
+    }
+
+    private func reportZoom() {
+        let magnification = zoomScale / minimumZoomScale
+        accessibilityValue = Double(magnification).formatted(.percent.precision(.fractionLength(0)))
+        zoomChanged?(magnification, maximumZoomScale / minimumZoomScale)
     }
 }
