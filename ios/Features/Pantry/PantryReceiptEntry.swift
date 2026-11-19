@@ -426,8 +426,6 @@ struct PantryReceiptHistory: View {
     @State private var reviewedState: InventoryState?
     @State private var price = ""
     @State private var correctionMessage: String?
-    @State private var confirmingUnknown = false
-    @FocusState private var priceFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -472,50 +470,17 @@ struct PantryReceiptHistory: View {
         }
         .sheet(item: $correcting) { original in
             NavigationStack {
-                Form {
-                    if let correctionMessage { Text(correctionMessage) }
-                    Text(original.name)
-                    Text(pantryFormat("Receipt revision %@", String(original.revision)))
-                    if let current = original.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(current))) }
-                    else { Text(pantryText("Paid price unknown")) }
-                    Text(original.merchant + " · " + original.purchaseDate.formatted(date: .abbreviated, time: .omitted))
-                    TextField(pantryText("Corrected paid line total in USD"), text: $price)
-                        .keyboardType(.decimalPad).focused($priceFocused)
-                    Text(pantryText("A correction adds a price revision. Pantry quantities and posted spending stay the same."))
-                    Button(pantryText("Save price correction")) {
-                        guard let total = enteredTotal else { return }
-                        saveCorrection(original, total: total)
-                    }.disabled(busy || enteredTotal == nil || enteredTotal == original.paidLineTotal)
-                    if original.paidLineTotal != nil {
-                        Button(pantryText("Mark paid total as unknown")) {
-                            priceFocused = false
-                            confirmingUnknown = true
-                        }.disabled(busy)
-                    }
+                ReceiptPriceCorrection(original: original, price: $price, correctionMessage: correctionMessage, busy: busy) {
+                    saveCorrection(original, total: $0)
                 }
-                .keyboardDoneAction(visible: priceFocused, title: pantryText("Done"), identifier: "receipt.correctionKeyboardDone") {
-                    priceFocused = false
-                }
-                .alert(pantryText("Mark paid total as unknown?"), isPresented: $confirmingUnknown) {
-                    Button(pantryText("Mark as unknown")) { saveCorrection(original, total: nil) }
-                    Button(pantryText("Cancel"), role: .cancel) {}
-                } message: {
-                    Text(pantryText("The earlier price stays in receipt history. Future price comparisons will omit this amount."))
-                }.navigationTitle(pantryText("Correct paid price"))
             }.interactiveDismissDisabled(busy)
         }
-    }
-
-    private var enteredTotal: Money? {
-        guard let total = try? Money(decimal: price), total >= .zero else { return nil }
-        return total
     }
 
     private func saveCorrection(_ original: ReceiptAcquisition, total: Money?) {
         guard !busy, let state = reviewedState, original.paidLineTotal != total,
               total.map({ $0 >= .zero }) ?? true else { return }
         busy = true
-        priceFocused = false
         Task {
             do {
                 try await model.correctReceiptPrice(original, total: total, reviewedState: state)
@@ -546,5 +511,54 @@ struct PantryReceiptHistory: View {
             facts.append(contentsOf: page.filter { permittedLines?.contains($0.lineID) ?? true })
             hasMore = page.count == 30
         } catch { message = receiptError(error) }
+    }
+}
+
+private struct ReceiptPriceCorrection: View {
+    let original: ReceiptAcquisition
+    @Binding var price: String
+    let correctionMessage: String?
+    let busy: Bool
+    let save: (Money?) -> Void
+    @State private var confirmingUnknown = false
+    @FocusState private var priceFocused: Bool
+
+    private var enteredTotal: Money? {
+        guard let total = try? Money(decimal: price), total >= .zero else { return nil }
+        return total
+    }
+
+    var body: some View {
+        Form {
+            if let correctionMessage { Text(correctionMessage) }
+            Text(original.name)
+            Text(pantryFormat("Receipt revision %@", String(original.revision)))
+            if let current = original.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(current))) }
+            else { Text(pantryText("Paid price unknown")) }
+            Text(original.merchant + " · " + original.purchaseDate.formatted(date: .abbreviated, time: .omitted))
+            TextField(pantryText("Corrected paid line total in USD"), text: $price)
+                .keyboardType(.decimalPad).focused($priceFocused)
+            Text(pantryText("A correction adds a price revision. Pantry quantities and posted spending stay the same."))
+            Button(pantryText("Save price correction")) {
+                guard let total = enteredTotal else { return }
+                priceFocused = false
+                save(total)
+            }.disabled(busy || enteredTotal == nil || enteredTotal == original.paidLineTotal)
+            if original.paidLineTotal != nil {
+                Button(pantryText("Mark paid total as unknown")) {
+                    priceFocused = false
+                    confirmingUnknown = true
+                }.disabled(busy)
+            }
+        }
+        .keyboardDoneAction(visible: priceFocused, title: pantryText("Done"), identifier: "receipt.correctionKeyboardDone") {
+            priceFocused = false
+        }
+        .alert(pantryText("Mark paid total as unknown?"), isPresented: $confirmingUnknown) {
+            Button(pantryText("Mark as unknown")) { save(nil) }
+            Button(pantryText("Cancel"), role: .cancel) {}
+        } message: {
+            Text(pantryText("The earlier price stays in receipt history. Future price comparisons will omit this amount."))
+        }.navigationTitle(pantryText("Correct paid price"))
     }
 }
