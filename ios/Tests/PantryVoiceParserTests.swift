@@ -117,6 +117,83 @@ final class PantryVoiceParserTests: XCTestCase {
         }
     }
 
+    func testSpokenFullnessPreservesDifferentFoodsContainersQualifiersAndWording() throws {
+        let half = try Rational(1, 2)
+        let examples: [(String, String, String, PantryVoiceRemaining, String)] = [
+            ("en-US", "My rice bag is still kind of full", "rice", .somewhatFull, "still kind of full"),
+            ("en-US", "I've got more than half a jar of salsa left", "salsa", .moreThanFraction(half, container: "jar"), "more than half a jar left"),
+            ("en-US", "The oat milk is half full", "oat milk", .fraction(half, container: nil), "half full"),
+            ("en-US", "My oat milk is more than half full", "oat milk", .moreThanFraction(half, container: nil), "more than half full"),
+            ("en-US", "The flour is almost gone", "flour", .nearlyEmpty, "almost gone"),
+            ("en-US", "The tub of rice and beans is mostly full", "rice and beans", .mostlyFull, "mostly full"),
+            ("en-US", "My bag of rice has less than half left", "rice", .lessThanFraction(half, container: nil), "less than half left"),
+            ("en-US", "The homemade sauce is full", "homemade sauce", .full, "full"),
+            ("en-US", "The homemade sauce is nearly full", "homemade sauce", .nearlyFull, "nearly full"),
+            ("es-US", "Mi bolsa de arroz todavía está bastante llena", "arroz", .somewhatFull, "todavía está bastante llena"),
+            ("es-US", "Mi leche de avena está a más de la mitad", "leche de avena", .moreThanFraction(half, container: nil), "a más de la mitad"),
+            ("es-US", "Me queda más de la mitad del frasco de salsa casera", "salsa casera", .moreThanFraction(half, container: "frasco"), "más de la mitad del frasco"),
+            ("es-US", "A mi frasco de salsa le queda menos de la mitad", "salsa", .lessThanFraction(half, container: nil), "menos de la mitad"),
+            ("es-US", "El envase de arroz y frijoles está casi lleno", "arroz y frijoles", .nearlyFull, "casi lleno")
+        ]
+        for (locale, source, food, value, wording) in examples {
+            XCTAssertEqual(PantryVoiceParser.parse(source, localeIdentifier: locale),
+                           .observation(.init(food: food, original: source, remaining: value, remainingWording: wording)), source)
+        }
+    }
+
+    func testOnlyARemainingPromptCanResolveABareFractionAndCannotSwitchTheNamedBatch() throws {
+        let half = try Rational(1, 2)
+        for (locale, source, result) in [
+            ("en-US", "half", PantryVoiceRemaining.fraction(half, container: nil)),
+            ("es-US", "la mitad", .fraction(half, container: nil)),
+            ("en-US", "less than half", .lessThanFraction(half, container: nil)),
+            ("es-US", "más de la mitad", .moreThanFraction(half, container: nil))
+        ] {
+            XCTAssertEqual(PantryVoiceParser.parse(source, localeIdentifier: locale), .needsReview(source))
+            XCTAssertEqual(PantryVoiceParser.parseRemainingReply(source, localeIdentifier: locale),
+                           .init(food: "", original: source, remaining: result, remainingWording: source))
+        }
+        for (locale, source, result) in [
+            ("en-US", "more than half left", PantryVoiceRemaining.moreThanFraction(half, container: nil)),
+            ("en-US", "almost empty", .nearlyEmpty), ("en-US", "still kind of full", .somewhatFull),
+            ("en-US", "mostly full", .mostlyFull), ("es-US", "casi vacía", .nearlyEmpty),
+            ("es-US", "todavía bastante llena", .somewhatFull)
+        ] {
+            let reply = PantryVoiceObservation(food: "", original: source, remaining: result, remainingWording: source)
+            XCTAssertEqual(PantryVoiceParser.parse(source, localeIdentifier: locale), .observation(reply))
+            XCTAssertEqual(PantryVoiceParser.parseRemainingReply(source, localeIdentifier: locale), reply)
+        }
+        for source in ["I used half", "Usé la mitad"] {
+            XCTAssertEqual(parse(source), .askRemaining(food: nil, original: source))
+        }
+        for source in ["half of the mayonnaise", "I used half", "I have half a jar of salsa left",
+                       "my beans are mostly full", "half or almost empty", "not half", "half?", "buy milk"] {
+            XCTAssertNil(PantryVoiceParser.parseRemainingReply(source, localeIdentifier: "en-US"), source)
+        }
+    }
+
+    func testMealSizedEstimateAndOutOfStockNeverAssertConsumption() {
+        let examples: [(String, String, PantryVoiceRemaining, String)] = [
+            ("My homemade soup has enough for one more meal", "homemade soup", .enoughForMeal, "enough for one more meal"),
+            ("There's enough rice for one more dinner", "rice", .enoughForMeal, "enough for one more dinner"),
+            ("Hay suficiente salsa casera para una comida más", "salsa casera", .enoughForMeal, "suficiente para una comida más"),
+            ("Mi sopa casera alcanza para una porción más", "sopa casera", .enoughForMeal, "alcanza para una porción más"),
+            ("We're out of milk", "milk", .empty, "We're out of"),
+            ("Se nos acabó la leche", "leche", .empty, "Se nos acabó")
+        ]
+        for (source, food, value, wording) in examples {
+            XCTAssertEqual(parse(source), .observation(.init(food: food, original: source, remaining: value, remainingWording: wording)))
+        }
+        for source in ["enough for one more serving", "suficiente para una cena más"] {
+            XCTAssertEqual(PantryVoiceParser.parseRemainingReply(source, localeIdentifier: "es-US"),
+                           .init(food: "", original: source, remaining: .enoughForMeal, remainingWording: source))
+        }
+        for source in ["We're not out of milk", "No se nos acabó la leche", "Buy milk", "Buy milk, we're out of milk",
+                       "The flour is nearly empty but the jar is full", "We are out of milk and buy rice"] {
+            XCTAssertEqual(parse(source), .needsReview(source), source)
+        }
+    }
+
     func testMixedMeasuresAndCompoundFoodNamesRetainMeaning() throws {
         for (source, wording, food, value, unit) in [
             ("I used a cup and a half of flour", "a cup and a half of flour", "flour", try Rational(3, 2), UnitOfMeasure.cup),

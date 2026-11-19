@@ -111,7 +111,7 @@ struct GroceryWindow: View {
         }, begin: {
             guard let scope = voicePromptScope, pickup.pantryRouteAvailable else { return nil }
             return voicePrompt.begin(scope, phase: scenePhase)
-        }, ready: { voicePrompt.recognitionReady($0, appActive: UIApplication.shared.applicationState == .active) },
+        }, nextPermission: { voicePrompt.nextPermission($0) }, ready: { voicePrompt.recognitionReady($0, appActive: UIApplication.shared.applicationState == .active) },
            cancel: { voicePrompt.cancel($0) }))
         .modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
             .environment(\.pickupLedger, ledger)

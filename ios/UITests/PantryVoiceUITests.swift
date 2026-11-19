@@ -213,12 +213,44 @@ import XCTest
         capture("Pantry-voice-06-private-use-history")
     }
 
+    func testSpanishContextualRemainingAnswerKeepsTheSelectedCustomFoodWithoutOfferingRestock() {
+        openPantry(reset: true, spanish: true)
+        let id = addLot("Caldo de la casa", amount: "4")
+        enterCommand("Usé un poco de caldo de la casa")
+        let lot = element("pantry.voiceLot.0")
+        XCTAssertTrue(lot.label.localizedCaseInsensitiveContains("Caldo de la casa"), lot.label)
+        let remaining = app.buttons["pantry.voiceRemaining.0"]
+        reveal(remaining)
+        remaining.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        tap(app.buttons["pantry.voiceDescribe.0"])
+        let reply = "más de la mitad"
+        fill(reply, into: "pantry.voiceRemainingText.0")
+        dismissVoiceKeyboard()
+        tap(app.buttons["pantry.voiceApplyRemaining.0"])
+        XCTAssertTrue(lot.label.localizedCaseInsensitiveContains("Caldo de la casa"), lot.label)
+        tap(app.buttons["pantry.voicePreview"])
+        let summary = element("pantry.voiceSummary.0")
+        reveal(summary)
+        XCTAssertTrue(summary.label.localizedCaseInsensitiveContains(reply), summary.label)
+        capture("Pantry-voice-08-estimacion-caldo")
+        tap(app.buttons["pantry.voiceConfirm"])
+        XCTAssertTrue(element("pantry.voiceSaved").waitForExistence(timeout: 8))
+        XCTAssertFalse(element("pantry.restock.review").exists)
+        app.terminate()
+        openPantry(reset: false, spanish: true, expectEmptyShop: true)
+        assertLot(id, contains: reply)
+        assertLot(id, contains: "cantidad desconocida")
+    }
+
     func testOnDeviceDictationOffersTypingWhenRecognitionOrPermissionIsUnavailable() {
         app.resetAuthorizationStatus(for: .microphone)
         defer { app.resetAuthorizationStatus(for: .microphone) }
         openPantry(reset: true)
         openVoiceEntry()
         assertDictationIdle()
+        let typed = "Is my ketchup expired"
+        fill(typed, into: "pantry.voiceText")
+        dismissVoiceKeyboard()
         tap(app.buttons["pantry.voice.start"])
         let alert = system.alerts.firstMatch
         if alert.waitForExistence(timeout: 4) {
@@ -232,9 +264,11 @@ import XCTest
         capture("Pantry-voice-07-dictation-fallback")
         XCTAssertFalse(element("pantry.voice.listening").exists)
         XCTAssertFalse(element("pantry.voice.transcript").exists)
-        fill("Is my ketchup expired?", into: "pantry.voiceText")
+        XCTAssertEqual(element("pantry.voiceText").value as? String, typed)
+        fill("?", into: "pantry.voiceText")
         dismissVoiceKeyboard()
         tap(app.buttons["pantry.voiceReview"])
+        XCTAssertTrue(app.buttons["pantry.voiceDate"].waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertFalse(element("pantry.voiceConfirm").exists)
     }
 

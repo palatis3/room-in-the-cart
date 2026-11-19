@@ -14,6 +14,7 @@ struct PantryVoicePromptScope: Equatable {
     private var scope: PantryVoicePromptScope?
     private var phase: ScenePhase = .active
     private var finished = false
+    private var sawInactive = false
 
     func begin(_ scope: PantryVoicePromptScope, phase: ScenePhase) -> UUID? {
         guard phase == .active, token == nil else { return nil }
@@ -26,7 +27,7 @@ struct PantryVoicePromptScope: Equatable {
     }
 
     func holdsPresentation(_ current: PantryVoicePromptScope?) -> Bool {
-        token != nil && self.phase != .background && scope == current
+        return token != nil && self.phase != .background && scope == current
     }
 
     func retains(_ current: PantryVoicePromptScope?, phase: ScenePhase) -> Bool {
@@ -39,21 +40,30 @@ struct PantryVoicePromptScope: Equatable {
 
     func recognitionReady(_ id: UUID, appActive: Bool) {
         guard token == id else { return }
-        if phase == .active && appActive { clear() }
-        else { finished = true }
+        finished = true
+        // The permission response can arrive before the scene's inactive/active pair.
+        if sawInactive && phase == .active && appActive { clear() }
+    }
+
+    func nextPermission(_ id: UUID) {
+        guard token == id else { return }
+        sawInactive = phase == .inactive
+        finished = false
     }
 
     func cancel(_ id: UUID) { if token == id { clear() } }
 
     func sceneChanged(_ next: ScenePhase) {
         phase = next
-        if next == .background || (next == .active && finished) { clear() }
+        if next == .inactive && token != nil { sawInactive = true }
+        if next == .background || (next == .active && finished && sawInactive) { clear() }
     }
 
     private func clear() {
         guard token != nil else { return }
         scope = nil
         finished = false
+        sawInactive = false
         token = nil
     }
 }
@@ -61,6 +71,7 @@ struct PantryVoicePromptScope: Equatable {
 struct PantryVoicePromptAccess {
     let holdsPresentation: @MainActor () -> Bool
     let begin: @MainActor () -> UUID?
+    let nextPermission: @MainActor (UUID) -> Void
     let ready: @MainActor (UUID) -> Void
     let cancel: @MainActor (UUID) -> Void
 }
@@ -89,13 +100,13 @@ struct PantryVoicePrivacyCover: UIViewRepresentable {
             guard let window, let scene = window.windowScene else { removeCover(); return }
             guard coveredWindow !== window else { return }
             removeCover()
+            coveredWindow = window
+            wasAccessibilityHidden = window.accessibilityElementsHidden
             let cover = UIWindow(windowScene: scene)
             let controller = UIViewController()
             controller.view.backgroundColor = UIColor(named: "canvas") ?? .systemBackground
             cover.rootViewController = controller
             cover.windowLevel = .alert + 1
-            coveredWindow = window
-            wasAccessibilityHidden = window.accessibilityElementsHidden
             window.accessibilityElementsHidden = true
             self.cover = cover
             cover.isHidden = false

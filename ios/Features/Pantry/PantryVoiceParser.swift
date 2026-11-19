@@ -31,15 +31,16 @@ struct PantryVoiceObservation: Equatable, Sendable {
 }
 
 enum PantryVoiceRemaining: Equatable, Sendable {
-    case low, some, nearlyEmpty, empty
+    case low, some, nearlyEmpty, empty, somewhatFull, mostlyFull, nearlyFull, full, enoughForMeal
     case fraction(Rational, container: String?)
     case lessThanFraction(Rational, container: String?)
+    case moreThanFraction(Rational, container: String?)
     case aboutFraction(Rational, container: String?)
 }
 
 /// Produces review proposals. The interpreter neither looks up batches nor changes stock.
 enum PantryVoiceParser {
-    private static let container = #"bottle|jar|carton|bag|box|can|botella|frasco|cartón|bolsa|caja|lata"#
+    private static let container = #"bottle|jar|carton|bag|box|can|tub|container|pot|botella|frasco|cartón|bolsa|caja|lata|bote|envase|recipiente|tarro"#
     private static let vague = #"some|a little(?: bit)?(?: of)?|a bit of|un poco de|algo de"#
     private static let pieces = ["piece", "pieces", "slice", "slices", "rebanada", "rebanadas", "trozo",
                                  "trozos", "pedazo", "pedazos", "pieza", "piezas"]
@@ -105,6 +106,20 @@ enum PantryVoiceParser {
         return items.isEmpty ? review : .consume(items)
     }
 
+    /// Only an active remaining-amount prompt supplies the meaning of a bare fraction.
+    /// A named food or another action must go through the full batch-selection flow.
+    static func parseRemainingReply(_ text: String, localeIdentifier: String) -> PantryVoiceObservation? {
+        if case .observation(let value) = parse(text, localeIdentifier: localeIdentifier), value.food.isEmpty {
+            return value
+        }
+        guard text.utf8.count <= 512, !text.contains(where: \.isNewline),
+              let language = Locale(identifier: localeIdentifier).language.languageCode?.identifier,
+              ["en", "es"].contains(language) else { return nil }
+        let wording = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"[.!]+$"#, with: "", options: .regularExpression)
+        guard let fraction = fractionAndFood(wording), fraction.food == nil else { return nil }
+        return PantryVoiceObservation(food: "", original: text, remaining: fraction.remaining, remainingWording: fraction.wording)
+    }
+
     private static func dateFood(_ command: String) -> String? {
         let question = command.trimmingCharacters(in: CharacterSet(charactersIn: "¿? "))
         return firstFood([
@@ -132,6 +147,14 @@ enum PantryVoiceParser {
                                          remainingWording: remainingWording(fraction.wording, in: clauses[1]))
         }
 
+        for form in [#"^(.+?) (?:has|have) (.+) left$"#, #"^a (.+?) le queda (.+)$"#] {
+            if let parts = groups(form, command), let food = subjectFood(parts[0]), !food.isEmpty,
+               let fraction = fractionAndFood(parts[1]), fraction.food == nil {
+                return PantryVoiceObservation(food: food, original: original, remaining: fraction.remaining,
+                                             remainingWording: remainingWording(parts[1], in: command))
+            }
+        }
+
         if let phrase = remainingPhrase(command) {
             if let fraction = fractionAndFood(phrase) {
                 return PantryVoiceObservation(food: fraction.food ?? "", original: original, remaining: fraction.remaining,
@@ -144,19 +167,73 @@ enum PantryVoiceParser {
             }
         }
 
-        let containerPrefix = #"(?:(?:the |my |el |la |mi )?(?:"# + container + #") (?:of|de) )?"#
+        if let parts = groups(#"^((?:we['’]re|we are|i['’]m|i am) out of|se (?:nos|me) acabó) (.+)$"#, command),
+           let food = subjectFood(parts[1]), !food.isEmpty {
+            return PantryVoiceObservation(food: food, original: original, remaining: .empty, remainingWording: parts[0])
+        }
+        let mealEN = #"one more (?:meal|dinner|serving)"#
+        let mealES = #"un(?:a)? (?:comida|cena|porción|ración) más"#
+        let enough = #"(?:enough for "# + mealEN + #"|(?:suficiente para|alcanza para|rinde para) "# + mealES + #")"#
+        if let parts = groups(#"^(?:(.+?) (?:has|have|tiene) )?("# + enough + #")$"#, command),
+           let food = parts[0].isEmpty ? "" : subjectFood(parts[0]) {
+            return PantryVoiceObservation(food: food, original: original, remaining: .enoughForMeal, remainingWording: parts[1])
+        }
+        if let parts = groups(#"^(.+?) ((?:alcanza|rinde) para "# + mealES + #")$"#, command), let food = subjectFood(parts[0]) {
+            return PantryVoiceObservation(food: food, original: original, remaining: .enoughForMeal, remainingWording: parts[1])
+        }
+        for pattern in [#"^(?:there is|there['’]s) (enough) (.+?) (for "# + mealEN + #")$"#,
+                        #"^hay (suficiente) (.+?) (para "# + mealES + #")$"#] {
+            if let parts = groups(pattern, command), let food = subjectFood(parts[1]), !food.isEmpty {
+                return PantryVoiceObservation(food: food, original: original, remaining: .enoughForMeal,
+                                             remainingWording: parts[0] + " " + parts[2])
+            }
+        }
+
+        let wording: String
+        let food: String
+        if let parts = groups(#"^(.+?) ((?:todavía|aún) (?:está|están) (.+))$"#, command) {
+            guard let name = subjectFood(parts[0]), let remaining = fullness(parts[2]) else { return nil }
+            return PantryVoiceObservation(food: name, original: original, remaining: remaining, remainingWording: parts[1])
+        } else if let parts = groups(#"^(.+?) (?:is|are|está|están) (.+)$"#, command) {
+            guard let name = subjectFood(parts[0]) else { return nil }
+            food = name
+            wording = parts[1]
+        } else if let parts = groups(#"^(?:it['’]s|está|están) (.+)$"#, command) {
+            food = ""
+            wording = parts[0]
+        } else {
+            food = ""
+            wording = command
+        }
+        guard let remaining = fullness(wording) else { return nil }
+        return PantryVoiceObservation(food: food, original: original, remaining: remaining, remainingWording: wording)
+    }
+
+    private static func subjectFood(_ value: String) -> String? {
+        let name = value.replacingOccurrences(of: #"^(?:the|my|our|mi|mis|el|la|los|las|nuestro|nuestra) "#, with: "",
+                                              options: [.caseInsensitive, .regularExpression])
+        if matches(#"^(?:it|i|we|yo|nosotros|nosotras|(?:"# + container + #"))$"#, name) { return "" }
+        for form in [#"^(?:"# + container + #") (?:of|de) (.+)$"#, #"^(.+?) (?:"# + container + #")$"#] {
+            if let phrase = groups(form, name)?.first { return checkedFood(phrase) }
+        }
+        return checkedFood(name)
+    }
+
+    private static func fullness(_ wording: String) -> PantryVoiceRemaining? {
         let states: [(String, PantryVoiceRemaining)] = [
-            (#"nearly empty|almost empty|casi vací[oa]"#, .nearlyEmpty), (#"empty|vací[oa]"#, .empty)
+            (#"(?:almost|nearly) (?:empty|gone)|casi vací[oa]s?|casi acabad[oa]s?"#, .nearlyEmpty),
+            (#"empty|vací[oa]s?"#, .empty),
+            (#"(?:kind of|sort of|somewhat|fairly) full|(?:algo|bastante|medio que) llen[oa]s?"#, .somewhatFull),
+            (#"mostly full|llen[oa]s? en su mayor parte"#, .mostlyFull),
+            (#"(?:almost|nearly) full|casi llen[oa]s?"#, .nearlyFull),
+            (#"full|llen[oa]s?"#, .full)
         ]
-        for (state, remaining) in states {
-            let unnamed = #"^(?:(?:(?:the|my|el|la|mi) )?(?:"# + container + #") (?:is|está)|it is|it['’]s|está) ("# + state + #")$"#
-            if let wording = groups(unnamed, command)?.first {
-                return PantryVoiceObservation(food: "", original: original, remaining: remaining, remainingWording: wording)
-            }
-            let pattern = #"^"# + containerPrefix + #"(?:(?:the|my|el|la|mi) )?(.+?) (?:is|está) ("# + state + #")$"#
-            if let parts = groups(pattern, command), let food = checkedFood(parts[0]) {
-                return PantryVoiceObservation(food: food, original: original, remaining: remaining, remainingWording: parts[1])
-            }
+        let still = #"^(?:(?:still|aún|todavía) )?(?:"#
+        for (pattern, value) in states where matches(still + pattern + #")$"#, wording) { return value }
+        for pattern in [#"^(?:still )?(.+) full$"#, #"^(?:(?:todavía|aún) )?a (.+)$"#,
+                        #"^(.+) llen[oa]s?$"#] {
+            if let phrase = groups(pattern, wording)?.first,
+               let fraction = fractionAndFood(phrase), fraction.food == nil { return fraction.remaining }
         }
         return nil
     }
@@ -167,7 +244,7 @@ enum PantryVoiceParser {
     }
 
     private static func remainingPhrase(_ command: String) -> String? {
-        for pattern in [#"^(?:i have |there is |there['’]s |we have )?(.+) left$"#,
+        for pattern in [#"^(?:i have |i['’]ve got |we['’]ve got |there is |there['’]s |we have )?(.+) left$"#,
                         #"^(?:(?:me |nos )?queda|tengo) (.+?)(?: restante)?$"#] {
             if let phrase = groups(pattern, command)?.first { return phrase }
         }
@@ -176,9 +253,9 @@ enum PantryVoiceParser {
 
     /// Separate the verbal qualifier before reading the fraction. An estimate never acquires an exact value.
     private static func fractionAndFood(_ phrase: String) -> (remaining: PantryVoiceRemaining, food: String?, wording: String)? {
-        let qualifier = #"(?:(less than|under|menos de|about|around|roughly|like|como|aproximadamente|más o menos) )?"#
+        let qualifier = #"(?:(less than|under|menos de|more than|over|más de|about|around|roughly|like|como|aproximadamente|más o menos) )?"#
         let fraction = #"(half|a half|(?:la )?mitad|medi[oa]|(?:a |one |un )?quarter|(?:un )?cuarto|1/2|1/4)"#
-        let vessel = #"(?: (?:(?:of |de )?(?:a |an |the |una? |la |el ))?("# + container + #"))?"#
+        let vessel = #"(?: (?:(?:(?:of |de )?(?:a |an |the |una? |la |el )|del ))?("# + container + #"))?"#
         let name = #"(?: (?:of|de) (.+))?"#
         guard let parts = groups("^" + qualifier + fraction + vessel + name + "$", phrase),
               let value = try? Rational(1, matches(#"quarter|cuarto|1/4"#, parts[1]) ? 4 : 2)
@@ -191,6 +268,7 @@ enum PantryVoiceParser {
         switch parts[0].lowercased() {
         case "": return (.fraction(value, container: package), food, wording)
         case "less than", "under", "menos de": return (.lessThanFraction(value, container: package), food, wording)
+        case "more than", "over", "más de": return (.moreThanFraction(value, container: package), food, wording)
         default: return (.aboutFraction(value, container: package), food, wording)
         }
     }
@@ -238,7 +316,7 @@ enum PantryVoiceParser {
                   list.items[0].needsBoundaryReview == false else { return nil }
         }
         guard trimmed.utf8.count <= 180, matches(#"^[\p{L}\p{M}]+(?:[ ’'\-][\p{L}\p{M}]+)*$"#, trimmed),
-              !matches(#"\b(?:used|use|usé|usar|buy|bought|add|added|update|compré|compra|añade|agrega|actualiza|delete|remove|borra|elimina|left|queda|quedan|expired|vencid\w*|empty|vacío|vacía|half|mitad|about|like|maybe|all|todo|toda|some|except|remaining|have|i|you|porque|then|after|before|instead|with|without|sin|approximately|approx|around|under|less|more|either|not|only|other|me|it|them|yesterday|tomorrow|ayer|mañana|later|después|para|today|hoy|before|ago|another|extra|plus|más|menos|casi|nearly|few|couple|several|roughly|perhaps|probably|for|from|was|were|tengo|unos|unas|aproximadamente|varios|varias|o)\b"#, trimmed),
+              !matches(#"\b(?:used|use|usé|usar|buy|bought|add|added|update|compré|compra|añade|agrega|actualiza|delete|remove|borra|elimina|left|queda|quedan|expired|vencid\w*|full|empty|gone|llena|lleno|vacío|vacía|half|mitad|about|like|maybe|all|todo|toda|some|except|remaining|have|i|you|porque|then|after|before|instead|with|without|sin|approximately|approx|around|under|less|more|either|not|only|other|me|it|them|yesterday|tomorrow|ayer|mañana|later|después|para|today|hoy|before|ago|another|extra|plus|más|menos|casi|nearly|few|couple|several|roughly|perhaps|probably|for|from|was|were|tengo|unos|unas|aproximadamente|varios|varias|o)\b"#, trimmed),
               !matches(#"^(?:of|de|and|y|a|an|un|una|one|two|three|four|five|six|seven|eight|nine|ten|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|medio|media|some|either|roughly|almost|handfuls?|puñados?)\b"#, trimmed)
         else { return nil }
         return trimmed

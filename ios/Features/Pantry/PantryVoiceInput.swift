@@ -7,10 +7,11 @@ import UIKit
     @Published private(set) var unsupportedLanguage = false
     private var authorized: (() -> Bool)?
     private var promptReadiness: AnyCancellable?
-    private var releasePrompt: (() -> Void)?
+    private var permission: (id: UUID, access: PantryVoicePromptAccess)?
+    private var runID: UUID?
 
     func start(localeIdentifier: String, authorized: @escaping () -> Bool,
-               prompt: PantryVoicePromptAccess? = nil, makeSpeech: @MainActor () -> any CaptureSpeechService = { OnDeviceSpeechCapture() }) {
+               prompt: PantryVoicePromptAccess? = nil, makeSpeech: (@MainActor () -> any CaptureSpeechService)? = nil) {
         guard authorized(), capture?.busy != true else { return }
         cancel()
         let language = Locale(identifier: localeIdentifier).language.languageCode?.identifier
@@ -19,20 +20,33 @@ import UIKit
             return
         }
         // A new service per deliberate start isolates delayed permission replies from later runs.
+        let run = UUID()
+        runID = run
+        let speech = makeSpeech?() ?? OnDeviceSpeechCapture(willRequestPermission: { [weak self] in
+            guard let self, runID == run, authorized(), let prompt else { return false }
+            return beginPermission(prompt)
+        })
         let model = CaptureModel(localeIdentifier: language == "es" ? "es-US" : "en-US",
-                                 speech: makeSpeech(), ocr: OnDeviceTextCapture())
+                                 speech: speech, ocr: OnDeviceTextCapture())
         self.authorized = authorized
         capture = model
-        // Bind the permission interruption before the system starts its prompt. Its
-        // lifetime follows this capture and the owning screen, independent of visible form rows.
-        let promptID = prompt?.begin()
-        if let prompt, let promptID { releasePrompt = { prompt.cancel(promptID) } }
         model.startSpeech()
-        if let prompt, let promptID {
-            promptReadiness = model.$listening.combineLatest(model.$busy)
-                .first { listening, busy in listening || !busy }
-                .sink { _ in prompt.ready(promptID) }
+    }
+
+    // The capture adapter calls this only for an actual undetermined OS permission.
+    // A previously denied/allowed request or unavailable recognizer never retains the route.
+    private func beginPermission(_ prompt: PantryVoicePromptAccess) -> Bool {
+        if let permission {
+            guard prompt.holdsPresentation() else { return false }
+            permission.access.nextPermission(permission.id)
+            return true
         }
+        guard let model = capture, let id = prompt.begin() else { return false }
+        permission = (id, prompt)
+        promptReadiness = model.$listening.combineLatest(model.$busy)
+            .first { listening, busy in listening || !busy }
+            .sink { _ in prompt.ready(id) }
+        return true
     }
 
     func use(_ model: CaptureModel, authorizedNow: () -> Bool, onUse: (String) -> Void) {
@@ -47,8 +61,9 @@ import UIKit
     func cancel() {
         promptReadiness?.cancel()
         promptReadiness = nil
-        releasePrompt?()
-        releasePrompt = nil
+        runID = nil
+        if let permission { permission.access.cancel(permission.id) }
+        permission = nil
         capture?.close()
         capture = nil
         authorized = nil

@@ -15,9 +15,28 @@ private struct VoicePantryRow {
     var unit: UnitOfMeasure?
     var spokenDimension: UnitDimension?
     var estimate = ""
+    var isLowEstimate = false
+    var estimateLotID: UUID?
+
+    mutating func applyRemaining(_ answer: PantryVoiceObservation) {
+        estimate = answer.remainingWording
+        estimateLotID = lotID
+        mode = answer.remaining == .empty ? .all : .remaining
+        switch answer.remaining {
+        case .low, .nearlyEmpty: isLowEstimate = true
+        case .lessThanFraction(let limit, _): isLowEstimate = limit.numerator <= limit.denominator / 2
+        default: isLowEstimate = false
+        }
+    }
     var showsAllLots = false
 
     mutating func choose(_ lot: InventoryLot) {
+        if let estimateLotID, estimateLotID != lot.id {
+            if mode == .remaining || mode == .all { mode = .remaining }
+            estimate = ""
+            isLowEstimate = false
+            self.estimateLotID = nil
+        }
         lotID = lot.id
         if let originalDimension = unit?.dimension ?? spokenDimension, originalDimension != lot.unit.dimension {
             // The number of pieces or cups cannot be carried into a weight or package count.
@@ -68,6 +87,15 @@ private struct VoicePantryRow {
     @State private var review: PantryConsumptionReview?
     @State private var saved: [InventoryLot]?
     @State private var savedRevision: Int64?
+    private struct RemainingReply {
+        let id = UUID()
+        let rowIndex: Int
+        let lotID: UUID
+        var text: String
+        var clarification: String?
+    }
+    @State private var remainingReply: RemainingReply?
+    @State private var restockIDs: Set<UUID> = []
     @State private var working = false
     @State private var message: String?
 
@@ -85,7 +113,15 @@ private struct VoicePantryRow {
 
     private var authorized: Bool { boundScope && scene == .active && UIApplication.shared.applicationState == .active }
     private var canRetainDictation: Bool {
-        boundScope && model.canEdit && !working && startingLot == nil && basis == nil && saved == nil
+        guard boundScope, model.canEdit, !working, saved == nil else { return false }
+        if basis == nil { return startingLot == nil }
+        guard let remainingReply else { return false }
+        return currentReply(remainingReply)
+    }
+
+    private func currentReply(_ reply: RemainingReply) -> Bool {
+        remainingReply?.id == reply.id && basis == model.snapshot?.state && review == nil && !dateOnly &&
+            rows.indices.contains(reply.rowIndex) && rows[reply.rowIndex].lotID == reply.lotID
     }
 
     var body: some View {
@@ -123,6 +159,12 @@ private struct VoicePantryRow {
                 } else {
                     ForEach(rows.indices, id: \.self) { index in
                         choiceSection(index)
+                        if let reply = remainingReply, reply.rowIndex == index, currentReply(reply) {
+                            PantryVoiceInput(voice: voice, authorized: { canRetainDictation && currentReply(reply) }) { words in
+                                guard authorized, currentReply(reply) else { return }
+                                updateRemaining(words, reply: reply)
+                            }
+                        }
                     }
                     if dateOnly {
                         dateSection
@@ -158,7 +200,9 @@ private struct VoicePantryRow {
         }
         .disabled(scene != .active)
         .onChange(of: canRetainDictation) { _, allowed in if !allowed { voice.cancel() } }
-        .onChange(of: boundScope) { _, allowed in if !allowed { erase() } }
+        .onChange(of: boundScope) { _, allowed in
+            if !allowed { erase() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.protectedDataWillBecomeUnavailableNotification)) { _ in erase() }
         .onChange(of: model.snapshot?.state.revision) { _, _ in
             if !working, basis != nil, model.snapshot?.state != basis { resetReview(); message = pantryNotice(.stale) }
@@ -171,6 +215,7 @@ private struct VoicePantryRow {
     }
 
     private func resetReview() {
+        closeRemaining()
         token = UUID(); basis = nil; rows = []; review = nil; dateOnly = false
         dateEvidence = nil; message = nil; working = false
     }
@@ -201,8 +246,7 @@ private struct VoicePantryRow {
             rows = [.init(food: food ?? "", original: original, mode: .remaining)]
         case .observation(let observation):
             var row = VoicePantryRow(food: observation.food, original: observation.original, reportsUse: false, mode: .remaining)
-            if case .empty = observation.remaining { row.mode = .all }
-            else { row.estimate = observation.remainingWording }
+            row.applyRemaining(observation)
             rows = [row]
         case .dateQuery(let food):
             dateOnly = true; rows = [.init(food: food, original: draft, mode: .skip)]
@@ -227,6 +271,7 @@ private struct VoicePantryRow {
 
     private func change(_ index: Int, _ update: (inout VoicePantryRow) -> Void) {
         guard authorized, !working, rows.indices.contains(index) else { return }
+        closeRemaining()
         update(&rows[index]); dateEvidence = nil; review = nil; message = nil; token = UUID()
     }
 
@@ -298,16 +343,42 @@ private struct VoicePantryRow {
             Text(pantryText("Not sure — leave this batch unchanged"))
         }
         Menu {
-            ForEach(["About half left", "Less than half left", "Nearly empty"], id: \.self) { key in
-                Button(pantryText(key)) { change(index) { $0.mode = .remaining; $0.estimate = pantryText(key) } }
+            ForEach(["Mostly full", "More than half left", "About half left", "Less than half left", "Nearly empty"], id: \.self) { key in
+                Button(pantryText(key)) {
+                    change(index) {
+                        $0.mode = .remaining
+                        $0.estimate = pantryText(key)
+                        $0.estimateLotID = $0.lotID
+                        $0.isLowEstimate = key == "Less than half left" || key == "Nearly empty"
+                    }
+                }
+            }
+            if let lot {
+                Button(pantryText("Describe what is left")) {
+                    guard authorized, model.canEdit, basis == model.snapshot?.state else { return }
+                    closeRemaining()
+                    remainingReply = RemainingReply(rowIndex: index, lotID: lot.id, text: row.estimate)
+                }.accessibilityIdentifier("pantry.voiceDescribe.\(index)")
             }
             Button(pantryText("Used it all")) { change(index) { $0.mode = .all; $0.reportsUse = true } }
             Button(pantryText("Not sure")) { change(index) { $0.mode = .skip } }
                 .accessibilityIdentifier("pantry.voiceNotSure.\(index)")
         } label: {
             Text(pantryText("Choose how much is left"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
         }
         .accessibilityIdentifier("pantry.voiceRemaining.\(index)")
+        if let reply = remainingReply, reply.rowIndex == index, currentReply(reply) {
+            TextField(pantryText("How much is left in this batch?"),
+                      text: Binding(get: { remainingReply?.text ?? "" }, set: { updateRemaining($0, reply: reply) }))
+                .focused($editing)
+                .accessibilityIdentifier("pantry.voiceRemainingText.\(index)")
+            if let clarification = reply.clarification { Text(clarification) }
+            Button(pantryText("Use this estimate")) { applyRemaining(reply) }
+                .disabled(reply.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .accessibilityIdentifier("pantry.voiceApplyRemaining.\(index)")
+        }
         if row.mode != .usedSome {
             Button(pantryText("Used some")) { change(index) { $0.mode = .usedSome; $0.reportsUse = true } }
                 .accessibilityIdentifier("pantry.voiceSome.\(index)")
@@ -318,8 +389,40 @@ private struct VoicePantryRow {
         }
     }
 
+    private func updateRemaining(_ words: String, reply: RemainingReply) {
+        guard authorized, currentReply(reply) else { return }
+        // Overlong or multi-line dictation cannot become a partial, valid interpretation.
+        guard words.utf8.count <= 512, !words.contains(where: \.isNewline) else {
+            remainingReply?.text = ""
+            remainingReply?.clarification = pantryText("Describe one remaining amount for this batch, or choose an estimate.")
+            return
+        }
+        remainingReply?.text = words
+        remainingReply?.clarification = nil
+    }
+
+    private func applyRemaining(_ reply: RemainingReply) {
+        guard authorized, model.canEdit, currentReply(reply), let words = remainingReply?.text else { return }
+        guard let result = PantryVoiceParser.parseRemainingReply(words, localeIdentifier: locale.identifier) else {
+            remainingReply?.clarification = pantryText("Describe one remaining amount for this batch, or choose an estimate.")
+            return
+        }
+        if result.remaining == .empty, rows[reply.rowIndex].reportsUse {
+            remainingReply?.clarification = pantryText("If you used the whole batch, choose Used it all.")
+            return
+        }
+        editing = false
+        change(reply.rowIndex) { $0.applyRemaining(result) }
+    }
+
+    private func closeRemaining() {
+        guard remainingReply != nil else { return }
+        voice.cancel()
+        remainingReply = nil
+    }
+
     private var readyToReview: Bool {
-        !rows.isEmpty && rows.allSatisfy { $0.mode == .skip || $0.selection != nil } &&
+        remainingReply == nil && !rows.isEmpty && rows.allSatisfy { $0.mode == .skip || $0.selection != nil } &&
         !working && authorized && model.canEdit && basis == model.snapshot?.state
     }
 
@@ -381,6 +484,7 @@ private struct VoicePantryRow {
         do {
             try await model.saveConsumption(review)
             guard request == token, authorized else { return }
+            restockIDs = Set(rows.filter { $0.mode == .all || ($0.mode == .remaining && $0.isLowEstimate) }.compactMap(\.lotID))
             let selectedIDs = rows.filter { $0.mode == .remaining || $0.mode == .all }.compactMap(\.lotID)
             saved = selectedIDs.compactMap { id in lots.first { $0.id == id } }
             savedRevision = model.snapshot?.state.revision
@@ -411,10 +515,12 @@ private struct VoicePantryRow {
                 } else {
                     Text(pantryFormat("%@ · %@", lot.name, pantryCount(lot.count)))
                 }
-                PantryRestockActions(model: model, lot: lot, sourceCurrent: {
-                    authorized && model.canEdit && savedRevision == model.snapshot?.state.revision &&
-                        model.snapshot?.lots.first(where: { $0.id == lot.id }) == lot
-                })
+                if restockIDs.contains(lot.id) {
+                    PantryRestockActions(model: model, lot: lot, sourceCurrent: {
+                        authorized && model.canEdit && savedRevision == model.snapshot?.state.revision &&
+                            model.snapshot?.lots.first(where: { $0.id == lot.id }) == lot
+                    })
+                }
             }
             Button(pantryText("Done")) { dismiss() }
         }

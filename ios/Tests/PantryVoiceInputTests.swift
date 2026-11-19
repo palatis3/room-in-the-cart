@@ -38,6 +38,24 @@ import UIKit
         XCTAssertTrue(window.allowsPantryAction(appActive: true))
     }
 
+    func testPermissionResultBeforeSceneInterruptionRetainsOnlyUntilReturn() throws {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
+        let window = PantryVoicePromptWindow()
+        let token = try XCTUnwrap(window.begin(scope, phase: .active))
+        // The first permission's foreground cycle cannot stand in for the second one.
+        window.sceneChanged(.inactive)
+        window.sceneChanged(.active)
+        window.nextPermission(token)
+        window.recognitionReady(token, appActive: true)
+        XCTAssertEqual(window.token, token)
+        window.sceneChanged(.inactive)
+        XCTAssertTrue(window.retains(scope, phase: .inactive))
+        XCTAssertFalse(window.allowsPantryAction(appActive: false))
+        window.sceneChanged(.active)
+        XCTAssertNil(window.token)
+    }
+
     func testBackgroundAndCancellationRetirePromptWithoutDisturbingLaterPermissionRun() throws {
         let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
         let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
@@ -55,20 +73,26 @@ import UIKit
 
     func testTemporaryPrivacyCoverHidesAnAppWindowWithoutTakingKeyboardFocus() throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
-        let window = UIWindow(windowScene: scene)
-        let originalKey = scene.keyWindow
-        let anchor = PantryVoicePrivacyCover.Anchor()
-        window.addSubview(anchor)
-        defer { anchor.removeFromSuperview() }
-        let cover = try XCTUnwrap(anchor.cover)
-        XCTAssertFalse(cover.isHidden)
-        XCTAssertFalse(cover.isKeyWindow)
-        XCTAssertGreaterThan(cover.windowLevel.rawValue, UIWindow.Level.alert.rawValue)
-        XCTAssertTrue(window.accessibilityElementsHidden)
-        XCTAssertTrue(scene.keyWindow === originalKey)
-        anchor.removeFromSuperview()
-        XCTAssertTrue(cover.isHidden)
-        XCTAssertFalse(window.accessibilityElementsHidden)
+        let window = try XCTUnwrap(scene.keyWindow)
+        let originalAccessibility = window.accessibilityElementsHidden
+        defer { window.accessibilityElementsHidden = originalAccessibility }
+
+        for initiallyHidden in [false, true] {
+            window.accessibilityElementsHidden = initiallyHidden
+            XCTAssertEqual(window.accessibilityElementsHidden, initiallyHidden)
+            let anchor = PantryVoicePrivacyCover.Anchor()
+            window.addSubview(anchor)
+            defer { anchor.removeFromSuperview() }
+            let cover = try XCTUnwrap(anchor.cover)
+            XCTAssertFalse(cover.isHidden)
+            XCTAssertFalse(cover.isKeyWindow)
+            XCTAssertGreaterThan(cover.windowLevel.rawValue, UIWindow.Level.alert.rawValue)
+            XCTAssertTrue(window.accessibilityElementsHidden)
+            XCTAssertTrue(scene.keyWindow === window)
+            anchor.removeFromSuperview()
+            XCTAssertTrue(cover.isHidden)
+            XCTAssertEqual(window.accessibilityElementsHidden, initiallyHidden)
+        }
     }
 
     func testDictationUsesReviewedSpanishWordingOnceAndPreservesIndependentTyping() async throws {

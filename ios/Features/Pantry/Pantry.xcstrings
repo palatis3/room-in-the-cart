@@ -10344,6 +10344,118 @@
           }
         }
       }
+    },
+    "More than half left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than half left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda más de la mitad"
+          }
+        }
+      }
+    },
+    "Mostly full": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostly full"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda la mayor parte"
+          }
+        }
+      }
+    },
+    "Describe what is left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe what is left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describir cuánto queda"
+          }
+        }
+      }
+    },
+    "How much is left in this batch?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How much is left in this batch?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto queda en este lote?"
+          }
+        }
+      }
+    },
+    "Use this estimate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta estimación"
+          }
+        }
+      }
+    },
+    "Describe one remaining amount for this batch, or choose an estimate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe one remaining amount for this batch, or choose an estimate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe cuánto queda en este lote o elige una estimación."
+          }
+        }
+      }
+    },
+    "If you used the whole batch, choose Used it all.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you used the whole batch, choose Used it all."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si usaste todo el lote, elige «Lo usé todo»."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
