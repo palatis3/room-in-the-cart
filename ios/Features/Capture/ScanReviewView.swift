@@ -453,7 +453,8 @@ struct ReceiptPhotoShortcuts: View {
             NavigationStack {
                 ReceiptSectionCapture(start: choice, target: target, authorize: authorize, initialPhoto: screenshot) { source in
                     guard authorize(), source.target == target else { return }
-                    result = source; start = nil
+                    // The document review dismisses this sheet after handing back its source.
+                    result = source
                 }
             }
         }

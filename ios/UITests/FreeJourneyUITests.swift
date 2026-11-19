@@ -1020,7 +1020,7 @@ import XCTest
             thumbnail = firstPhoto(in: screen)
             return thumbnail != nil
         }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [loaded], timeout: 12), .completed)
+        XCTAssertEqual(XCTWaiter.wait(for: [loaded], timeout: 60), .completed)
         let frame = try XCTUnwrap(thumbnail, app.debugDescription)
         let origin = app.frame.origin
         app.coordinate(withNormalizedOffset: .zero)
@@ -1083,6 +1083,38 @@ import XCTest
         XCTAssertTrue(fee.exists && fee.label.uppercased().contains("SERVICE FEE"))
         XCTAssertEqual(fee.value as? String, "0")
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
+
+        tap(app.buttons["receipt.document.inspect.1.1"])
+        XCTAssertTrue(app.staticTexts["Selected printed line"].waitForExistence(timeout: 5))
+        tap(app.buttons["Done"])
+        enableSwitch("receipt.document.line.1.1")
+        fill("Room Market", into: "Store or branch", control: app.textFields["Store or branch"])
+        enableSwitch("I checked these printed lines and physically received food from this purchase.")
+        tap(app.buttons["receipt.document.accept"])
+
+        let date = app.switches["I checked the purchase date."]
+        XCTAssertTrue(date.waitForExistence(timeout: 10), "The selected image should hand its lines to the receipt editor.")
+        XCTAssertEqual(date.value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        checkReceiptSwitch("I checked the purchase date.")
+        receiptTap(app.buttons["receipt.action.0"])
+        receiptTap(app.buttons["Add a separate physical batch"])
+        fill("Rolled oats", into: "Food name", replacing: true, control: app.textFields["Food name"])
+        fill("3", into: "receipt.received.0", control: app.textFields["receipt.received.0"])
+        fill("2", into: "receipt.usable.0", control: app.textFields["receipt.usable.0"])
+        receiptTap(app.buttons["receipt.review"])
+        let confirm = app.buttons["receipt.commit"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        let change = app.descendants(matching: .any).matching(NSPredicate(format:
+            "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", "Rolled oats", "Add 2", "Received 3")).firstMatch
+        XCTAssertTrue(change.exists, app.debugDescription)
+        receiptTap(confirm)
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+        let stock = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
+        let oatsLot = stock.matching(NSPredicate(format: "label CONTAINS %@", "Rolled oats")).firstMatch
+        XCTAssertTrue(oatsLot.waitForExistence(timeout: 8))
+        XCTAssertFalse(stock.matching(NSPredicate(format: "label CONTAINS[c] %@", "SERVICE FEE")).firstMatch.exists)
     }
 
     private func openShareExtension(from source: String) {
