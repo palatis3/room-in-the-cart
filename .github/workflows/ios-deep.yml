@@ -226,8 +226,8 @@ jobs:
       queue: max
       cancel-in-progress: false
     runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-A2' || 'xcode-27' }}
-    # Allow the 20-minute runtime setup, the 35-minute native step, and evidence handling.
-    timeout-minutes: 65
+    # Allow the 35-minute runtime setup, the 35-minute native step, and evidence handling.
+    timeout-minutes: 80
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       CI_IPHONE_NAME: iPhone 17
@@ -279,7 +279,7 @@ jobs:
           PYCODE
       - name: Prepare and verify the selected StoreKit runtime
         id: storekit-runtime
-        timeout-minutes: 20
+        timeout-minutes: 35
         shell: bash
         run: |
           set -o pipefail
@@ -310,7 +310,7 @@ jobs:
           matches, devices = inventory()
           if not matches and not current and not hosted_compatibility:
               subprocess.run(["xcodebuild", "-downloadPlatform", "iOS", "-buildVersion", build,
-                              "-architectureVariant", "arm64"], check=True, timeout=600)
+                              "-architectureVariant", "arm64"], check=True, timeout=1800)
               matches, devices = inventory()
           exact = [r for r in matches if r["buildversion"] == build]
           assert len(exact) == 1, f"Expected one StoreKit runtime {runtime}/{build}; found {len(exact)}"
