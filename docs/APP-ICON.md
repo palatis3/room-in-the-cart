@@ -1,9 +1,24 @@
-# App icon
+# Room in the Cart artwork
 
-The app icon is a generated spruce-and-linen grocery basket mark. The built-in image generation tool produced the source on November 3, 2026. The opaque square was packaged at 1024 × 1024 pixels in `ios/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png`; the Xcode generator selects `AppIcon` for all app configurations.
+The approved mark has a raised cream handle, two wheels and a single pear tucked behind the sloping cart rim. Its source is the upper-left tile on the original comparison sheet. The source sheet stays outside the app and web bundles. [Original comparison sheet](../shared/brand/reference/Approved-cart-reference.png)
 
-Generation prompt:
+The production SVG has three editable layers in paint order. The field fills the square. The pear includes its stem and leaf and extends behind the rim. The cart front includes both wheels and stays still. Each export uses the same view box and resting registration. The default colors were sampled from the artwork. UI actions and surfaces use their own semantic colors. [Production master](../shared/brand/cart.svg) · [UI color contract](../shared/contracts/theme.json)
 
-> Use case: logo-brand. Asset: final native iOS app icon for Room in the Cart, an app connecting family grocery pickup with meals and budget. Create one square 1024x1024 icon with an opaque edge-to-edge deep spruce green (#195848) background. Center a single bold, beautifully balanced warm linen (#F7F5EF) grocery basket mark with two simple grocery forms nestled inside, one rounded produce shape with a small leaf and one modest rectangular package. Integrate a clear small pocket of empty space in the basket suggesting room for what matters. Sophisticated minimal flat vector-like geometry, rounded intentional strokes, excellent optical balance, readable silhouette at 32px. Warm trustworthy utility, premium restrained design. Only spruce and linen colors, no gradients, no texture, no letters, no words, no numbers, no border, no pre-rounded icon corners, no shadows, no mockup, no multiple alternatives. Fill entire square with spruce; keep artwork safely within centered 68% square.
+## Application
 
-The single-image catalog follows [Apple’s app icon configuration](https://developer.apple.com/documentation/xcode/configuring-your-app-icon).
+- The Home Screen receives opaque 1024 × 1024 RGB artwork for the default, dark and tinted appearances. iOS applies its own icon mask. The default asset serves iOS 17.
+- In the app, `BrandCartMark()` shows the resting composition. `BrandCartMark(pearOffset:pearAngle:)` keeps the field and cart still while the pear moves in display points and rotates in degrees around its lower body. The illustration is decorative beside the saved result or About caption.
+- Extensions can use the complete `BrandCartRest` vector image. The web wordmark uses the rounded `/brand-cart.svg`. The existing 64 px favicon and 180 px touch icon use the complete resting mark.
+
+## Reproduce the exports
+
+Run these commands on macOS with Python 3 and Pillow. The exporter uses the system SVG renderer and verifies that the opaque icon covers its square before writing RGB PNGs.
+
+```sh
+python3 scripts/generate_brand_assets.py
+python3 scripts/generate_brand_assets.py --check
+```
+
+The check compares generated SVGs, asset manifests and decoded PNG pixels. It also verifies the SHA-256 of the original sheet and compares the filled silhouettes within its 564 px registered square, starting at (136, 146). The default export measured 99.61% intersection over union for the cart body, 99.28% for the rear wheel, 99.43% for the front wheel and 98.62% for the pear and leaf. It retains the open space between the handle and fruit. [Export and registration check](../scripts/generate_brand_assets.py)
+
+Small raster previews at 60, 48, 29, 20 and 16 px showed separate wheels and a visible pear in each appearance. At 16 px the stem and leaf read as a single small detail. Home Screen clear effects and other system-applied treatments still require inspection on the relevant configured device.
