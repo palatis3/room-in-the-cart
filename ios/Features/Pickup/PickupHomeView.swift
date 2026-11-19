@@ -72,6 +72,7 @@ struct PickupHomeView: View {
                 }
             }
         }
+        .workingSurface()
         .navigationTitle(pTr("Pickup"))
         .modifier(PickupNextShopRoute(model: model, requested: $nextShopRequested) { nextShopFocused = true })
         .task { await model.load() }
@@ -101,7 +102,7 @@ struct PickupSaveStatus: View {
     var body: some View {
         if let error = model.error {
             Section {
-                Text(error).foregroundStyle(.red).accessibilityIdentifier("pickup-save-error")
+                Text(error).foregroundStyle(Theme.error).accessibilityIdentifier("pickup-save-error")
                 if model.hasPendingSave {
                     Button(pTr("Retry save")) { Task { if await model.retrySave() { onRetried?() } } }
                     Button(pTr("Discard unsaved change"), role: .destructive) { Task { await model.discardPendingSafely() } }
@@ -172,16 +173,16 @@ struct PickupResultView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(pickupResultText(result)).font(.title2.bold())
+            Text(pickupResultText(result)).font(.title.bold()).monospacedDigit().accessibilityAddTraits(.isHeader)
             switch result.cap {
             case .notProvided: Text(pTr("No spending cap supplied"))
-            case .scopeMismatch: Text(pTr("Cap and checkout cover different commitments"))
-            case .unresolved: Text(pTr("Whether this fits the cap is unresolved"))
+            case .scopeMismatch: Text(pTr("Cap and checkout cover different commitments")).foregroundStyle(Theme.warning)
+            case .unresolved: Text(pTr("Whether this fits the cap is unresolved")).foregroundStyle(Theme.warning)
             case let .within(_, headroom): Text("\(pTr("Within this scope’s cap · room remaining")) \(pMoney(headroom))")
-            case let .over(_, overage): Text("\(pTr("Over this scope’s cap by")) \(pMoney(overage))")
+            case let .over(_, overage): Text("\(pTr("Over this scope’s cap by")) \(pMoney(overage))").foregroundStyle(Theme.warning)
             }
             ForEach(Array(uncertaintyDescriptions.enumerated()), id: \.offset) { _, description in
-                Text(verbatim: description).font(.caption)
+                Text(verbatim: description).font(.body).foregroundStyle(Theme.secondary)
             }
         }
     }
@@ -218,7 +219,7 @@ struct PickupCheckoutView: View {
     }
     var body: some View {
         if let journey = model.journey, journey.basket?.phase == .frozen, let snapshot = model.frozenSnapshot {
-            Form {
+            WorkingForm {
                 PickupSaveStatus(model: model)
                 Section(pTr("Frozen · placement unconfirmed")) {
                     if let quote = journey.frozenQuotes[snapshot.id] {
@@ -242,7 +243,7 @@ struct PickupCheckoutView: View {
     }
 
     private var checkoutEditor: some View {
-        Form {
+        WorkingForm {
             if !draftIsStale { PickupSaveStatus(model: model) }
             if draftIsStale {
                 Section {
@@ -312,9 +313,9 @@ struct PickupCheckoutView: View {
                         PickupEvidenceField(title: pTr("Deposits and other charges"), amount: $draft.deposits).focused($field, equals: .deposits)
                     }
                 }
-                Button(pTr("Save and evaluate checkout")) { saveQuote() }.buttonStyle(.borderedProminent)
+                Button(pTr("Save and evaluate checkout")) { saveQuote() }.buttonStyle(PrimaryAction())
                     .disabled(draftIsStale || draft.termsNeedFreshPricing || !model.hasCurrentBasketStockBasis)
-                if let formError { Text(formError).foregroundStyle(.red) }
+                if let formError { Text(formError).foregroundStyle(Theme.error) }
                 if !draftIsStale, !draft.hasUnsavedChanges, let result = model.result, let id = model.journey?.id {
                     NavigationLink(pTr("Check price by weight")) { PickupWeightReview(model: model, shopID: id) }
                         .accessibilityIdentifier("checkout.weightReview")

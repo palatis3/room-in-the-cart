@@ -3,7 +3,7 @@ import Combine
 
 /// These locators contain identities only. No grant, role, consent, financial
 /// projection, form draft or verified session is recovered from this file.
-enum AdultTab: String, Codable, CaseIterable { case shop, dinners, records }
+enum AdultTab: String, Codable, CaseIterable { case shop, pantry, dinners, records }
 struct HouseholdNavigationIdentity: Codable, Hashable {
     let subject: String
     let householdID: String
@@ -27,14 +27,28 @@ struct NavigationSnapshot: Codable, Equatable {
     let version: Int
     var selection: AdultTab
     var shop: [RestorableDestination]
+    var pantry: [RestorableDestination] = []
     var dinners: [RestorableDestination]
     var records: [RestorableDestination]
     static let empty = Self(version: 1, selection: .shop, shop: [], dinners: [], records: [])
     subscript(_ tab: AdultTab) -> [RestorableDestination] {
-        get { switch tab { case .shop: shop; case .dinners: dinners; case .records: records } }
-        set { switch tab { case .shop: shop = newValue; case .dinners: dinners = newValue; case .records: records = newValue } }
+        get { switch tab { case .shop: shop; case .pantry: pantry; case .dinners: dinners; case .records: records } }
+        set { switch tab { case .shop: shop = newValue; case .pantry: pantry = newValue; case .dinners: dinners = newValue; case .records: records = newValue } }
     }
 }
+extension NavigationSnapshot {
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        version = try values.decode(Int.self, forKey: .version)
+        selection = try values.decode(AdultTab.self, forKey: .selection)
+        shop = try values.decode([RestorableDestination].self, forKey: .shop)
+        // A version-one snapshot written before the Pantry tab has no Pantry path.
+        pantry = try values.decodeIfPresent([RestorableDestination].self, forKey: .pantry) ?? []
+        dinners = try values.decode([RestorableDestination].self, forKey: .dinners)
+        records = try values.decode([RestorableDestination].self, forKey: .records)
+    }
+}
+
 final class NavigationSnapshotStore {
     private let url: URL
     init(url: URL) { self.url = url }
@@ -74,6 +88,7 @@ final class NavigationSnapshotStore {
 @MainActor final class NavigationRestorationModel: ObservableObject {
     @Published private(set) var selection: AdultTab
     @Published private(set) var shopPath: [RestorableDestination] = []
+    @Published private(set) var pantryPath: [RestorableDestination] = []
     @Published private(set) var dinnersPath: [RestorableDestination] = []
     @Published private(set) var recordsPath: [RestorableDestination] = []
     private var snapshot: NavigationSnapshot
@@ -106,7 +121,7 @@ final class NavigationSnapshotStore {
         reconcile()
     }
     func path(for tab: AdultTab) -> [RestorableDestination] {
-        switch tab { case .shop: shopPath; case .dinners: dinnersPath; case .records: recordsPath }
+        switch tab { case .shop: shopPath; case .pantry: pantryPath; case .dinners: dinnersPath; case .records: recordsPath }
     }
     func select(_ tab: AdultTab) {
         selection = tab; snapshot.selection = tab; store.save(snapshot)
@@ -128,12 +143,12 @@ final class NavigationSnapshotStore {
     func resume() { suspended = false; reconcile() }
     /// An explicit incoming shortcut wins even if it arrives before stores open.
     func preferIncomingLink() {
-        snapshot = .empty; selection = .shop; publishPaths(shop: [], dinners: [], records: []); store.save(snapshot)
+        snapshot = .empty; selection = .shop; publishPaths(shop: [], pantry: [], dinners: [], records: []); store.save(snapshot)
     }
     func reconcile() {
         guard !suspended, let household, let access else { return }
-        if let role = household.projection?.role, !["shopper", "organizer"].contains(role) {
-            snapshot = .empty; selection = .shop; publishPaths(shop: [], dinners: [], records: []); store.save(snapshot)
+        if household.usesScopedHouseholdRoot {
+            snapshot = .empty; selection = .shop; publishPaths(shop: [], pantry: [], dinners: [], records: []); store.save(snapshot)
             sawLiveHousehold = true; return
         }
         let live = contextualScope(household)
@@ -162,7 +177,7 @@ final class NavigationSnapshotStore {
             }
             visible[tab] = allowed
         }
-        publishPaths(shop: visible[.shop] ?? [], dinners: visible[.dinners] ?? [], records: visible[.records] ?? [])
+        publishPaths(shop: visible[.shop] ?? [], pantry: visible[.pantry] ?? [], dinners: visible[.dinners] ?? [], records: visible[.records] ?? [])
         if changed { store.save(snapshot) }
     }
     private func householdScopeWillChange() {
@@ -173,7 +188,7 @@ final class NavigationSnapshotStore {
             Array(path.prefix { route in if case .household = route { return false }; return true })
         }
         for tab in AdultTab.allCases { snapshot[tab] = localPrefix(snapshot[tab]) }
-        publishPaths(shop: localPrefix(shopPath), dinners: localPrefix(dinnersPath), records: localPrefix(recordsPath))
+        publishPaths(shop: localPrefix(shopPath), pantry: localPrefix(pantryPath), dinners: localPrefix(dinnersPath), records: localPrefix(recordsPath))
         store.save(snapshot)
     }
     private enum Validation: Equatable { case allowed, waiting, invalid }
@@ -201,8 +216,9 @@ final class NavigationSnapshotStore {
             return .allowed
         }
     }
-    private func publishPaths(shop: [RestorableDestination], dinners: [RestorableDestination], records: [RestorableDestination]) {
+    private func publishPaths(shop: [RestorableDestination], pantry: [RestorableDestination], dinners: [RestorableDestination], records: [RestorableDestination]) {
         if shopPath != shop { shopPath = shop }
+        if pantryPath != pantry { pantryPath = pantry }
         if dinnersPath != dinners { dinnersPath = dinners }
         if recordsPath != records { recordsPath = records }
     }

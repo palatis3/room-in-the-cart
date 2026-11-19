@@ -40,6 +40,21 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
     }
 
+    func testPrivateQuickEntrySurvivesAnOrdinaryBackgroundInterruption() {
+        launch()
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText("fresh milk")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        XCTAssertEqual(field.value as? String, "fresh milk")
+        tap(app.buttons["quickGrocery.add"])
+        let added = app.buttons["quickGrocery.undo"]
+        XCTAssertTrue(added.waitForExistence(timeout: 10))
+        XCTAssertTrue(added.label.contains("fresh milk"))
+    }
+
     func testQuickGroceryReturnUndoAndDuplicateReviewInSpanish() {
         launch(language: "es")
         let field = element("quickGrocery.name")
@@ -473,12 +488,15 @@ final class RoomInTheCartUITests: XCTestCase {
 
     func testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop() {
         launch()
-        let shortcuts = app.buttons["deviceShortcuts"]
-        XCTAssertTrue(shortcuts.waitForExistence(timeout: 5))
+        let disclosure = app.buttons["shop.moreTools"]
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["deviceShortcuts"].exists)
         let compare = app.buttons["newComparison"]
         let startPickup = app.buttons["openPickupList"]
         XCTAssertTrue(shopViewport.contains(compare.frame))
         XCTAssertTrue(shopViewport.contains(startPickup.frame))
+        let shortcuts = app.shopToolButton("deviceShortcuts")
+        revealFullyInShop(shortcuts)
         XCTAssertLessThan(compare.frame.midY, shortcuts.frame.minY)
         XCTAssertLessThan(startPickup.frame.midY, shortcuts.frame.minY)
         // Accessibility can report the 44-point frame as 43.99999999999994.
@@ -502,7 +520,7 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func verifyShopRepairShortcut(largeDark: Bool) {
         launch(largeDark: largeDark)
-        let shortcut = element("urgentRepairShortcut")
+        let shortcut = app.shopToolButton("urgentRepairShortcut")
         revealFullyInShop(shortcut)
         let scroll = app.scrollViews["shopContentScroll"]
         let tabs = app.tabBars.firstMatch
@@ -547,21 +565,22 @@ final class RoomInTheCartUITests: XCTestCase {
         continueAfterFailure = true
         launch()
         let grocery = element("quickGrocery.name")
-        let repair = element("urgentRepairShortcut")
+        let disclosure = app.buttons["shop.moreTools"]
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
         XCTAssertTrue(grocery.waitForExistence(timeout: 5))
         let groceryBefore = grocery.frame
-        let repairBefore = repair.frame
+        let disclosureBefore = disclosure.frame
         captureShopFrames("Initial-Shop-before-audit")
         screenshot("Initial-Shop-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Initial Shop"))
         let groceryAfter = grocery.frame
         XCTAssertEqual(groceryAfter.height, groceryBefore.height, accuracy: 1,
                        "The empty field should return to one line at the original text size.")
-        XCTAssertEqual(repair.frame.minY - groceryAfter.minY, repairBefore.minY - groceryBefore.minY, accuracy: 1,
-                       "The restored text size should preserve the distance between the field and repair shortcut.")
+        XCTAssertEqual(disclosure.frame.minY - groceryAfter.minY, disclosureBefore.minY - groceryBefore.minY, accuracy: 1,
+                       "The restored text size should preserve the distance between the field and tools disclosure.")
         // Retain the initial audit; add full-category coverage after the
         // complete repair shortcut is visible above bottom navigation.
-        revealFullyInShop(element("urgentRepairShortcut"))
+        revealFullyInShop(app.shopToolButton("urgentRepairShortcut"))
         captureShopFrames("Complete-repair-shortcut-before-audit")
         screenshot("Complete-repair-shortcut-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Complete repair shortcut"))

@@ -16,70 +16,95 @@ struct LedgerHomeView: View {
     @State private var showingShopPicker = false
     @State private var showingListOptions = false
     @State private var stapleRecallShopID: UUID?
-    private enum Focus: Hashable { case result, error, line(UUID) }
+    private enum Focus: Hashable { case result, error, undo, line(UUID) }
+    @State private var returnToLine: UUID?
+    @State private var checkCue: GroceryCheckCue?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scene
     @AccessibilityFocusState private var focus: Focus?
 
     var body: some View {
         VStack(spacing: 0) {
             if model.ready, let shop = model.shop {
                 if !dynamicTypeSize.isAccessibilitySize { controls(shop) }
-                List {
-                    Section { LedgerQuickGroceryEntry(model: model) }
-                    if dynamicTypeSize.isAccessibilitySize {
+                ScrollViewReader { reader in
+                    List {
+                        if dynamicTypeSize.isAccessibilitySize {
+                            Section {
+                                shopPicker(shop).buttonStyle(.borderless)
+                                listOptions(shop).buttonStyle(.borderless)
+                                Text(ledgerText("Search active items"))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .listRowSeparator(.hidden, edges: .bottom)
+                                    .accessibilityHidden(true)
+                                searchField.listRowSeparator(.hidden, edges: .top)
+                                importButton
+                            }
+                        }
+                        if model.error != nil || model.hasPendingSave {
+                            Section { LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .error) }
+                        }
                         Section {
-                            shopPicker(shop).buttonStyle(.borderless)
-                            listOptions(shop).buttonStyle(.borderless)
-                            Text(ledgerText("Search active items"))
-                                .fixedSize(horizontal: false, vertical: true)
-                                .listRowSeparator(.hidden, edges: .bottom)
-                                .accessibilityHidden(true)
-                            searchField.listRowSeparator(.hidden, edges: .top)
-                            importButton
+                            Button { sheet = .inStore(shop.id) } label: {
+                                Label(shoppingText("Shop in store"), systemImage: "cart")
+                                    .font(.headline).frame(minHeight: 44)
+                            }.accessibilityIdentifier("ledgerInStore")
                         }
-                    }
-                    Section {
-                        LedgerSaveStatus(model: model)
-                            .accessibilityFocused($focus, equals: model.error == nil ? .result : .error)
-                        Button { sheet = .inStore(shop.id) } label: {
-                            Label(shoppingText("Shop in store"), systemImage: "cart")
-                                .frame(minHeight: 44)
-                        }.accessibilityIdentifier("ledgerInStore")
-                        factsSummary(shop)
-                    }
-                    let exclusions = shop.listExclusions
-                    let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
-                    let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
-                    if groups.allSatisfy({ $0.lines.isEmpty }) {
-                        Section(ledgerText("Shopping list")) {
-                            Text(ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
-                                .foregroundStyle(Theme.secondary)
+                        if let last = shop.recentlyChecked.first(where: { !$0.isHandled }) {
+                            Section { checkedResult(last, shop: shop) }.listRowBackground(Theme.selection)
                         }
-                    } else {
-                        ForEach(groups) { group in
-                            Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
-                                ForEach(group.lines) { line in
-                                    row(line, shop: shop, exclusions: exclusions[line.id], departmentChoices: departmentChoices)
-                                        .id(line.id).accessibilityFocused($focus, equals: .line(line.id))
+                        let exclusions = shop.listExclusions
+                        let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
+                        let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
+                        if groups.allSatisfy({ $0.lines.isEmpty }) {
+                            Section(ledgerText("Shopping list")) {
+                                Text(ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
+                                    .foregroundStyle(Theme.secondary)
+                            }
+                        } else {
+                            ForEach(groups) { group in
+                                Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
+                                    ForEach(group.lines) { line in
+                                        row(line, shop: shop, exclusions: exclusions[line.id], departmentChoices: departmentChoices)
+                                            .id(line.id)
+                                    }
                                 }
                             }
                         }
-                    }
-                    Section {
-                        Button { sheet = .history } label: {
-                            Label(ledgerText("Recently checked, Handled and Trash"), systemImage: "clock.arrow.circlepath")
-                                .frame(minHeight: 44, alignment: .leading)
-                        }.accessibilityIdentifier("ledgerHistory")
-                        if let batch = shop.importBatches.last(where: { $0.undoneAt == nil }) {
-                            Button(ledgerText("Undo last list import"), role: .destructive) {
-                                Task {
-                                    _ = await model.editShop(key: "undo-\(batch.id)", shopID: shop.id) { try $0.undoImport(batchID: batch.id) }
-                                    focus = model.error == nil ? .result : .error
-                                }
-                            }.disabled(model.saving || model.hasPendingSave)
-                                .accessibilityIdentifier("ledgerUndoImport")
+                        Section {
+                            LedgerQuickGroceryEntry(model: model)
+                            factsSummary(shop)
+                        }
+                        Section {
+                            Button { sheet = .history } label: {
+                                Label(ledgerText("Recently checked, Handled and Trash"), systemImage: "clock.arrow.circlepath")
+                                    .frame(minHeight: 44, alignment: .leading)
+                            }.accessibilityIdentifier("ledgerHistory")
+                            if let batch = shop.importBatches.last(where: { $0.undoneAt == nil }) {
+                                Button(ledgerText("Undo last list import"), role: .destructive) {
+                                    Task {
+                                        _ = await model.editShop(key: "undo-\(batch.id)", shopID: shop.id) { try $0.undoImport(batchID: batch.id) }
+                                        focus = model.error == nil ? .result : .error
+                                    }
+                                }.disabled(model.saving || model.hasPendingSave)
+                                    .accessibilityIdentifier("ledgerUndoImport")
+                            }
+                        }
+                        if model.error == nil && !model.hasPendingSave {
+                            Section { LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .result) }
+                        }
+                    }.listStyle(.insetGrouped).workingSurface()
+                    .onChange(of: returnToLine) { _, line in
+                        guard let line else { return }
+                        reader.scrollTo(line, anchor: .center)
+                        Task { @MainActor in
+                            await Task.yield()
+                            guard returnToLine == line else { return }
+                            focus = .line(line)
+                            returnToLine = nil
                         }
                     }
-                }.listStyle(.insetGrouped).workingSurface()
+                }
             } else if model.opening {
                 ProgressView(ledgerText("Opening your pickups…")).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -246,20 +271,66 @@ struct LedgerHomeView: View {
             .disabled(model.saving || model.hasPendingSave)
     }
 
+    private func checkedResult(_ line: ShoppingLine, shop: ShoppingLedger) -> some View {
+        let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 12))
+        return layout {
+            Label(quickGroceryFormat("Checked %@", line.name), systemImage: "checkmark.square.fill")
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button {
+                Task {
+                    guard await changeCheck(line, shop: shop, checked: false) else { focus = .error; return }
+                    let visible = model.shop.map { model.workspace.listLayout.groups(shop: $0, search: model.search) } ?? []
+                    if visible.contains(where: { $0.lines.contains(where: { $0.id == line.id }) }) {
+                        returnToLine = line.id
+                    } else { focus = .result }
+                }
+            } label: { Text(quickGroceryText("Undo")).underline().frame(minWidth: 44, minHeight: 44) }
+            .buttonStyle(.borderless).disabled(model.saving || model.hasPendingSave)
+            .accessibilityLabel(quickGroceryFormat("Undo checking %@", line.name))
+            .accessibilityIdentifier("ledgerUndoCheck")
+            .accessibilityFocused($focus, equals: .undo)
+        }.foregroundStyle(Theme.onSelection)
+            .overlay { GroceryCheckInset(cue: checkCue, lineID: line.id) }
+    }
+
+    private func changeCheck(_ line: ShoppingLine, shop: ShoppingLedger, checked: Bool) async -> Bool {
+        let saved = await model.editShop(key: "check-\(line.id)", shopID: shop.id) { current in
+            guard model.workspace.selectedShopID == shop.id, current.revisionID == shop.revisionID,
+                  let source = current.lines.first(where: { $0.id == line.id }),
+                  source.checkedAt == line.checkedAt, source.isChecked != checked, !source.isHandled, !source.isTrashed else {
+                throw LedgerError.stalePreview
+            }
+            try current.setChecked(lineID: line.id, checked: checked)
+        }
+        if saved { checkCue = checked && !reduceMotion && scene == .active ? GroceryCheckCue(lineID: line.id) : nil }
+        return saved
+    }
+
     private func row(_ line: ShoppingLine, shop: ShoppingLedger, exclusions: String?, departmentChoices: [String]) -> some View {
         let quantity = ledgerQuantity(try? shop.quantity(forLineID: line.id))
         let details = [quantity, exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
         return HStack(alignment: .top, spacing: 10) {
             Button {
-                Task {
-                    _ = await model.editShop(key: "check-\(line.id)", shopID: shop.id) { try $0.setChecked(lineID: line.id, checked: true) }
-                    focus = model.error == nil ? .result : .error
+                let visible = model.workspace.listLayout.groups(shop: shop, search: model.search).flatMap(\.lines)
+                let index = visible.firstIndex { $0.id == line.id }
+                let next = index.flatMap { index in
+                    visible.dropFirst(index + 1).first ?? visible.prefix(index).last
                 }
-            } label: { Image(systemName: "circle").font(.title2).frame(width: 44, height: 44) }
-                .buttonStyle(.borderless).disabled(model.saving || model.hasPendingSave)
-                .accessibilityLabel(ledgerFormat("Check %@", line.name))
-                .accessibilityHint(ledgerText("Moves this item to Recently checked."))
-                .accessibilityIdentifier("ledgerCheck-\(line.id)")
+                Task {
+                    guard await changeCheck(line, shop: shop, checked: true) else { focus = .error; return }
+                    if UIAccessibility.isVoiceOverRunning, let next { returnToLine = next.id }
+                    else if next == nil { focus = .undo }
+                }
+            } label: {
+                Image(systemName: "square").font(.title2.weight(.regular))
+                    .foregroundStyle(Theme.controlEdge).frame(width: 44, height: 44).contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless).disabled(model.saving || model.hasPendingSave)
+            .accessibilityLabel(ledgerFormat("Check %@", line.name))
+            .accessibilityHint(ledgerText("Moves this item to Recently checked."))
+            .accessibilityFocused($focus, equals: .line(line.id))
+            .accessibilityIdentifier("ledgerCheck-\(line.id)")
             VStack(alignment: .leading, spacing: 0) {
                 NavigationLink {
                     LedgerIngredientView(model: model, shopID: shop.id, lineID: line.id)

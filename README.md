@@ -4,14 +4,18 @@ Native iPhone implementation of Foundation 2.1, with an account-free pack compar
 
 Open [RoomInTheCart.xcodeproj](ios/RoomInTheCart.xcodeproj) in Xcode, choose **RoomInTheCart-Release**, select an iPhone simulator, and run. The simulator preview runs without a signing team, account, or backend setup. Use **RoomInTheCart** for Debug development. The deployment target is **iOS 17.0**. Native CI builds with **Xcode 27.1 (27A9275)**.
 
-The app has Shop, Dinners and Records tab roots. Shop includes staged list import, distinct manual/meal/protected contributions, exact comparison, checkout review and pickup reconciliation. Meals retain stable identities and dates; reviewed dinner planning and optional on-device capture are integrated in source, with additional acceptance work underway. Records supports comparison reopen and scoped encrypted export/recovery into isolated workspaces. Household and StoreKit membership adapters are integrated in source, with role-aware routing and a local device-owner gate after shared use. This is not a claim that every launch requirement or live provider flow has passed acceptance.
+The adult app opens with **Shop**, **Pantry**, **Dinners** and **Records**. Pantry keeps food on hand, batch dates and reviewed receipt imports together. A child or an assigned helper opens directly into their permitted task. Shop includes staged list import, distinct manual/meal/protected contributions, exact comparison, checkout review and pickup reconciliation. Meals retain stable identities and dates; reviewed dinner planning and optional on-device capture are integrated in source, with additional acceptance work underway. Records supports comparison reopen and scoped encrypted export/recovery into isolated workspaces. Household and StoreKit membership adapters are integrated in source, with role-aware routing and a local device-owner gate after shared use. This is not a claim that every launch requirement or live provider flow has passed acceptance.
 
 In **Shop**, open **List order and aisles** to arrange the active items, or **Large-print list** for a printable copy. **Dinners** can start the first pickup and prepare an editable meal idea from an original pattern. Saving an idea to the dinner library and applying its ingredients to a pickup are separate decisions. In **Records**, connected adults can review entered prices and period budgets. Choose the household overview for a period that includes more than one permitted shop. Optional pickup feedback is off until enabled in Settings.
 
 
 In **Records → Family decision history**, review the pickup evidence and record what your household observed. The cook handoff can save a dated copy and separately record who received it and who acknowledged it. **Review prior staples** lets a named Household shopper revisit the store and purpose before adding a need to a fresh list.
 
-## First task
+## First grocery
+
+Open **Shop**, type a grocery in the item field and press Return. Use the nearby Undo to remove the entry. Open **Pantry** to record food you actually have, **Dinners** to plan a meal, or **Records** to revisit saved work. Plum & Pear uses the [shared semantic colors](shared/contracts/theme.json) for the native and web interfaces.
+
+## Compare two packs
 
 1. Open **Shop → Compare packs** and enter 12 wraps.
 2. Enter two quotes. Pack A has 8 wraps for $3 and Pack B has 6 for $2. Set an optional $30 item limit.

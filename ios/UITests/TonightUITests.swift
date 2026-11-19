@@ -38,7 +38,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launch()
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.tonight"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 12))
@@ -80,7 +80,7 @@ import XCTest
         for spanish in [false, true] {
             app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
             app.launch()
-            tap(app.buttons["shop.myPantry"])
+            tap(app.shopToolButton("shop.myPantry"))
             tap(app.buttons["pantry.setup.apply"])
             tap(app.buttons["pantry.tonight"])
             let text = spanish ? "La ayuda en línea requiere una cuenta de adulto autorizada. Puedes seguir revisando coincidencias locales sin iniciar sesión." : "Online help requires an authorized adult account. Keep reviewing local matches without signing in."

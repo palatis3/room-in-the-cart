@@ -7,6 +7,55 @@ import XCTest
     override func setUpWithError() throws { continueAfterFailure = false }
     override func tearDownWithError() throws { app.terminate() }
 
+    func testFourAdultDestinationsAndPantryRestoreWithoutEnablingInventory() {
+        launch(reset: true)
+        let tabs = app.tabBars.buttons
+        XCTAssertEqual(tabs.allElementsBoundByIndex.map(\.label), ["Shop", "Pantry", "Dinners", "Records"])
+        XCTAssertTrue(tabs["Shop"].isSelected)
+        tap(tabs["Pantry"])
+        XCTAssertTrue(app.buttons["pantry.setup.apply"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.buttons["pantry.setup.apply"].label, "Start my pantry")
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(tabs["Pantry"].isSelected)
+        XCTAssertTrue(app.buttons["pantry.setup.apply"].waitForExistence(timeout: 10))
+        tap(tabs["Shop"])
+        XCTAssertTrue(element("quickGrocery.name").waitForExistence(timeout: 10))
+        tap(tabs["Records"])
+        XCTAssertTrue(app.buttons["records.startComparison"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["records.sharedPlacementReports"].exists)
+        XCTAssertFalse(app.buttons["records.priceBudgetHistory"].exists)
+        XCTAssertFalse(app.buttons["Family decision history"].exists)
+    }
+
+    func testNamedCheckUndoSurvivesRelaunchAndRestoresOnlyTheCheckedRow() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        tap(entry)
+        entry.typeText("milk\n")
+        XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 10))
+        entry.typeText("eggs\n")
+        let eggsAdded = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@", "quickGrocery.undo", "eggs")).firstMatch
+        XCTAssertTrue(eggsAdded.waitForExistence(timeout: 10))
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        tap(app.buttons["openPickupList"])
+        let milk = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "milk")).firstMatch
+        let eggs = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "eggs")).firstMatch
+        XCTAssertTrue(milk.waitForExistence(timeout: 10))
+        let milkID = milk.identifier, eggsID = eggs.identifier
+        tap(milk)
+        let undo = app.buttons["ledgerUndoCheck"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        XCTAssertTrue(undo.label.contains("milk"))
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        tap(undo)
+        XCTAssertTrue(app.buttons[milkID].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons[eggsID].exists)
+        XCTAssertFalse(undo.exists)
+    }
+
     func testInListPickupCreationAndSwitchRestoreTheChosenList() {
         launch(reset: true)
         tap(app.buttons["openPickupList"])
@@ -127,6 +176,25 @@ import XCTest
 
 @MainActor
 extension XCUIApplication {
+    /// The fresh Shop exposes infrequent shortcuts through its disclosure.
+    /// Existing pickups already show those actions with the named trip.
+    func shopToolButton(_ identifier: String, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
+        let tool = buttons[identifier]
+        let collapsed = buttons.matching(NSPredicate(format: "identifier == %@ AND value IN %@",
+            "shop.moreTools", ["Collapsed", "Contraído"])).firstMatch
+        if collapsed.exists {
+            let scroll = scrollViews["shopContentScroll"]
+            for _ in 0..<12 {
+                if collapsed.isHittable && scroll.frame.contains(collapsed.frame) { break }
+                if collapsed.frame.midY < scroll.frame.minY { scroll.swipeDown() }
+                else { scroll.swipeUp() }
+            }
+            XCTAssertTrue(collapsed.isHittable, "More shopping tools should open from Shop.", file: file, line: line)
+            collapsed.tap()
+        }
+        return tool
+    }
+
     /// UIKit may retain a dismissed keyboard below the viewport. Measure one
     /// snapshot instead of waiting for that offscreen accessibility node to vanish.
     func waitForKeyboardDismissal(doneIdentifier: String, timeout: TimeInterval = 5,

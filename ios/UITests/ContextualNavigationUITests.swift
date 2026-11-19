@@ -58,7 +58,7 @@ import UIKit
 
     func testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence() {
         launch(reset: true)
-        let shortcut = element("shop.checkOneChange")
+        let shortcut = app.shopToolButton("shop.checkOneChange")
         tap(shortcut)
         XCTAssertTrue(app.navigationBars["Check one change"].waitForExistence(timeout: 5))
         tap(app.buttons["Leave without saving"])

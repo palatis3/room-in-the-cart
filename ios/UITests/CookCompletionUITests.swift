@@ -17,7 +17,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launch()
-        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
+        tap(app.shopToolButton("shop.myPantry")); tap(app.buttons["pantry.setup.apply"])
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinnerStartPickup"])
         fill(app.textFields["ledgerShopName"], "Cooking review")

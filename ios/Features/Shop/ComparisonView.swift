@@ -57,17 +57,15 @@ struct ComparisonView: View {
     }
 
     private var editor: some View {
-        Form {
+        WorkingForm {
             Section {
-                Text(tr("Enough food. The right pack.")).font(.title2.bold())
-                Text(tr("Compare the cost of enough usable food for one item. No account or connection needed."))
-                    .foregroundStyle(Theme.secondary)
-            }.listRowBackground(Theme.surface)
-            Section(tr("What you need")) {
+                Text(quickGroceryText("Enough for what?")).font(.title.bold()).accessibilityAddTraits(.isHeader)
                 TextField(tr("Item name"), text: $model.draft.item, axis: .vertical)
                     .focused($inputFocused, equals: "itemName").accessibilityIdentifier("itemName")
                 entry("Total amount needed", text: $model.draft.needed, id: "needed")
                 unitPicker("Needed unit", selection: $model.draft.unit, id: "neededUnit")
+            } footer: {
+                Text(tr("Compare the cost of enough usable food for one item. No account or connection needed."))
             }
             Section {
                 entry("Confirmed usable amount at home", text: $model.draft.stock, id: "stock")

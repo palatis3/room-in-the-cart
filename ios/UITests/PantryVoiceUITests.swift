@@ -325,7 +325,7 @@ import XCTest
         if expectEmptyShop {
             XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12), app.debugDescription)
         }
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         if reset { tap(app.buttons["pantry.setup.apply"]) }
         XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 10))
     }

@@ -240,14 +240,9 @@ struct GroceryWindow: View {
     private var pantryOpenScope: PantryOpenScope {
         PantryOpenScope(adult: privatePantryIdentity, ledgerReady: ledger.ready, ledgerOrigin: ledger.sourceWorkspaceID, attempt: pantryOpenAttempt)
     }
-    private var pantryCleanupPending: Bool {
-        guard let stores = pickup.pantryErasureStores else { return false }
-        return PantryErasureCoordinator.hasPendingCleanup(in: stores.configuration.erasureJournalDirectory,
-                                                         originID: stores.inventory.workspaceID)
-    }
     private var pantryRetry: (@MainActor () -> Void)? {
         guard let failed = failedPantryScope, failed == pantryOpenScope, failed.adult != nil,
-              !ledger.hasPendingLedgerDeletion, !pickup.pantryRestartAvailable, !pantryCleanupPending else { return nil }
+              !ledger.hasPendingLedgerDeletion, !pickup.pantryRestartAvailable, !pickup.pantryCleanupPending else { return nil }
         return {
             guard failed == pantryOpenScope, privatePantryIdentity == failed.adult else { return }
             failedPantryScope = nil
@@ -256,7 +251,7 @@ struct GroceryWindow: View {
     }
     private func recordPantryFailure(_ expected: PantryOpenScope) {
         guard !Task.isCancelled, expected == pantryOpenScope, expected.adult != nil,
-              !ledger.hasPendingLedgerDeletion, !pickup.pantryRestartAvailable, !pantryCleanupPending else { return }
+              !ledger.hasPendingLedgerDeletion, !pickup.pantryRestartAvailable, !pickup.pantryCleanupPending else { return }
         failedPantryScope = expected
     }
     @MainActor private func openPrivatePantry(_ scope: PantryOpenScope) async {
@@ -322,7 +317,7 @@ struct RootView: View {
         } else { adultRoot }
     }
     @ViewBuilder private var adultRoot: some View {
-        if let role = household.projection?.role, !["shopper", "organizer"].contains(role) {
+        if household.usesScopedHouseholdRoot {
             NavigationStack { HouseholdSettingsView(model: household) }
         } else if !access.unlocked {
             WorkspaceUnlockView(access: access, household: household, childExitNotice: guardianChild?.message)
@@ -340,6 +335,57 @@ private struct GuardianBoundaryRoot<AdultRoot: View>: View {
     }
 }
 
+private extension PickupModel {
+    var pantryCleanupPending: Bool {
+        guard let stores = pantryErasureStores else { return false }
+        return PantryErasureCoordinator.hasPendingCleanup(in: stores.configuration.erasureJournalDirectory,
+                                                         originID: stores.inventory.workspaceID)
+    }
+}
+
+/// A tab can be selected while the private stores are opening or the pantry is retired.
+struct AdultPantryTab: View {
+    @EnvironmentObject private var pickup: PickupModel
+    @EnvironmentObject private var ledger: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.pantryVoicePrompt) private var voicePrompt
+    @Environment(\.privatePantryRetry) private var retry
+
+    var body: some View {
+        Group {
+            if pickup.pantryRouteAvailable || voicePrompt?.holdsPresentation() == true {
+                PantrySetupView(pickup: pickup, ledger: ledger)
+            } else if pickup.pantryRestartAvailable {
+                WorkingForm { PantryRestartButton(pickup: pickup) }
+                    .navigationTitle(quickGroceryText("Pantry"))
+            } else if let retry {
+                WorkingForm {
+                    Button(pantryText("Retry opening My Pantry"), action: retry)
+                        .accessibilityIdentifier("pantry.retryOpen")
+                }.navigationTitle(quickGroceryText("Pantry"))
+            } else if household.projection?.grantId == nil,
+                      CapturePrivateIdentity.current(access: access, household: household) != nil {
+                if ledger.hasPendingLedgerDeletion || pickup.pantryCleanupPending {
+                    WorkingForm {
+                        Text(quickGroceryText("Finish the pending cleanup in Records to reopen this workspace."))
+                        RecordsRecoveryLink(accessibilityID: "pantry.recovery")
+                    }.navigationTitle(quickGroceryText("Pantry"))
+                } else {
+                    ProgressView(quickGroceryText("Opening Pantry…"))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Theme.canvas).navigationTitle(quickGroceryText("Pantry"))
+                }
+            } else {
+                Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                    .foregroundStyle(Theme.secondary).padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Theme.canvas).navigationTitle(quickGroceryText("Pantry"))
+            }
+        }
+    }
+}
+
 struct ShopView: View {
     @Environment(\.privatePantryRetry) private var retryPrivatePantry
     @EnvironmentObject private var household: HouseholdModel
@@ -348,6 +394,10 @@ struct ShopView: View {
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var navigation: NavigationRestorationModel
+    @State private var beganWithEmptyList = false
+    private struct InStoreSelection: Identifiable { let id: UUID }
+    @State private var inStoreShop: InStoreSelection?
+    @State private var showingMoreTools = false
     @State private var showingStandingList = false
     @State private var showingFirstList = false
     @State private var showingPantry = false
@@ -365,6 +415,13 @@ struct ShopView: View {
                 .accessibilityHidden(true)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
+            .onAppear { beganWithEmptyList = ledger.shop == nil }
+            .onChange(of: ledger.ready) { _, ready in
+                if ready { beganWithEmptyList = ledger.shop == nil }
+            }
+            .sheet(item: $inStoreShop) { shop in
+                PrivateShoppingSheet(model: ledger) { InStoreShoppingView(model: ledger, shopID: shop.id) }
+            }
             .sheet(isPresented: $showingPantry) {
                 NavigationStack {
                     PantrySetupView(pickup: pickup, ledger: ledger)
@@ -403,162 +460,239 @@ struct ShopView: View {
         return journey.closedAt == nil && (journey.basket == nil || journey.basket?.phase == .draft)
     }
 
-    private var comparePacks: some View {
-        NavigationLink { ComparisonView() } label: {
-            Label(tr("Compare packs"), systemImage: "arrow.left.arrow.right")
-                .frame(minHeight: 44)
-        }.accessibilityIdentifier("newComparison")
-    }
-
-    private var pantryLabel: some View {
-        Label(pantryText("My Pantry"), systemImage: "cabinet").frame(minHeight: 44)
-    }
-
     private var shopContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                if let journey = pickup.resumableJourney(for: ledger.shop?.id), !journey.offers.isEmpty {
-                    let timelineStart = Date()
-                    TimelineView(.explicit([timelineStart] + (journey.offers.map(\.deadline.cutoff) + (journey.pickup?.receipts.map(\.receivedAt) ?? [])).filter { $0 > timelineStart }.sorted())) { context in
-                        if let offer = journey.nextUnfilledOffer(at: context.date) {
-                            let expired = context.date >= offer.deadline.cutoff
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(pTr(expired ? "Await pickup · fill still unknown" : "Decision pending before cutoff")).font(.headline)
-                                    .accessibilityIdentifier("shop.resumeOfferStatus")
-                                Text(offer.replacement)
-                                Text("\(pTr("Cutoff")): \(pickupOfferCutoffText(offer)) · \(offer.deadline.timeZoneID)")
-                                NavigationLink(pTr(expired ? "Record what came home" : "Review a store offer")) {
-                                    pickupDestination(journey.id) {
-                                        if expired { PickupArrivalView(model: pickup) }
-                                        else { PickupOfferView(model: pickup) }
-                                    }
-                                }.frame(minHeight: 44).accessibilityIdentifier("shop.resumeOffer")
-                            }.frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-                        }
+            VStack(alignment: .leading, spacing: 20) {
+                if !beganWithEmptyList { tripSummary }
+                VStack(alignment: .leading, spacing: 12) {
+                    BrandScopeLabel(quickGroceryText("Private on this iPhone"), systemImage: "lock")
+                    LedgerQuickGroceryEntry(model: ledger, prominent: true)
+                    if ledger.shop == nil {
+                        Text(tr("Works offline. No account needed."))
+                            .font(.footnote).foregroundStyle(Theme.secondary)
                     }
                 }
-                VStack(alignment: .leading, spacing: 12) {
-                    LedgerQuickGroceryEntry(model: ledger)
-                    if let shop = ledger.shop {
-                        Text(shop.title).font(.title2.bold()).accessibilityAddTraits(.isHeader)
-                        if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
-                            Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
-                        }
-                    } else {
-                        comparePacks.foregroundStyle(Theme.action)
-                        Button { showingFirstList = true } label: {
-                            Label(ledgerText("Add a list"), systemImage: "list.bullet")
-                                .font(.headline).frame(minHeight: 44)
-                        }.disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("shop.addFirstList")
-                        Button(shoppingText("Standing list")) { showingStandingList = true }
-                            .frame(minHeight: 44).disabled(!ledger.ready).accessibilityIdentifier("shop.standingList")
-                        Text(tr("Works offline. No account needed.")).font(.footnote).foregroundStyle(Theme.secondary)
-                    }
-                    RestorableShoppingListLink {
-                        Label(ledger.shop == nil ? ledgerText("Start pickup") : ledgerText("Shopping list"), systemImage: "list.bullet")
-                            .font(.headline).fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                    }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
-                    if pickup.pantryRouteAvailable || pantryVoicePrompt?.holdsPresentation() == true {
-                        if #available(iOS 18, *), household.projection?.canBrowseHouseholdTonight != true {
-                            NavigationLink { PantrySetupView(pickup: pickup, ledger: ledger) } label: { pantryLabel }
-                                .accessibilityIdentifier("shop.myPantry")
-                        } else {
-                            // iOS 17 can repeatedly rebuild Shop while pushing the observed pantry setup.
-                            Button { showingPantry = true } label: { pantryLabel }
-                                .accessibilityIdentifier("shop.myPantry")
-                        }
-                    } else if pickup.pantryRestartAvailable {
-                        PantryRestartButton(pickup: pickup)
-                    }
-                    if ledger.shop == nil && (ledger.saving || ledger.hasPendingSave || ledger.error != nil) {
-                        LedgerSaveStatus(model: ledger)
-                    } else if let retryPrivatePantry {
-                        Button(pantryText("Retry opening My Pantry"), action: retryPrivatePantry)
-                            .frame(minHeight: 44).accessibilityIdentifier("shop.retryMyPantry")
-                    }
-                    if let shop = ledger.shop {
-                        if let closed = pickup.journeys.first(where: { $0.id == shop.id })?.closedAt {
-                            Text(pTr("Closed") + " · " + closed.formatted(date: .abbreviated, time: .shortened))
-                        } else if let journey = pickup.resumableJourney(for: shop.id), let basket = journey.basket, basket.phase != .draft {
-                            if shop.basis.slot == nil, let slot = journey.context?.slot, !slot.isEmpty {
-                                Text(pTr("Pickup or delivery slot") + " · " + slot)
-                            }
-                            if basket.phase == .frozen {
-                                NavigationLink(pTr("Prepare retailer handoff")) {
-                                    pickupDestination(journey.id) { PickupHandoffView(model: pickup, shopID: journey.id) }
-                                }.frame(minHeight: 44)
-                            } else {
-                                let now = Date()
-                                let arrivals = journey.pickup?.receipts.map(\.receivedAt).filter { $0 > now } ?? []
-                                TimelineView(.explicit([now] + arrivals.sorted())) { context in
-                                    if journey.shouldResumeArrival(at: context.date) {
-                                        NavigationLink(pTr("Record what came home")) {
-                                            pickupDestination(journey.id) { PickupArrivalView(model: pickup) }
-                                        }.frame(minHeight: 44)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if canReviewCheckout {
-                        NavigationLink {
-                            CheckOneChangeView()
-                        } label: {
-                            Label(ledger.shop == nil ? CheckOneChangeView.title : tr("Review checkout"),
-                                  systemImage: "cart")
-                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                .contentShape(Rectangle())
-                        }.foregroundStyle(Theme.action).accessibilityIdentifier("shop.checkOneChange")
-                    }
-                    if ledger.shop != nil {
-                        FirstListResumeButton(model: ledger, showingEditor: showingFirstList) { showingFirstList = true }
-                        comparePacks.foregroundStyle(Theme.action)
-                    }
-                    NavigationLink {
-                        UrgentRepairView(model: pickup).environment(\.pickupLedger, ledger)
-                    } label: {
-                        Text(tr("Something is missing")).font(.body).fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                    }.foregroundStyle(Theme.action).accessibilityIdentifier("urgentRepairShortcut")
-                    if let saved = [ledger.savedAt, pickup.journeys.first?.savedAt, model.records.first?.savedAt].compactMap({ $0 }).max() {
-                        Text(tr("Last local save") + " · " + saved.formatted(date: .abbreviated, time: .shortened))
-                            .font(.footnote).accessibilityIdentifier("shop.localSave")
-                    }
-                    if !household.locked, let shared = household.sharedShop { ShopSyncStatus(model: shared) }
-                    FamilyInboxContextLink()
-                    if !pickup.journeys.isEmpty {
-                        NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
-                            .frame(minHeight: 44)
-                    }
-                }.padding(20).background(Theme.surface, in: RoundedRectangle(cornerRadius: 20))
-                NavigationLink {
-                    DeviceSurfacesEntry(composition: surfaces)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "iphone").foregroundStyle(Theme.secondary)
-                        Text(SurfaceCopy.text("Device shortcuts")).font(.subheadline.weight(.semibold))
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.forward").font(.footnote)
-                    }
-                    .frame(minHeight: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).foregroundStyle(Theme.action)
-                    .accessibilityIdentifier("deviceShortcuts")
+                if beganWithEmptyList { tripSummary }
+                shopTools
+                if let saved = [ledger.savedAt, pickup.journeys.first?.savedAt, model.records.first?.savedAt].compactMap({ $0 }).max() {
+                    Text(tr("Last local save") + " · " + saved.formatted(date: .abbreviated, time: .shortened))
+                        .font(.footnote).foregroundStyle(Theme.secondary).accessibilityIdentifier("shop.localSave")
+                }
+                if !household.locked, let shared = household.sharedShop { ShopSyncStatus(model: shared) }
+                FamilyInboxContextLink()
                 if let error = model.error {
-                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color("error"))
+                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Theme.error)
                     Button(tr("Try again")) { Task { await model.open(); await model.refresh() } }.frame(minHeight: 44)
                 }
                 if !model.records.isEmpty {
-                    Text(tr("Pick up where you left off")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
-                    ForEach(model.records.prefix(5), id: \.id) { record in
-                        SavedRow(record: record)
-                            .padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(tr("Pick up where you left off")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
+                        ForEach(model.records.prefix(5), id: \.id) { record in
+                            SavedRow(record: record)
+                            Divider()
+                        }
                     }
                 }
-            }.padding(20)
+            }.frame(maxWidth: 640, alignment: .leading)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20).padding(.vertical, 16)
         }.accessibilityIdentifier("shopContentScroll")
+    }
+
+    @ViewBuilder private var tripSummary: some View {
+        if let shop = ledger.shop {
+            VStack(alignment: .leading, spacing: 8) {
+                Label(quickGroceryText("Current pickup"), systemImage: "cart")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                Text(shop.title).font(.title.bold()).accessibilityAddTraits(.isHeader)
+                if !shop.basis.branch.isEmpty { Text(shop.basis.branch) }
+                if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
+                    Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
+                        .font(.subheadline).foregroundStyle(Theme.secondary)
+                }
+                if let closed = pickup.journeys.first(where: { $0.id == shop.id })?.closedAt {
+                    Text(pTr("Closed") + " · " + closed.formatted(date: .abbreviated, time: .shortened))
+                    shoppingListLink
+                } else if let journey = pickup.resumableJourney(for: shop.id) {
+                    if shop.basis.slot == nil, let slot = journey.context?.slot, !slot.isEmpty {
+                        Text(pTr("Pickup or delivery slot") + " · " + slot).font(.subheadline)
+                    }
+                    tripAction(journey, shop: shop)
+                } else { resumeList(shop) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+            .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(Theme.divider).accessibilityHidden(true) }
+        } else if let journey = pickup.resumableJourney(for: nil), !journey.offers.isEmpty {
+            tripAction(journey, shop: nil)
+        }
+    }
+
+    private func tripAction(_ journey: PickupJourney, shop: ShoppingLedger?) -> some View {
+        let now = Date()
+        let changes = journey.offers.map(\.deadline.cutoff) + (journey.pickup?.receipts.map(\.receivedAt) ?? [])
+        return TimelineView(.explicit([now] + changes.filter { $0 > now }.sorted())) { context in
+            if let offer = journey.nextUnfilledOffer(at: context.date) {
+                let expired = context.date >= offer.deadline.cutoff
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(pTr(expired ? "Await pickup · fill still unknown" : "Decision pending before cutoff"))
+                        .font(.headline).accessibilityIdentifier("shop.resumeOfferStatus")
+                    Text(offer.replacement)
+                    Text(pTr("Cutoff") + " · " + pickupOfferCutoffText(offer) + " · " + offer.deadline.timeZoneID)
+                    NavigationLink(pTr(expired ? "Record what came home" : "Review a store offer")) {
+                        pickupDestination(journey.id) {
+                            if expired { PickupArrivalView(model: pickup) }
+                            else { PickupOfferView(model: pickup) }
+                        }
+                    }.buttonStyle(PrimaryAction()).accessibilityIdentifier("shop.resumeOffer")
+                    if shop != nil { shoppingListLink }
+                }
+            } else if journey.basket?.phase == .frozen {
+                VStack(alignment: .leading, spacing: 4) {
+                    NavigationLink(pTr("Prepare retailer handoff")) {
+                        pickupDestination(journey.id) { PickupHandoffView(model: pickup, shopID: journey.id) }
+                    }.buttonStyle(PrimaryAction())
+                    if shop != nil { shoppingListLink }
+                }
+            } else if journey.shouldResumeArrival(at: context.date) {
+                VStack(alignment: .leading, spacing: 4) {
+                    NavigationLink(pTr("Record what came home")) {
+                        pickupDestination(journey.id) { PickupArrivalView(model: pickup) }
+                    }.buttonStyle(PrimaryAction())
+                    if shop != nil { shoppingListLink }
+                }
+            } else if let shop {
+                if journey.basket?.phase == .reportedPlaced { shoppingListLink }
+                else { resumeList(shop) }
+            }
+        }
+    }
+
+    @ViewBuilder private func resumeList(_ shop: ShoppingLedger) -> some View {
+        if shop.lines.contains(where: { $0.isChecked && !$0.isHandled && !$0.isTrashed }),
+           shop.lines.contains(where: { !$0.isChecked && !$0.isHandled && !$0.isTrashed }) {
+            Button(quickGroceryText("Resume picking")) { inStoreShop = InStoreSelection(id: shop.id) }
+                .buttonStyle(PrimaryAction()).accessibilityIdentifier("shop.resumePicking")
+            shoppingListLink
+        } else {
+            shoppingListLink.buttonStyle(PrimaryAction())
+        }
+    }
+
+    private var shoppingListLink: some View {
+        RestorableShoppingListLink {
+            Label(ledgerText("Shopping list"), systemImage: "list.bullet")
+                .frame(minHeight: 44)
+        }.accessibilityIdentifier("openPickupList")
+    }
+
+    private var shopTools: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if ledger.shop == nil {
+                VStack(alignment: .leading, spacing: 0) {
+                    Button { showingFirstList = true } label: { ShopToolLabel(ledgerText("Add a list"), "text.badge.plus", chevron: true) }
+                        .disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave)
+                        .accessibilityIdentifier("shop.addFirstList")
+                    Divider()
+                    NavigationLink { ComparisonView() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right", chevron: true) }
+                        .accessibilityIdentifier("newComparison")
+                    Divider()
+                    RestorableShoppingListLink { ShopToolLabel(ledgerText("Start pickup"), "cart", chevron: true) }
+                        .accessibilityIdentifier("openPickupList")
+                }
+                .buttonStyle(.plain).padding(.horizontal, 16).padding(.vertical, 4)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+                .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(Theme.divider).accessibilityHidden(true) }
+                DisclosureGroup(isExpanded: $showingMoreTools) { secondaryShopTools } label: {
+                    Text(quickGroceryText("More shopping tools")).font(.headline)
+                }
+                .disclosureGroupStyle(LabeledFormDisclosureStyle(label: quickGroceryText("More shopping tools"), identifier: "shop.moreTools"))
+            } else {
+                Text(quickGroceryText("Shopping tools")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                secondaryShopTools
+                FirstListResumeButton(model: ledger, showingEditor: showingFirstList) { showingFirstList = true }
+            }
+        }
+    }
+
+    private var secondaryShopTools: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if ledger.shop == nil {
+                Button { showingStandingList = true } label: { ShopToolLabel(shoppingText("Standing list"), "list.star") }
+                    .disabled(!ledger.ready).accessibilityIdentifier("shop.standingList")
+            } else {
+                NavigationLink { ComparisonView() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right") }
+                    .accessibilityIdentifier("newComparison")
+            }
+            if canReviewCheckout {
+                NavigationLink { CheckOneChangeView() } label: {
+                    ShopToolLabel(ledger.shop == nil ? CheckOneChangeView.title : tr("Review checkout"), "cart")
+                }.accessibilityIdentifier("shop.checkOneChange")
+            }
+            NavigationLink { UrgentRepairView(model: pickup).environment(\.pickupLedger, ledger) } label: {
+                ShopToolLabel(tr("Something is missing"), "basket")
+            }.accessibilityIdentifier("urgentRepairShortcut")
+            pantryShortcut
+            NavigationLink { DeviceSurfacesEntry(composition: surfaces) } label: {
+                ShopToolLabel(SurfaceCopy.text("Device shortcuts"), "iphone")
+            }.accessibilityIdentifier("deviceShortcuts")
+            if !pickup.journeys.isEmpty {
+                NavigationLink { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) } label: {
+                    ShopToolLabel(tr("Pickup, repairs and handoffs"), "shippingbox")
+                }
+            }
+        }.buttonStyle(.plain)
+    }
+
+    @ViewBuilder private var pantryShortcut: some View {
+        if pickup.pantryRouteAvailable || pantryVoicePrompt?.holdsPresentation() == true {
+            if #available(iOS 18, *), household.projection?.canBrowseHouseholdTonight != true {
+                NavigationLink { PantrySetupView(pickup: pickup, ledger: ledger) } label: {
+                    ShopToolLabel(pantryText("My Pantry"), "cabinet")
+                }.accessibilityIdentifier("shop.myPantry")
+            } else {
+                // iOS 17 needs a separate presentation when Shop observes pantry setup.
+                Button { showingPantry = true } label: { ShopToolLabel(pantryText("My Pantry"), "cabinet") }
+                    .accessibilityIdentifier("shop.myPantry")
+            }
+        } else if pickup.pantryRestartAvailable {
+            PantryRestartButton(pickup: pickup)
+        } else if let retryPrivatePantry {
+            Button(pantryText("Retry opening My Pantry"), action: retryPrivatePantry)
+                .frame(minHeight: 44).accessibilityIdentifier("shop.retryMyPantry")
+        }
+    }
+}
+
+private struct ShopToolLabel: View {
+    let title: String
+    let symbol: String
+    let chevron: Bool
+    @ScaledMetric(relativeTo: .body) private var rowHeight: CGFloat = 44
+    @Environment(\.isEnabled) private var enabled
+
+    init(_ title: String, _ symbol: String, chevron: Bool = false) {
+        self.title = title
+        self.symbol = symbol
+        self.chevron = chevron
+    }
+    var body: some View {
+        HStack(spacing: 8) {
+            Label {
+                Text(title).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: symbol)
+            }
+            .font(.body.weight(.medium))
+            if chevron {
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.forward").font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.secondary).accessibilityHidden(true)
+            }
+        }.foregroundStyle(enabled ? Theme.action : Theme.secondary)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, minHeight: max(44, rowHeight), alignment: .leading)
+            .contentShape(Rectangle())
     }
 }
 
@@ -589,44 +723,65 @@ struct SavedRow: View {
 
 struct RecordsView: View {
     @EnvironmentObject private var household: HouseholdModel
-    @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var ledger: LedgerModel
+    private var hasSharedRecordsAccess: Bool {
+        guard !household.locked, household.identity != nil, household.service != nil,
+              let scope = household.projection, scope.enrolled, scope.grantId == nil else { return false }
+        return ["organizer", "shopper", "contributor"].contains(scope.role)
+    }
+
     var body: some View {
         List {
-            ManagedViewsContextLink()
-            PickupPlacedOrdersLink(model: pickup)
-            Section(ht("Shared pickup records")) {
-                if !household.locked, household.identity != nil,
-                   let scope = household.projection, scope.enrolled, scope.grantId == nil {
-                    NavigationLink(ht("Find a past shared pickup")) {
-                        HouseholdShopSelector(household: household, includingClosed: true)
-                    }.accessibilityIdentifier("records.chooseSharedPickup")
-                    NavigationLink(ht("Open selected shared pickup")) {
-                        HouseholdShopView(model: household)
-                    }.accessibilityIdentifier("records.sharedPickup")
-                    Text(ht("Choose a pickup to reopen its orders, deliveries and saved cook instructions."))
-                        .font(.footnote).foregroundStyle(Theme.secondary)
+            Section {
+                BrandScopeLabel(recordsText("On this iPhone"), systemImage: "lock")
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                PickupPlacedOrdersLink(model: pickup)
+                if pickup.pantryRouteAvailable {
+                    NavigationLink {
+                        PantrySetupView(pickup: pickup, ledger: ledger, destination: .receipts)
+                    } label: {
+                        Label(pantryText("Receipt history"), systemImage: "receipt")
+                    }.accessibilityIdentifier("records.privateReceipts")
+                    NavigationLink {
+                        PantrySetupView(pickup: pickup, ledger: ledger, destination: .prices)
+                    } label: {
+                        Label(pantryText("Private price history"), systemImage: "tag")
+                    }.accessibilityIdentifier("records.privatePrices")
                 }
-                NavigationLink(PlacementCopy.text("Shared placement reports")) {
-                    PlacementRecordsEntryView(household: household)
-                }.accessibilityIdentifier("records.sharedPlacementReports")
+                if pickup.journeys.contains(where: PickupDecisionEvidence.hasRecords) {
+                    PickupDecisionsLink(shopID: nil)
+                }
+                if !hasSharedRecordsAccess && (household.canUnlockPlacementEvidence || household.placementEvidenceUnlocked) {
+                    NavigationLink {
+                        PlacementRecordsEntryView(household: household)
+                    } label: { Label(PlacementCopy.text("Open my saved placement records"), systemImage: "lock.doc") }
+                    .accessibilityIdentifier("records.sharedPlacementReports")
+                }
+                if !pickup.journeys.isEmpty {
+                    NavigationLink {
+                        PickupHomeView(model: pickup).environment(\.pickupLedger, ledger)
+                    } label: { Label(tr("Pickup, repairs and handoffs"), systemImage: "shippingbox") }
+                }
             }
-            NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry() }
-            RecordsRecoveryLink()
-            if pickup.pantryRouteAvailable {
-                NavigationLink(pantryText("Private price history")) {
-                    PantrySetupView(pickup: pickup, ledger: ledger, opensPriceHistory: true)
-                }.accessibilityIdentifier("records.privatePrices")
+            Section(recordsText("Saved comparisons")) {
+                if !model.hasLoadedRecords, model.error == nil {
+                    ProgressView(recordsText("Loading saved comparisons…"))
+                } else if model.hasLoadedRecords, model.error == nil, model.records.isEmpty && model.unavailableRecords.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label(tr("Your comparisons live here"), systemImage: "scalemass").font(.headline)
+                        Text(tr("Save a pack comparison to return to the same amounts and prices, even offline."))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                    }.padding(.vertical, 4)
+                    NavigationLink {
+                        ComparisonView()
+                    } label: { Label(tr("Compare packs"), systemImage: "plus") }
+                    .accessibilityIdentifier("records.startComparison")
+                }
+                ForEach(model.records, id: \.id) { SavedRow(record: $0) }
             }
-            NavigationLink(HistoryCopy.text("Prices and period budgets")) {
-                HistoryRecordsEntryView(household: household)
-            }.accessibilityIdentifier("records.priceBudgetHistory")
-            if model.records.isEmpty && model.unavailableRecords.isEmpty {
-                ContentUnavailableView(tr("Your comparisons live here"), systemImage: "tray", description: Text(tr("Save a pack comparison to return to the same amounts and prices, even offline.")))
-            }
-            ForEach(model.records, id: \.id) { SavedRow(record: $0) }
             if !model.unavailableRecords.isEmpty {
                 Section(tr("Comparisons that need attention")) {
                     ForEach(model.unavailableRecords) { record in
@@ -639,10 +794,46 @@ struct RecordsView: View {
                     Button(tr("Try again")) { Task { await model.refresh() } }.frame(minHeight: 44)
                 }
             }
-            if !pickup.journeys.isEmpty {
-                NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
+            Section(recordsText("Files and recovery")) {
+                RecordsRecoveryLink()
             }
-            if let error = model.error { Text(error).foregroundStyle(Color("error")) }
+            if hasSharedRecordsAccess, let scope = household.projection {
+                Section(ht("Shared pickup records")) {
+                    NavigationLink(ht("Find a past shared pickup")) {
+                        HouseholdShopSelector(household: household, includingClosed: true)
+                    }.accessibilityIdentifier("records.chooseSharedPickup")
+                    if scope.shopId != nil {
+                        NavigationLink(ht("Open selected shared pickup")) {
+                            HouseholdShopView(model: household)
+                        }.accessibilityIdentifier("records.sharedPickup")
+                    }
+                    NavigationLink {
+                        PlacementRecordsEntryView(household: household)
+                    } label: { Label(PlacementCopy.text("Shared placement reports"), systemImage: "doc.text") }
+                    .accessibilityIdentifier("records.sharedPlacementReports")
+                    NavigationLink {
+                        HistoryRecordsEntryView(household: household)
+                    } label: { Label(HistoryCopy.text("Prices and period budgets"), systemImage: "calendar") }
+                    .accessibilityIdentifier("records.priceBudgetHistory")
+                    if household.decisionAccess != nil {
+                        NavigationLink {
+                            FamilyDecisionsEntry()
+                        } label: { Label(HistoryCopy.text("Family decision history"), systemImage: "person.2") }
+                    }
+                    ManagedViewsContextLink()
+                }
+            }
+            if let error = model.error {
+                Section {
+                    Text(error).foregroundStyle(Theme.error)
+                    Button(tr("Try again")) {
+                        Task {
+                            if model.ready { await model.refresh() }
+                            else { await model.open() }
+                        }
+                    }
+                }
+            }
         }.workingSurface().navigationTitle(tr("Records")).settingsButton().task { await model.refresh() }
     }
 }
@@ -668,7 +859,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("appearance") private var appearance = "system"
     var body: some View {
-        Form {
+        WorkingForm {
             Section(tr("Appearance")) {
                 Picker(tr("Appearance"), selection: $appearance) {
                     Text(tr("System")).tag("system")
@@ -685,7 +876,9 @@ struct SettingsView: View {
             Section(tr("Household")) {
                 NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
                 HouseholdPantryLink(household: household)
-                NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
+                if household.canOpenMembership {
+                    NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
+                }
             }
             if surfaces.privateAuthorized {
                 Section(SurfaceCopy.text("Device shortcuts")) {
@@ -708,7 +901,7 @@ struct SettingsView: View {
             #if DEBUG
             Section(tr("Development")) { NavigationLink(tr("Component gallery")) { ComponentGallery() } }
             #endif
-        }.workingSurface().navigationTitle(tr("Settings"))
+        }.navigationTitle(tr("Settings"))
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(tr("Done")) { dismiss() } } }
     }
 }

@@ -52,11 +52,40 @@ struct PrivateShoppingSheet<Content: View>: View {
     }
 }
 
+/// Feedback belongs to the confirmed item. Its dated schedule ends after 120 ms
+/// and cannot replay when the row is reused or the app returns to the foreground.
+struct GroceryCheckCue {
+    let lineID: UUID
+    let began = Date()
+}
+
+struct GroceryCheckInset: View {
+    let cue: GroceryCheckCue?
+    let lineID: UUID
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scene
+    var body: some View {
+        if let cue, cue.lineID == lineID, !reduceMotion, scene == .active, Date().timeIntervalSince(cue.began) < 0.12 {
+            let frames = (0...8).map { cue.began.addingTimeInterval(Double($0) * 0.015) }
+            TimelineView(.explicit(frames)) { frame in
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Theme.action, lineWidth: 2)
+                    .opacity(max(0, min(1, 1 - frame.date.timeIntervalSince(cue.began) / 0.12)))
+            }
+            .allowsHitTesting(false).accessibilityHidden(true)
+        }
+    }
+}
+
 struct InStoreShoppingView: View {
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     @Environment(\.shoppingListAuthorization) private var authorize
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var cue: GroceryCheckCue?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scene
     @State private var editingPrice: ShoppingLine?
     private enum Focus: Hashable { case line(UUID), subtotal }
     @AccessibilityFocusState private var focus: Focus?
@@ -83,7 +112,7 @@ struct InStoreShoppingView: View {
                                             changePick(line, in: shop, checked: true, next: next)
                                         } label: {
                                             HStack {
-                                                Image(systemName: "circle")
+                                                Image(systemName: "square").font(.title3).foregroundStyle(Theme.controlEdge)
                                                 VStack(alignment: .leading) {
                                                     Text(line.name).font(.headline)
                                                     Text(ledgerQuantity(try? shop.quantity(forLineID: line.id))).font(.subheadline)
@@ -106,10 +135,17 @@ struct InStoreShoppingView: View {
                             Section(shoppingText("Picked items")) {
                                 ForEach(picked) { line in
                                     Button { editingPrice = line } label: {
-                                        VStack(alignment: .leading) {
-                                            Text(line.name).font(.headline)
-                                            Text(priceLabel(shop.priceForCurrentPick(lineID: line.id)))
-                                        }.frame(minHeight: 44, alignment: .leading)
+                                        HStack(alignment: .firstTextBaseline, spacing: 12) {
+                                            Image(systemName: "checkmark.square.fill")
+                                                .foregroundStyle(Theme.action).accessibilityHidden(true)
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(line.name).font(.headline).foregroundStyle(Theme.ink)
+                                                Text(priceLabel(shop.priceForCurrentPick(lineID: line.id)))
+                                                    .foregroundStyle(Theme.secondary).monospacedDigit()
+                                            }
+                                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                            .padding(.horizontal, 4)
+                                            .overlay { GroceryCheckInset(cue: cue, lineID: line.id) }
                                     }.accessibilityHint(shoppingText("Edit the price for the entire picked amount."))
                                     .accessibilityIdentifier("inStorePrice-\(line.id)")
                                     .accessibilityAction(named: Text(shoppingFormat("Undo pick of %@", line.name))) {
@@ -118,30 +154,27 @@ struct InStoreShoppingView: View {
                                 }
                             }
                         }
+                        if typeSize.isAccessibilitySize {
+                            Section { subtotalSummary(shop, last: picked.first).id(Focus.subtotal) }
+                        }
                     }
+                    .workingSurface()
                     .disabled(model.saving)
                     .safeAreaInset(edge: .bottom, spacing: 0) {
-                        let subtotal = shop.pickedCartSubtotal
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(shoppingFormat("%@ for %lld of %lld picked items", moneyText(subtotal.total),
-                                Int64(subtotal.priced), Int64(subtotal.picked))).font(.headline)
-                                .accessibilityFocused($focus, equals: .subtotal)
-                                .accessibilityIdentifier("inStoreSubtotal")
-                            Text(shoppingText("Entered item totals before checkout charges.")).font(.footnote)
-                            if let last = picked.first {
-                                ViewThatFits(in: .horizontal) {
-                                    HStack { lastPickActions(last, shop: shop) }
-                                    VStack(alignment: .leading) { lastPickActions(last, shop: shop) }
-                                }
-                            }
-                        }.frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
-                            .padding(.vertical, 6).background(.regularMaterial)
-                            .disabled(model.saving || model.hasPendingSave)
+                        if !typeSize.isAccessibilitySize {
+                            subtotalSummary(shop, last: picked.first)
+                                .padding(.horizontal).padding(.vertical, 6).background(Theme.surface)
+                                .overlay(alignment: .top) { Divider() }
+                        }
                     }
                     .onChange(of: pendingFocus) { _, target in
                         guard let target else { return }
-                        if case let .line(id) = target, UIAccessibility.isVoiceOverRunning {
-                            reader.scrollTo(id, anchor: .center)
+                        if UIAccessibility.isVoiceOverRunning {
+                            switch target {
+                            case .line(let id): reader.scrollTo(id, anchor: .center)
+                            case .subtotal:
+                                if typeSize.isAccessibilitySize { reader.scrollTo(Focus.subtotal, anchor: .top) }
+                            }
                         }
                         Task { @MainActor in
                             await Task.yield()
@@ -156,6 +189,22 @@ struct InStoreShoppingView: View {
             }
         }.navigationTitle(shoppingText("Shop in store"))
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
+    }
+
+    private func subtotalSummary(_ shop: ShoppingLedger, last: ShoppingLine?) -> some View {
+        let subtotal = shop.pickedCartSubtotal
+        return VStack(alignment: .leading, spacing: 5) {
+            Text(shoppingFormat("%@ for %lld of %lld picked items", moneyText(subtotal.total),
+                Int64(subtotal.priced), Int64(subtotal.picked))).font(.headline).monospacedDigit()
+                .accessibilityFocused($focus, equals: .subtotal)
+                .accessibilityIdentifier("inStoreSubtotal")
+            Text(shoppingText("Entered item totals before checkout charges.")).font(.footnote)
+            if let last {
+                let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 12))
+                layout { lastPickActions(last, shop: shop) }
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading)
+            .disabled(model.saving || model.hasPendingSave)
     }
 
     @ViewBuilder private func lastPickActions(_ last: ShoppingLine, shop: ShoppingLedger) -> some View {
@@ -184,6 +233,7 @@ struct InStoreShoppingView: View {
                       current.lines.contains(where: { $0.id == line.id && !$0.isHandled && !$0.isTrashed }) else { throw LedgerError.stalePreview }
                 try current.setChecked(lineID: line.id, checked: checked)
             }) else { return }
+            cue = checked && !reduceMotion && scene == .active ? GroceryCheckCue(lineID: line.id) : nil
             pendingFocus = next.map(Focus.line) ?? .subtotal
         }
     }

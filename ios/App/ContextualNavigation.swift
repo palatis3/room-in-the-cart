@@ -2,6 +2,13 @@ import SwiftUI
 import Combine
 import CoreDomain
 
+extension HouseholdModel {
+    var usesScopedHouseholdRoot: Bool {
+        guard let scope = projection else { return false }
+        return scope.grantId != nil || !scope.enrolled || !["shopper", "organizer"].contains(scope.role)
+    }
+}
+
 @MainActor func contextualScope(_ household: HouseholdModel) -> ContextualHouseholdScope? {
     guard !household.locked, let identity = household.identity, let scope = household.projection,
           scope.enrolled, scope.grantId == nil, ["shopper", "organizer"].contains(scope.role) else { return nil }

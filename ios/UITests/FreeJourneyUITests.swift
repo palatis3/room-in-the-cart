@@ -18,7 +18,7 @@ import XCTest
 #if DEBUG && targetEnvironment(simulator)
     func testLunchHoldShowsBackingAndShortfallAfterRestartAndPartialRelease() throws {
         launch(reset: true)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
         let name = app.textFields["pantry.foodName"]
@@ -53,7 +53,7 @@ import XCTest
         let release = app.buttons["Release food from this reservation"]
 
         restart()
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons[batchID])
         reveal(backing)
         XCTAssertEqual(backing.value as? String, "2 units")
@@ -141,7 +141,7 @@ import XCTest
         tap(app.buttons["Done"])
         restart()
         tap(app.tabBars.buttons["Shop"])
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
         fill(lotName, into: "pantry.foodName")
@@ -213,7 +213,7 @@ import XCTest
         tapVisibleFormRow(cancel, marker: "FINISH_PACKAGE_CANCEL")
         XCTAssertFalse(app.buttons["tonight.apply"].exists, app.debugDescription)
         restart()
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons[lotID])
         let restoredBacking = element(backingID)
         reveal(restoredBacking)
@@ -230,7 +230,7 @@ import XCTest
 
     func testProductBatchManualBarcodeRepeatNeedsTwoPackagesAndConfirmedFoodSurvivesRelaunch() {
         launch(reset: true, privateRecovery: true)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
         let wraps = lots.matching(NSPredicate(format: "label BEGINSWITH %@", "Wraps"))
@@ -288,7 +288,7 @@ import XCTest
         XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
         app.terminate()
         launch(reset: false)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         let oats = lots.matching(NSPredicate(format: "label BEGINSWITH %@", "Rolled oats"))
         reveal(oats.firstMatch)
         XCTAssertEqual(oats.count, 1)
@@ -305,7 +305,7 @@ import XCTest
     // The qualification device is seeded with the three dated images from scripts/fixtures/pantry_product_photos.swift.
     func testSelectedPhotosAndBarcodeAreEditedTogetherAndOnlyConfirmedPackagesPersist() {
         launch(reset: true)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.productBatch"])
         enableSwitch("productBatch.photoConsent")
@@ -358,7 +358,7 @@ import XCTest
         tap(commit)
         XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
         restart()
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
         for (name, quantity) in [("Green lentils", "400"), ("Reviewed bean jar", "750")] {
             let lot = lots.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
@@ -372,7 +372,7 @@ import XCTest
 
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
         launch(reset: true)
-        let pantry = app.buttons["shop.myPantry"]
+        var pantry: XCUIElement { app.shopToolButton("shop.myPantry") }
         XCTAssertTrue(pantry.waitForExistence(timeout: 12), "Pantry entry is missing from the empty Shop")
         pantry.tap()
         tap(app.buttons["pantry.setup.apply"])
@@ -410,7 +410,7 @@ import XCTest
 
     func testPrivateLotPrintedWordingCanBeReviewedReopenedInSpanishAndRemoved() {
         launch(reset: true)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
         fill("Green lentils", into: "pantry.foodName")
@@ -429,7 +429,7 @@ import XCTest
         XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
         app.terminate()
         launch(reset: false, spanish: true)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(lot)
         XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
         tap(app.buttons["pantry.packageDate"])
@@ -442,7 +442,7 @@ import XCTest
 
     func testPantryManualCheckDateRemainsAvailableWhenDigestPermissionIsDenied() {
         launch(reset: true)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
         tap(app.textFields["pantry.foodName"])
@@ -459,7 +459,7 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 10))
         app.terminate()
         launch(reset: false)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.digest"])
         let item = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Green lentils")).firstMatch
         XCTAssertTrue(item.waitForExistence(timeout: 10))
@@ -515,7 +515,7 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Check date saved."].waitForExistence(timeout: 15))
         app.terminate()
         app.launch()
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.digest"])
         optInToHomeSummary("adultHomeSummary.useSoon")
         placeWidgetAndColdTap(widgetTitle: "Use soon", expectedCount: "Batches to check today or earlier: 1")
@@ -563,7 +563,7 @@ import XCTest
     private func launchAndAddWidgetLentils() {
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
         tap(app.textFields["pantry.foodName"])
@@ -624,7 +624,7 @@ import XCTest
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         tap(app.tabBars.buttons["Shop"])
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         let setup = app.buttons["pantry.setup.apply"]
         if setup.waitForExistence(timeout: 3) { tap(setup) }
         tap(app.buttons["pantry.add"])
@@ -679,7 +679,7 @@ import XCTest
 
     func testOptionalFoodKeeperMatchingKeepsTheSignedOutManualGuideAvailable() {
         launch(reset: true)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
         fill("Canned chicken", into: "pantry.foodName")
@@ -716,7 +716,7 @@ import XCTest
         }
         let name = spanish ? "Pollo enlatado" : "Canned chicken"
         launch(reset: true, spanish: spanish)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
         tap(app.textFields["pantry.foodName"])
@@ -748,7 +748,7 @@ import XCTest
         XCTAssertEqual(status.label, spanish ? "Se guardó el intervalo de calidad." : "Quality range saved.")
         app.terminate()
         launch(reset: false, spanish: spanish)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(row)
         let source = element("pantry.foodKeeper.source")
         XCTAssertTrue(source.waitForExistence(timeout: 8))
@@ -876,7 +876,7 @@ import XCTest
         tap(paid)
         XCTAssertTrue(app.staticTexts["Manually confirmed paid price"].waitForExistence(timeout: 5))
         tap(app.tabBars.buttons["Shop"])
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 8))
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'pantry.lot.'")).count, 0)
     }
@@ -894,7 +894,7 @@ import XCTest
         XCTAssertTrue(app.staticTexts["fixture.receipt.exported"].waitForExistence(timeout: 10), app.debugDescription)
         app.terminate()
         launch(reset: true)
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.receipt"])
         tap(app.buttons["receipt.document"])
@@ -1069,7 +1069,7 @@ import XCTest
         saveSourcePhoto()
         app.terminate()
         launch(reset: true)
-        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
+        tap(app.shopToolButton("shop.myPantry")); tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.receipt"])
         let screenshot = app.buttons["receipt.chooseScreenshot"]
         XCTAssertTrue(screenshot.waitForExistence(timeout: 5) && screenshot.isHittable, app.debugDescription)
@@ -1144,7 +1144,7 @@ import XCTest
         XCTAssertTrue(stage.waitForNonExistence(timeout: 12), app.debugDescription)
         app.terminate()
         launch(reset: true, sharedReceiptToken: token)
-        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
+        tap(app.shopToolButton("shop.myPantry")); tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
         let open = app.buttons["Open shared receipt"].firstMatch
         XCTAssertTrue(open.waitForExistence(timeout: 12), app.debugDescription); open.tap()
@@ -1238,7 +1238,7 @@ import XCTest
 
     func testRescanReviewRequiresChoosingTheOriginalBeforeSaving() {
         launch(reset: true)
-        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.shopToolButton("shop.myPantry"))
         openReceiptAfterPantrySetup()
         reviewManualOatsAtMarket()
         receiptTap(app.buttons["receipt.commit"])
@@ -1246,7 +1246,7 @@ import XCTest
         receiptTap(app.buttons["Done"])
         app.terminate()
         launch(reset: false)
-        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.shopToolButton("shop.myPantry"))
         receiptTap(app.buttons["pantry.receipt"])
         reviewManualOatsAtMarket()
         let original = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "receipt.rescan.candidate.")).firstMatch
@@ -1267,7 +1267,7 @@ import XCTest
 
     func testReceiptPaidTotalCanBeMarkedUnknownWithoutBecomingFree() {
         launch(reset: true)
-        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.shopToolButton("shop.myPantry"))
         openReceiptAfterPantrySetup()
         reviewManualOatsAtMarket(paidPrintedTotal: true)
         receiptTap(app.buttons["receipt.commit"])
@@ -1286,7 +1286,7 @@ import XCTest
 
         app.terminate()
         launch(reset: false)
-        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.shopToolButton("shop.myPantry"))
         receiptTap(app.buttons["pantry.receiptHistory"])
         receiptTap(edit)
         XCTAssertTrue(app.navigationBars["Correct paid price"].waitForExistence(timeout: 8))
@@ -1307,7 +1307,7 @@ import XCTest
 
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         launch(reset: true)
-        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.shopToolButton("shop.myPantry"))
         openReceiptAfterPantrySetup()
         let camera = app.buttons["receipt.takePhoto"]
         let screenshot = app.buttons["receipt.chooseScreenshot"]
@@ -1341,7 +1341,7 @@ import XCTest
         XCTAssertTrue(lot.waitForExistence(timeout: 8))
         app.terminate()
         launch(reset: false)
-        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.shopToolButton("shop.myPantry"))
         receiptTap(app.buttons["pantry.receiptHistory"])
         XCTAssertTrue(app.staticTexts["Oats"].firstMatch.waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["Paid price unknown"].exists)
@@ -2692,7 +2692,7 @@ import XCTest
 
     func testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable() {
         launch(reset: true)
-        tap(element("urgentRepairShortcut"))
+        tap(app.shopToolButton("urgentRepairShortcut"))
         enterNeed(food: "Peppers", meal: "Wednesday rice", required: "4", available: "1")
         enableSwitch("I checked this food’s identity and usable amount", diagnosticName: "free-repair-confirmation")
         tap(app.buttons["Save need and repair meal"])
@@ -2724,7 +2724,7 @@ import XCTest
 
     func testFreeCookCorrectionAndExplicitRecipientAcknowledgment() {
         launch(reset: true)
-        tap(element("urgentRepairShortcut"))
+        tap(app.shopToolButton("urgentRepairShortcut"))
         enterNeed(food: "Beans", meal: "Soup", required: "4", available: "1")
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
@@ -2770,7 +2770,7 @@ import XCTest
 
     func testNextShopCanCancelThenOpenOneFreshShoppingList() {
         launch(reset: true)
-        tap(element("urgentRepairShortcut"))
+        tap(app.shopToolButton("urgentRepairShortcut"))
         tap(app.textFields["Food that is short"])
         for (label, value) in [("Food that is short", "Rice"), ("Meal or purpose", "Dinner"),
                                ("Required amount", "3"), ("Usable amount available now", "1")] {
@@ -2817,7 +2817,7 @@ import XCTest
 
     func testCorrectFreezerBatchAndReadReservationsAfterRestart() {
         launch(reset: true)
-        tap(element("urgentRepairShortcut"))
+        tap(app.shopToolButton("urgentRepairShortcut"))
         enterNeed(food: "Wraps", meal: "Dinner", required: "4", available: "0")
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
@@ -2861,7 +2861,7 @@ import XCTest
 
     func testUrgentRepairWithoutAnOrderPersistsAcrossRestart() throws {
         launch(reset: true)
-        tap(element("urgentRepairShortcut"))
+        tap(app.shopToolButton("urgentRepairShortcut"))
         enterNeed(food: "Tortillas", meal: "Wednesday supper", required: "6", available: "2")
         enableSwitch("I checked this food’s identity and usable amount")
         fill("3", into: "Usable amount available now", replacing: true)
