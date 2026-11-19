@@ -1,4 +1,4 @@
-import {randomUUID} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {digest} from './database.js';
 import {storedDeliveryEvidence} from './delivery-evidence.js';
@@ -19,11 +19,30 @@ const lineSchema=z.object({
     method:z.enum(['textFile','pdfText','pdfOCR','imageOCR']),stage:z.enum(['order','receipt','finalInvoice'])}).strict().nullish().default(null)
 }).strict().refine(l=>l.received.amount.numerator>0 && l.received.unit===l.usable.unit && cmp(amount(l.usable),amount(l.received))<=0
   && (l.printed?(l.printed.page-1)*200+l.printed.line-1===l.ordinal:l.ordinal<200));
+// Same length-prefixed identity as CoreDomain. The server verifies the transaction
+// key before accepting a segmented source, even if only its first page was selected.
+function printedTransactionId(merchant:string,reference:string):string {
+  const hash=createHash('sha256').update('room-in-the-cart/receipt-acquisition/v1');
+  for(const field of ['transaction',merchant.trim().toLowerCase(),reference.trim()]) {
+    const bytes=Buffer.from(field),length=Buffer.alloc(8);
+    length.writeBigUInt64BE(BigInt(bytes.length));
+    hash.update(length).update(bytes);
+  }
+  const bytes=hash.digest().subarray(0,16);
+  bytes[6]=(bytes[6]! & 0x0f)|0x80;
+  bytes[8]=(bytes[8]! & 0x3f)|0x80;
+  const hex=bytes.toString('hex');
+  return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
+}
 export const householdReceiptBody=z.object({
   receiptId:id,imageId:id.nullish().default(null),layoutId:id.optional(),merchant:text(256),purchaseDay:z.iso.date(),zone:text(100),
-  reference:text(256).nullish().default(null),lines:z.array(lineSchema).min(1).max(50)
+  reference:text(256).nullish().default(null),segmentedPhotos:z.literal(true).optional(),lines:z.array(lineSchema).min(1).max(50)
 }).strict().refine(b=>new Set(b.lines.map(l=>l.ordinal)).size===b.lines.length &&
-  new Set(b.lines.flatMap(l=>l.delivery?[l.delivery.lotId]:[])).size===b.lines.filter(l=>l.delivery).length);
+  new Set(b.lines.flatMap(l=>l.delivery?[l.delivery.lotId]:[])).size===b.lines.filter(l=>l.delivery).length).refine(b=>{
+  if(!b.segmentedPhotos) return !b.lines.some(l=>l.printed?.method==='imageOCR' && l.printed.page>1);
+  return !!b.reference && !!b.imageId && !!b.layoutId && b.imageId!==b.receiptId &&
+    b.receiptId===printedTransactionId(b.merchant,b.reference) && b.lines.every(l=>l.printed?.method==='imageOCR');
+});
 type Body=z.infer<typeof householdReceiptBody>;
 type Row=Body['lines'][number];
 const layoutReview=()=>new ServiceError(409,'receipt_layout_review','Check the saved receipt. For a missed item, reopen its original file or add the food separately.');
