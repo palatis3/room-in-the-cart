@@ -237,8 +237,9 @@ struct LargePrintList: View {
             Section {
                 Text(shop.title).font(.largeTitle.bold())
                 if !shop.basis.branch.isEmpty { Text(shop.basis.branch).font(.title2) }
-                Text(ledgerText("Print active items and quantities in the current list order."))
+                Text(ledgerText("Prints active items in list order, with quantities and checkboxes."))
                 Button(ledgerText("Print shopping list")) { printList(groups) }
+                    .buttonStyle(PrimaryAction())
                     .disabled(printSession.active || groups.allSatisfy { $0.lines.isEmpty })
                     .accessibilityIdentifier("printShoppingList")
             }
