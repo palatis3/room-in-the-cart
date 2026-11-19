@@ -231,14 +231,12 @@ import XCTest
         app.launch()
         let shop = app.tabBars.buttons["Shop"]
         XCTAssertTrue(shop.waitForExistence(timeout: 30), app.debugDescription)
-        func dismissReceiptKeyboard(_ identifier: String) {
+        func dismissTypingTipIfPresented() {
             let tip = app.staticTexts["Speed up your typing by sliding your finger across the letters to compose a word."]
             if tip.exists {
                 tap(app.buttons["Continue"])
                 XCTAssertTrue(tip.waitForNonExistence(timeout: 5))
             }
-            tap(app.buttons[identifier])
-            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: identifier), app.debugDescription)
         }
         func allBatchIDs(prefix: String) -> Set<String> {
             // SwiftUI creates the remaining stock and correction rows as the list scrolls.
@@ -279,13 +277,21 @@ import XCTest
         tap(app.buttons["householdPantry.receipt"])
         tap(app.buttons["householdReceipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
+        let printedLines = "Oats 3 count USD 4.20\nBeans 5 count USD 6.10\nPaper bag fee"
         tap(wording)
-        wording.typeText("Oats 3 count USD 4.20\nBeans 5 count USD 6.10\nPaper bag fee")
-        dismissReceiptKeyboard("scan.sourceDone")
+        wording.typeText(printedLines)
+        dismissTypingTipIfPresented()
+        XCTAssertEqual(wording.value as? String, printedLines)
+        // Enter both pieces of source evidence in one edit session, then use the scanner's Done.
         let merchant = app.textFields["Source reference label"]
-        tap(merchant)
+        reveal(merchant, fullyVisible: true)
+        merchant.tap()
         merchant.typeText("Corner Market")
-        dismissReceiptKeyboard("scan.sourceDone")
+        dismissTypingTipIfPresented()
+        tap(app.buttons["scan.sourceDone"])
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "scan.sourceDone"), app.debugDescription)
+        XCTAssertEqual(merchant.value as? String, "Corner Market")
+        XCTAssertEqual(wording.value as? String, printedLines)
         tap(app.buttons["Review printed lines"])
         enableSwitch("I reviewed these lines as source evidence only.")
         tap(app.buttons["scan.receipt.review"])
@@ -294,7 +300,13 @@ import XCTest
             tap(app.buttons["receipt.action.\(ordinal)"])
             tap(app.buttons["Add a separate physical batch"])
             tap(app.buttons["receipt.printedQuantity.\(ordinal)"])
-            fill(usable, into: "receipt.usable.\(ordinal)")
+            let amount = app.textFields["receipt.usable.\(ordinal)"]
+            tap(amount)
+            dismissBilingualKeyboardCardIfPresent()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            amount.typeText(usable + XCUIKeyboardKey.return.rawValue)
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "householdReceipt.keyboardDone"), app.debugDescription)
+            XCTAssertEqual(amount.value as? String, usable)
             if ordinal == 0 {
                 let paid = app.buttons["receipt.printedPrice.0"]
                 reveal(paid, fullyVisible: true)
