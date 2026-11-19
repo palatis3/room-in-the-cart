@@ -93,6 +93,60 @@ struct WorkingForm<Content: View>: View {
     }
 }
 
+/// One input with a name that remains visible after a value has been entered.
+struct WorkingField<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title).font(.subheadline.weight(.medium)).foregroundStyle(Theme.secondary)
+                .accessibilityHidden(true)
+            content.accessibilityLabel(title)
+        }
+        .padding(.vertical, 3)
+    }
+}
+
+/// The item stays prominent while the detail identifies its location, source or count.
+struct WorkingRecordHeading: View {
+    let title: String
+    let detail: String
+    let systemImage: String
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    init(_ title: String, detail: String, systemImage: String) {
+        self.title = title
+        self.detail = detail
+        self.systemImage = systemImage
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            if !typeSize.isAccessibilitySize {
+                Image(systemName: systemImage)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Theme.onSelection)
+                    .frame(width: 40, height: 40)
+                    .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
+                    .accessibilityHidden(true)
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.title2.weight(.semibold)).foregroundStyle(Theme.ink)
+                Text(detail).font(.subheadline).foregroundStyle(Theme.secondary)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 4)
+    }
+}
+
 /// Keep expanded controls as separate Form rows. The native Chevron-only action
 /// lacked a useful label/hit area on iOS 17, so the disclosure header is one
 /// explicit, full-row semantic button using the normal expansion binding.
