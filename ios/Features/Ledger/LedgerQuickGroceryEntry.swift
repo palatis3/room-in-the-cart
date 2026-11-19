@@ -101,14 +101,11 @@ private struct QuickGroceryField: View {
             Text(quickGroceryText(householdMember ? "Add to my private list" : "Add a grocery"))
                 .font(prominent ? .largeTitle.bold() : .headline)
                 .foregroundStyle(Theme.ink).accessibilityAddTraits(.isHeader)
-            if typeSize.isAccessibilitySize {
-                Text(quickGroceryText("Grocery name")).font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text(quickGroceryText("Grocery name")).font(.subheadline)
+                .foregroundStyle(Theme.secondary).fixedSize(horizontal: false, vertical: true)
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout(spacing: 8))
             layout {
-                let placeholder = typeSize.isAccessibilitySize ? "" : quickGroceryText("Grocery name")
-                TextField("", text: groceryInput, prompt: Text(placeholder).foregroundStyle(Theme.secondary), axis: .vertical)
+                TextField("", text: groceryInput, axis: .vertical)
                     .textFieldStyle(.plain).font(.body)
                     .fixedSize(horizontal: false, vertical: !text.isEmpty)
                     .frame(height: emptyLineHeight)

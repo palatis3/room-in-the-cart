@@ -105,6 +105,7 @@ struct InStoreShoppingView: View {
                             if !group.lines.isEmpty {
                                 Section(group.aisle.isEmpty ? shoppingText("To pick") : group.aisle) {
                                     ForEach(group.lines) { line in
+                                        let quantity = shop.shoppingRowQuantity(for: line)
                                         Button {
                                             let index = visible.firstIndex(where: { $0.id == line.id }) ?? 0
                                             let others = visible.filter { $0.id != line.id }
@@ -115,13 +116,13 @@ struct InStoreShoppingView: View {
                                                 Image(systemName: "square").font(.title3).foregroundStyle(Theme.controlEdge)
                                                 VStack(alignment: .leading) {
                                                     Text(line.name).font(.headline)
-                                                    Text(ledgerQuantity(try? shop.quantity(forLineID: line.id))).font(.subheadline)
+                                                    if let quantity { Text(quantity).font(.subheadline) }
                                                     if !line.notes.isEmpty { Text(line.notes) }
                                                     if let exclusions = exclusionsByLine[line.id] { Text(exclusions) }
                                                 }
                                             }.frame(minHeight: 48)
                                         }.accessibilityLabel(ledgerFormat("Check %@", line.name))
-                                        .accessibilityValue(Text([ledgerQuantity(try? shop.quantity(forLineID: line.id)),
+                                        .accessibilityValue(Text([quantity ?? "",
                                             line.notes, exclusionsByLine[line.id] ?? ""].filter { !$0.isEmpty }.joined(separator: ", ")))
                                         .accessibilityFocused($focus, equals: .line(line.id))
                                         .accessibilityIdentifier("inStoreCheck-\(line.id)")

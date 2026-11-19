@@ -14,6 +14,27 @@ import CoreDomain
         return shop
     }
 
+    func testOnlyOneUnqualifiedNameOmitsTheQuantityFromShoppingRows() throws {
+        var shop = ShoppingLedger()
+        let oats = try XCTUnwrap(QuickGrocery.stage("Oats", in: shop))
+        try shop.commitImport(oats)
+        let plain = try XCTUnwrap(shop.lines.first)
+        XCTAssertNil(shop.shoppingRowQuantity(for: plain))
+        XCTAssertNil(try shop.quantity(forLineID: plain.id))
+        XCTAssertEqual(ledgerQuantity(try shop.quantity(forLineID: plain.id)), ledgerText("Quantity unresolved"))
+
+        let unknown = try shop.stageImport(text: "2–3 bags of rice")
+        try shop.commitImport(unknown)
+        XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerText("Quantity unresolved"))
+
+        _ = try shop.addProtectedNeed(name: "Milk", quantity: nil, purpose: "School lunch")
+        XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerText("Quantity unresolved"))
+
+        let amount = Quantity(amount: .one, unit: .count, originalLiteral: "1")
+        _ = try shop.addManualLine(name: "Apple", quantity: amount)
+        XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerQuantity(amount))
+    }
+
     func testChangingPickupsClearsOnlyThePreviousListsFilter() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

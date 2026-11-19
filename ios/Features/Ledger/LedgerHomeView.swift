@@ -308,8 +308,8 @@ struct LedgerHomeView: View {
     }
 
     private func row(_ line: ShoppingLine, shop: ShoppingLedger, exclusions: String?, departmentChoices: [String]) -> some View {
-        let quantity = ledgerQuantity(try? shop.quantity(forLineID: line.id))
-        let details = [quantity, exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
+        let quantity = shop.shoppingRowQuantity(for: line)
+        let details = [quantity ?? "", exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
         return HStack(alignment: .top, spacing: 10) {
             Button {
                 let visible = model.workspace.listLayout.groups(shop: shop, search: model.search).flatMap(\.lines)
@@ -337,7 +337,7 @@ struct LedgerHomeView: View {
                 } label: {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(line.name).font(.headline)
-                        Text(quantity).foregroundStyle(Theme.secondary)
+                        if let quantity { Text(quantity).foregroundStyle(Theme.secondary) }
                         if let exclusions { Text(verbatim: exclusions) }
                         if !line.notes.isEmpty { Text(line.notes) }
                     }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
