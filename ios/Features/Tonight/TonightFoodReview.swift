@@ -15,7 +15,7 @@ struct TonightFoodReview: View {
         Group {
             if !authorize() { Text(tonightText("Unlock your private workspace to review tonight’s meals.")) }
             else {
-                Form {
+                WorkingForm {
                     Text(food.name).font(.headline)
                     Text(food.detail)
                     Text(tonightText("Review the actual pantry product labels. If several batches share this food, review every batch. Recipe text does not establish these facts."))

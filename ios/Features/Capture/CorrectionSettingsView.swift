@@ -65,7 +65,7 @@ import SwiftUI
 
     var body: some View {
         ScrollViewReader { scroll in
-            Form {
+            WorkingForm {
                 if authorized {
                     Section(captureText("Spelling language")) {
                         Picker(captureText("Spelling language"), selection: Binding(get: { displayedSelection }, set: { selection = $0 })) {

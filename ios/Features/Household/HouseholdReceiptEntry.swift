@@ -113,7 +113,7 @@ struct HouseholdReceiptEntry: View {
         do { draft = try ReceiptImportDraft(source: source); invalid = false } catch { invalid = true }
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section(householdPantryText("Shared pantry destination")) {
                 Text(household).font(.headline)
                 Text(householdPantryText("Adults with pantry access can see the store, date, any receipt reference you enter and the selected food lines, including original wording, quantities, storage location and any prices you enter. The original file stays on this device."))

@@ -45,7 +45,7 @@ struct SharedRecoveryReview: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if allowed {
                 Section {
                     Text(verbatim: intent.replacement.title).font(.headline)

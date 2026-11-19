@@ -102,7 +102,7 @@ private struct SharedPantryRegistration: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 Section {
                     Picker(ht("Food source"), selection: $source) {
                         Text(ht("Food already at home")).tag(nil as UUID?)

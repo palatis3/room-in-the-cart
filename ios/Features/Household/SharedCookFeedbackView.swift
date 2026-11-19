@@ -20,7 +20,7 @@ struct SharedCookFeedbackView: View {
         child?.presented != true && household.sharedShop === model && model.canShareMealFeedback
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if allowed, let page, loadedScope == model.scope {
                 Section(cookingText("My household reactions")) {
                     Text(cookingText("Only the reactions you share here are visible to adults authorized for this cooking record."))
@@ -104,7 +104,7 @@ struct SharedFeedbackWithdrawalView: View {
             household.householdPantryScope == scope && household.projection?.capabilities.contains("my_feedback_withdrawal") == true
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if allowed, let page {
                 LabeledContent(cookingText("Meals with my shared feedback"), value: page.count.formatted())
                 if page.count > 0 {

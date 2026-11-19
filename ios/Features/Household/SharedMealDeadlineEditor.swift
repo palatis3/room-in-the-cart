@@ -58,7 +58,7 @@ private struct SharedMealDeadlinePicker: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             LabeledContent(sharedRecoveryText("Scheduled day"), value: sharedMealScheduleText(meal.day, locale: locale))
             NavigationLink {
                 List(zones, id: \.self) { zone in

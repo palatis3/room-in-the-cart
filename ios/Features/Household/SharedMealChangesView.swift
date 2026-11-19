@@ -95,7 +95,7 @@ private struct SharedMealChangeContent: View {
     @State private var notice: String?
     @FocusState private var inputFocus: String?
     var body: some View {
-        Form {
+        WorkingForm {
             if let page = model.page {
                 if (!page.shopper || seed != nil || dinnerID != nil) && model.review == nil && !model.hasPending { editor(page) }
                 if let review = model.review {

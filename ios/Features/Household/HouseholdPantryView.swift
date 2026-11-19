@@ -234,7 +234,7 @@ private struct HouseholdPantryEditor: View {
     @State private var invalid = false
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let reviewed {
                 Section(householdPantryText("Review pantry addition")) { PantryAdditionFacts(addition: reviewed) }
                 Button(householdPantryText("Edit addition")) { self.reviewed = nil }
@@ -297,7 +297,7 @@ private struct HouseholdPantryCountEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section(lot.foodName) {
                 LabeledContent(householdPantryText("Previous count"), value: deliveryQuantityText(lot.observation?.quantity))
                 if let reviewed {

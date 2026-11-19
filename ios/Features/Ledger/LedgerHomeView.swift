@@ -403,7 +403,7 @@ struct LedgerNewShopView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             TextField(ledgerText("Pickup name"), text: $title, axis: .vertical).accessibilityIdentifier("ledgerShopName")
                 .disabled(model.saving || model.hasPendingSave)
             LedgerSaveStatus(model: model, onRetried: { dismiss() })

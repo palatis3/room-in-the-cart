@@ -8,7 +8,7 @@ struct HouseholdDevicesView: View {
     @AccessibilityFocusState private var resultFocused: Bool
     init(model: HouseholdDevicesModel) { _model = StateObject(wrappedValue: model) }
     var body: some View {
-        Form {
+        WorkingForm {
             if model.live && !model.suspended {
                 Section {
                     Text(model.inventoryScope == "guardian_children" ? DeviceManagementCopy.text("Devices for children under your verified guardianship.") : DeviceManagementCopy.text("Enrolled access for this household. Each reference identifies one enrollment."))

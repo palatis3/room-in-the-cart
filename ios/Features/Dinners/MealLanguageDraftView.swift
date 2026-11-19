@@ -60,7 +60,7 @@ private struct MealLanguageDraftReview: View {
     private var text: String { wording.trimmingCharacters(in: .whitespacesAndNewlines) }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 if active {
                     if loading { ProgressView() }
                     else if available {

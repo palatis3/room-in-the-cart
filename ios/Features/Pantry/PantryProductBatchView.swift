@@ -33,7 +33,7 @@ struct PantryProductBatchView: View {
     private var authorized: Bool { model.phase == .ready && model.snapshot?.state.workspaceID == batch.workspaceID }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if !authorized {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if saved {
@@ -280,7 +280,7 @@ private struct PantryProductCandidateEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if authorized() {
                 Section {
                     Toggle(pantryText("Include this product"), isOn: $row.included).accessibilityIdentifier("productBatch.include")
@@ -426,7 +426,7 @@ private struct ManualBarcodeCorrectionView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 Section(pantryText("Barcode")) {
                     TextField(pantryText("Barcode"), text: $code)
                         .autocorrectionDisabled().textInputAutocapitalization(.never)

@@ -22,7 +22,7 @@ struct SharedOrderAmendmentView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if canRead {
                 if model.pending != nil {
                     Section(OrderAmendmentCopy.text("Pending confirmation")) {
@@ -203,7 +203,7 @@ private struct SharedAmendmentLineEditor: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 if choice.line == nil { TextField(OrderAmendmentCopy.text("Item name"), text: $name).focused($focus, equals: .name) }
                 else { Text(name) }
                 TextField(OrderAmendmentCopy.text("Confirmed packs"), text: $packs).keyboardType(.numberPad)

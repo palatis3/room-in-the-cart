@@ -42,7 +42,7 @@ struct ThreeDinnerBasketView: View {
     }
     private var recipes: [AcceptedDinner] { model.state.acceptedDinners.filter { selected.contains($0.id) } }
     var body: some View {
-        Form {
+        WorkingForm {
             if current {
                 if page == 0 { setup }
                 if page == 1 { evidence }

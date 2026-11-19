@@ -22,7 +22,7 @@ import SwiftUI
     private struct Mode: Identifiable { let kind: ScanKind; var id: String { kind.rawValue } }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(captureText("References are private source evidence. They do not change quantities, prices, payments or arrivals."))
                 Text(captureText("Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. You can choose references separately for an encrypted recovery file in Records."))

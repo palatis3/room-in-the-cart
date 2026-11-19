@@ -64,7 +64,7 @@ private struct RecipeStepDetail: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Text(verbatim: step.instruction).font(.title3).textSelection(.enabled)
             if let save {
                 Section(recordsText("Choose ingredients for this step")) {

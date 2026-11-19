@@ -180,7 +180,7 @@ private struct SharedFallbackCandidateView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let candidate, let library = model.library {
                 SharedFallbackRecipeFacts(recipe: candidate.recipe)
                 if candidate.usual { Text(fallbackText("Usual fallback")) }
@@ -230,7 +230,7 @@ private struct FallbackApprovalSheet: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 if model.canSuggest, model.library == review.library {
                     SharedFallbackRecipeFacts(recipe: review.recipe)
                     Toggle(fallbackText("Usual fallback"), isOn: $usual).accessibilityIdentifier("fallback.usual")

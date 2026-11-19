@@ -39,7 +39,7 @@ struct SharedCookCompletionView: View {
             model.scope.shopId.flatMap(UUID.init(uuidString:)) == shopID
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if allowed, model.pendingSharedCook, model.delivery == .waiting {
                 Button(cookingText("Retry saved cooking change")) { Task { await model.retry(); await load() } }
                     .disabled(model.busy)
@@ -107,7 +107,7 @@ struct SharedCookCompletionView: View {
         .sheet(item: $resolution) { row in
             if allowed, let review, let done = review.completion, let need = review.needs.first(where: { $0.id == row.needId }) {
                 NavigationStack {
-                    Form {
+                    WorkingForm {
                         Text(verbatim: need.name)
                         Picker(cookingText("Used from"), selection: $resolveLot) {
                             Text(cookingText("Choose a lot")).tag(nil as UUID?)

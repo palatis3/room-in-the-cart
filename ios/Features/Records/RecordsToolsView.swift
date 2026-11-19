@@ -716,7 +716,7 @@ private struct RecipePageEntryView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 TextField(recordsText("HTTPS recipe link"), text: $address)
                     .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                     .disabled(task != nil)
@@ -848,7 +848,7 @@ private struct ManualRecipeEntryView: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 TextField(recordsText("Meal title"), text: $title)
                     .focused($editing, equals: .title)
                 TextField(recordsText("Servings or yield, in your words"), text: $servings)

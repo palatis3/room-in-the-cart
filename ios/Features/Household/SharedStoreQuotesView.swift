@@ -49,7 +49,7 @@ private struct SharedStoreQuotesContent: View {
     private var displayedNotice: String? { (entering ? entryNotice : nil) ?? model.notice }
     var body: some View {
         ScrollViewReader { proxy in
-        Form {
+        WorkingForm {
             if let page = model.page {
                 Section {
                     Text(StoreQuoteCopy.text("Manual observations only. Enter two complete single-store plans for the same shared basket. No retailer, route, order, or location is contacted.")).accessibilityIdentifier("sharedQuotes.scope")

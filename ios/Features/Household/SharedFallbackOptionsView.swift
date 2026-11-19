@@ -38,7 +38,7 @@ struct SharedFallbackOptionsView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if live {
                 Section(target.title) {
                     Text(verbatim: sharedMealScheduleText(target.day))

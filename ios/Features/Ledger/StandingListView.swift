@@ -98,7 +98,7 @@ private struct StandingItemDetail: View {
     @Environment(\.dismiss) private var dismiss
     @State private var deleting = false
     var body: some View {
-        Form {
+        WorkingForm {
             if let current = model.workspace.shoppingLists.standing.first(where: { $0.id == item.id }) {
                 ShoppingIntentLabel(row: current.row)
                 Text(current.stores.joined(separator: " · "))
@@ -190,7 +190,7 @@ private struct StandingItemEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             TextField(shoppingText("Item name"), text: $name)
             TextField(shoppingText("Quantity (optional)"), text: $amount)
             Picker(shoppingText("Unit"), selection: $unit) {

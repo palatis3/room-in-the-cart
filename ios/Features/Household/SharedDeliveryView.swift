@@ -39,7 +39,7 @@ struct SharedDeliveryView: View {
     @State private var matchingSource: SharedDeliveryPage.Source?
 
     var body: some View {
-        Form {
+        WorkingForm {
             if model.canReadDelivery, model.scope.shopId == shopID {
                 NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model, shopID: shopID) }
                     .accessibilityIdentifier("delivery.financial")
@@ -154,7 +154,7 @@ private struct DeliveryMealMatches: View {
                                 let target = SharedDeliveryPage.IngredientMatch(occurrence: occurrence, ingredient: ingredient)
                                 let matched = source.matches?.contains(target) == true
                                 NavigationLink {
-                                    Form {
+                                    WorkingForm {
                                         LabeledContent(ht("Food that came home"), value: source.foodName)
                                         LabeledContent(ht("Confirmed usable quantity"), value: deliveryQuantityText(source.confirmed?.quantity))
                                         if !source.exclusionTags.isEmpty {
@@ -268,7 +268,7 @@ private struct DeliveryReservationEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 if let meal = reviewed.meals?.first(where: { $0.id == target.occurrenceId })?.meal {
                     LabeledContent(ht("Meal name"), value: meal.title)
@@ -393,7 +393,7 @@ private struct SharedDeliveryEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 switch action {
                 case .register(let line):
                     LabeledContent(ht("Ordered item"), value: line.name)

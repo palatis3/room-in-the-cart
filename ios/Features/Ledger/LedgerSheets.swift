@@ -95,7 +95,7 @@ struct LedgerImportView: View {
     var body: some View {
         let review = preview.map { LedgerImportReview(shop: shop, preview: $0, choices: choices) }
         return ScrollViewReader { scroll in
-            Form {
+            WorkingForm {
                 if let incomingWording {
                     Section(SurfaceCopy.text("Shortcut item")) {
                         Text(verbatim: incomingWording)
@@ -728,7 +728,7 @@ struct LedgerFactsView: View {
             || !retailerTotal.isEmpty || !includedCharges.isEmpty)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if !isCurrent {
                 Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
                 Button(ledgerText("Close")) { dismiss() }

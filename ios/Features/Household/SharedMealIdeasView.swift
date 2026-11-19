@@ -63,7 +63,7 @@ private struct SharedMealIdeaEditor: View {
     private var saved: SharedMealIdeaPage.Idea? { model.page?.ideas.first { $0.id == ideaID } }
     private var own: Bool { saved == nil || saved?.actorId.uuidString.lowercased() == model.scope.memberID.lowercased() }
     var body: some View {
-        Form {
+        WorkingForm {
             Section(ht("Household scope")) {
                 Text(verbatim: household.projection?.household.label ?? "")
                 Text(ht("Enter only food evidence this household may share. Private device stock, prices, and decision history are not imported."))

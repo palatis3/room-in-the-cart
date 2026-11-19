@@ -221,7 +221,7 @@ private struct FirstListForm: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         if editor.stale {
-            Form {
+            WorkingForm {
                 Text(ledgerText("The shopping workspace changed. Review your draft wording again before creating a pickup."))
                 Text(verbatim: editor.content.original)
                 Button(ledgerText("Review as a new pickup")) { Task { await editor.reviewAgain() } }

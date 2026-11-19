@@ -191,7 +191,7 @@ private struct SharedRecoveryEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if allowed {
                 Section {
                     Text(verbatim: target.title).font(.headline)

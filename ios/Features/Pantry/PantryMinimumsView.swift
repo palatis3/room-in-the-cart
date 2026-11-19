@@ -39,7 +39,7 @@ struct PantryMinimumsView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let access, let snapshot = model.snapshot, let doc = try? store.document(scope) {
                 Section(pantryText("Set a minimum")) {
                     Picker(pantryText("Food identity"), selection: $selected) {

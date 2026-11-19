@@ -159,7 +159,7 @@ struct LedgerMealEditor: View {
         _portions = State(initialValue: template?.servingGroups.map(PortionDraft.init) ?? [])
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if let reviewToSave {
                 let reviewed = reviewToSave.candidate
                 Section(ledgerText("Review dinner")) {
@@ -359,7 +359,7 @@ private struct LedgerOccurrenceEditor: View {
         _title = State(initialValue: meal.title); _notes = State(initialValue: meal.notes)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 TextField(ledgerText("Dinner title"), text: $title, axis: .vertical)
                 TextField(ledgerText("Dinner notes"), text: $notes, axis: .vertical)
@@ -388,7 +388,7 @@ private struct LedgerMealDateView: View {
         _date = State(initialValue: meal.scheduledDay?.date ?? Date())
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(meal.title).font(.headline)
                 Toggle(ledgerText("Assign a night"), isOn: $dated)

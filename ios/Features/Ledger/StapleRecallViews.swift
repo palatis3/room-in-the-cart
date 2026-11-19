@@ -14,7 +14,7 @@ struct StapleApprovalView: View {
         _revision = State(initialValue: shop.revisionID)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if let shop = ledger.shop, shop.id == shopID, let line = shop.lines.first(where: { $0.id == lineID }) {
                 Text(line.name).font(.headline)
                 LabeledContent(ledgerText("Store"), value: shop.basis.branch)
@@ -145,7 +145,7 @@ private struct StapleReviewSheet: View {
         _unit = State(initialValue:quantity?.unit ?? .count)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Text(item.line.name).font(.headline)
             LabeledContent(ledgerText("Purpose"), value:item.approval.purpose)
             LabeledContent(ledgerText("Remembered store"), value:item.approval.branch)

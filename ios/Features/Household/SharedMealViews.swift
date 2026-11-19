@@ -281,7 +281,7 @@ struct SharedMealMovesView: View {
         [context?.household.id,context?.memberId,context?.shopId,context?.role].compactMap { $0 }.joined(separator: "/")
     }
     var body: some View {
-        Form {
+        WorkingForm {
             NavigationLink(ht("Household dinner ideas")) { SharedMealIdeasView(household: household) }
             Button(ht("Guest, ingredient, and serving-group proposals")) { showingChanges = true }
             if let plan, plan.shopId == context?.shopId.flatMap(UUID.init(uuidString:)), plan.shopper == (context?.role == "shopper") {

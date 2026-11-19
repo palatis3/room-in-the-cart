@@ -42,7 +42,7 @@ struct DinnerRotationEditor: View {
         _entries = State(initialValue: existing?.entries.map { DinnerRotationRow(id: $0.id, acceptedDinnerID: $0.acceptedDinnerID, offset: $0.dayOffset ?? -1, pinned: $0.pinned) } ?? [DinnerRotationRow()])
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 TextField(dinnerText("Rotation name"), text: $title)
                 ForEach(entries) { entry in
@@ -92,7 +92,7 @@ struct DinnerRotationReview: View {
         self.model = model; self.rotation = rotation; _start = State(initialValue: initialStart)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 DatePicker(dinnerText("Week starting"), selection: $start, displayedComponents: .date)
                 Text(model.shop?.basis.timeZoneIdentifier ?? "")

@@ -24,7 +24,7 @@ struct PriceImageReview: View {
     @State private var inclusions: [ReviewedCheckoutImage.Field: ReviewedCheckoutImage.Inclusion] = [:]
 
     var body: some View {
-        Form {
+        WorkingForm {
             PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
                 Label(pantryText("Choose a price image"), systemImage: "photo")
             }.accessibilityIdentifier("priceImage.choose")

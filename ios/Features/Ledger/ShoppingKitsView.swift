@@ -79,7 +79,7 @@ private struct ShoppingKitEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             TextField(shoppingText("Kit name"), text: $draft.name)
             Section(shoppingText("Choose kit items")) {
                 ForEach($draft.rows) { $row in
@@ -151,7 +151,7 @@ private struct ShoppingKitItemEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             TextField(shoppingText("Item name"), text: $name)
             TextField(shoppingText("Quantity (optional)"), text: $amount)
             Picker(shoppingText("Unit"), selection: $unit) {
@@ -182,7 +182,7 @@ private struct ShoppingKitReview: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section(shoppingFormat("Add to %@", shop.title)) {
                 ForEach(kit.rows) { row in
                     Toggle(isOn: Binding(get: { selected.contains(row.id) }, set: { on in

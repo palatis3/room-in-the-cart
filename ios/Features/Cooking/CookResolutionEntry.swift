@@ -48,7 +48,7 @@ struct CookResolutionEntry: View {
         return name + " · " + String(number)
     }
     private func resolutionForm(_ context: PantryCookResolution.Context) -> some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(context.record.draft.cookedTitle).font(.headline)
                 Text(cookCompletionText("The original cooking record stays unchanged. Review each unresolved use separately."))

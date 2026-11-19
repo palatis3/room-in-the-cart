@@ -64,7 +64,7 @@ struct DinnerScenarioEditor: View {
         let canonical = canonicalSupply
         let lots = canonical.map { DinnerLibraryPairings.unreservedLots(canonical: $0) }
             ?? (pickup.pantryIsActive ? [] : currentPickup.flatMap { try? DinnerLibraryPairings.unreservedLots($0, at: Date()) } ?? [])
-        Form {
+        WorkingForm {
             Section {
                 if dynamicTypeSize.isAccessibilitySize {
                     Text(dinnerText("Scenario evidence"))
@@ -327,7 +327,7 @@ private struct DinnerFoodEvidenceEditor: View {
     @Binding var food: DinnerFoodEvidenceDraft
     let usesFreePantryStock: Bool
     var body: some View {
-        Form {
+        WorkingForm {
             Section(dinnerText("Reviewed food identity")) {
                 TextField(dinnerText("Food name"), text: $food.name)
                 Text(dinnerText("Use this identity only for ingredients and packs you explicitly reviewed as the same food."))

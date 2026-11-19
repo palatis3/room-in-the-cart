@@ -95,7 +95,7 @@ extension ReceiptImportDraft.Line {
     }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 if scene == .active, identity != nil { Section(isReceipt ? pantryText("Original receipt wording") : pantryText("Original source wording")) { Text(verbatim: original) } }
                 if !checked { ProgressView() }
                 else if !current {

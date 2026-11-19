@@ -211,7 +211,7 @@ private struct FoodKeeperDates: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Text(verbatim: product.name(language)).font(.headline)
             Text(condition.title)
             if let text = product.rule(for: condition)?.guidance(language) { Text(verbatim: text) }

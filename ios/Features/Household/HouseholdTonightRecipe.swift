@@ -50,7 +50,7 @@ struct HouseholdTonightRecipeEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section(tonightText("Household recipe")) {
                 Text(verbatim: householdName).font(.headline)
                 Text(tonightText("The adults with access to this household pantry can read this recipe."))
@@ -226,7 +226,7 @@ private struct HouseholdRecipePackageEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(verbatim: lot.foodName + " · " + String(lot.id.uuidString.suffix(8)))
                 if let observed = (lot.observation?.confirmedAt).flatMap(serviceDate) {

@@ -108,7 +108,7 @@ private struct PickupAmendmentEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if canAccess {
                 PickupSaveStatus(model: model)
                 if let review {
@@ -190,7 +190,7 @@ private struct AmendmentLineEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 if selection.line == nil {
                     TextField(pTr("Item name"), text: $name).focused($focused, equals: .name)
                 } else { Text(name) }

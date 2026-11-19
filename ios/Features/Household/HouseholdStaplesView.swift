@@ -124,7 +124,7 @@ private struct HouseholdStaplePurchaseView: View {
         let lot = lots.first { $0.id == lotID }
         let group = state.groups.first { $0.id == groupID }
         let title = group?.name ?? name.trimmingCharacters(in: .whitespacesAndNewlines)
-        Form {
+        WorkingForm {
             if reviewing, let lot, let count = lot.purchaseObservation {
                 LabeledContent(householdPantryText("Staple"), value: title)
                 LabeledContent(ht("Food name"), value: lot.foodName)

@@ -185,7 +185,7 @@ private struct RequestPurchaseEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section(ht("Received request")) {
                 Text(match.request.originalItem).font(.headline).accessibilityIdentifier("purchase.review.original")
                 LabeledContent(ht("Requested by"), value: match.request.authorAlias ?? ht("Unknown"))

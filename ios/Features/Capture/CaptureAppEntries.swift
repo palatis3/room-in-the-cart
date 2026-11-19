@@ -67,7 +67,7 @@ struct CapturePrivateIdentity: Equatable {
     @State private var failed = false
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(captureText("Review a recipe from text or photo"))
                 Text(captureText("Accepting a recipe saves an editable candidate. Choose it separately in the dinner library to add grocery needs."))
@@ -200,7 +200,7 @@ struct RecipeSourceDisclosure: View {
             (model.shop?.mealOccurrences.contains { $0.templateID == templateID && $0.sourceEvidence == evidence && $0.removedAt == nil } == true)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if authorized() {
                 Section { RecipeSourceDisclosure(evidence: evidence) }
                 if let data = record?.imageJPEG, let image = UIImage(data: data) {

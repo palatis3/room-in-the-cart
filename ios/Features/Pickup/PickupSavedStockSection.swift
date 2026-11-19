@@ -139,7 +139,7 @@ private struct PickupPantryLotDestination: View {
                 PantryLotEntryView(model: pantry, lotID: lotID, accessAllowed: accessAllowed,
                                    availabilityNeedsReview: projectionRow?.issues.isEmpty != true)
             } else {
-                Form {
+                WorkingForm {
                     if presentation.scope(presentationID: UUID()) == nil {
                         Text(pantryText("Unlock the authorized private workspace to view pantry food."))
                     } else {
@@ -217,7 +217,7 @@ private struct PickupBatchReview: View {
                }) {
                 PickupPantryLotDestination(model: model, journeyID: journeyID, lotID: row.id)
             } else {
-                Form {
+                WorkingForm {
                     PickupSaveStatus(model: model)
                     Text(pantryText("This food is unavailable. Return to My Pantry and refresh."))
                 }.navigationTitle(pantryText("Pantry food"))
@@ -230,7 +230,7 @@ private struct PickupBatchReview: View {
     }
 
     private var legacyDetail: some View {
-        Form {
+        WorkingForm {
             if !model.pantryIsActive || presentation.scope(presentationID: UUID()) != nil {
                 PickupSaveStatus(model: model)
                 Section(lot.name) {
@@ -390,7 +390,7 @@ struct PickupStockEntryView: View {
     @FocusState private var field: PickupNewStockSection.Field?
 
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             if canShowStock {
                 if model.journey?.closedAt == nil {
@@ -604,7 +604,7 @@ private struct PickupPantryAddDestination: View {
                 PantryAddFoodEntryView(model: pantry, accessAllowed: accessAllowed, reviewedFood: admittedContext?.reviewedFood,
                                        refreshContext: { invalidate(); await openEntry() })
             } else {
-                Form {
+                WorkingForm {
                     if presentation.scope(presentationID: UUID()) == nil {
                         Text(pantryText("Unlock the authorized private workspace to view pantry food."))
                     } else {

@@ -156,7 +156,7 @@ private struct SharedFinancialEditor: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 Picker(pTr("Record type"), selection: $kind) {
                     ForEach(ShopperFinancialEntry.Kind.allCases, id: \.self) { kind in Text(kind.label).tag(kind) }
                 }.accessibilityIdentifier("financial.kind")

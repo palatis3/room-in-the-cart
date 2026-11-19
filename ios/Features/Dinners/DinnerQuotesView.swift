@@ -9,7 +9,7 @@ struct DinnerQuotesView: View {
     @State private var showPreview = false
     @FocusState private var inputFocus: String?
     var body: some View {
-        Form {
+        WorkingForm {
             if model.budgetVisible, let basis = model.shop?.basis {
                 Section(dinnerText("Available budget")) {
                     if !basis.branch.isEmpty { Text(dinnerFormat("Current pickup branch: %@",basis.branch)).accessibilityIdentifier("quoteCurrentBranch") }

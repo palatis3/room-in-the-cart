@@ -87,7 +87,7 @@ struct LedgerLayoutEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Picker(ledgerText("List order"), selection: $mode) {
                 Text(ledgerText("Original entry order")).tag(LedgerListOrder.entered)
                 Text(ledgerText("Manual item order")).tag(LedgerListOrder.manual)

@@ -97,7 +97,7 @@ struct PickupUsableCorrectionView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model) {
                 if let review, review.applied(in: model.journey) { dismiss() }
             }

@@ -90,7 +90,7 @@ private struct CookLiveViewEntry: View {
     @EnvironmentObject private var household: HouseholdModel
     @State private var approvedScope: ContextualHouseholdScope?
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(pTr("Your private cook note is not copied here. Choose the shared shop, then enter and review only the instructions this recipient should see."))
                 Text(pTr("Recipients can open the current view in a browser. Previously sent dated copies cannot be recalled."))
@@ -169,7 +169,7 @@ struct NextShopDinnerContextEntry: View {
             if opened {
                 DinnerPlanningEntry(destination: .library, expectedShopID: journeyID)
             } else {
-                Form {
+                WorkingForm {
                     LedgerSaveStatus(model: ledger)
                     Text(pTr("Open this saved next-shop draft to choose a familiar dinner. Choosing a dinner still requires its own review and Apply."))
                     Button(pTr("Open saved next-shop dinner choices")) { Task { await open() } }

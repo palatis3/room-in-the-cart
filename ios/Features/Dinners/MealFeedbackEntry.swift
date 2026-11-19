@@ -78,7 +78,7 @@ private struct MealFeedbackEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(title).font(.headline)
                 Text(dinnerText("Choose any reactions you want to keep for future meal suggestions."))

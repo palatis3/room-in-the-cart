@@ -497,7 +497,7 @@ struct PickupListBridgeView: View {
                 else { LedgerHomeView(model: ledger) }
             }
             else {
-                Form {
+                WorkingForm {
                     LedgerSaveStatus(model: ledger)
                     Text(pTr("The next-shop draft is saved. Open its editable shopping list; old prices and order status will not carry over."))
                     Button(pTr("Open saved next shopping list")) { Task { await open() } }

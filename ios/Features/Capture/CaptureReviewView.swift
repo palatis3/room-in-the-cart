@@ -106,7 +106,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     }
 
     private func captureForm(_ scroll: ScrollViewProxy) -> some View {
-        Form {
+        WorkingForm {
             if reviewingFields {
                 if !requestMode, naturalBatch != nil, currentPickup != nil {
                     NaturalListLanguageEntry(lines: $structuredLines, locale: model.localeIdentifier, authorize: authorize)

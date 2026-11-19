@@ -38,7 +38,7 @@ struct PickupSettlementView: View {
     @State private var nextShopRequested = false
     @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             if let summary = try? model.journey?.settlement.summary(asOf: model.stockReviewDate) {
                 Section(pTr("Actual money · separate from food")) {
@@ -246,7 +246,7 @@ private struct PickupNextShopSelection: View {
 
     var body: some View {
         let remaining = try? source.nextShopMealNeeds(closing: choices, at: model.stockReviewDate)
-        return Form {
+        return WorkingForm {
             PickupSaveStatus(model: model)
             Text(pTr("Review each carryover. The new draft clears old prices, quotes, offers and checkout status. Prior history stays intact."))
             ForEach(source.deferred.filter { $0.status == "review" }) { need in
@@ -306,7 +306,7 @@ private struct PickupNextShopDraft: View {
     @Environment(\.pickupLedger) private var ledger
 
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             Text(pTr("Fresh draft saved. Review its store, slot and prices before checkout."))
             if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }

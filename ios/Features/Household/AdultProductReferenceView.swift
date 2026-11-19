@@ -50,7 +50,7 @@ private struct ProductReferenceDetail: View {
     private enum Confirmation: String, Identifiable { case remove, block, report; var id: Self { self } }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let page {
                 Section {
                     Text(verbatim: itemName).font(.headline)
@@ -302,7 +302,7 @@ private struct ProductReferenceCropEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 if let cropped {
                     Image(decorative: cropped, scale: 1).resizable().scaledToFit().frame(maxHeight: 270)
                         .accessibilityLabel(ht("Selected crop"))

@@ -148,7 +148,7 @@ private struct PickupFeedbackEditor: View {
     @State private var failed = false
 
     var body: some View {
-        Form {
+        WorkingForm {
             Text(pTr("This response stays with this pickup on your device. It contains only your choices."))
             Picker(pTr("What happened?"), selection: $decision) {
                 Text(pTr("Choose a response")).tag(nil as PickupDecision?)
@@ -204,7 +204,7 @@ struct MeasurementSettingsView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-        Form {
+        WorkingForm {
             if scope != nil {
                 if let result = statusMessage {
                     Text(result)
@@ -288,7 +288,7 @@ struct SharedMeasurementFeedbackView: View {
     }
     var body: some View {
         ScrollViewReader { proxy in
-        Form {
+        WorkingForm {
             if let scope, scope == draftScope {
                 Text(actionResult?.text ?? (page?.feedback != nil ? pTr("Household response recorded") : pTr("Only the choices entered here are sent to the household service. Your local pickup feedback stays on this device.")))
                     .id("measurement-feedback-result")
