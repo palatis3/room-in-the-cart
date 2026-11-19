@@ -104,6 +104,7 @@ private struct PantryPriceDetail: View {
                     Text(row.date, style: .date)
                     if let pack = row.pack { Text(verbatim: String(pack.count) + " × " + pack.perPackage.originalLiteral) }
                     if let eligibility = row.eligibility { Text(verbatim: eligibility) }
+                    if let tax = row.taxTreatment { Text(shelfTaxLabel(tax)) }
                     if case .paidReceipt(let source) = row.source {
                         LabeledContent(pantryText("Receipt line"), value: source.originalLine)
                         Text(verbatim: source.receiptID.uuidString).font(.caption)
@@ -358,6 +359,7 @@ private struct PantryPriceEditor: View {
     @State private var quantity = ""
     @State private var unit = UnitOfMeasure.count
     @State private var eligibility = ""
+    @State private var tax: PrivatePriceEvidence.TaxTreatment?
     @State private var source = ""
     @State private var review: PrivatePriceEvidence?
     @State private var notice: String?
@@ -387,6 +389,7 @@ private struct PantryPriceEditor: View {
             _unit = State(initialValue: pack.perPackage.unit)
         }
         _eligibility = State(initialValue: original.eligibility ?? "")
+        _tax = State(initialValue: original.taxTreatment)
         _source = State(initialValue: original.sourceText)
     }
 
@@ -401,6 +404,7 @@ private struct PantryPriceEditor: View {
                 Text(review.date, style: .date)
                 if let pack = review.pack { Text(verbatim: String(pack.count) + " × " + pack.perPackage.originalLiteral) }
                 if let eligibility = review.eligibility { Text(verbatim: eligibility) }
+                if let tax = review.taxTreatment { Text(shelfTaxLabel(tax)) }
                 if let shelf = review.shelfImage {
                     Text(shelfBasisName(shelf.basis))
                     if !shelf.printed.wording.isEmpty { Text(verbatim: shelf.printed.wording) }
@@ -461,6 +465,14 @@ private struct PantryPriceEditor: View {
                     }
                 }
                 TextField(pantryText("Promotion or membership conditions"), text: $eligibility).focused($focused, equals: "eligibility")
+                ShelfTaxPicker(tax: $tax)
+                if entryKind == .shelf {
+                    let entered = try? reviewed()
+                    ShelfPaidPriceView(model: model, offer: ShelfPriceOffer(product: name, variant: variant,
+                        pack: entered?.pack, amountMinor: entered?.amountMinor, currency: currency, eligibility: eligibility, tax: tax),
+                        asOf: date, store: [store, branch].filter { !$0.isEmpty }.joined(separator: " · "),
+                        isUnitLabel: printed != nil && priceBasis == .unit)
+                }
                 TextField(pantryText("Price source wording"), text: $source, axis: .vertical).focused($focused, equals: "source")
                 Button(pantryText("Review price")) {
                     do { review = try reviewed(); notice = nil }
@@ -529,9 +541,161 @@ private struct PantryPriceEditor: View {
             foodID: original?.foodID, linkedLotID: original?.linkedLotID, name: name,
             variant: text(variant), store: store, branch: text(branch), mode: mode, date: date, currencyCode: currency,
             amountMinor: text(amount).map { try Money(decimal: decimal($0)).minorUnits }, pack: pack,
-            eligibility: text(eligibility), sourceText: text(source) ?? entryKind.label, shelfImage: image)
+            eligibility: text(eligibility), sourceText: text(source) ?? entryKind.label, shelfImage: image, taxTreatment: tax)
         try evidence.validate()
         return evidence
     }
 
+}
+
+private func shelfTaxLabel(_ value: PrivatePriceEvidence.TaxTreatment?) -> String {
+    switch value {
+    case .included: pantryText("Tax included")
+    case .excluded: pantryText("Tax excluded")
+    case nil: pantryText("Tax treatment unrecorded")
+    }
+}
+
+struct ShelfTaxPicker: View {
+    @Binding var tax: PrivatePriceEvidence.TaxTreatment?
+    var body: some View {
+        Picker(pantryText("Tax treatment"), selection: $tax) {
+            Text(pantryText("Not recorded")).tag(nil as PrivatePriceEvidence.TaxTreatment?)
+            Text(pantryText("Tax included")).tag(Optional(PrivatePriceEvidence.TaxTreatment.included))
+            Text(pantryText("Tax excluded")).tag(Optional(PrivatePriceEvidence.TaxTreatment.excluded))
+        }
+    }
+}
+
+struct ShelfPaidPriceView: View {
+    @ObservedObject var model: PantryModel
+    let offer: ShelfPriceOffer
+    let asOf: Date
+    let store: String
+    var isUnitLabel = false
+    @Environment(\.locale) private var locale
+    @State private var records: [PrivatePriceEvidence] = []
+    @State private var state: InventoryState?
+    @State private var loadedProduct: String?
+    @State private var failed = false
+    @State private var choice: UUID?
+    @State private var confirmed = false
+    @State private var adjustments: [PrivatePriceEvidence]?
+    @State private var adjustmentPrice: UUID?
+    private var product: String { ShelfPriceOffer.normalized(offer.product) }
+    private var candidates: [PrivatePriceEvidence] { offer.candidates(in: records, through: asOf) }
+    private var purchase: PrivatePriceEvidence? { offer.purchase(in: candidates, chosenID: choice) }
+    private var purchaseChoices: [PrivatePriceEvidence] {
+        var variants: Set<String> = []
+        return candidates.filter { row in
+            guard let variant = row.variant else { return true }
+            return variants.insert(ShelfPriceOffer.normalized(variant)).inserted
+        }
+    }
+
+    var body: some View {
+        Group {
+            if model.phase != .accessDenied && !product.isEmpty {
+                if failed {
+                    Text(pantryText("Private price history is unavailable."))
+                } else if loadedProduct != product {
+                    ProgressView(pantryText("Looking up paid prices"))
+                } else {
+                    priceRows
+                }
+            }
+        }
+        .privacySensitive()
+        .task(id: product) {
+            loadedProduct = nil; choice = nil; confirmed = false; failed = false
+            records = []; state = nil
+            guard !product.isEmpty, model.phase != .accessDenied else { return }
+            do {
+                let history = try await model.paidPurchases(named: product)
+                try Task.checkCancellation()
+                guard model.phase != .accessDenied else { return }
+                records = history.prices; state = history.state; loadedProduct = product
+            } catch { if !Task.isCancelled { failed = true } }
+        }
+        .task(id: purchase?.id) {
+            adjustmentPrice = nil; adjustments = nil
+            guard let paid = purchase, let state else { return }
+            let credits = try? await model.paidPurchaseCredits(for: paid, expected: state)
+            guard !Task.isCancelled, model.phase != .accessDenied else { return }
+            adjustments = credits; adjustmentPrice = paid.id
+        }
+        .onChange(of: offer) { prior, next in
+            if prior.variant != next.variant || prior.tax != next.tax || prior.eligibility != next.eligibility || prior.pack != next.pack { confirmed = false }
+            if prior.variant != next.variant { choice = nil }
+        }
+        .onChange(of: purchase?.id) { _, _ in confirmed = false }
+    }
+
+    @ViewBuilder private var priceRows: some View {
+        if candidates.isEmpty || offer.amountMinor == nil {
+            Text(pantryText("No comparable paid price")).accessibilityIdentifier("prices.noComparable")
+        } else {
+            if ShelfPriceOffer.normalized(offer.variant).isEmpty || candidates.contains(where: { $0.variant == nil }) || choice != nil {
+                Picker(pantryText("Choose the matching purchase"), selection: $choice) {
+                    Text(pantryText("Choose a purchase")).tag(nil as UUID?)
+                    ForEach(purchaseChoices) { row in
+                        Text(verbatim: purchaseLabel(row)).tag(Optional(row.id))
+                    }
+                }
+            }
+            if let paid = purchase, let pack = paid.pack, let shelfPack = offer.pack {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(pantryText("Last comparable purchase")).font(.headline)
+                    Text(verbatim: purchaseLabel(paid))
+                    Text(verbatim: packageLabel(pack))
+                    if let usable = paid.confirmedUsable {
+                        Text(verbatim: pantryText("Confirmed usable amount") + " · " + pantryQuantity(usable))
+                    }
+                    if let mode = paid.mode { Text(verbatim: mode.ledgerLabel) }
+                    Text(verbatim: priceAmount(paid))
+                    Text(verbatim: paid.eligibility ?? pantryText("Offer conditions unrecorded"))
+                    Text(verbatim: shelfTaxLabel(paid.taxTreatment))
+                }.accessibilityElement(children: .combine)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(pantryText("Current shelf offer")).font(.headline)
+                    Text(verbatim: store.isEmpty ? ledgerText("Store not set") : store)
+                    Text(asOf, style: .date)
+                    Text(verbatim: (isUnitLabel ? pantryText("Printed unit-price quantity") + " · " : "") + packageLabel(shelfPack))
+                    if let amount = offer.amountMinor { Text(verbatim: (Decimal(amount) / 100).formatted(.currency(code: offer.currency).locale(locale))) }
+                    Text(verbatim: offer.eligibility.isEmpty ? pantryText("Offer conditions unrecorded") : offer.eligibility)
+                    Text(verbatim: shelfTaxLabel(offer.tax))
+                }.accessibilityElement(children: .combine)
+                let needsReview = offer.needsBasisConfirmation(for: paid)
+                if needsReview {
+                    Toggle(pantryText("I checked that the variant, usable quantity basis, tax and offer conditions match"),
+                           isOn: $confirmed).accessibilityIdentifier("prices.sameBasis")
+                }
+                if confirmed || !needsReview, adjustmentPrice == paid.id, let adjustments,
+                   let rates = try? offer.unitRates(for: paid, adjustments: adjustments, sameBasisConfirmed: confirmed) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(verbatim: pantryFormat("Shelf per %@: %@", pantryUnit(shelfPack.perPackage.unit, singular: true), rate(rates.shelf)))
+                        Text(verbatim: pantryFormat("Paid per %@ after recorded credits: %@", pantryUnit(shelfPack.perPackage.unit, singular: true), rate(rates.paid)))
+                        Text(pantryText(rates.shelf == rates.paid ? "Same price per unit" :
+                                (rates.shelf < rates.paid ? "Shelf price is lower per unit" : "Shelf price is higher per unit")))
+                    }.accessibilityElement(children: .combine).accessibilityIdentifier("prices.paidComparison")
+                } else if confirmed || !needsReview, adjustmentPrice == paid.id {
+                    Text(pantryText("No comparable paid price"))
+                }
+            } else { Text(pantryText("No comparable paid price")) }
+        }
+
+    }
+
+    private func purchaseLabel(_ price: PrivatePriceEvidence) -> String {
+        let identity = price.variant ?? price.sourceText
+        return [price.name, identity, price.store, price.branch, price.date.formatted(.dateTime.year().month().day().locale(locale))]
+            .compactMap { $0 }.joined(separator: " · ")
+    }
+    private func packageLabel(_ pack: PrivatePriceEvidence.Pack) -> String {
+        pack.count == 1 ? pantryQuantity(pack.perPackage) : pantryFormat("%@ packages of %@", String(pack.count), pantryQuantity(pack.perPackage))
+    }
+    private func rate(_ cents: Rational) -> String {
+        (Decimal(cents.numerator) / Decimal(cents.denominator) / 100).formatted(
+            .currency(code: offer.currency).precision(.fractionLength(2...6)).locale(locale))
+    }
 }

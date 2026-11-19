@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "NSRemindersFullAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a Reminders list to copy selected incomplete grocery titles into a shopping draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una lista de Recordatorios para copiar los títulos pendientes que selecciones a un borrador de compras."
+          }
+        }
+      }
+    },
     "NSFaceIDUsageDescription": {
       "localizations": {
         "en": {

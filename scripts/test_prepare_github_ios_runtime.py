@@ -1415,7 +1415,7 @@ class PreparationTests(unittest.TestCase):
 
 class RuntimeWorkflowTests(unittest.TestCase):
     def test_github_consumers_all_create_owned_but_bitrise_keeps_existing_pilots(self):
-        cases = [('ci.yml', 'ios-tests', ['ui-01', 'ui-05'], 'ui-09'),
+        cases = [('ci.yml', 'ios-tests', ['ui-01', 'ui-05', 'ui-11'], 'ui-09'),
                  ('ios-fixtures.yml', 'contributor-tests', ['contributor-balanced-01', 'SharedFallbackUITests'], 'RecordsMediaUITests'),
                  ('ios-fixtures.yml', 'dinner-tests', ['contributor-balanced-01', 'SharedFallbackUITests'], 'dinner-other')]
         for workflow, job, pilots, other in cases:

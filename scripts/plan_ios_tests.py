@@ -12,6 +12,7 @@ from ci_mac_slots import with_macos_slots
 MODEL_TARGET = "RoomInTheCartTests"
 UI_TARGET = "RoomInTheCartUITests"
 TARGETS = {MODEL_TARGET, UI_TARGET}
+ACCESSIBILITY_AUDIT = f"{UI_TARGET}/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults"
 DURATIONS_PATH = Path(__file__).with_name("ios_test_durations.json")
 TEST_SELECTOR = re.compile(r"[^/\s]+/[^/\s]+/[^/\s]+")
 
@@ -100,13 +101,28 @@ def make_plan(enumeration, durations, ui_shards):
         lanes[index].append(identifier)
         totals[index] += estimates[identifier]
 
+    # Split the five-viewport audit after balancing so unrelated cases keep
+    # their previous simulator groups. A previously solo audit leaves a
+    # vacancy: move one short case from the largest group if one can spare it.
+    audit = next((case for case in ui_tests if selector(case) == ACCESSIBILITY_AUDIT), None)
+    if audit is not None:
+        previous = next(lane for lane in lanes if audit in lane)
+        previous.remove(audit)
+        if not previous:
+            largest = max(lanes, key=len)
+            if len(largest) > 1:
+                previous.append(largest.pop())
+        lanes.append([audit])
+
     shards = {"models": {"selector_file": "models.txt", "test_identifiers": models}}
-    for index, (identifiers, total) in enumerate(zip(lanes, totals), start=1):
+    for index, identifiers in enumerate(lanes, start=1):
+        if not identifiers:
+            continue
         name = f"ui-{index:02d}"
         shards[name] = {
             "selector_file": f"{name}.txt",
             "test_identifiers": sorted(identifiers),
-            "estimated_seconds": total,
+            "estimated_seconds": sum(estimates[case] for case in identifiers),
         }
 
     return {

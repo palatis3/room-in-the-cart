@@ -220,7 +220,7 @@ import LocalStore
         XCTAssertEqual(unchanged.lots, snapshot.lots); XCTAssertEqual(unchanged.reservations, snapshot.reservations)
     }
 
-    private func receiptFixture() async throws -> (Fixture, ReceiptFragment, UsableObservation) {
+    private func receiptFixture(receivedQuantity: Int64 = 8) async throws -> (Fixture, ReceiptFragment, UsableObservation) {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(directory, test: self), clock = Clock(now)
@@ -253,8 +253,8 @@ import LocalStore
         let frozen = await pickup.freeze(); XCTAssertTrue(frozen)
         let placed = await pickup.reportPlaced(); XCTAssertTrue(placed)
         let key = ReceiptKey(sourceEventID: "actual-delivery", orderLineID: food, branchID: "Main", segmentID: "one")
-        let receipt = ReceiptFragment(key: key, itemName: "Wraps", received: q(8), disposition: .received, receivedAt: now)
-        let observation = UsableObservation(id: UUID(), receipt: key, usable: q(8), confirmedAt: now, confirmedMatchToOrderLine: true)
+        let receipt = ReceiptFragment(key: key, itemName: "Wraps", received: q(receivedQuantity), disposition: .received, receivedAt: now)
+        let observation = UsableObservation(id: UUID(), receipt: key, usable: q(receivedQuantity), confirmedAt: now, confirmedMatchToOrderLine: true)
         let received = await pickup.receive(receipt, usable: observation); XCTAssertTrue(received)
         let stock = UUID()
         let stocked = try await pickup.saveStockLot(.init(id: stock, foodID: food, name: "Existing freezer batch",
@@ -263,6 +263,68 @@ import LocalStore
         let fixture = try await activate(producer: store, pickup: pickup, directory: directory, cleanup: cleanup,
             clock: clock, food: food, stock: stock)
         return (fixture, receipt, observation)
+    }
+
+    func testWholeSourceCorrectionCannotOverwriteFourPlusTwoAfterSplittingSix() async throws {
+        let (f, receipt, observation) = try await receiptFixture(receivedQuantity: 6)
+        var inventory = try await f.repository.load(at: now)
+        // Isolate a source with no commitments, as required for a simple physical split.
+        let release = try inventory.reservations.filter { $0.state != .released }.map { claim in
+            let released = InventoryReservation(id: claim.id, originID: claim.originID, revision: claim.revision + 1,
+                foodID: claim.foodID, lotID: claim.lotID, name: claim.name, amount: claim.amount,
+                priority: claim.priority, state: .released, personal: claim.personal)
+            return try PantryPersistenceCodec.write(released, expectedRevision: claim.revision)
+        }
+        if !release.isEmpty {
+            _ = try await f.target.commitInventory(InventoryBatch(workspaceID: f.target.workspaceID, operationID: UUID(),
+                expectedRevision: inventory.state.revision, request: Data("released commitments".utf8), writes: release), at: now)
+            inventory = try await f.repository.load(at: now)
+        }
+        let source = InventorySource.receipt(originID: f.target.workspaceID, key: receipt.key)
+        let root = try XCTUnwrap(inventory.lots.first { $0.source == source })
+        f.clock.now = now.addingTimeInterval(10)
+        let correction = UsableObservation(id: UUID(), receipt: receipt.key, usable: q(5), confirmedAt: f.clock.now,
+            supersedesID: observation.id, confirmedMatchToOrderLine: true)
+        let acceptedByLegacy = await f.pickup.confirmUsable(correction)
+        XCTAssertTrue(acceptedByLegacy)
+        let oldReview = try await review(f)
+
+        let child = UUID()
+        func apply(_ action: InventoryChange, to id: UUID) async throws -> PantryRepository.Snapshot {
+            let snapshot = try await f.repository.load(at: f.clock.now)
+            let lot = try XCTUnwrap(snapshot.lots.first { $0.id == id })
+            let command = InventoryCommand(id: UUID(), originID: f.target.workspaceID, lotID: id, eventID: UUID(),
+                                           expectedRevision: lot.revision, occurredAt: f.clock.now, change: action)
+            return try await f.repository.apply(command, reviewedInventoryRevision: snapshot.state.revision, at: f.clock.now).current
+        }
+        let split = InventoryPortionAction.split(amount: q(2), destination: .freezer, lotID: child, eventID: UUID(), observationID: UUID())
+        let remainder = InventoryCountRevision(count: .exact(q(4)), observationID: UUID(), observedAt: root.confirmedAt)
+        let divided = try await apply(.revise(.init(observation: remainder, portion: split)), to: root.id)
+        XCTAssertEqual(divided.lots.first { $0.id == root.id }?.count, .exact(q(4)))
+        XCTAssertEqual(divided.lots.first { $0.id == child }?.count, .exact(q(2)))
+        do { _ = try await commit(oldReview, in: f); XCTFail("stale correction committed") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .staleInventory) }
+
+        func rejectWholeRecount() async throws {
+            do { _ = try await review(f); XCTFail("a source-level count must not overwrite one portion") }
+            catch { XCTAssertEqual(error as? PantryPickupDelta.Failure, .portionRecountRequired) }
+        }
+        try await rejectWholeRecount()
+        _ = try await apply(.move(.fridge), to: child)
+        try await rejectWholeRecount()
+        let discard = InventoryPortionAction.discard(amount: q(1), reason: nil)
+        let reading = InventoryCountRevision(count: .exact(q(1)), observationID: UUID(), observedAt: root.confirmedAt)
+        let discarded = try await apply(.revise(.init(observation: reading, portion: discard)), to: child)
+        try await rejectWholeRecount()
+        let undoID = try XCTUnwrap(discarded.lots.first { $0.id == child }?.discardUndo?.eventID)
+        let restored = InventoryCountRevision(count: .exact(q(2)), observationID: UUID(), observedAt: root.confirmedAt)
+        _ = try await apply(.revise(.init(observation: restored, portion: .undoDiscard(eventID: undoID))), to: child)
+        try await rejectWholeRecount()
+        let reconciled = try await apply(.count(.exact(q(3)), observationID: UUID()), to: root.id)
+        XCTAssertEqual(reconciled.lots.first { $0.id == root.id }?.count, .exact(q(3)))
+        XCTAssertEqual(reconciled.lots.first { $0.id == child }?.count, .exact(q(2)))
+        _ = try await apply(.usedUp(observationID: UUID()), to: child)
+        try await rejectWholeRecount()
     }
 
     func testReceiptCorrectionChangesOnlyFullReceiptSourceAndPreservesIndependentRecount() async throws {

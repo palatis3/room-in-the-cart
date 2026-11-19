@@ -44,20 +44,64 @@ import XCTest
         active.firstMatch.tap()
         XCTAssertTrue(app.staticTexts["Office"].waitForExistence(timeout: 5))
         app.navigationBars.buttons.firstMatch.tap()
-        app.buttons["ledgerHistory"].tap()
+        let shopPicker = app.buttons["ledgerShopPicker"]
+        XCTAssertEqual(shopPicker.label, "This trip")
+        app.buttons["ledgerListOptions"].tap()
+        app.buttons["List history"].tap()
         let handled = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Handled by Ana")).firstMatch
         XCTAssertTrue(handled.waitForExistence(timeout: 5))
         app.buttons["Done"].tap()
-        app.buttons["ledgerShopPicker"].tap()
+        shopPicker.tap()
         app.buttons["Previous market"].tap()
+        let previousMarket = app.buttons.matching(identifier: "ledgerShopPicker")
+            .matching(NSPredicate(format: "label == %@", "Previous market")).firstMatch
+        XCTAssertTrue(previousMarket.waitForExistence(timeout: 8))
         let checked = app.buttons["Reopen Coffee"]
-        app.buttons["ledgerHistory"].tap()
+        let footerHistory = app.buttons["ledgerHistory"]
+        show(footerHistory)
+        footerHistory.tap()
         show(checked)
         XCTAssertFalse(handled.exists)
         checked.tap()
         XCTAssertTrue(checked.waitForNonExistence(timeout: 6))
         app.buttons["Done"].tap()
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerInspect-", "Coffee")).firstMatch.waitForExistence(timeout: 6))
+    }
+
+    func testInStoreCheckPriceCoverageAndOneHandedUndo() {
+        continueAfterFailure = false
+        launch(fresh: true)
+        let inStore = app.buttons["ledgerInStore"]
+        show(inStore)
+        inStore.tap()
+        let checks = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-"))
+        XCTAssertTrue(checks.firstMatch.waitForExistence(timeout: 8))
+        checks.firstMatch.tap()
+        let subtotal = app.staticTexts["inStoreSubtotal"]
+        func waitForSubtotal(_ expected: String) {
+            let value = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", expected), object: subtotal)
+            XCTAssertEqual(XCTWaiter.wait(for: [value], timeout: 8), .completed)
+        }
+        waitForSubtotal("0 of 1 picked items")
+        app.buttons["inStoreLastPrice"].tap()
+        let amount = app.textFields["inStoreAmount"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 8))
+        enter("4.25", in: amount)
+        if app.buttons["inStoreAmountDone"].isHittable { app.buttons["inStoreAmountDone"].tap() }
+        let save = app.buttons["Save price"]
+        show(save)
+        save.tap()
+        waitForSubtotal("$4.25 for 1 of 1 picked items")
+        checks.firstMatch.tap()
+        waitForSubtotal("$4.25 for 1 of 2 picked items")
+        app.buttons["inStoreUndo"].tap()
+        waitForSubtotal("$4.25 for 1 of 1 picked items")
+        app.buttons["Done"].tap()
+        app.terminate()
+        launch(fresh: false)
+        show(inStore)
+        inStore.tap()
+        waitForSubtotal("$4.25 for 1 of 1 picked items")
     }
 
     private func enter(_ value: String, in field: XCUIElement) {

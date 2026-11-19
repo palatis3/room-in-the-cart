@@ -69,6 +69,7 @@ export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.en
    const privacyResult=mode==='run'?(deletionResult??await privacy.cleanup(options)):null;
    const privacyAttention=deletionResult&&(deletionResult.capacityDeferred||deletionResult.journalDeferred||deletionResult.issuerMismatch||deletionResult.leaseLost);
    signal.throwIfAborted();
+   if(mode==='run')await pool.query('SELECT ritc.prune_product_references($1)',[OPERATIONS_BATCH_SIZE]);
    const guardianResult=mode==='run'?(await pool.query('SELECT * FROM ritc.guardian_housekeeping($1,$2,$3)',[OPERATIONS_BATCH_SIZE,guardianPolicy?.pendingHours??null,guardianPolicy?.evidenceDays??null])).rows[0]:null;
    signal.throwIfAborted();
    const row=(await pool.query('SELECT * FROM ritc.operations_health()')).rows[0];signal.throwIfAborted();

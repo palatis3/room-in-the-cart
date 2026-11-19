@@ -3,6 +3,17 @@ import CoreDomain
 import LocalStore
 
 struct ComparisonView: View {
+    @Environment(\.pantryDigestAccess) private var priceAccess
+    @Environment(\.scenePhase) private var scene
+    @EnvironmentObject private var workspace: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @EnvironmentObject private var child: GuardianChildCoordinator
+    private let allowsPersonalPrices: Bool
+    private var priceIdentity: CapturePrivateIdentity? {
+        guard allowsPersonalPrices, scene == .active, UIApplication.shared.isProtectedDataAvailable,
+              !child.presented, household.projection?.grantId == nil else { return nil }
+        return CapturePrivateIdentity.current(access: workspace, household: household)
+    }
     @EnvironmentObject private var app: AppModel
     @StateObject private var model: ComparisonModel
     @State private var reviewing: Bool
@@ -10,7 +21,8 @@ struct ComparisonView: View {
     @AccessibilityFocusState private var resultFocused: ResultFocus?
     @FocusState private var inputFocused: String?
 
-    init(draft: ComparisonDraft = ComparisonDraft(), saved: SavedComparison? = nil) {
+    init(draft: ComparisonDraft = ComparisonDraft(), saved: SavedComparison? = nil, allowsPersonalPrices: Bool = true) {
+        self.allowsPersonalPrices = allowsPersonalPrices
         let model = ComparisonModel(draft: draft, savedRevision: saved?.revision ?? 0)
         model.savedAt = saved?.savedAt
         _model = StateObject(wrappedValue: model)
@@ -108,6 +120,12 @@ struct ComparisonView: View {
                                   sourceUnit: unit.wrappedValue, targetUnit: model.draft.unit,
                                   conversion: conversion, identifier: prefix + "Conversion")
             entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
+            if let identity = priceIdentity {
+                let scope = PantryDigestScope(origin: priceAccess?.scope.origin ?? identity.actorID, identity: identity)
+                PackPaidPriceEditor(product: model.draft.item, packLabel: label.wrappedValue, quantity: quantity,
+                                    unit: unit, price: price, access: priceAccess, current: { priceIdentity == identity }, prefix: prefix)
+                    .id(scope.owner + scope.origin.uuidString + prefix)
+            }
         } header: { Text(tr(title)) } footer: {
             Text(tr("Enter the usable amount, not just the printed pack size. Leave an unknown weight, yield or price blank."))
         }
@@ -433,5 +451,106 @@ private struct ComparisonSaveButton: UIViewRepresentable {
         guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
         let height = uiView.titleLabel?.sizeThatFits(CGSize(width: max(1, width - 24), height: .greatestFiniteMagnitude)).height ?? 0
         return CGSize(width: width, height: max(52, ceil(height) + 16))
+    }
+}
+
+private struct PackPaidPriceEditor: View {
+    let product: String
+    let packLabel: String
+    @Binding var quantity: String
+    @Binding var unit: UnitOfMeasure
+    @Binding var price: String
+    let access: PantryDigestAccess?
+    let current: @MainActor () -> Bool
+    let prefix: String
+    @EnvironmentObject private var pickup: PickupModel
+    @State private var model: PantryModel?
+    @State private var expanded = false
+    @State private var scan = false
+    @State private var printed: (line: PriceImageLine, proposal: ReviewedShelfImage.Proposal)?
+    @State private var comparePrinted = false
+    @State private var store = ""
+    @State private var variant = ""
+    @State private var conditions = ""
+    @State private var tax: PrivatePriceEvidence.TaxTreatment?
+    @State private var seenAt = Date()
+
+    var body: some View {
+        DisclosureGroup(pantryText("Compare with my last purchase"), isExpanded: $expanded) {
+            if expanded, current() {
+                Button(pantryText("Read a shelf label")) { scan = true }
+                    .accessibilityIdentifier(prefix + ".shelfScan")
+                if let printed {
+                    Text(verbatim: printed.line.effectiveWording)
+                    Text(pantryText("Check the USD price for one pack and its usable amount against this label."))
+                    let proposal = printed.proposal
+                    if scannedOffer != nil {
+                        Toggle(pantryFormat("Compare the printed offer in %@", proposal.currencyCode ?? "USD"),
+                               isOn: $comparePrinted)
+                    }
+                    if (proposal.currencyCode == nil || proposal.currencyCode == "USD"),
+                       proposal.priceBasis == .bundle, (proposal.packages ?? 1) == 1,
+                       let amount = proposal.amount, let size = proposal.packageSize {
+                        Button(pantryText("Use this USD price and printed amount for one usable pack")) {
+                            price = NSDecimalNumber(decimal: Decimal(amount.minorUnits) / 100).stringValue
+                            quantity = size.amount.description
+                            unit = size.unit
+                            conditions = proposal.conditions ?? ""
+                            comparePrinted = false
+                        }
+                    }
+                }
+                TextField(pantryText("Brand or variant"), text: $variant)
+                    .accessibilityIdentifier(prefix + ".paidVariant")
+                TextField(pantryText("Store"), text: $store)
+                TextField(pantryText("Promotion or membership conditions"), text: $conditions)
+                ShelfTaxPicker(tax: $tax)
+                if let model, access?.authorized() == true {
+                    ShelfPaidPriceView(model: model, offer: comparePrinted ? scannedOffer ?? offer : offer, asOf: seenAt, store: store,
+                                       isUnitLabel: comparePrinted && printed?.proposal.priceBasis == .unit)
+                        .id(pickup.pantrySnapshot?.state.revision)
+                } else {
+                    Text(pantryText("No comparable paid price"))
+                }
+            }
+        }
+        .task(id: expanded) {
+            guard expanded, current(), access?.authorized() == true else { model = nil; return }
+            model = pickup.makePantryModel()
+            seenAt = Date()
+        }
+        .onChange(of: product) { _, _ in resetMatch() }
+        .onChange(of: packLabel) { _, _ in resetMatch() }
+        .sheet(isPresented: $scan) {
+            NavigationStack {
+                PriceImageReview(purpose: .shelf, authorized: { current() }, acceptShelf: { line in
+                    guard current() else { return }
+                    let proposal = ReviewedShelfImage.propose(line.effectiveWording)
+                    printed = (line, proposal)
+                    comparePrinted = false
+                    conditions = proposal.conditions ?? ""
+                })
+            }
+        }
+        .privacySensitive()
+    }
+
+    private var offer: ShelfPriceOffer {
+        let size = try? ComparisonModel.quantity(quantity, unit)
+        return ShelfPriceOffer(product: product, variant: variant, pack: size.map { .init(perPackage: $0) },
+                               amountMinor: (try? ComparisonModel.money(price))?.minorUnits,
+                               currency: "USD", eligibility: conditions, tax: tax, basis: .usable)
+    }
+    private var scannedOffer: ShelfPriceOffer? {
+        guard let printed else { return nil }
+        let proposal = printed.proposal
+        guard let amount = proposal.amount, proposal.priceBasis != .unknown,
+              let size = proposal.rateQuantity ?? proposal.packageSize else { return nil }
+        let bundle = PrivatePriceEvidence.Pack(count: proposal.priceBasis == .unit ? 1 : proposal.packages ?? 1, perPackage: size)
+        return ShelfPriceOffer(product: product, variant: variant, pack: bundle, amountMinor: amount.minorUnits,
+                               currency: proposal.currencyCode ?? "USD", eligibility: conditions, tax: tax)
+    }
+    private func resetMatch() {
+        printed = nil; comparePrinted = false; variant = ""; conditions = ""; tax = nil
     }
 }

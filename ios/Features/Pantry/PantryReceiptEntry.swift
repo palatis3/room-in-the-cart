@@ -6,6 +6,7 @@ import SwiftUI
 
 struct PantryReceiptEntry: View {
     @ObservedObject var model: PantryModel
+    var didFinishWithLot: (UUID) -> Void = { _ in }
     var initialSource: SourceMediaRecord? = nil
     var verifySource: @MainActor () async throws -> Void = {}
     @State private var aliases: [InventoryReceiptAlias] = []
@@ -25,14 +26,16 @@ struct PantryReceiptEntry: View {
     }
     @State private var assistance: AssistanceReview?
     @State private var reviewedSourceImage: Data?
+    @State private var deliveryPurchases = false
     @State private var fileSource = false
+    @State private var receiptTripReview = ReceiptTripReviewState()
     @State private var scan = false
     @State private var draft: ReceiptImportDraft?
     @State private var rescan: ReceiptRescanPrompt?
     @State private var review: PantryReceiptReview?
     @State private var working = false
     @State private var message: String?
-    @State private var savedLotIDs: Set<UUID>?
+    @State private var savedLotIDs: [UUID]?
     @FocusState private var field: String?
     @State private var targetID = UUID()
     @AccessibilityFocusState private var resultFocused: Bool
@@ -44,8 +47,12 @@ struct PantryReceiptEntry: View {
                 Text(message).accessibilityFocused($resultFocused).accessibilityIdentifier("receipt.status")
             }
             if let savedLotIDs {
-                Button(pantryText("Done")) { dismiss() }
-                let lots = model.snapshot?.lots.filter { savedLotIDs.contains($0.id) } ?? []
+                let byID = Dictionary(uniqueKeysWithValues: (model.snapshot?.lots ?? []).map { ($0.id, $0) })
+                let lots = savedLotIDs.compactMap { byID[$0] }
+                Button(pantryText("Done")) {
+                    if model.permitsReceiptSource, let lot = lots.first { didFinishWithLot(lot.id) }
+                    dismiss()
+                }
                 if model.permitsReceiptSource, !lots.isEmpty {
                     Section {
                         if lots.count == 1 {
@@ -122,6 +129,12 @@ struct PantryReceiptEntry: View {
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
                     ReceiptPurchaseDateFields(draft: value)
                 }
+                if !model.receiptTrips.isEmpty {
+                    NavigationLink {
+                        ReceiptTripDifferenceReview(trips: model.receiptTrips, purchases: model.recentPurchases, aliases: aliases, draft: displayed, state: $receiptTripReview)
+                    } label: { Text(captureText("Compare receipt with a planned shop")) }
+                    .accessibilityIdentifier("receipt.tripDifferences")
+                }
                 Text(pantryText("Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped."))
                 ForEach(displayed.lines) { line in
                     PantryReceiptLineEditor(line: captureDraftBinding(line, in: value.lines), lots: model.snapshot?.lots ?? [], purchases: model.recentPurchases, aliases: aliases.filter {
@@ -145,6 +158,16 @@ struct PantryReceiptEntry: View {
                 .accessibilityIdentifier("receipt.review")
             } else {
                 Section {
+                    if let state = model.snapshot?.state {
+                        ReceiptPhotoShortcuts(target: .init(workspaceID: state.workspaceID, containerID: targetID, objectID: targetID,
+                            revision: state.revision, kind: .receiptEvidence), authorize: {
+                                model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
+                            }) { source in accept(source) }
+                    }
+                    if model.supportsReceiptAliases {
+                        Button(pantryText("My delivery receipts")) { deliveryPurchases = true }
+                            .accessibilityIdentifier("receipt.deliveryPurchases")
+                    }
                     Button(pantryText("Read a receipt file")) { fileSource = true }.accessibilityIdentifier("receipt.document")
                     Button(pantryText("Scan or type receipt lines")) { scan = true }.accessibilityIdentifier("receipt.scan")
                     Text(pantryText("Check the printed wording first. Then confirm what arrived and how much is usable."))
@@ -170,6 +193,7 @@ struct PantryReceiptEntry: View {
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
             if origin == nil { reviewedSourceImage = nil; assistance = nil; draft = nil; review = nil; rescan = nil; scan = false; fileSource = false; sharedSource = nil; savedLotIDs = nil }
         }
+        .onChange(of: draft?.draftID) { _, _ in receiptTripReview = .init() }
         .task(id: aliasScope) {
             let scope = aliasScope
             aliases = []
@@ -184,6 +208,16 @@ struct PantryReceiptEntry: View {
                       let index = current.lines.firstIndex(where: { $0.id == basis.line.id }) else { throw PantryReceiptError.stale }
                 try current.lines[index].applyAssisted(suggestion, request: input, reviewedLine: basis.line, useReceived: received)
                 draft = current
+            }
+        }
+        .sheet(isPresented: $deliveryPurchases) {
+            if let state = model.snapshot?.state {
+                NavigationStack {
+                    PrivateDeliveryReceiptsView(model: model, target: .init(workspaceID: state.workspaceID, containerID: targetID,
+                        objectID: targetID, revision: state.revision, kind: .receiptEvidence)) { source, original, selected in
+                            acceptDelivery(source, original: original, selected: selected)
+                        }
+                }
             }
         }
         .sheet(isPresented: $fileSource) {
@@ -251,6 +285,20 @@ struct PantryReceiptEntry: View {
         }
     }
 
+    private func acceptDelivery(_ source: SourceMediaRecord, original: PrivateDeliveryRevision, selected: Set<Int>) {
+        accept(source)
+        guard var current = draft, current.draftID == source.id else { return }
+        current.reference = original.order
+        if let date = original.purchaseDate { current.purchaseDate = date }
+        let reviewed = Dictionary(uniqueKeysWithValues: original.lines.filter { selected.contains($0.id) }.map { ($0.id, $0) })
+        for index in current.lines.indices {
+            guard let item = reviewed[current.lines[index].ordinal] else { continue }
+            current.lines[index].location = item.disposition.storage ?? .fridge
+            current.lines[index].treatment = .add
+        }
+        draft = current
+    }
+
     private func accept(_ source: SourceMediaRecord, fromSavedPickup: Bool = false) {
         guard model.canEdit, model.snapshot?.state.workspaceID == source.target.workspaceID else { return }
         do {
@@ -268,7 +316,8 @@ struct PantryReceiptEntry: View {
                 try await verifySource()
                 try await model.saveReceipt(value)
                 review = nil; draft = nil; reviewedSourceImage = nil
-                savedLotIDs = Set(value.facts.map(\.lotID))
+                var seen = Set<UUID>()
+                savedLotIDs = value.facts.map(\.lotID).filter { seen.insert($0).inserted }
                 message = value.batch == nil ? pantryText("These lines were already saved.") : pantryText("Reviewed receipt lines saved.")
                 if let sharedSource {
                     do { try await model.finishSharedReceipt(sharedSource, committed: true) }
@@ -560,5 +609,317 @@ private struct ReceiptPriceCorrection: View {
         } message: {
             Text(pantryText("The earlier price stays in receipt history. Future price comparisons will omit this amount."))
         }.navigationTitle(pantryText("Correct paid price"))
+    }
+}
+
+struct ReceiptTripReviewState {
+    var trip: ReceiptTripPlan?
+    var links: [UUID: ReceiptTripLink] = [:]
+    var leftUnresolved = Set<UUID>()
+}
+
+struct ReceiptTripDifferenceReview: View {
+    let trips: [ReceiptTripPlan]
+    let purchases: [PantryRecentPurchase]
+    var aliases: [InventoryReceiptAlias] = []
+    let draft: ReceiptImportDraft
+    @Binding var state: ReceiptTripReviewState
+    @State private var editing: ReceiptImportDraft.Line?
+
+    private var selectable: [ReceiptImportDraft.Line] {
+        draft.lines.filter(\.canComparePurchase)
+    }
+    private func candidate(_ row: ReceiptImportDraft.Line, trip: ReceiptTripPlan) -> UUID? {
+        let known = Set(aliases.filter { alias in
+            InventoryReceiptAlias.key(alias.merchant) == InventoryReceiptAlias.key(draft.merchant) &&
+            alias.language == draft.language && row.name == row.sourceName &&
+            InventoryReceiptAlias.key(alias.wording) == InventoryReceiptAlias.key(row.printed?.name ?? row.original)
+        }.map(\.foodID))
+        return trip.suggestedLine(for: row, purchases: purchases, knownFood: known.count == 1 ? known.first : nil)
+    }
+
+    private func suggestions(_ trip: ReceiptTripPlan) -> [ReceiptTripLink] {
+        let rows = selectable.compactMap { row in candidate(row, trip: trip).map { ($0, row) } }
+        let byPlan = Dictionary(grouping: rows, by: { $0.0 })
+        return trip.lines.compactMap { planned in
+            guard let candidates = byPlan[planned.id], candidates.count == 1, let row = candidates.first?.1,
+                  !state.leftUnresolved.contains(row.id), state.links[row.id] == nil,
+                  !state.links.values.contains(where: { $0.portions[planned.id] != nil }),
+                  planned.packages?.isEmpty != false, !trip.countsPacks, row.documentLine?.stage != .order,
+                  let printed = row.printed, !printed.uncertain, let amount = printed.quantity, let unit = printed.unit,
+                  let quantity = try? ComparisonModel.quantity(amount, unit),
+                  let value = printed.amount, let money = try? Money(decimal: value),
+                  let link = ReceiptTripLink(receiptLineID: row.id, printed: quantity, portions: [planned.id: quantity], printedTotal: money),
+                  ReceiptTripLink.compare(planned, with: [row.id: link]) == .matched else { return nil }
+            return link
+        }
+    }
+    var body: some View {
+        List {
+            tripPicker
+            if let trip = state.trip, trips.contains(trip) {
+                comparisonSections(for: trip)
+            } else if state.trip != nil {
+                Text(captureText("This shop changed. Choose it again to compare the current plan."))
+                Button(captureText("Clear comparison")) { state = .init() }
+            }
+        }
+        .onAppear {
+            if state.trip == nil, let source = draft.savedPickup, source.originID == draft.workspaceID,
+               let trip = trips.first(where: { $0.id == source.id }) { state.trip = trip }
+        }
+        .navigationTitle(captureText("Receipt differences"))
+        .sheet(item: $editing) { row in assignment(for: row) }
+    }
+
+    private var tripPicker: some View {
+        let selection = Binding<UUID?>(get: { state.trip?.id }, set: { id in
+            state = .init(trip: trips.first { $0.id == id })
+        })
+        return Picker(captureText("Planned shop"), selection: selection) {
+            Text(captureText("Choose explicitly")).tag(nil as UUID?)
+            ForEach(trips) { trip in
+                let date = trip.date.formatted(date: .abbreviated, time: .shortened)
+                let label = [trip.branch, date, String(trip.id.uuidString.suffix(6))].joined(separator: " · ")
+                Text(label).tag(Optional(trip.id))
+            }
+        }
+        .accessibilityIdentifier("receipt.tripPicker")
+    }
+
+    @ViewBuilder private func comparisonSections(for trip: ReceiptTripPlan) -> some View {
+        let suggested = suggestions(trip)
+        let suggestedIDs = Set(suggested.map(\.receiptLineID))
+        let proposedPlans = Set(suggested.flatMap { $0.portions.keys })
+        Section {
+            Text(captureText("Compare only the pages you have. Missing evidence does not establish a shortage or overcharge. This review changes neither inventory nor spending."))
+        }
+        if draft.lines.contains(where: { $0.documentLine?.stage == .order }) {
+            Text(captureText("An order confirmation describes the plan. Use a purchase receipt or final invoice to compare what was charged."))
+        }
+        unmatchedSection(trip, suggestedIDs: suggestedIDs)
+        differencesSection(trip, proposedPlans: proposedPlans)
+        suggestionsSection(trip, suggestedIDs: suggestedIDs)
+        matchedSection(trip)
+        reviewedSection
+    }
+
+    @ViewBuilder private func unmatchedSection(_ trip: ReceiptTripPlan, suggestedIDs: Set<UUID>) -> some View {
+        let unmatched = selectable.filter { state.links[$0.id] == nil && !suggestedIDs.contains($0.id) }
+        if !unmatched.isEmpty {
+            Section(captureText("Receipt lines to review")) {
+                ForEach(unmatched) { row in
+                    Button { editing = row } label: {
+                        VStack(alignment: .leading) {
+                            Text(row.original)
+                            if let id = candidate(row, trip: trip), let planned = trip.lines.first(where: { $0.id == id }) {
+                                Text(captureText("Previously linked product") + " · " + planned.name).font(.caption)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func differencesSection(_ trip: ReceiptTripPlan, proposedPlans: Set<UUID>) -> some View {
+        let differences = trip.lines.filter { !proposedPlans.contains($0.id) && ReceiptTripLink.compare($0, with: state.links) != .matched }
+        if !differences.isEmpty {
+            Section(captureText("Differences and unknowns")) {
+                ForEach(differences) { planned in plannedRow(planned) }
+            }
+        }
+    }
+
+    @ViewBuilder private func suggestionsSection(_ trip: ReceiptTripPlan, suggestedIDs: Set<UUID>) -> some View {
+        if !suggestedIDs.isEmpty {
+            Section(captureText("Suggested exact matches")) {
+                ForEach(selectable.filter { suggestedIDs.contains($0.id) }) { row in
+                    Button { editing = row } label: {
+                        VStack(alignment: .leading) {
+                            Text(row.original)
+                            if let id = candidate(row, trip: trip), let line = trip.lines.first(where: { $0.id == id }) {
+                                Text(line.name + " · " + pantryQuantity(line.quantity)).font(.caption)
+                            }
+                        }
+                    }
+                }
+                Button(captureText("Confirm these reviewed matches")) {
+                    for link in suggestions(trip) { state.links[link.receiptLineID] = link }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func matchedSection(_ trip: ReceiptTripPlan) -> some View {
+        let matched = trip.lines.filter { ReceiptTripLink.compare($0, with: state.links) == .matched }
+        if !matched.isEmpty {
+            DisclosureGroup(captureText("Confirmed matches") + " (" + String(matched.count) + ")") {
+                ForEach(matched) { planned in plannedRow(planned) }
+            }
+        }
+    }
+
+    @ViewBuilder private var reviewedSection: some View {
+        let reviewed = selectable.filter { state.links[$0.id] != nil }
+        if !reviewed.isEmpty {
+            DisclosureGroup(captureText("Edit reviewed receipt lines")) {
+                ForEach(reviewed) { row in Button(row.original) { editing = row } }
+            }
+        }
+    }
+
+    @ViewBuilder private func assignment(for row: ReceiptImportDraft.Line) -> some View {
+        if let trip = state.trip, trips.contains(trip) {
+            NavigationStack {
+                ReceiptTripAssignLine(row: row, trip: trip, existing: state.links[row.id],
+                    suggestion: candidate(row, trip: trip)) { match in
+                    guard trips.contains(trip), state.trip == trip else { return }
+                    state.links[row.id] = match
+                    if match == nil { state.leftUnresolved.insert(row.id) } else { state.leftUnresolved.remove(row.id) }
+                    editing = nil
+                }
+            }
+        }
+    }
+
+    private func tripQuantity(_ quantity: Quantity) -> String {
+        if state.trip?.countsPacks == true { return captureText("Planned packs") + " · " + quantity.amount.description }
+        return captureText("Planned amount") + " · " + pantryQuantity(quantity)
+    }
+
+    @ViewBuilder private func plannedRow(_ line: BasketLine) -> some View {
+        let status = ReceiptTripLink.compare(line, with: state.links)
+        VStack(alignment: .leading) {
+            Text(line.name).font(.headline)
+            Text(tripQuantity(line.quantity))
+            if case .exact(let price) = line.expectedCost { Text(captureText("Planned line total") + " · " + receiptMoney(price)) }
+            ForEach(selectable.filter { state.links[$0.id]?.portions[line.id] != nil }) { row in
+                if let link = state.links[row.id], let portion = link.portions[line.id] {
+                    Text(row.original + " · " + pantryQuantity(portion))
+                    if let paid = link.printedTotal, link.portions.count == 1 {
+                        Text(captureText("Receipt line total") + " · " + receiptMoney(paid))
+                    }
+                }
+            }
+            switch status {
+            case .matched: Text(captureText("Product, quantity and line total match."))
+            case .noEvidence: Text(captureText("No confirmed receipt link for this planned item."))
+            case .incompatible: Text(captureText("The units are not comparable."))
+            case .quantity: Text(captureText("The reviewed quantity differs from the planned quantity."))
+            case .price: Text(captureText("The reviewed line total differs from the planned total."))
+            case .priceUnknown: Text(captureText("Quantity matches. A comparable price is unknown."))
+            }
+        }
+    }
+}
+
+private struct ReceiptTripAssignLine: View {
+    let row: ReceiptImportDraft.Line
+    let trip: ReceiptTripPlan
+    let accept: (ReceiptTripLink?) -> Void
+    @State private var primary: UUID?
+    @State private var secondary: UUID?
+    @State private var split: Bool
+    @State private var unit: UnitOfMeasure
+    @State private var amount: String
+    @State private var secondAmount: String
+    @State private var price: String
+    @State private var checkedPacks: Bool
+    @FocusState private var focus: String?
+    @Environment(\.dismiss) private var dismiss
+
+    init(row: ReceiptImportDraft.Line, trip: ReceiptTripPlan, existing: ReceiptTripLink?, suggestion: UUID?, accept: @escaping (ReceiptTripLink?) -> Void) {
+        self.row = row; self.trip = trip; self.accept = accept
+        _checkedPacks = State(initialValue: existing != nil)
+        let parts = trip.lines.compactMap { line in existing?.portions[line.id].map { (line.id, $0) } }
+        _primary = State(initialValue: parts.first?.0 ?? suggestion)
+        _secondary = State(initialValue: parts.count == 2 ? parts[1].0 : nil)
+        _split = State(initialValue: parts.count == 2)
+        _unit = State(initialValue: trip.countsPacks ? .count : parts.first?.1.unit ?? row.printed?.unit ?? .count)
+        let sum = try? parts.reduce(Rational.zero) { try $0.adding($1.1.amount) }
+        _amount = State(initialValue: !parts.isEmpty ? sum?.description ?? "" : trip.countsPacks ? "" : row.printed?.quantity ?? "")
+        _secondAmount = State(initialValue: parts.count == 2 ? parts[1].1.amount.description : "")
+        if let money = existing?.printedTotal {
+            _price = State(initialValue: NSDecimalNumber(decimal: Decimal(money.minorUnits) / 100).stringValue)
+        } else { _price = State(initialValue: existing == nil ? row.printed?.amount ?? "" : "") }
+    }
+
+    private var selectedPacks: [BasketLine] {
+        trip.lines.filter { line in (line.id == primary || (split && line.id == secondary)) && line.packages?.isEmpty == false }
+    }
+
+    private var proposed: ReceiptTripLink? {
+        guard row.canComparePurchase, (selectedPacks.isEmpty && !trip.countsPacks) || checkedPacks else { return nil }
+        guard let primary, let total = try? ComparisonModel.quantity(amount, unit), total.amount > .zero else { return nil }
+        var portions = [primary: total]
+        if split {
+            guard let secondary, secondary != primary, let other = try? ComparisonModel.quantity(secondAmount, unit),
+                  other.amount > .zero, let remaining = try? total.amount.subtracting(other.amount), remaining > .zero else { return nil }
+            portions[primary] = Quantity(amount: remaining, unit: unit, originalLiteral: remaining.description)
+            portions[secondary] = other
+        }
+        let entry = price.trimmingCharacters(in: .whitespacesAndNewlines)
+        let money = try? Money(decimal: entry)
+        guard entry.isEmpty || money != nil else { return nil }
+        return .init(receiptLineID: row.id, printed: total, portions: portions, printedTotal: money)
+    }
+    @ViewBuilder private var quantityAndPrice: some View {
+        TextField(captureText("Printed quantity"), text: $amount).focused($focus, equals: "amount")
+        if trip.countsPacks {
+            Text(captureText("Enter the number of comparable packs shown on the receipt."))
+        } else {
+            Picker(captureText("Printed unit"), selection: $unit) {
+                ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(pantryUnit(unit)).tag(unit) }
+            }
+        }
+        TextField(captureText("Printed line total in USD, if known"), text: $price).keyboardType(.decimalPad).focused($focus, equals: "price")
+    }
+
+    @ViewBuilder private var splitControls: some View {
+        Toggle(captureText("Split the quantity between two planned lines"), isOn: $split)
+        if split {
+            Picker(captureText("Second planned product"), selection: $secondary) {
+                Text(captureText("Choose explicitly")).tag(nil as UUID?)
+                ForEach(trip.lines.filter { $0.id != primary }) { line in Text(line.name + " · " + pantryQuantity(line.quantity)).tag(Optional(line.id)) }
+            }
+            TextField(captureText("Quantity for the second line"), text: $secondAmount).focused($focus, equals: "split")
+            Text(captureText("The rest goes to the first line. The price stays with the printed line."))
+        }
+    }
+
+    @ViewBuilder private var packConfirmation: some View {
+        if !selectedPacks.isEmpty || trip.countsPacks {
+            ForEach(selectedPacks) { line in
+                Text(line.name)
+                ForEach(Array((line.packages ?? []).enumerated()), id: \.offset) { _, pack in
+                    Text(String(pack.count) + " × " + pack.amountPerPack.description + " " + pantryUnit(pack.unit))
+                }
+            }
+            Toggle(captureText("I checked the pack sizes and converted the receipt quantity to the chosen unit."), isOn: $checkedPacks)
+        }
+    }
+
+    var body: some View {
+        Form {
+            Text(row.original).font(.headline)
+            Text(captureText("Choose only a planned product you can verify from the receipt. Leave possible substitutions unresolved."))
+            Picker(captureText("Planned product"), selection: $primary) {
+                Text(captureText("Choose explicitly")).tag(nil as UUID?)
+                ForEach(trip.lines) { line in Text(line.name + " · " + pantryQuantity(line.quantity)).tag(Optional(line.id)) }
+            }
+            quantityAndPrice
+            splitControls
+            packConfirmation
+            Button(captureText("Confirm product and amount")) { if let proposed { accept(proposed) } }.disabled(proposed == nil)
+            Button(captureText("Leave line unresolved")) { accept(nil) }
+        }
+        .onChange(of: primary) { _, _ in checkedPacks = false }
+        .onChange(of: secondary) { _, _ in checkedPacks = false }
+        .onChange(of: split) { _, _ in checkedPacks = false }
+        .onChange(of: unit) { _, _ in checkedPacks = false }
+        .navigationTitle(captureText("Review product link"))
+        .keyboardDoneAction(visible: focus != nil, title: captureText("Done"), identifier: "receipt.differenceDone") { focus = nil }
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { dismiss() } } }
     }
 }

@@ -173,6 +173,7 @@ struct PantryLiveStockProjection {
         for observation in selected?.pickup?.usableObservations ?? [] { selectedLatest[observation.receipt] = observation }
         let edgesByClaim = Dictionary(grouping: snapshot.availability.allocations, by: \.needID)
         let canonicalLots = Dictionary(uniqueKeysWithValues: snapshot.lots.map { ($0.id, $0) })
+        let roots = try InventoryLot.splitRoots(in: snapshot.lots)
         let canonicalBySource = Dictionary(uniqueKeysWithValues: snapshot.lots.map { ($0.source, $0.id) })
         let available = Dictionary(uniqueKeysWithValues: snapshot.availability.lots.map { ($0.id, $0) })
         guard Set(available.keys) == Set(canonicalLots.keys) else { throw Failure.invalidMapping }
@@ -203,9 +204,10 @@ struct PantryLiveStockProjection {
                 // Keep an old reader's exact local observation alias, but always
                 // expose the independent canonical head above as freshness evidence.
                 readerID = selectedLatest[key]?.id ?? current.id
-                if !snapshot.receiptAcquiredLots.contains(current.id) {
-                    issues += receiptIssues(receiptEvidence[key], at: now)
-                }
+            }
+            if let rootID = roots[current.id], let root = canonicalLots[rootID],
+               case .receipt(_, let originalKey) = root.source, !snapshot.receiptAcquiredLots.contains(rootID) {
+                issues += receiptIssues(receiptEvidence[originalKey], at: now)
             }
             rows.append(Lot(id: current.id, readerID: readerID, current: current, availability: availability,
                 scopedLegacyLotIDs: aliases, scopedLegacyObservationIDs: observationAliases, receiptKey: receiptKey, issues: issues))

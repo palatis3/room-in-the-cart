@@ -62,6 +62,7 @@ public struct HouseholdReceiptAcquisition: Codable, Equatable, Sendable {
     public let receiptId: UUID
     public let imageId: UUID?
     public let layoutId: UUID?
+    public let segmentedPhotos: Bool?
     public let merchant: String
     public let purchaseDay: String
     public let zone: String
@@ -69,14 +70,20 @@ public struct HouseholdReceiptAcquisition: Codable, Equatable, Sendable {
     public let lines: [HouseholdReceiptLine]
 
     public init(receiptId: UUID, imageId: UUID?, merchant: String, purchaseDay: String, zone: String,
-                reference: String?, lines: [HouseholdReceiptLine], layoutId: UUID? = nil) {
+                reference: String?, lines: [HouseholdReceiptLine], layoutId: UUID? = nil, segmentedPhotos: Bool? = nil) {
         self.receiptId = receiptId; self.imageId = imageId; self.merchant = merchant; self.purchaseDay = purchaseDay
-        self.zone = zone; self.reference = reference; self.lines = lines; self.layoutId = layoutId
+        self.zone = zone; self.reference = reference; self.lines = lines; self.layoutId = layoutId; self.segmentedPhotos = segmentedPhotos
     }
     public func validate() throws {
         guard householdReceiptText(merchant, 256), householdReceiptDay(purchaseDay), TimeZone(identifier: zone) != nil,
               reference.map({ householdReceiptText($0, 256) }) != false, (1...50).contains(lines.count),
               Set(lines.map(\.ordinal)).count == lines.count else { throw ClientError.configuration }
+        let laterImagePage = lines.contains { $0.printed?.method == "imageOCR" && ($0.printed?.page ?? 0) > 1 }
+        guard !laterImagePage || segmentedPhotos == true else { throw ClientError.configuration }
+        if let segmentedPhotos {
+            guard segmentedPhotos, reference != nil, imageId != nil, layoutId != nil, receiptId != imageId,
+                  lines.allSatisfy({ $0.printed?.method == "imageOCR" }) else { throw ClientError.configuration }
+        }
         let links = lines.compactMap { $0.delivery?.lotId }
         guard Set(links).count == links.count else { throw ClientError.configuration }
         for line in lines { try line.validate() }

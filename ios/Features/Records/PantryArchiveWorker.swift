@@ -1200,7 +1200,7 @@ extension PantryArchiveWorker {
 
     /// Restored history is read from the authenticated package. A prior origin belongs
     /// to this batch only when its final head reproduces the child's actual restore baseline.
-    func archivedUsage(_ handle: PantryArchiveHandle, context: RestorationContext, lot: InventoryLot) throws -> [PantryUsageHistoryRow] {
+    func archivedActions(_ handle: PantryArchiveHandle, context: RestorationContext, lot: InventoryLot) throws -> PantryArchivedActions {
         guard context.version == 1, context.reference == handle.reference, context.workspaceID == lot.source.originID,
               context.workspaceID != handle.scope.originID else { throw Failure.invalid }
         var scopes = [handle.scope.originID: handle.scope]
@@ -1233,7 +1233,7 @@ extension PantryArchiveWorker {
         }
         guard let sourceLot,
               try PantryArchiveRestore.baselineLot(sourceLot, newOriginID: context.workspaceID,
-                                                   restorationID: context.restorationID).source == lot.source else { return [] }
+                                                   restorationID: context.restorationID).source == lot.source else { return .init(usage: [], discards: []) }
         var lineage = [handle.scope.originID: sourceLot]
         var scope = handle.scope
         while case .independent(let copy) = scope {
@@ -1270,7 +1270,7 @@ extension PantryArchiveWorker {
                         observations[origin, default: [:]][observation.id] = observation
                     case .event(let event) where event.lotID == lot.id,
                          .historical(.originalEvent(let event)) where event.lotID == lot.id:
-                        if lineage[event.originID] != nil, case .revise(let revision) = event.change, revision.usage != nil {
+                        if lineage[event.originID] != nil, case .revise(let revision) = event.change, revision.usage != nil || revision.portion != nil {
                             try charge(item)
                             events[event.originID, default: []].append(event)
                         }
@@ -1313,6 +1313,7 @@ extension PantryArchiveWorker {
             }
         }
         var rows = journeys.filter { $0.value.revision > (retiredJourneys[$0.key] ?? 0) }.flatMap { $0.value.rows }
+        var discards: [PantryDiscardRow] = [], undone = Set<UUID>()
         for (origin, uses) in events {
             guard let head = lineage[origin], let readings = observations[origin] else { throw Failure.invalid }
             var chain = Set<UUID>(), cursor: UUID? = head.observationID
@@ -1327,10 +1328,17 @@ extension PantryArchiveWorker {
                       recorded.count == reading.count, recorded.countWording == reading.countWording,
                       recorded.observedAt == reading.observedAt, event.occurredAt <= head.updatedAt else { throw Failure.invalid }
                 rows += try PantryUsageHistoryRow.entries(from: event)
+                switch revision.portion {
+                case let .discard(amount, reason):
+                    discards.append(.init(id: event.id, lotID: lot.id, date: event.occurredAt, amount: amount, reason: reason))
+                case .undoDiscard(let id): undone.insert(id)
+                default: break
+                }
             }
         }
-        guard Set(rows.map(\.id)).count == rows.count else { throw Failure.invalid }
-        return rows.sorted { ($0.occurredAt, $0.id.uuidString) > ($1.occurredAt, $1.id.uuidString) }
+        guard Set(rows.map(\.id)).count == rows.count, Set(discards.map(\.id)).count == discards.count else { throw Failure.invalid }
+        return .init(usage: rows.sorted { ($0.occurredAt, $0.id.uuidString) > ($1.occurredAt, $1.id.uuidString) },
+                     discards: discards.filter { !undone.contains($0.id) })
     }
 
     /// Privacy predicates perform read-only comparisons on the worker. An early

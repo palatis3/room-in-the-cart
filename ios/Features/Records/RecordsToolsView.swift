@@ -75,6 +75,7 @@ struct RecordsToolsView: View {
                     recipePageButton
                     manualRecipeButton
                     recipeFileButton
+                    recipeFileHelp
                 }
             } else {
                 currentSources
@@ -330,6 +331,9 @@ struct RecordsToolsView: View {
         Button(recordsText("Import a recipe link")) { model.beginImport(.recipePage) }
             .accessibilityIdentifier("records.recipeLink")
     }
+    private var recipeFileHelp: some View {
+        Text(recordsText("Choose a Paprika recipe collection (.paprikarecipes), Recipe JSON-LD, or a saved draft. Review and edit recipes before saving. For large Paprika libraries, export one category at a time.")).font(.footnote).foregroundStyle(.secondary)
+    }
     private var recipeFileButton: some View {
         Button(recordsText("Choose a recipe or draft file…")) { chooseImportFile(recipes: true) }
             .accessibilityIdentifier("records.chooseRecipeFile")
@@ -342,8 +346,7 @@ struct RecordsToolsView: View {
             recipePageButton
             recipeFileButton
             manualRecipeButton
-            Text(recordsText("Recipe files may contain a Recipe, an array, or a graph. Original ingredient and yield text are preserved."))
-                .font(.footnote).foregroundStyle(.secondary)
+            recipeFileHelp
         }
     }
     private func reviewSection(_ review: RecoveryReview) -> some View {
@@ -391,7 +394,7 @@ struct RecordsToolsView: View {
                 .font(.footnote)
             Button(recipeLibraryOnly ? recordsText("Save reviewed recipes") : recordsText("Import reviewed copies")) {
                 Task { await model.applyReviewedImport() }
-            }.disabled(!review.canApply).accessibilityIdentifier("records.applyImport")
+            }.disabled(!review.canApply || !model.paprikaVersionsReviewed).accessibilityIdentifier("records.applyImport")
             if model.recipeReport != nil, review.canApply {
                 Button(recordsText("Save recipe draft to Files")) {
                     Task { if await model.prepareRecipeDraft() { savePreparedFile() } }
@@ -411,13 +414,20 @@ struct RecordsToolsView: View {
                 Label(missingRecipeField(field), systemImage: "exclamationmark.circle").font(.subheadline)
             }
             if review.canApply {
+                if model.paprikaVersionChoices.contains(row.id) {
+                    Text(recordsText("Another version or a recipe with matching content is already in this review or your library. Skip this version or save it separately."))
+                    Toggle(recordsText("Save this version as a separate copy"), isOn: Binding(
+                        get: { model.acceptedPaprikaVersions.contains(row.id) },
+                        set: { model.confirmPaprikaVersion(row, selected: $0) }))
+                        .accessibilityIdentifier("records.paprikaVersion." + row.record.revision)
+                }
                 HStack(spacing: 16) {
                     if row.disposition == .absent || row.disposition == .sibling {
                         Button(recordsText("Edit recipe")) { model.beginRecipeCorrection(row) }
                             .accessibilityLabel(recordsText("Edit recipe") + ", " + recipe.title)
                             .accessibilityIdentifier("records.editRecipe." + row.record.id)
                     }
-                    if review.rows.count > 1 {
+                    if review.rows.count > 1 || model.paprikaVersionChoices.contains(row.id) {
                         Button(recordsText("Skip this recipe")) { Task { await model.skipRecipe(row) } }
                             .accessibilityLabel(recordsText("Skip this recipe") + ", " + recipe.title)
                     }
@@ -595,7 +605,7 @@ struct RecordsToolsView: View {
         case .staleReview: return recordsText("Your local copies changed during review. Select the file again before importing.")
         case .exportSelectionChanged: return recordsText("Your selection changed. Review the selected records and source references, then prepare the file again.")
         case .deletionSelectionChanged: return recordsText("The selected records changed. Review them again before deleting.")
-        case .invalidRecipe: return recordsText("Check the recipe title, source URL and text. Use a supported Recipe JSON-LD file or enter it manually.")
+        case .invalidRecipe: return recordsText("Check the recipe title, source link and text. Choose a Paprika collection or Recipe JSON-LD file, or enter the recipe manually.")
         case .unavailable: return recordsText("The local operation could not finish. Your current records are still available. Try again.")
         }
     }

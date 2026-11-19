@@ -279,6 +279,7 @@ enum PantryArchiveCodec {
             try validateHistory(history, at: value.descriptor.capturedAt)
             guard evidence.insert(digest(try ArchiveCodec.canonical(history))).inserted else { throw Failure.invalid }
         }
+        _ = try InventoryLot.splitRoots(in: value.lots)
         _ = try InventoryProjection.build(originID: value.descriptor.originID, lots: value.lots,
             reservations: value.reservations, at: value.descriptor.capturedAt)
     }
@@ -336,7 +337,8 @@ enum PantryArchiveCodec {
                                 baselines.append(InventoryLot(id: original.id, foodID: original.foodID, name: original.name,
                                     source: original.source, revision: 1, location: original.location, openedAt: original.openedAt,
                                     unit: original.unit, count: original.count, observationID: baselineID,
-                                    confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording))
+                                    confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording,
+                                    splitFromLotID: original.splitFromLotID, discardedTimes: original.discardedTimes))
                             }
                         default: break
                         }

@@ -9,9 +9,10 @@ struct DinnerPlanningHome: View {
     @StateObject private var model: DinnerFeatureModel
     @State private var startingPickup = false
     init(ledger: LedgerModel, access: @escaping DinnerFeatureModel.AccessProvider,
-         phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [], runtimeChanges: AnyPublisher<Void, Never>? = nil) {
+         phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [], runtimeChanges: AnyPublisher<Void, Never>? = nil,
+         basketPrepAccess: @escaping () -> Bool = { false }) {
         self.ledger = ledger
-        let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: ideaCatalog)
+        let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: ideaCatalog, basketPrepAccess: basketPrepAccess)
         model.observe(ledger.objectWillChange)
         if let runtimeChanges { model.observeRuntime(runtimeChanges) }
         _model = StateObject(wrappedValue: model)
@@ -78,6 +79,9 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                             }.disabled(!model.editable)
                         }
                     }
+                    if model.basketPrepAccess(), model.localIdeaWorkspaceID != nil {
+                        DinnerPrepAgenda(model: model)
+                    }
                     Section(dinnerText("Plan")) {
                         NavigationLink(dinnerText("All chosen dinners, including earlier dates")) { DinnerAllMealsView(model: model) }
                         NavigationLink(dinnerText("Add a manual dinner")) { DinnerTemplateEditor(model: model, purpose: .manual) }
@@ -91,6 +95,11 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                         NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }
                         if model.budgetVisible {
                             if let shop = model.shop {
+                                if model.basketPrepAccess(), model.localIdeaWorkspaceID != nil, model.phaseProvider(shop.id) == .draft {
+                                    DinnerDecisionButton(model: model, title: dinnerPlanText("Three dinners, one basket"), identifier: "dinner.threeNightBasket") {
+                                        ThreeDinnerBasketView(model: model, shop: shop)
+                                    }
+                                }
                                 DinnerDecisionButton(model: model, title: dinnerText("Price a dinner plan or compare pairings"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
                             }
                             NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }

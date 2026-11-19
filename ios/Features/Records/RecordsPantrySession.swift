@@ -95,12 +95,12 @@ import RecordArchive
             pendingStore = pending
             let source = opened.source, context = opened.identity
             let repository = PantryRepository(store: opened.store, mutationGate: gate, pendingStore: pending,
-                archivedUsage: { [weak self] lot in
+                archivedActions: { [weak self] lot in
                     guard let self, self.phase == .ready, self.identity == context else { throw ArchiveError.unavailable }
                     try self.requireAccess()
                     try await self.lifetime.revalidate(acquired, copy: ready, registry: self.registry)
                     try self.requireAccess()
-                    let rows = try await self.worker.archivedUsage(source, context: context, lot: lot)
+                    let rows = try await self.worker.archivedActions(source, context: context, lot: lot)
                     try await self.lifetime.revalidate(acquired, copy: ready, registry: self.registry)
                     try self.requireAccess()
                     return rows

@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from plan_ios_tests import MODEL_TARGET, UI_TARGET, make_plan, selector, write_plan
+from plan_ios_tests import ACCESSIBILITY_AUDIT, MODEL_TARGET, UI_TARGET, make_plan, selector, write_plan
 
 
 MODEL = f"{MODEL_TARGET}/ModelTests/testModel()"
@@ -69,6 +69,40 @@ class PlanIOSTests(unittest.TestCase):
             plan["shards"]["ui-02"]["test_identifiers"], [UI_TESTS[1], UI_TESTS[2], UI_TESTS[4]]
         )
         self.assertEqual(plan["shards"]["ui-02"]["estimated_seconds"], 140)
+
+    def test_isolated_audit_keeps_other_cases_in_their_balanced_groups(self):
+        audit = ACCESSIBILITY_AUDIT + "()"
+        stand_in = f"{UI_TARGET}/JourneyTests/testSameWeight()"
+        durations = {**DURATIONS, "hosted_seconds": {
+            **DURATIONS["hosted_seconds"], ACCESSIBILITY_AUDIT: 57, selector(stand_in): 57}}
+        before = make_plan(enumeration([MODEL, *UI_TESTS, stand_in]), durations, 2)
+        after = make_plan(enumeration([MODEL, *UI_TESTS, audit]), durations, 2)
+        self.assertEqual(after["shards"]["ui-03"], {
+            "selector_file": "ui-03.txt", "test_identifiers": [audit], "estimated_seconds": 57})
+        for name, old in before["shards"].items():
+            expected_cases = [case for case in old["test_identifiers"] if case != stand_in]
+            self.assertEqual(after["shards"][name]["test_identifiers"], expected_cases)
+            if name != "models":
+                expected_seconds = old["estimated_seconds"] - (57 if stand_in in old["test_identifiers"] else 0)
+                self.assertEqual(after["shards"][name]["estimated_seconds"], expected_seconds)
+        with self.assertRaisesRegex(ValueError, "Duplicate Xcode test selector"):
+            make_plan(enumeration([MODEL, *UI_TESTS, audit, ACCESSIBILITY_AUDIT]), durations, 2)
+
+    def test_solo_audit_fills_its_previous_group_only_if_another_case_can_move(self):
+        durations = {**DURATIONS, "hosted_seconds": {ACCESSIBILITY_AUDIT: 1000}}
+        for general, capacity, expected_counts in (
+            ([], 1, {"ui-02": 1}),
+            (UI_TESTS[:1], 2, {"ui-02": 1, "ui-03": 1}),
+            (UI_TESTS[:3], 2, {"ui-01": 1, "ui-02": 2, "ui-03": 1}),
+        ):
+            with self.subTest(general=general):
+                plan = make_plan(enumeration([MODEL, ACCESSIBILITY_AUDIT, *general]), durations, capacity)
+                self.assertEqual({r["shard"]: r["expected_count"] for r in plan["include"]
+                                  if r["shard"] != "models"}, expected_counts)
+                audit_group = plan["shards"][f"ui-{capacity + 1:02d}"]
+                self.assertEqual(audit_group["test_identifiers"], [ACCESSIBILITY_AUDIT])
+                self.assertCountEqual([case for shard in plan["shards"].values()
+                                       for case in shard["test_identifiers"]], [MODEL, ACCESSIBILITY_AUDIT, *general])
 
     def test_rejects_duplicate_selectors_including_after_normalization(self):
         for source in (

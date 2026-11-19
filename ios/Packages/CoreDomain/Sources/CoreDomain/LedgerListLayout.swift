@@ -78,7 +78,8 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
         if let saved = layout.departmentStore, saved.branch == Self.branch(shop), let department = saved.rows[key] {
             return department
         }
-        return line.aisle
+        if !line.aisle.isEmpty { return line.aisle }
+        return GroceryDepartment.suggested(for: line.name)?.label(spanish: GroceryDepartment.usesSpanish) ?? ""
     }
 
     public func matchedStore(in shop: ShoppingLedger) -> UUID? {
@@ -141,7 +142,7 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
             let id = try confirmedStore(in: shop)
             let key = id.uuidString.lowercased(), product = Self.product(line.name)
             guard !product.isEmpty, var store = departmentDirectory?.stores[key] else { throw LedgerError.stalePreview }
-            store.products[product] = department.isEmpty ? nil : department
+            store.products[product] = department
             departmentDirectory?.stores[key] = store
             shopLayouts[shopKey]?.departmentStore?.rows[row] = department
             shopLayouts[shopKey]?.rowDepartments?[row] = nil
@@ -175,8 +176,12 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
                 } else { shopLayouts[shopKey]?.departmentStore = nil }
                 continue
             }
-            guard var layout = shopLayouts[shopKey], var saved = layout.departmentStore,
-                  saved.branch == branch, let store = directory.stores[saved.storeID.uuidString.lowercased()] else { continue }
+            guard let id = matchedStore(in: shop), let store = directory.stores[id.uuidString.lowercased()] else { continue }
+            var layout = layout(for: shop)
+            // A pre-existing list can gain new rows after another pickup taught
+            // this branch a correction. Snapshot only newly added/renamed rows.
+            var saved = layout.departmentStore.flatMap { $0.branch == branch ? $0 : nil } ??
+                ShopDepartmentSnapshot(storeID: store.id, branch: branch, order: store.order, rows: [:])
             let oldNames = Dictionary(uniqueKeysWithValues: (prior?.lines ?? []).map { ($0.id, $0.name) })
             for line in shop.lines where oldNames[line.id] != line.name {
                 let row = line.id.uuidString.lowercased()
@@ -199,10 +204,14 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty && seen.insert($0).inserted }
     }
+    public func departmentChoices(in shop: ShoppingLedger, spanish: Bool = GroceryDepartment.usesSpanish) -> [String] {
+        let defaults = GroceryDepartment.allCases.map { $0.label(spanish: spanish) }
+        return Set(aisleNames(in: shop) + defaults).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
     public func groups(shop: ShoppingLedger, search: String = "") -> [Group] {
         let layout = layout(for: shop)
-        let hasAssignments = layout.departmentStore != nil || layout.rowDepartments != nil
-        let matches = hasAssignments ? shop.search(search, department: { department(for: $0, in: shop) }) : shop.search(search)
+        let matches = shop.search(search, department: { department(for: $0, in: shop) })
         var lines = matches.filter { !$0.isChecked && !$0.isHandled && !$0.isTrashed }
         if layout.mode != .entered {
             let rank = Dictionary(uniqueKeysWithValues: layout.lineOrder.enumerated().map { ($0.element,$0.offset) })
@@ -264,7 +273,7 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
             for (key, store) in directory.stores {
                 guard key == store.id.uuidString.lowercased(), validLabel(store.name), store.products.count <= 10_000,
                       store.products.allSatisfy({ $0.key.utf8.count <= 8192 && !$0.key.isEmpty &&
-                          $0.key == Self.product($0.key) && validLabel($0.value) }) else { throw LedgerError.invalid("departmentProducts") }
+                          $0.key == Self.product($0.key) && ($0.value.isEmpty || validLabel($0.value)) }) else { throw LedgerError.invalid("departmentProducts") }
                 try validateAisles(store.order)
             }
             for (alias, id) in directory.aliases {

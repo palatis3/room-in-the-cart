@@ -16,6 +16,56 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testLargestTextQuickGroceryFitsAndSubmitsWithReturn() {
+        launch(language: "es", largeDark: true)
+        let field = element("quickGrocery.name")
+        revealFullyInShop(field)
+        let largest = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+        let lineHeight = UIFont.preferredFont(forTextStyle: .body, compatibleWith: largest).lineHeight
+        XCTAssertGreaterThanOrEqual(field.frame.height, floor(lineHeight))
+        let label = app.staticTexts["Nombre del producto"]
+        XCTAssertTrue(label.exists && shopViewport.contains(label.frame))
+        XCTAssertEqual(field.label, label.label)
+        screenshot("Largest-text-Spanish-grocery-name")
+        let emptyHeight = field.frame.height
+        let name = "aceite de oliva virgen extra"
+        field.tap()
+        field.typeText(name)
+        XCTAssertEqual(field.value as? String, name)
+        XCTAssertGreaterThan(field.frame.height, emptyHeight, "A long entry should wrap at this text size.")
+        field.typeText("\n")
+        let undo = app.buttons["quickGrocery.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        XCTAssertTrue(undo.label.contains(name))
+        XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
+    }
+
+    func testQuickGroceryReturnUndoAndDuplicateReviewInSpanish() {
+        launch(language: "es")
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText("huevos\n")
+        let undo = app.buttons["quickGrocery.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        XCTAssertTrue(undo.label.contains("huevos"))
+        field.typeText("leche\n")
+        let milkUndo = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                        "quickGrocery.undo", "leche")).firstMatch
+        XCTAssertTrue(milkUndo.waitForExistence(timeout: 10))
+        tap(milkUndo)
+        XCTAssertTrue(milkUndo.waitForNonExistence(timeout: 10))
+        tap(field)
+        field.typeText("huevos\n")
+        XCTAssertTrue(element("ledgerImportForm").waitForExistence(timeout: 10))
+        app.terminate()
+        launch(language: "es", reset: false)
+        tap(element("openPickupList"))
+        let items = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
+        XCTAssertTrue(items.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertEqual(items.count, 1)
+        XCTAssertTrue(items.firstMatch.label.contains("huevos"))
+    }
+
     func testColdAddItemShortcutOpensEditableFirstDraftWithoutCreatingPickup() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--test-shopping-add-intent",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
@@ -496,9 +546,19 @@ final class RoomInTheCartUITests: XCTestCase {
         // Collect failures from every viewport in this audit-only test.
         continueAfterFailure = true
         launch()
+        let grocery = element("quickGrocery.name")
+        let repair = element("urgentRepairShortcut")
+        XCTAssertTrue(grocery.waitForExistence(timeout: 5))
+        let groceryBefore = grocery.frame
+        let repairBefore = repair.frame
         captureShopFrames("Initial-Shop-before-audit")
         screenshot("Initial-Shop-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Initial Shop"))
+        let groceryAfter = grocery.frame
+        XCTAssertEqual(groceryAfter.height, groceryBefore.height, accuracy: 1,
+                       "The empty field should return to one line at the original text size.")
+        XCTAssertEqual(repair.frame.minY - groceryAfter.minY, repairBefore.minY - groceryBefore.minY, accuracy: 1,
+                       "The restored text size should preserve the distance between the field and repair shortcut.")
         // Retain the initial audit; add full-category coverage after the
         // complete repair shortcut is visible above bottom navigation.
         revealFullyInShop(element("urgentRepairShortcut"))
@@ -515,7 +575,9 @@ final class RoomInTheCartUITests: XCTestCase {
         // restart check still runs. No issue categories/elements are filtered.
         XCTAssertNoThrow(try auditAccessibility("Initial comparison results"))
         assertKnownTotals()
-        assertContains("Room within the item limit: $26.00")
+        let headroom = app.staticTexts["Room within the item limit: $26.00"]
+        reveal(headroom)
+        positionPackBForAudit(headroom: headroom)
         screenshot("Scrolled-result-before-audit")
         captureComparisonFrames("Scrolled-result-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Scrolled comparison results"))
@@ -567,7 +629,11 @@ final class RoomInTheCartUITests: XCTestCase {
     private func captureShopFrames(_ name: String) {
         let scroll = app.scrollViews["shopContentScroll"]
         let target = element("urgentRepairShortcut")
+        let grocery = element("quickGrocery.name")
+        let addButton = app.buttons["quickGrocery.add"]
         let rows = ["Window: \(app.windows.firstMatch.frame)", "Shop scroll: \(scroll.frame)",
+                    grocery.exists ? "Grocery field: \(grocery.frame)" : "Grocery field: absent",
+                    addButton.exists ? "Add grocery: \(addButton.frame)" : "Add grocery: absent",
                     "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(tabFrameDescription)",
                     "Visible Shop: \(shopViewport)",
                     target.exists ? "Repair shortcut: \(target.frame); hittable=\(target.isHittable); \(target.label)" : "Repair shortcut: absent"]
@@ -584,6 +650,41 @@ final class RoomInTheCartUITests: XCTestCase {
         let bottom = min(list.maxY, window.maxY, tabs.exists ? tabs.frame.minY : window.maxY)
         return CGRect(x: max(list.minX, window.minX), y: top,
                       width: min(list.maxX, window.maxX) - max(list.minX, window.minX), height: max(0, bottom - top))
+    }
+
+    private func positionPackBForAudit(headroom: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let header = app.staticTexts["bHeader"]
+        let source = app.staticTexts["comparisonSourceNote"]
+        let purchase = app.staticTexts["bPacks"]
+        let total = app.staticTexts["bTotal"]
+        // Keep the complete purchase, limit and source together in the middle viewport.
+        // A hittable result can have ink behind the navigation bar or the following row
+        // partly under the tab bar after a swipe. The other audits cover both ends.
+        reveal(source, file: file, line: line)
+        for _ in 0..<10 {
+            let viewport = comparisonViewport
+            guard header.exists, source.exists, viewport.height > 0 else { break }
+            let group = header.frame.union(source.frame)
+            // Align the final source row to the bottom content inset. The last
+            // audit separately shows the full Save button on the following row.
+            let offset = viewport.maxY - 12 - group.maxY
+            if abs(offset) <= 12 && viewport.contains(group) {
+                for row in [header, total, purchase, headroom, source] {
+                    XCTAssertTrue(row.exists && row.isHittable && viewport.contains(row.frame),
+                                  "Expected a complete Pack B result in the audit viewport: \(row)", file: file, line: line)
+                }
+                return
+            }
+            guard group.height <= viewport.height else { break }
+            let window = app.windows.firstMatch
+            let origin = window.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: viewport.midX - window.frame.minX, dy: viewport.midY - window.frame.minY))
+            let distance = min(viewport.height / 3, max(-viewport.height / 3, offset))
+            let end = start.withOffset(CGVector(dx: 0, dy: distance))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        }
+        captureComparisonFrames("Pack-B-position-failure")
+        XCTFail("Could not position the complete Pack B results and their source for the audit.", file: file, line: line)
     }
 
     private func revealFullyInComparison(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {

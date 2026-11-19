@@ -39,6 +39,7 @@ extension DinnerWorkspaceStore {
     let accessProvider: AccessProvider
     let phaseProvider: (UUID) -> BasketPhase
     let ideaCatalog: [MealTemplate]
+    let basketPrepAccess: () -> Bool
     let clock: () -> Date
     private(set) weak var repeatWeekPickup: PickupModel?
     private weak var swapPickup: PickupModel?
@@ -52,9 +53,9 @@ extension DinnerWorkspaceStore {
 
     init(store: any DinnerWorkspaceStore, access: @escaping AccessProvider,
          phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [],
-         clock: @escaping () -> Date = Date.init) {
+         clock: @escaping () -> Date = Date.init, basketPrepAccess: @escaping () -> Bool = { false }) {
         self.store = store; accessProvider = access; phaseProvider = phase
-        self.ideaCatalog = ideaCatalog; self.clock = clock
+        self.ideaCatalog = ideaCatalog; self.clock = clock; self.basketPrepAccess = basketPrepAccess
     }
     func observe(_ publisher: ObservableObjectPublisher) {
         observation = publisher.sink { [weak self] _ in self?.objectWillChange.send() }
@@ -86,6 +87,7 @@ extension DinnerWorkspaceStore {
         guard let preview, shop?.id == preview.proposal.shopID, let access = try? access(for: preview.proposal.shopID) else { return false }
         let namespace: String
         switch access.scope { case .local(let id): namespace = "local:\(id.uuidString)"; case .household(let id): namespace = "household:\(id)" }
+        if preview.proposal.tool == .threeDinnerBasket, !basketPrepAccess() || !access.hasPaidTools || !access.canReadBudget { return false }
         if let repeated = preview.proposal.repeatWeek {
             guard let identity = editorIdentity, canReadRepeatSources(repeated.sourceShopIDs, identity: identity),
                   repeated.staples.isEmpty || access.hasPaidTools else { return false }
@@ -232,6 +234,17 @@ extension DinnerWorkspaceStore {
     @discardableResult func applyPreview() async -> Bool {
         guard canApply, let reviewed = preview else { fail(DinnerPlanningError.forbidden); return false }
         var authorize = repeatWeekAuthorization(for: reviewed.proposal)
+        if reviewed.proposal.tool == .threeDinnerBasket {
+            let proposal = reviewed.proposal
+            let identity = editorIdentity
+            authorize = { [weak self] in
+                guard let self, let identity, self.basketPrepAccess(), self.editorIdentity == identity, self.shop?.id == proposal.shopID,
+                      self.phaseProvider(proposal.shopID) == .draft, let access = try? self.access(for: proposal.shopID)
+                else { return false }
+                return access.hasPaidTools && access.canReadBudget && access.actorID == proposal.authorID &&
+                    access.actorID == access.assignedShopperID
+            }
+        }
         if let originalID = reviewed.proposal.swapOriginalID {
             guard let detail = currentSwapReview, let pickup = swapPickup else { fail(DinnerPlanningError.stalePreview); return false }
             authorize = swapAuthorization(reviewed.proposal, pickup: pickup, meals: [originalID], usesCanonicalStock: detail.pantryBasis != nil)
@@ -286,6 +299,22 @@ extension DinnerWorkspaceStore {
             guard workspace.selectedShopID == editor.shopID, note.shopID == editor.shopID,
                   editor.scope == access.scope, editor.actorID == access.actorID else { throw DinnerPlanningError.forbidden }
             try workspace.dinnerPlanning.recordWeekNote(note, replacing: original, access: access, at: now)
+        }
+    }
+    @discardableResult func savePrep(_ task: DinnerPrepTask?, previous: DinnerPrepTask?, mealID: UUID, revision: UUID,
+                                     editor: EditorIdentity, completing: Bool = false) async -> Bool {
+        let authorized = { @MainActor [weak self] in
+            self?.basketPrepAccess() == true && self?.editorIdentity == editor && self?.localIdeaWorkspaceID != nil
+        }
+        guard authorized() else { return false }
+        return await mutate(key: "dinner-prep-\(UUID())", shopID: editor.shopID,
+                            reauthorize: authorized) { workspace, index, access, now in
+            guard workspace.selectedShopID == editor.shopID, editor.scope == access.scope, editor.actorID == access.actorID
+            else { throw DinnerPlanningError.forbidden }
+            var value = task
+            if completing { value?.completedAt = now }
+            try workspace.dinnerPlanning.setPrep(value, replacing: previous, mealID: mealID,
+                ledger: workspace.shops[index], expectedRevision: revision, access: access, at: now)
         }
     }
     @discardableResult func saveRotation(_ rotation: DinnerRotation) async -> Bool {

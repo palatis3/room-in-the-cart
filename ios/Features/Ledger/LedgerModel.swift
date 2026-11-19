@@ -107,7 +107,9 @@ private enum LedgerDeletionJournal {
     private let inventoryProjectionsEnabled: Bool
     private let mutationGate: PantryMutationGate?
     private let usesLivePantry: Bool
-    private var privatePantryAuthorization: (() -> Bool)?
+    // The ledger opens before the adult's paired pantry finishes authorization.
+    // Private entry controls observe this model to become available after binding.
+    @Published private var privatePantryAuthorization: (() -> Bool)?
     private var privatePantryDeletionCheck: (() throws -> Bool)?
     private var privatePantryWritable: Bool { !usesLivePantry || privatePantryAuthorization?() == true }
     @Published private(set) var hasPendingPantryProjection = false
@@ -808,6 +810,33 @@ private enum LedgerDeletionJournal {
             try shop.commitImport(preview, decisions: decisions)
             candidate.shops.append(shop)
             candidate.selectedShopID = shop.id
+        }
+    }
+
+    func addQuickGrocery(_ preview: StagedListImport, selectedShopID: UUID?, workspaceID: UUID,
+                         authorize: @escaping @MainActor () -> Bool) async -> Bool {
+        await change(key: "quick-grocery-\(preview.id)", onShopSelected: nil, authorize: authorize) { candidate in
+            guard sourceWorkspaceID == workspaceID else { throw LedgerError.stalePreview }
+            if candidate.selectedShopID == preview.shopID,
+               let index = candidate.shops.firstIndex(where: { $0.id == preview.shopID }),
+               candidate.shops[index].importBatches.contains(where: { $0.id == preview.id }) {
+                try candidate.shops[index].commitImport(preview)
+                return
+            }
+            guard candidate.selectedShopID == selectedShopID else { throw LedgerError.stalePreview }
+            if let selectedShopID {
+                guard selectedShopID == preview.shopID,
+                      let index = candidate.shops.firstIndex(where: { $0.id == selectedShopID }) else {
+                    throw LedgerError.stalePreview
+                }
+                try candidate.shops[index].commitImport(preview)
+            } else {
+                guard candidate.shops.isEmpty else { throw LedgerError.stalePreview }
+                var shop = ShoppingLedger(id: preview.shopID, title: ledgerText("Pickup"))
+                try shop.commitImport(preview)
+                candidate.shops.append(shop)
+                candidate.selectedShopID = shop.id
+            }
         }
     }
 

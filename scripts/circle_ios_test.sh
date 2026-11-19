@@ -34,8 +34,11 @@ boot_pid=$!
 mv .build/DerivedData/Build/test-plan .build/test-plan
 jq -e --arg revision "$CIRCLE_SHA1" '.revision == $revision' .build/test-plan/producer.json > /dev/null
 EXPECTED_TEST_COUNT=$(jq -er --arg shard "$TEST_SHARD" \
-    '.include | select(length == 11) | map(select(.shard == $shard)) | select(length == 1)
-     | .[0].expected_count | select(type == "number" and . > 0)' .build/test-plan/manifest.json)
+    '.include
+     | select(map(.shard) | sort == ["models", "ui-01", "ui-02", "ui-03", "ui-04", "ui-05",
+                                      "ui-06", "ui-07", "ui-08", "ui-09", "ui-10", "ui-11"])
+     | select(any(.[]; .shard == "ui-11" and .expected_count == 1))
+     | map(select(.shard == $shard)) | .[0].expected_count | select(type == "number" and . > 0)' .build/test-plan/manifest.json)
 export EXPECTED_TEST_COUNT
 cp ".build/test-plan/$TEST_SHARD.txt" "$evidence/"
 printf 'CircleCI node %s of %s: %s, %s tests\n' "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL" "$TEST_SHARD" "$EXPECTED_TEST_COUNT"

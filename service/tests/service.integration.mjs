@@ -1,3 +1,4 @@
+import {adultPickupTests} from './adult-pickup.wire.mjs';
 import test,{before,after} from 'node:test';
 import {grocery30Routing} from './grocery30-routing.mjs';
 import assert from 'node:assert/strict';
@@ -21,11 +22,11 @@ const server=createHTTPServer({repository:repo,verifier,billing:new BillingServi
 let origin;
 before(async()=>{await admin.query('CREATE SCHEMA IF NOT EXISTS auth; CREATE TABLE IF NOT EXISTS auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz)');await migrate(adminURL);await assertRuntimeRole(runtime);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;});
 after(async()=>{await new Promise(resolve=>server.close(resolve));await Promise.all([runtime.end(),admin.end()]);});
-async function fixture({createShop=true}={}) {
+async function fixture({createShop=true,otherAdult=false}={}) {
   const h=randomUUID(),shopId=randomUUID(),lineId=randomUUID(),actors={};
   const c=await admin.connect();try{
     await c.query('BEGIN');await c.query('INSERT INTO ritc.household(household_id,label) VALUES($1,$2)',[h,'Fictional household']);
-    for(const name of ['Mia','Alex','Sam','Jo']) {
+    for(const name of ['Mia','Alex','Sam','Jo',...(otherAdult?['Lee']:[])]) {
       const id=randomUUID(),session=randomUUID(),subject=randomUUID(),kind=['Sam','Jo'].includes(name)?'child':'adult';
       await c.query('INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer,can_contribute) VALUES($1,$2,$3,$4,$5,$6,\'active\',$7,true)',[h,id,issuer,subject,name,kind,name==='Mia']);
       const token=await new SignJWT({session_id:session}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setAudience(audience).setSubject(subject).setIssuedAt().setExpirationTime('1h').sign(privateKey);
@@ -68,6 +69,8 @@ async function fixture({createShop=true}={}) {
   }
   return{h,shopId,lineId,line,quote,actors,http,envelope,command,send,preview};
 }
+
+adultPickupTests({fixture,admin,repo});
 
 if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS',async()=>{
   const f=await deferredFixture('Alex',{originalItem:'Original basket'});
@@ -1617,4 +1620,35 @@ test('a retried request keeps its original safe receipt, and a removal suppresse
   const mine=(await f.http('Alex','GET','/requests/mine')).data.requests;
   assert.equal(mine.length,1);
   assert.equal(mine[0].originalItem,'Reviewed wording');
+});
+
+test('segmented household receipts require the same printed transaction across extensions and retakes',async()=>{
+  const f=await fixture({createShop:false});
+  const quantity={amount:{numerator:1,denominator:1},unit:'count',originalLiteral:'1'};
+  const row=page=>({ordinal:(page-1)*200,original:'YOGUR 1 EA $2.25',foodName:'Yogur',location:'fridge',
+    received:quantity,usable:quantity,paidUSDMinor:225,printed:{page,line:1,method:'imageOCR',stage:'receipt'}});
+  const header={merchant:'Mercado Café',purchaseDay:'2026-01-10',zone:'UTC',reference:'Receipt 724',segmentedPhotos:true,
+    receiptId:'05e32c0b-b8cf-87cb-bda7-d6a70f780aa7',imageId:randomUUID(),layoutId:randomUUID()};
+  const command=(pantryRevision,fields,lines)=>({v:1,kind:'pantry.acquireReceipt',grantEpoch:0,pantryRevision,
+    clientKey:randomUUID(),replayWindow:f.actors.Mia.window,body:{...fields,lines}});
+  const send=c=>f.http('Mia','POST','/pantry/commands',c);
+  // Selecting just a row from page one does not turn a segmented receipt into a single image.
+  assert.equal((await send(command(0,{...header,reference:null},[row(1)]))).status,422);
+  assert.equal((await send(command(0,{...header,receiptId:randomUUID()},[row(1)]))).status,422);
+  const {segmentedPhotos,...unmarked}=header;
+  assert.equal((await send(command(0,unmarked,[row(2)]))).status,422);
+  const original=command(0,header,[row(1)]),saved=await send(original);
+  assert.equal(saved.status,200,JSON.stringify(saved.data));
+  assert.deepEqual((await send(original)).data,saved.data);
+  assert.equal((await send(command(1,header,[row(1),row(2)]))).data.savedCount,1);
+  // Extra final section, retaken middle section and retaken first section all require review.
+  for(const firstImage of [header.imageId,header.imageId,randomUUID()]){
+    const denied=await send(command(2,{...header,imageId:firstImage,layoutId:randomUUID()},[row(1),row(3)]));
+    assert.equal(denied.status,409);assert.equal(denied.data.error.code,'receipt_layout_review');
+  }
+  const stock=(await f.http('Mia','GET','/pantry')).data;
+  assert.equal(stock.pantryRevision,2);assert.equal(stock.lots.length,2);
+  const separate={...header,reference:'Receipt 725',receiptId:'8534e80c-5aa0-856c-ab5b-57ae5657dc10',
+    imageId:randomUUID(),layoutId:randomUUID()};
+  assert.equal((await send(command(2,separate,[row(1)]))).data.savedCount,1);
 });

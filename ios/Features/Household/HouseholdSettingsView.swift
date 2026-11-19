@@ -7,6 +7,7 @@ struct HouseholdSettingsView: View {
     var continuesAfterWorkspaceLock = false
     @State private var visibleEntry: UUID?
     @Environment(\.scenePhase) private var scenePhase
+    @FocusState private var lastCallItemFocused: Bool
     @State private var requestReview: RequestReviewPresentation?
     private struct RequestReviewPresentation: Identifiable {
         let id = UUID()
@@ -124,6 +125,7 @@ struct HouseholdSettingsView: View {
                                     if let proposed = model.pendingCorrection(for: request) {
                                         LabeledContent(ht("Correction on this device"), value: proposed)
                                     }
+                                    AdultProductReferenceLink(household: model, request: request)
                                     if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                                     Text(status(request)).foregroundStyle(.secondary)
                                     if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
@@ -141,7 +143,7 @@ struct HouseholdSettingsView: View {
                                     } else if request.status != "withdrawn" {
                                         Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
                                     }
-                                }.accessibilityElement(children: projection.supportsSharedContentSafety ? .contain : .combine)
+                                }.accessibilityElement(children: projection.supportsSharedContentSafety || projection.capabilities.contains("adult_product_reference") ? .contain : .combine)
                                 .accessibilityIdentifier("household.ownRequest." + request.id)
                             }
                             if model.requests.isEmpty {
@@ -153,11 +155,19 @@ struct HouseholdSettingsView: View {
                             }
                         }
                     }
-                    if projection.capabilities.contains("own_requests"), projection.shopId != nil || model.editing != nil || model.followingUp != nil {
+                    if projection.capabilities.contains("own_requests"), projection.shopId != nil || model.selectedRequestPickupID != nil || model.editing != nil || model.followingUp != nil {
+                        if model.editing == nil, model.followingUp == nil,
+                           let shop = model.selectedRequestPickupID ?? projection.shopId.flatMap(UUID.init(uuidString:)),
+                           model.adultRequestScope(shop: shop, capability: "adult_last_call") != nil {
+                            AdultShopLastCall(household: model, shopID: shop) { late in
+                                model.forNextShop = late
+                                lastCallItemFocused = true
+                            }
+                        }
                         Section(model.contributorDraftTitle) {
                             if model.editing != nil || model.followingUp != nil { Button(ht("Cancel edit")) { model.cancelEdit() } }
                             if model.followingUp != nil { Text(ht("This follow-up leaves the accepted request unchanged.")) }
-                            TextField(ht("Item"), text: $model.item)
+                            TextField(ht("Item"), text: $model.item).focused($lastCallItemFocused)
                             TextField(ht("Quantity, optional"), text: $model.quantity)
                             if model.requestRequiresNextShop {
                                 Text(ht("Request for next shop"))

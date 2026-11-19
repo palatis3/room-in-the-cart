@@ -268,6 +268,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public var handledBy: String?
     public var handledAt: Date?
     public var trashedAt: Date?
+    public internal(set) var pickedPrice: PickedLinePrice? = nil
     public var stapleApproval: StapleApproval?
     public var isChecked: Bool { checkedAt != nil }
     public var isHandled: Bool { handledAt != nil }
@@ -298,17 +299,20 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
     public var duplicateLineIDs: [UUID]
     public var exclusions: [String]
     public var capture: CaptureImportMetadata?
+    /// Opaque private product reference from an explicitly reviewed pantry suggestion.
+    public var pantryProductLink: UUID?
     public let originalPack: ListQuantityParser.PackLabel?
 
     public init(id: UUID, proposedLineID: UUID, originalText: String, name: String, quantity: Quantity?,
                 unresolvedReason: String?, duplicateLineIDs: [UUID], exclusions: [String] = [],
-                capture: CaptureImportMetadata? = nil, originalPack: ListQuantityParser.PackLabel? = nil) {
+                capture: CaptureImportMetadata? = nil, originalPack: ListQuantityParser.PackLabel? = nil, pantryProductLink: UUID? = nil) {
+        self.pantryProductLink = pantryProductLink
         self.id = id; self.proposedLineID = proposedLineID; self.originalText = originalText; self.name = name
         self.quantity = quantity; self.unresolvedReason = unresolvedReason; self.duplicateLineIDs = duplicateLineIDs
         self.exclusions = exclusions; self.capture = capture; self.originalPack = originalPack
     }
     private enum CodingKeys: String, CodingKey {
-        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack
+        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack, pantryProductLink
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -319,6 +323,7 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
         duplicateLineIDs = try c.decode([UUID].self, forKey: .duplicateLineIDs)
         exclusions = try c.decodeIfPresent([String].self, forKey: .exclusions) ?? []
         capture = try c.decodeIfPresent(CaptureImportMetadata.self, forKey: .capture)
+        pantryProductLink = try c.decodeIfPresent(UUID.self, forKey: .pantryProductLink)
         originalPack = try c.decodeIfPresent(ListQuantityParser.PackLabel.self, forKey: .originalPack)
     }
 }
@@ -424,6 +429,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     public var selectedShopID: UUID?
     public var dinnerPlanning: DinnerPlanningState
     public internal(set) var privateMealFeedback: [PrivateMealFeedback] = []
+    public var shoppingLists = PrivateShoppingLists()
     public var listLayout = LedgerListLayout()
     public var packSelections: [LedgerPackSelection]
     public init(shops: [ShoppingLedger] = [], mealTemplates: [MealTemplate] = [], selectedShopID: UUID? = nil,
@@ -432,9 +438,10 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         self.dinnerPlanning = dinnerPlanning
         self.packSelections = packSelections
     }
-    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout, privateMealFeedback }
+    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout, privateMealFeedback, shoppingLists }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        if shoppingLists != PrivateShoppingLists() { try c.encode(shoppingLists, forKey: .shoppingLists) }
         if !privateMealFeedback.isEmpty { try c.encode(privateMealFeedback, forKey: .privateMealFeedback) }
         try c.encode(shops, forKey: .shops)
         try c.encode(mealTemplates, forKey: .mealTemplates)
@@ -446,6 +453,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        shoppingLists = try c.decodeIfPresent(PrivateShoppingLists.self, forKey: .shoppingLists) ?? PrivateShoppingLists()
         privateMealFeedback = try c.decodeIfPresent([PrivateMealFeedback].self, forKey: .privateMealFeedback) ?? []
         listLayout = try c.decodeIfPresent(LedgerListLayout.self, forKey: .listLayout) ?? LedgerListLayout()
         shops = try c.decode([ShoppingLedger].self, forKey: .shops)
@@ -471,6 +479,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         }
         try dinnerPlanning.validate(shops: shops)
         try listLayout.validate(shops: shops)
+        try shoppingLists.validate(shops: shops)
         guard packSelections.count <= 10_000 else { throw LedgerError.invalid("packSelections") }
         try uniqueIDs(packSelections.map(\.id))
         for selection in packSelections {
@@ -609,6 +618,24 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         return Quantity(amount: total, unit: unit, originalLiteral: "\(total) \(line.name)")
     }
 
+    /// Construct one review of the list, including source notes and effective quantities.
+    /// Index contributions once so opening a kit editor on a large list stays linear.
+    public func shoppingKitRows() throws -> [ShoppingKitRow] {
+        let sources = contributions.filter { $0.removedAt == nil }
+        let members = Dictionary(grouping: sources, by: \.lineID)
+        let byID = Dictionary(uniqueKeysWithValues: sources.map { ($0.id, $0.lineID) })
+        let edges = Dictionary(grouping: allocations) { byID[$0.demandContributionID] }
+        let exclusions = itemExclusions
+        return try lines.filter { !$0.isTrashed }.map { line in
+            let items = members[line.id] ?? []
+            var seen = Set<String>()
+            let notes = ([line.notes] + items.map(\.notes)).filter { !$0.isEmpty && seen.insert($0).inserted }
+            return ShoppingKitRow(id: line.id, name: line.name,
+                quantity: try quantity(for: line, members: items, edges: edges[line.id] ?? []),
+                notes: notes.joined(separator: "\n"), exclusions: exclusions[line.id] ?? [])
+        }
+    }
+
     @discardableResult
     public mutating func addManualLine(name: String, quantity: Quantity?, notes: String = "",
                                        exclusions: [String] = [], at: Date = Date()) throws -> UUID {
@@ -616,6 +643,16 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             next.appendManualFields(id: UUID(), contributionID: UUID(), name: name, quantity: quantity, notes: notes, exclusions: exclusions)
         }
     }
+    /// Applying a reviewed kit is one edit, including when it contains dozens of rows.
+    mutating func appendKitRows(_ rows: [ShoppingKitRow]) throws {
+        try mutate("applyShoppingKit", at: Date()) { next in
+            for row in rows {
+                _ = next.appendManualFields(id: UUID(), contributionID: UUID(), name: row.name,
+                    quantity: row.quantity, notes: row.notes, exclusions: row.exclusions)
+            }
+        }
+    }
+
     private mutating func appendManualFields(id: UUID, contributionID: UUID, name: String, quantity: Quantity?, notes: String, exclusions: [String]) -> UUID {
         let lineID = appendLine(id: id, name: name, notes: notes)
         contributions.append(.init(id: contributionID, lineID: lineID, source: .manual, productName: name, quantity: quantity,
@@ -905,9 +942,26 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func setChecked(lineID: UUID, checked: Bool, at: Date = Date()) throws {
         try mutate("setChecked", at: at) { next in
             let index = try next.lineIndex(lineID)
+            next.lines[index].pickedPrice = nil
             next.lines[index].checkedAt = checked ? at : nil
         }
     }
+    /// Record only an entered total for this specific pick. Checkout has its own evidence.
+    public mutating func recordPickedPrice(lineID: UUID, expectedRevision: UUID, total: Money?,
+                                           membership: Bool, weighted: Bool, conditionsConfirmed: Bool) throws {
+        guard revisionID == expectedRevision else { throw LedgerError.stalePreview }
+        try mutate("pickedPrice", at: Date()) { next in
+            let index = try next.lineIndex(lineID)
+            let line = next.lines[index]
+            guard let picked = line.checkedAt, !line.isTrashed, !line.isHandled else { throw LedgerError.stalePreview }
+            let price = PickedLinePrice(total: total, membership: membership, weighted: weighted,
+                conditionsConfirmed: conditionsConfirmed, checkedAt: picked, name: line.name,
+                quantity: try next.quantity(forLineID: lineID), basisRevision: next.basisRevision)
+            try price.validate()
+            next.lines[index].pickedPrice = price
+        }
+    }
+
     public mutating func handle(lineID: UUID, by: String, at: Date = Date()) throws {
         try mutate("handle", at: at) { next in try next.markHandled(lineID, by: by, at: at) }
     }
@@ -1100,6 +1154,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
         }
         for line in lines {
+            try line.pickedPrice?.validate()
             if let approval = line.stapleApproval {
                 try ledgerText(approval.purpose, nonempty: true, maximum: 512)
                 try ledgerText(approval.branch, nonempty: true, maximum: 512)
@@ -1211,7 +1266,17 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     guard touchedMeals.insert(dinner.occurrenceID).inserted,
                           !next.mealOccurrences.contains(where: { $0.id == dinner.occurrenceID }) else { throw DinnerPlanningError.operationConflict }
                     for (index, ingredient) in dinner.template.ingredients.enumerated() {
-                        let lineID = next.appendLine(id: dinner.lineIDs[index], name: ingredient.name, notes: ingredient.notes)
+                        let lineID: UUID
+                        if let reviewed = dinner.reviewedGroceryLines?[index] {
+                            guard let line = next.lines.first(where: { $0.id == reviewed && !$0.isChecked && !$0.isHandled && !$0.isTrashed }),
+                                  line.name == ingredient.name, line.notes == ingredient.notes,
+                                  next.contributions(forLineID: reviewed).allSatisfy({ source in
+                                      Set(source.exclusions) == Set(dinner.template.exclusions + ingredient.exclusions)
+                                          && source.notes == ingredient.notes
+                                  })
+                            else { throw DinnerPlanningError.reviewRequired("groceryMatch") }
+                            lineID = reviewed
+                        } else { lineID = next.appendLine(id: dinner.lineIDs[index], name: ingredient.name, notes: ingredient.notes) }
                         next.contributions.append(LedgerContribution(id: dinner.contributionIDs[index], lineID: lineID,
                             source: .meal(occurrenceID: dinner.occurrenceID), productName: ingredient.name, quantity: ingredient.quantity,
                             originalText: ingredient.quantity?.originalLiteral ?? ingredient.name, notes: ingredient.notes,
@@ -1220,7 +1285,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     let template = dinner.template
                     next.mealOccurrences.append(MealOccurrence(repeatedFrom: repeatWeek?.meals[changeIndex].source, id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
                         title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
-                        sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
+                        sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps, exclusions: template.exclusions, servingGroups: template.servingGroups + [dinner.lunchHold].compactMap { $0 }, leadTimeMinutes: template.leadTimeMinutes,
                         completedSteps: template.completedSteps, ingredientContributionIDs: dinner.contributionIDs,
                         scheduledDay: dinner.day, isHidden: false, removedAt: nil))
                 case .move(let occurrenceID, let day):
@@ -1312,6 +1377,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try validate()
         var next = self
         let result = try action(&next)
+        if operation != "pickedPrice" { next.discardChangedPickPrices(previous: self) }
         next.revision = try increment(next.revision)
         let parent = next.revisions.last?.id
         next.revisionID = proposedRevisionID ?? UUID()
@@ -1325,6 +1391,30 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try next.validate()
         self = next
         return result
+    }
+
+    /// A price applies to the picked product and its reviewed amount. Clear changed
+    /// evidence in the same mutation so reverting a later edit cannot revive it.
+    private mutating func discardChangedPickPrices(previous: Self) {
+        let priced = lines.indices.filter { lines[$0].pickedPrice != nil }
+        guard !priced.isEmpty else { return }
+        let ids = Set(priced.map { lines[$0].id })
+        let oldLines = Dictionary(uniqueKeysWithValues: previous.lines.filter { ids.contains($0.id) }.map { ($0.id, $0) })
+        func facts(_ shop: Self) -> (sources: [UUID: [LedgerContribution]], edges: [UUID?: [AllocationEdge]]) {
+            let sources = shop.contributions.filter { $0.removedAt == nil && ids.contains($0.lineID) }
+            let owners = Dictionary(uniqueKeysWithValues: sources.map { ($0.id, $0.lineID) })
+            let edges = shop.allocations.filter { owners[$0.demandContributionID] != nil }
+            return (Dictionary(grouping: sources, by: \.lineID), Dictionary(grouping: edges) { owners[$0.demandContributionID] })
+        }
+        let old = facts(previous), current = facts(self)
+        for index in priced {
+            let line = lines[index]
+            guard let before = oldLines[line.id], line.pickedPrice == before.pickedPrice,
+                  basisRevision == previous.basisRevision, line.checkedAt == before.checkedAt,
+                  !line.isHandled, !line.isTrashed, line.name == before.name, line.notes == before.notes,
+                  old.sources[line.id] == current.sources[line.id], old.edges[line.id] == current.edges[line.id]
+            else { lines[index].pickedPrice = nil; continue }
+        }
     }
 
     private mutating func appendLine(id: UUID = UUID(), name: String, notes: String = "") -> UUID {

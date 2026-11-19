@@ -19,6 +19,8 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         case adjustment(target: UUID, revision: Int64, kind: AdjustmentKind)
     }
 
+    public enum TaxTreatment: String, Codable, CaseIterable, Sendable { case included, excluded }
+
     public enum AdjustmentKind: String, Codable, CaseIterable, Sendable {
         case refund, discount, unallocatedCredit
     }
@@ -56,14 +58,17 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
     public let currencyCode: String
     public let amountMinor: Int64?
     public let pack: Pack?
+    /// The usable portion of a receipt line can be smaller than the purchased amount.
+    public let confirmedUsable: Quantity?
     public let eligibility: String?
+    public let taxTreatment: TaxTreatment?
     public let shelfImage: ReviewedShelfImage?
     public let sourceText: String
 
     public init(id: UUID, revision: Int64 = 1, source: Source, foodID: UUID? = nil, linkedLotID: UUID? = nil, name: String,
                 variant: String? = nil, store: String, branch: String? = nil, mode: FulfillmentMode? = nil,
                 date: Date, currencyCode: String, amountMinor: Int64?, pack: Pack?, eligibility: String? = nil,
-                sourceText: String, shelfImage: ReviewedShelfImage? = nil) {
+                sourceText: String, shelfImage: ReviewedShelfImage? = nil, taxTreatment: TaxTreatment? = nil, confirmedUsable: Quantity? = nil) {
         self.id = id
         self.revision = revision
         self.source = source
@@ -78,8 +83,10 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         self.currencyCode = currencyCode
         self.amountMinor = amountMinor
         self.pack = pack
+        self.confirmedUsable = confirmedUsable
         self.eligibility = eligibility
         self.shelfImage = shelfImage
+        self.taxTreatment = taxTreatment
         self.sourceText = sourceText
     }
 
@@ -92,7 +99,7 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
                   foodID: receipt.foodID, linkedLotID: receipt.lotID, name: receipt.name, store: receipt.merchant, date: receipt.purchaseDate,
                   currencyCode: receipt.paidLineTotal?.currency.rawValue ?? Currency.usd.rawValue,
                   amountMinor: receipt.paidLineTotal?.minorUnits, pack: Pack(perPackage: receipt.received),
-                  sourceText: receipt.originalLine)
+                  sourceText: receipt.originalLine, confirmedUsable: receipt.usable)
         try validate()
     }
 
@@ -112,6 +119,11 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         }
         try ledgerText(sourceText, nonempty: true, maximum: 8192)
         try pack?.validate()
+        if let confirmedUsable {
+            guard case .paidReceipt = source, let pack, pack.count == 1, confirmedUsable.unit == pack.perPackage.unit,
+                  confirmedUsable.amount <= pack.perPackage.amount else { throw DomainError.invalidInput("receiptPriceUsable") }
+            try confirmedUsable.validate()
+        }
         if let shelfImage {
             try shelfImage.printed.validate()
             guard source == .shelf, shelfImage.printed.shelfID == id,
@@ -166,5 +178,84 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         let sharedVariant = variant != nil && variant == other.variant && name == other.name
         guard (sharedFood || sharedVariant), variant == other.variant else { return false }
         return try unitPrice(in: unit) != nil && other.unitPrice(in: unit) != nil
+    }
+}
+
+/// The quantity and amount describe the same shelf bundle or printed unit-price basis.
+public struct ShelfPriceOffer: Equatable, Sendable {
+    public enum QuantityBasis: Sendable { case purchased, usable }
+    public let basis: QuantityBasis
+    public let product: String
+    public let variant: String
+    public let pack: PrivatePriceEvidence.Pack?
+    public let amountMinor: Int64?
+    public let currency: String
+    public let eligibility: String
+    public let tax: PrivatePriceEvidence.TaxTreatment?
+
+    public init(product: String, variant: String, pack: PrivatePriceEvidence.Pack?, amountMinor: Int64?,
+                currency: String, eligibility: String, tax: PrivatePriceEvidence.TaxTreatment?,
+                basis: QuantityBasis = .purchased) {
+        self.basis = basis
+        self.product = product
+        self.variant = variant
+        self.pack = pack
+        self.amountMinor = amountMinor
+        self.currency = currency
+        self.eligibility = eligibility
+        self.tax = tax
+    }
+
+    public static func normalized(_ text: String?) -> String {
+        (text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    public func candidates(in records: [PrivatePriceEvidence], through date: Date) -> [PrivatePriceEvidence] {
+        guard let pack, pack.count > 0, pack.perPackage.amount > .zero, !Self.normalized(product).isEmpty else { return [] }
+        return records.filter { row in
+            let paidVariant = Self.normalized(row.variant)
+            return row.isPaidPrice && row.amountMinor != nil && row.date <= date && row.currencyCode == currency
+                && Self.normalized(row.name) == Self.normalized(product)
+                && (Self.normalized(variant).isEmpty || paidVariant.isEmpty || paidVariant == Self.normalized(variant))
+                && Self.normalized(row.eligibility) == Self.normalized(eligibility)
+                && (row.taxTreatment == nil || tax == nil || row.taxTreatment == tax)
+                && row.pack?.perPackage.unit.dimension == pack.perPackage.unit.dimension
+                && (basis != .usable || row.confirmedUsable?.amount != .zero)
+        }.sorted { ($0.date, $0.id.uuidString) > ($1.date, $1.id.uuidString) }
+    }
+
+    /// A named variant matches automatically. Unlabelled evidence requires the shopper to choose the actual purchase.
+    public func purchase(in candidates: [PrivatePriceEvidence], chosenID: UUID?) -> PrivatePriceEvidence? {
+        if let chosenID, let selected = candidates.first(where: { $0.id == chosenID }) {
+            if let selectedVariant = selected.variant {
+                return candidates.first { Self.normalized($0.variant) == Self.normalized(selectedVariant) }
+            }
+            return selected
+        }
+        guard !Self.normalized(variant).isEmpty else { return nil }
+        return candidates.first { Self.normalized($0.variant) == Self.normalized(variant) }
+    }
+
+    public func needsBasisConfirmation(for paid: PrivatePriceEvidence) -> Bool {
+        tax == nil || paid.taxTreatment == nil || Self.normalized(eligibility).isEmpty
+            || (basis == .usable && paid.confirmedUsable == nil)
+    }
+
+    public func unitRates(for paid: PrivatePriceEvidence, adjustments: [PrivatePriceEvidence],
+                          sameBasisConfirmed: Bool) throws -> (shelf: Rational, paid: Rational)? {
+        guard sameBasisConfirmed || !needsBasisConfirmation(for: paid), let pack, let amountMinor, amountMinor >= 0,
+              !candidates(in: [paid], through: paid.date).isEmpty else { return nil }
+        try pack.validate()
+        let historical: Rational
+        if basis == .usable, let usable = paid.confirmedUsable {
+            guard let net = try paid.netAmount(adjustments: adjustments),
+                  let quantity = try usable.converted(to: pack.perPackage.unit), quantity > .zero else { return nil }
+            historical = try Rational(net).divided(by: quantity)
+        } else {
+            guard let rate = try paid.unitPrice(in: pack.perPackage.unit, adjustments: adjustments) else { return nil }
+            historical = rate
+        }
+        let totalQuantity = try pack.perPackage.amount.multiplied(by: Rational(pack.count))
+        return (try Rational(amountMinor).divided(by: totalQuantity), historical)
     }
 }

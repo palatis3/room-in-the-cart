@@ -38,7 +38,11 @@ extension ReceiptImportDraft {
             })
         }
         let ref = reference.trimmingCharacters(in: .whitespacesAndNewlines)
-        let imageID = imageDigest.map { ReceiptAcquisition.identity(["image", $0.base64EncodedString()]) }
+        let segmented = firstSectionDigest != nil
+        guard !segmented || !ref.isEmpty else { throw PantryReceiptError.invalid }
+        // Extending a previously saved single photo still resolves its existing source.
+        // The confirmed transaction identifies a retaken first photo as the same purchase.
+        let imageID = (firstSectionDigest ?? imageDigest).map { ReceiptAcquisition.identity(["image", $0.base64EncodedString()]) }
         // A reference may be supplied later for this same file. Keep the coordinates stable.
         let scope = ["household-receipt-layout-v1", workspaceID.uuidString, (imageID ?? receiptID).uuidString]
         let layout: UUID?
@@ -49,7 +53,7 @@ extension ReceiptImportDraft {
             layout = ReceiptAcquisition.identity(scope + ["reviewed"] + lines.map(\.original))
         }
         let receipt = HouseholdReceiptAcquisition(receiptId: receiptID, imageId: imageID, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines), purchaseDay: format.string(from: purchaseDate),
-        zone: zone.identifier, reference: ref.isEmpty ? nil : ref, lines: rows, layoutId: layout)
+        zone: zone.identifier, reference: ref.isEmpty ? nil : ref, lines: rows, layoutId: layout, segmentedPhotos: segmented ? true : nil)
         try receipt.validate()
         return receipt
     }
@@ -86,6 +90,8 @@ struct HouseholdReceiptEntry: View {
     @ObservedObject var model: HouseholdPantryModel
     let page: HouseholdPantryPage
     let household: String
+    var householdModel: HouseholdModel? = nil
+    @State private var tripState = ReceiptTripReviewState()
     @State private var sourceID = UUID()
     @State private var scan = false
     @State private var file = false
@@ -125,8 +131,14 @@ struct HouseholdReceiptEntry: View {
                 let value = Binding(get: { draft ?? displayed }, set: { if draft?.draftID == displayed.draftID { draft = $0 } })
                 Section(pantryText("Receipt details")) {
                     TextField(pantryText("Store or branch"), text: value.merchant).focused($field, equals: "merchant")
-                    TextField(pantryText("Confirmed transaction reference, if printed"), text: value.reference).focused($field, equals: "reference")
+                    if displayed.firstSectionDigest != nil {
+                        Text(captureText("Enter the printed transaction reference for this multi-photo receipt. Use the same reference when retaking or extending it. If none is printed, add genuinely missing food separately in the household pantry."))
+                    }
+                    TextField(displayed.firstSectionDigest == nil ? pantryText("Confirmed transaction reference, if printed") : captureText("Printed transaction reference (required)"), text: value.reference).focused($field, equals: "reference")
                     ReceiptPurchaseDateFields(draft: value)
+                }
+                if let householdModel {
+                    HouseholdReceiptTripLink(household: householdModel, pantry: model, page: page, draft: displayed, state: $tripState)
                 }
                 Text(pantryText("Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped."))
                 ForEach(displayed.lines) { row in
@@ -137,9 +149,11 @@ struct HouseholdReceiptEntry: View {
                 Button(pantryText("Review selected food")) {
                     do { reviewed = try value.wrappedValue.householdReceipt(for: page, deliveries: deliveries); invalid = false }
                     catch { invalid = true }
-                }.disabled(!displayed.dateConfirmed || displayed.selectedLines.isEmpty)
+                }.disabled(!displayed.dateConfirmed || displayed.selectedLines.isEmpty ||
+                    (displayed.firstSectionDigest != nil && displayed.reference.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                 .accessibilityIdentifier("householdReceipt.review")
             } else {
+                ReceiptPhotoShortcuts(target: target, authorize: { model.permitsReceiptReview(page) }, reviewed: accept)
                 Button(pantryText("Read a receipt file")) { file = true }
                 Button(pantryText("Scan or type receipt lines")) { scan = true }.accessibilityIdentifier("householdReceipt.scan")
             }
@@ -158,6 +172,69 @@ struct HouseholdReceiptEntry: View {
         }
         .sheet(isPresented: $file) {
             NavigationStack { PantryReceiptDocuments(target: target, authorize: { model.permitsReceiptReview(page) }) { source, _ in accept(source) } }
+        }
+    }
+}
+
+/// Household pantry access alone does not confer access to the shopper's confirmed order.
+private struct HouseholdReceiptTripLink: View {
+    @ObservedObject var household: HouseholdModel
+    @ObservedObject var pantry: HouseholdPantryModel
+    let page: HouseholdPantryPage
+    let draft: ReceiptImportDraft
+    @Binding var state: ReceiptTripReviewState
+
+    private var shopID: UUID? {
+        guard pantry.permitsReceiptReview(page), household.householdPantryScope == pantry.scope,
+              let actor = household.projection, actor.enrolled, actor.grantId == nil, actor.role == "shopper",
+              actor.capabilities.contains("shopper_commands"), actor.capabilities.contains("confirmed_order"),
+              let raw = actor.shopId else { return nil }
+        return UUID(uuidString: raw)
+    }
+    var body: some View {
+        if let shopID, let service = household.service {
+            NavigationLink(captureText("Compare receipt with a planned shop")) {
+                HouseholdReceiptTripRead(shopID: shopID, name: household.projection?.household.label ?? "",
+                    service: service, authorize: { self.shopID == shopID }, draft: draft, state: $state)
+            }.accessibilityIdentifier("householdReceipt.tripDifferences")
+        }
+    }
+}
+
+private struct HouseholdReceiptTripRead: View {
+    let shopID: UUID
+    let name: String
+    let service: HouseholdService
+    let authorize: @MainActor () -> Bool
+    let draft: ReceiptImportDraft
+    @Binding var state: ReceiptTripReviewState
+    @State private var trip: ReceiptTripPlan?
+    @State private var failed = false
+    @State private var attempt = UUID()
+    @Environment(\.scenePhase) private var scene
+
+    var body: some View {
+        Group {
+            if authorize(), let trip {
+                ReceiptTripDifferenceReview(trips: [trip], purchases: [], draft: draft, state: $state)
+            } else if failed {
+                Text(captureText("The confirmed order is unavailable. You can still review the receipt on its own."))
+                Button(captureText("Try again")) { attempt = UUID() }
+            } else { ProgressView() }
+        }
+        .task(id: attempt) {
+            guard authorize(), scene == .active else { return }
+            do {
+                let order = try await service.confirmedOrder(shopID: shopID)
+                guard !Task.isCancelled, scene == .active, authorize(), order.shopId == shopID else { return }
+                let current = try ReceiptTripPlan(shared: order, household: name)
+                if state.trip != current { state = .init(trip: current) }
+                trip = current
+            } catch { if !Task.isCancelled { trip = nil; failed = true } }
+        }
+        .onChange(of: scene) { _, phase in
+            trip = nil; failed = false
+            if phase == .active { attempt = UUID() }
         }
     }
 }

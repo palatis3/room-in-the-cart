@@ -3,6 +3,7 @@ import CoreDomain
 
 private enum LedgerHomeSheet: Hashable, Identifiable {
     case newShop, entry, facts, history, layout, printList
+    case inStore(UUID), kits(UUID?), standing
     case renameShop(id: UUID, title: String)
     var id: Self { self }
 }
@@ -23,6 +24,7 @@ struct LedgerHomeView: View {
             if model.ready, let shop = model.shop {
                 if !dynamicTypeSize.isAccessibilitySize { controls(shop) }
                 List {
+                    Section { LedgerQuickGroceryEntry(model: model) }
                     if dynamicTypeSize.isAccessibilitySize {
                         Section {
                             shopPicker(shop).buttonStyle(.borderless)
@@ -38,9 +40,14 @@ struct LedgerHomeView: View {
                     Section {
                         LedgerSaveStatus(model: model)
                             .accessibilityFocused($focus, equals: model.error == nil ? .result : .error)
+                        Button { sheet = .inStore(shop.id) } label: {
+                            Label(shoppingText("Shop in store"), systemImage: "cart")
+                                .frame(minHeight: 44)
+                        }.accessibilityIdentifier("ledgerInStore")
                         factsSummary(shop)
                     }
                     let exclusions = shop.listExclusions
+                    let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
                     let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
                     if groups.allSatisfy({ $0.lines.isEmpty }) {
                         Section(ledgerText("Shopping list")) {
@@ -51,7 +58,8 @@ struct LedgerHomeView: View {
                         ForEach(groups) { group in
                             Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
                                 ForEach(group.lines) { line in
-                                    row(line, shop: shop, exclusions: exclusions[line.id]).id(line.id).accessibilityFocused($focus, equals: .line(line.id))
+                                    row(line, shop: shop, exclusions: exclusions[line.id], departmentChoices: departmentChoices)
+                                        .id(line.id).accessibilityFocused($focus, equals: .line(line.id))
                                 }
                             }
                         }
@@ -81,6 +89,10 @@ struct LedgerHomeView: View {
                         Text(ledgerText("Type or paste a list, keep each meal's needs, and pick up where you left off."))
                         LedgerSaveStatus(model: model)
                         if model.ready {
+                            if !model.workspace.shoppingLists.kits.isEmpty {
+                                Button(shoppingText("Shopping kits")) { sheet = .kits(nil) }
+                            }
+                            Button(shoppingText("Standing list")) { sheet = .standing }
                             Button(ledgerText("Start pickup")) { sheet = .newShop }
                                 .buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerStartShop")
                                 .disabled(model.saving || model.hasPendingSave)
@@ -98,25 +110,37 @@ struct LedgerHomeView: View {
             StapleRecallView(ledger: model, targetID: shopID)
         }
         .sheet(item: $sheet) { destination in
-            NavigationStack {
-                switch destination {
-                case .newShop: LedgerNewShopView(model: model, onShopSelected: onShopSelected)
-                case let .renameShop(id, title):
-                    LedgerNewShopView(model: model, shopID: id, title: title)
-                case .entry:
-                    if let shop = model.shop { LedgerImportView(model: model, shopID: shop.id) }
-                case .facts:
-                    if let shop = model.shop { LedgerFactsView(model: model, shop: shop) }
-                case .layout:
-                    if let shop = model.shop { LedgerLayoutEditor(model: model, shop: shop) }
-                case .printList:
-                    if let shop = model.shop { LargePrintList(shop: shop, layout: model.workspace.listLayout) }
-                case .history:
-                    if let shop = model.shop { LedgerHistoryView(model: model, shopID: shop.id) }
-                }
+            switch destination {
+            case .inStore(let id):
+                PrivateShoppingSheet(model: model) { InStoreShoppingView(model: model, shopID: id) }
+            case .kits(let id):
+                PrivateShoppingSheet(model: model) { ShoppingKitsView(model: model, shopID: id) }
+            case .standing:
+                PrivateShoppingSheet(model: model) { StandingListView(model: model) }
+            default:
+                NavigationStack { existingSheet(destination) }
             }
         }
         .onChange(of: model.error) { _, error in if error != nil { focus = .error } }
+    }
+
+    @ViewBuilder private func existingSheet(_ destination: LedgerHomeSheet) -> some View {
+        switch destination {
+        case .inStore, .kits, .standing: EmptyView()
+        case .newShop: LedgerNewShopView(model: model, onShopSelected: onShopSelected)
+        case let .renameShop(id, title):
+            LedgerNewShopView(model: model, shopID: id, title: title)
+        case .entry:
+            if let shop = model.shop { LedgerImportView(model: model, shopID: shop.id) }
+        case .facts:
+            if let shop = model.shop { LedgerFactsView(model: model, shop: shop) }
+        case .layout:
+            if let shop = model.shop { LedgerLayoutEditor(model: model, shop: shop) }
+        case .printList:
+            if let shop = model.shop { LargePrintList(shop: shop, layout: model.workspace.listLayout) }
+        case .history:
+            if let shop = model.shop { LedgerHistoryView(model: model, shopID: shop.id) }
+        }
     }
 
     private func controls(_ shop: ShoppingLedger) -> some View {
@@ -167,7 +191,10 @@ struct LedgerHomeView: View {
         }
         .accessibilityIdentifier("ledgerListOptions")
         .confirmationDialog(ledgerText("List options"), isPresented: $showingListOptions, titleVisibility: .visible) {
+            Button(shoppingText("Shopping kits")) { sheet = .kits(shop.id) }
+            Button(shoppingText("Standing list")) { sheet = .standing }
             Button(ledgerText("List order and aisles")) { sheet = .layout }
+            Button(ledgerText("List history")) { sheet = .history }
             Button(ledgerText("Review prior staples")) { stapleRecallShopID = shop.id }
             Button(ledgerText("Large-print list")) { sheet = .printList }
             Button(ledgerText("Cancel"), role: .cancel) {}
@@ -219,7 +246,7 @@ struct LedgerHomeView: View {
             .disabled(model.saving || model.hasPendingSave)
     }
 
-    private func row(_ line: ShoppingLine, shop: ShoppingLedger, exclusions: String?) -> some View {
+    private func row(_ line: ShoppingLine, shop: ShoppingLedger, exclusions: String?, departmentChoices: [String]) -> some View {
         let quantity = ledgerQuantity(try? shop.quantity(forLineID: line.id))
         let details = [quantity, exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
         return HStack(alignment: .top, spacing: 10) {
@@ -233,19 +260,21 @@ struct LedgerHomeView: View {
                 .accessibilityLabel(ledgerFormat("Check %@", line.name))
                 .accessibilityHint(ledgerText("Moves this item to Recently checked."))
                 .accessibilityIdentifier("ledgerCheck-\(line.id)")
-            NavigationLink {
-                LedgerIngredientView(model: model, shopID: shop.id, lineID: line.id)
-            } label: {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(line.name).font(.headline)
-                    Text(quantity).foregroundStyle(Theme.secondary)
-                    if let exclusions { Text(verbatim: exclusions) }
-                    if !line.notes.isEmpty { Text(line.notes) }
-                    if !line.aisle.isEmpty { Text(line.aisle).font(.footnote).foregroundStyle(Theme.secondary) }
-                }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
-            }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
-                .accessibilityValue(Text(verbatim: details))
-                .accessibilityIdentifier("ledgerInspect-\(line.id)")
+            VStack(alignment: .leading, spacing: 0) {
+                NavigationLink {
+                    LedgerIngredientView(model: model, shopID: shop.id, lineID: line.id)
+                } label: {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(line.name).font(.headline)
+                        Text(quantity).foregroundStyle(Theme.secondary)
+                        if let exclusions { Text(verbatim: exclusions) }
+                        if !line.notes.isEmpty { Text(line.notes) }
+                    }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
+                }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
+                    .accessibilityValue(Text(verbatim: details))
+                    .accessibilityIdentifier("ledgerInspect-\(line.id)")
+                LedgerDepartmentPicker(model: model, shop: shop, line: line, labels: departmentChoices)
+            }
         }
     }
 }

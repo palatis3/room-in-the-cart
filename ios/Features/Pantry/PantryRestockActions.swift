@@ -42,12 +42,12 @@ enum PantryRestockReview: Equatable {
 
     /// A saved food name such as “5 spice” contains no evidence of a purchase quantity.
     /// Other rows, including quantities the shopper types, use the regular import parser.
-    static func stage(food: String, text: String, source: ImportSource, id: UUID, shop: ShoppingLedger) throws -> StagedListImport {
+    static func stage(food: String, text: String, source: ImportSource, id: UUID, shop: ShoppingLedger, suggestedAmount: Quantity? = nil, productLink: UUID? = nil) throws -> StagedListImport {
         var draft = try shop.stageImport(text: text, source: source, importID: id)
         for index in draft.lines.indices where draft.lines[index].originalText == food {
             let row = draft.lines[index]
             draft.lines[index] = StagedImportLine(id: row.id, proposedLineID: row.proposedLineID, originalText: food,
-                name: food, quantity: nil, unresolvedReason: "Review the quantity and unit.", duplicateLineIDs: [])
+                name: food, quantity: suggestedAmount, unresolvedReason: suggestedAmount == nil ? "Review the quantity and unit." : nil, duplicateLineIDs: [], pantryProductLink: productLink)
         }
         return try shop.refreshImportMatches(draft)
     }
@@ -60,6 +60,9 @@ struct PantryRestockActions: View {
     @ObservedObject var model: PantryModel
     let lot: InventoryLot
     let sourceCurrent: @MainActor () -> Bool
+    var suggestedAmount: Quantity? = nil
+    var productLink: UUID? = nil
+    var showCheckDates = true
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var household: HouseholdModel
@@ -137,7 +140,9 @@ struct PantryRestockActions: View {
                         NavigationLink(pantryText("Open shopping list")) { LedgerHomeView(model: ledger) }
                     }
                 }
-                if let digest, digest.authorized(), PantryRestockReview.canSetCheckDate(for: lot) {
+                let times = model.snapshot?.lots.filter { $0.foodID == lot.foodID }.compactMap(\.discardedTimes).reduce(0, +) ?? 0
+                if times > 0 { LabeledContent(pantryText("Recorded discards for this product"), value: times.formatted()) }
+                if showCheckDates, let digest, digest.authorized(), PantryRestockReview.canSetCheckDate(for: lot) {
                     let scope = PantryDigestAccess(scope: digest.scope, authorized: { adult != nil && digest.authorized() })
                     NavigationLink(pantryFormat("Set a check date for %@", food)) {
                         PantryDigestDayEditor(model: model, access: scope, lot: lot)
@@ -162,10 +167,10 @@ struct PantryRestockActions: View {
                     if current(review) {
                         switch review.destination {
                         case .firstList:
-                            FirstListEntry(model: ledger, prefill: food, pantryFoodPrefill: true,
+                            FirstListEntry(model: ledger, prefill: food, pantryFoodPrefill: true, pantrySuggestedAmount: suggestedAmount, pantryProductLink: productLink,
                                 authorizeEntry: { current(review) }, onSaved: { _ in grocery = nil })
                         case .shop(let id, _):
-                            LedgerImportView(model: ledger, shopID: id, prefill: food, pantryFoodPrefill: true,
+                            LedgerImportView(model: ledger, shopID: id, prefill: food, pantryFoodPrefill: true, pantrySuggestedAmount: suggestedAmount, pantryProductLink: productLink,
                                 authorizeEntry: { current(review) })
                         default: EmptyView()
                         }

@@ -28,6 +28,40 @@ final class InventoryTests: XCTestCase {
         try InventoryProjection.build(originID: origin, lots: lots, reservations: reservations, at: now)
     }
 
+    func testDiscardIsDistinctFromUseAndOnlyUndoesTheReviewedBatchRevision() throws {
+        let initial = try lot(.exact(q(8)))
+        let discard = InventoryPortionAction.discard(amount: q(2), reason: "Spoiled")
+        let reading = InventoryCountRevision(count: try discard.remainder(of: initial), observationID: UUID(), observedAt: now)
+        let result = try change(initial, .revise(.init(observation: reading, portion: discard)))
+        XCTAssertEqual(result.lot.count.quantity?.amount, q(6).amount)
+        XCTAssertEqual(result.lot.discardedTimes, 1)
+        XCTAssertEqual(result.lot.confirmedAt, initial.confirmedAt)
+        guard case .revise(let edit) = result.event.change else { return XCTFail("missing discard") }
+        XCTAssertNil(edit.usage)
+        let undo = InventoryPortionAction.undoDiscard(eventID: result.event.id)
+        let restore = InventoryCountRevision(count: try undo.remainder(of: result.lot), observationID: UUID(), observedAt: now)
+        let restored = try change(result.lot, .revise(.init(observation: restore, portion: undo)))
+        XCTAssertEqual(restored.lot.count, initial.count)
+        XCTAssertNil(restored.lot.discardedTimes)
+        let recounted = try change(result.lot, .count(.exact(q(3)), observationID: UUID()))
+        XCTAssertThrowsError(try undo.remainder(of: recounted.lot))
+    }
+
+    func testUnmeasuredDiscardAndInvalidTransfersNeverInventAQuantity() throws {
+        let unknown = try lot(.someLeft), initial = try lot(.exact(q(4)))
+        let discard = InventoryPortionAction.discard(amount: nil, reason: nil)
+        XCTAssertEqual(try discard.remainder(of: unknown), .unknown)
+        func split(_ quantity: Quantity) -> InventoryPortionAction {
+            .split(amount: quantity, destination: .freezer, lotID: UUID(), eventID: UUID(), observationID: UUID())
+        }
+        XCTAssertThrowsError(try split(q(1)).remainder(of: unknown))
+        XCTAssertThrowsError(try split(q(1, .gram)).remainder(of: initial))
+        XCTAssertThrowsError(try split(q(4)).remainder(of: initial))
+        let flour = try lot(.exact(q(2, .kilogram)))
+        XCTAssertEqual(try split(q(500, .gram)).remainder(of: flour).quantity?.amount, try Rational(3, 2))
+        XCTAssertEqual(try split(q(1)).remainder(of: initial).quantity?.amount, q(3).amount)
+    }
+
     private func applyReservation(_ edit: InventoryReservationEdit, to lot: InventoryLot, lots: [InventoryLot],
                                   claims: [InventoryReservation]) throws -> (InventoryReservation, InventoryProjection) {
         let command = InventoryCommand(id: UUID(), originID: origin, lotID: lot.id, eventID: UUID(),

@@ -29,6 +29,38 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testPrepStaysInItsOwnShopArchiveAndRoundTripsWithoutDeviceConsent() throws {
+        let now = Date(), zone = "America/New_York"
+        var first = ShoppingLedger(title: "Monday", basis: ShopBasis(timeZoneIdentifier: zone))
+        let other = ShoppingLedger(title: "Other")
+        let template = MealTemplate(title: "Beans")
+        let meal = try first.chooseMeal(template, on: now, at: now)
+        var workspace = LedgerWorkspace(shops: [first, other], mealTemplates: [template], selectedShopID: first.id)
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "me", shopID: first.id,
+            assignedShopperID: "me", canPlan: true, canReadBudget: true, hasPaidTools: false, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let old = try RecordsNativeCodec.ledgerScope(workspace, shop: first)
+        let oldBytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: old))
+        func record(_ bytes: Data) -> ArchiveRecord {
+            ArchiveRecord(id: first.id.uuidString, origin: "ledger/fixture", revision: ArchiveCodec.digest(bytes),
+                kind: .ledger, title: first.title, savedAtMilliseconds: ArchiveCodec.milliseconds(now), nativePayload: bytes)
+        }
+        XCTAssertFalse(String(decoding: oldBytes, as: UTF8.self).contains("prepTasks"))
+        XCTAssertNoThrow(try RecordsNativeCodec.validate(record(oldBytes)))
+        let task = DinnerPrepTask(shopID: first.id, occurrenceID: meal, instruction: "Soak beans", daysBefore: 1, hour: 18,
+                                  dinnerDay: try MealDay(date: now, timeZoneIdentifier: zone))
+        try workspace.dinnerPlanning.setPrep(task, replacing: nil, mealID: meal, ledger: first, expectedRevision: first.revisionID, access: access, at: now)
+        XCTAssertTrue(try RecordsNativeCodec.ledgerScope(workspace, shop: other).dinnerPlanning.prepTasks.isEmpty)
+        XCTAssertTrue(try XCTUnwrap(RecordsNativeCodec.ledgerLibrary(workspace)).dinnerPlanning.prepTasks.isEmpty)
+        let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: first)
+        let bytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: scoped))
+        try RecordsNativeCodec.validate(record(bytes))
+        let imported = try RecordsNativeCodec.ledger(bytes)
+        XCTAssertEqual(imported.dinnerPlanning.prepTasks, [task])
+        let exported = try RecordsNativeCodec.ledgerScope(imported, shop: first)
+        XCTAssertEqual(try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: exported)), bytes)
+        XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains("local-consent"))
+    }
     @MainActor func testPickerCompletionAndManualRecipeStayWithTheirPresentingScope() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
@@ -897,6 +929,68 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertTrue(removed.isEmpty)
         let saved = try await registry.refreshList()
         XCTAssertTrue(saved.isEmpty)
+    }
+
+    @MainActor func testSelectedPaprikaCollectionReviewsBeforeSaveAndSupportsUndo() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        // A ZIP containing one gzipped fictional recipe.
+        let bytes = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAMEVc10iT4+2WwAAAFsAAAASAAAAc291cC5wYXByaWthcmVjaXBlH4sIAAAAAAAC/6tWykvMTVWyUgrOLy1Q0lEqTi0qy8xLLwaKGCkk5ZfnFAMFgQJFqSmZqXklIHGn1MQ8kGhKZlFqcklmfh5IMDgzNze1SE+pFgCUHxOJUQAAAFBLAQIUAxQAAAAAAMEVc10iT4+2WwAAAFsAAAASAAAAAAAAAAAAAACAAQAAAABzb3VwLnBhcHJpa2FyZWNpcGVQSwUGAAAAAAEAAQBAAAAAiwAAAAAA"))
+        let url = directory.appendingPathComponent("Family.paprikarecipes")
+        try bytes.write(to: url)
+        let entry = try XCTUnwrap(model.beginImport(.recipeFile))
+        await model.finishFileImport(.success(url), from: entry)
+        XCTAssertEqual(model.review?.rows.map { $0.record.title }, ["Soup"])
+        let beforeSave = try await registry.refreshList()
+        XCTAssertTrue(beforeSave.isEmpty)
+        model.cancelReview()
+        await model.importFile(url, recipes: true)
+        await model.applyReviewedImport()
+        let saved = try await registry.refreshList()
+        XCTAssertEqual(saved.map { $0.record.title }, ["Soup"])
+        await model.undoImport()
+        let afterUndo = try await registry.refreshList()
+        XCTAssertTrue(afterUndo.isEmpty)
+        XCTAssertEqual(try Data(contentsOf: url), bytes)
+    }
+
+    @MainActor func testChangedPaprikaUIDRequiresSeparateCopyApprovalAndSupportsSkipping() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let url = directory.appendingPathComponent("Dinner.paprikarecipes")
+        // Two synthetic exports of the same UID, before and after revising the source ingredients.
+        let first = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAAAAIVAKup0VRwAAAEcAAAAUAAAARGlubmVyLnBhcHJpa2FyZWNpcGUfiwgAAAAAAAL/q1YqzUxRslJQMkw0SjJOVtJRUMpLzE0Fibhk5uWlFoFEMvPSi1JTMlPzSopBEkGZyalKtQDitPgaOgAAAFBLAQIUAxQAAAAAAAAAIVAKup0VRwAAAEcAAAAUAAAAAAAAAAAAAACAAQAAAABEaW5uZXIucGFwcmlrYXJlY2lwZVBLBQYAAAAAAQABAEIAAAB5AAAAAAA="))
+        let second = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAAAAIVCLo5kaUQAAAFEAAAAUAAAARGlubmVyLnBhcHJpa2FyZWNpcGUfiwgAAAAAAAL/q1YqzUxRslJQMkw0SjJOVtJRUMpLzE0Fibhk5uWlFoFEMvPSi1JTMlPzSopBEkGZyakKiXkpCklF+SUZSrUAElELP0QAAABQSwECFAMUAAAAAAAAACFQi6OZGlEAAABRAAAAFAAAAAAAAAAAAAAAgAEAAAAARGlubmVyLnBhcHJpa2FyZWNpcGVQSwUGAAAAAAEAAQBCAAAAgwAAAAAA"))
+        try first.write(to: url)
+        await model.importFile(url, recipes: true)
+        await model.applyReviewedImport()
+        let before = try await registry.refreshList()
+        XCTAssertEqual(before.count, 1)
+
+        try second.write(to: url)
+        await model.importFile(url, recipes: true)
+        let changed = try XCTUnwrap(model.review?.rows.first)
+        XCTAssertEqual(changed.disposition, .sibling)
+        XCTAssertTrue(model.paprikaVersionChoices.contains(changed.id))
+        await model.applyReviewedImport()
+        let withoutConsent = try await registry.refreshList()
+        XCTAssertEqual(withoutConsent, before)
+        await model.skipRecipe(changed)
+        XCTAssertNil(model.review)
+        await model.importFile(url, recipes: true)
+        let reviewed = try XCTUnwrap(model.review?.rows.first)
+        model.confirmPaprikaVersion(reviewed, selected: true)
+        await model.applyReviewedImport()
+        let after = try await registry.refreshList()
+        XCTAssertEqual(after.count, 2)
+        XCTAssertTrue(after.contains(before[0]))
+        await model.undoImport()
+        let restored = try await registry.refreshList()
+        XCTAssertEqual(restored, before)
     }
 
     @MainActor func testPartialRecipeCorrectionPreservesBatchAndOriginalSourceOnRetry() async throws {

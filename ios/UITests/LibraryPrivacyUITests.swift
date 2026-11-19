@@ -23,8 +23,8 @@ import XCTest
     func waitForLabel(_ id: String, _ expected: String) -> Bool {
         XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", expected), object: element(id))], timeout: 15) == .completed
     }
-    func assertText(_ text: String) {
-        let value = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+    func assertText(_ text: String, in container: XCUIElement? = nil) {
+        let value = (container ?? app).staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
         reveal(value, requiresHitTarget: false)
         XCTAssertTrue(value.exists, text)
     }
@@ -126,7 +126,7 @@ import XCTest
         capture("Notes-only recipe with selected instruction ready and playback stopped")
     }
 
-    func testCookingTimersRestoreInSpanishAtLargestTextAndEndOnRequest() {
+    func testCookingTimersRestoreInSpanishAtLargestTextAndEndOnRequest() throws {
         launch("--recipe-library-fixture")
         tap(button("records.recovered.Existing family soup"))
         tap(app.buttons["Open saved recipe"])
@@ -148,8 +148,14 @@ import XCTest
         tap(button("records.recovered.Existing family soup"))
         tap(button("records.openSavedRecipe"))
         tap(button("cooking.openRecipe"))
-        assertText("Keep the existing instructions.")
-        assertText("2 cups beans")
+        XCTAssertTrue(app.navigationBars["Modo de cocina"].waitForExistence(timeout: 8))
+        // The underlying Records form repeats the recipe text. Keep scrolling and
+        // assertions on the presented cooking form, even as its step goes offscreen.
+        let cooking = try XCTUnwrap(app.collectionViews.allElementsBoundByIndex.first {
+            $0.staticTexts["Paso 1 de 1"].exists
+        })
+        assertText("Keep the existing instructions.", in: cooking)
+        assertText("2 cups beans", in: cooking)
         reveal(element("cooking.paused.0"), requiresHitTarget: false)
         XCTAssertEqual(element("cooking.paused.0").label, "En pausa")
         reveal(element("cooking.timer.1"), requiresHitTarget: false)

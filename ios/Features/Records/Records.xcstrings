@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Another version or a recipe with matching content is already in this review or your library. Skip this version or save it separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another version or a recipe with matching content is already in this review or your library. Skip this version or save it separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay otra versión o una receta con el mismo contenido en esta revisión o en tu colección. Omite esta versión o guárdala por separado."
+          }
+        }
+      }
+    },
+    "Save this version as a separate copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save this version as a separate copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar esta versión como una copia aparte"
+          }
+        }
+      }
+    },
     "Choose cooking instructions from notes": {
       "extractionState": "manual",
       "localizations": {
@@ -235,23 +269,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Importar una receta mediante un enlace"
-          }
-        }
-      }
-    },
-    "Recipe files may contain a Recipe, an array, or a graph. Original ingredient and yield text are preserved.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recipe files may contain a Recipe, an array, or a graph. Original ingredient and yield text are preserved."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los archivos pueden contener una receta, una lista o un grafo. Se conserva el texto original de los ingredientes y del rendimiento."
           }
         }
       }
@@ -949,23 +966,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar importación"
-          }
-        }
-      }
-    },
-    "Check the recipe title, source URL and text. Use a supported Recipe JSON-LD file or enter it manually.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check the recipe title, source URL and text. Use a supported Recipe JSON-LD file or enter it manually."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revisa el título, la URL de origen y el texto de la receta. Usa un archivo Recipe JSON-LD compatible o introdúcela manualmente."
           }
         }
       }
@@ -6020,6 +6020,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preparar esta cena"
+          }
+        }
+      }
+    },
+    "Choose a Paprika recipe collection (.paprikarecipes), Recipe JSON-LD, or a saved draft. Review and edit recipes before saving. For large Paprika libraries, export one category at a time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a Paprika recipe collection (.paprikarecipes), Recipe JSON-LD, or a saved draft. Review and edit recipes before saving. For large Paprika libraries, export one category at a time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una colección de Paprika (.paprikarecipes), un archivo Recipe JSON-LD o un borrador guardado. Revisa y edita las recetas antes de guardarlas. Para bibliotecas grandes de Paprika, exporta una categoría a la vez."
+          }
+        }
+      }
+    },
+    "Check the recipe title, source link and text. Choose a Paprika collection or Recipe JSON-LD file, or enter the recipe manually.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the recipe title, source link and text. Choose a Paprika collection or Recipe JSON-LD file, or enter the recipe manually."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el título, el enlace de origen y el texto. Elige una colección de Paprika o un archivo Recipe JSON-LD, o introduce la receta manualmente."
           }
         }
       }

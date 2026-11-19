@@ -208,3 +208,16 @@ struct PantryUsageHistoryRow: Identifiable, Equatable {
         }
     }
 }
+
+struct PantryDiscardRow: Identifiable, Sendable {
+    let id: UUID
+    let lotID: UUID
+    let date: Date
+    let amount: Quantity?
+    let reason: String?
+}
+
+struct PantryArchivedActions: Sendable {
+    let usage: [PantryUsageHistoryRow]
+    let discards: [PantryDiscardRow]
+}

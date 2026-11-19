@@ -235,3 +235,110 @@ import XCTest
         do { _ = try await task.value; XCTFail("Cancelled review must not publish") } catch is CancellationError {}
     }
 }
+
+extension ReceiptDocumentTests {
+    func testReceiptSectionsKeepDistinctYogurtsAcrossRetakesAndPartialImports() throws {
+        func photo(_ lines: [String], _ key: String) -> ExtractedReceiptDocument {
+            .init(digest: Data(SHA256.hash(data: Data(key.utf8))), pages: [
+                .init(id: 1, method: .imageOCR, lines: lines.enumerated().map { .init(id: $0.offset + 1, text: $0.element) })
+            ])
+        }
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 0, kind: .receiptEvidence)
+        let first = photo(["LECHE", "YOGUR", "YOGUR"], "first")
+        var draft = ReceiptSectionDraft()
+        try draft.put(first, bytes: 400, preview: nil, at: 0)
+        XCTAssertEqual(try draft.review().document.digest, first.digest)
+        try draft.put(photo(["YOGUR", "YOGUR", "HUEVOS"], "second"), bytes: 500, preview: nil, at: 1)
+        XCTAssertEqual(draft.likelyOverlaps(at: 1), [1, 2])
+        XCTAssertThrowsError(try draft.review())
+        draft.resolve(at: 1, omitting: 1)
+        let partial = try draft.review()
+        XCTAssertEqual(partial.omitted, [.init(page: 2, line: 1)])
+        let eggs = try partial.document.source(target: target, merchant: "Tienda", stage: .receipt, selection: [.init(page: 2, line: 3)], at: Date())
+        draft.resolve(at: 1, omitting: 0)
+        let keep = try draft.review()
+        XCTAssertTrue(keep.omitted.isEmpty)
+        let yogurt = try keep.document.source(target: target, merchant: "Tienda", stage: .receipt, selection: [.init(page: 2, line: 2)], at: Date())
+        XCTAssertEqual(yogurt.id, eggs.id)
+        XCTAssertEqual(yogurt.documentLayoutID, eggs.documentLayoutID)
+        XCTAssertNotEqual(yogurt.receiptLines[0].id, eggs.receiptLines[0].id)
+        XCTAssertThrowsError(try draft.put(photo([], "bad"), bytes: 50, preview: nil, at: 1))
+        XCTAssertEqual(try draft.review().document.digest, partial.document.digest)
+        try draft.put(photo(["YOGUR", "HUEVOS"], "retake"), bytes: 500, preview: nil, at: 1)
+        XCTAssertThrowsError(try draft.review())
+        draft.resolve(at: 1, omitting: 1)
+        XCTAssertNotEqual(try draft.review().document.digest, partial.document.digest)
+        try draft.put(photo(["PAN"], "new first"), bytes: 500, preview: nil, at: 0)
+        XCTAssertTrue(try draft.review().omitted.isEmpty)
+        XCTAssertEqual(try draft.review().document.pages[1].lines.map(\.text), ["YOGUR", "HUEVOS"])
+        var bounded = ReceiptSectionDraft()
+        func part(_ index: Int) -> ExtractedReceiptDocument { photo(["YOGUR"], String(index)) }
+        for index in 0..<3 { try bounded.put(part(index), bytes: 10_000_000, preview: nil, at: index) }
+        XCTAssertThrowsError(try bounded.put(part(0), bytes: 1, preview: nil, at: 1)) { XCTAssertEqual($0 as? ReceiptDocumentFailure, .duplicateSection) }
+        XCTAssertThrowsError(try bounded.put(part(3), bytes: 1, preview: nil, at: 3)) { XCTAssertEqual($0 as? ReceiptDocumentFailure, .size) }
+        XCTAssertEqual(bounded.sections.count, 3)
+        for index in 0..<6 { try bounded.put(part(index), bytes: 10, preview: nil, at: index) }
+        XCTAssertThrowsError(try bounded.put(part(6), bytes: 10, preview: nil, at: 6))
+    }
+
+    func testPrivateTripDifferencesPreserveRepeatsUnknownPricesAndSplitAllocations() throws {
+        func unit(_ amount: String, _ unit: UnitOfMeasure = .count) throws -> Quantity { try XCTUnwrap(ComparisonModel.quantity(amount, unit)) }
+        let a = UUID(), b = UUID()
+        let first = BasketLine(id: a, name: "Yogurt", quantity: try unit("2"), expectedCost: .exact(.init(minorUnits: 400)))
+        let other = BasketLine(id: b, name: "Yogurt", quantity: try unit("1"), expectedCost: .exact(.init(minorUnits: 200)))
+        var links: [UUID: ReceiptTripLink] = [:]
+        XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .noEvidence)
+        func add(_ total: Quantity, _ portions: [UUID: Quantity], cents: Int64?) throws {
+            let id = UUID()
+            links[id] = try XCTUnwrap(.init(receiptLineID: id, printed: total, portions: portions, printedTotal: cents.map { Money(minorUnits: $0) }))
+        }
+        try add(unit("1"), [a: unit("1")], cents: 200)
+        XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .quantity)
+        try add(unit("1"), [a: unit("1")], cents: 200)
+        XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .matched)
+        XCTAssertEqual(ReceiptTripLink.compare(other, with: links), .noEvidence)
+        links = [:]
+        try add(unit("3"), [a: unit("2"), b: unit("1")], cents: 600)
+        XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .priceUnknown)
+        XCTAssertEqual(ReceiptTripLink.compare(other, with: links), .priceUnknown)
+        XCTAssertNil(ReceiptTripLink(receiptLineID: UUID(), printed: try unit("2"), portions: [a: try unit("2"), b: try unit("1")], printedTotal: nil))
+        links = [:]
+        try add(unit("2"), [a: unit("2")], cents: 450)
+        XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .price)
+        links = [:]
+        try add(unit("2", .ounce), [a: unit("2", .ounce)], cents: 400)
+        XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .incompatible)
+    }
+}
+
+extension ReceiptDocumentTests {
+    func testSharedReceiptTripUsesAmendedPacksAndNeverLinksBySimilarWording() throws {
+        let shop = UUID(), line = UUID(), amendment = UUID()
+        let original: [String: Any] = ["lineId": line.uuidString, "originalItem": "Tortillas", "packs": 3, "unitPriceMinor": 200, "feeEligible": true]
+        let changed: [String: Any] = ["lineId": line.uuidString, "originalItem": "Tortillas", "packs": 2, "unitPriceMinor": 225, "feeEligible": true]
+        let quote: [String: Any] = ["currency": "USD", "scope": "wholeCheckout", "complete": true, "capMinor": NSNull(),
+            "capScope": "wholeCheckout", "fee": ["kind": "fixed", "amountMinor": 0], "taxesMinor": 0, "depositsMinor": 0,
+            "discountsMinor": 0, "observedAt": "2026-01-01T08:00:00Z", "expiresAt": "2026-01-01T12:00:00Z"]
+        let raw: [String: Any] = ["shopId": shop.uuidString, "shopRevision": 4, "authorityEpoch": 1, "placedRevision": 3,
+            "asOf": "2026-01-03T12:00:00Z",
+            "original": ["lines": [original], "quote": quote, "snapshotCreatedAt": "2026-01-01T10:00:00Z"] as [String: Any],
+            "current": ["lines": [changed], "amendmentId": amendment.uuidString] as [String: Any],
+            "amendments": [["amendmentId": amendment.uuidString, "predecessorId": NSNull(), "retailerReference": "Shop revision",
+                            "confirmedAt": "2026-01-02T10:00:00Z", "recordedAt": "2026-01-02T10:01:00Z",
+                            "actorId": UUID().uuidString, "lines": [changed]] as [String: Any]]]
+        let page = try JSONDecoder().decode(SharedConfirmedOrder.self, from: JSONSerialization.data(withJSONObject: raw))
+        let trip = try ReceiptTripPlan(shared: page, household: "Casa")
+        XCTAssertTrue(trip.countsPacks)
+        XCTAssertEqual(trip.id, shop)
+        XCTAssertEqual(trip.lines[0].quantity.amount, try Rational(2))
+        XCTAssertEqual(trip.lines[0].expectedCost, .exact(Money(minorUnits: 450)))
+        let wording = ReceiptImportDraft.Line(id: UUID(), ordinal: 0, original: "TORTILLAS 2 EA $4.50", name: "Tortillas")
+        XCTAssertNil(trip.suggestedLine(for: wording, purchases: []))
+        var plannedOnly = wording
+        plannedOnly.documentLine = .init(method: .pdfText, stage: .order, page: 1, line: 1)
+        XCTAssertFalse(plannedOnly.canComparePurchase)
+        plannedOnly.documentLine = .init(method: .pdfText, stage: .finalInvoice, page: 1, line: 1)
+        XCTAssertTrue(plannedOnly.canComparePurchase)
+        XCTAssertThrowsError(try page.validate(shopID: UUID()))
+    }
+}

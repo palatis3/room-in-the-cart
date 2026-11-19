@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 
 from ci_mac_slots import with_macos_slots, with_bitrise_slots
-from plan_ios_tests import DURATIONS_PATH, make_plan, selector, write_plan
+from plan_ios_tests import ACCESSIBILITY_AUDIT, DURATIONS_PATH, make_plan, selector, write_plan
 
 DINNER = (
     'RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern',
@@ -18,6 +18,8 @@ DINNER = (
 def select_work(inventory, durations, event, scope):
     # This validates every enabled/disabled test, including cases outside Dinner.
     full = make_plan(inventory, durations, ui_shards=10)
+    if 'ui-11' not in full['shards']:
+        raise ValueError(f'The compiled inventory must include the ordinary accessibility audit: {ACCESSIBILITY_AUDIT}')
     if scope == 'full':
         return full, full
     if scope != 'dinner' or event != 'workflow_dispatch':
@@ -65,9 +67,9 @@ def main():
         provider = os.environ.get('IOS_PROVIDER', 'github')
         if provider == 'circleci':
             delegated = {'ui-01', 'ui-02', 'ui-03'}
-            expected = {f'ui-{i:02}' for i in range(1, 11)}
+            expected = {f'ui-{i:02}' for i in range(1, 12)}
             if scope != 'full' or {row['shard'] for row in consumers} != expected:
-                raise ValueError('CircleCI requires the ordinary full ten-shard plan')
+                raise ValueError('CircleCI requires the ten general UI shards and the dedicated accessibility shard')
             consumers = [row for row in consumers if row['shard'] not in delegated]
             print('CircleCI runs ' + ', '.join(sorted(delegated)) + ' from the same full plan.')
         elif provider != 'github':

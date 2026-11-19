@@ -14,6 +14,8 @@ struct PantryProductBatchView: View {
     @State private var review: PantryReceiptReview?
     @State private var result: String?
     @State private var inputMessage: String?
+    private let didFinishWithLot: (UUID) -> Void
+    @State private var savedLotID: UUID?
     @State private var saved = false
     @State private var working = false
     @State private var code = ""
@@ -21,7 +23,8 @@ struct PantryProductBatchView: View {
     @FocusState private var focus: String?
     @Environment(\.dismiss) private var dismiss
 
-    init(model: PantryModel, workspaceID: UUID) {
+    init(model: PantryModel, workspaceID: UUID, didFinishWithLot: @escaping (UUID) -> Void = { _ in }) {
+        self.didFinishWithLot = didFinishWithLot
         self.model = model
         _batch = State(initialValue: PantryProductBatch(workspaceID: workspaceID))
     }
@@ -33,7 +36,10 @@ struct PantryProductBatchView: View {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if saved {
                 Text(pantryText("Product batch saved.")).accessibilityIdentifier("productBatch.saved")
-                Button(pantryText("Done")) { dismiss() }
+                Button(pantryText("Done")) {
+                    if let savedLotID { didFinishWithLot(savedLotID) }
+                    dismiss()
+                }
             } else if let review {
                 Section(pantryText("Review received products")) {
                     ForEach(review.facts) { row in
@@ -196,7 +202,11 @@ struct PantryProductBatchView: View {
             defer { working = false }
             do {
                 try await model.saveProducts(batch, review: proposal)
-                if authorized { saved = true; review = nil; result = nil }
+                if authorized {
+                    let physicalIDs = Set(model.snapshot?.lots.map(\.id) ?? [])
+                    savedLotID = proposal.facts.first(where: { physicalIDs.contains($0.lotID) })?.lotID
+                    saved = true; review = nil; result = nil
+                }
             } catch {
                 await model.load()
                 if authorized {

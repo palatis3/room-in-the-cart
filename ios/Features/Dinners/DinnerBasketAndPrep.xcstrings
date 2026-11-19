@@ -1,0 +1,854 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%lld minutes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld minutos"
+          }
+        }
+      }
+    },
+    "Additional lunch portions per dinner: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional lunch portions per dinner: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones adicionales para el almuerzo por cena: %lld"
+          }
+        }
+      }
+    },
+    "After moving dinner, review the new prep time here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After moving dinner, review the new prep time here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de mover la cena, revisa aquí la nueva hora de preparación."
+          }
+        }
+      }
+    },
+    "Already on list · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already on list · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya está en la lista · %@"
+          }
+        }
+      }
+    },
+    "Available minutes (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available minutes (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos disponibles (opcional)"
+          }
+        }
+      }
+    },
+    "Change nights or recipes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change nights or recipes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar las noches o las recetas"
+          }
+        }
+      }
+    },
+    "Choose another hour for this local clock change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another hour for this local clock change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige otra hora debido al cambio de horario local."
+          }
+        }
+      }
+    },
+    "Choose three different open nights.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose three different open nights."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige tres noches libres distintas."
+          }
+        }
+      }
+    },
+    "Choose three open nights. Each new lunch hold comes from the recipe’s unassigned servings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose three open nights. Each new lunch hold comes from the recipe’s unassigned servings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige tres noches libres. Las porciones para el almuerzo se reservan de las porciones sin asignar de la receta."
+          }
+        }
+      }
+    },
+    "Completed %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completada el %@"
+          }
+        }
+      }
+    },
+    "Date this dinner to add a prep task.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date this dinner to add a prep task."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asigna una fecha a esta cena para añadir una tarea de preparación."
+          }
+        }
+      }
+    },
+    "Days before dinner: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days before dinner: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Días antes de la cena: %lld"
+          }
+        }
+      }
+    },
+    "Dinner moved. The original alert is paused.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner moved. The original alert is paused."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cena cambió de fecha. El aviso original está en pausa."
+          }
+        }
+      }
+    },
+    "Dinner prep": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner prep"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparación de la cena"
+          }
+        }
+      }
+    },
+    "Enable prep alert on this device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable prep alert on this device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar el aviso en este dispositivo"
+          }
+        }
+      }
+    },
+    "Exclusions · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusions · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusiones · %@"
+          }
+        }
+      }
+    },
+    "Find dinner combinations": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find dinner combinations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar combinaciones de cenas"
+          }
+        }
+      }
+    },
+    "Grocery estimate before tax, fees and stock deductions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grocery estimate before tax, fees and stock deductions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación antes de impuestos, cargos y descuentos por existencias."
+          }
+        }
+      }
+    },
+    "Grocery subtotal budget (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grocery subtotal budget (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presupuesto para el subtotal de alimentos (opcional)"
+          }
+        }
+      }
+    },
+    "Known grocery subtotal · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known grocery subtotal · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal conocido de alimentos · %@"
+          }
+        }
+      }
+    },
+    "Local prep time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local prep time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora local de preparación"
+          }
+        }
+      }
+    },
+    "Mark prep complete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark prep complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar la preparación como completada"
+          }
+        }
+      }
+    },
+    "Move prep to the new dinner date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move prep to the new dinner date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustar la preparación a la nueva fecha"
+          }
+        }
+      }
+    },
+    "Night %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noche %lld"
+          }
+        }
+      }
+    },
+    "No combination fits these nights, portions, times and known prices.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No combination fits these nights, portions, times and known prices."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna combinación cumple las condiciones de noches, porciones, tiempo y precios conocidos."
+          }
+        }
+      }
+    },
+    "No other saved meal fits this slot.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No other saved meal fits this slot."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna otra cena guardada cumple las condiciones de esta noche."
+          }
+        }
+      }
+    },
+    "Open Dinners to review your prep task.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Dinners to review your prep task."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Cenas para revisar tu tarea de preparación."
+          }
+        }
+      }
+    },
+    "Option %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Option %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opción %lld"
+          }
+        }
+      }
+    },
+    "Pack and store evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack and store evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos del paquete y la tienda"
+          }
+        }
+      }
+    },
+    "Prep instruction": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prep instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucción de preparación"
+          }
+        }
+      }
+    },
+    "Price observed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price observed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha del precio"
+          }
+        }
+      }
+    },
+    "Price per pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio por paquete"
+          }
+        }
+      }
+    },
+    "Remove prep task": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove prep task"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la tarea de preparación"
+          }
+        }
+      }
+    },
+    "Reserved lunch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved lunch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almuerzo reservado"
+          }
+        }
+      }
+    },
+    "Review adding these dinners": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review adding these dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar las cenas que se añadirán"
+          }
+        }
+      }
+    },
+    "Review groceries and prices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review groceries and prices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar alimentos y precios"
+          }
+        }
+      }
+    },
+    "Review the current list and recipe ingredients. Combine rows only when the same product can cover each need. Enter dated pack evidence or leave the price open.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the current list and recipe ingredients. Combine rows only when the same product can cover each need. Enter dated pack evidence or leave the price open."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la lista y los ingredientes de las recetas. Combina filas solo si el mismo producto cubre cada necesidad. Indica el precio del paquete con su fecha o déjalo pendiente."
+          }
+        }
+      }
+    },
+    "Save prep task": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save prep task"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la tarea"
+          }
+        }
+      }
+    },
+    "Saved recipes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved recipes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recetas guardadas"
+          }
+        }
+      }
+    },
+    "Select 3–12 recipes. A time limit requires a saved duration.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select 3–12 recipes. A time limit requires a saved duration."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona de 3 a 12 recetas. Para aplicar un límite de tiempo, la receta necesita una duración guardada."
+          }
+        }
+      }
+    },
+    "Store and pack label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store and pack label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda y etiqueta del paquete"
+          }
+        }
+      }
+    },
+    "Swap this meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap this meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar esta cena"
+          }
+        }
+      }
+    },
+    "The alert is unavailable. Your prep task is saved here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The alert is unavailable. Your prep task is saved here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El aviso no está disponible. La tarea de preparación está guardada aquí."
+          }
+        }
+      }
+    },
+    "Three dinners, one basket": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three dinners, one basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tres cenas, una cesta"
+          }
+        }
+      }
+    },
+    "Time unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duración desconocida"
+          }
+        }
+      }
+    },
+    "Turn off prep alert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off prep alert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar el aviso de preparación"
+          }
+        }
+      }
+    },
+    "Unpriced": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpriced"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin precio"
+          }
+        }
+      }
+    },
+    "Unpriced groceries: %lld. The total is uncertain.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpriced groceries: %lld. The total is uncertain."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos sin precio: %lld. El total es incierto."
+          }
+        }
+      }
+    },
+    "Usable quantity per pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable quantity per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable por paquete"
+          }
+        }
+      }
+    },
+    "Use the same grocery for these needs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the same grocery for these needs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el mismo producto para estas necesidades"
+          }
+        }
+      }
+    },
+    "Whole packs: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole packs: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes enteros: %lld"
+          }
+        }
+      }
+    },
+    "Existing holds": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existing holds"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservas existentes"
+          }
+        }
+      }
+    },
+    "%@ · %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ · %@"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

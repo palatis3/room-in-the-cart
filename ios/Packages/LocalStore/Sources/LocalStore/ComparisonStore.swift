@@ -104,6 +104,7 @@ public actor ComparisonStore {
                 try database.migrateReceiptAliases()
                 try database.migratePricesAndStaples()
                 try database.installReceiptRecognition()
+                try database.installPrivateDeliveryPurchases()
             }
             let finalVersion = try database.integer("PRAGMA user_version")
             guard finalVersion <= (inventoryEnabled ? ComparisonDatabase.inventorySchemaVersion : 2) else { throw ComparisonStoreError.unsupportedSchema(finalVersion) }

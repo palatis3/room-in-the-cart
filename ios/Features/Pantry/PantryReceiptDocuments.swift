@@ -27,6 +27,9 @@ struct PantryReceiptDocuments: View {
     let target: CaptureTarget
     let authorize: @MainActor () -> Bool
     var initialInput: ReceiptDocumentBytes? = nil
+    var initialDocument: ExtractedReceiptDocument? = nil
+    var omittedLines: Set<ExtractedReceiptDocument.Selection> = []
+    var backToSections: (() -> Void)? = nil
     let onReview: (SourceMediaRecord, SharedReceiptItem?) -> Void
     @State private var inbox: [SharedReceiptItem] = []
     @State private var openedShare: SharedReceiptItem?
@@ -65,7 +68,7 @@ struct PantryReceiptDocuments: View {
                         if page.skipped == .pixels { Text(pantryText("This page exceeds 25 megapixels. Choose a smaller image to review it.")) }
                         else if page.skipped == .lineLimit { Text(pantryText("This page exceeds the line limit. You can type the food lines instead.")) }
                         else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
-                        ForEach(page.lines) { line in
+                        ForEach(page.lines.filter { !omittedLines.contains(.init(page: page.id, line: $0.id)) }) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
                             Toggle(isOn: Binding(get: { selection.contains(position) }, set: { include in
                                 if include { selection.insert(position) } else { selection.remove(position) }
@@ -91,7 +94,8 @@ struct PantryReceiptDocuments: View {
                         } catch { show(error) }
                     }.disabled(!authorize() || !confirmed || selection.isEmpty || merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("receipt.document.accept")
-                    Button(pantryText("Choose another document")) { cancel() }
+                    if let backToSections { Button(captureText("Back to receipt sections"), action: backToSections) }
+                    if initialDocument == nil { Button(pantryText("Choose another document")) { cancel() } }
                 }
             } else {
                 if let model, !inbox.isEmpty {
@@ -153,7 +157,7 @@ struct PantryReceiptDocuments: View {
                   }, secondaryButton: .cancel(Text(pantryText("Cancel"))))
         }
         .onDisappear { cancel(); inbox = [] }
-        .task { await loadInbox() }
+        .task { if let initialDocument { document = initialDocument } else { await loadInbox() } }
         .task { if let initialInput, document == nil, job == nil { start { initialInput } } }
     }
 

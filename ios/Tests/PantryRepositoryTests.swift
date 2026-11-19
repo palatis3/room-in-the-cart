@@ -37,6 +37,76 @@ final class PantryRepositoryTests: XCTestCase {
             expectedRevision: revision, occurredAt: now, change: change)
     }
 
+    func testSplitReplaysAtomicallyWithOriginalDatesAndOneSourceAcquisition() async throws {
+        let (directory, store) = try database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try await activate(store)
+        let repo = PantryRepository(store: store, authorize: { true })
+        let command = try creation(store)
+        let original = try await repo.apply(command, reviewedInventoryRevision: 1, at: now)
+        let lot = try XCTUnwrap(original.current.lots.first)
+        let amount = try quantity(2)
+        let split = InventoryPortionAction.split(amount: amount, destination: .freezer, lotID: UUID(), eventID: UUID(), observationID: UUID())
+        let reading = InventoryCountRevision(count: try split.remainder(of: lot), observationID: UUID(), observedAt: lot.confirmedAt)
+        let edit = change(command, revision: lot.revision, .revise(.init(observation: reading, portion: split)))
+        let reviewed = try await repo.review(edit, at: now)
+        XCTAssertEqual(reviewed.splitLot?.count.quantity, amount)
+        let saved = try await repo.apply(edit, reviewedInventoryRevision: reviewed.before.state.revision, at: now)
+        let replay = try await repo.apply(edit, reviewedInventoryRevision: reviewed.before.state.revision, at: now)
+        XCTAssertTrue(replay.replayed)
+        XCTAssertEqual(saved.current.lots.count, 2)
+        XCTAssertEqual(replay.current.lots, saved.current.lots)
+        let child = try XCTUnwrap(saved.current.lots.first { $0.id != lot.id })
+        XCTAssertEqual(child.splitFromLotID, lot.id)
+        XCTAssertEqual(child.confirmedAt, lot.confirmedAt)
+        XCTAssertEqual(child.location, .freezer)
+        XCTAssertEqual(saved.current.lots.first { $0.id == lot.id }?.count.quantity?.amount, try Rational(6))
+        let acquisitionRows = try await store.acquisitionRows()
+        XCTAssertTrue(acquisitionRows.isEmpty)
+        let claim = InventoryReservation(id: UUID(), originID: store.workspaceID, revision: 1,
+                                        foodID: lot.foodID, lotID: lot.id, name: "Lunch", amount: try quantity(5))
+        _ = try await store.commitInventory(InventoryBatch(workspaceID: store.workspaceID, operationID: UUID(),
+            expectedRevision: saved.current.state.revision, request: Data("hold".utf8),
+            writes: [try PantryPersistenceCodec.write(claim, expectedRevision: 0)]), at: now)
+        let parent = try XCTUnwrap(saved.current.lots.first { $0.id == lot.id })
+        let another = InventoryPortionAction.split(amount: amount, destination: .fridge, lotID: UUID(), eventID: UUID(), observationID: UUID())
+        let remainder = InventoryCountRevision(count: try another.remainder(of: parent), observationID: UUID(), observedAt: lot.confirmedAt)
+        do {
+            _ = try await repo.review(change(command, revision: parent.revision, .revise(.init(observation: remainder, portion: another))), at: now)
+            XCTFail("held quantity cannot move")
+        } catch { XCTAssertEqual(error as? InventoryError, .invalid("reservationExceedsFree")) }
+        try await store.close()
+    }
+
+    func testShelfMarksRequireSameRevisionAndMinimumUsesOnlyConfirmedAvailableStock() async throws {
+        let (directory, store) = try database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try await activate(store)
+        let repo = PantryRepository(store: store, authorize: { true })
+        let create = try creation(store)
+        let result = try await repo.apply(create, reviewedInventoryRevision: 1, at: now)
+        let lot = try XCTUnwrap(result.current.lots.first)
+        let session = PantryShelfCount(id: UUID(), name: "Top", location: lot.location,
+                                      batches: [.init(id: lot.id, revision: lot.revision, answer: .present)])
+        let persisted = try JSONDecoder().decode(PantryShelfCount.self, from: JSONEncoder().encode(session))
+        XCTAssertEqual(persisted.answer(for: lot), .present)
+        var other = PantryShelfCount(id: UUID(), name: "New count", location: lot.location, batches: [])
+        XCTAssertFalse(other.markSaved(lot, from: session, adding: true))
+        XCTAssertTrue(other.batches.isEmpty)
+        let hold = InventoryReservation(id: UUID(), originID: store.workspaceID, revision: 1, foodID: lot.foodID,
+                                       lotID: lot.id, name: "Dinner", amount: try quantity(7))
+        let projection = try InventoryProjection.build(originID: store.workspaceID, lots: [lot], reservations: [hold], at: now)
+        let minimum = PantryStapleMinimum(foodID: lot.foodID, anchorLotID: lot.id, target: try quantity(4), afterHolds: true)
+        let need = try minimum.shortfall(lots: [lot], projection: projection)
+        XCTAssertEqual(need?.amount, try Rational(3))
+        XCTAssertEqual(minimum.proposal(shortfall: need, incoming: try quantity(4))?.amount, .zero)
+        let qualitative = try await repo.apply(change(create, revision: lot.revision, .count(.someLeft, observationID: UUID())),
+                                               reviewedInventoryRevision: result.current.state.revision, at: now)
+        XCTAssertNil(persisted.answer(for: try XCTUnwrap(qualitative.current.lots.first)))
+        XCTAssertNil(try minimum.shortfall(lots: qualitative.current.lots, projection: qualitative.current.availability))
+        try await store.close()
+    }
+
     func testReopenedRetryReturnsCurrentCountAndLocationWithoutRepeatingAcquisition() async throws {
         let (directory, store) = try database()
         defer { try? FileManager.default.removeItem(at: directory) }

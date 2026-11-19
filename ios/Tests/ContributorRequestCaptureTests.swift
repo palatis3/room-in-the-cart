@@ -1,10 +1,45 @@
 import XCTest
+import ImageIO
+import UIKit
+import UniformTypeIdentifiers
 import CoreDomain
 import HouseholdClient
 import DeviceSurfaces
 @testable import RoomInTheCart
 
 @MainActor final class ContributorRequestCaptureTests: XCTestCase {
+    func testSharedProductCropUsesSelectedPixelsWithoutPhotoMetadata() throws {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let source = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 16), format: format).image { view in
+            UIColor.red.setFill()
+            view.fill(CGRect(x: 0, y: 0, width: 16, height: 16))
+            UIColor.blue.setFill()
+            view.fill(CGRect(x: 16, y: 0, width: 16, height: 16))
+        }
+        let file = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(file, UTType.jpeg.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, try XCTUnwrap(source.cgImage),
+                                   [kCGImagePropertyGPSDictionary: [kCGImagePropertyGPSLatitude: 42, kCGImagePropertyGPSLatitudeRef: "N"]] as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        let input = try XCTUnwrap(CGImageSourceCreateWithData(file, nil))
+        let metadata = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(input, 0, nil) as? [CFString: Any])
+        XCTAssertNotNil(metadata[kCGImagePropertyGPSDictionary])
+        let thumbnail = try XCTUnwrap(ProductReferenceRaster.thumbnail(file as Data).cgImage)
+        let portion = try XCTUnwrap(thumbnail.cropping(to: CGRect(x: 20, y: 4, width: 8, height: 8)))
+        let reviewed = try XCTUnwrap(ProductReferenceRaster.rgb(portion))
+        XCTAssertEqual(reviewed.width, 8)
+        XCTAssertEqual(reviewed.height, 8)
+        XCTAssertEqual(reviewed.pixels.count, 8 * 8 * 3)
+        for offset in stride(from: 0, to: reviewed.pixels.count, by: 3) {
+            XCTAssertLessThan(reviewed.pixels[offset], 30)
+            XCTAssertLessThan(reviewed.pixels[offset + 1], 30)
+            XCTAssertGreaterThan(reviewed.pixels[offset + 2], 220)
+        }
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(reviewed)) as? [String: Any])
+        XCTAssertEqual(Set(json.keys), ["width", "height", "pixels"])
+    }
+
     private func model(_ fixture: ContributorCaptureFixture, queue: URL, deviceVault: ContributorCaptureVault = .init(),
                        captureCorrections: CaptureCorrectionStore = .shared, child: Bool = false) async throws -> HouseholdModel {
         ContributorCaptureProtocol.handler = fixture.respond

@@ -782,6 +782,45 @@ extension PantryModelTests {
         try await db.close()
     }
 
+    func testShelfAndMinimumReopenUnderOriginalOwnerAndEraseWithOrigin() async throws {
+        let (directory, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = model(db)
+        await model.load()
+        let lot = try await add(model)
+        let scope = PantryDigestScope(origin: db.workspaceID, identity: .init(actorID: UUID(), subject: nil,
+                                                                             householdID: nil, memberID: nil, role: nil))
+        var unlocked = true
+        let access = PantryDigestAccess(scope: scope, authorized: { unlocked })
+        let folder = directory.appendingPathComponent("checks")
+        let first = PantryDigestStore(folder: folder, scheduler: DigestSchedulerSpy())
+        let shelf = PantryShelfCount(id: UUID(), name: "Top shelf", location: lot.location,
+                                    batches: [.init(id: lot.id, revision: lot.revision, answer: .present)])
+        let target = PantryStapleMinimum(foodID: lot.foodID, anchorLotID: lot.id,
+                                        target: Quantity(amount: .one, unit: .count, originalLiteral: "1"), afterHolds: true)
+        let legacy = try JSONEncoder().encode(PantryDigestDocument(scope))
+        XCTAssertNil(try JSONDecoder().decode(PantryDigestDocument.self, from: legacy).shelf)
+        try first.updateShelf(nil, next: shelf, sighting: lot.id, access: access)
+        try first.updateMinimum(nil, next: target, foodID: lot.foodID, access: access)
+        let reopened = PantryDigestStore(folder: folder, scheduler: DigestSchedulerSpy())
+        let doc = try reopened.document(scope)
+        XCTAssertEqual(doc.shelf, shelf)
+        XCTAssertEqual(doc.minimums, [target])
+        XCTAssertEqual(doc.presence?.map(\.lotID), [lot.id])
+        XCTAssertThrowsError(try reopened.updateShelf(nil, next: nil, access: access))
+        unlocked = false
+        XCTAssertThrowsError(try reopened.updateMinimum(target, next: nil, foodID: lot.foodID, access: access))
+        let other = PantryDigestScope(origin: db.workspaceID, identity: .init(actorID: UUID(), subject: nil,
+                                                                             householdID: nil, memberID: nil, role: nil))
+        XCTAssertNil(try reopened.document(other).shelf)
+        XCTAssertNil(try reopened.document(other).minimums)
+        try await reopened.erase(origin: db.workspaceID, whole: true, inventory: db)
+        XCTAssertNil(try reopened.document(scope).shelf)
+        XCTAssertNil(try reopened.document(scope).minimums)
+        XCTAssertNil(try reopened.document(scope).presence)
+        try await db.close()
+    }
+
     func testDigestErasureRemovesOnlyAffectedHandlesAndWholeOriginRevokesSavedConsent() async throws {
         let (dir, db) = try await database()
         defer { try? FileManager.default.removeItem(at: dir) }

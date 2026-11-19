@@ -8,7 +8,7 @@ import PDFKit
 import UniformTypeIdentifiers
 
 enum ReceiptDocumentKind: String, Codable, Sendable { case pdf, image, text }
-enum ReceiptDocumentFailure: Error, Equatable, Sendable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout }
+enum ReceiptDocumentFailure: Error, Equatable, Sendable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout, duplicateSection }
 
 enum ReceiptPhotoSelection: Sendable, Transferable {
     case selected(ReceiptDocumentBytes)
@@ -88,6 +88,7 @@ struct ReceiptDocumentPage: Identifiable, Sendable {
 struct ExtractedReceiptDocument: Sendable {
     let digest: Data
     let pages: [ReceiptDocumentPage]
+    var firstSectionDigest: Data? = nil
 
     struct Selection: Hashable { let page: Int; let line: Int }
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
@@ -110,12 +111,14 @@ struct ExtractedReceiptDocument: Sendable {
         // Extraction can change row positions even when the file bytes are identical.
         // Hash the entire coordinate map locally so picking a different subset preserves its identity.
         var coordinates = ["receipt-file-layout-v1", target.workspaceID.uuidString]
+        if firstSectionDigest != nil { coordinates += ["segmented-photos", digest.base64EncodedString()] }
         for page in pages {
             coordinates += [String(page.id), page.method.rawValue, String(page.lines.count)]
             for line in page.lines { coordinates += [String(line.id), line.text] }
         }
         source.documentLayoutID = ReceiptAcquisition.identity(coordinates)
         source.documentDigest = digest
+        source.firstSectionDigest = firstSectionDigest
         do { try source.validate() } catch { throw ReceiptDocumentFailure.selection }
         return source
     }
@@ -301,5 +304,86 @@ struct ReceiptDocumentReader: Sendable {
             return true
         }, nil)
         if let error { throw error }
+    }
+}
+
+/// Page/line coordinates always refer to the complete OCR result. Choosing to omit
+/// a repeated edge never renumbers a purchased line or changes the source identity.
+struct ReceiptSectionDraft {
+    static let maximumSections = 6
+    static let maximumBytes = 30_000_000
+    struct Section {
+        let digest: Data
+        let byteCount: Int
+        let page: ReceiptDocumentPage
+        let preview: Data?
+    }
+    private(set) var sections: [Section] = []
+    private(set) var omittedPrefixes: [Int: Int] = [:]
+
+    mutating func put(_ document: ExtractedReceiptDocument, bytes: Int, preview: Data?, at index: Int) throws {
+        guard (0...sections.count).contains(index), index < Self.maximumSections,
+              (1...ReceiptDocumentBytes.maximumBytes).contains(bytes),
+              document.pages.count == 1, let page = document.pages.first, page.method == .imageOCR,
+              !page.lines.isEmpty else { throw ReceiptDocumentFailure.selection }
+        guard !sections.enumerated().contains(where: { $0.offset != index && $0.element.digest == document.digest }) else {
+            throw ReceiptDocumentFailure.duplicateSection
+        }
+        var next = sections
+        let part = Section(digest: document.digest, byteCount: bytes, page: page, preview: preview)
+        if index == next.count { next.append(part) } else { next[index] = part }
+        guard next.reduce(0, { $0 + $1.byteCount }) <= Self.maximumBytes,
+              next.flatMap({ $0.page.lines }).reduce(0, { $0 + $1.text.utf8.count }) <= 100_000 else {
+            throw ReceiptDocumentFailure.size
+        }
+        sections = next
+        omittedPrefixes.removeValue(forKey: index)
+        omittedPrefixes.removeValue(forKey: index + 1)
+    }
+
+    func likelyOverlaps(at index: Int) -> [Int] {
+        guard index > 0, sections.indices.contains(index) else { return [] }
+        func key(_ line: ReceiptDocumentPage.Line) -> String {
+            line.text.lowercased().split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        }
+        let previous = sections[index - 1].page.lines.map(key)
+        let next = sections[index].page.lines.map(key)
+        return (1...min(previous.count, next.count)).filter { previous.suffix($0).elementsEqual(next.prefix($0)) }
+    }
+
+    mutating func resolve(at index: Int, omitting count: Int) {
+        guard index > 0, sections.indices.contains(index), count == 0 || likelyOverlaps(at: index).contains(count) else { return }
+        omittedPrefixes[index] = count
+    }
+
+    var hasUnresolvedOverlap: Bool {
+        sections.indices.contains { !likelyOverlaps(at: $0).isEmpty && omittedPrefixes[$0] == nil }
+    }
+
+    func review() throws -> (document: ExtractedReceiptDocument, omitted: Set<ExtractedReceiptDocument.Selection>) {
+        guard let first = sections.first, !hasUnresolvedOverlap else { throw ReceiptDocumentFailure.selection }
+        var bytes = Data("receipt-sections-v1".utf8)
+        var omitted = Set<ExtractedReceiptDocument.Selection>()
+        let pages = sections.enumerated().map { index, section in
+            bytes.append(section.digest)
+            for line in section.page.lines.prefix(omittedPrefixes[index] ?? 0) {
+                omitted.insert(.init(page: index + 1, line: line.id))
+            }
+            return ReceiptDocumentPage(id: index + 1, method: .imageOCR, lines: section.page.lines)
+        }
+        let digest = sections.count == 1 ? first.digest : Data(SHA256.hash(data: bytes))
+        return (.init(digest: digest, pages: pages, firstSectionDigest: sections.count > 1 ? first.digest : nil), omitted)
+    }
+
+    static func preview(_ data: Data) -> Data? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: 520] as CFDictionary) else { return nil }
+        let output = NSMutableData()
+        guard let writer = CGImageDestinationCreateWithData(output, UTType.jpeg.identifier as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(writer, image, [kCGImageDestinationLossyCompressionQuality: 0.6] as CFDictionary)
+        guard CGImageDestinationFinalize(writer), output.length <= 250_000 else { return nil }
+        return output as Data
     }
 }

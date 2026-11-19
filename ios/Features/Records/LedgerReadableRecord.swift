@@ -8,6 +8,14 @@ import CoreDomain
         // A shop projection can contain supporting versions of its chosen dinners.
         // The separate library selection is where templates, drafts and rotations belong.
         if workspace.shops.isEmpty {
+            for kit in workspace.shoppingLists.kits {
+                sections.append([joined([shoppingText("Shopping kits"), kit.name])] + kit.rows.map(shoppingIntent))
+            }
+            for item in workspace.shoppingLists.standing where item.transfer == nil {
+                sections.append([shoppingText("Standing list"), shoppingIntent(item.row),
+                    item.checkedAt.map { joined([ledgerText("Checked at"), stamp($0)]) } ?? "",
+                    joined([shoppingText("Eligible stores"), item.stores.joined(separator: ", ")])])
+            }
             let library = workspace.dinnerPlanning
             for meal in workspace.mealTemplates {
                 sections.append([ledgerText("Usual dinner")] + template(meal))
@@ -53,6 +61,11 @@ import CoreDomain
         return sections.map { $0.joined(separator: "\n") }.joined(separator: "\n\n")
     }
 
+    private static func shoppingIntent(_ row: ShoppingKitRow) -> String {
+        joined([row.name, quantity(row.quantity), row.notes, row.exclusions.isEmpty ? "" : exclusions(row.exclusions),
+            row.optional ? shoppingText("Optional") : ""])
+    }
+
     private static func shoppingList(_ shop: ShoppingLedger, in workspace: LedgerWorkspace) throws -> [String] {
         let basis = shop.basis
         var lines = [joined([shop.title, revision(shop.revision)]),
@@ -67,6 +80,12 @@ import CoreDomain
             lines.append(joined([ledgerFormat("Retailer preview: %@", dinnerMoney(preview.total)), preview.source,
                                  ledgerDate(preview.capturedAt, zone: basis.timeZoneIdentifier)]))
             if !preview.includedCharges.isEmpty { lines.append(ledgerFormat("Included charges: %@", preview.includedCharges.joined(separator: ", "))) }
+        }
+
+        if shop.lines.contains(where: { $0.pickedPrice != nil }) {
+            let subtotal = shop.pickedCartSubtotal
+            lines.append(shoppingFormat("%@ for %lld of %lld picked items", moneyText(subtotal.total), Int64(subtotal.priced), Int64(subtotal.picked)))
+            lines.append(shoppingText("Entered item totals before checkout charges."))
         }
 
         let contributions = Dictionary(grouping: shop.contributions, by: \.lineID)

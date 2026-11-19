@@ -560,6 +560,11 @@ public actor RecoveryRegistry {
         try refreshFromDisk()
         return try makeReview(envelope)
     }
+    /// Use the same refreshed manifest generation for the archive review and legacy content matches.
+    public func reviewPaprikaRecipes(_ envelope: ArchiveEnvelope) throws -> (RecoveryReview, Set<String>) {
+        let staged = try review(envelope)
+        return (staged, PaprikaCollection.legacyMatches(envelope.payload.records, saved: manifest.records.map(\.record)))
+    }
     private func makeReview(_ envelope: ArchiveEnvelope, includePriorCopies: Bool = true) throws -> RecoveryReview {
         try ArchiveCodec.validate(envelope)
         let incoming = envelope.payload.records
@@ -595,7 +600,13 @@ public actor RecoveryRegistry {
         let rows = try incoming.map { record -> RecoveryReviewRow in
             let identity = ArchiveCodec.identity(record, projection: envelope.projectionID)
             let source = ArchiveSourceIdentity(origin: record.origin, recordID: record.id)
-            if erasedOrigins.contains(record.origin) || erasedSources.contains(source) || erasedIdentities.contains(identity) ||
+            // Older Paprika imports had only their content hash as identity. A tracked source
+            // must honor an erasure that already covered this exact imported or corrected wording.
+            let legacyErased = PaprikaCollection.isTracked(record) && [record.revision, record.parentRevision].compactMap { $0 }.contains { revision in
+                erasedSources.contains(ArchiveSourceIdentity(origin: record.origin, recordID: revision)) ||
+                erasedIdentities.contains(ArchiveIdentity(origin: record.origin, recordID: revision, revision: revision, projection: identity.projection))
+            }
+            if legacyErased || erasedOrigins.contains(record.origin) || erasedSources.contains(source) || erasedIdentities.contains(identity) ||
                 (record.media ?? []).contains(where: { erasedMedia.contains(.init(origin: record.origin, mediaID: $0.id)) }) {
                 return .init(id: identity, record: record, disposition: .erased, existingCopyID: nil, priorCopies: [])
             }

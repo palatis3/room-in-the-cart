@@ -6,7 +6,7 @@ struct HouseholdInboxView: View {
     var body: some View {
         Group {
             if model.canReviewHouseholdRequests, let inbox = model.shopperInbox {
-                ShopperInboxContent(model: inbox, sharedShop: model.sharedShop)
+                ShopperInboxContent(model: inbox, sharedShop: model.sharedShop, household: model)
             } else { ContentUnavailableView(ht("Shopper access required"), systemImage: "lock", description: Text(ht("Only the assigned shopper can review these requests."))) }
         }.navigationTitle(ht("Family requests"))
     }
@@ -14,6 +14,7 @@ struct HouseholdInboxView: View {
 struct ShopperInboxContent: View {
     @ObservedObject var model: HouseholdInboxModel
     var sharedShop: HouseholdShopModel? = nil
+    var household: HouseholdModel? = nil
     @State private var decisionRequest: OwnRequest?
     @State private var lastRequestID: String?
     @State private var confirmedReturnID: String?
@@ -61,6 +62,7 @@ struct ShopperInboxContent: View {
                                     if request.canReportContent == true {
                                         SharedSafetyButton(channel: model.sharedSafetyChannel, fields: SharedMessageField.request(request))
                                     }
+                                    if let household { AdultProductReferenceLink(household: household, request: request) }
                                     Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
                                         .accessibilityIdentifier("household.request.outcome.\(request.id)")
                                         .accessibilityFocused($focusedOutcome, equals: request.id)

@@ -78,17 +78,27 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
     public let updatedAt: Date
     public let useFirst: Bool
 
+    public let splitFromLotID: UUID?
+    public let discardUndo: InventoryDiscardUndo?
+    public let discardedTimes: Int?
+
     public init(id: UUID, foodID: UUID, name: String, source: InventorySource, revision: Int64,
                 location: InventoryLocation, openedAt: Date? = nil, unit: UnitOfMeasure, count: InventoryCount,
-                observationID: UUID, confirmedAt: Date, updatedAt: Date, useFirst: Bool = false, countWording: String? = nil) {
+                observationID: UUID, confirmedAt: Date, updatedAt: Date, useFirst: Bool = false, countWording: String? = nil,
+                splitFromLotID: UUID? = nil, discardUndo: InventoryDiscardUndo? = nil, discardedTimes: Int? = nil) {
+        self.splitFromLotID = splitFromLotID; self.discardUndo = discardUndo; self.discardedTimes = discardedTimes
         self.id = id; self.foodID = foodID; self.name = name; self.source = source; self.revision = revision
         self.location = location; self.openedAt = openedAt; self.unit = unit; self.count = count; self.countWording = countWording
         self.observationID = observationID; self.confirmedAt = confirmedAt; self.updatedAt = updatedAt; self.useFirst = useFirst
     }
     public func validate() throws {
-        guard revision >= 1, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 512,
+        guard splitFromLotID != id, (discardedTimes ?? 0) >= 0, revision >= 1, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 512,
               confirmedAt.timeIntervalSinceReferenceDate.isFinite, updatedAt.timeIntervalSinceReferenceDate.isFinite,
               confirmedAt <= updatedAt, count.quantity.map({ $0.unit == unit }) ?? true else { throw InventoryError.invalid("lot") }
+        if let discardUndo {
+            try discardUndo.previousCount.validate(wording: discardUndo.previousWording)
+            guard (discardedTimes ?? 0) > 0, discardUndo.previousConfirmedAt == confirmedAt else { throw InventoryError.invalid("discardUndo") }
+        }
         if let openedAt {
             guard openedAt.timeIntervalSinceReferenceDate.isFinite, openedAt <= updatedAt else { throw InventoryError.invalid("openedAt") }
         }
@@ -105,8 +115,12 @@ public struct InventoryLotSeed: Codable, Equatable, Sendable {
     public let count: InventoryCount
     public let useFirst: Bool
     public let observedAt: Date?
+    public let openedAt: Date?
+    public let splitFromLotID: UUID?
     public init(foodID: UUID, name: String, source: InventorySource, location: InventoryLocation,
-                unit: UnitOfMeasure, count: InventoryCount, useFirst: Bool = false, observedAt: Date? = nil) {
+                unit: UnitOfMeasure, count: InventoryCount, useFirst: Bool = false, observedAt: Date? = nil,
+                openedAt: Date? = nil, splitFromLotID: UUID? = nil) {
+        self.openedAt = openedAt; self.splitFromLotID = splitFromLotID
         self.foodID = foodID; self.name = name; self.source = source; self.location = location
         self.unit = unit; self.count = count; self.useFirst = useFirst
         self.observedAt = observedAt
@@ -139,13 +153,16 @@ public struct InventoryUsage: Codable, Equatable, Sendable, Identifiable {
 /// canonical pantry value; changing a label must never manufacture a recount.
 public struct InventoryLotRevision: Codable, Equatable, Sendable {
     public let observation: InventoryCountRevision?
+    public let portion: InventoryPortionAction?
     public let usage: [InventoryUsage]?
     public let foodID: UUID?
     public let name: String?
     public let useFirst: Bool?
     public let location: InventoryLocation?
     public init(observation: InventoryCountRevision? = nil, foodID: UUID? = nil,
-                name: String? = nil, useFirst: Bool? = nil, location: InventoryLocation? = nil, usage: [InventoryUsage]? = nil) {
+                name: String? = nil, useFirst: Bool? = nil, location: InventoryLocation? = nil, usage: [InventoryUsage]? = nil,
+                portion: InventoryPortionAction? = nil) {
+        self.portion = portion
         self.usage = usage
         self.observation = observation; self.foodID = foodID; self.name = name
         self.useFirst = useFirst; self.location = location

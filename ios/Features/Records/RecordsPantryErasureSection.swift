@@ -103,7 +103,10 @@ private struct PantryErasureImpactView: View {
     var body: some View {
         Section(recordsText("Review pantry deletion")) {
             switch review.selection {
-            case .lot: Text(recordsText("You selected one food batch."))
+            case .lot:
+                if review.foodNames.count > 1 {
+                    Text(pantryText("This batch was split. Deleting its transfer history also deletes the linked portions listed below."))
+                } else { Text(recordsText("You selected one food batch.")) }
             case .pickup: Text(recordsText("You selected one pickup and its pantry records."))
             case .price: Text(pantryText("You selected one price and its corrections and credits."))
             case .wholeOrigin: Text(recordsText("You selected the entire local pantry and its history."))

@@ -346,6 +346,30 @@ import LocalStore
         XCTAssertEqual(free, try Rational(11), "Seventeen current wraps minus six allocated, not twenty-four old wraps.")
     }
 
+    func testSplitOfUnresolvedReceiptCannotBecomeEligibleManualStock() async throws {
+        let fixture = try await activate([])
+        let initial = try await fixture.repository.load(at: now)
+        let source = UUID(), child = UUID(), food = UUID()
+        let key = ReceiptKey(sourceEventID: "unverified", orderLineID: food, branchID: "store", segmentID: "one")
+        _ = try await fixture.repository.apply(.init(id: UUID(), originID: fixture.store.workspaceID, lotID: source,
+            eventID: UUID(), expectedRevision: nil, occurredAt: now,
+            change: .create(.init(foodID: food, name: "Rolls", source: .receipt(originID: fixture.store.workspaceID, key: key),
+                                  location: .cupboard, unit: .count, count: .exact(q(6))), observationID: UUID())),
+            reviewedInventoryRevision: initial.state.revision, at: now)
+        let portion = InventoryPortionAction.split(amount: q(2), destination: .freezer, lotID: child, eventID: UUID(), observationID: UUID())
+        let reading = InventoryCountRevision(count: .exact(q(4)), observationID: UUID(), observedAt: now)
+        let split = try await change(source, .revise(.init(observation: reading, portion: portion)), fixture: fixture)
+        let live = try PantryLiveStockProjection.buildGlobal(snapshot: split, mapping: fixture.mapping, at: now)
+        XCTAssertEqual(live.lots.count, 2)
+        XCTAssertTrue(live.globallyFreeLots.isEmpty)
+        XCTAssertTrue(try XCTUnwrap(live.lot(canonicalID: child)).issues.contains(.receiptEvidenceUnresolved))
+        let context = try PantryErasureDependencies.Context(snapshot: split, mapping: fixture.mapping,
+                                                            sourceToken: await fixture.store.inventorySourceToken(), at: now)
+        let impact = try await PantryErasureDependencies.scan(store: fixture.store, selection: .lot(child, revision: 1),
+                                                              context: context, authorize: { true })
+        XCTAssertEqual(impact.explicitlySelectedLotIDs, [source, child])
+    }
+
     func testOtherShopIneligibleReceiptBackingHoldsFreeFoodButUnknownUnallocatedReceiptDoesNot() async throws {
         let pair = manualJourneys()
         var first = pair.0

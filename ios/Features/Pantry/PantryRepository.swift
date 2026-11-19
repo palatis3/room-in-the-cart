@@ -23,6 +23,11 @@ final class PantryRepository {
         let lots: [InventoryLot]
         let reservations: [InventoryReservation]
         let availability: InventoryProjection
+        /// Legacy pickup edits describe the original source total. After a split or
+        /// discard, only an explicit count of the current physical portion can replace it.
+        func requiresPortionRecount(_ lot: InventoryLot) -> Bool {
+            lot.splitFromLotID != nil || (lot.discardedTimes ?? 0) > 0 || lots.contains { $0.splitFromLotID == lot.id }
+        }
         var receiptAcquiredLots: Set<UUID> = []
         let loadedPayloadBytes: Int
         fileprivate let observationCount: Int
@@ -35,6 +40,7 @@ final class PantryRepository {
         let before: Snapshot
         let proposedLot: InventoryLot
         let proposedAvailability: InventoryProjection
+        var splitLot: InventoryLot? = nil
 
         /// Includes newly unresolved or shortfall-backed commitments, not just numeric changes.
         var affectedReservations: [InventoryReservationCoverage] {
@@ -62,7 +68,7 @@ final class PantryRepository {
     let aliasPersonaID: UUID?
     let pendingStore: PantryPendingStore?
     let store: ComparisonStore
-    private let archivedUsage: (@MainActor (InventoryLot) async throws -> [PantryUsageHistoryRow])?
+    private let archivedActions: (@MainActor (InventoryLot) async throws -> PantryArchivedActions)?
     private let authorize: () -> Bool
     let limits: ReadLimits
     private let mutationGate: PantryMutationGate?
@@ -71,9 +77,9 @@ final class PantryRepository {
 
     init(store: ComparisonStore, limits: ReadLimits = .standard, mutationGate: PantryMutationGate? = nil,
          pendingStore: PantryPendingStore? = nil, aliasPersonaID: UUID? = nil,
-         archivedUsage: (@MainActor (InventoryLot) async throws -> [PantryUsageHistoryRow])? = nil,
+         archivedActions: (@MainActor (InventoryLot) async throws -> PantryArchivedActions)? = nil,
          authorize: @escaping () -> Bool) {
-        self.archivedUsage = archivedUsage
+        self.archivedActions = archivedActions
         self.store = store
         self.authorize = authorize
         self.limits = limits
@@ -100,6 +106,7 @@ final class PantryRepository {
         let observationRows = try await records(.observation, maximum: limits.observations, maximumBytes: remainingBytes)
         let lots = try lotRows.map(PantryPersistenceCodec.lot)
         remainingBytes -= observationRows.reduce(0) { $0 + $1.payload.count }
+        _ = try InventoryLot.splitRoots(in: lots)
         let acquiredLots = try await confirmedReceiptLots(lots, maximumBytes: remainingBytes)
         remainingBytes -= acquiredLots.bytes
         let final = try await store.inventoryState()
@@ -170,9 +177,13 @@ final class PantryRepository {
 
     private func preparedChange(_ command: InventoryCommand, before: Snapshot, at now: Date) throws
         -> (review: Review, writes: [InventoryWrite]) {
+        if case .create(let seed, _) = command.change, seed.splitFromLotID != nil {
+            throw InventoryError.invalid("unpairedTransfer")
+        }
         let lot: InventoryLot
         let after: InventoryProjection
-        let writes: [InventoryWrite]
+        var writes: [InventoryWrite]
+        var splitLot: InventoryLot?
         if case let .reservation(edit) = command.change {
             guard let current = before.lots.first(where: { $0.id == command.lotID }) else { throw InventoryError.stale }
             let (claim, projection) = try edit.prepare(command: command, lots: before.lots, reservations: before.reservations,
@@ -183,12 +194,35 @@ final class PantryRepository {
         } else {
             let prepared = try InventoryEngine.prepare(command, current: before.lots.first { $0.id == command.lotID }, at: now)
             lot = prepared.lot
-            after = try InventoryProjection.build(originID: before.state.workspaceID,
-                lots: before.lots.filter { $0.id != command.lotID } + [lot], reservations: before.reservations, at: now)
             writes = try PantryPersistenceCodec.writes(prepared)
+            var lots = before.lots.filter { $0.id != command.lotID } + [lot]
+            if case .revise(let revision) = command.change, let portion = revision.portion,
+               case let .split(amount, destination, child, event, observation) = portion {
+                guard let free = before.availability.lots.first(where: { $0.id == lot.id })?.free,
+                      amount.unit.dimension == free.unit.dimension, let moved = try amount.converted(to: free.unit), moved <= free.amount else {
+                    throw InventoryError.invalid("reservationExceedsFree")
+                }
+                let seed = InventoryLotSeed(foodID: lot.foodID, name: lot.name,
+                    source: .manual(originID: command.originID, sourceID: child), location: destination,
+                    unit: lot.unit, count: .exact(Quantity(amount: moved, unit: lot.unit, originalLiteral: moved.description,
+                                                           confirmedConversion: lot.count.quantity?.confirmedConversion)),
+                    useFirst: lot.useFirst, observedAt: lot.confirmedAt,
+                    openedAt: lot.openedAt, splitFromLotID: lot.id)
+                let childCommand = InventoryCommand(id: command.id, originID: command.originID, lotID: child,
+                    eventID: event, expectedRevision: nil, occurredAt: command.occurredAt, change: .create(seed, observationID: observation))
+                let creation = try InventoryEngine.prepare(childCommand, current: nil, at: now)
+                splitLot = creation.lot
+                lots.append(creation.lot)
+                writes += try PantryPersistenceCodec.writes(creation)
+            }
+            after = try InventoryProjection.build(originID: before.state.workspaceID,
+                lots: lots, reservations: before.reservations, at: now)
+            if splitLot != nil, after.allocations != before.availability.allocations {
+                throw InventoryError.invalid("reservationWouldMoveOtherFood")
+            }
         }
         try validateCapacity(of: writes, replacing: before)
-        return (Review(command: command, before: before, proposedLot: lot, proposedAvailability: after), writes)
+        return (Review(command: command, before: before, proposedLot: lot, proposedAvailability: after, splitLot: splitLot), writes)
     }
 
     /// The original command and reviewed global revision are the durable retry input.
@@ -411,6 +445,56 @@ final class PantryRepository {
         }
     }
 
+    private func visitEvents(_ lot: InventoryLot, bytes: inout Int, count: inout Int,
+                             visit: (InventoryEvent) throws -> Void) async throws {
+        var cursor: UUID?
+        while true {
+            let page = try await store.inventoryRecords(kind: .event, lotID: lot.id, after: cursor, limit: InventoryPersistenceLimits.pageItems)
+            try requireAccess()
+            for record in page {
+                bytes += record.payload.count
+                count += 1
+                guard bytes <= limits.payloadBytes, count <= limits.observations else { throw InventoryError.capacity }
+                let event = try JSONDecoder().decode(InventoryEvent.self, from: record.payload)
+                guard record.payloadVersion == 1, record.revision == 1, event.id == record.key.id, event.lotID == lot.id,
+                      event.originID == originID, record.lotID == lot.id, (1...lot.revision).contains(event.revision),
+                      event.occurredAt.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalidProvenance }
+                try visit(event)
+            }
+            guard page.count == InventoryPersistenceLimits.pageItems else { break }
+            cursor = page.last?.key.id
+        }
+    }
+
+    func discardHistory(foodID: UUID, basis: InventoryState, at now: Date) async throws -> [PantryDiscardRow] {
+        let current = try await loadForEditing(at: now)
+        guard current.state == basis else { throw PantryConsumptionFailure.stale }
+        var rows: [PantryDiscardRow] = []
+        var undone = Set<UUID>()
+        var bytes = 0, count = 0
+        for lot in current.lots where lot.foodID == foodID {
+            if let archived = try await archivedActions?(lot) {
+                try requireAccess()
+                guard count <= limits.observations - archived.discards.count else { throw InventoryError.capacity }
+                count += archived.discards.count
+                rows += archived.discards
+            }
+            try await visitEvents(lot, bytes: &bytes, count: &count) { event in
+                guard case .revise(let edit) = event.change else { return }
+                switch edit.portion {
+                case let .discard(amount, reason):
+                    rows.append(.init(id: event.id, lotID: lot.id, date: event.occurredAt, amount: amount, reason: reason))
+                case .undoDiscard(let id): undone.insert(id)
+                default: break
+                }
+            }
+        }
+        guard try await store.inventoryState() == basis else { throw PantryConsumptionFailure.stale }
+        try requireAccess()
+        guard Set(rows.map(\.id)).count == rows.count else { throw Failure.invalidProvenance }
+        return rows.filter { !undone.contains($0.id) }.sorted { ($0.date, $0.id.uuidString) > ($1.date, $1.id.uuidString) }
+    }
+
     func usageHistory(lotID: UUID, basis: InventoryState) async throws -> [PantryUsageHistoryRow] {
         try requireAccess()
         guard basis.workspaceID == originID, basis.active, try await store.inventoryState() == basis else {
@@ -421,31 +505,18 @@ final class PantryRepository {
         try requireAccess()
         let lot = try PantryPersistenceCodec.lot(head)
         guard lot.source.originID == originID else { throw Failure.wrongWorkspace }
-        var cursor: UUID?, bytes = 0, count = 0
+        var bytes = 0, count = 0
         var history: [PantryUsageHistoryRow] = []
         var seen = Set<UUID>()
-        while true {
-            let page = try await store.inventoryRecords(kind: .event, lotID: lotID, after: cursor, limit: InventoryPersistenceLimits.pageItems)
-            try requireAccess()
-            for record in page {
-                bytes += record.payload.count
-                count += 1
-                guard bytes <= limits.payloadBytes, count <= limits.observations else { throw InventoryError.capacity }
-                let event = try JSONDecoder().decode(InventoryEvent.self, from: record.payload)
-                guard record.payloadVersion == 1, record.revision == 1, event.id == record.key.id, event.lotID == lotID,
-                      event.originID == originID, record.lotID == lotID, (1...lot.revision).contains(event.revision),
-                      event.occurredAt.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalidProvenance }
-                for row in try PantryUsageHistoryRow.entries(from: event) {
-                    guard seen.insert(row.id).inserted else { throw Failure.invalidProvenance }
-                    history.append(row)
-                }
+        try await visitEvents(lot, bytes: &bytes, count: &count) { event in
+            for row in try PantryUsageHistoryRow.entries(from: event) {
+                guard seen.insert(row.id).inserted else { throw Failure.invalidProvenance }
+                history.append(row)
             }
-            guard page.count == InventoryPersistenceLimits.pageItems else { break }
-            cursor = page.last?.key.id
         }
         let cooked = try await cookUsageHistory(lotID: lotID, basis: basis)
         try requireAccess()
-        let archived = try await archivedUsage?(lot) ?? []
+        let archived = try await archivedActions?(lot).usage ?? []
         try requireAccess()
         for row in cooked + archived {
             guard seen.insert(row.id).inserted else { throw Failure.invalidProvenance }
@@ -824,6 +895,16 @@ final class PantryRepository {
         try requireAccess()
         let inbox = try PrivateReceiptInbox.open()
         let result = try await operation(inbox, .init(origin: originID, persona: aliasPersonaID))
+        try requireAccess()
+        return result
+    }
+
+    func withPrivateDeliveryScope<T>(_ action: (ComparisonStore, UUID) async throws -> T) async throws -> T {
+        try requireAccess()
+        guard let aliasPersonaID, let gate = mutationGate else { throw Failure.unauthorized }
+        let lease = try gate.beginExclusiveWrite()
+        defer { gate.endExclusiveWrite(lease) }
+        let result = try await action(store, aliasPersonaID)
         try requireAccess()
         return result
     }
