@@ -25,7 +25,7 @@ struct LedgerQuickGroceryEntry: View {
            let identity = CapturePrivateIdentity.current(access: access, household: household) {
             if let owner = try? firstListOwner(identity), let workspaceID = model.sourceWorkspaceID {
                 let available = scene == .active && model.firstListStore != nil
-                QuickGroceryField(model: model, workspaceID: workspaceID, prominent: prominent, householdMember: household.projection != nil, authorize: {
+                QuickGroceryField(model: model, workspaceID: workspaceID, prominent: prominent, available: available, householdMember: household.projection != nil, authorize: {
                     UIApplication.shared.isProtectedDataAvailable && UIApplication.shared.applicationState == .active &&
                     child?.presented != true && household.projection?.grantId == nil &&
                     CapturePrivateIdentity.current(access: access, household: household) == identity &&
@@ -49,11 +49,13 @@ private struct QuickGroceryField: View {
     @ObservedObject var model: LedgerModel
     let workspaceID: UUID
     let prominent: Bool
+    let available: Bool
     let householdMember: Bool
     let authorize: @MainActor () -> Bool
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var text = ""
     @State private var recent: [String] = []
+    @State private var visible = false
     @State private var submitting = false
     @State private var submitted: StagedListImport?
     @State private var undoBatch: UUID?
@@ -172,6 +174,11 @@ private struct QuickGroceryField: View {
                 .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
             }
         }
+        .onAppear { visible = true }
+        .onDisappear { visible = false }
+        .onChange(of: available) { _, ready in
+            if ready { finishCommittedEntry(announce: false) }
+        }
         .onChange(of: model.revision, initial: true) { _, _ in
             recent = QuickGrocery.recentNames(in: model.workspace)
             finishCommittedEntry()
@@ -219,14 +226,16 @@ private struct QuickGroceryField: View {
         }
     }
 
-    private func finishCommittedEntry() {
-        guard let preview = submitted, model.shop?.id == preview.shopID,
+    private func finishCommittedEntry(announce: Bool = true) {
+        guard authorize(), let preview = submitted, model.shop?.id == preview.shopID,
               model.shop?.importBatches.contains(where: { $0.id == preview.id && $0.undoneAt == nil }) == true else { return }
         if text.trimmingCharacters(in: .whitespacesAndNewlines) == preview.originalText { text = "" }
         submitted = nil
         undoBatch = preview.id
-        editing = true
-        UIAccessibility.post(notification: .announcement, argument: quickGroceryFormat("Added %@", preview.originalText))
+        if announce && visible {
+            editing = true
+            UIAccessibility.post(notification: .announcement, argument: quickGroceryFormat("Added %@", preview.originalText))
+        }
     }
 }
 
