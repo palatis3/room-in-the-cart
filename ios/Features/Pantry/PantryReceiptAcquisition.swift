@@ -44,6 +44,7 @@ struct ReceiptImportDraft {
     let workspaceID: UUID
     let savedPickup: ReceiptAcquisition.SavedPickup?
     let imageDigest: Data?
+    let documentLayoutID: UUID?
     var supportsRescan = true
     var rescanDecision: ReceiptRescanDecision?
     var merchant: String
@@ -60,6 +61,7 @@ struct ReceiptImportDraft {
         savedPickup = fromSavedPickup ? .init(originID: source.target.workspaceID, id: source.target.containerID) : nil
         draftID = source.id
         workspaceID = source.target.workspaceID
+        documentLayoutID = source.documentLayoutID
         imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
         merchant = source.reviewedLabel
         printedDate = ReceiptPrintedDate.unique(in: source.receiptLines, now: now)

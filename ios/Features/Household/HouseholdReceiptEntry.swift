@@ -38,10 +38,18 @@ extension ReceiptImportDraft {
             })
         }
         let ref = reference.trimmingCharacters(in: .whitespacesAndNewlines)
-        let receipt = HouseholdReceiptAcquisition(receiptId: receiptID, imageId: imageDigest.map {
-            ReceiptAcquisition.identity(["image", $0.base64EncodedString()])
-        }, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines), purchaseDay: format.string(from: purchaseDate),
-        zone: zone.identifier, reference: ref.isEmpty ? nil : ref, lines: rows)
+        let imageID = imageDigest.map { ReceiptAcquisition.identity(["image", $0.base64EncodedString()]) }
+        // A reference may be supplied later for this same file. Keep the coordinates stable.
+        let scope = ["household-receipt-layout-v1", workspaceID.uuidString, (imageID ?? receiptID).uuidString]
+        let layout: UUID?
+        if lines.allSatisfy({ $0.documentLine != nil }) {
+            // Older saved files lack an extraction proof. Do not infer their layout from a partial selection.
+            layout = documentLayoutID.map { ReceiptAcquisition.identity(scope + ["file", $0.uuidString]) }
+        } else {
+            layout = ReceiptAcquisition.identity(scope + ["reviewed"] + lines.map(\.original))
+        }
+        let receipt = HouseholdReceiptAcquisition(receiptId: receiptID, imageId: imageID, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines), purchaseDay: format.string(from: purchaseDate),
+        zone: zone.identifier, reference: ref.isEmpty ? nil : ref, lines: rows, layoutId: layout)
         try receipt.validate()
         return receipt
     }
@@ -106,6 +114,7 @@ struct HouseholdReceiptEntry: View {
             }
             if let reviewed {
                 Section(pantryText("Confirm receipt lines")) {
+                    Text(householdPantryText("To help prevent counting a receipt twice, the app also sends a code based on all the lines it read, in order, including skipped lines."))
                     HouseholdReceiptFacts(receipt: reviewed)
                     Text(pantryText("Saving receipt evidence does not post a payment."))
                     HouseholdPantryConfirmButton(model: model, page: page, change: .receipt(reviewed),

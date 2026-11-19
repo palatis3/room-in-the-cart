@@ -65,11 +65,15 @@ private struct HouseholdPantryView: View {
                                     if let lot = model.lots.first(where: { $0.id == correction.lotId }) { Text(lot.foodName) }
                                     LabeledContent(householdPantryText("Corrected count"), value: deliveryQuantityText(correction.quantity))
                                 }
-                                Text(householdPantryText("Check the stock below. Retrying sends the same change."))
-                                if let deadline = serviceDate(pending.intent.expiresAt), deadline > Date() {
-                                    Button(householdPantryText("Retry the same change")) { Task { await model.retry() } }
-                                        .accessibilityIdentifier("householdPantry.retry")
-                                } else { Text(householdPantryText("The retry period has ended.")) }
+                                if pending.reviewOnly == true {
+                                    Text(HouseholdPantryModel.receiptReviewGuidance)
+                                } else {
+                                    Text(householdPantryText("Check the stock below. Retrying sends the same change."))
+                                    if let deadline = serviceDate(pending.intent.expiresAt), deadline > Date() {
+                                        Button(householdPantryText("Retry the same change")) { Task { await model.retry() } }
+                                            .accessibilityIdentifier("householdPantry.retry")
+                                    } else { Text(householdPantryText("The retry period has ended.")) }
+                                }
                                 Button(householdPantryText("Clear saved retry"), role: .destructive) { clearingRetry = true }
                                     .confirmationDialog(householdPantryText("Clear the saved retry after checking stock?"), isPresented: $clearingRetry, titleVisibility: .visible) {
                                         Button(householdPantryText("I checked the stock. Clear retry."), role: .destructive) { Task { await model.clearReviewedRetry() } }
@@ -147,18 +151,26 @@ struct HouseholdPantryConfirmButton: View {
     let closeEditor: () -> Void
     @State private var retryPreparation = false
 
+    private var receiptNeedsReview: Bool {
+        if case .receipt(let receipt) = change { return model.rejectedReceipt == receipt }
+        return false
+    }
+
     var body: some View {
         Button(title) {
             Task {
                 switch await model.confirmChange(change, reviewed: page) {
                 case .savedForSubmission: closeEditor()
                 case .retryPreparation: retryPreparation = true
-                case .unavailable: break
+                case .receiptNeedsReview, .unavailable: break
                 }
             }
         }
-        .disabled(!model.permitsReceiptReview(page))
+        .disabled(!model.permitsReceiptReview(page) || receiptNeedsReview)
         .accessibilityIdentifier(identifier)
+        if receiptNeedsReview {
+            Text(HouseholdPantryModel.receiptReviewGuidance).accessibilityIdentifier("householdReceipt.reviewNotice")
+        }
         if retryPreparation {
             Text(householdPantryText("Your change is still open. Try confirming again when the service is available."))
                 .accessibilityIdentifier("householdPantry.confirmationNotice")

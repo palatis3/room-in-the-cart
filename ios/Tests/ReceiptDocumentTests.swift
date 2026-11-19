@@ -112,6 +112,15 @@ import XCTest
         let combined = try extracted.source(target: target, merchant: "Market", stage: .finalInvoice,
             selection: [.init(page: 1, line: 1), .init(page: 2, line: 1)], at: Date())
         let first = try ReceiptImportDraft(source: single), second = try ReceiptImportDraft(source: combined)
+        XCTAssertNotNil(first.documentLayoutID)
+        XCTAssertEqual(first.documentLayoutID, second.documentLayoutID)
+        // The same bytes can yield different OCR coordinates on another reading.
+        let shifted = try await ReceiptDocumentReader(recognize: { _ in "HEADER\nSCANNED BEANS" }).extract(input)
+        let shiftedRow = try shifted.source(target: target, merchant: "Market", stage: .finalInvoice,
+            selection: [.init(page: 2, line: 2)], at: Date())
+        XCTAssertEqual(shiftedRow.documentDigest, single.documentDigest)
+        XCTAssertNotEqual(shiftedRow.documentLayoutID, single.documentLayoutID)
+        XCTAssertFalse(shiftedRow.originalText.contains("HEADER"))
         XCTAssertEqual(first.imageDigest, extracted.digest)
         XCTAssertEqual(first.receiptID, second.receiptID)
         XCTAssertEqual(first.lines.first?.ordinal, 200)

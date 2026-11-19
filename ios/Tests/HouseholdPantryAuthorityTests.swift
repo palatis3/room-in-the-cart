@@ -9,6 +9,8 @@ private actor PantryTestService: HouseholdPantryServing {
     let session: HouseholdPantrySession
     var grantEpoch = 1
     var preparationError: ClientError?
+    var dropsRequest = false
+    var rejectsReceiptLayout = false
     var losesResponse = false
     var sent: [HouseholdPantryIntent] = []
     var accessDenied = false
@@ -29,6 +31,8 @@ private actor PantryTestService: HouseholdPantryServing {
         session = try pantryFixture(["householdID": UUID().uuidString, "memberID": UUID().uuidString, "deviceID": UUID().uuidString])
     }
     func failPreparation(with error: ClientError?) { preparationError = error }
+    func dropRequest(_ drop: Bool) { dropsRequest = drop }
+    func rejectReceiptLayout() { rejectsReceiptLayout = true }
     func setLoss(_ loss: Bool) { losesResponse = loss }
     func revokeAndRegrant() { grantEpoch += 2 }
     func enablePagination() { paged = true }
@@ -75,7 +79,9 @@ private actor PantryTestService: HouseholdPantryServing {
     }
     func submitHouseholdPantryChange(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) throws -> HouseholdPantryReceipt {
         sent.append(intent)
+        if dropsRequest { throw ClientError.transport }
         if case .receipt(let value) = intent.change {
+            if rejectsReceiptLayout { throw ClientError.service(status: 409, code: "receipt_layout_review", correlationID: nil, retryAfter: nil) }
             if let previous = acquired[intent.id] { return previous }
             let rows = value.lines.map { ["ordinal": $0.ordinal, "lotId": UUID().uuidString] as [String: Any] }
             let result: HouseholdPantryReceipt = try pantryFixture(["v": 1, "kind": "pantry.acquireReceipt",
@@ -305,6 +311,12 @@ private actor PantryTestService: HouseholdPantryServing {
         XCTAssertThrowsError(try draft.householdReceipt(for: page, deliveries: []))
         draft.dateConfirmed = true
         let reviewed = try draft.householdReceipt(for: page, deliveries: [])
+        var identified = draft
+        identified.reference = "Transaction 123"
+        let withReference = try identified.householdReceipt(for: page, deliveries: [])
+        XCTAssertNotEqual(reviewed.receiptId, withReference.receiptId)
+        XCTAssertNotNil(reviewed.layoutId)
+        XCTAssertEqual(reviewed.layoutId, withReference.layoutId)
         XCTAssertEqual(reviewed.lines.map(\.ordinal), [0, 2])
         XCTAssertEqual(reviewed.lines.map(\.paidUSDMinor), [410, nil])
         XCTAssertEqual(reviewed.lines.map(\.original), ["BEANS", "PERAS"])
@@ -333,6 +345,81 @@ private actor PantryTestService: HouseholdPantryServing {
         let sent = await service.sent, acquired = await service.acquired
         XCTAssertEqual(sent, [intent, intent]); XCTAssertEqual(acquired.count, 1)
         XCTAssertNil(resumed.pending)
+    }
+
+    func testReceiptLayoutUsesOnlyScopedIdentityAndRejectedCopyClearsOnlyItsPendingSubmission() async throws {
+        let service = try PantryTestService(), store = HouseholdPantryPendingStore(url: temporaryURL())
+        let model = try makeModel(service: service, store: store)
+        await model.load()
+        let page = try XCTUnwrap(model.page)
+        func typed(_ words: [String], reference: String) throws -> HouseholdReceiptAcquisition {
+            let target = CaptureTarget(workspaceID: page.householdId, containerID: UUID(), objectID: UUID(),
+                                       revision: 0, kind: .receiptEvidence)
+            let source = SourceMediaRecord(id: UUID(), target: target, originalText: words.joined(separator: "\n"),
+                reviewedLabel: "Market", imageJPEG: nil, barcode: nil,
+                receiptLines: words.map { ScanReceiptLine(originalText: $0) }, capturedAt: Date())
+            var draft = try ReceiptImportDraft(source: source)
+            draft.reference = reference
+            draft.dateConfirmed = true
+            let index = try XCTUnwrap(words.firstIndex(of: "OATS"))
+            draft.lines[index].treatment = .add
+            draft.lines[index].received = "2"
+            draft.lines[index].usable = "2"
+            return try draft.householdReceipt(for: page, deliveries: [])
+        }
+        let strings = ["OATS", "Skipped private wording"]
+        let first = try typed(strings, reference: "123")
+        XCTAssertNotNil(first.layoutId)
+        XCTAssertEqual(first.layoutId, try typed(strings, reference: "123").layoutId)
+        XCTAssertNotEqual(first.layoutId, try typed(strings.reversed(), reference: "123").layoutId)
+        XCTAssertNotEqual(first.layoutId, try typed(strings, reference: "456").layoutId)
+        XCTAssertNotEqual(try typed(strings, reference: "").layoutId, try typed(strings, reference: "").layoutId)
+        let body = try JSONEncoder().encode(first)
+        XCTAssertFalse(String(decoding: body, as: UTF8.self).contains("Skipped private wording"))
+        await service.rejectReceiptLayout()
+        let result = await model.confirmChange(.receipt(first), reviewed: page)
+        XCTAssertEqual(result, .receiptNeedsReview)
+        XCTAssertEqual(model.rejectedReceipt, first)
+        let duplicate = await model.confirmChange(.receipt(first), reviewed: page)
+        XCTAssertEqual(duplicate, .receiptNeedsReview)
+        XCTAssertEqual(model.page, page)
+        XCTAssertNil(model.pending)
+        let remaining = try await store.read()
+        XCTAssertTrue(remaining.isEmpty)
+        XCTAssertTrue(model.notice?.contains("original file") == true)
+        await model.retry()
+        let sent = await service.sent
+        XCTAssertEqual(sent.count, 1)
+
+        // A rejected retry restored after interruption keeps every reviewed field until the
+        // adult explicitly clears it. No new command can send a read-only record.
+        model.dismiss()
+        let uncertain = try makeModel(service: service, store: store)
+        await uncertain.load()
+        let current = try XCTUnwrap(uncertain.page)
+        await service.dropRequest(true)
+        let interrupted = await uncertain.confirmChange(.receipt(first), reviewed: current)
+        XCTAssertEqual(interrupted, .savedForSubmission)
+        uncertain.dismiss()
+        await service.dropRequest(false)
+        let restored = try makeModel(service: service, store: store)
+        await restored.load()
+        await restored.retry()
+        XCTAssertEqual(restored.pending?.reviewOnly, true)
+        XCTAssertEqual(restored.pending?.intent.change, .receipt(first))
+        restored.dismiss()
+        let other = try makeModel(service: service, store: store, subject: "Another adult")
+        await other.load()
+        XCTAssertNil(other.pending)
+        let readOnly = try makeModel(service: service, store: store)
+        await readOnly.load()
+        XCTAssertEqual(readOnly.pending?.reviewOnly, true)
+        await readOnly.retry()
+        let allSends = await service.sent
+        XCTAssertEqual(allSends.count, 3)
+        await readOnly.clearReviewedRetry()
+        let cleared = try await store.read()
+        XCTAssertTrue(cleared.isEmpty)
     }
 
     func testPreparationRetryEndsWithTheHouseholdScopeOrAccess() async throws {

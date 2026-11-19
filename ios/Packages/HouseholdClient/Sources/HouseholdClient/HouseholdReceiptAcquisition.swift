@@ -61,6 +61,7 @@ public struct HouseholdReceiptLine: Codable, Equatable, Sendable {
 public struct HouseholdReceiptAcquisition: Codable, Equatable, Sendable {
     public let receiptId: UUID
     public let imageId: UUID?
+    public let layoutId: UUID?
     public let merchant: String
     public let purchaseDay: String
     public let zone: String
@@ -68,9 +69,9 @@ public struct HouseholdReceiptAcquisition: Codable, Equatable, Sendable {
     public let lines: [HouseholdReceiptLine]
 
     public init(receiptId: UUID, imageId: UUID?, merchant: String, purchaseDay: String, zone: String,
-                reference: String?, lines: [HouseholdReceiptLine]) {
+                reference: String?, lines: [HouseholdReceiptLine], layoutId: UUID? = nil) {
         self.receiptId = receiptId; self.imageId = imageId; self.merchant = merchant; self.purchaseDay = purchaseDay
-        self.zone = zone; self.reference = reference; self.lines = lines
+        self.zone = zone; self.reference = reference; self.lines = lines; self.layoutId = layoutId
     }
     public func validate() throws {
         guard householdReceiptText(merchant, 256), householdReceiptDay(purchaseDay), TimeZone(identifier: zone) != nil,

@@ -1,6 +1,39 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This copy could not be matched to the saved receipt. Check the household stock. For a missed item, try the original file. If it still cannot be matched, choose Add food to storage.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This copy could not be matched to the saved receipt. Check the household stock. For a missed item, try the original file. If it still cannot be matched, choose Add food to storage."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo asociar esta copia con el recibo guardado. Revisa las existencias del hogar. Si falta un artículo, prueba con el archivo original. Si tampoco se puede asociar, elige «Registrar alimentos guardados»."
+          }
+        }
+      }
+    },
+    "To help prevent counting a receipt twice, the app also sends a code based on all the lines it read, in order, including skipped lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To help prevent counting a receipt twice, the app also sends a code based on all the lines it read, in order, including skipped lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para evitar contar un recibo dos veces, la app también envía un código basado en todos los renglones que leyó, en orden, incluidos los omitidos."
+          }
+        }
+      }
+    },
     "%lld purchase days, usually %lld days apart.": {
       "localizations": {
         "en": {

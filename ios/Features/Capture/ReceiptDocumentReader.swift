@@ -97,6 +97,14 @@ struct ExtractedReceiptDocument: Sendable {
         guard rows.count == selection.count else { throw ReceiptDocumentFailure.selection }
         var source = SourceMediaRecord(id: id, target: target, originalText: rows.map(\.originalText).joined(separator: "\n"),
             reviewedLabel: merchant, imageJPEG: nil, barcode: nil, receiptLines: rows, capturedAt: date)
+        // Extraction can change row positions even when the file bytes are identical.
+        // Hash the entire coordinate map locally so picking a different subset preserves its identity.
+        var coordinates = ["receipt-file-layout-v1", target.workspaceID.uuidString]
+        for page in pages {
+            coordinates += [String(page.id), page.method.rawValue, String(page.lines.count)]
+            for line in page.lines { coordinates += [String(line.id), line.text] }
+        }
+        source.documentLayoutID = ReceiptAcquisition.identity(coordinates)
         source.documentDigest = digest
         do { try source.validate() } catch { throw ReceiptDocumentFailure.selection }
         return source
