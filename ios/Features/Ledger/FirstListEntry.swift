@@ -14,6 +14,28 @@ struct FirstListContents: Equatable, Codable {
     var invalidAmounts: [UUID: InvalidImportAmount] = [:]
     var explicitSeparate: Set<UUID> = []
     var matchesAreCurrent = true
+
+    func appending(_ wording: String, pantryFood: Bool, shop: ShoppingLedger) throws -> Self {
+        guard shop.id == shopID else { throw LedgerError.stalePreview }
+        let combinedWording = [original, wording].filter { !$0.isEmpty }.joined(separator: "\n")
+        try StagedListImport.validateSourceText(combinedWording, maximumLines: StagedListImport.maximumLines)
+        let before = try preview ?? shop.stageImport(text: original, source: source, importID: importID)
+        guard before.id == importID, before.originalText == original else { throw LedgerError.stalePreview }
+        let addition = try pantryFood
+            ? PantryRestockReview.stage(food: wording, text: wording, source: .typed, id: UUID(), shop: shop)
+            : shop.stageImport(text: wording)
+        let combined = try shop.appendingImport(addition, to: before)
+        var next = self
+        next.original = combined.originalText
+        next.preview = combined
+        if preview == nil { next.choices = LedgerImportReview.initialChoices(before) }
+        for row in combined.lines.dropFirst(before.lines.count) where row.duplicateLineIDs.isEmpty {
+            next.choices[row.id] = .addNew
+        }
+        guard try JSONEncoder().encode(next).count <= LedgerStore.maximumFirstListDraftBytes else { throw LedgerStoreError.payloadTooLarge }
+        return next
+    }
+
 }
 
 /// One editor serializes its replacements. Other editors must still match SQLite's token.

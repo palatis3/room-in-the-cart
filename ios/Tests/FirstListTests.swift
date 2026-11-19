@@ -60,6 +60,79 @@ import CoreDomain
         let undone = await next.editShop(key: "undo-first", shopID: candidate.id) { try $0.undoImport(batchID: review.id) }
         XCTAssertTrue(undone); XCTAssertNotNil(next.shop?.importBatches.first?.undoneAt)
     }
+    func testAppendingRestockPreservesReviewedDraftAcrossReopen() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("ledger.sqlite"), owner = Data(repeating: 6, count: 32)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let store = try LedgerStore(url: url)
+        let editor = try FirstListEditor(store: store, owner: owner, base: 0, saved: nil, authorize: { true })
+        var input = editor.content
+        let shop = ShoppingLedger(id: input.shopID, title: "List")
+        input.original = (1...50).map { "Item " + String($0) }.joined(separator: "\n")
+        var reviewed = try shop.stageImport(text: input.original, importID: input.importID)
+        reviewed.lines[0].name = "Corrected name"
+        reviewed.lines[0].quantity = Quantity(amount: .one, unit: .cup, originalLiteral: "1")
+        reviewed.lines[1].exclusions = ["sesame"]
+        input.preview = reviewed
+        input.choices = LedgerImportReview.initialChoices(reviewed)
+        let skip = reviewed.lines[2].id
+        input.choices[skip] = .skip
+        input.explicitSeparate = [reviewed.lines[0].id]
+        input.invalidAmounts[reviewed.lines[3].id] = .init(text: "1/", unit: .cup)
+        input.matchesAreCurrent = false
+        let first = await editor.flush(input); XCTAssertNotNil(first)
+        let saved = try await store.firstListDraft(owner: owner)
+        let resumed = try FirstListEditor(store: store, owner: owner, base: 0, saved: saved, authorize: { true })
+        let next = try resumed.content.appending("5 spice", pantryFood: true, shop: shop)
+        let nextVersion = await resumed.flush(next); XCTAssertNotNil(nextVersion)
+        let other = try LedgerStore(url: url)
+        let record = try await other.firstListDraft(owner: owner)
+        let reopened = try FirstListEditor(store: other, owner: owner, base: 0, saved: record, authorize: { true })
+        XCTAssertEqual(reopened.content, next)
+        let preview = try XCTUnwrap(next.preview)
+        XCTAssertEqual(preview.id, reviewed.id)
+        XCTAssertEqual(Array(preview.lines.prefix(50)), reviewed.lines)
+        XCTAssertEqual(next.choices.filter { $0.key != preview.lines.last?.id }, input.choices)
+        XCTAssertEqual(next.explicitSeparate, input.explicitSeparate)
+        XCTAssertEqual(next.invalidAmounts, input.invalidAmounts)
+        XCTAssertFalse(next.matchesAreCurrent)
+        XCTAssertEqual(preview.lines.last?.name, "5 spice")
+        XCTAssertNil(preview.lines.last?.quantity)
+        XCTAssertEqual(preview.originalText, input.original + "\n5 spice")
+        XCTAssertFalse(PantryRestockReview.draftIncludes(food: reviewed.lines[2].name, text: next.original, preview: preview, choices: next.choices))
+        XCTAssertFalse(PantryRestockReview.draftIncludes(food: "Item 1", text: next.original, preview: preview, choices: next.choices))
+        try await other.close()
+        try await store.close()
+    }
+
+    func testAppendingShortcutChecksCombinedLimitsAndRetainsDuplicateDecisions() throws {
+        var input = FirstListContents()
+        let shop = ShoppingLedger(id: input.shopID, title: "List")
+        input.original = "2 eggs"
+        let before = try shop.stageImport(text: input.original, importID: input.importID)
+        input.preview = before
+        input.choices = LedgerImportReview.initialChoices(before)
+        let next = try input.appending("3 eggs\n2 kg rice", pantryFood: false, shop: shop)
+        let preview = try XCTUnwrap(next.preview)
+        XCTAssertEqual(preview.lines[0], before.lines[0])
+        XCTAssertEqual(preview.lines[1].duplicateLineIDs, [before.lines[0].proposedLineID])
+        XCTAssertNil(next.choices[preview.lines[1].id])
+        XCTAssertEqual(preview.lines[2].quantity?.unit, .kilogram)
+        XCTAssertEqual(next.choices[preview.lines[2].id], .addNew)
+        var choices = next.choices
+        choices[preview.lines[1].id] = .addToLine(before.lines[0].proposedLineID)
+        var committed = shop
+        try committed.commitImport(preview, decisions: choices)
+        XCTAssertEqual(committed.lines.count, 2)
+        XCTAssertEqual(try committed.quantity(forLineID: before.lines[0].proposedLineID)?.amount, try Rational(5))
+        let excess = Array(repeating: "x", count: StagedListImport.maximumLines).joined(separator: "\n")
+        XCTAssertThrowsError(try input.appending(excess, pantryFood: false, shop: shop)) {
+            XCTAssertEqual($0 as? ImportTextLimit, .nonblankLines(maximum: StagedListImport.maximumLines))
+        }
+        XCTAssertEqual(input.preview, before)
+    }
+
     func testDiscardClosesTheEditorAndCannotResurrectQueuedTyping() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

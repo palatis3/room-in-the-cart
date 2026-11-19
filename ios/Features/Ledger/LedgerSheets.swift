@@ -41,6 +41,7 @@ struct LedgerImportView: View {
     private let prefill: String
     private let pantryFoodPrefill: Bool
     @State private var incomingWording: String?
+    @State private var appendError: String?
     init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", pantryFoodPrefill: Bool = false, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
         self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onFirstSave = onFirstSave
         self.authorizeEntry = authorizeEntry
@@ -50,7 +51,7 @@ struct LedgerImportView: View {
         if let firstDraft { _importID = State(initialValue: firstDraft.content.importID) }
         if let content = firstDraft?.content, firstDraft?.version != nil {
             _original = State(initialValue: content.original); _source = State(initialValue: content.source)
-            let alreadyInDraft = pantryFoodPrefill && PantryRestockReview.draftIncludes(food: prefill, text: content.original, preview: content.preview)
+            let alreadyInDraft = pantryFoodPrefill && PantryRestockReview.draftIncludes(food: prefill, text: content.original, preview: content.preview, choices: content.choices)
             _incomingWording = State(initialValue: prefill.isEmpty || alreadyInDraft ? nil : prefill)
             _importID = State(initialValue: content.importID); _preview = State(initialValue: content.preview)
             _choices = State(initialValue: content.choices); _invalidAmounts = State(initialValue: content.invalidAmounts)
@@ -86,11 +87,9 @@ struct LedgerImportView: View {
                     Section(SurfaceCopy.text("Shortcut item")) {
                         Text(verbatim: incomingWording)
                         Button(SurfaceCopy.text("Append to saved draft")) {
-                            guard authorizeEntry() else { return }
-                            original = [original, incomingWording].filter { !$0.isEmpty }.joined(separator: "\n")
-                            preview = nil; choices = [:]; invalidAmounts = [:]; explicitSeparate = []
-                            importID = UUID(); captured = nil; self.incomingWording = nil
+                            appendToDraft(incomingWording)
                         }.disabled(model.saving || model.hasPendingSave)
+                        if let appendError { Text(appendError).foregroundStyle(Theme.warning) }
                     }
                 }
                 if let firstDraft {
@@ -229,6 +228,32 @@ struct LedgerImportView: View {
                     scroll.scrollTo("ledgerImportSaveStatus", anchor: .top)
                     focus = .status
                 }
+        }
+    }
+
+    private func appendToDraft(_ wording: String) {
+        guard let firstDraft, firstDraft.authorize(), authorizeEntry(), !model.saving, !model.hasPendingSave,
+              let currentShop, incomingWording == wording else { return }
+        do {
+            let next = try firstContents.appending(wording, pantryFood: pantryFoodPrefill, shop: currentShop)
+            original = next.original
+            preview = next.preview
+            choices = next.choices
+            // A single capture editor cannot reopen a combined manual/capture review.
+            // The original rows still carry their reviewed capture fields.
+            captured = nil
+            captureBinding = nil
+            inputLimit = nil
+            appendError = nil
+            incomingWording = nil
+            firstDraft.update(next)
+            model.error = nil
+        } catch let limit as ImportTextLimit {
+            appendError = ledgerImportLimitMessage(limit)
+        } catch LedgerError.stalePreview {
+            appendError = ledgerText("This pickup changed after your preview. Return to the original text and review it again before adding it.")
+        } catch {
+            appendError = ledgerText("This change is too large to save. Reduce the amount of data and try again.")
         }
     }
 

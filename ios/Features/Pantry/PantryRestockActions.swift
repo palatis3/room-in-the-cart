@@ -28,10 +28,12 @@ enum PantryRestockReview: Equatable {
         name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
-    static func draftIncludes(food: String, text: String, preview: StagedListImport?) -> Bool {
+    static func draftIncludes(food: String, text: String, preview: StagedListImport?, choices: [UUID: ImportResolution] = [:]) -> Bool {
         let key = normalized(food)
+        if let preview {
+            return preview.lines.contains { choices[$0.id] != .skip && normalized($0.name) == key }
+        }
         return text.split(whereSeparator: \.isNewline).contains { normalized(String($0)) == key }
-            || preview?.lines.contains { normalized($0.name) == key } == true
     }
 
     private static func normalized(_ name: String) -> String {
