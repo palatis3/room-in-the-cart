@@ -2113,18 +2113,18 @@
         }
       }
     },
-    "Remove child session and return to locked adult access": {
+    "Sign out child": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove child session and return to locked adult access"
+            "value": "Sign out child"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eliminar la sesión del menor y volver al acceso de adulto bloqueado"
+            "value": "Cerrar sesión del menor"
           }
         }
       }

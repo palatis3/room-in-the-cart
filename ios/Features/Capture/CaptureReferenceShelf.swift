@@ -101,7 +101,7 @@ import SwiftUI
                 }
             }
         }
-        .confirmationDialog(captureText("Remove the saved image and source wording from this device?"), isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
+        .confirmationDialog(captureText("Remove the saved image and source wording from this device?"), isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
             Button(captureText("Remove source reference"), role: .destructive) {
                 guard let record = removing else { return }; removing = nil
                 Task { @MainActor in

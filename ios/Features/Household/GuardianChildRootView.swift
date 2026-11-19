@@ -49,9 +49,9 @@ struct GuardianChildRootView: View {
                 }
             }
             .confirmationDialog(GuardianCopy.text("Remove this child session from the device?"), isPresented: $remove, titleVisibility: .visible) {
-                Button(GuardianCopy.text("Remove child session and return to locked adult access"), role: .destructive) {
+                Button(GuardianCopy.text("Sign out child"), role: .destructive) {
                     Task { await coordinator.removeChildSession() }
-                }
+                }.accessibilityIdentifier("guardian.confirmChildSignOut")
                 Button(GuardianCopy.text("Cancel")) { remove = false }.accessibilityIdentifier("guardian.leaveChildCancel")
             } message: {
                 Text(GuardianCopy.text("This signs the child out on this device. Adult groceries, meals and costs stay locked and require device-owner authentication."))

@@ -247,8 +247,10 @@ import XCTest
 
         XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"enabled == true"),object:leave)],timeout:10),.completed)
         leave.tap()
-        let confirm=app.buttons["Remove child session and return to locked adult access"]
-        XCTAssertTrue(confirm.waitForExistence(timeout:5)); confirm.tap()
+        let confirm = app.buttons["guardian.confirmChildSignOut"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        XCTAssertEqual(confirm.label, "Sign out child")
+        confirm.tap()
         // No explicit fixture refresh: production RootView must observe presented=false.
         XCTAssertTrue(app.buttons["Unlock private workspace"].waitForExistence(timeout:10))
         XCTAssertFalse(element("guardian.leaveChildSpace").exists)

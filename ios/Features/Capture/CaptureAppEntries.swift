@@ -224,7 +224,7 @@ struct RecipeSourceDisclosure: View {
                 if !authorized() { record = nil; return }
             }
         }
-        .confirmationDialog(captureText("Remove saved recipe photo? The recipe and original text will stay."), isPresented: $confirmRemoval) {
+        .confirmationDialog(captureText("Remove saved recipe photo? The recipe and original text will stay."), isPresented: $confirmRemoval, titleVisibility: .visible) {
             Button(captureText("Remove saved recipe photo"), role: .destructive) {
                 guard let target, let record else { return }
                 Task {
