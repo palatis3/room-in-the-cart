@@ -1,24 +1,89 @@
-* { box-sizing:border-box; }
-html { font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--canvas); font-size:100%; }
-body { margin:0; }
-header,main { max-width:46rem; margin:auto; padding:1rem 1.25rem; }
-header { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
-header p { font-size:1.2rem; font-weight:700; } header select { width:auto; }
-main { padding-bottom:4rem; }
-h1 { font-size:clamp(1.9rem,5vw,2.5rem); line-height:1.15; letter-spacing:-.02em; }
-h2 { margin-top:1.5rem; } p { line-height:1.55; overflow-wrap:anywhere; }
-.card,form { background:var(--surface); border-radius:1.25rem; padding:1.25rem; margin:1rem 0; }
-article h3 { margin-top:0; } label { display:block; font-weight:600; margin:1rem 0 .5rem; }
-input,textarea,select,button { font:inherit; color:inherit; min-height:44px; border:1px solid var(--control-edge); border-radius:.65rem; }
-input,textarea,select { background:var(--surface); padding:.75rem; width:100%; }
-textarea { min-height:6rem; resize:vertical; } input[type=checkbox] { width:1.5rem; height:1.5rem; flex-shrink:0; }
-button { cursor:pointer; padding:.75rem 1rem; margin:.5rem .5rem .5rem 0; background:var(--surface); font-weight:600; }
-button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
-button:disabled { opacity:.65; cursor:wait; }
-:focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
-.checkbox { display:flex; align-items:center; gap:.75rem; font-weight:400; }
-.notice:not(:empty) { background:var(--warning-surface); color:var(--warning); padding:1rem; border-radius:.75rem; }
-.actions { display:flex; flex-wrap:wrap; }
-@media(max-width:360px) {header {flex-wrap:wrap;} button {width:100%;margin-right:0;} }
-@media(prefers-reduced-motion:no-preference) {button {transition:background-color 100ms ease;} }
-@media(forced-colors:active) {button, input, textarea,select {border:1px solid ButtonText;} }
+* { box-sizing: border-box; }
+html {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 100%;
+  color: var(--ink);
+  background: var(--canvas);
+  accent-color: var(--accent);
+}
+body { margin: 0; }
+header, main { max-width: 46rem; margin-inline: auto; padding: 1.25rem; }
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem 1.5rem;
+  border-bottom: 1px solid var(--divider);
+}
+.brand-name {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  min-height: 44px;
+  font: 650 1.25rem/1.2 ui-serif, Georgia, serif;
+  color: var(--ink);
+}
+.brand-name::before {
+  content: "";
+  flex: none;
+  width: 44px;
+  height: 44px;
+  background: url("/brand-cart.svg") center / contain no-repeat;
+}
+header select { width: auto; max-width: 100%; }
+main { padding-block: 1.5rem 4rem; }
+h1, h2, h3 { text-wrap: pretty; overflow-wrap: anywhere; }
+h1 { font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.1; letter-spacing: -.035em; }
+h2 { margin-top: 1.75rem; line-height: 1.2; }
+p { line-height: 1.55; overflow-wrap: anywhere; }
+a { color: var(--accent); text-decoration-thickness: .09em; text-underline-offset: .18em; }
+.card, form {
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: 1rem;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  margin: 1.25rem 0;
+}
+article h3 { margin-top: 0; }
+label { display: block; font-weight: 600; margin: 1rem 0 .5rem; }
+input, textarea, select, button {
+  font: inherit;
+  color: inherit;
+  min-height: 44px;
+  border: 1px solid var(--control-edge);
+  border-radius: .6rem;
+}
+input, textarea, select { background: var(--surface); padding: .75rem; width: 100%; }
+textarea { min-height: 6rem; resize: vertical; }
+input[type=checkbox] { width: 1.5rem; height: 1.5rem; min-height: 0; flex: none; }
+button {
+  cursor: pointer;
+  padding: .65rem 1rem;
+  margin: .5rem .5rem .5rem 0;
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+button.primary, .child-invitation button[type=submit] {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+button:disabled { opacity: .65; cursor: default; }
+:focus-visible { box-shadow: 0 0 0 7px var(--surface); outline: 3px solid var(--focus); outline-offset: 3px; }
+.checkbox { display: flex; align-items: center; min-height: 44px; gap: .75rem; font-weight: 400; }
+.notice:not(:empty), .child-invitation [role=status]:not(:empty) {
+  background: var(--surface);
+  color: var(--ink);
+  border-inline-start: 3px solid var(--control-edge);
+  padding: .75rem 1rem;
+}
+.actions { display: flex; flex-wrap: wrap; }
+#pairing-code { font-size: 1.5rem; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: .1em; }
+@media (max-width: 360px) { button { width: 100%; margin-right: 0; } }
+@media (forced-colors: active) {
+  button, input, textarea, select { border: 1px solid ButtonText; }
+  :focus-visible { outline-color: Highlight; }
+}

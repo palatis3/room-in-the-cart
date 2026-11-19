@@ -21,19 +21,51 @@ struct RoomInTheCartWidget: Widget {
     let kind = "RoomInTheCartCapture"
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: CaptureProvider()) { entry in
-            Label(SurfaceCopy.text("Open grocery entry"), systemImage: "cart")
-                .font(.headline)
+            CaptureWidgetView()
                 .widgetURL(entry.url)
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(for: .widget) { Color("surface") }
         }.configurationDisplayName(SurfaceCopy.text("Grocery entry"))
             .description(SurfaceCopy.text("Open the app to review an entry. Private details stay in the app."))
             .supportedFamilies([.systemSmall, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
 
+private struct CaptureWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
+    var body: some View {
+        let title = SurfaceCopy.text("Open grocery entry")
+        switch family {
+        case .systemSmall:
+            VStack(alignment: .leading, spacing: 8) {
+                if renderingMode == .fullColor {
+                    Image(decorative: "BrandCartRest").resizable().scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                } else {
+                    Image(systemName: "cart.badge.plus").font(.title2)
+                        .widgetAccentable().accessibilityHidden(true)
+                }
+                Spacer(minLength: 0)
+                Text(title).font(.headline)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .foregroundStyle(renderingMode == .fullColor ? Color("ink") : Color.primary)
+        case .accessoryCircular:
+            Image(systemName: "cart.badge.plus").widgetAccentable().accessibilityLabel(title)
+        default:
+            Label(title, systemImage: "cart.badge.plus")
+        }
+    }
+}
+
 private struct FoodEntry: TimelineEntry {
     let date: Date
     let summary: AdultFoodSummaryProjection?
+    // An expired timeline entry keeps only its opaque route so a tap reaches the
+    // app's unavailable destination after its own current-authority check.
+    var expiredRoute: RouteHandle? = nil
 }
 
 private struct FoodProvider: TimelineProvider {
@@ -51,7 +83,7 @@ private struct FoodProvider: TimelineProvider {
             completion(Timeline(entries: [FoodEntry(date: now, summary: nil)], policy: .never)); return
         }
         completion(Timeline(entries: [FoodEntry(date: now, summary: value),
-                                      FoodEntry(date: value.expiresAt, summary: nil)], policy: .atEnd))
+                                      FoodEntry(date: value.expiresAt, summary: nil, expiredRoute: value.route)], policy: .atEnd))
     }
 }
 
@@ -61,27 +93,60 @@ private extension AdultFoodWidget {
     var title: String { SurfaceCopy.text(kind == .useSoon ? "Use soon" : "Tonight") }
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind.widgetKind, provider: FoodProvider(kind: kind)) { entry in
-            VStack(alignment: .leading, spacing: 8) {
-                Text(title).font(.headline)
-                if let summary = entry.summary, summary.isFresh(at: Date(), zone: .current) {
-                    if summary.plannedDinner == true && summary.count == 1 {
-                        Text(SurfaceCopy.text("Planned for tonight"))
-                    } else {
-                        let format = kind == .useSoon ? SurfaceCopy.text("Batches to check today or earlier: %lld")
-                            : summary.plannedDinner == true ? SurfaceCopy.text("%lld dinners planned")
-                            : SurfaceCopy.text("Reviewed meal options: %lld")
-                        Text(String(format: format, locale: Locale.current, Int64(summary.count)))
-                    }
-                    if let title = summary.reviewedTitle { Text(verbatim: title).lineLimit(2) }
-                } else { Text(SurfaceCopy.text("Open the app to review this item")) }
-            }.privacySensitive()
-                .widgetURL(entry.summary.flatMap { (try? IOSSurfaceContainers.urls())?.url(handle: $0.route) })
-                .containerBackground(.fill.tertiary, for: .widget)
+            AdultSummaryWidgetView(kind: kind, title: title, entry: entry)
         }.configurationDisplayName(title)
             .description(SurfaceCopy.text("Show a private summary after turning it on in the app."))
             .supportedFamilies([.systemMedium])
             .containerBackgroundRemovable(false)
             .disfavoredLocations([.lockScreen, .standBy, .iPhoneWidgetsOnMac], for: [.systemMedium])
+    }
+}
+
+private struct AdultSummaryWidgetView: View {
+    let kind: AdultFoodSummaryKind
+    let title: String
+    let entry: FoodEntry
+    @Environment(\.widgetRenderingMode) private var renderingMode
+    @Environment(\.redactionReasons) private var redaction
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        let summary = entry.summary.flatMap { value in
+            !redaction.contains(.privacy) && value.isFresh(at: Date(), zone: .current) ? value : nil
+        }
+        VStack(alignment: .leading, spacing: 4) {
+            Label {
+                Text(title)
+            } icon: {
+                Image(systemName: kind == .useSoon ? "calendar" : "fork.knife").widgetAccentable()
+            }
+            .font(.headline)
+            .foregroundStyle(renderingMode == .fullColor ? Color("accent") : Color.primary)
+            if let summary {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(summaryText(summary)).font(.body)
+                    if let title = summary.reviewedTitle { Text(verbatim: title).font(.body).lineLimit(2) }
+                    let time = summary.writtenAt.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: locale))
+                    Text(String(format: SurfaceCopy.text("Updated at %@"), locale: locale, time))
+                        .font(.caption)
+                        .foregroundStyle(renderingMode == .fullColor ? Color("secondary") : Color.secondary)
+                        .layoutPriority(1)
+                }.privacySensitive()
+            } else {
+                Text(SurfaceCopy.text("Open the app to review this item"))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .foregroundStyle(renderingMode == .fullColor ? Color("ink") : Color.primary)
+        .widgetURL((entry.summary?.route ?? entry.expiredRoute).flatMap { (try? IOSSurfaceContainers.urls())?.url(handle: $0) })
+        .containerBackground(for: .widget) { Color("surface") }
+    }
+
+    private func summaryText(_ summary: AdultFoodSummaryProjection) -> String {
+        if summary.plannedDinner == true, summary.count == 1 { return SurfaceCopy.text("Planned for tonight") }
+        let key = kind == .useSoon ? "Batches to check today or earlier: %lld"
+            : summary.plannedDinner == true ? "%lld dinners planned" : "Reviewed meal options: %lld"
+        return String(format: SurfaceCopy.text(key), locale: locale, Int64(summary.count))
     }
 }
 

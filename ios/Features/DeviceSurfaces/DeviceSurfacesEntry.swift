@@ -28,7 +28,7 @@ struct DeviceSurfacesEntry: View {
                         Section {
                             Text(entry.originalText).textSelection(.enabled)
                             if let edited = entry.editedText { Text(edited) }
-                            Text(entry.receipt.expiresAt.formatted(date: .abbreviated, time: .shortened)).font(.footnote)
+                            LabeledContent(SurfaceCopy.text("Expires"), value: entry.receipt.expiresAt.formatted(date: .abbreviated, time: .shortened))
                             Button(SurfaceCopy.text("Review selected text")) { if let selectedShop { Task { await composition.review(entry, shopID: selectedShop) } } }.disabled(selectedShop == nil)
                             Button(SurfaceCopy.text("Discard selected text"), role: .destructive) { Task { await composition.discard(entry) } }
                         }
@@ -38,7 +38,7 @@ struct DeviceSurfacesEntry: View {
                     }
                     if let message = composition.message { Text(message) }
                     Button(SurfaceCopy.text("Try again")) { Task { await composition.sourceDidChange() } }
-                }.disabled(composition.busy)
+                }.workingSurface().disabled(composition.busy)
                 .confirmationDialog(SurfaceCopy.text("Start a new review for this pickup?"), isPresented: Binding(
                     get: { composition.destinationChange != nil },
                     set: { if !$0 { composition.destinationChange = nil } }
@@ -72,7 +72,7 @@ private struct SurfaceImportReview: View {
         Group {
             if let draft = composition.draft, composition.privateAuthorized {
                 let review = LedgerImportReview(shop: composition.shop(draft.preview.shopID), preview: draft.preview, choices: draft.decisions)
-                Form {
+                WorkingForm {
                     if let shop = composition.shop(draft.preview.shopID) {
                         LabeledContent(SurfaceCopy.text("Shopping list"), value: shop.title)
                     }
@@ -143,11 +143,21 @@ private struct SurfaceReminderList: View {
             ForEach(composition.reminderTargets) { target in
                 NavigationLink(target.title) { SurfaceReminderSetup(composition: composition, target: target) }
             }
-        }.navigationTitle(SurfaceCopy.text("Local reminders"))
+        }.workingSurface().navigationTitle(SurfaceCopy.text("Local reminders"))
     }
 }
 struct SurfaceUnavailableView: View {
-    var body: some View { ContentUnavailableView(SurfaceCopy.text("Open the app to review this item"), systemImage: "lock", description: Text(SurfaceCopy.text("This shortcut is unavailable in the current workspace. Unlock or choose an authorized workspace in the app."))) }
+    var body: some View {
+        ContentUnavailableView {
+            Label(SurfaceCopy.text("Open the app to review this item"), systemImage: "lock")
+                .foregroundStyle(Theme.ink)
+        } description: {
+            Text(SurfaceCopy.text("This shortcut is unavailable in the current workspace. Unlock or choose an authorized workspace in the app."))
+                .foregroundStyle(Theme.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.canvas)
+    }
 }
 
 struct DeviceSurfacesDestination: View {
@@ -193,7 +203,7 @@ struct DeviceSurfacesDestination: View {
                 } else { SurfaceUnavailableView() }
             case .offer(let journey, let offerID):
                 if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers(at: composition.reminderEvaluationDate).first(where: { $0.id == offerID }) {
-                    Form {
+                    WorkingForm {
                         Text(offer.replacement)
                         TimelineView(.periodic(from: .now, by: 30)) { context in
                             Text(pTr(context.date >= offer.deadline.cutoff ? "Await pickup · fill still unknown" : "Decision pending before cutoff"))
@@ -204,7 +214,7 @@ struct DeviceSurfacesDestination: View {
                 } else { SurfaceUnavailableView() }
             case .deferral(let journey, let needID):
                 if composition.privateAuthorized, selected, pickup.journey?.id == journey, let need = pickup.journey?.deferred.first(where: { $0.id == needID && $0.status == "review" }) {
-                    Form { Text(need.line.name); Button(SurfaceCopy.text("Review next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused).environment(\.pickupLedger, ledger) }
+                    WorkingForm { Text(need.line.name); Button(SurfaceCopy.text("Review next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused).environment(\.pickupLedger, ledger) }
                 } else { SurfaceUnavailableView() }
             }
         }.modifier(PickupNextShopRoute(model: pickup, requested: $nextShopRequested) { nextShopFocused = true })

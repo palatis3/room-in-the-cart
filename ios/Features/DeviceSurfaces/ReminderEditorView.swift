@@ -93,7 +93,7 @@ struct ReminderQuietHoursDraft: Equatable {
     }
 
     private var reminderForm: some View {
-        Form {
+        WorkingForm {
             if let sourceTitle {
                 Section {
                     Text(sourceTitle).font(.headline).accessibilityIdentifier("reminder.subject")

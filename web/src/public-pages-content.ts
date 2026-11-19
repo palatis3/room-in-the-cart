@@ -13,8 +13,8 @@ export const publicPages = {
       "es": "Ayuda"
     },
     "lead": {
-      "en": "You can compare packs and plan a pickup on your iPhone without signing in. Open a household invitation to send a request or read shared instructions in your browser.",
-      "es": "Puedes comparar paquetes y planificar una recogida en tu iPhone sin iniciar sesión. Abre una invitación del hogar para enviar una solicitud o leer las instrucciones compartidas en tu navegador."
+      "en": "On your iPhone, open Shop and use Add a grocery to start your private list. In a browser, open your household invitation to send a request or read shared cooking instructions.",
+      "es": "En tu iPhone, abre Compras y usa Agregar un producto para empezar tu lista privada. En un navegador, abre la invitación de tu hogar para enviar una solicitud o leer las instrucciones de cocina compartidas."
     },
     "notice": null,
     "sections": [
@@ -29,8 +29,8 @@ export const publicPages = {
             "es": "Este sitio web es para colaboradores y personas que cocinan con invitación. Abre el enlace de invitación o de vista actual que te dio tu hogar. El inicio de sesión, la pertenencia al hogar y la vista seleccionada se verifican por separado. Si el inicio de sesión por correo o el consentimiento del tutor no está disponible, la página lo indica; no crea acceso."
           },
           {
-            "en": "Review a request before sending. Received means the household confirmed it. Waiting to send means it has not been received. Retry an uncertain submission with the original retry action rather than sending a duplicate. A cook with permission can suggest a correction; only the shopper can approve a basket change.",
-            "es": "Revisa una solicitud antes de enviarla. Recibida significa que el hogar la confirmó. Pendiente de enviar significa que no se ha recibido. Si un envío no tiene resultado confirmado, usa la acción de reintento original en vez de enviar un duplicado. Quien cocina con permiso puede sugerir una corrección; solo la persona asignada para comprar puede aprobar un cambio en la cesta."
+            "en": "Review a request before sending. Received means the household service has your request. The shopper decides whether to add it to the pickup. Waiting to send means the browser still has it in its local queue. Retry an uncertain submission with the original retry action rather than sending a duplicate. A cook with permission can suggest a correction; only the shopper can approve a basket change.",
+            "es": "Revisa una solicitud antes de enviarla. Recibida significa que el servicio del hogar tiene tu solicitud. Quien hace las compras decide si la agrega a la recogida. Pendiente de enviar significa que la solicitud sigue en la cola local del navegador. Si un envío no tiene resultado confirmado, usa la acción de reintento original en vez de enviar un duplicado. Quien cocina con permiso puede sugerir una corrección; solo la persona asignada para comprar puede aprobar un cambio en la cesta."
           },
           {
             "en": "Unsent browser text stays on the open page unless an enrolled contributor separately agrees to the permitted local queue. Closing or reloading can lose unsent text. Received requests and suggestions can be recovered from the service only while that same access remains valid. Sign out before sharing a browser.",
@@ -203,6 +203,22 @@ export const publicPages = {
           {
             "en": "Restore with the original purchasing account and household. A pending or unverified purchase adds no paid access. If delivery is uncertain, retry delivery or restore rather than buying again. Ending membership preserves permitted Free work.",
             "es": "Restaura con la cuenta compradora y el hogar originales. Una compra pendiente o sin verificar no agrega acceso de pago. Si no se confirma la entrega, reintenta la entrega o restaura la compra en vez de comprar otra vez. Al terminar la membresía se conserva el trabajo gratuito permitido."
+          }
+        ]
+      },
+      {
+        "title": {
+          "en": "Track food in Pantry",
+          "es": "Llevar la cuenta de los alimentos en la despensa"
+        },
+        "paragraphs": [
+          {
+            "en": "On your iPhone, open Pantry to see the food you have and where you keep it. Add food by hand or review lines from a receipt. Check each amount before saving your pantry changes.",
+            "es": "En tu iPhone, abre Despensa para ver qué alimentos tienes y dónde los guardas. Agrega alimentos a mano o revisa los renglones de un recibo. Comprueba cada cantidad antes de guardar los cambios en la despensa."
+          },
+          {
+            "en": "You can choose a date to check food quality or look up the food in the offline storage guide. A reminder asks you to open My Pantry to review the food.",
+            "es": "Puedes elegir una fecha para revisar la calidad del alimento o consultarlo en la guía de almacenamiento sin conexión. Un recordatorio te pide que abras Mi despensa para revisar el alimento."
           }
         ]
       }

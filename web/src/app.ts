@@ -1,3 +1,4 @@
+import { brandName } from './brand.js';
 import { API, ApiError, isContributorSession, type BrowserAuthState,type RequestPickup,type Session, type OwnRequest, type ReadRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal, type ReportField, type ReportReason, type SafetyAction } from './api.js';
 import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
@@ -459,7 +460,7 @@ export class WebApp {
   }
   render():void {
     this.root.replaceChildren();this.root.ownerDocument.documentElement.lang=this.language;
-    const header=this.el('header');header.append(this.el('p','Room in the Cart'));
+    const header=this.el('header');header.append(brandName(this.root.ownerDocument));
     const lang=this.el('select');lang.id='language';lang.setAttribute('aria-label',this.t('Language'));
     for(const [v,k] of [['en','English'],['es','Spanish']]) {const o=this.el('option',this.t(k!));o.value=v!;o.selected=v===this.language;lang.append(o);}
     lang.addEventListener('change', () => {

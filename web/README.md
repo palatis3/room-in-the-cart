@@ -1,6 +1,6 @@
 # Invited contributor and cook web client
 
-This is the narrow mobile web client, not the adult shopping app. It uses native HTML controls, generated spruce/linen tokens, English and US Spanish copy, and only same-origin session-cookie API calls. User food names, amounts and instructions remain as entered. Spanish copy requires human review before release.
+This is the narrow mobile web client, not the adult shopping app. It uses native HTML controls, generated Plum & Pear color tokens, English and US Spanish copy, and only same-origin session-cookie API calls. User food names, amounts and instructions remain as entered. Spanish copy requires human review before release.
 
 ## Run
 

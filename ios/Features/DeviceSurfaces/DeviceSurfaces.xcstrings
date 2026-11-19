@@ -408,6 +408,23 @@
         }
       }
     },
+    "Updated at %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated at %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizado a las %@"
+          }
+        }
+      }
+    },
     "Grocery entry": {
       "localizations": {
         "en": {
