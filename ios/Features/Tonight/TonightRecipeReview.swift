@@ -49,9 +49,13 @@ struct TonightRecipeReview: View {
                             }
                             LabeledContent(ledgerText("Servings"), value: amountText(candidate.servings))
                             ForEach(candidate.ingredients) { ingredient in LabeledContent(ingredient.name, value: ledgerQuantity(ingredient.quantity)) }
-                            Text(tonightText(original?.mealTemplates.isEmpty == false ?
-                                "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged." :
-                                "Saving creates your Free reusable dinner. It does not start a pickup or add groceries."))
+                            if let template, original?.mealTemplates.contains(template) == true {
+                                Text(tonightText("Saving updates this recipe in your library."))
+                            } else {
+                                Text(tonightText(original?.mealTemplates.isEmpty == false ?
+                                    "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged." :
+                                    "Saving creates your Free reusable dinner. It does not start a pickup or add groceries."))
+                            }
                             Button(tonightText("Save reviewed recipe")) { Task { await save(candidate) } }.buttonStyle(PrimaryAction())
                                 .disabled(busy || ledger.hasPendingSave).accessibilityIdentifier("tonight.recipe.save")
                             Button(tonightText("Keep editing")) { self.candidate = nil }.disabled(busy)

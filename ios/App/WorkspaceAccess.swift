@@ -80,6 +80,10 @@ struct WorkspaceUnlockView: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("guardian.childExitNotice")
                     }
+                    if let notice = household.protectedAccessNotice {
+                        Text(notice).foregroundStyle(Theme.secondary)
+                            .accessibilityIdentifier("workspace.accessEnded")
+                    }
                     Text(tr("Unlock to return to your saved groceries, meals and costs."))
                         .foregroundStyle(Theme.secondary)
 

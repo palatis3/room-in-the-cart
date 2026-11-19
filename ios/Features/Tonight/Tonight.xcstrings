@@ -1225,6 +1225,23 @@
         }
       }
     },
+    "Saving updates this recipe in your library.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving updates this recipe in your library."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al guardar, se actualiza esta receta en tu biblioteca."
+          }
+        }
+      }
+    },
     "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged.": {
       "extractionState": "manual",
       "localizations": {
