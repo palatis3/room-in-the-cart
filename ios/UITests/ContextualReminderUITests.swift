@@ -20,12 +20,11 @@ import XCTest
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"])
-        fill("Family market", into: app.textFields["Store"], replacing: true)
-        fill("Main branch", into: app.textFields["Branch"], replacing: true)
-        fill("Tuesday 5 PM", into: app.textFields["Pickup or delivery slot"], replacing: true)
-        fill("Retailer preview", into: app.textFields["Source of these prices"], replacing: true)
-        fill("4.00", into: app.textFields["Price for coffee"]); fill("3.00", into: app.textFields["Price for wraps"])
-        for label in ["Fee below threshold or fixed fee", "Eligible discount", "Tax", "Deposits and other charges"] { fill("0", into: app.textFields[label]) }
+        enterCheckoutFields(additional: [
+            ("Price for coffee", "4.00"), ("Price for wraps", "3.00"),
+            ("Fee below threshold or fixed fee", "0"), ("Eligible discount", "0"),
+            ("Tax", "0"), ("Deposits and other charges", "0")
+        ])
         tap(app.buttons["Save and evaluate checkout"])
         enableSwitch("coffee"); enableSwitch("Include in deferral preview")
         let preview = app.buttons["Preview deferrals together"]
@@ -100,22 +99,7 @@ import XCTest
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"])
-        // These adjacent checkout fields share one keyboard session.
-        for (label, value) in [("Store", "Family market"), ("Branch", "Main branch"),
-                               ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer preview")] {
-            let field = app.textFields[label]
-            tap(field)
-            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-            if let old = field.value as? String, old != field.placeholderValue {
-                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
-            }
-            field.typeText(value)
-            XCTAssertEqual(field.value as? String, value, label)
-        }
-        let done = app.buttons["Done"]
-        XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
-        done.tap()
-        XCTAssertTrue(done.waitForNonExistence(timeout: 5))
+        enterCheckoutFields()
         enableSwitch("Retailer total already includes all charges")
         let total = app.textFields["Inclusive total"]
         fill("3.00", into: total)
@@ -243,6 +227,28 @@ import XCTest
         reveal(control)
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
+    private func enterCheckoutFields(additional: [(String, String)] = []) {
+        let fields = [("Store", "Family market"), ("Branch", "Main branch"),
+                      ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer preview")]
+        let done = app.buttons["Done"]
+        // Move through the actual inputs in form order, as the checkout form allows.
+        // Keep one keyboard session and confirm each field before moving focus.
+        for (label, value) in fields + additional {
+            let field = app.textFields[label]
+            reveal(field, above: done)
+            field.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            if let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, label)
+        }
+        XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
+    }
+
     private func fill(_ text: String, into field: XCUIElement, replacing: Bool = false, doneIdentifier: String? = nil) {
         tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
@@ -262,7 +268,7 @@ import XCTest
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement, requiresHitTarget: Bool = true) {
+    private func reveal(_ target: XCUIElement, requiresHitTarget: Bool = true, above inputBar: XCUIElement? = nil) {
         for attempt in 0..<64 {
             let area = scrollableArea()
             if target.exists && (!requiresHitTarget || target.isHittable) {
@@ -270,23 +276,24 @@ import XCTest
                 // Native Form rows can be partially tappable while their center
                 // lies underneath the tab bar. Scroll the actual touch point into
                 // the visible content before tapping a row or its trailing switch.
-                if touchableArea().contains(center) { return }
+                if touchableArea(above: inputBar).contains(center) { return }
                 if ["Cancel", "Done"].contains(target.label) { return }
             }
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 32 }
-            scrollContent(upward: upward)
+            scrollContent(upward: upward, besideFields: inputBar != nil)
         }
-        let area = touchableArea()
+        let area = touchableArea(above: inputBar)
         XCTAssertTrue(target.exists && (!requiresHitTarget || target.isHittable) && area.contains(CGPoint(x: target.frame.midX, y: target.frame.midY)),
             "Missing a visible touch point in \(area) for UI element: \(target.debugDescription)")
     }
-    private func touchableArea() -> CGRect {
+    private func touchableArea(above inputBar: XCUIElement? = nil) -> CGRect {
         let viewport = viewportBoundaries()
+        let inputTop = inputBar.flatMap { $0.exists ? $0.frame.minY : nil } ?? viewport.bounds.maxY
         return CGRect(x: viewport.bounds.minX, y: viewport.navigationBottom, width: viewport.bounds.width,
-                      height: max(0, min(viewport.keyboardTop, viewport.tabTop) - 4 - viewport.navigationBottom))
+                      height: max(0, min(viewport.keyboardTop, viewport.tabTop, inputTop) - 4 - viewport.navigationBottom))
     }
     private func scrollableArea() -> CGRect {
         let viewport = viewportBoundaries()
@@ -315,14 +322,15 @@ import XCTest
         }
         return (bounds, navigationBottom, keyboardTop, tabTop)
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, besideFields: Bool = false) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
         let area = scrollableArea(), bounds = app.frame
         let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
         let origin = app.coordinate(withNormalizedOffset: .zero)
-        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
+        let x = besideFields ? area.minX : area.midX
+        let start = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? low : high) - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? high : low) - bounds.minY))
         start.press(forDuration: 0.05, thenDragTo: end)
     }
     private func assertText(_ text: String) {
