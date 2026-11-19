@@ -2952,7 +2952,12 @@ import XCTest
         tap(app.shopToolButton("urgentRepairShortcut"))
         enterNeed(food: "Tortillas", meal: "Wednesday supper", required: "6", available: "2")
         enableSwitch("I checked this food’s identity and usable amount")
-        fill("3", into: "Usable amount available now", replacing: true)
+        let available = app.textFields["Usable amount available now"]
+        tap(available)
+        XCTAssertEqual(available.value as? String, "2")
+        available.typeText(XCUIKeyboardKey.delete.rawValue + "3\n")
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
+        XCTAssertEqual(available.value as? String, "3")
         XCTAssertFalse(app.buttons["Save need and repair meal"].isEnabled)
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
