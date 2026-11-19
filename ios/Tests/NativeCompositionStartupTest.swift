@@ -1,11 +1,40 @@
 import XCTest
 import Combine
+import SwiftUI
 import DeviceSurfaces
 import CoreDomain
 @testable import RoomInTheCart
 
 #if DEBUG
 @MainActor final class DeviceSurfacesCompositionStartupTests: XCTestCase {
+    func testPantryClockChangesReachSwiftUIOnMainWhenPostedFromAWorker() async throws {
+        let center = NotificationCenter()
+        let names: [Notification.Name] = [.NSCalendarDayChanged, .NSSystemTimeZoneDidChange, UIApplication.significantTimeChangeNotification]
+        let mounted = expectation(description: "SwiftUI attached its clock subscriber")
+        let delivered = expectation(description: "All three clock changes reached the mounted view")
+        delivered.expectedFulfillmentCount = names.count
+
+        let events = Publishers.MergeMany(names.map { center.pantryClockChanges(for: $0) })
+            .handleEvents(receiveOutput: { _ in
+                // SwiftUI may reschedule its action even after an unsafe publication to the subscriber.
+                XCTAssertTrue(Thread.isMainThread, "Check the publication before SwiftUI handles it")
+            })
+        let controller = UIHostingController(rootView: Text(verbatim: "Clock notification test")
+            .onReceive(events) { _ in delivered.fulfill() }
+            .onAppear { mounted.fulfill() })
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.windowLevel = .normal - 1
+        window.rootViewController = controller
+        window.isHidden = false
+        defer { window.isHidden = true }
+        await fulfillment(of: [mounted], timeout: 5)
+        DispatchQueue.global().async {
+            for name in names { center.post(name: name, object: nil) }
+        }
+        await fulfillment(of: [delivered], timeout: 5)
+    }
+
     func testQueuedOpaqueURLDoesNotSurviveBackgroundThenForeground() async throws {
         let f = try await coldURLFixture()
         let saved = f.ledger.workspace, revision = f.ledger.revision
