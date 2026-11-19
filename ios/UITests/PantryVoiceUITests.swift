@@ -38,9 +38,12 @@ import XCTest
         tap(element("pantry.voiceUnit.2"))
         tap(app.buttons["units"])
         tap(app.buttons["pantry.voicePreview"])
-        let first = element("pantry.voiceSummary.0")
-        reveal(first)
-        XCTAssertTrue(first.label.localizedCaseInsensitiveContains("eggs"), first.label)
+        let expectedReview: [(food: String, remaining: String)] = [("Eggs", "4 units"), ("Wheat bread", "5 units"), ("Flour", "4 units")]
+        for (index, expected) in expectedReview.enumerated() {
+            let summary = element("pantry.voiceSummary.\(index)")
+            reveal(summary)
+            XCTAssertTrue(summary.label.contains(expected.food) && summary.label.contains(expected.remaining), summary.label)
+        }
         capture("Pantry-voice-02-reviewed-uses")
         tap(app.buttons["pantry.voiceConfirm"])
         XCTAssertTrue(element("pantry.voiceSaved").waitForExistence(timeout: 10))
@@ -276,7 +279,7 @@ import XCTest
         app.resetAuthorizationStatus(for: .microphone)
         defer { app.resetAuthorizationStatus(for: .microphone) }
         openPantry(reset: true)
-        openVoiceEntry()
+        tapPantryEntry(app.buttons["pantry.voiceEntry"])
         assertDictationIdle()
         let typed = "Is my ketchup expired"
         fill(typed, into: "pantry.voiceText")
@@ -302,8 +305,7 @@ import XCTest
         XCTAssertFalse(element("pantry.voiceConfirm").exists)
     }
 
-    private func openVoiceEntry() {
-        let entry = app.buttons["pantry.voiceEntry"]
+    private func tapPantryEntry(_ entry: XCUIElement) {
         let list = app.collectionViews.firstMatch
         // After a lot is saved, the form may scroll to its status or last focused row.
         // Wait for an unobscured, settled row before using its center hit point.
@@ -336,7 +338,7 @@ import XCTest
     }
 
     private func enterCommand(_ wording: String) {
-        openVoiceEntry()
+        tapPantryEntry(app.buttons["pantry.voiceEntry"])
         assertDictationIdle()
         fill(wording, into: "pantry.voiceText")
         dismissVoiceKeyboard()
@@ -399,7 +401,8 @@ import XCTest
     }
 
     @discardableResult private func addLot(_ name: String, amount: String) -> String {
-        tap(app.buttons["pantry.add"])
+        tapPantryEntry(app.buttons["pantry.add"])
+        XCTAssertTrue(app.textFields["pantry.foodName"].waitForExistence(timeout: 8), app.debugDescription)
         fill(name, into: "pantry.foodName")
         fill(amount, into: "pantry.amount")
         tap(app.buttons["pantry.review"])
