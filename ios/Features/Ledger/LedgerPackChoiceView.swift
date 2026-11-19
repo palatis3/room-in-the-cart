@@ -130,7 +130,7 @@ struct LedgerPackChoiceView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
             }
-            .keyboardDoneAction(visible: field != nil, title: ledgerText("Done")) { field = nil }
+            .keyboardDoneAction(visible: field != nil, title: ledgerText("Done"), identifier: "ledger.pack.keyboardDone") { field = nil }
             .task {
                 await pickup.load()
                 if pickup.pantryIsActive { _ = await pickup.refreshPantryStock() }

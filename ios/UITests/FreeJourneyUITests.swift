@@ -2202,6 +2202,47 @@ import XCTest
         try await setReduceMotion(original, using: control, in: settings)
     }
 
+    func testFeedbackRemovalKeepsOptOutReachableOnTheClosedPickup() {
+        launch(reset: true, privateRecovery: true)
+        tap(app.buttons["settings"])
+        enableSwitch("Offer optional feedback after a pickup")
+        tap(app.buttons["Done"])
+        shopRoot()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["Close the pickup"])
+        tap(app.buttons["Close this pickup"])
+        verifyFeedbackRemovalAndOptOut()
+
+        restart()
+        shopRoot()
+        tap(app.buttons["settings"])
+        let consent = app.switches["Offer optional feedback after a pickup"]
+        reveal(consent)
+        XCTAssertEqual(consent.value as? String, "0")
+    }
+
+    private func verifyFeedbackRemovalAndOptOut() {
+        tap(app.buttons["Record how this pickup turned out"])
+        choose("What happened?", value: "I kept my plan")
+        choose("Usual workflow", value: "My usual list or notes")
+        choose("Compared with your usual workflow", value: "Same result")
+        tap(app.buttons["Save my response"])
+        assertText("I kept my plan")
+        assertText("This pickup counts as zero additional benefit")
+        let removeResponse = app.buttons["Remove this response"]
+        let feedbackOffer = app.buttons["Record how this pickup turned out"]
+        let stopFeedback = app.buttons["Stop offering feedback"]
+        tap(removeResponse)
+        XCTAssertTrue(removeResponse.waitForNonExistence(timeout: 8))
+        // After saving the removal, the feedback section keeps the shopper at the next choices.
+        let offerReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true AND enabled == true"), object: stopFeedback)
+        XCTAssertEqual(XCTWaiter.wait(for: [offerReady], timeout: 10), .completed)
+        XCTAssertTrue(feedbackOffer.exists)
+        capture("Free-removed-response-offer-still-in-view")
+        stopFeedback.tap()
+        XCTAssertTrue(feedbackOffer.waitForNonExistence(timeout: 8))
+    }
+
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
         avoidIOS17SnapshotLoggingCrash()
         func applyLibraryDinner() {
@@ -2276,6 +2317,12 @@ import XCTest
                 app.typeText(value)
                 let done = app.buttons.matching(identifier: doneIdentifier).firstMatch
                 XCTAssertTrue((done.exists || done.waitForExistence(timeout: 5)) && done.isHittable, "Done must be reachable from \(name)")
+                if doneIdentifier == "ledger.pack.keyboardDone" {
+                    guard waitForDoneAboveKeyboard(identifier: doneIdentifier) else {
+                        XCTFail("The pack editor's Done button did not settle above the keyboard for \(name)")
+                        return
+                    }
+                }
                 done.tap()
                 let ready = app.waitForKeyboardDismissal(doneIdentifier: doneIdentifier, timeout: 10) { screen in
                     reviewedField(named: identity, in: screen)?.value as? String == value
@@ -2326,7 +2373,7 @@ import XCTest
             ("First pack price, USD", "2"), ("Second pack label", "Three wraps"),
             ("Second pack usable amount", "3"), ("Second pack price, USD", "1.50"),
             ("Where you checked these packs and prices", "Retailer shelf checked today"),
-        ])
+        ], doneIdentifier: "ledger.pack.keyboardDone")
         tap(app.buttons["ledgerReviewPacks"])
         assertText("Item-only comparison")
         assertText("3.00")
@@ -2498,25 +2545,7 @@ import XCTest
         assertText("2.00")
         XCTAssertFalse(app.buttons["Record how this pickup turned out"].exists)
         tap(app.buttons["Close this pickup"])
-        tap(app.buttons["Record how this pickup turned out"])
-        choose("What happened?", value: "I kept my plan")
-        choose("Usual workflow", value: "My usual list or notes")
-        choose("Compared with your usual workflow", value: "Same result")
-        tap(app.buttons["Save my response"])
-        assertText("I kept my plan")
-        assertText("This pickup counts as zero additional benefit")
-        let removeResponse = app.buttons["Remove this response"]
-        let feedbackOffer = app.buttons["Record how this pickup turned out"]
-        let stopFeedback = app.buttons["Stop offering feedback"]
-        tap(removeResponse)
-        XCTAssertTrue(removeResponse.waitForNonExistence(timeout: 8))
-        // After saving the removal, the feedback section keeps the shopper at the next choices.
-        let offerReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true AND enabled == true"), object: stopFeedback)
-        XCTAssertEqual(XCTWaiter.wait(for: [offerReady], timeout: 10), .completed)
-        XCTAssertTrue(feedbackOffer.exists)
-        capture("Free-removed-response-offer-still-in-view")
-        stopFeedback.tap()
-        XCTAssertTrue(feedbackOffer.waitForNonExistence(timeout: 8))
+        verifyFeedbackRemovalAndOptOut()
         capture("Free-settlement-keeps-food-separate")
         tap(app.buttons["Review next shop"])
         tap(app.buttons["Create fresh next-shop draft"])
@@ -2597,21 +2626,7 @@ import XCTest
             if done.exists && done.isHittable {
                 // Synthesized typing briefly hides the keyboard. Its Return key can
                 // occupy the former position of Done as the keyboard slides back.
-                let aboveKeyboard = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                    // Read both frames during the same keyboard animation frame.
-                    guard let screen = try? self.app.snapshot() else { return false }
-                    var elements = screen.children
-                    var pad = CGRect.null
-                    var bar = CGRect.null
-                    while let element = elements.popLast() {
-                        if element.elementType == .keyboard { pad = element.frame }
-                        else if element.elementType == .button, element.identifier == "Done" { bar = element.frame }
-                        if !pad.isEmpty && !bar.isEmpty { break }
-                        elements.append(contentsOf: element.children)
-                    }
-                    return !pad.isEmpty && screen.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
-                }, object: nil)
-                guard XCTWaiter.wait(for: [aboveKeyboard], timeout: 5) == .completed else {
+                guard waitForDoneAboveKeyboard(identifier: "Done") else {
                     XCTFail("The dinner editor’s Done button did not settle above the visible keyboard.")
                     return
                 }
@@ -4181,6 +4196,29 @@ import XCTest
         }
         close.tap()
     }
+    private func waitForDoneAboveKeyboard(identifier: String) -> Bool {
+        var lastButton: CGRect?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let screen = try? self.app.snapshot() else { return false }
+            var elements = screen.children
+            var keyboard = CGRect.null
+            var button = CGRect.null
+            while let element = elements.popLast() {
+                if element.elementType == .keyboard { keyboard = element.frame }
+                if element.elementType == .button && element.identifier == identifier { button = element.frame }
+                elements.append(contentsOf: element.children)
+            }
+            guard !keyboard.isEmpty, screen.frame.intersects(keyboard), !button.isEmpty,
+                  button.maxY <= keyboard.minY + 1 else {
+                lastButton = nil
+                return false
+            }
+            defer { lastButton = button }
+            return lastButton == button
+        }, object: nil)
+        return XCTWaiter.wait(for: [settled], timeout: 8) == .completed
+    }
+
     private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
     private func enableSwitch(_ label: String, diagnosticName: String? = nil, position: ((XCUIElement) -> Void)? = nil) {
         let control = app.switches[label]
