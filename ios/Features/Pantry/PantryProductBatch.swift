@@ -50,6 +50,18 @@ struct PantryProductBatch {
             return try? size.amount.multiplied(by: Rational(count))
         }
 
+        var reviewEvidenceLine: String {
+            let size = try? ComparisonModel.quantity(perPack, unit)
+            return evidenceLine(unitLabel: pantryUnit(unit, singular: size?.amount == .one))
+        }
+
+        func evidenceLine(unitLabel: String) -> String {
+            var parts = [barcode?.value, original.isEmpty ? nil : original,
+                         "\(packages) × \(perPack) \(unitLabel)"].compactMap { $0 }
+            if let proposal = appliedCatalog { parts.append(proposal.attribution) }
+            return parts.joined(separator: " · ")
+        }
+
         mutating func use(_ proposal: ProductCatalogProposal) {
             if let text = proposal.name { name = text }
             if let pack = Self.pack(proposal.quantity ?? "") { perPack = pack.0; unit = pack.1 }
@@ -169,13 +181,8 @@ struct PantryProductBatch {
             let usable = amountUsable.isEmpty ? total.description : amountUsable
             guard let quantity = try ComparisonModel.quantity(usable, candidate.unit), quantity.amount >= .zero,
                   quantity.amount <= total else { throw ProductBatchError.invalid }
-            var evidence = [candidate.barcode?.value, candidate.original.isEmpty ? nil : candidate.original,
-                            "\(candidate.packages) × \(candidate.perPack) \(candidate.unit.rawValue)"].compactMap { $0 }
-            if let proposal = candidate.appliedCatalog {
-                evidence.append(proposal.attribution)
-            }
             let treatment = try candidate.treatment(deliveries: deliveries, workspaceID: workspaceID)
-            return .init(id: candidate.id, ordinal: candidate.ordinal, original: evidence.joined(separator: " · "), name: candidate.name,
+            return .init(id: candidate.id, ordinal: candidate.ordinal, original: candidate.evidenceLine(unitLabel: candidate.unit.rawValue), name: candidate.name,
                          treatment: treatment, received: total.description, usable: usable, unit: candidate.unit, location: candidate.location)
         }
         guard confirmed, !rows.isEmpty else { throw ProductBatchError.invalid }

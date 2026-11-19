@@ -45,9 +45,10 @@ struct PantryProductBatchView: View {
             } else if let review {
                 Section(pantryText("Review received products")) {
                     ForEach(review.facts) { row in
+                        let candidate = batch.candidates.first { $0.ordinal == row.ordinal }
                         VStack(alignment: .leading) {
                             Text(row.name).font(.headline)
-                            Text(row.originalLine)
+                            Text(verbatim: candidate?.reviewEvidenceLine ?? row.originalLine)
                             Text(pantryFormat("Received %@", pantryQuantity(row.received)))
                             Text(pantryFormat("Usable %@", pantryQuantity(row.usable)))
                             switch row.stock {
@@ -56,7 +57,7 @@ struct PantryProductBatchView: View {
                                 Text(pantryLocationName(location))
                             case .linked:
                                 Text(pantryText("Link evidence to the delivered batch. Its pantry count stays the same."))
-                                if let delivery = batch.candidates.first(where: { $0.ordinal == row.ordinal })?.linkedDelivery {
+                                if let delivery = candidate?.linkedDelivery {
                                     Text(PantryReceiptDelivery.label(for: delivery.lot, purchase: delivery.purchase))
                                 }
                             }

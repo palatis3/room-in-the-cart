@@ -44,7 +44,8 @@ final class PantryProductCatalogTests: XCTestCase {
         XCTAssertEqual(line.name, "Rye crispbread")
         XCTAssertEqual(line.received, "3")
         XCTAssertEqual(line.usable, "3")
-        XCTAssertTrue(line.original.contains("LOCAL-3314"))
+        XCTAssertEqual(line.original, "LOCAL-3314 · Rye crispbread · 1 × 3 count")
+        XCTAssertEqual(batch.candidates[0].evidenceLine(unitLabel: "unidades"), "LOCAL-3314 · Rye crispbread · 1 × 3 unidades")
         XCTAssertFalse(line.original.contains("LOCAL-3317"))
     }
 
