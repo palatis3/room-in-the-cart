@@ -539,6 +539,7 @@ struct ShopView: View {
                         .font(.headline).accessibilityIdentifier("shop.resumeOfferStatus")
                     Text(offer.replacement)
                     Text(pTr("Cutoff") + " · " + pickupOfferCutoffText(offer) + " · " + offer.deadline.timeZoneID)
+                        .accessibilityIdentifier("shop.resumeOfferCutoff")
                     NavigationLink(pTr(expired ? "Record what came home" : "Review a store offer")) {
                         pickupDestination(journey.id) {
                             if expired { PickupArrivalView(model: pickup) }

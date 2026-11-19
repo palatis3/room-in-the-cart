@@ -198,6 +198,7 @@ struct InStoreShoppingView: View {
                         Text(priceLabel(shop.priceForCurrentPick(lineID: line.id)))
                             .foregroundStyle(Theme.secondary).monospacedDigit()
                     }
+                    .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 4)
                     Image(systemName: "pencil").font(.footnote).foregroundStyle(Theme.action)

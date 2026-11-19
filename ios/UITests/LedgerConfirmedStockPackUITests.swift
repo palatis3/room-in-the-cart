@@ -139,6 +139,8 @@ import XCTest
         dismissKeyboard()
         XCTAssertEqual(original.value as? String, "12 wraps")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        XCTAssertTrue(app.buttons["Inspect wraps"].wait(for: \.isHittable, toEqual: true, timeout: 8),
+                      "The reviewed wraps must be actionable when the import sheet closes.")
     }
 
     private func createListAndConfirmStock(amount: String) {

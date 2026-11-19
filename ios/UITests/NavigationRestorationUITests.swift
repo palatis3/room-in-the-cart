@@ -195,6 +195,17 @@ import XCTest
 
 @MainActor
 extension XCUIApplication {
+    /// The history footer retains its scroll position while a restored grocery returns to the active section above.
+    func revealRestoredGrocery(_ grocery: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(navigationBars["List history"].waitForNonExistence(timeout: 8), file: file, line: line)
+        let list = collectionViews.firstMatch
+        for _ in 0..<8 {
+            if grocery.exists && grocery.isHittable { return }
+            list.swipeDown()
+        }
+        XCTAssertTrue(grocery.exists && grocery.isHittable, "The restored grocery must return to the active list.", file: file, line: line)
+    }
+
     /// The fresh Shop exposes infrequent shortcuts through its disclosure.
     /// Existing pickups already show those actions with the named trip.
     func shopToolButton(_ identifier: String, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {

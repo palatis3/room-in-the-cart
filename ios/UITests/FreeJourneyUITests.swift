@@ -256,7 +256,7 @@ import XCTest
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         tap(app.navigationBars.buttons.firstMatch)
         tap(app.buttons["pantry.tonight"])
-        XCTAssertTrue(home.waitForExistence(timeout: 10), app.debugDescription)
+        reveal(home)
         XCTAssertEqual(home.value as? String, "1")
     }
 
@@ -463,12 +463,13 @@ import XCTest
         launch(reset: false, spanish: true)
         tap(app.shopToolButton("shop.myPantry"))
         tap(lot)
-        XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
+        reveal(app.staticTexts[wording])
         tap(app.buttons["pantry.packageDate"])
         XCTAssertTrue(app.navigationBars["Fecha impresa en el envase"].waitForExistence(timeout: 8))
         XCTAssertEqual(editableElement("packageDate.wording").value as? String, wording)
         tap(app.buttons["packageDate.remove"])
         XCTAssertTrue(app.navigationBars["Green lentils"].waitForExistence(timeout: 8))
+        reveal(app.buttons["pantry.packageDate"])
         XCTAssertFalse(app.staticTexts[wording].exists)
     }
 
@@ -1980,7 +1981,9 @@ import XCTest
         XCTAssertFalse(app.buttons["Inspect cereal"].exists)
         tap(app.buttons["ledgerShopPicker"])
         tap(app.buttons["Next week groceries"])
-        for item in ["milks", "bread", "cereal"] {
+        XCTAssertTrue(app.navigationBars["Next week groceries"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["Inspect milks"].wait(for: \.isHittable, toEqual: true, timeout: 8))
+        for item in ["bread", "cereal"] {
             reveal(app.buttons["Inspect " + item])
         }
     }
@@ -2999,7 +3002,7 @@ import XCTest
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Reopen ")).firstMatch)
         XCTAssertTrue(app.navigationBars["List history"].exists)
         tap(app.buttons["Done"])
-        reveal(element(id))
+        app.revealRestoredGrocery(element(id))
         tap(element(id))
         tap(app.buttons["Mark handled by someone"])
         fill("Sam", into: "ledgerHandledBy")
@@ -3014,6 +3017,7 @@ import XCTest
         assertText("Handled by Sam")
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Reopen ")).firstMatch)
         tap(app.buttons["Done"])
+        app.revealRestoredGrocery(element(id))
         tap(element(id))
         tap(app.buttons["Review removing this item"])
         tap(app.buttons["Move item to Trash"])
@@ -3023,7 +3027,7 @@ import XCTest
         tap(element("ledgerHistory"))
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Restore ")).firstMatch)
         tap(app.buttons["Done"])
-        reveal(element(id))
+        app.revealRestoredGrocery(element(id))
     }
 
     func testDuplicateImportChoicesFollowReviewedAmountsAndCheckedLines() {

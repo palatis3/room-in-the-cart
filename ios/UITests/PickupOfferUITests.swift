@@ -368,7 +368,18 @@ import XCTest
         reveal(savedStatus)
         XCTAssertEqual(savedStatus.label, "Await pickup · fill still unknown")
         assertText("Large wrap pack")
-        assertText("Cutoff:", hasPrefix: true)
+        let cutoff = app.staticTexts["shop.resumeOfferCutoff"]
+        reveal(cutoff)
+        let fields = cutoff.label.components(separatedBy: " · ")
+        XCTAssertEqual(fields.count, 3, cutoff.label)
+        XCTAssertEqual(fields.first, "Cutoff")
+        XCTAssertEqual(fields.last, TimeZone.current.identifier)
+        let deadline = try XCTUnwrap(fields.dropFirst().dropLast().first)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        XCTAssertNotNil(formatter.date(from: deadline), "Show both the cutoff date and time.")
         capture("Offer-expired-resume-card-after-restart")
         tap(app.buttons["shop.resumeOffer"])
         XCTAssertTrue(app.navigationBars["What came home"].waitForExistence(timeout: 8))
