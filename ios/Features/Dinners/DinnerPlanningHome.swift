@@ -569,7 +569,9 @@ private struct DinnerManualRecipeLink: View {
             if let recipe {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: recipe.title).font(.system(.title3, design: .serif, weight: .semibold))
-                    Text(tonightText("Free reusable dinner")).font(.subheadline).foregroundStyle(Theme.secondary)
+                    if ledger.workspace.mealTemplates.first?.id == recipe.id {
+                        Text(tonightText("Free reusable dinner")).font(.subheadline).foregroundStyle(Theme.secondary)
+                    }
                 }.frame(minHeight: 44, alignment: .leading)
             } else {
                 Label(dinnerText("Save a familiar dinner"), systemImage: "book")
