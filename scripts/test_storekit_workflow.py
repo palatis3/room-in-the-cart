@@ -115,7 +115,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
         download = next(step for step in tests['steps'] if step.get('uses', '').startswith('actions/download-artifact@'))
         self.assertEqual(download['with']['artifact-ids'], '${{ needs.storekit-build.outputs.artifact }}')
         self.assertNotIn('run-id', download['with'])
-        self.assertEqual(tests['timeout-minutes'], 65)
+        self.assertEqual(tests['timeout-minutes'], 80)
         self.assertEqual(sum(step.get('id') == 'storekit-runtime' for step in tests['steps']), 1)
         self.assertEqual(sum(step.get('id') == 'storekit-restore' for step in tests['steps']), 1)
         native = self.step('storekit', identifier='storekit-native')
@@ -322,7 +322,7 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
         self.assertEqual(self.jobs['storekit-build']['env']['CI_IPHONE_RUNTIME'],
                          'com.apple.CoreSimulator.SimRuntime.iOS-27-0')
         self.assertNotIn('-downloadPlatform', '\n'.join(s.get('run', '') for s in self.jobs['storekit-build']['steps']))
-        self.assertEqual(self.step('storekit', identifier='storekit-runtime')['timeout-minutes'], 20)
+        self.assertEqual(self.step('storekit', identifier='storekit-runtime')['timeout-minutes'], 35)
 
     def runtime_fixture(self, version, build):
         return {'identifier': 'com.apple.CoreSimulator.SimRuntime.iOS-' + version.replace('.', '-'),
@@ -543,7 +543,7 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
         environment, native, download = self.prepare_runtime('', 'pull_request', [],
                                                              after_download=[runtime], existing_device=False)
         download.assert_called_once_with(['xcodebuild', '-downloadPlatform', 'iOS', '-buildVersion', '23C54',
-                                          '-architectureVariant', 'arm64'], check=True, timeout=600)
+                                          '-architectureVariant', 'arm64'], check=True, timeout=1800)
         self.assertEqual(sum(call.args[0][2:3] == ['create'] for call in native.call_args_list), 1)
         self.assertEqual(environment['SIMULATOR_ID'], '22222222-3333-4444-8555-666666666666')
         self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], environment['SIMULATOR_ID'])

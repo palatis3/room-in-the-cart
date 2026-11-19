@@ -47,6 +47,24 @@ final class PantryModelTests: XCTestCase {
         return claim
     }
 
+    func testRecentUsageIncludesTodayAndPrevious29LocalDaysAcrossDaylightSaving() throws {
+        let zone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        let formatter = ISO8601DateFormatter()
+        let now = try XCTUnwrap(formatter.date(from: "2026-11-18T18:00:00Z"))
+        let times = [
+            "2026-10-20T03:59:59Z", // October 19 in New York
+            "2026-10-20T04:00:00Z", // First included local midnight (EDT)
+            "2026-11-18T05:00:00Z", // Today's local midnight (EST)
+            "2026-11-18T18:00:00Z",
+            "2026-11-18T18:00:01Z"
+        ]
+        let entries = try times.map { text in
+            PantryUsageHistoryRow(id: UUID(), occurredAt: try XCTUnwrap(formatter.date(from: text)),
+                                 kind: .some, remainingWording: nil)
+        }
+        XCTAssertEqual(PantryUsageHistoryRow.usesInLast30Days(entries, asOf: now, timeZone: zone), 3)
+    }
+
     func testPhotoExcerptOnlyProposesCompletePackageLinesAndPreservesUnicode() throws {
         func candidate(_ label: String) throws -> PantryProductBatch.Candidate {
             var batch = PantryProductBatch(workspaceID: UUID())
@@ -420,7 +438,17 @@ extension PantryModelTests {
         try await digest.setAlerts(scope, enabled: true, minute: 600, authorized: { true })
         XCTAssertEqual(scheduler.deliveries.count, 1)
         let reopened = PantryDigestStore(folder: folder, scheduler: scheduler, now: { self.now })
-        XCTAssertEqual(try reopened.document(scope).selections.first?.range, original)
+        let saved = try XCTUnwrap(reopened.document(scope).currentGuideRange(for: lot))
+        XCTAssertEqual(saved, original)
+        let matches = reference.search("chicken", language: .english)
+        XCTAssertGreaterThan(matches.count, 1)
+        XCTAssertTrue(matches.contains { $0.id == saved.productID })
+        let lookup = FoodKeeperLookupContext(foodName: "Chicken", storage: .refrigerator, openedDay: nil, reviewedRange: saved)
+        XCTAssertEqual(lookup.recordedStart(productID: 142, condition: .refrigeratedOpened), yesterday)
+        XCTAssertNil(lookup.recordedStart(productID: 142, condition: .refrigeratedPurchased))
+        XCTAssertNil(lookup.recordedStart(productID: 17, condition: .refrigeratedOpened))
+        let other = PantryDigestScope(origin: scope.origin, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        XCTAssertNil(try reopened.document(other).currentGuideRange(for: lot))
         XCTAssertEqual(try reopened.document(scope).rules.first?.day, original.earliest)
         let corrected = try reviewed(today)
         try await reopened.saveRange(corrected, scope: scope, lot: lot, authorized: { true })
@@ -432,6 +460,7 @@ extension PantryModelTests {
         XCTAssertTrue(scheduler.deliveries.isEmpty)
         XCTAssertTrue(try reopened.document(scope).rules.isEmpty)
         XCTAssertFalse(try XCTUnwrap(reopened.document(scope).selections.first).applies(to: openedLot))
+        XCTAssertNil(try reopened.document(scope).currentGuideRange(for: openedLot))
         try await reopened.saveDay(scope, lot: openedLot, day: original.latest, authorized: { true })
         try await reopened.saveRange(corrected, scope: scope, lot: openedLot, authorized: { true })
         XCTAssertNil(try reopened.document(scope).rules.first?.source)
@@ -441,6 +470,7 @@ extension PantryModelTests {
         try await reopened.reconcile(scope, lots: [frozen])
         XCTAssertEqual(try reopened.document(scope).rules.first?.day, original.latest)
         XCTAssertFalse(try XCTUnwrap(reopened.document(scope).selections.first).applies(to: frozen))
+        XCTAssertNil(try reopened.document(scope).currentGuideRange(for: frozen))
         do {
             try await reopened.saveRange(corrected, scope: scope, lot: frozen, authorized: { true })
             XCTFail("A refrigerated range cannot be saved for a frozen lot")

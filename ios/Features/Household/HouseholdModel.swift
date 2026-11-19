@@ -21,7 +21,10 @@ struct DeviceReminderPersona: Equatable {
 
 @MainActor final class HouseholdModel: ObservableObject {
     @Published private(set) var identity: VerifiedAdultIdentity?
+    enum WorkspaceListState { case notLoaded, loaded, unavailable }
+    @Published private(set) var workspaceListState: WorkspaceListState = .notLoaded
     @Published private(set) var workspaces: [WorkspaceList.Workspace] = []
+    private var workspaceListRequest = UUID()
     @Published private(set) var projection: HouseholdBootstrap?
     @Published private(set) var shopperInbox: HouseholdInboxModel?
     @Published private(set) var sharedShop: HouseholdShopModel?
@@ -139,8 +142,22 @@ struct DeviceReminderPersona: Equatable {
             service: namespace + "." + serviceURL.absoluteString, account: "deletion-receipts"))
         configured = true
     }
+    private let safetyReviews = SharedSafetyReviews()
+    func sharedSafetyChannel(afterBlock: (() async -> Void)? = nil) -> SharedSafetyChannel? {
+        guard !locked, let scope = projection else { return nil }
+        let session = generation
+        return SharedSafetyChannel(reviews: safetyReviews, generation: session, scope: scope, service: service,
+            current: { [weak self] in self?.generation == session && self?.locked == false && self?.projection == scope },
+            afterBlock: { [weak self] in
+                if let afterBlock { await afterBlock() }
+                else if let self {
+                    self.requests = []
+                    await self.refresh()
+                }
+            })
+    }
     func sendCode() async {
-        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
+        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is unavailable. You can still use your private shopping tools."); return }
         guard let auth, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
         let start = generation
@@ -162,21 +179,54 @@ struct DeviceReminderPersona: Equatable {
     }
 
     func verifyCode(continueInHousehold: () -> Bool = { false }) async {
-        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
-        guard let auth, let service, !busy else { return }
+        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is unavailable. You can still use your private shopping tools."); return }
+        guard let auth, service != nil, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
         let start = generation
         do {
             let access = try await auth.verifyEmailCode(email: email.trimmingCharacters(in: .whitespacesAndNewlines), code: code)
             guard start == generation else { return }
             verifiedHouseholdSubject = identity == nil && continueInHousehold() ? access.identity.subject : nil
+            if identity?.subject != access.identity.subject { clearWorkspaceList() }
             identity = access.identity; code = ""; locked = false
             configureLifecycle(access.identity)
-            let result = try await service.workspaces()
-            guard start == generation else { return }
-            workspaces = result.workspaces
-            if workspaces.isEmpty { notice = ht("This account has no active household access. Your private work stays on this phone.") }
+            await readWorkspaceList(subject: access.identity.subject)
         } catch { await show(error, start: start) }
+    }
+    private func clearWorkspaceList() {
+        workspaceListRequest = UUID()
+        workspaceListState = .notLoaded
+        workspaces = []
+    }
+
+    func retryWorkspaceList() async {
+        guard !guardianChildOnly, !locked, !busy, workspaceListState == .unavailable,
+              let subject = identity?.subject else { return }
+        busy = true
+        defer { busy = false }
+        await readWorkspaceList(subject: subject)
+    }
+
+    private func readWorkspaceList(subject: String) async {
+        guard let service, identity?.subject == subject, !locked else { return }
+        let start = generation, request = UUID()
+        workspaceListRequest = request
+        func current() -> Bool {
+            generation == start && identity?.subject == subject && !locked && workspaceListRequest == request
+        }
+        do {
+            let list = try await service.workspaces(subject: subject)
+            guard current() else { return }
+            workspaces = list.workspaces
+            workspaceListState = .loaded
+        } catch {
+            guard current() else { return }
+            workspaceListState = .unavailable
+            switch error as? ClientError {
+            case .accessEnded, .sessionNeeded: await show(error, start: start)
+            default: break // Keep the last known choices and let the shopper retry the read.
+            }
+        }
     }
     /// Explicit consent keeps local data private. There is deliberately no automatic local import.
     func join(_ workspace: WorkspaceList.Workspace) async {
@@ -279,6 +329,7 @@ struct DeviceReminderPersona: Equatable {
                 prior.role != fresh.role || prior.grantId != fresh.grantId || Set(prior.capabilities) != Set(fresh.capabilities)
             let destinationChanged = prior.shopId != fresh.shopId
             if actorChanged || destinationChanged {
+                safetyReviews.clear()
                 contributorReplayWindow = nil
                 onScopeChange?()
                 if guardianChildOnly && !actorChanged && editing == nil && followingUp == nil {
@@ -630,6 +681,40 @@ struct DeviceReminderPersona: Equatable {
             }
         } catch {
             guard start == generation else { return }
+            if let publicationNotice = sharedPublicationNotice(error), pending == operation,
+               case .service(_, let code, _, _) = error as? ClientError {
+                let draft = currentContributorRequestScope()
+                guard let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes),
+                      case .string(let wording) = envelope.body["originalItem"], draft?.targetShopID == envelope.shopId else {
+                    delivery = .needsReview(operationID: operation.id, code: code)
+                    notice = publicationNotice
+                    return
+                }
+                let firstDraft = submittedDraft != nil && draft == submittedDraft
+                let restoredNewRequest = submittedDraft == nil && item.isEmpty && quantity.isEmpty && editing == nil &&
+                    followingUp == nil && envelope.kind == "request.send" && envelope.body["followupTo"] == nil
+                guard firstDraft || restoredNewRequest else {
+                    // A different edit or destination needs explicit review before replacing the draft.
+                    delivery = .needsReview(operationID: operation.id, code: code)
+                    notice = publicationNotice
+                    return
+                }
+                do {
+                    try await outbox.removeIfUnchanged([operation])
+                    guard start == generation, pending == operation else { return }
+                    pending = nil
+                    delivery = .localDraft
+                    if currentContributorRequestScope() == draft {
+                        item = wording
+                        if case .string(let amount) = envelope.body["ownQuantity"] { quantity = amount } else { quantity = "" }
+                        if envelope.kind == "request.send" { forNextShop = envelope.body["route"] == .string("next") }
+                    }
+                    notice = publicationNotice
+                } catch {
+                    if start == generation { notice = ht("Could not clear the local retry. Try again.") }
+                }
+                return
+            }
             if case .service(_, "queue_permission_ended", _, _) = error as? ClientError, let endedGrant = operation.requestQueueGrant {
                 contributorReplayWindow = nil
                 do {
@@ -663,7 +748,7 @@ struct DeviceReminderPersona: Equatable {
     }
     var canReviewRejectedCorrection: Bool {
         guard case .needsReview(let id, let code) = delivery, let pending, pending.id == id,
-              code == "followup_required" || code == "stale_base",
+              ["followup_required", "stale_base", "content_review_required", "shared_posting_unavailable"].contains(code),
               let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes) else { return false }
         return envelope.kind == "request.edit"
     }
@@ -760,7 +845,7 @@ struct DeviceReminderPersona: Equatable {
         }
         accountDeletion?.clearReview(); householdExit?.clear()
         onScopeChange?(); invalidateSessionActions(); locked = identity != nil
-        clearProjection(preservePlacementEvidence: true); lifecycle?.clear(); lifecycle = nil; workspaces = []; code = ""; notice = nil
+        clearProjection(preservePlacementEvidence: true); lifecycle?.clear(); lifecycle = nil; clearWorkspaceList(); code = ""; notice = nil
     }
     func unlock(context: LAContext = LAContext()) async {
         guard !guardianChildOnly, let auth, let service, !busy else { return }
@@ -777,7 +862,7 @@ struct DeviceReminderPersona: Equatable {
             return
         }
         do {
-            let access = try await auth.access(); let list = try await service.workspaces()
+            let access = try await auth.access(); let list = try await service.workspaces(subject: access.identity.subject)
             guard start == generation else { return }
             if let prior = suspendedReminderPersona, let householdID = prior.householdID {
                 var checked: DeviceReminderPersona?
@@ -789,7 +874,7 @@ struct DeviceReminderPersona: Equatable {
                 guard start == generation else { return }
                 if checked != prior { suspendedReminderPersona = nil }
             }
-            identity = access.identity; workspaces = list.workspaces; locked = false; keepLocalPrivate = false
+            identity = access.identity; workspaces = list.workspaces; workspaceListState = .loaded; locked = false; keepLocalPrivate = false
             configureLifecycle(access.identity)
         } catch { await show(error, start: start) }
     }
@@ -799,6 +884,7 @@ struct DeviceReminderPersona: Equatable {
            saved.householdID == intent.householdID, saved.memberID == intent.memberID {
             invalidateSessionActions(); placementEvidenceIdentity = nil; placementEvidenceUnlocked = false
         }
+        workspaceListRequest = UUID()
         workspaces.removeAll { $0.householdId == intent.householdID }
         if projection?.household.id == intent.householdID, projection?.memberId == intent.memberID {
             invalidateSessionActions(); onScopeChange?(); clearProjection()
@@ -808,7 +894,7 @@ struct DeviceReminderPersona: Equatable {
     }
     func householdExited(_ intent: HouseholdExitIntent) async {
         let subject = intent.subject, householdID = intent.householdID
-        guard identity?.subject == subject, let service else { return }
+        guard identity?.subject == subject, service != nil else { return }
         await hideExitingScope(intent)
         let start = generation
         var cleanupFailed = false
@@ -824,11 +910,8 @@ struct DeviceReminderPersona: Equatable {
         do { try await guardianIntentStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await deviceRevocationStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         guard start == generation, self.identity?.subject == subject, !locked else { return }
-        do {
-            let list = try await service.workspaces()
-            guard start == generation, self.identity?.subject == subject, !locked else { return }
-            workspaces = list.workspaces
-        } catch { notice = ht("You left the household. Its access is closed. The remaining memberships could not be refreshed.") }
+        await readWorkspaceList(subject: subject)
+        guard start == generation, self.identity?.subject == subject, !locked else { return }
         if cleanupFailed { notice = ht("You left the household. Some local household retries could not be cleared.") }
     }
     func submitAccountDeletion(subject: String) async {
@@ -871,7 +954,7 @@ struct DeviceReminderPersona: Equatable {
         busy = true; defer { busy = false }
         onScopeChange?()
         accountDeletion?.clearReview(); householdExit?.clear()
-        invalidateSessionActions(); identity = nil; workspaces = []; clearProjection(); lifecycle?.clear(); lifecycle = nil
+        invalidateSessionActions(); identity = nil; clearWorkspaceList(); clearProjection(); lifecycle?.clear(); lifecycle = nil
         delivery = .localDraft; code = ""; email = ""; item = ""; quantity = ""; codeSent = false; locked = false
         keepLocalPrivate = false; editing = nil
         var failed = false
@@ -910,6 +993,7 @@ struct DeviceReminderPersona: Equatable {
         return token
     }
     private func clearProjection(preservePlacementEvidence: Bool = false) {
+        safetyReviews.clear()
         if !preservePlacementEvidence {
             placementEvidenceIdentity = nil; placementEvidenceUnlocked = false; placementEvidenceNotice = nil
             suspendedReminderPersona = nil
@@ -924,7 +1008,7 @@ struct DeviceReminderPersona: Equatable {
     private func validateGuardianChildProjection(_ value: HouseholdBootstrap) throws {
         guard guardianChildOnly else { return }
         guard value.enrolled, value.role == "contributor", value.grantId == nil,
-              value.capabilities == ["own_requests"], value.canSelectShop != true,
+              value.hasOnlyChildRequestCapabilities, value.canSelectShop != true,
               (value.selectionRequired != true || value.shopId == nil) else { throw ClientError.accessEnded }
     }
     /// Dedicated child composition only: this adopts the exact server-issued credential without calling generic enrollment.
@@ -1002,7 +1086,7 @@ struct DeviceReminderPersona: Equatable {
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded:
             onScopeChange?()
-            invalidateSessionActions(); clearProjection(); workspaces = []; delivery = .accessEnded; locked = identity != nil
+            invalidateSessionActions(); clearProjection(); clearWorkspaceList(); delivery = .accessEnded; locked = identity != nil
             notice = ht("Access needs to be checked again. Your private work stays on this phone.")
             await service?.clearScope()
             do { try await outbox.purge() }

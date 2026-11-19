@@ -1,6 +1,89 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose a saved food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a saved food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un alimento guardado"
+          }
+        }
+      }
+    },
+    "Choose a matching food and confirm its storage history to estimate a quality date range.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a matching food and confirm its storage history to estimate a quality date range."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el alimento que corresponda y confirma cómo se ha conservado para estimar durante qué periodo mantendrá su calidad."
+          }
+        }
+      }
+    },
+    "Mark as unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar como desconocido"
+          }
+        }
+      }
+    },
+    "Mark paid total as unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark paid total as unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar el total pagado como desconocido"
+          }
+        }
+      }
+    },
+    "Mark paid total as unknown?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark paid total as unknown?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Marcar el total pagado como desconocido?"
+          }
+        }
+      }
+    },
     "Stock action": {
       "localizations": {
         "en": {
@@ -77,6 +160,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirmado de este lote"
+          }
+        }
+      }
+    },
+    "The earlier price stays in receipt history. Future price comparisons will omit this amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier price stays in receipt history. Future price comparisons will omit this amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El precio anterior se conserva en el historial de recibos. Las futuras comparaciones de precios omitirán este importe."
           }
         }
       }
@@ -4403,18 +4503,18 @@
         }
       }
     },
-    "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 text file up to 10 MB. PDFs can have up to 20 pages.": {
+    "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 or UTF-16 text file up to 10 MB. PDFs can have up to 20 pages.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 text file up to 10 MB. PDFs can have up to 20 pages."
+            "value": "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 or UTF-16 text file up to 10 MB. PDFs can have up to 20 pages."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige un PDF, una foto JPEG, PNG o HEIC, o un archivo de texto UTF-8 de hasta 10 MB. El PDF puede tener hasta 20 páginas."
+            "value": "Elige un PDF, una foto JPEG, PNG o HEIC, o un archivo de texto UTF-8 o UTF-16 de hasta 10 MB. El PDF puede tener hasta 20 páginas."
           }
         }
       }
@@ -9061,6 +9161,1366 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este recibo supera el límite de comparación local. Abre el historial de recibos para consultar las líneas guardadas."
+          }
+        }
+      }
+    },
+    "Preparing microphone…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing microphone…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando el micrófono…"
+          }
+        }
+      }
+    },
+    "Listening — tap Stop when finished": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening — tap Stop when finished"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escuchando. Toca Detener cuando termines."
+          }
+        }
+      }
+    },
+    "Stop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detener"
+          }
+        }
+      }
+    },
+    "Microphone or speech access is unavailable. You can type instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone or speech access is unavailable. You can type instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay acceso al micrófono o al reconocimiento de voz. Puedes escribir."
+          }
+        }
+      }
+    },
+    "On-device dictation is unavailable for this language or device. You can type instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On-device dictation is unavailable for this language or device. You can type instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado local no está disponible para este idioma o dispositivo. Puedes escribir."
+          }
+        }
+      }
+    },
+    "Dictation stopped. You can type or try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation stopped. You can type or try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado se detuvo. Puedes escribir o volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Review adding %@ to %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review adding %@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar si se añade %@ a %@"
+          }
+        }
+      }
+    },
+    "Review %@ for a new shopping list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review %@ for a new shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar %@ para una lista de compras nueva"
+          }
+        }
+      }
+    },
+    "%@ is already on an open shopping list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is already on an open shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ya figura en una lista de compras abierta."
+          }
+        }
+      }
+    },
+    "There is an open household request for %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is an open household request for %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay una solicitud abierta del hogar para %@."
+          }
+        }
+      }
+    },
+    "Choose an open shopping list to review this item.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an open shopping list to review this item."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una lista de compras abierta para revisar este artículo."
+          }
+        }
+      }
+    },
+    "Set a check date for %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a check date for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una fecha para revisar %@"
+          }
+        }
+      }
+    },
+    "Review daily notification settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review daily notification settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la configuración de las notificaciones diarias"
+          }
+        }
+      }
+    },
+    "A check date stays in My Pantry. For an alert, choose a time and turn on daily notifications.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A check date stays in My Pantry. For an alert, choose a time and turn on daily notifications."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fecha de revisión queda en Mi despensa. Para recibir un aviso, elige una hora y activa las notificaciones diarias."
+          }
+        }
+      }
+    },
+    "%@ · Remaining estimate: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Remaining estimate: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Cantidad que queda, según tu estimación: %@"
+          }
+        }
+      }
+    },
+    "%@ – %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – %@"
+          }
+        }
+      }
+    },
+    "Add a pantry batch before reviewing these words.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a pantry batch before reviewing these words."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade un lote a la despensa para poder revisar lo que escribiste o dictaste."
+          }
+        }
+      }
+    },
+    "After this change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After this change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después del cambio"
+          }
+        }
+      }
+    },
+    "Amount used": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizada"
+          }
+        }
+      }
+    },
+    "Check recorded dates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check recorded dates"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar las fechas guardadas"
+          }
+        }
+      }
+    },
+    "Choose a batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un lote"
+          }
+        }
+      }
+    },
+    "Choose a unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una unidad"
+          }
+        }
+      }
+    },
+    "Choose a unit that matches this batch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a unit that matches this batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una unidad compatible con este lote."
+          }
+        }
+      }
+    },
+    "Choose how much is left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose how much is left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicar cuánto queda"
+          }
+        }
+      }
+    },
+    "Confirm pantry changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm pantry changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar los cambios en la despensa"
+          }
+        }
+      }
+    },
+    "Could not complete this pantry review. Return to My Pantry and refresh.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not complete this pantry review. Return to My Pantry and refresh."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo completar la revisión. Vuelve a Mi despensa y actualiza los datos."
+          }
+        }
+      }
+    },
+    "Date information changed. Check the recorded dates again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date information changed. Check the recorded dates again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos de las fechas cambiaron. Vuelve a consultar las fechas guardadas."
+          }
+        }
+      }
+    },
+    "Date records are unavailable. Return to My Pantry and refresh.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date records are unavailable. Return to My Pantry and refresh."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pueden consultar las fechas guardadas. Vuelve a Mi despensa y actualiza los datos."
+          }
+        }
+      }
+    },
+    "Edit choices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit choices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar la selección"
+          }
+        }
+      }
+    },
+    "Edit your words and try again. Include the food and what you used, what remains, or the date you want to check.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit your words and try again. Include the food and what you used, what remains, or the date you want to check."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifica el texto y vuelve a intentarlo. Indica el alimento y cuánto usaste, cuánto queda o qué fecha quieres consultar."
+          }
+        }
+      }
+    },
+    "Enter amount used": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter amount used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicar cuánto usé"
+          }
+        }
+      }
+    },
+    "FoodKeeper quality range": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FoodKeeper quality range"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periodo de calidad estimado por FoodKeeper"
+          }
+        }
+      }
+    },
+    "How much is left?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How much is left?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto queda?"
+          }
+        }
+      }
+    },
+    "Left unchanged: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left unchanged: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin cambios: %@"
+          }
+        }
+      }
+    },
+    "No pantry changes selected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pantry changes selected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No seleccionaste ningún cambio para la despensa."
+          }
+        }
+      }
+    },
+    "Not sure": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not sure"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lo sé"
+          }
+        }
+      }
+    },
+    "Not sure — leave this batch unchanged": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not sure — leave this batch unchanged"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lo sé. Dejar este lote sin cambios."
+          }
+        }
+      }
+    },
+    "Pantry batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lote de la despensa"
+          }
+        }
+      }
+    },
+    "Preview pantry changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview pantry changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver los cambios antes de guardar"
+          }
+        }
+      }
+    },
+    "Remaining estimate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación de cuánto queda"
+          }
+        }
+      }
+    },
+    "Remaining estimate: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining estimate: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad que queda, según tu estimación: %@"
+          }
+        }
+      }
+    },
+    "Review my words": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review my words"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar lo que dije o escribí"
+          }
+        }
+      }
+    },
+    "Review pantry changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pantry changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los cambios en la despensa"
+          }
+        }
+      }
+    },
+    "Show all pantry batches": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all pantry batches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver todos los lotes de la despensa"
+          }
+        }
+      }
+    },
+    "Talk or type about pantry food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk or type about pantry food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictar o escribir sobre mi despensa"
+          }
+        }
+      }
+    },
+    "This batch needs a measured count before you can subtract an amount.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch needs a measured count before you can subtract an amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para descontar una cantidad, primero registra cuánto contiene este lote."
+          }
+        }
+      }
+    },
+    "This storage range describes quality. It does not establish an expiration date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This storage range describes quality. It does not establish an expiration date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este periodo indica cuánto tiempo se estima que el alimento conserva su calidad. No determina una fecha de caducidad."
+          }
+        }
+      }
+    },
+    "Used all of the selected batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used all of the selected batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usé todo el lote seleccionado"
+          }
+        }
+      }
+    },
+    "Used it all": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used it all"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo usé todo"
+          }
+        }
+      }
+    },
+    "What did you use, or what would you like to check?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What did you use, or what would you like to check?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué usaste o qué quieres consultar?"
+          }
+        }
+      }
+    },
+    "Which %@?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which %@?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿A qué lote de «%@» te refieres?"
+          }
+        }
+      }
+    },
+    "Which pantry batch?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which pantry batch?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿A qué lote de la despensa te refieres?"
+          }
+        }
+      }
+    },
+    "Your words": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your words"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu mensaje"
+          }
+        }
+      }
+    },
+    "About half left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About half left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda aproximadamente la mitad"
+          }
+        }
+      }
+    },
+    "Less than half left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less than half left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda menos de la mitad"
+          }
+        }
+      }
+    },
+    "Nearly empty": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nearly empty"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Casi vacío"
+          }
+        }
+      }
+    },
+    "No verified FoodKeeper quality range available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified FoodKeeper quality range available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay un periodo de calidad verificado de FoodKeeper para este lote."
+          }
+        }
+      }
+    },
+    "No verified printed package date available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified printed package date available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una fecha impresa verificada para este envase."
+          }
+        }
+      }
+    },
+    "%@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        }
+      }
+    },
+    "Last used": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Último uso"
+          }
+        }
+      }
+    },
+    "Record one use. The amount remaining will be unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record one use. The amount remaining will be unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se registrará un uso. La cantidad restante quedará sin determinar."
+          }
+        }
+      }
+    },
+    "Recorded uses": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded uses"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usos registrados"
+          }
+        }
+      }
+    },
+    "Retry usage history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry usage history"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar el historial de uso"
+          }
+        }
+      }
+    },
+    "The printed date has passed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The printed date has passed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fecha impresa ya pasó."
+          }
+        }
+      }
+    },
+    "The printed date is today.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The printed date is today."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fecha impresa es hoy."
+          }
+        }
+      }
+    },
+    "The selected batch is empty": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected batch is empty"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El lote seleccionado está vacío"
+          }
+        }
+      }
+    },
+    "This batch changed. Return to My Pantry and review it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch changed. Return to My Pantry and review it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este lote cambió. Vuelve a Mi despensa y revísalo de nuevo."
+          }
+        }
+      }
+    },
+    "Usage history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage history"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historial de uso"
+          }
+        }
+      }
+    },
+    "Used some": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used some"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usé un poco"
+          }
+        }
+      }
+    },
+    "No pantry batch matches %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pantry batch matches %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay ningún lote en la despensa que coincida con %@."
+          }
+        }
+      }
+    },
+    "Leave this item unchanged": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave this item unchanged"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dejar este artículo sin cambios"
+          }
+        }
+      }
+    },
+    "This batch is empty. Choose another batch or correct its count in My Pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This batch is empty. Choose another batch or correct its count in My Pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este lote está vacío. Elige otro o corrige su cantidad en Mi despensa."
+          }
+        }
+      }
+    },
+    "Start dictation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start dictation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar dictado"
+          }
+        }
+      }
+    },
+    "Review what you dictated": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review what you dictated"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa lo que dictaste"
+          }
+        }
+      }
+    },
+    "Use this text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este texto"
+          }
+        }
+      }
+    },
+    "The saved FoodKeeper range needs review. Check whether the package is open, where it is stored, and the starting date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved FoodKeeper range needs review. Check whether the package is open, where it is stored, and the starting date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay que revisar el periodo guardado de FoodKeeper. Comprueba si el envase está abierto, dónde lo guardas y a partir de qué fecha se cuenta."
+          }
+        }
+      }
+    },
+    "Review FoodKeeper guidance for this batch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review FoodKeeper guidance for this batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar las indicaciones de FoodKeeper para este lote"
+          }
+        }
+      }
+    },
+    "Uses in the last 30 days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses in the last 30 days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usos en los últimos 30 días"
+          }
+        }
+      }
+    },
+    "More than half left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than half left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda más de la mitad"
+          }
+        }
+      }
+    },
+    "Mostly full": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostly full"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda la mayor parte"
+          }
+        }
+      }
+    },
+    "Describe what is left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe what is left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describir cuánto queda"
+          }
+        }
+      }
+    },
+    "How much is left in this batch?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How much is left in this batch?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto queda en este lote?"
+          }
+        }
+      }
+    },
+    "Use this estimate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta estimación"
+          }
+        }
+      }
+    },
+    "Describe one remaining amount for this batch, or choose an estimate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe one remaining amount for this batch, or choose an estimate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe cuánto queda en este lote o elige una estimación."
+          }
+        }
+      }
+    },
+    "If you used the whole batch, choose Used it all.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you used the whole batch, choose Used it all."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si usaste todo el lote, elige «Lo usé todo»."
           }
         }
       }

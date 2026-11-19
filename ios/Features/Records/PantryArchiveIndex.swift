@@ -103,7 +103,7 @@ final class PantryArchiveIndex {
                 if case let .originalLot(original, baselineID) = envelope.body {
                     let baseline = InventoryLot(id: original.id, foodID: original.foodID, name: original.name, source: original.source,
                         revision: 1, location: original.location, openedAt: original.openedAt, unit: original.unit, count: original.count,
-                        observationID: baselineID, confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst)
+                        observationID: baselineID, confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording)
                     try execute("INSERT INTO baselines(lot,payload) VALUES (?,?)", texts: [original.id.uuidString], data: ArchiveCodec.canonical(baseline))
                 }
             default: break
@@ -209,7 +209,7 @@ final class PantryArchiveIndex {
                       previous.map({ $0.revision < value.revision && $0.observedAt <= value.observedAt }) ?? true else { throw Failure.invalid }
                 previous = value
             }
-            guard let latest = previous, latest.id == lot.observationID, latest.count == lot.count,
+            guard let latest = previous, latest.id == lot.observationID, latest.count == lot.count, latest.countWording == lot.countWording,
                   latest.observedAt == lot.confirmedAt else { throw Failure.invalid }
             var current: InventoryLot?, initialized = false
             try self.forEach(kind: "event", lot: lot.id) { item in

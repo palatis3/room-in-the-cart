@@ -202,3 +202,171 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
         let purged = try await store.read(); XCTAssertTrue(purged.isEmpty); XCTAssertNil(model.invitation); XCTAssertNil(model.pending)
     }
 }
+
+private actor GuardianDeletionFixture: GuardianChildDeletionServing {
+    let child: GuardianDeletionChild
+    let reviewed: GuardianDeletionReview
+    var sent = [UUID]()
+    var sealed = false
+    init() throws {
+        let id = UUID().uuidString
+        child = try GuardianFixtureData.decode(["enrollmentId": id, "childAlias": "Sam"])
+        reviewed = try GuardianFixtureData.decode(["enrollmentId": id, "childAlias": "Sam", "reviewId": UUID().uuidString,
+            "expiresAt": "2099-01-01T00:00:00Z", "verifiedBackupRetentionDays": 30])
+    }
+    func guardianDeletionChildren(subject: String, householdID: String, memberID: String) -> [GuardianDeletionChild] { sealed ? [] : [child] }
+    func guardianDeletionReview(subject: String, householdID: String, memberID: String, child: GuardianDeletionChild, childSignInEmail: String) throws -> GuardianDeletionReview {
+        guard childSignInEmail == "sam@example.invalid" else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
+        return reviewed
+    }
+    func deleteGuardianChildAccount(_ request: GuardianDeletionRequest) throws -> DeletionStatus {
+        sent.append(request.id)
+        throw ClientError.transport
+    }
+    func seal() { sealed = true }
+    func deletionStatus(_ receipt: DeletionReceipt) throws -> DeletionStatus {
+        guard sealed, sent.contains(receipt.id) else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
+        return try GuardianFixtureData.decode(["jobId":receipt.id.uuidString, "status":"complete", "appDataErased":true,
+            "providerAccountDeleted":true, "completedAt":"2026-11-19T00:00:00Z", "receiptExpiresAt":"2099-01-01T00:00:00Z"])
+    }
+}
+
+@MainActor final class GuardianChildDeletionTests: XCTestCase {
+    private func scope(_ subject: String = "guardian") -> GuardianRuntimeScope {
+        .init(subject: subject, householdID: GuardianFixtureData.householdID, memberID: GuardianFixtureData.memberID,
+              generation: UUID(), enrollmentRevision: UUID())
+    }
+
+    func testUnconfirmedDeletionSurvivesRestartChecksStatusAndReusesOneReceiptForTheSameChild() async throws {
+        let scope = scope(), fixture = try GuardianDeletionFixture(), vault = GuardianModelVault()
+        func open() -> GuardianChildDeletionModel {
+            GuardianChildDeletionModel(scope: scope, service: fixture, vault: vault, runtime: { scope })
+        }
+        let model = open()
+        await model.load()
+        let child = try XCTUnwrap(model.children?.first)
+        await model.select(child, email: "sam@example.invalid")
+        let review = try XCTUnwrap(model.review)
+        XCTAssertTrue(model.receipts.isEmpty)
+        await model.submit(review)
+        let request = try XCTUnwrap(model.receipts.first)
+        XCTAssertNil(model.statuses[request.id])
+        XCTAssertFalse(model.canReview(child))
+        XCTAssertFalse(try XCTUnwrap(vault.read()).contains("sam@example.invalid"))
+
+        let restarted = open()
+        await restarted.load()
+        let persisted = try XCTUnwrap(restarted.receipts.first)
+        XCTAssertEqual(persisted.id, request.id)
+        await restarted.check(persisted)
+        XCTAssertTrue(restarted.canReview(child))
+        await restarted.select(child, email: "sam@example.invalid")
+        await restarted.submit(try XCTUnwrap(restarted.review))
+        let sent = await fixture.sent
+        XCTAssertEqual(sent, [request.id, request.id])
+        await fixture.seal()
+        await restarted.check(persisted)
+        XCTAssertEqual(restarted.statuses[persisted.id]?.status, .complete)
+        restarted.forget(persisted)
+        XCTAssertTrue(restarted.receipts.isEmpty)
+    }
+
+    func testWrongEmailFailedReceiptWriteAndScopeChangeCannotSendOrRevealSavedReceipt() async throws {
+        let original = scope(), other = scope("other"), fixture = try GuardianDeletionFixture(), vault = GuardianModelVault()
+        var live = original
+        let model = GuardianChildDeletionModel(scope: original, service: fixture, vault: vault, runtime: { live })
+        await model.load()
+        let child = try XCTUnwrap(model.children?.first)
+        await model.select(child, email: "wrong@example.invalid")
+        XCTAssertNil(model.review)
+        await model.load()
+        await model.select(child, email: "sam@example.invalid")
+        let approved = try XCTUnwrap(model.review)
+        vault.rejectWrites = true
+        await model.submit(approved)
+        let sent = await fixture.sent
+        XCTAssertTrue(sent.isEmpty)
+        XCTAssertTrue(model.receipts.isEmpty)
+        vault.rejectWrites = false
+        await model.select(child, email: "sam@example.invalid")
+        live = other
+        await model.submit(approved)
+        let sentAfterChange = await fixture.sent
+        XCTAssertTrue(sentAfterChange.isEmpty)
+        live = original
+        await model.submit(approved)
+        model.clear()
+        XCTAssertTrue(model.receipts.isEmpty)
+        let stranger = GuardianChildDeletionModel(scope: other, service: fixture, vault: vault, runtime: { other })
+        await stranger.load()
+        XCTAssertTrue(stranger.receipts.isEmpty)
+    }
+}
+
+private actor ManualGuardianFixture: GuardianManualReviewServing {
+    private let enrollment = UUID(), created = "2026-11-18T16:00:00Z", expires = "2099-01-01T00:00:00Z"
+    private var saved: UUID?
+    private var intake = true
+    private var hideFirstStatus = true
+    private(set) var keys: [UUID] = []
+
+    func guardianManualReviews(subject: String, householdID: String, memberID: String) throws -> GuardianManualReviewPage {
+        let cases: [[String: String]]
+        if let saved, !hideFirstStatus { cases = [receipt(saved)] }
+        else { cases = [] }
+        return try GuardianFixtureData.decode(["available":intake, "children":[["enrollmentId":enrollment.uuidString, "childAlias":"Sam", "identityState":"unmatched"]], "requests":cases])
+    }
+    private func receipt(_ id: UUID) -> [String: String] {
+        ["requestId":id.uuidString, "status":intake ? "received" : "closed", "createdAt":created, "updatedAt":created, "expiresAt":expires]
+    }
+    func requestGuardianManualReview(_ key: GuardianManualReviewKey, childSignInEmail: String) throws -> GuardianManualReviewCase {
+        guard childSignInEmail == "sam@example.invalid" else { throw ClientError.accessEnded }
+        keys.append(key.id)
+        saved = key.id
+        if keys.count == 1 { throw ClientError.transport }
+        hideFirstStatus = false
+        return try GuardianFixtureData.decode(receipt(key.id))
+    }
+    func closeIntake() { intake = false }
+}
+
+extension GuardianChildDeletionTests {
+    func testPrivateCaseSubmissionRecoversOneKeyAndClosedIntakeStillShowsCaseStatus() async throws {
+        let scope = scope(), fixture = ManualGuardianFixture(), vault = GuardianModelVault()
+        func open() -> GuardianManualReviewModel {
+            GuardianManualReviewModel(scope: scope, service: fixture, vault: vault, runtime: { scope })
+        }
+        let first = open()
+        await first.refresh()
+        let child = try XCTUnwrap(first.children.first)
+        XCTAssertEqual(child.identityState, .unmatched)
+        await first.submit(child: child, email: "sam@example.invalid")
+        XCTAssertTrue(first.cases.isEmpty)
+        XCTAssertFalse(try XCTUnwrap(vault.read()).contains("sam@example.invalid"))
+
+        let restarted = open()
+        await restarted.refresh()
+        await restarted.submit(child: child, email: "sam@example.invalid")
+        let result = try XCTUnwrap(restarted.cases.first)
+        XCTAssertEqual(result.status, .received)
+        let keys = await fixture.keys
+        XCTAssertEqual(keys, [result.id, result.id])
+        XCTAssertNil(try vault.read())
+        await fixture.closeIntake()
+        await restarted.refresh()
+        XCTAssertEqual(restarted.available, false)
+        XCTAssertEqual(restarted.cases.first?.status, .closed)
+        await restarted.submit(child: child, email: "sam@example.invalid")
+        let final = await fixture.keys
+        XCTAssertEqual(final.count, 2)
+    }
+
+    func testPrivateSupportDraftContainsOnlyValidatedAddressAndLocalizedSubject() throws {
+        let url = try XCTUnwrap(GuardianDeletionSupportSection.contactURL(address: "hello@example.org"))
+        let parts = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        XCTAssertEqual(parts.scheme, "mailto")
+        XCTAssertEqual(parts.path, "hello@example.org")
+        XCTAssertEqual(parts.queryItems?.map(\.name), ["subject"])
+        XCTAssertNil(GuardianDeletionSupportSection.contactURL(address: "hello@example.org?cc=other@example.com"))
+    }
+}

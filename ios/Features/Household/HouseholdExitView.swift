@@ -53,7 +53,7 @@ struct HouseholdExitView: View {
                     if account.emailOTPEnabled {
                         Text(ht("Sign in again with a new email code before leaving a household."))
                         Button(ht("Sign out to verify again")) { Task { await account.signOut(); dismiss() } }
-                    } else { Text(ht("Fresh email verification is unavailable on this build.")) }
+                    } else { Text(ht("You need a new email code to leave this household. Email verification is unavailable.")) }
                 }
             } else { Text(ht("Sign in to your adult account to review household memberships.")) }
             if let notice = exit.notice { Section { Text(notice) } }

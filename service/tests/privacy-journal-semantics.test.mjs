@@ -7,3 +7,28 @@ test('restore semantic schema accepts exact content-free source scope',()=>asser
 const negatives=[['duplicate targets',p=>p.targets.push(p.targets[0])],['unknown attestation email',p=>p.attestation.email='private@example.invalid'],['unknown grocery field',p=>p.effects[0].after.grocery='private'],['foreign effect',p=>p.effects[0].key=randomUUID()+'/'+m],['wrong member key',p=>p.effects[0].key=h+'/'+randomUUID()],['adult binding identity mismatch',p=>p.targets[0].binding.identity_hash='f'.repeat(64)],['child kind substitution',p=>p.targets[0].kind='explicit_sole_guardian_profile'],['duplicate effects',p=>p.effects.push(p.effects[0])],['inverted retention policy',p=>p.markerDays=0],['unknown payload field',p=>p.rawToken='credential'],['unchanged effect',p=>p.effects[0].after=p.effects[0].before]];
 for(const[name,change]of negatives)test('semantic rejects '+name,()=>assert.throws(()=>validatePrivacyRestoreEvents([changed(change)])));
 test('status expiry/cleanup race returns404 after valid first receipt read',async()=>{let reads=0,acks=0;const pool={connect:async()=>({query:async sql=>sql.includes('privacy_status')?{rows:[{value:++reads===1?{status:'pending'}:null}]}:{rows:[]},release(){}})};const service=new PrivacyService({pool},{journal:{configurationId:'fixture',beforeCommit:async()=>{},afterCommit:async()=>{},acknowledgeJob:async()=>{acks++;}}});await assert.rejects(()=>service.status(randomUUID(),'a'.repeat(43)),e=>e.status===404||e.code==='unavailable');assert.equal(reads,2);assert.equal(acks,1);});
+
+test('guardian whole-account journal targets must all bind the same child and include a distinct guardian review',()=>{
+ const child = changed(p=>{
+  delete p.attestation.sqlAdultScopeCheck;
+  p.attestation.guardianAuthorization={guardianHash:'9'.repeat(64),householdId:h,enrollmentId:randomUUID(),reviewHash:'8'.repeat(64)};
+  p.targets[0].kind='guardian_child_account';
+  Object.assign(p.targets[0].binding,{kind:'child',organizer:false});
+  p.effects=[];
+ });
+ assert.equal(validatePrivacyRestoreEvents([child]).length,1);
+ for(const update of [
+  p=>{delete p.attestation.guardianAuthorization;},
+  p=>{p.attestation.sqlAdultScopeCheck='passed';},
+  p=>{p.attestation.guardianAuthorization.guardianHash=p.identityHash;},
+  p=>{p.targets[0].binding.identity_hash='f'.repeat(64);},
+  p=>{p.targets[0].kind='explicit_sole_guardian_profile';},
+ ]){
+  const other=structuredClone(child);
+  update(other.payload.data);other.payloadDigest=journalHash(other.payload);
+  assert.throws(()=>validatePrivacyRestoreEvents([other]));
+ }
+ const unjoined=structuredClone(child);unjoined.payload.data.targets=[];
+ unjoined.payloadDigest=journalHash(unjoined.payload);
+ assert.equal(validatePrivacyRestoreEvents([unjoined]).length,1);
+});

@@ -86,7 +86,7 @@ struct PantryStaplesView: View {
         .privacySensitive()
         .task(id: input) { await load(input) }
         .refreshable { await load(input) }
-        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in day = Date() }
+        .onReceive(NotificationCenter.default.pantryClockChanges(for: .NSCalendarDayChanged)) { _ in day = Date() }
         .onChange(of: scene) { _, value in if value == .active { day = Date() } }
     }
 

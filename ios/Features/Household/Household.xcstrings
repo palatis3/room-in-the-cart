@@ -1,6 +1,454 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Your household list could not be loaded. Check your connection and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household list could not be loaded. Check your connection and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar la lista de tus hogares. Revisa tu conexión y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Retry loading households": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry loading households"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar los hogares"
+          }
+        }
+      }
+    },
+    "Posting shared messages is unavailable for this account. You can still read messages and use the safety controls.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posting shared messages is unavailable for this account. You can still read messages and use the safety controls."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cuenta no puede publicar mensajes compartidos. Aún puedes leer los mensajes y usar las opciones de seguridad."
+          }
+        }
+      }
+    },
+    "Action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción"
+          }
+        }
+      }
+    },
+    "Another reason": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another reason"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otro motivo"
+          }
+        }
+      }
+    },
+    "Block sender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block sender"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear a quien envió el mensaje"
+          }
+        }
+      }
+    },
+    "Block this sender’s shared messages from your view. The block sends a message reference without an excerpt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block this sender’s shared messages from your view. The block sends a message reference without an excerpt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los mensajes compartidos por esta persona se ocultarán en tu vista. Al bloquearla se envía una referencia al mensaje sin incluir su texto."
+          }
+        }
+      }
+    },
+    "Choose a reason": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a reason"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un motivo"
+          }
+        }
+      }
+    },
+    "Choose the excerpt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the excerpt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el fragmento"
+          }
+        }
+      }
+    },
+    "Confirm block": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm block"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar bloqueo"
+          }
+        }
+      }
+    },
+    "Delivery is unconfirmed. Retry the same action to check its result.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivery is unconfirmed. Retry the same action to check its result."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se ha confirmado el envío. Vuelve a intentar la misma acción para consultar el resultado."
+          }
+        }
+      }
+    },
+    "Exact excerpt to send": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact excerpt to send"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragmento exacto que se enviará"
+          }
+        }
+      }
+    },
+    "Harassment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harassment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acoso"
+          }
+        }
+      }
+    },
+    "Include an excerpt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include an excerpt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir un fragmento"
+          }
+        }
+      }
+    },
+    "Reason for reporting": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason for reporting"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motivo del reporte"
+          }
+        }
+      }
+    },
+    "Report or block": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report or block"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportar o bloquear"
+          }
+        }
+      }
+    },
+    "Report privately": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report privately"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportar en privado"
+          }
+        }
+      }
+    },
+    "Retry the same action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a intentar la misma acción"
+          }
+        }
+      }
+    },
+    "Send private report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send private report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar reporte privado"
+          }
+        }
+      }
+    },
+    "Sender blocked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender blocked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se bloqueó a quien envió el mensaje."
+          }
+        }
+      }
+    },
+    "Sending…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviando…"
+          }
+        }
+      }
+    },
+    "The sender of this message could not be verified for blocking.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sender of this message could not be verified for blocking."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar quién envió este mensaje para bloquearlo."
+          }
+        }
+      }
+    },
+    "This action is unavailable for the current household access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action is unavailable for the current household access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta acción no está disponible con tu acceso actual al hogar."
+          }
+        }
+      }
+    },
+    "This message changed or is no longer available. Refresh before reviewing it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This message changed or is no longer available. Refresh before reviewing it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este mensaje cambió o ya no está disponible. Actualiza la vista antes de volver a revisarlo."
+          }
+        }
+      }
+    },
+    "This wording could not be shared. Edit it and review it again before sending.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This wording could not be shared. Edit it and review it again before sending."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo compartir este texto. Edítalo y vuelve a revisarlo antes de enviarlo."
+          }
+        }
+      }
+    },
+    "Unsafe content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsafe content"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenido peligroso"
+          }
+        }
+      }
+    },
+    "Your private report was received.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private report was received."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se recibió tu reporte privado."
+          }
+        }
+      }
+    },
+    "Your report goes to the safety team with the reason and a reference to this message.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your report goes to the safety team with the reason and a reference to this message."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El equipo de seguridad recibirá tu reporte con el motivo y una referencia a este mensaje."
+          }
+        }
+      }
+    },
     "Bought by": {
       "localizations": {
         "en": {
@@ -3903,18 +4351,18 @@
         }
       }
     },
-    "Email sign-in is not ready yet. Your private shopping tools work without an account.": {
+    "Email sign-in is unavailable. You can still use your private shopping tools.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Email sign-in is not ready yet. Your private shopping tools work without an account."
+            "value": "Email sign-in is unavailable. You can still use your private shopping tools."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El acceso por correo electrónico aún no está disponible. Tus herramientas privadas de compras funcionan sin una cuenta."
+            "value": "El inicio de sesión por correo electrónico no está disponible. Puedes seguir usando tus herramientas privadas de compras."
           }
         }
       }
@@ -4729,34 +5177,34 @@
         }
       }
     },
-    "Fresh email verification is unavailable on this build.": {
+    "You need a new email code to leave this household. Email verification is unavailable.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fresh email verification is unavailable on this build."
+            "value": "You need a new email code to leave this household. Email verification is unavailable."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta versión no permite volver a verificar tu identidad por correo."
+            "value": "Necesitas un código nuevo por correo electrónico para salir de este hogar. La verificación por correo no está disponible."
           }
         }
       }
     },
-    "Fresh email verification is unavailable on this build. Review deletion again when household sign-in is available.": {
+    "You need a new email code to delete your account. Email verification is unavailable.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fresh email verification is unavailable on this build. Review deletion again when household sign-in is available."
+            "value": "You need a new email code to delete your account. Email verification is unavailable."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta versión no permite volver a verificar tu identidad por correo. Revisa la eliminación cuando el inicio de sesión del hogar esté disponible."
+            "value": "Necesitas un código nuevo por correo electrónico para eliminar tu cuenta. La verificación por correo no está disponible."
           }
         }
       }
@@ -5068,18 +5516,18 @@
         }
       }
     },
-    "Household service is not configured": {
+    "Household sign-in is unavailable": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Household service is not configured"
+            "value": "Household sign-in is unavailable"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El servicio del hogar no está configurado"
+            "value": "No se puede iniciar sesión en el hogar"
           }
         }
       }
@@ -5742,6 +6190,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mantener mi trabajo existente privado en este teléfono"
+          }
+        }
+      }
+    },
+    "Keep my lists and plans private when creating or joining a household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep my lists and plans private when creating or joining a household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener mis listas y planes privados al crear un hogar o unirme a uno"
           }
         }
       }
@@ -6748,22 +7212,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nueva cantidad utilizable"
-          }
-        }
-      }
-    },
-    "No active household access is available for this account.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No active household access is available for this account."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta cuenta no tiene acceso activo a ningún hogar."
           }
         }
       }
@@ -8167,18 +8615,18 @@
         }
       }
     },
-    "Private shopping tools work without an account. Household sign-in will be available when the service is connected.": {
+    "You can make a private shopping list, compare packs and plan dinners on this iPhone without an account.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private shopping tools work without an account. Household sign-in will be available when the service is connected."
+            "value": "You can make a private shopping list, compare packs and plan dinners on this iPhone without an account."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las herramientas privadas de compras funcionan sin una cuenta. El acceso al hogar estará disponible cuando se conecte el servicio."
+            "value": "Puedes hacer una lista de compras privada, comparar paquetes y planear cenas en este iPhone sin una cuenta."
           }
         }
       }
@@ -14251,18 +14699,18 @@
         }
       }
     },
-    "This iPhone has no household service connection configured. Account deletion is unavailable.": {
+    "Account deletion is unavailable on this iPhone. Open Support in Settings for help.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This iPhone has no household service connection configured. Account deletion is unavailable."
+            "value": "Account deletion is unavailable on this iPhone. Open Support in Settings for help."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este iPhone no tiene configurada una conexión al servicio del hogar. La eliminación de cuentas no está disponible."
+            "value": "La eliminación de cuentas no está disponible en este iPhone. Para obtener ayuda, abre Soporte en Configuración."
           }
         }
       }

@@ -1,3 +1,4 @@
+import {checkPublishingMember,reviewSharedWording} from './shared-content-filter.js';
 import { randomUUID } from 'node:crypto';
 import { bodySchemas, type Envelope } from './contracts.js';
 import { invalid, refresh, ServiceError, unavailable } from './errors.js';
@@ -5,7 +6,7 @@ import type { Context, Shop } from './repository.js';
 
 // The caller has already checked the destination's selected-shop authority.
 // Both the list and the write resolve source authority independently.
-const eligible = `FROM ritc.request_origin r
+const eligible = `FROM ritc.visible_request_origin r
  JOIN ritc.shop s ON (s.household_id,s.shop_id)=(r.household_id,r.shop_id)
  JOIN ritc.shop dest ON dest.household_id=r.household_id AND dest.shop_id=$2
  WHERE r.household_id=$1 AND s.shopper_id=$3 AND s.created_at<dest.created_at
@@ -35,6 +36,8 @@ export async function carryRequest(ctx:Context,dest:Shop,notice:string|null,c:En
   if(!r)throw unavailable();
   if(r.authority_epoch!==b.sourceAuthorityEpoch)throw new ServiceError(409,'authority_changed','Review the current shopper assignment.');
   if(r.revision!==c.base.requestRevision)throw new ServiceError(409,'stale_base','Review the changed request.');
+  await checkPublishingMember(ctx);
+  reviewSharedWording(r.original_item,r.own_quantity);
   await ctx.db.query(`INSERT INTO ritc.request(household_id,request_id,shop_id,author_id,author_consent_id,client_request_id,
     original_item,own_quantity,authored_at,route) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'current')`,
     [ctx.householdId,operationId,dest.shop_id,r.author_id,r.author_consent_id,randomUUID(),r.original_item,r.own_quantity,r.authored_at]);
@@ -45,7 +48,7 @@ export async function carryRequest(ctx:Context,dest:Shop,notice:string|null,c:En
 
 export async function reauthorizeCarry(ctx:Context,dest:Shop,notice:string|null,operationId:string) {
   const row=await ctx.db.query(`SELECT 1 FROM ritc.request_carry c
-    JOIN ritc.request_origin r ON (r.household_id,r.request_id)=(c.household_id,c.source_request_id)
+    JOIN ritc.visible_request_origin r ON (r.household_id,r.request_id)=(c.household_id,c.source_request_id)
     JOIN ritc.shop s ON (s.household_id,s.shop_id)=(r.household_id,r.shop_id)
     WHERE c.household_id=$1 AND c.target_request_id=$2 AND s.shopper_id=$3
     AND c.source_authority_epoch=s.authority_epoch AND c.target_authority_epoch=$4

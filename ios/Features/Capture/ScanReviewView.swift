@@ -68,7 +68,7 @@ import CoreDomain
             } else if recipe != nil {
                 recipeFields
             } else {
-                captureControls
+                if kind != .receipt { captureControls }
                 if let failure = model.failure {
                     Section {
                         Text(failureText(failure))
@@ -95,12 +95,23 @@ import CoreDomain
                         Button(captureText("Keep my current draft")) { model.discardCandidate() }
                     }
                 }
-                Section(captureText("Editable source text")) {
-                    TextEditor(text: $model.text).frame(minHeight: 150).accessibilityLabel(captureText("Editable source text"))
+                let sourceLabel = kind == .receipt ? captureText("Type or paste receipt lines") : captureText("Editable source text")
+                Section(sourceLabel) {
+                    TextEditor(text: $model.text).frame(minHeight: 150)
+                        .overlay(alignment: .topLeading) {
+                            if kind == .receipt, model.text.isEmpty {
+                                Text(captureText("Enter one printed line per row."))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 5).padding(.vertical, 8)
+                                    .allowsHitTesting(false).accessibilityHidden(true)
+                            }
+                        }
+                        .accessibilityLabel(sourceLabel)
                         .id("scan.sourceEditor")
                         .accessibilityIdentifier("scan.sourceEditor")
                         .focused($focusedField, equals: .sourceText)
                         .disabled(model.busy || loadingPhoto)
+                    if kind == .receipt { pasteSourceButton }
                     if let source = model.accepted {
                         DisclosureGroup(captureText("Compare with the original")) {
                             sourceImage(source.originalImageData)
@@ -125,6 +136,7 @@ import CoreDomain
                     }.disabled(!canReview || model.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 } else if kind == .receipt {
                     receiptFields
+                    captureControls
                 } else {
                     packageFields
                 }
@@ -185,6 +197,15 @@ import CoreDomain
         .onDisappear { if !showCamera { close() } }
     }
     private var canReview: Bool { authorize() && !model.closed && !model.busy && !loadingPhoto && !requestingCamera && model.candidate == nil }
+    private var pasteSourceButton: some View {
+        PasteButton(payloadType: String.self) { values in
+            Task { @MainActor in
+                guard canReview else { return }
+                if model.paste(values) { resetDerived() }
+            }
+        }.disabled(!canReview)
+            .accessibilityLabel(captureText("Paste source text"))
+    }
     private var captureControls: some View {
         Section(captureText("Optional camera or selected photo")) {
             Text(captureText("You can always type. A photo or scan never confirms a price, payment, arrival or safe ingredient."))
@@ -199,13 +220,7 @@ import CoreDomain
             PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
                 Text(captureText("Choose one photo for review"))
             }.disabled(!canReview || !localPhotoConsent)
-            PasteButton(payloadType: String.self) { values in
-                Task { @MainActor in
-                    guard canReview else { return }
-                    if model.paste(values) { resetDerived() }
-                }
-            }.disabled(!canReview)
-                .accessibilityLabel(captureText("Paste source text"))
+            if kind != .receipt { pasteSourceButton }
             if model.busy || loadingPhoto || requestingCamera { ProgressView(captureText("Preparing source for review…")) }
             Text(captureText("Saved photo references are smaller copies without location metadata. The app keeps them separate from your photo library."))
                 .font(.footnote)

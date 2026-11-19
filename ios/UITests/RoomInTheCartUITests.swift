@@ -102,12 +102,12 @@ final class RoomInTheCartUITests: XCTestCase {
             launch(language: language)
             tap(app.buttons["settings"])
             tap(app.buttons[language == "en" ? "Household requests" : "Solicitudes del hogar"])
-            let configured = !app.staticTexts[language == "en" ? "Household service is not configured" : "El servicio del hogar no está configurado"].exists
+            let configured = !app.staticTexts[language == "en" ? "Household sign-in is unavailable" : "No se puede iniciar sesión en el hogar"].exists
             tap(app.buttons["household.accountDeletion"])
             let title = language == "en" ? "Account deletion" : "Eliminación de la cuenta"
             XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 5))
-            let unavailable = language == "en" ? "This iPhone has no household service connection configured. Account deletion is unavailable." :
-                "Este iPhone no tiene configurada una conexión al servicio del hogar. La eliminación de cuentas no está disponible."
+            let unavailable = language == "en" ? "Account deletion is unavailable on this iPhone. Open Support in Settings for help." :
+                "La eliminación de cuentas no está disponible en este iPhone. Para obtener ayuda, abre Soporte en Configuración."
             let signIn = language == "en" ? "Sign in to your adult account to review deletion. Saved receipts can be checked after sign-out." :
                 "Inicia sesión con tu cuenta de adulto para revisar la eliminación. Puedes consultar los comprobantes guardados después de cerrar sesión."
             reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", configured ? signIn : unavailable)).firstMatch)

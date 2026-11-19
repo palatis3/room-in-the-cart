@@ -66,6 +66,7 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
     let barcode: CapturedBarcode?
     let receiptLines: [ScanReceiptLine]
     let capturedAt: Date
+    var documentLayoutID: UUID? = nil
     var documentDigest: Data? = nil
     var reviewedImageLines: [Int: ReviewedImageWording]? = nil
     var reference: SourceMediaReference { .init(workspaceID: target.workspaceID, mediaID: id) }

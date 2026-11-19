@@ -418,6 +418,35 @@ import XCTest
         capture("Cook-only-report-explicit-send-preserved-draft-read-only")
     }
 
+    func testReadOnlyCookCanReviewAnExactExcerptRetryThePrivateReportAndBlockSender() {
+        app.launchArguments = ["--ui-testing", "--helper-revision-fixture", "--message-safety-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 30))
+        tap(app.buttons["Cook instructions"])
+        tap(app.buttons["safety.open"])
+        let send = app.buttons["safety.confirm"]
+        XCTAssertFalse(send.isEnabled)
+        XCTAssertFalse(element("safety.excerpt").exists)
+        tap(element("safety.reason"))
+        tap(element("Unsafe content"))
+        enableSwitch("Include an excerpt")
+        XCTAssertEqual(element("safety.excerpt").label, "Tuesday")
+        tap(send)
+        let retry = app.buttons["Retry the same action"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts["Your private report was received."].exists)
+        tap(retry)
+        XCTAssertTrue(app.staticTexts["Your private report was received."].waitForExistence(timeout: 10))
+        tap(app.buttons["Block sender"])
+        XCTAssertFalse(element("safety.excerpt").exists)
+        tap(send)
+        XCTAssertTrue(app.staticTexts["Sender blocked."].waitForExistence(timeout: 10))
+        tap(app.buttons["Close"])
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format:"exists == false"),
+            object: app.buttons["safety.open"])], timeout: 10), .completed)
+    }
+
     func testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages() {
         for (language, entry, label, refresh) in [
             ("en", "Cook instructions", "Current instruction revision", "Refresh instructions"),

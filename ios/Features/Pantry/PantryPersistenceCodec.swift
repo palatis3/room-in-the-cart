@@ -38,7 +38,7 @@ enum PantryPersistenceCodec {
             try observation.validate()
             guard observation.id == lot.observationID, observation.lotID == lot.id,
                   observation.operationID == command.id, observation.revision == lot.revision,
-                  observation.count == lot.count, observation.observedAt == lot.confirmedAt else { throw Failure.invalidRecord }
+                  observation.count == lot.count, observation.countWording == lot.countWording, observation.observedAt == lot.confirmedAt else { throw Failure.invalidRecord }
             // Observation revision denotes the lot revision; the immutable SQL row is revision one.
             result.append(InventoryWrite(record: InventoryRecord(key: .init(.observation, observation.id), revision: 1,
                 payload: try encode(observation), lotID: lot.id), expectedRevision: 0))

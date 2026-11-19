@@ -1072,6 +1072,7 @@ struct SharedShopTransfer: Equatable {
     }
     private func handle(_ error: Error, start: UUID) async {
         guard start == generation else { return }
+        if let publicationNotice = sharedPublicationNotice(error) { notice = publicationNotice; return }
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _): clear(); await onAccessEnded()
         case .service(status: 409, code: "food_preview_expired", correlationID: _, retryAfter: _):

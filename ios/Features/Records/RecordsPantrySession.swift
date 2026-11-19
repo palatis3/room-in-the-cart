@@ -93,7 +93,18 @@ import RecordArchive
             let pending = try PantryPendingStore(directory: root.appendingPathComponent(id.uuidString, isDirectory: true)
                 .appendingPathComponent("pending", isDirectory: true), inventoryWorkspaceID: opened.store.workspaceID)
             pendingStore = pending
+            let source = opened.source, context = opened.identity
             let repository = PantryRepository(store: opened.store, mutationGate: gate, pendingStore: pending,
+                archivedUsage: { [weak self] lot in
+                    guard let self, self.phase == .ready, self.identity == context else { throw ArchiveError.unavailable }
+                    try self.requireAccess()
+                    try await self.lifetime.revalidate(acquired, copy: ready, registry: self.registry)
+                    try self.requireAccess()
+                    let rows = try await self.worker.archivedUsage(source, context: context, lot: lot)
+                    try await self.lifetime.revalidate(acquired, copy: ready, registry: self.registry)
+                    try self.requireAccess()
+                    return rows
+                },
                 authorize: { [weak self] in self?.hasAccess == true })
             let model = PantryModel(repository: repository, clock: clock)
             self.model = model

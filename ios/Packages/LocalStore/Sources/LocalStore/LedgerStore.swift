@@ -27,6 +27,7 @@ public enum LedgerStoreError: Error, Equatable, Sendable {
     case invalidInput
     case payloadTooLarge
     case staleRevision(expected: Int64, actual: Int64)
+    case staleFirstListDrafts
     case operationConflict
     case erased
     case corruptRecord
@@ -195,7 +196,7 @@ public actor LedgerStore {
     /// secure_delete and best-effort WAL truncation do not erase external backups, active
     /// reader snapshots, or filesystem/media copies. Success is returned only after COMMIT.
     @discardableResult
-    public func eraseWorkspace(workspaceID target: UUID, expectedRevision: Int64,
+    public func eraseWorkspace(workspaceID target: UUID, expectedRevision: Int64, expectedDraftTokens: [UUID]? = nil,
                                operationID: UUID, at: Date) throws -> LedgerWorkspaceTombstone {
         guard expectedRevision >= 0, at.timeIntervalSinceReferenceDate.isFinite
         else { throw LedgerStoreError.invalidInput }
@@ -215,6 +216,9 @@ public actor LedgerStore {
             guard target == workspaceID else { throw LedgerStoreError.invalidInput }
             guard expectedRevision == current.revision else {
                 throw LedgerStoreError.staleRevision(expected: expectedRevision, actual: current.revision)
+            }
+            if let expectedDraftTokens, try liveFirstListDraftTokens() != expectedDraftTokens {
+                throw LedgerStoreError.staleFirstListDrafts
             }
             guard try !database.hasSaveOperation(operationID) else { throw LedgerStoreError.operationConflict }
             var replacement = UUID()

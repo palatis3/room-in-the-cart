@@ -1,4 +1,7 @@
 import CoreDomain
+import CryptoKit
+import DeviceSurfaces
+import UniformTypeIdentifiers
 import HouseholdClient
 import PDFKit
 import UIKit
@@ -6,6 +9,47 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ReceiptDocumentTests: XCTestCase {
+    func testOriginalSharedTextReopensAsReceiptWithItsExactFileDigestAndEncoding() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("shared.sqlite"), now = Date()
+        let scope = SharedReceiptScope(origin: UUID(), persona: UUID())
+        let wording = "2 tortillas\r\nCafé 🍚"
+        let little = try XCTUnwrap(wording.data(using: .utf16LittleEndian))
+        let big = try XCTUnwrap(wording.data(using: .utf16BigEndian))
+        let samples: [(Data, UTType?)] = [
+            (Data(wording.utf8), .utf8PlainText), (Data([0xef, 0xbb, 0xbf]) + Data(wording.utf8), .plainText),
+            (Data([0xff, 0xfe]) + little, nil), (Data([0xfe, 0xff]) + big, nil),
+            (little, .utf16PlainText), (big, .utf16ExternalPlainText)
+        ]
+        for (bytes, type) in samples {
+            // Untyped marked files use the same descriptor as receipts staged before encoding hints.
+            XCTAssertEqual(try SelectedTextInbox.decodePlainText(bytes, type: type ?? .plainText), wording)
+            let writer = try SharedCaptureInbox(url: url), id = UUID()
+            _ = try await writer.stageReceipt(bytes, kind: .text, id: id, now: now, type: type)
+            let inbox = try SharedCaptureInbox(url: url)
+            let pending = try await inbox.pendingReceiptFiles(scope: scope, now: now)
+            let item = try XCTUnwrap(pending.first(where: { $0.id == id }))
+            let original = try await inbox.openReceipt(item, scope: scope, now: now)
+            XCTAssertEqual(original, bytes)
+            let result = try await ReceiptDocumentReader().extract(.shared(original, descriptor: item.descriptor))
+            XCTAssertEqual(result.digest, Data(SHA256.hash(data: bytes)))
+            XCTAssertEqual(result.pages.first?.lines.map(\.text), ["2 tortillas", "Café 🍚"])
+            try await inbox.finishReceipt(item, scope: scope, committed: false, now: now)
+        }
+
+        let long = String(repeating: "A", count: SelectedTextInbox.maximumEntryBytes + 1)
+        let bytes = try XCTUnwrap(long.data(using: .utf16LittleEndian))
+        let file = folder.appendingPathComponent("receipt.txt")
+        try bytes.write(to: file)
+        XCTAssertThrowsError(try SelectedTextInbox.decodePlainText(bytes, type: .utf16PlainText))
+        let picked = try ReceiptDocumentBytes.read(file, kind: .text, type: .utf16PlainText)
+        let document = try await ReceiptDocumentReader().extract(picked)
+        XCTAssertEqual(document.pages.first?.lines.first?.text, long)
+        XCTAssertEqual(document.digest, Data(SHA256.hash(data: bytes)))
+    }
+
     func testLocalReceiptPhotoOffersPrintedFieldsWithoutClaimingReceivedUsableOrPaid() async throws {
         let bounds = CGRect(x: 0, y: 0, width: 1100, height: 280)
         let format = UIGraphicsImageRendererFormat(); format.scale = 1
@@ -53,6 +97,14 @@ import XCTest
         XCTAssertEqual(proposal("PERAS 2 kg a USD 2,50 USD 5,00").amount, "5.00")
         XCTAssertEqual(proposal("EGGS GRADE A $4.00").name, "EGGS GRADE A")
         XCTAssertEqual(proposal("EGGS GRADE A $4.00").amount, "4.00")
+        for unit in ["onzas líquidas", "oz liq.", "fluid ounces", "fl. oz."] {
+            let oil = proposal("ACEITE 8 \(unit) USD 4,00")
+            XCTAssertEqual(oil.unit, .fluidOunce, unit)
+            XCTAssertEqual(oil.quantity, "8", unit)
+            XCTAssertEqual(oil.name, "ACEITE", unit)
+            XCTAssertEqual(oil.amount, "4.00", unit)
+        }
+        XCTAssertEqual(proposal("QUESO 8 onzas USD 4,00").unit, .ounce)
         let returned = proposal("PERAS -2 CT USD 6.50")
         XCTAssertNil(returned.quantity); XCTAssertNil(returned.amount); XCTAssertTrue(returned.uncertain)
         XCTAssertNil(proposal("PERAS 2 CT (6.50)").quantity)
@@ -104,6 +156,15 @@ import XCTest
         let combined = try extracted.source(target: target, merchant: "Market", stage: .finalInvoice,
             selection: [.init(page: 1, line: 1), .init(page: 2, line: 1)], at: Date())
         let first = try ReceiptImportDraft(source: single), second = try ReceiptImportDraft(source: combined)
+        XCTAssertNotNil(first.documentLayoutID)
+        XCTAssertEqual(first.documentLayoutID, second.documentLayoutID)
+        // The same bytes can yield different OCR coordinates on another reading.
+        let shifted = try await ReceiptDocumentReader(recognize: { _ in "HEADER\nSCANNED BEANS" }).extract(input)
+        let shiftedRow = try shifted.source(target: target, merchant: "Market", stage: .finalInvoice,
+            selection: [.init(page: 2, line: 2)], at: Date())
+        XCTAssertEqual(shiftedRow.documentDigest, single.documentDigest)
+        XCTAssertNotEqual(shiftedRow.documentLayoutID, single.documentLayoutID)
+        XCTAssertFalse(shiftedRow.originalText.contains("HEADER"))
         XCTAssertEqual(first.imageDigest, extracted.digest)
         XCTAssertEqual(first.receiptID, second.receiptID)
         XCTAssertEqual(first.lines.first?.ordinal, 200)

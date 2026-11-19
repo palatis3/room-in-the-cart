@@ -36,6 +36,7 @@ struct GuardianChildRootView: View {
                         Text(GuardianCopy.text("Child sign-in is not available yet"))
                         if let message = coordinator.message { Text(message).accessibilityIdentifier("guardian.childRootResult") }
                         Button(GuardianCopy.text("Check child access again")) { Task { await coordinator.resume() } }
+                        GuardianChildDeletionHelp()
                     }
                 }
             }
@@ -119,6 +120,7 @@ struct GuardianNativeAuthenticationView: View {
                 Section { Text(message).accessibilityIdentifier("guardian.nativeAuthResult") }
             }
             if model.busy { ProgressView(GuardianCopy.text("Checking child setup…")) }
+            GuardianChildDeletionHelp()
         }.disabled(model.busy)
         .navigationTitle(GuardianCopy.text("Child sign-in"))
         .task { await model.load() }
@@ -161,7 +163,12 @@ struct GuardianChildRequestsView: View {
                             if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                             Text(requestStatus(request)).foregroundStyle(.secondary)
                             if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
-                            if let clarification = request.clarification { Text(clarification) }
+                            if let clarification = request.clarification {
+                                Text(verbatim: clarification)
+                                if request.canReportClarification == true, let field = SharedMessageField(.clarification, request.id, request.revision, .question, clarification) {
+                                    SharedSafetyButton(channel: household.sharedSafetyChannel(), fields: [field])
+                                }
+                            }
                             if request.ownActionAllowed {
                                 HStack {
                                     Button(ht("Edit request")) { household.edit(request) }.buttonStyle(.borderless)
@@ -216,6 +223,7 @@ struct GuardianChildRequestsView: View {
             }
             if let message = household.notice { Section { Text(message).accessibilityIdentifier("guardian.childRequestsResult") } }
             if household.busy { ProgressView(ht("Checking service…")) }
+            GuardianChildDeletionHelp()
         }.disabled(household.busy)
         .navigationTitle(GuardianCopy.text("My requests"))
         .sheet(item: $review) { value in

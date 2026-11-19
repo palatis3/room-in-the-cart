@@ -156,18 +156,29 @@ import DeviceSurfaces
         let (inbox, journal, port, entry, _) = try await fixture()
         let bridge = SurfaceImportBridge(inbox: inbox, journal: journal, port: port, clock: { self.now })
         let initialResult = try await bridge.open(entry, shopID: port.value.id)
-        let initial = try XCTUnwrap(initialResult)
+        let baseline = try XCTUnwrap(initialResult)
+        var initial = baseline
+        initial.preview.lines[1].name = "Gala apples"
+        initial.decisions[initial.preview.lines[1].id] = .skip
+        try bridge.saveReview(initial, replacing: baseline)
         port.failureBeforeCommit = true
         do { try await bridge.commit(initial); XCTFail() } catch {}
         port.failureBeforeCommit = false
-        _ = try port.value.addManualLine(name: "Soap", quantity: nil)
+        _ = try port.value.addManualLine(name: initial.preview.lines[0].name, quantity: nil)
         let refreshResult = try await bridge.refreshReview(entry.id)
         let refreshed = try XCTUnwrap(refreshResult)
         XCTAssertEqual(refreshed.id, initial.id)
         XCTAssertEqual(refreshed.preview.baseRevision, port.value.revision)
         XCTAssertEqual(refreshed.confirmedAttempts.first?.preview, initial.preview)
-        XCTAssertNotEqual(refreshed.preview.lines.map(\.id), initial.preview.lines.map(\.id))
-        try await bridge.commit(refreshed)
+        XCTAssertEqual(refreshed.preview.lines.map(\.id), initial.preview.lines.map(\.id))
+        XCTAssertNil(refreshed.decisions[initial.preview.lines[0].id], "A new match needs a decision before retry")
+        XCTAssertEqual(refreshed.preview.lines[1].name, "Gala apples")
+        XCTAssertEqual(refreshed.decisions[initial.preview.lines[1].id], .skip)
+        var reviewed = refreshed
+        reviewed.decisions[initial.preview.lines[0].id] = .addNew
+        reviewed.explicitSeparate = [initial.preview.lines[0].id]
+        try bridge.saveReview(reviewed, replacing: refreshed)
+        try await bridge.commit(reviewed)
         XCTAssertEqual(port.value.importBatches.count, 1)
     }
     func testRacingOldReceiptIsRecognizedAfterExplicitFreshReview() async throws {

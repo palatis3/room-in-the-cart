@@ -497,6 +497,47 @@ for (const action of ['Edit', 'Follow up']) {
  });
 }
 
+for (const action of ['send', 'edit', 'withdraw']) for (const [failure, status] of [['disconnected', 0], ['rate-limited', 429]]) {
+ test(`a confirmed ${action} receipt survives a ${failure} refresh`, async t => {
+  const original = own();
+  let confirmed;
+  let writes = 0;
+  const {root, dom} = await setup(fakeAPI({
+   requests: async () => {
+    if (confirmed) throw new ApiError(failure, status);
+    return action === 'send' ? [] : [original];
+   },
+   command: async (_, command) => {
+    writes++;
+    confirmed = {...original, shopId: command.shopId, revision: 2,
+     originalItem: command.body.originalItem ?? original.originalItem,
+     status: action === 'withdraw' ? 'withdrawn' : 'pending',
+     ownActionAllowed: action !== 'withdraw'};
+    return confirmed;
+   }
+  }));
+  t.after(() => dom.window.close());
+  if (action === 'withdraw') {
+   click(root, 'Withdraw');
+   click(root, 'Confirm withdrawal');
+  } else {
+   if (action === 'edit') click(root, 'Edit');
+   type(dom, 'item', 'Two bags of rice');
+   submit(root, dom);
+   submit(root, dom);
+  }
+  await waitForIdle(root);
+  assert.equal(writes, 1);
+  assert.match(root.querySelector('[role="status"]').textContent, action === 'withdraw' ? /Withdrawn/ : /Received by the shopper/);
+  const card = root.querySelector('article[data-request-id]');
+  assert.equal(card?.querySelector('h3')?.textContent, confirmed.originalItem);
+  if (action === 'withdraw') {
+   assert.match(card.textContent, /Withdrawn/);
+   assert.equal(card.querySelector('button'), null);
+  }
+ });
+}
+
 test('withdrawal confirmation belongs to the reviewed revision after a refresh',async()=>{
  let row=own();const commands=[];
  const {root}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{commands.push(command);return row;}}));
@@ -574,13 +615,13 @@ test('only the owning queue can recover a rejected correction and concurrent tab
   body:{requestId:'request-a',originalItem:'Beans',ownQuantity:'2 cans'}};
  const pending={id:edit.clientKey,scope,command:edit,createdAt:new Date().toISOString()};
  await a.put(pending,active,true);
- assert.equal(await b.reviewEdit(pending.id,'other scope','mark'),null);
- assert.equal(await b.reviewEdit(pending.id,scope,'take'),null);
- await a.reviewEdit(pending.id,scope,'mark');
- assert.equal(await b.reviewEdit(pending.id,'other scope','take'),null);
- const taken=await Promise.all([a.reviewEdit(pending.id,scope,'take'),b.reviewEdit(pending.id,scope,'take')]);
+ assert.equal(await b.reviewPending(pending.id,'other scope','mark'),null);
+ assert.equal(await b.reviewPending(pending.id,scope,'take'),null);
+ await a.reviewPending(pending.id,scope,'mark');
+ assert.equal(await b.reviewPending(pending.id,'other scope','take'),null);
+ const taken=await Promise.all([a.reviewPending(pending.id,scope,'take'),b.reviewPending(pending.id,scope,'take')]);
  assert.deepEqual(taken.filter(Boolean),[{...pending,needsReview:true}]);
- assert.equal(await b.reviewEdit(pending.id,scope,'mark'),null);
+ assert.equal(await b.reviewPending(pending.id,scope,'mark'),null);
  assert.deepEqual(await a.list(scope),[]);
 });
 
@@ -1517,4 +1558,149 @@ test('Spanish cooking report is scoped to the current editor and never shown to 
  submit(root,dom);assert.match(root.textContent,/Informe de cocina/);
  current={...current,memberId:'different',role:'helper'};await app.start();
  assert.doesNotMatch(root.textContent,/Usé frijoles|Informar lo que cocinaste|Enviar informe/);
+});
+
+function safetyReason(root,dom,value='unsafe') {
+ const menu=[...root.querySelectorAll('main select')].find(s=>[...s.options].some(o=>o.value==='harassment'));
+ menu.value=value;menu.dispatchEvent(new dom.window.Event('change'));
+}
+test('a contributor can privately report a clarification without sharing their request wording', async t => {
+ const question='Which size did you mean?';
+ const row={...own(),requestId:crypto.randomUUID(),revision:3,clarification:question,status:'clarified',canReportClarification:true};
+ const posted=[];
+ const s={...session(),canModerate:true};
+ const {root,dom}=await setup(fakeAPI({session:async()=>s,requests:async()=>[row],
+  moderate:async (_session,action)=>{posted.push(structuredClone(action));if(posted.length===1)throw new ApiError('network',0);}}));
+ t.after(()=>dom.window.close());
+ click(root,'Report or block');
+ assert.equal(root.querySelector('blockquote').textContent,question);
+ assert.doesNotMatch(root.textContent,/No-salt frijoles|two 15 oz cans/);
+ assert.equal(root.querySelector('input[type=checkbox]').checked,false);
+ safetyReason(root,dom);click(root,'Send private report');await waitForIdle(root);
+ assert.match(root.textContent,/Confirmation is pending/);
+ click(root,'Retry same action');await waitForIdle(root);
+ assert.deepEqual(posted[1],posted[0]);
+ assert.deepEqual(posted[0],{action:'report',clientKey:posted[0].clientKey,reason:'unsafe',
+  source:{kind:'clarification',id:row.requestId,revision:3,field:'question'}});
+ assert.match(root.textContent,/Private report received/);
+});
+
+test('a cook can choose one exact instruction field; blocking sends no excerpt and drops the prior view', async t => {
+ const s={...editorSession(),role:'helper',canModerate:true};
+ const view={...cookView(),canPropose:false,canReportContent:true,instructions:[{item:'Wraps',amount:'2 packs',rawAmount:'2',unit:'packs',action:'Set two aside.'}]};
+ const posted=[];let blocked=false;
+ const {root,dom}=await setup(fakeAPI({session:async()=>s,view:async()=>{if(blocked)throw new ApiError('unavailable',404);return view;},
+  moderate:async (_session,action)=>{posted.push(structuredClone(action));blocked=action.action==='block';}}));
+ t.after(()=>dom.window.close());
+ click(root.querySelector('article'),'Report or block');
+ const menu=root.querySelector('main label select');menu.value='3';menu.dispatchEvent(new dom.window.Event('change'));
+ assert.equal(root.querySelector('blockquote').textContent,'packs');
+ root.querySelector('input[type=checkbox]').click();
+ safetyReason(root,dom);click(root,'Send private report');await waitForIdle(root);
+ assert.equal(posted[0].text,'packs');
+ assert.deepEqual(posted[0].source,{kind:'instruction',id:view.grantId,revision:7,field:'unit',index:0});
+ click(root.querySelector('article'),'Report or block');
+ root.querySelector('input[type=checkbox]').click();
+ click(root,'Review blocking this sender');assert.equal(posted.length,1);
+ click(root,'Confirm block');await waitForIdle(root);
+ assert.deepEqual(posted[1],{clientKey:posted[1].clientKey,action:'block',
+  source:{kind:'instruction',id:view.grantId,revision:7,field:'action',index:0}});
+ assert.match(root.textContent,/Sender blocked/);assert.doesNotMatch(root.textContent,/Set two aside|Wraps|Tuesday/);
+});
+
+test('a moderation review cannot send after the contributor session changes', async t => {
+ let current={...session(),canModerate:true};
+ const {root,dom}=await setup(fakeAPI({session:async()=>current,requests:async()=>[{...own(),clarification:'Original private question',canReportClarification:true}],
+  moderate:async()=>assert.fail('wrong household')}));
+ t.after(()=>dom.window.close());
+ click(root,'Report or block');current={...current,memberId:'another-member'};
+ safetyReason(root,dom);click(root,'Send private report');await waitForIdle(root);
+ assert.doesNotMatch(root.textContent,/Original private question/);
+ assert.match(root.textContent,/Access has ended/);
+});
+
+test('shared wording rejected in a request or cook suggestion returns to the original editable draft', async t => {
+ const rejected=()=>{throw new ApiError('content_review_required',422);};
+ const a=await setup(fakeAPI({command:rejected}));t.after(()=>a.dom.window.close());
+ type(a.dom,'item','Original request');submit(a.root,a.dom);submit(a.root,a.dom);await waitForIdle(a.root);
+ assert.equal(a.root.querySelector('#item').value,'Original request');assert.match(a.root.textContent,/Edit the wording/);
+ const b=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(),sendProposal:rejected}));t.after(()=>b.dom.window.close());
+ type(b.dom,'correction','Original correction');submit(b.root,b.dom);await waitForIdle(b.root);
+ assert.equal(b.root.querySelector('#correction').value,'Original correction');
+ assert.match(b.root.textContent,/Edit the wording/);assert.doesNotMatch(b.root.textContent,/Receipt unconfirmed/);
+});
+
+test('moderation negotiates capability, posts a scoped CSRF request and verifies the receipt', async()=>{
+ const posted=[];const receiptId=crypto.randomUUID();
+ const api=new API(async(path,init)=>{
+  if(path==='/v1/session'){
+   assert.equal(init.headers['X-Shared-Content-Safety'],'1');return Response.json({...session(),capabilities:['own_requests','shared_content_safety']});
+  }
+  posted.push({path,init});return Response.json({receiptId,status:'received'});
+ });
+ const s=await api.session();assert.equal(s.canModerate,true);
+ const action={action:'report',clientKey:crypto.randomUUID(),source:{kind:'clarification',id:crypto.randomUUID(),revision:2,field:'question'},reason:'other'};
+ await api.moderate(s,action);
+ assert.equal(posted[0].path,'/v1/households/household-a/moderation/actions');
+ assert.equal(posted[0].init.headers['X-CSRF-Token'],s.csrf);
+ assert.equal(posted[0].init.cache,'no-store');assert.deepEqual(JSON.parse(posted[0].init.body),action);
+ await assert.rejects(api.moderate({...s,canModerate:false},action));assert.equal(posted.length,1);
+ await assert.rejects(new API(async()=>Response.json({receiptId,status:'blocked'})).moderate(s,action));
+});
+
+test('a filtered offline request keeps its original wording and returns to an editable draft after reload',async t=>{
+ const active={...session(),queueConsent:true,canSetRequestQueue:true};
+ const outbox=new Outbox(new IDBFactory()), queued=command();
+ const pending={id:queued.clientKey,scope:scopeFor(active),command:queued,createdAt:new Date().toISOString()};
+ await outbox.put(pending,active,true);
+ let sends=0;
+ const api=fakeAPI({session:async()=>active,command:async()=>{sends++;throw new ApiError('content_review_required',422);}});
+ const before=await setup(api,'en',outbox);t.after(()=>before.dom.window.close());
+ click(before.root,'Retry');await waitForIdle(before.root);assert.equal(sends,1);
+ assert.equal((await outbox.list(pending.scope))[0].needsReview,'wording');
+ const after=await setup(api,'en',outbox);t.after(()=>after.dom.window.close());
+ click(after.root,'Edit this request');await waitForIdle(after.root);
+ assert.equal(after.root.querySelector('#item').value,queued.body.originalItem);
+ assert.equal((await outbox.list(pending.scope)).length,0);assert.equal(sends,1);
+});
+
+test('report controls require a server-identified incoming field as well as a safety-enabled session', async t=>{
+ const row={...own(),clarification:'A question already visible in this request'};
+ for(const config of [{canModerate:false,canReportClarification:true},{canModerate:true,canReportClarification:false}]){
+  const fixture=await setup(fakeAPI({session:async()=>({...session(),canModerate:config.canModerate}),
+   requests:async()=>[{...row,canReportClarification:config.canReportClarification}]}));
+  t.after(()=>fixture.dom.window.close());assert.doesNotMatch(fixture.root.textContent,/Report or block/);
+ }
+ const fixture=await setup(fakeAPI({session:async()=>({...editorSession(),canModerate:true}),
+  view:async()=>cookView(),receivedProposals:async()=>({proposals:[],nextCursor:null})}));
+ t.after(()=>fixture.dom.window.close());assert.doesNotMatch(fixture.root.textContent,/Report or block/);
+});
+
+test('posting suspension retains contributor drafts, queued requests, and current household access',async t=>{
+ const active={...session(),canSetRequestQueue:true,queueConsent:true},outbox=new Outbox(new IDBFactory());
+ const queued=command(),pending={id:queued.clientKey,scope:scopeFor(active),command:queued,createdAt:new Date().toISOString()};
+ await outbox.put(pending,active,true);
+ let denial='shared_posting_unavailable';
+ const {root,dom}=await setup(fakeAPI({session:async()=>active,requests:async()=>[own()],
+  command:async()=>{throw new ApiError(denial,403);}}),'en',outbox);t.after(()=>dom.window.close());
+ type(dom,'item','Keep this request');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.match(root.querySelector('[role="status"]').textContent,/Shared posting is unavailable/);
+ assert.equal(root.querySelector('#item').value,'Keep this request');
+ assert.match(root.textContent,/No-salt frijoles/);
+ assert.deepEqual((await outbox.list(pending.scope)).map(r=>r.id),[pending.id]);
+ click(root,'Retry');await waitForIdle(root);
+ assert.equal(root.querySelector('#item').value,'Keep this request');
+ assert.deepEqual((await outbox.list(pending.scope)).map(r=>r.id),[pending.id]);
+ denial='access_ended';submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/Access has ended/);assert.doesNotMatch(root.textContent,/No-salt frijoles|Keep this request/);
+ assert.deepEqual(await outbox.list(pending.scope),[]);
+});
+
+test('posting suspension keeps cook instructions and reopens an editable suggestion',async t=>{
+ const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(),
+  sendProposal:async()=>{throw new ApiError('shared_posting_unavailable',403);}}));t.after(()=>dom.window.close());
+ type(dom,'correction','Keep one portion');submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/Current instructions/);assert.match(root.textContent,/Shared posting is unavailable/);
+ assert.equal(root.querySelector('#correction').value,'Keep one portion');
+ assert.doesNotMatch(root.textContent,/Receipt unconfirmed|Access has ended/);
 });

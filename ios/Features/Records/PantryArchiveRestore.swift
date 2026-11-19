@@ -35,10 +35,10 @@ enum PantryArchiveRestore {
             let lot = InventoryLot(id: original.id, foodID: original.foodID, name: original.name, source: sourceKey,
                 revision: 1, location: original.location, openedAt: original.openedAt, unit: original.unit,
                 count: original.count, observationID: observationID, confirmedAt: original.confirmedAt,
-                updatedAt: original.updatedAt, useFirst: original.useFirst)
+                updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording)
             lots.append(lot)
             observations.append(.init(id: observationID, lotID: lot.id, operationID: restorationID, revision: 1,
-                supersedesID: nil, observedAt: original.confirmedAt, count: original.count))
+                supersedesID: nil, observedAt: original.confirmedAt, count: original.count, countWording: original.countWording))
             links.append(.init(lotID: lot.id, source: sourceKey))
             // This immutable local baseline lets later events be checked without inventing prior SQL revisions.
             history.append(.originalLot(lot))
@@ -67,7 +67,7 @@ enum PantryArchiveRestore {
         return InventoryLot(id: original.id, foodID: original.foodID, name: original.name, source: source, revision: 1,
             location: original.location, openedAt: original.openedAt, unit: original.unit, count: original.count,
             observationID: identity(restorationID: restorationID, originID: newOriginID, lotID: original.id),
-            confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst)
+            confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording)
     }
     private static func historicalOrigins(_ source: PantryArchiveCodec.Snapshot) -> Set<UUID> {
         var result: Set<UUID> = [source.descriptor.originID]

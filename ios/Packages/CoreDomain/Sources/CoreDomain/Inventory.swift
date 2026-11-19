@@ -32,6 +32,13 @@ public enum InventoryCount: Codable, Equatable, Sendable {
     public var quantity: Quantity? { if case .exact(let value) = self { return value }; return nil }
     public var suppressesStaplePrompt: Bool { self == .haveEnough }
     public func validate() throws { try quantity?.validate() }
+
+    public func validate(wording: String?) throws {
+        try validate()
+        guard let wording else { return }
+        guard self == .someLeft, !wording.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              wording.utf8.count <= 512 else { throw InventoryError.invalid("countWording") }
+    }
 }
 
 public struct InventoryObservation: Codable, Equatable, Sendable, Identifiable {
@@ -42,13 +49,14 @@ public struct InventoryObservation: Codable, Equatable, Sendable, Identifiable {
     public let supersedesID: UUID?
     public let observedAt: Date
     public let count: InventoryCount
-    public init(id: UUID, lotID: UUID, operationID: UUID, revision: Int64, supersedesID: UUID?, observedAt: Date, count: InventoryCount) {
+    public let countWording: String?
+    public init(id: UUID, lotID: UUID, operationID: UUID, revision: Int64, supersedesID: UUID?, observedAt: Date, count: InventoryCount, countWording: String? = nil) {
         self.id = id; self.lotID = lotID; self.operationID = operationID; self.revision = revision
-        self.supersedesID = supersedesID; self.observedAt = observedAt; self.count = count
+        self.supersedesID = supersedesID; self.observedAt = observedAt; self.count = count; self.countWording = countWording
     }
     public func validate() throws {
         guard revision >= 1, supersedesID != id, observedAt.timeIntervalSinceReferenceDate.isFinite else { throw InventoryError.invalid("observation") }
-        try count.validate()
+        try count.validate(wording: countWording)
     }
 }
 
@@ -64,6 +72,7 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
     public let openedAt: Date?
     public let unit: UnitOfMeasure
     public let count: InventoryCount
+    public let countWording: String?
     public let observationID: UUID
     public let confirmedAt: Date
     public let updatedAt: Date
@@ -71,9 +80,9 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
 
     public init(id: UUID, foodID: UUID, name: String, source: InventorySource, revision: Int64,
                 location: InventoryLocation, openedAt: Date? = nil, unit: UnitOfMeasure, count: InventoryCount,
-                observationID: UUID, confirmedAt: Date, updatedAt: Date, useFirst: Bool = false) {
+                observationID: UUID, confirmedAt: Date, updatedAt: Date, useFirst: Bool = false, countWording: String? = nil) {
         self.id = id; self.foodID = foodID; self.name = name; self.source = source; self.revision = revision
-        self.location = location; self.openedAt = openedAt; self.unit = unit; self.count = count
+        self.location = location; self.openedAt = openedAt; self.unit = unit; self.count = count; self.countWording = countWording
         self.observationID = observationID; self.confirmedAt = confirmedAt; self.updatedAt = updatedAt; self.useFirst = useFirst
     }
     public func validate() throws {
@@ -83,7 +92,7 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
         if let openedAt {
             guard openedAt.timeIntervalSinceReferenceDate.isFinite, openedAt <= updatedAt else { throw InventoryError.invalid("openedAt") }
         }
-        try source.validate(); try count.validate()
+        try source.validate(); try count.validate(wording: countWording)
     }
 }
 
@@ -107,25 +116,69 @@ public struct InventoryLotSeed: Codable, Equatable, Sendable {
 /// An observation's time is distinct from the time a reviewed edit is saved.
 public struct InventoryCountRevision: Codable, Equatable, Sendable {
     public let count: InventoryCount
+    public let countWording: String?
     public let observationID: UUID
     public let observedAt: Date
-    public init(count: InventoryCount, observationID: UUID, observedAt: Date) {
+    public init(count: InventoryCount, observationID: UUID, observedAt: Date, countWording: String? = nil) {
+        self.countWording = countWording
         self.count = count; self.observationID = observationID; self.observedAt = observedAt
     }
+}
+
+/// A use is a historical action, distinct from an observation of what remains.
+public struct InventoryUsage: Codable, Equatable, Sendable, Identifiable {
+    public enum Kind: Codable, Equatable, Sendable {
+        case measured(Quantity), all, some
+    }
+    public let id: UUID
+    public let kind: Kind
+    public init(id: UUID, kind: Kind) { self.id = id; self.kind = kind }
 }
 
 /// One reviewed source edit advances a head once. Omitted fields retain the
 /// canonical pantry value; changing a label must never manufacture a recount.
 public struct InventoryLotRevision: Codable, Equatable, Sendable {
     public let observation: InventoryCountRevision?
+    public let usage: [InventoryUsage]?
     public let foodID: UUID?
     public let name: String?
     public let useFirst: Bool?
     public let location: InventoryLocation?
     public init(observation: InventoryCountRevision? = nil, foodID: UUID? = nil,
-                name: String? = nil, useFirst: Bool? = nil, location: InventoryLocation? = nil) {
+                name: String? = nil, useFirst: Bool? = nil, location: InventoryLocation? = nil, usage: [InventoryUsage]? = nil) {
+        self.usage = usage
         self.observation = observation; self.foodID = foodID; self.name = name
         self.useFirst = useFirst; self.location = location
+    }
+
+    public func validateUsage(replacing prior: InventoryCount? = nil) throws {
+        guard let usage else { return }
+        guard !usage.isEmpty, usage.count <= 64, Set(usage.map(\.id)).count == usage.count,
+              let observation else { throw InventoryError.invalid("usage") }
+        if prior?.quantity?.amount == .zero { throw InventoryError.invalid("useOfEmptyLot") }
+        var remaining = prior?.quantity?.amount
+        for action in usage {
+            switch action.kind {
+            case .measured(let quantity):
+                try quantity.validate()
+                guard quantity.amount > .zero, let observed = observation.count.quantity else { throw InventoryError.invalid("measuredUse") }
+                if let prior {
+                    guard let initial = prior.quantity, let available = remaining, initial.unit == observed.unit,
+                          quantity.unit.dimension == initial.unit.dimension, let used = try quantity.converted(to: initial.unit),
+                          used <= available else { throw InventoryError.invalid("measuredUse") }
+                    remaining = try available.subtracting(used)
+                }
+            case .all:
+                guard usage.count == 1, observation.count.quantity?.amount == .zero else { throw InventoryError.invalid("usedUp") }
+            case .some:
+                guard usage.count == 1, observation.count == .unknown || observation.count == .someLeft else {
+                    throw InventoryError.invalid("unmeasuredUse")
+                }
+            }
+        }
+        if let remaining, case .measured = usage[0].kind, remaining != observation.count.quantity?.amount {
+            throw InventoryError.invalid("measuredUse")
+        }
     }
 }
 

@@ -63,6 +63,7 @@ struct GuardianChildView: View {
                         .accessibilityIdentifier("guardian.childForget")
                 }
             }
+            GuardianChildDeletionHelp()
         }.disabled(model.busy || !model.live)
         .navigationTitle(GuardianCopy.text("Use a child invitation"))
         .task { await model.load() }

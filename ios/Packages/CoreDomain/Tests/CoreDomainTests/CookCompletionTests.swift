@@ -21,6 +21,35 @@ final class CookCompletionTests: XCTestCase {
         try CookCompletion.review(draft, inventoryID: origin, inventoryRevision: 6, ledgerID: ledger, shop: shop,
                                   lots: lots, reservations: holds, mealClaims: owned, at: now)
     }
+    func testCookReviewRequiresEveryLiveContributionAndAcceptsAnExplicitlyEmptyDinner() throws {
+        var (shop, meal) = try makeMeal()
+        func draft(_ ids: [UUID]) -> CookCompletionDraft {
+            CookCompletionDraft(inventoryID: origin, inventoryRevision: 6, ledgerID: ledger, shop: shop, meal: meal,
+                cookedAt: now, servingsMade: .one, parts: ids.map { .init(contributionID: $0, use: .notUsed) }, leftovers: [])
+        }
+        let original = draft(meal.ingredientContributionIDs)
+        let bytes = try JSONEncoder().encode(original)
+        let originalFields = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        XCTAssertNil(originalFields["activeContributionIDs"])
+        XCTAssertEqual(try JSONDecoder().decode(CookCompletionDraft.self, from: bytes), original)
+        XCTAssertNoThrow(try evaluate(original, shop, []))
+
+        try shop.removeContribution(contributionID: meal.ingredientContributionIDs[1], at: now)
+        let active = [meal.ingredientContributionIDs[0], meal.ingredientContributionIDs[2]]
+        let current = draft(active)
+        XCTAssertEqual(current.ingredientRowIDs, active)
+        XCTAssertNoThrow(try evaluate(current, shop, []))
+        let incomplete = draft([active[0]])
+        var forged = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(incomplete)) as? [String: Any])
+        forged["activeContributionIDs"] = [active[0].uuidString]
+        let forgedDraft = try JSONDecoder().decode(CookCompletionDraft.self, from: JSONSerialization.data(withJSONObject: forged))
+        XCTAssertThrowsError(try evaluate(forgedDraft, shop, []))
+        for id in active { try shop.removeContribution(contributionID: id, at: now) }
+        let empty = draft([])
+        XCTAssertEqual(empty.ingredientRowIDs, [])
+        XCTAssertTrue(try evaluate(empty, shop, []).changes.isEmpty)
+    }
+
     func testActualSplitUseAndTwoLeftoversKeepUntrackedSaltAndUnknownOilDistinct() throws {
         let (shop, meal) = try makeMeal(), ids = meal.ingredientContributionIDs
         let wraps = try lot("Corn wraps", count: 4), other = try lot("Flour wraps", count: 2)

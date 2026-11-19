@@ -88,11 +88,11 @@ import XCTest
 
         let name = "Actual item name", received = "Physical amount received"
         let usable = "Confirmed usable amount (optional)", match = "I checked the identity, units and meal constraints"
-        let segment = "Segment ID (distinct for each split delivery)", event = "Delivery or receipt evidence ID"
+        let segment = "Split delivery reference", event = "Receipt or delivery reference"
         let save = app.buttons["Save observed arrival"]
-        func enterArrivalValue(_ value: String, into label: String, replacing: Bool = false) {
+        func enterArrivalValue(_ value: String, into label: String, replacing: Bool = false, initiallyUpward: Bool = true) {
             let field = app.textFields[label]
-            reveal(field, requireVisibleCenter: true, initiallyUpward: !replacing, reserveKeyboardSpace: false)
+            reveal(field, requireVisibleCenter: true, initiallyUpward: initiallyUpward, reserveKeyboardSpace: false)
             field.tap()
             if replacing {
                 let previous = field.value as? String ?? ""
@@ -133,12 +133,17 @@ import XCTest
             XCTAssertFalse(app.staticTexts["pickup-save-error"].exists)
         }
 
+        let initialPicker = arrivalPicker("Original order line")
+        reveal(initialPicker)
+        XCTAssertTrue(initialPicker.label.contains("Choose a line") || initialPicker.value as? String == "Choose a line")
         chooseArrival("Original order line", value: "wraps")
         chooseArrival("What happened", value: "Wrong item")
         enterArrivalValue("1", into: received)
         enterArrivalValue("1", into: usable)
+        tap(app.buttons["arrival.references"])
+        let deliveryID = "receipt-719"
+        enterArrivalValue(deliveryID, into: event)
         enterArrivalValue("first bag", into: segment)
-        let deliveryID = try XCTUnwrap(app.textFields[event].value as? String)
         enableSwitch(match)
 
         chooseArrival("Original order line", value: "apples")
@@ -146,9 +151,14 @@ import XCTest
         requireEmpty(usable)
         XCTAssertEqual(app.textFields[name].value as? String, "apples")
         XCTAssertEqual(app.switches[match].value as? String, "0")
-        XCTAssertEqual(app.textFields[event].value as? String, deliveryID)
-        XCTAssertEqual(app.textFields[segment].value as? String, "first bag")
-        enterArrivalValue("4", into: received)
+        // Selecting the line brings the top of the form back into view.
+        // Scroll to each retained delivery reference before reading its value.
+        for (label, expected) in [(event, deliveryID), (segment, "first bag")] {
+            let field = app.textFields[label]
+            reveal(field, requireVisibleCenter: true, reserveKeyboardSpace: false)
+            XCTAssertEqual(field.value as? String, expected, label)
+        }
+        enterArrivalValue("4", into: received, initiallyUpward: false)
         enterArrivalValue("3", into: usable)
         XCTAssertEqual(app.textFields[received].value as? String, "4")
         XCTAssertEqual(app.textFields[usable].value as? String, "3")
@@ -162,7 +172,17 @@ import XCTest
         tap(save)
         checkSavedRows(1)
 
-        chooseArrival("Original order line", value: "wraps")
+        // Reopening preselects the only still-unobserved line. A live edit stays on the user's selection.
+        returnToLinePicker()
+        let current = arrivalPicker("Original order line")
+        XCTAssertTrue(current.label.contains("apples") || current.value as? String == "apples")
+        app.navigationBars["What came home"].buttons.element(boundBy: 0).tap()
+        tap(app.buttons["Record what came home"])
+        let remaining = arrivalPicker("Original order line")
+        reveal(remaining)
+        XCTAssertTrue(remaining.label.contains("wraps") || remaining.value as? String == "wraps")
+        requireEmpty(received)
+        requireEmpty(usable)
         enterArrivalValue("2", into: received)
         enterArrivalValue("1", into: usable)
         enableSwitch(match)
@@ -171,14 +191,14 @@ import XCTest
 
         chooseArrival("What happened", value: "Wrong item")
         XCTAssertEqual(app.switches[match].value as? String, "0")
-        enterArrivalValue("other food", into: name, replacing: true)
+        enterArrivalValue("other food", into: name, replacing: true, initiallyUpward: false)
         enableSwitch(match)
-        enterArrivalValue("different food", into: name, replacing: true)
+        enterArrivalValue("different food", into: name, replacing: true, initiallyUpward: false)
         XCTAssertEqual(app.switches[match].value as? String, "0")
         enableSwitch(match)
         chooseArrival("Unit", value: "gram")
         XCTAssertEqual(app.switches[match].value as? String, "0")
-        tap(app.buttons["Start another actual delivery segment"])
+        tap(app.buttons["Start another delivery for this item"])
         returnToLinePicker()
         let disposition = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "What happened")).firstMatch
         XCTAssertTrue(disposition.label == "What happened, Received" || disposition.value as? String == "Received")
@@ -186,15 +206,16 @@ import XCTest
         requireEmpty(received)
         requireEmpty(usable)
         XCTAssertEqual(app.switches[match].value as? String, "0")
+        tap(app.buttons["arrival.references"])
         requireEmpty(segment)
-        XCTAssertNotEqual(app.textFields[event].value as? String, deliveryID)
+        requireEmpty(event)
         enterArrivalValue("second bag", into: segment)
-        enterArrivalValue("1", into: received)
+        enterArrivalValue("1", into: received, initiallyUpward: false)
         enterArrivalValue("1", into: usable)
         enableSwitch(match)
         tap(save)
         checkSavedRows(3)
-        enterArrivalValue("different bag", into: segment, replacing: true)
+        enterArrivalValue("different bag", into: segment, replacing: true, initiallyUpward: false)
         returnToLinePicker()
         requireEmpty(received)
         requireEmpty(usable)

@@ -107,7 +107,14 @@ import XCTest
         let value=element(id); reveal(value, searchTowardStart: searchTowardStart)
         if value.value as? String != "1" { value.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5)).tap() }
     }
-    private func type(_ id: String,_ value:String) { let field=element(id); reveal(field); field.tap(); field.typeText(value); if app.keyboards.buttons["Return"].exists { app.keyboards.buttons["Return"].tap() } }
+    private func type(_ id: String, _ value: String) {
+        let field = element(id)
+        reveal(field)
+        field.tap()
+        // All callers edit single-line fields. Send Return to the focused field.
+        // A software keyboard key can still exist after its hit target disappears.
+        field.typeText(value + "\n")
+    }
     private func selectSetup() { tap("guardian.enrollment.10000000-0000-4000-8000-000000000001") }
     private func state(_ expected:String) {
         let result=element("guardian.state"); reveal(result,hitTarget:false)
@@ -117,9 +124,11 @@ import XCTest
         let screenshot = XCTAttachment(screenshot:app.screenshot()); screenshot.name = name; screenshot.lifetime = .keepAlways; add(screenshot)
         let accessibility = XCTAttachment(string:app.debugDescription); accessibility.name = name + " accessibility"; accessibility.lifetime = .keepAlways; add(accessibility)
     }
-    func testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock() {
+    private func signInFromPrivateSettings(hasHousehold: Bool, loseFirstWorkspaceList: Bool = false) {
         app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","--guardian-fixture-root",
             "--reset-guardian-root-fixture","--household-first-sign-in","-AppleLanguages","(en)","-AppleLocale","en_US"]
+        if !hasHousehold { app.launchArguments.append("--no-existing-households") }
+        if loseFirstWorkspaceList { app.launchArguments.append("--lose-first-workspace-list") }
         app.launch()
         let settings = app.buttons["settings"]
         XCTAssertTrue(settings.waitForExistence(timeout:15))
@@ -129,6 +138,41 @@ import XCTest
         tap("Email me a code")
         type("Email sign-in code", "123456")
         tap("Verify code")
+    }
+
+    func testMembershipListRetriesAfterVerifiedSignInWithoutAnotherCode() {
+        signInFromPrivateSettings(hasHousehold: true, loseFirstWorkspaceList: true)
+        let retry = app.buttons["household.workspaces.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Create household"].exists)
+        XCTAssertFalse(app.buttons["Email me a code"].exists)
+        tap("household.workspaces.retry")
+        let family = app.buttons["Fixture family"]
+        XCTAssertTrue(family.waitForExistence(timeout: 10))
+        XCTAssertFalse(family.isEnabled)
+        toggle("Keep my existing work private on this phone")
+        tap("Fixture family")
+        XCTAssertTrue(app.buttons["Refresh household"].waitForExistence(timeout: 10))
+    }
+
+    func testFirstSignInWithoutHouseholdsShowsOnlySetupPrivacyChoice() {
+        signInFromPrivateSettings(hasHousehold: false)
+        let adult = app.switches["I confirm I am an adult"]
+        XCTAssertTrue(adult.waitForExistence(timeout:10))
+        XCTAssertFalse(app.switches["Keep my existing work private on this phone"].exists)
+        type("Your household alias", "First shopper")
+        toggle("I confirm I am an adult")
+        type("Household name", "First household")
+        let create = app.buttons["Create household"]
+        reveal(create, hitTarget:false)
+        XCTAssertFalse(create.isEnabled)
+        toggle("Keep my lists and plans private when creating or joining a household", searchTowardStart:true)
+        reveal(create)
+        XCTAssertTrue(create.isEnabled)
+    }
+
+    func testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock() {
+        signInFromPrivateSettings(hasHousehold: true)
 
         // Nothing else is tapped between verification and choosing the household.
         let family = app.buttons["Fixture family"]
@@ -227,6 +271,52 @@ import XCTest
         XCTAssertFalse(element("guardian.leaveChildSpace").exists)
         XCTAssertEqual(app.tabBars.count,0)
     }
+    func testVerifiedGuardianCanReviewAndCancelWholeChildAccountDeletionWithEnrollmentUnavailable() {
+        signInFromPrivateSettings(hasHousehold: true)
+        toggle("Keep my existing work private on this phone")
+        tap("Fixture family")
+        tap("Guardian controls")
+        tap("guardian.childDeletionEntry")
+        tap("guardian.reviewChildDeletion")
+        let verify = element("guardian.verifyDeletionEmail")
+        reveal(verify, hitTarget: false)
+        XCTAssertFalse(verify.isEnabled)
+        type("guardian.childDeletionEmail", "child@example.invalid")
+        tap("guardian.verifyDeletionEmail")
+        tap("guardian.confirmChildDeletion")
+        let alert = app.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout:5))
+        XCTAssertTrue(alert.staticTexts.containing(NSPredicate(format:"label CONTAINS %@", "Fixture child")).firstMatch.exists)
+        alert.buttons["Cancel"].tap()
+        XCTAssertFalse(alert.exists)
+        XCTAssertTrue(element("guardian.confirmChildDeletion").exists)
+        XCTAssertFalse(app.buttons["Check deletion status"].exists)
+        capture("Guardian cancelled permanent child account deletion after review")
+
+        tap("guardian.manualReviewEntry")
+        let closed = app.staticTexts["This review case is closed. Only a deletion receipt confirms that the account was erased."]
+        reveal(closed, hitTarget: false)
+        let unmatched = element("guardian.manualReviewCandidate")
+        reveal(unmatched)
+        XCTAssertTrue(unmatched.label.contains("account unconfirmed"))
+        unmatched.tap()
+        let investigationMessage = "A sign-in code was requested, but the child’s account has not been confirmed. Ask the review team to investigate the interrupted setup."
+        let investigate = app.staticTexts.matching(NSPredicate(format: "label == %@", investigationMessage)).firstMatch
+        reveal(investigate, hitTarget: false)
+        XCTAssertFalse(element("guardian.confirmChildDeletion").exists)
+        capture("Private review for an interrupted setup with a separate closed case")
+    }
+
+    func testSpanishChildInPartialSetupCanFindGuardianDeletionInstructions() {
+        launch("--guardian-fixture-child",spanish:true)
+        let help = element("guardian.childDeletionHelp")
+        reveal(help,hitTarget:false)
+        XCTAssertTrue(help.label.contains("Eliminar la cuenta de un menor"), help.label)
+        XCTAssertFalse(element("guardian.childDeletionEntry").exists)
+        XCTAssertFalse(element("guardian.confirmChildDeletion").exists)
+        capture("Spanish partial child enrollment directs verified guardian to deletion")
+    }
+
     func testUnavailableNeverOffersCreationOrAdultVerification() {
         launch("--guardian-fixture-unavailable")
         XCTAssertTrue(element("guardian.unavailable").exists)

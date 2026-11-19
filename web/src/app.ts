@@ -1,4 +1,4 @@
-import { API, ApiError, isContributorSession, type BrowserAuthState,type RequestPickup,type Session, type OwnRequest, type ReadRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal } from './api.js';
+import { API, ApiError, isContributorSession, type BrowserAuthState,type RequestPickup,type Session, type OwnRequest, type ReadRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal, type ReportField, type ReportReason, type SafetyAction } from './api.js';
 import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
 import {browserSignOutPending,resumeBrowserSignOut,setBrowserSignOutPending} from './browser-sign-out.js';
@@ -12,6 +12,16 @@ interface CookingReportDraft {
   review: string | null;
 }
 
+type SafetyField = {source:ReportField; text:string; label:string};
+interface SafetyReview {
+  scope:string;
+  fields:SafetyField[];
+  selected:number;
+  reason:ReportReason|'';
+  includeText:boolean;
+  action:'report'|'block';
+  intent?:SafetyAction;
+}
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
@@ -23,6 +33,9 @@ const proposalNotices:Record<OwnProposal['status'],string> = {
 // A reviewed draft is valid only for the exact actor, role and destination that displayed it.
 function reviewScope(session: Session): string {
   return JSON.stringify([session.household.id, session.memberId, session.role, session.shopId, session.grantId ?? null]);
+}
+function isPostingSuspended(error:unknown):boolean {
+  return error instanceof ApiError&&error.status===403&&error.code==='shared_posting_unavailable';
 }
 function isRequestRevisionConflict(error:unknown):boolean {
   return error instanceof ApiError && error.status===409 && (error.code==='followup_required'||error.code==='stale_base');
@@ -71,6 +84,7 @@ export class WebApp {
   private suggestionsState:'unchecked'|'ready'|'unavailable'='unchecked';
   private correction = '';
   private cookingReport: CookingReportDraft | null = null;
+  private safety:SafetyReview|null=null;
   private withdrawn:OwnRequest|null = null;
   private withdrawalCommand:Command|null = null;
   constructor(private readonly root:HTMLElement, private readonly api = new API(), private readonly outbox = new Outbox(), private invitation:string|null = null) {
@@ -123,7 +137,7 @@ export class WebApp {
     await this.run(()=>this.load(),'load');
   }
   private clearPrivate():void {
-    this.clearInvitationDraft();this.browserAuth=null;
+    this.safety=null;this.clearInvitationDraft();this.browserAuth=null;
     this.session=null;this.reviewedScope=null;this.pickups=[];this.chosenPickupId=null;this.requests=[];this.firstRequestPageAsOf=undefined;this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';this.cookingReport=null;
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
@@ -206,6 +220,7 @@ export class WebApp {
       }
     }
     this.session=fresh;
+    if(!fresh?.canModerate||!fresh.enrolled||(this.safety&&reviewScope(fresh)!==this.safety.scope))this.safety=null;
     if(!fresh){
       this.cookingReport=null;
       this.requests=[];this.firstRequestPageAsOf=undefined;
@@ -390,7 +405,7 @@ export class WebApp {
         }
       }
     }
-    if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
+    if((e.status===403&&!isPostingSuspended(e))||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
       const ended=this.session;
       this.clearPrivate();
       this.render();
@@ -405,7 +420,7 @@ export class WebApp {
     }
     if(e.status===401) {
       if(this.session){this.clearInvitationDraft();this.browserAuth=null;}
-      this.session=null;this.requests=[];this.firstRequestPageAsOf=undefined;this.view=null;this.pending=[];
+      this.safety=null;this.session=null;this.requests=[];this.firstRequestPageAsOf=undefined;this.view=null;this.pending=[];
       this.receivedSuggestions=[];this.suggestionsState='unchecked';
       this.notice=this.draft.item || this.draft.amount || this.correction
         ? 'Sign in again to continue. Your text stays on this page.'
@@ -426,6 +441,10 @@ export class WebApp {
     else if(e.code==='login_rate_limited')this.notice='Wait before requesting or checking another code.';
     else if(e.code==='consent_unavailable')this.notice='Child enrollment is not available here yet. Ask a guardian to use the verified setup.';
     else if(e.status===409) this.notice='This information changed. Refresh, review, and try again.';
+    else if(isPostingSuspended(e))this.notice='Shared posting is unavailable for this account. You can still view your household information.';
+    else if(e.code==='content_review_required'){
+      this.notice='Edit the wording before sharing it with the household.';
+    }
     else if(e.status===422) this.notice='Check your entry and try again.';
     else if(this.suggestionsState==='unavailable')this.notice='Received suggestions could not be checked. Retry recovery before sending another suggestion.';
     else if(purpose==='load')this.notice='Could not load your account. Refresh to try again.';
@@ -465,6 +484,7 @@ export class WebApp {
     if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
     const context=this.el('section');context.append(this.el('p',this.session.household.label));
     const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut(this.session??undefined))));context.append(actions);main.append(context);
+    if(this.safety&&this.session.canModerate&&this.session.enrolled){this.renderSafety(main,this.safety);return;}
     if(this.session.role==='helper'||this.session.role==='editor'){
       if(this.view)this.renderCook(main);else main.append(this.el('p',this.t('No instructions are available.')));
     } else {
@@ -629,8 +649,8 @@ export class WebApp {
         card.append(this.el('p',String(p.command.body.originalItem??'')),this.el('p',this.t('Saved on this browser')+' · '+this.date(p.createdAt)));
         if(p.needsReview) {
           if(p.command.body.ownQuantity)card.append(this.el('p',String(p.command.body.ownQuantity)));
-          card.append(this.el('p',this.t('The original request changed. Review your correction before sending it again.')));
-          const move=this.button('Move correction to draft',()=>void this.run(()=>this.reviewQueuedEdit(p)));
+          card.append(this.el('p',this.t(p.needsReview==='wording'?'Edit the wording before sharing it with the household.':'The original request changed. Review your correction before sending it again.')));
+          const move=this.button(p.needsReview==='wording'?'Edit this request':'Move correction to draft',()=>void this.run(()=>this.reviewQueuedRequest(p)));
           card.append(move);
           if(this.hasRequestDraft())card.append(this.el('p',this.t('Finish or discard your current draft first.')));
         } else {
@@ -666,7 +686,11 @@ export class WebApp {
           r.purchaseOutcome==='notBought'?'Shopper confirmed the item was not bought':'Purchase not confirmed';
         card.append(this.el('p',this.t(purchaseLabel)));
       }
-      if(r.clarification)card.append(this.el('p',r.clarification));
+      if(r.clarification){
+        card.append(this.el('p',r.clarification));
+        if(r.canReportClarification)this.offerSafety(card,[{source:{kind:'clarification',id:r.requestId,revision:r.revision,field:'question'},
+          text:r.clarification,label:'Shopper’s question'}]);
+      }
       if(r.ownActionAllowed){
         card.append(this.button('Edit',()=>this.openRequestDraft(r)),this.button('Withdraw',()=>{this.withdrawn=r;this.withdrawalCommand=null;this.render();}));
       } else if(r.status!=='withdrawn'){
@@ -675,12 +699,14 @@ export class WebApp {
       if(this.withdrawn?.requestId===r.requestId){card.append(this.el('p',this.t('Withdraw this pending request?')),this.button('Confirm withdrawal',()=>void this.run(async()=>{
         const fresh=await this.reauthenticate(this.withdrawalCommand??undefined);
         this.withdrawalCommand??=this.makeCommand('request.withdraw',{requestId:r.requestId},r.revision,r.shopId);
-        try {await this.api.command(fresh,this.withdrawalCommand);} catch(error) {
+        let received:OwnRequest;
+        try {received=await this.api.command(fresh,this.withdrawalCommand);} catch(error) {
           if(!isRequestRevisionConflict(error))throw error;
           this.withdrawn=null;this.withdrawalCommand=null;
           await this.reloadChangedRequest();return;
         }
-        this.withdrawn=null;this.withdrawalCommand=null;this.notice='Withdrawn';await this.load();
+        this.withdrawn=null;this.withdrawalCommand=null;this.notice='Withdrawn';
+        await this.refreshAfterReceipt(received);
       })),this.button('Cancel',()=>{this.withdrawn=null;this.render();}));}own.append(card);
     }main.append(own);
   }
@@ -748,6 +774,10 @@ export class WebApp {
     try{received=await this.api.command(s,command,persisted?s.requestQueueGrant:undefined);}catch(error){
       this.uncertainSend=error instanceof ApiError && (error.status===0||error.status>=500);
 
+      if(isPostingSuspended(error)||(error instanceof ApiError&&error.code==='content_review_required')){
+        this.review=false;this.retryCommand=null;
+        await this.fail(error,'mutation',persisted?p:undefined);return;
+      }
       if(command.kind==='request.edit' && isRequestRevisionConflict(error)) {
         if(persisted)await this.outbox.remove(p.id,p.scope);
         this.retryCommand=null;this.review=false;
@@ -777,8 +807,21 @@ export class WebApp {
         this.notice='Received by the shopper. Retry to clear the copy on this browser.';
       }
     }
-    // A successful command is received even if the subsequent refresh disconnects.
-    try{await this.load();}catch(error){if(error instanceof ApiError&&(error.status===401||error.status===403))throw error;}
+    await this.refreshAfterReceipt(received);
+  }
+  private async refreshAfterReceipt(received?:OwnRequest):Promise<void> {
+    if(received) {
+      const previous=this.requests.find(row=>row.requestId===received.requestId);
+      if(!previous)this.requests.unshift(received);
+      else if(previous.revision<=received.revision)this.requests=this.requests.map(row=>row===previous?received:row);
+      this.reconcileRequestActions();
+    }
+    // A transient failure on the following read cannot undo the command receipt.
+    try { await this.load(); }
+    catch(error) {
+      if(error instanceof ApiError && (error.status===0 || error.status===429 || error.status>=500))return;
+      throw error;
+    }
   }
   private showQueued(pending:Pending):void {
     this.pending=[...this.pending.filter(item=>item.id!==pending.id),pending];
@@ -788,18 +831,32 @@ export class WebApp {
   private hasRequestDraft():boolean {
     return Boolean(this.draft.item || this.draft.amount || this.draft.route==='next' || this.draft.editing || this.draft.followup || this.retryCommand || this.review);
   }
-  private async reviewQueuedEdit(p:Pending):Promise<void> {
+  private async reviewQueuedRequest(p:Pending):Promise<void> {
     if(this.hasRequestDraft()) {
       this.notice='Finish or discard your current draft first.';return;
     }
     await this.load();
     const s=this.session;
     if(!s || !isContributorSession(s) || !s.enrolled || !s.queueConsent || scopeFor(s)!==p.scope)return;
+    if(p.command.kind==='request.send'){
+      const followup=p.command.body.followupTo;
+      const canReturn=followup
+        ? this.requests.some(r=>r.requestId===followup&&r.shopId===p.command.shopId)
+        : s.shopId===p.command.shopId||this.pickups.some(r=>r.shopId===p.command.shopId);
+      if(!canReturn){this.notice='Choose an open pickup to continue.';return;}
+      const row=await this.outbox.reviewPending(p.id,p.scope,'take');
+      this.pending=this.pending.filter(entry=>entry.id!==p.id);
+      if(!row||this.signOutPending||!this.session?.queueConsent||scopeFor(this.session)!==p.scope)return;
+      if(s.selectionRequired)this.chosenPickupId=p.command.shopId;
+      this.draft={item:String(row.command.body.originalItem),amount:String(row.command.body.ownQuantity??''),
+        route:row.command.body.route==='next'?'next':'current',editing:null,followup:typeof followup==='string'?followup:null};
+      this.review=false;this.notice='Edit the wording before sharing it with the household.';return;
+    }
     const current=this.requests.find(row=>row.requestId===p.command.body.requestId && row.shopId===p.command.shopId);
     if(!current || current.status==='withdrawn') {
       this.notice='This request is no longer available for correction.';return;
     }
-    const row=await this.outbox.reviewEdit(p.id,p.scope,'take');
+    const row=await this.outbox.reviewPending(p.id,p.scope,'take');
     this.pending=this.pending.filter(entry=>entry.id!==p.id);
     if(!row || this.signOutPending || !this.session?.queueConsent || scopeFor(this.session)!==p.scope)return;
     this.draft={item:String(row.command.body.originalItem),amount:String(row.command.body.ownQuantity??''),route:current.route,
@@ -818,8 +875,13 @@ export class WebApp {
     if(!this.confirmedOperations.has(p.id)) {
       if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
       try {received=await this.api.command(fresh,p.command,fresh.requestQueueGrant);} catch(error) {
+        if(error instanceof ApiError&&error.code==='content_review_required'){
+          const marked=await this.outbox.reviewPending(p.id,p.scope,'wording');
+          if(marked)this.pending=this.pending.map(entry=>entry.id===p.id?marked:entry);
+          this.notice='Edit the wording before sharing it with the household.';return;
+        }
         if(p.command.kind!=='request.edit' || !isRequestRevisionConflict(error))throw error;
-        await this.outbox.reviewEdit(p.id,p.scope,'mark');
+        await this.outbox.reviewPending(p.id,p.scope,'mark');
         await this.reloadChangedRequest();return;
       }
     }
@@ -842,6 +904,10 @@ export class WebApp {
       this.notice=proposalNotices[this.proposalStatus?.status??receipt.status];
     }catch(error){
       if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
+      if(isPostingSuspended(error)||(error instanceof ApiError&&error.code==='content_review_required')){
+        this.resetProposal();
+        if(this.cookingReport)this.cookingReport.review=null;else this.correction=wording;
+      }
       this.proposalConflict=error instanceof ApiError&&error.status===409&&error.code==='stale_base';
       throw error;
     }
@@ -897,12 +963,112 @@ export class WebApp {
     if(this.suggestionsCursor&&this.suggestionsState==='ready')section.append(this.button('Show older suggestions',()=>void this.run(()=>this.recoverSuggestions(true))));
     main.append(section);
   }
+  private offerSafety(parent:HTMLElement,fields:SafetyField[]):void {
+    if(!this.session?.canModerate||!this.session.enrolled)return;
+    parent.append(this.button('Report or block',()=>{
+      if(!this.session)return;
+      this.safety={scope:reviewScope(this.session),fields,selected:0,reason:'',includeText:false,action:'report'};
+      this.notice='';this.render();this.root.querySelector<HTMLElement>('#safety-title')?.focus();
+    }));
+  }
+  private renderSafety(main:HTMLElement,review:SafetyReview):void {
+    const heading=this.el('h1',this.t('Report or block'));heading.id='safety-title';heading.tabIndex=-1;main.append(heading);
+    const field=review.fields[review.selected]!;
+    const current=field.source.kind==='clarification'
+      ? this.requests.some(r=>r.requestId===field.source.id&&r.revision===field.source.revision&&r.clarification===field.text&&r.canReportClarification)
+      : this.view?.canReportContent&&this.view.grantId===field.source.id&&this.view.revision===field.source.revision&&Date.parse(this.view.expiresAt)>Date.now();
+    if(!current&&!review.intent){
+      main.append(this.el('p',this.t('This message changed. Open the current message to review it.')),
+        this.button('Back',()=>{this.safety=null;this.render();}));return;
+    }
+    if(review.intent){
+      main.append(this.el('p',this.t('Confirmation is pending. Retry the same action to check it.')),
+        this.button('Retry same action',()=>void this.run(()=>this.submitSafety(review)),true));
+    }else{
+      const select=(title:string,choices:readonly (readonly [string,string])[],value:string,change:(value:string)=>void)=>{
+        const label=this.el('label',this.t(title)),menu=this.el('select');
+        for(const [key,name] of choices){const option=this.el('option',this.t(name));option.value=key;menu.append(option);}
+        menu.value=value;menu.addEventListener('change',()=>change(menu.value));label.append(menu);main.append(label);
+      };
+      if(review.fields.length>1)select('Choose a message field',review.fields.map((f,i)=>[String(i),f.label]),String(review.selected),
+        index=>{review.selected=Number(index);review.includeText=false;this.render();});
+      const quote=this.el('blockquote',field.text);quote.style.whiteSpace='pre-wrap';main.append(quote);
+      if(review.action==='report'){
+        select('Why are you reporting this?',[['','Choose a reason'],['unsafe','Unsafe content'],['harassment','Harassment'],['other','Other concern']],
+          review.reason,reason=>{review.reason=reason as ReportReason|'';submit.disabled=!review.reason||this.busy;});
+        const submit=this.button('Send private report',()=>void this.run(()=>this.submitSafety(review)),true);
+        submit.disabled=!review.reason||this.busy;
+        const label=this.el('label');label.className='checkbox';
+        const check=this.el('input');check.type='checkbox';check.checked=review.includeText;
+        check.addEventListener('change',()=>{review.includeText=check.checked;this.render();});
+        label.append(check,this.el('span',this.t('Include the selected wording in my report')));main.append(label);
+        main.append(this.el('p',this.t(review.includeText?'The review team will receive your reason, the message reference, and the wording shown above.':
+          'The review team will receive your reason and the message reference. The wording stays out of the report.')),
+          submit,
+          this.button('Review blocking this sender',()=>{review.action='block';review.includeText=false;this.render();}));
+      }else{
+        main.append(this.el('p',this.t('Block messages from this sender in this household? The block uses the message reference only.')),
+          this.button('Confirm block',()=>void this.run(()=>this.submitSafety(review)),true),
+          this.button('Review a report instead',()=>{review.action='report';this.render();}));
+      }
+    }
+    main.append(this.button('Back',()=>{this.safety=null;this.render();}));
+  }
+  private async submitSafety(review:SafetyReview):Promise<void>{
+    const history=this.historyGeneration;
+    const fresh=await this.api.session();
+    if(history!==this.historyGeneration||this.safety!==review||this.signOutPending)return;
+    if(!fresh?.enrolled||!fresh.canModerate||reviewScope(fresh)!==review.scope)throw new ApiError('access_ended',403);
+    const field=review.fields[review.selected]!;
+    if(field.source.kind==='instruction'&&this.view&&Date.parse(this.view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
+    if(!review.intent){
+      if(review.action==='report'&&!review.reason)return;
+      const base={clientKey:crypto.randomUUID(),source:field.source};
+      review.intent=review.action==='block'?{...base,action:'block'}:
+        {...base,action:'report',reason:review.reason as ReportReason,...(review.includeText?{text:field.text}:{})};
+    }
+    try{await this.api.moderate(fresh,review.intent);}
+    catch(error){
+      if(review!==this.safety)return;
+      if(!(error instanceof ApiError)||error.status===0||error.status>=500&&error.code!=='moderation_unavailable'){
+        this.notice='Confirmation is pending. Retry the same action to check it.';return;
+      }
+      if(error.status===401||error.status===403)throw error;
+      this.safety=null;
+      if(error.code==='sender_unavailable'){this.notice='The sender could not be verified for a block. You can still report the message.';return;}
+      if(error.code==='moderation_unavailable'){this.notice='Reporting and blocking are unavailable right now.';return;}
+      this.notice='This message changed. Open the current message to review it.';return;
+    }
+    if(this.safety!==review)return;
+    this.safety=null;
+    if(review.action==='report'){this.notice='Private report received.';return;}
+    // Discard previously readable content before fetching the post-block projection.
+    this.view=null;this.requests=[];this.receivedSuggestions=[];this.resetProposal();this.correction='';this.cookingReport=null;
+    this.withdrawn=null;this.withdrawalCommand=null;
+    try{await this.load();}
+    catch(error){if(error instanceof ApiError&&(error.status===401||error.status===403))throw error;}
+    this.notice='Sender blocked.';
+  }
   private renderCook(main:HTMLElement):void {
     const view=this.view!;
     if(Date.parse(view.expiresAt)<=Date.now()){main.append(this.el('p',this.t('Access has ended. Ask your household for a new invitation.')));this.clearPrivate();void this.outbox.clear().catch(()=>{});return;}
     main.append(this.el('h1',this.t('Current instructions')),this.el('h2',view.shopLabel));
     main.append(this.el('p',`${this.t('As of')}: ${this.date(view.asOf)}`),this.el('p',`${this.t('Revision')}: ${view.revision}`),this.el('p',`${this.t('Expires')}: ${this.date(view.expiresAt)}`));
-    for(const line of view.instructions){const a=this.el('article');a.className='card';a.append(this.el('h3',line.item),this.el('p',line.amount??this.t('Unknown amount')),this.el('p',line.action));if(line.basis)a.append(this.el('p',line.basis));main.append(a);}
+    const base={kind:'instruction' as const,id:view.grantId,revision:view.revision};
+    if(view.canReportContent)this.offerSafety(main,[{source:{...base,field:'shopLabel'},text:view.shopLabel,label:'Pickup name'}]);
+    for(const [index,line] of view.instructions.entries()){
+      const a=this.el('article');a.className='card';
+      a.append(this.el('h3',line.item),this.el('p',line.amount??this.t('Unknown amount')),this.el('p',line.action));
+      if(line.basis)a.append(this.el('p',line.basis));
+      const fields:SafetyField[]=[
+        {source:{...base,index,field:'action'},text:line.action,label:'Cooking instruction'},
+        {source:{...base,index,field:'label'},text:line.item,label:'Item name'}
+      ];
+      if(line.rawAmount)fields.push({source:{...base,index,field:'amount'},text:line.rawAmount,label:'Amount'});
+      if(line.rawAmount&&line.unit)fields.push({source:{...base,index,field:'unit'},text:line.unit,label:'Unit'});
+      if(view.canReportContent)this.offerSafety(a,fields);
+      main.append(a);
+    }
     this.renderReceivedSuggestions(main);
     if(!view.canPropose){main.append(this.el('p',this.t('This view is read-only.')));return;}
     if(this.proposalIntent){

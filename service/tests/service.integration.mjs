@@ -16,7 +16,7 @@ const admin=new pg.Pool({connectionString:adminURL}),runtime=new pg.Pool({connec
 const issuer='https://identity.fixture.invalid',audience='authenticated';
 const {publicKey,privateKey}=await generateKeyPair('ES256'),jwk=await exportJWK(publicKey);jwk.kid='fixture-1';
 const verifier=new JWTIdentityVerifier({issuer,audience,jwksUrl:issuer+'/jwks'},createLocalJWKSet({keys:[jwk]}));
-const repo=new HouseholdRepository(runtime,{allowChildNetwork:true,noticeVersion:'fixture-notice-v1',sessionStatus:new SupabaseSessionVerifier(issuer)});
+const repo=new HouseholdRepository(runtime,{allowChildNetwork:true,noticeVersion:'fixture-notice-v1',sharedContentSafety:true,moderationRetentionDays:7,sessionStatus:new SupabaseSessionVerifier(issuer)});
 const server=createHTTPServer({repository:repo,verifier,billing:new BillingService(null),webOrigin:'https://web.fixture.invalid',maxRequestsPerMinute:10000});
 let origin;
 before(async()=>{await admin.query('CREATE SCHEMA IF NOT EXISTS auth; CREATE TABLE IF NOT EXISTS auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz)');await migrate(adminURL);await assertRuntimeRole(runtime);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;});
@@ -1379,7 +1379,7 @@ test('reviewed shared receipt lines commit once, preserve partial selection and 
   const q=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
   const line=(ordinal,foodName)=>({ordinal,original:'Printed '+foodName,foodName,location:'pantry',received:q(3),usable:q(2),
     paidUSDMinor:ordinal===0?129:null,delivery:null,printed:null});
-  const body={receiptId:randomUUID(),imageId:randomUUID(),merchant:'Market',reference:'Reviewed 123',zone:'UTC',
+  const body={receiptId:randomUUID(),imageId:randomUUID(),layoutId:randomUUID(),merchant:'Market',reference:'Reviewed 123',zone:'UTC',
     purchaseDay:'2026-01-10',lines:[line(0,'Beans'),line(2,'Pears')]};
   const make=(base,body,actor='Alex',epoch=1)=>({v:1,kind:'pantry.acquireReceipt',replayWindow:f.actors[actor].window,
     clientKey:randomUUID(),grantEpoch:epoch,pantryRevision:base,body});
@@ -1418,6 +1418,87 @@ test('reviewed shared receipt lines commit once, preserve partial selection and 
   const records=await admin.query('SELECT count(*)::int n FROM ritc.operation_response WHERE household_id=$1 AND operation_id=ANY($2::uuid[])',[f.h,[a.data.operationId,later.data.operationId,noop.data.operationId]]);
   assert.equal(records.rows[0].n,0);
   assert.equal((await write('Mia',make((await page()).data.pantryRevision,body,'Mia',0))).data.error.code,'refresh_required');
+});
+
+test('shared receipt reprints cannot append shifted lines or change saved stock and spend',async()=>{
+  const f=await fixture({createShop:false});
+  const quantity={amount:{numerator:2,denominator:1},unit:'count',originalLiteral:'2'};
+  const row=(ordinal,method='pdfOCR')=>({ordinal,original:'OATS 2 CT $4.20',foodName:'Oats',location:'pantry',
+    received:quantity,usable:quantity,paidUSDMinor:420,
+    printed:method?{page:1,line:ordinal+1,method,stage:'receipt'}:null});
+  const original={receiptId:randomUUID(),imageId:randomUUID(),layoutId:randomUUID(),merchant:'Market',reference:'Purchase 123',
+    zone:'UTC',purchaseDay:'2026-01-10'};
+  const make=(pantryRevision,header,lines)=>({v:1,kind:'pantry.acquireReceipt',replayWindow:f.actors.Mia.window,
+    clientKey:randomUUID(),grantEpoch:0,pantryRevision,body:{...header,lines}});
+  const send=command=>f.http('Mia','POST','/pantry/commands',command);
+  const stock=async()=>(await f.http('Mia','GET','/pantry')).data;
+  const expectReview=async command=>{
+    const response=await send(command);
+    assert.equal(response.status,409);
+    assert.equal(response.data.error.code,'receipt_layout_review');
+  };
+  const firstCommand=make(0,original,[row(0)]),first=await send(firstCommand);
+  assert.equal(first.status,200,JSON.stringify(first.data));
+  const second=await send(make(1,original,[row(0),row(1)]));
+  assert.equal(second.data.savedCount,1);
+  assert.equal(second.data.receiptLines[0].lotId,first.data.receiptLines[0].lotId);
+  assert.notEqual(second.data.receiptLines[1].lotId,first.data.receiptLines[0].lotId);
+  assert.equal((await send(make(2,original,[row(0),row(1)]))).data.savedCount,0);
+  const before=await stock();
+  assert.equal(before.lots.length,2);
+  assert.deepEqual(before.lots.map(l=>l.receiptEvidence.line.paidUSDMinor),[420,420]);
+  assert.deepEqual(before.lots.map(l=>l.observation.quantity),[quantity,quantity]);
+  // One reprint moves a saved line. Another puts an identical physical line into a known position.
+  const reprint={...original,imageId:randomUUID(),layoutId:randomUUID()};
+  await Promise.all([expectReview(make(2,reprint,[row(2)])),expectReview(make(2,reprint,[row(0)]))]);
+  await expectReview(make(2,{...original,layoutId:randomUUID()},[row(0),row(2)]));
+  await expectReview(make(2,{...original,imageId:randomUUID()},[row(2)]));
+  const unchanged=await stock();
+  assert.equal(unchanged.pantryRevision,before.pantryRevision);
+  assert.deepEqual(unchanged.lots,before.lots);
+  assert.deepEqual((await send(firstCommand)).data,first.data);
+  const aliases=await admin.query('SELECT source_id,original_layout_digest FROM ritc.receipt_source_key WHERE household_id=$1',[f.h]);
+  assert.equal(aliases.rowCount,2);
+  assert.match(aliases.rows.find(r=>r.source_id===original.receiptId).original_layout_digest,/^[0-9a-f]{64}$/);
+  assert.equal(aliases.rows.find(r=>r.source_id===original.imageId).original_layout_digest,null);
+  const another={...original,receiptId:randomUUID(),imageId:randomUUID(),reference:'Purchase 456'};
+  assert.equal((await send(make(2,another,[row(0)]))).data.savedCount,1);
+  // A persisted pre-068 key must still replay byte-for-byte, even when no original layout is known.
+  const legacy={...original,receiptId:randomUUID(),imageId:randomUUID(),reference:'Older receipt'};
+  delete legacy.layoutId;
+  const historicalCommand=make(3,legacy,[row(0,null)]),historical=await send(historicalCommand);
+  assert.equal(historical.status,200,JSON.stringify(historical.data));
+  const marker=await admin.query('SELECT original_layout_digest FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=$2',[f.h,legacy.receiptId]);
+  assert.equal(marker.rows[0].original_layout_digest,null);
+  assert.deepEqual((await send(historicalCommand)).data,historical.data);
+  await expectReview(make(4,legacy,[row(1,null)]));
+  await expectReview(make(4,{...legacy,layoutId:randomUUID()},[row(1,null)]));
+  const textFile={...legacy,receiptId:randomUUID(),imageId:randomUUID(),reference:'UTF-8 receipt'};
+  assert.equal((await send(make(4,textFile,[row(0,'textFile')]))).data.savedCount,1);
+  assert.equal((await send(make(5,{...textFile,layoutId:randomUUID()},[row(1,'textFile')]))).data.savedCount,1);
+  const final=await stock();
+  assert.equal(final.pantryRevision,6);
+  assert.equal(final.lots.length,6);
+  assert.equal(final.lots.reduce((sum,l)=>sum+l.receiptEvidence.line.paidUSDMinor,0),2520);
+  // An exact file can gain a missing transaction reference once. Check every saved row,
+  // including after a previous row without a reference has already been acquired.
+  const imageId=randomUUID(),unidentified={...original,receiptId:imageId,imageId,reference:null};
+  const originalCommand=make(6,unidentified,[row(0)]),unreferenced=await send(originalCommand);
+  assert.equal(unreferenced.status,200);
+  const identified={...unidentified,receiptId:randomUUID(),reference:'Confirmed 123'};
+  const identifiedCommand=make(7,identified,[row(1)]),linked=await send(identifiedCommand);
+  assert.equal(linked.status,200);
+  assert.equal(linked.data.receiptId,imageId);
+  assert.deepEqual((await send(originalCommand)).data,unreferenced.data);
+  assert.deepEqual((await send(identifiedCommand)).data,linked.data);
+  const conflicting={...identified,receiptId:randomUUID(),reference:'Different 456'};
+  await expectReview(make(8,conflicting,[row(2)]));
+  assert.equal((await stock()).pantryRevision,8);
+  const missing=await admin.query('SELECT 1 FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=$2',[f.h,conflicting.receiptId]);
+  assert.equal(missing.rowCount,0);
+  const independent=await send(make(8,{...conflicting,imageId:randomUUID()},[row(0)]));
+  assert.equal(independent.data.receiptId,conflicting.receiptId);
+  assert.equal(independent.data.savedCount,1);
 });
 
 test('fifty long reviewed receipt lines remain one bounded household stock revision',async()=>{
@@ -1470,4 +1551,70 @@ test('a reported purchaser is separate from the recorder and private to the assi
   assert.equal((await send(command(current.revision,'bought',{...explicit,expectedAlias:'Different adult'}))).status,409);
   const unknown=await send(command(current.revision,'bought',{kind:'unknown'})); assert.equal(unknown.status,200);
   current=await row(); assert.equal(current.purchaseOutcome,'bought'); assert.equal(current.reportedPurchaser,undefined);
+});
+
+test('shared wording is checked before publication and current moderation follows requests, questions and cook instructions',async()=>{
+  const f=await fixture(),{shopId}=f;
+  const supported={'X-Shared-Content-Safety':'1'};
+  const bootstrap=(await f.http('Sam','GET','/bootstrap',undefined,supported)).data;
+  assert(bootstrap.capabilities.includes('shared_content_safety'));
+  assert(!(await f.http('Sam','GET','/bootstrap')).data.capabilities.includes('shared_content_safety'));
+  const request={clientRequestId:randomUUID(),originalItem:'Jerk chicken',ownQuantity:'Te voy a hacer daño',authoredAt:new Date().toISOString()};
+  const rejected=await f.command('Alex','request.send',request);
+  assert.equal(rejected.status,422);
+  assert.equal(rejected.data.error.code,'content_review_required');
+  assert.equal(JSON.stringify(rejected.data).includes(request.ownQuantity),false);
+  let inbox=await f.http('Mia','GET','/shops/'+shopId+'/inbox');
+  assert.deepEqual(inbox.data.requests,[]);
+  const sent=(await f.send('Alex',{...request,ownQuantity:'one package'})).request;
+  const base={shopRevision:1,authorityEpoch:1,requestRevision:sent.revision};
+  const edit=await f.command('Alex','request.edit',{requestId:sent.requestId,originalItem:'Go kill yourself',ownQuantity:null},base);
+  assert.equal(edit.status,422);
+  assert.equal((await f.command('Mia','request.clarify',{requestId:sent.requestId,question:'Te voy a matar'},base)).status,422);
+  const asked=await f.command('Mia','request.clarify',{requestId:sent.requestId,question:'Frozen or fresh?'},base);
+  assert.equal(asked.status,200,JSON.stringify(asked.data));
+  let mine=await f.http('Alex','GET','/requests/mine',undefined,supported);
+  assert.equal(mine.data.requests[0].clarification,'Frozen or fresh?');
+  assert.equal(mine.data.requests[0].canReportClarification,true);
+  assert.equal(mine.data.requests[0].canReportContent,undefined);
+  assert.equal((await f.http('Mia','GET','/shops/'+shopId+'/inbox',undefined,supported)).data.requests[0].canReportContent,true);
+  await admin.query('INSERT INTO ritc.moderation_block(household_id,viewer_id,author_id) VALUES($1,$2,$3)',[f.h,f.actors.Alex.id,f.actors.Mia.id]);
+  mine=await f.http('Alex','GET','/requests/mine');
+  assert.equal(mine.data.requests[0].clarification,null);
+  assert.equal(mine.data.requests[0].originalItem,'Jerk chicken');
+  await admin.query("INSERT INTO ritc.moderation_removal(household_id,source_kind,source_id,source_revision) VALUES($1,'request',$2,1)",[f.h,sent.requestId]);
+  inbox=await f.http('Mia','GET','/shops/'+shopId+'/inbox');
+  assert.deepEqual(inbox.data.requests,[]);
+  assert.equal((await f.preview({...sent,revision:2})).status,404);
+
+  const project={shopId,mode:'edit',shopLabel:'Dinner',language:'en',items:[{label:'Chicken',unit:'lb',amount:'2',action:'I will hurt you'}]};
+  assert.equal((await f.http('Mia','POST','/views',project)).status,422);
+  project.items[0].action='Roast the chicken';
+  const view=await f.http('Mia','POST','/views',project);
+  assert.equal(view.status,200);
+  const grantId=view.data.grantId;
+  const grant=(await admin.query('SELECT projection_author_id FROM ritc.view_grant WHERE household_id=$1 AND grant_id=$2',[f.h,grantId])).rows[0];
+  assert.equal(grant.projection_author_id,f.actors.Mia.id);
+  const joined=await f.http('Alex','POST','/v1/invites/redeem',{token:view.data.token,intent:'join',adultAttestation:true});
+  assert.equal(joined.status,200);
+  const current=await f.http('Alex','GET','/v1/views/'+grantId+'/current',undefined,{'X-View-Grant-ID':grantId,'X-Household-ID':f.h});
+  assert.equal(current.status,404);
+  assert(!JSON.stringify(current.data).includes('Roast the chicken'));
+});
+
+test('a retried request keeps its original safe receipt, and a removal suppresses its old wording after an edit',async()=>{
+  const f=await fixture();
+  const first=await f.send('Alex',{originalItem:'First wording'});
+  const base={shopRevision:1,authorityEpoch:1,requestRevision:1};
+  const replacement=await f.command('Alex','request.edit',{requestId:first.request.requestId,originalItem:'Reviewed wording',ownQuantity:null},base);
+  assert.equal(replacement.status,200);
+  const retry=()=>f.http('Alex','POST','/commands',first.envelope);
+  assert.equal((await retry()).data.request.originalItem,'First wording');
+  await admin.query("INSERT INTO ritc.moderation_removal(household_id,source_kind,source_id,source_revision) VALUES($1,'request',$2,1)",[f.h,first.request.requestId]);
+  const redacted=await retry();
+  assert.equal(redacted.status,409);
+  assert(!JSON.stringify(redacted.data).includes('First wording'));
+  const mine=(await f.http('Alex','GET','/requests/mine')).data.requests;
+  assert.equal(mine.length,1);
+  assert.equal(mine[0].originalItem,'Reviewed wording');
 });

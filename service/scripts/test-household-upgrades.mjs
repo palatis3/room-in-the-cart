@@ -43,11 +43,16 @@ async function seed(db,through){
  await db.query('UPDATE ritc.household SET pantry_revision=$2 WHERE household_id=$1',[h,through>=51?5:3]);
  const price={id:randomUUID(),sourceRevision:{sourceId:randomUUID(),revision:1,shopRevision:1,authorityEpoch:1},price:{kind:'exact',minor:550}};
  await db.query("INSERT INTO ritc.price_observation(household_id,observation_id,shop_id,actor_id,record,observed_at) VALUES($1,$2,$3,$4,$5,'2026-11-01T12:00:00Z')",[h,price.id,shop,m,price]);
- return {h,m,shop,price};
+ let receiptSources=[];
+ if(through>=58){
+  const receiptId=randomUUID(),imageId=randomUUID();
+  receiptSources=(await db.query('INSERT INTO ritc.receipt_source_key(household_id,source_id,receipt_id) SELECT $1,k,$2 FROM unnest($3::uuid[]) k RETURNING source_id,receipt_id',[h,receiptId,[receiptId,imageId]])).rows;
+ }
+ return {h,m,shop,price,receiptSources};
 }
 const results=[];
 try{
- for(const history of [{name:'049',through:49},{name:'051',through:51},{name:'051-plus-057',through:51,price:true},{name:'058',through:58}]){
+ for(const history of [{name:'049',through:49},{name:'051',through:51},{name:'051-plus-057',through:51,price:true},{name:'058',through:58},{name:'067',through:67}]){
   const database='ritc_upgrade_'+randomUUID().replaceAll('-','');const url=new URL(connection);url.pathname='/'+database;
   const scratch=await mkdtemp(join(tmpdir(),'ritc-household-upgrade-'));let db,created=false;
   try{
@@ -69,6 +74,10 @@ try{
    assert.deepEqual(registry.map(r=>[r.version,r.checksum]),files.map(n=>[n,checksums[n]]));
    for(const row of applied)assert.deepEqual(registry.find(r=>r.version===row.version),row);
    assert.deepEqual((await read()).rows,before);
+   for(const source of seeded.receiptSources){
+    const stored=await db.query('SELECT source_id,receipt_id,original_layout_digest FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=$2',[seeded.h,source.source_id]);
+    assert.deepEqual(stored.rows,[{...source,original_layout_digest:null}]);
+   }
    assert.equal((await db.query('SELECT count(*)::int n FROM ritc.pantry_event WHERE event_id<>operation_id')).rows[0].n,0);
    assert.equal((await db.query('SELECT count(*)::int n FROM ritc.pantry_batch')).rows[0].n,history.through>=51?5:3);
    assert.deepEqual((await db.query('SELECT record FROM ritc.price_observation WHERE household_id=$1',[seeded.h])).rows[0].record,seeded.price);
@@ -76,9 +85,9 @@ try{
    for(const table of ['meal_preference_profile','meal_preference_write_key','staple_settings','staple_group','staple_purchase','pantry_batch','shared_cook','household_meal_feedback','receipt_source_key','retired_receipt_line','household_receipt_line','receipt_submission_line','tonight_recipe','tonight_recipe_write','tonight_choice']){
     const r=(await db.query('SELECT relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=$1::regclass',['ritc.'+table])).rows[0];assert(r.relrowsecurity&&r.relforcerowsecurity,table);
    }
-   const chain=[['privacy_erase_extension','privacy_erase_before_tonight'],['privacy_erase_before_tonight','privacy_erase_before_household_receipts'],['privacy_erase_before_household_receipts','privacy_erase_before_meal_feedback'],['privacy_erase_before_meal_feedback','privacy_erase_before_cook_completion'],['privacy_erase_before_cook_completion','privacy_erase_before_staples'],['privacy_erase_before_staples','privacy_erase_before_meal_preferences']];
+   const chain=[['privacy_erase_extension','privacy_erase_before_moderation'],['privacy_erase_before_moderation','privacy_erase_before_reported_buyer'],['privacy_erase_before_reported_buyer','privacy_erase_before_tonight'],['privacy_erase_before_tonight','privacy_erase_before_household_receipts'],['privacy_erase_before_household_receipts','privacy_erase_before_meal_feedback'],['privacy_erase_before_meal_feedback','privacy_erase_before_cook_completion'],['privacy_erase_before_cook_completion','privacy_erase_before_staples'],['privacy_erase_before_staples','privacy_erase_before_meal_preferences']];
    for(const [fn,priorFn] of chain){const r=(await db.query('SELECT pg_get_functiondef($1::regprocedure) body',['ritc.'+fn+'(uuid,uuid)'])).rows[0];assert(r.body.includes(priorFn),fn);}
-   results.push({history:history.name,priorMigrations:prior.length,finalMigrations:registry.length,physicalEventsPreserved:before.length,immutablePricePreserved:true,migrationsIdempotent:true,erasureChainPreserved:true});
+   results.push({history:history.name,priorMigrations:prior.length,finalMigrations:registry.length,legacyReceiptKeysPreserved:seeded.receiptSources.length,physicalEventsPreserved:before.length,immutablePricePreserved:true,migrationsIdempotent:true,erasureChainPreserved:true});
   }finally{await db?.end();if(created)await owner.query('DROP DATABASE "'+database+'"');await rm(scratch,{recursive:true,force:true});}
  }
  console.log(JSON.stringify({passed:true,results,migrationChecksums:checksums},null,2));

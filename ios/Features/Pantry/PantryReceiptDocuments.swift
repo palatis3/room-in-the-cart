@@ -113,7 +113,7 @@ struct PantryReceiptDocuments: View {
                 PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
                     Text(pantryText("Choose a receipt from Photos"))
                 }
-                Text(pantryText("Use a PDF, JPEG, PNG, HEIC photo or UTF-8 text file up to 10 MB. PDFs can have up to 20 pages."))
+                Text(pantryText("Use a PDF, JPEG, PNG, HEIC photo or UTF-8 or UTF-16 text file up to 10 MB. PDFs can have up to 20 pages."))
             }
         }
         .privacySensitive()

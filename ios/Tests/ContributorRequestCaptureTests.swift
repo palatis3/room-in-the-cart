@@ -35,6 +35,63 @@ import DeviceSurfaces
         return ReviewedCapture(id: UUID(), text: text, originalText: text, source: .speech, localeIdentifier: "en-US", sourceImageData: nil,
             lines: [try XCTUnwrap(draft.reviewed(expectedDestination: scope.destination))], fieldDrafts: [draft])
     }
+    func testRejectedSharedWordingKeepsContributorDraftEditableAndAllowsFreshReview() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        let account = try await model(fixture, queue: queue)
+        fixture.rejectSharedWording = true
+        account.item = "First fictional draft"
+        account.quantity = "Two boxes"
+        await account.sendRequest()
+        guard case .localDraft = account.delivery else { return XCTFail("The rejected request should be editable") }
+        XCTAssertEqual(account.item, "First fictional draft")
+        XCTAssertEqual(account.quantity, "Two boxes")
+        XCTAssertEqual(account.notice, ht("This wording could not be shared. Edit it and review it again before sending."))
+        let spanishPath = try XCTUnwrap(Bundle.main.path(forResource: "es", ofType: "lproj"))
+        let spanish = try XCTUnwrap(Bundle(path: spanishPath))
+        XCTAssertEqual(spanish.localizedString(forKey: "This wording could not be shared. Edit it and review it again before sending.", value: nil, table: "Household"),
+                       "No se pudo compartir este texto. Edítalo y vuelve a revisarlo antes de enviarlo.")
+        let retry = try await OperationOutbox(url: queue).operations()
+        XCTAssertTrue(retry.isEmpty)
+        XCTAssertTrue(fixture.rows.isEmpty)
+        fixture.rejectSharedWording = false
+        fixture.suspendSharedPosting = true
+        await account.sendRequest()
+        XCTAssertNotNil(account.identity)
+        XCTAssertNotNil(account.projection)
+        XCTAssertEqual(account.item, "First fictional draft")
+        XCTAssertEqual(account.notice, ht("Posting shared messages is unavailable for this account. You can still read messages and use the safety controls."))
+        fixture.suspendSharedPosting = false
+        account.item = "Revised wording"
+        await account.sendRequest()
+        XCTAssertEqual(fixture.rows.count, 1)
+        XCTAssertEqual(fixture.rows.first?["originalItem"] as? String, "Revised wording")
+    }
+
+    func testChildSafetyUsesItsEnrolledDeviceForClarificationOnly() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        fixture.childPickups = [UUID()]
+        fixture.moderationEnabled = true
+        let account = try await model(fixture, queue: queue, child: true)
+        let channel = try XCTUnwrap(account.sharedSafetyChannel())
+        let requestID = UUID().uuidString
+        let field = try XCTUnwrap(SharedMessageField(.clarification, requestID, 2, .question, "Which size?"))
+        let review = SharedSafetyReview()
+        await review.submit(.report(source: field.source, reason: .unsafe, excerpt: nil), through: channel)
+        XCTAssertEqual(review.status, .reported)
+        XCTAssertEqual(fixture.safetyActions.count, 1)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: fixture.safetyActions[0]) as? [String: Any])
+        XCTAssertNil(body["text"])
+        let wrong = try XCTUnwrap(SharedMessageField(.request, requestID, 2, .item, "My own item"))
+        let denied = SharedSafetyReview()
+        await denied.submit(.block(source: wrong.source), through: channel)
+        XCTAssertEqual(denied.status, .unavailable)
+        XCTAssertEqual(fixture.safetyActions.count, 1)
+    }
+
     func testReviewedFieldsPreserveOriginalPacksPurposeAndExclusionsWithoutSending() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), model = try await model(fixture, queue: queue)
@@ -936,6 +993,8 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
     var offersQueuePermission = false, queueGrant: UUID?, queueExpiry: String?
     var asOf: String?
     var failRequestRead = false
+    var rejectSharedWording = false, suspendSharedPosting = false, moderationEnabled = false
+    var safetyActions: [Data] = []
     var dropBeforeCommit = false, attemptedGrants: [UUID?] = []
     var enrollmentRevoked = false, revokedBootstrapChecks = 0
     var commands: [Data] = [], rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:]
@@ -968,6 +1027,10 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
                 return try response(["error": ["code": "access_ended"]], 403)
             }
             var value: [String: Any] = ["nextShopOnly":nextShopOnly,"household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]
+            if moderationEnabled {
+                XCTAssertEqual(request.value(forHTTPHeaderField: "X-Shared-Content-Safety"), "1")
+                value["capabilities"] = ["own_requests", "shared_content_safety"]
+            }
             if let childPickups {
                 value["selectionRequired"] = childPickups.count > 1
                 value["canSelectShop"] = false
@@ -1008,7 +1071,15 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
             if windowFailure == .revoked { return try response(["error": ["code": "access_ended"]], 403) }
             return try response(["id":windowID,"expiresAt":windowExpiry])
         }
+        if path.hasSuffix("/moderation/actions") {
+            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Shared-Content-Safety"), "1")
+            XCTAssertNil(request.value(forHTTPHeaderField: "X-Shop-ID"))
+            safetyActions.append(data)
+            return try response(["receiptId":windowID, "status":"received"])
+        }
         if path.hasSuffix("/commands") {
+            if rejectSharedWording { return try response(["error":["code":"content_review_required"]], 422) }
+            if suspendSharedPosting { return try response(["error":["code":"shared_posting_unavailable"]], 403) }
             let grant = request.value(forHTTPHeaderField: "X-Request-Queue-Grant").flatMap(UUID.init(uuidString:))
             attemptedGrants.append(grant)
             if dropBeforeCommit { dropBeforeCommit = false; throw URLError(.notConnectedToInternet) }

@@ -48,6 +48,14 @@ actor PendingShopWriteStore<Write: PendingShopWrite> {
         guard values.count < 100 else { throw ClientError.configuration }
         values.append(intent); try write(values)
     }
+    func replace(_ original: Write, with replacement: Write, expectedEpoch: UUID) throws {
+        guard generation == expectedEpoch, replacement.sharesScope(with: original) else { throw ClientError.cancelled }
+        try replacement.validate()
+        var values = try read()
+        guard let index = values.firstIndex(of: original) else { throw ClientError.cancelled }
+        values[index] = replacement
+        try write(values)
+    }
     func complete(_ intent: Write, expectedEpoch: UUID) throws {
         guard generation == expectedEpoch else { throw ClientError.cancelled }
         var values = try read(); values.removeAll { $0 == intent }; try write(values)

@@ -9,10 +9,12 @@ public struct SharedReceiptDescriptor: Codable, Equatable, Sendable {
     public let kind: Kind
     public let size: Int
     public let fileDigest: String
+    public let unmarkedUTF16: UnmarkedUTF16?
 
-    init(id: UUID, kind: Kind, data: Data) throws {
+    init(id: UUID, kind: Kind, data: Data, type: UTType? = nil) throws {
         guard !data.isEmpty, data.count <= Self.maximumBytes else { throw SurfaceError.capacity }
         self.id = id; self.kind = kind; size = data.count; fileDigest = Self.digest(data)
+        unmarkedUTF16 = kind == .text ? UnmarkedUTF16(data: data, type: type) : nil
     }
 
     static func digest(_ bytes: Data) -> String {
@@ -42,8 +44,8 @@ public struct SharedReceiptRetirement: Codable, Equatable, Hashable, Sendable {
 extension SharedCaptureInbox {
     public func expireReceipts(now: Date) async throws { try await storage.sweepReceiptExpiry(now) }
 
-    public func stageReceipt(_ bytes: Data, kind: SharedReceiptDescriptor.Kind, id: UUID, now: Date) async throws -> InboxReceipt {
-        let descriptor = try SharedReceiptDescriptor(id: id, kind: kind, data: bytes)
+    public func stageReceipt(_ bytes: Data, kind: SharedReceiptDescriptor.Kind, id: UUID, now: Date, type: UTType? = nil) async throws -> InboxReceipt {
+        let descriptor = try SharedReceiptDescriptor(id: id, kind: kind, data: bytes, type: type)
         return try await storage.stageReceipt(bytes, descriptor: descriptor, now: now)
     }
     public func pendingReceiptFiles(scope: SharedReceiptScope, now: Date) async throws -> [SharedReceiptItem] {

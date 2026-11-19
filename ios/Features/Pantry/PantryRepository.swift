@@ -62,6 +62,7 @@ final class PantryRepository {
     let aliasPersonaID: UUID?
     let pendingStore: PantryPendingStore?
     let store: ComparisonStore
+    private let archivedUsage: (@MainActor (InventoryLot) async throws -> [PantryUsageHistoryRow])?
     private let authorize: () -> Bool
     let limits: ReadLimits
     private let mutationGate: PantryMutationGate?
@@ -70,7 +71,9 @@ final class PantryRepository {
 
     init(store: ComparisonStore, limits: ReadLimits = .standard, mutationGate: PantryMutationGate? = nil,
          pendingStore: PantryPendingStore? = nil, aliasPersonaID: UUID? = nil,
+         archivedUsage: (@MainActor (InventoryLot) async throws -> [PantryUsageHistoryRow])? = nil,
          authorize: @escaping () -> Bool) {
+        self.archivedUsage = archivedUsage
         self.store = store
         self.authorize = authorize
         self.limits = limits
@@ -121,7 +124,7 @@ final class PantryRepository {
                 predecessor = observation
             }
             guard let latest = predecessor, latest.id == lot.observationID,
-                  latest.count == lot.count, latest.observedAt == lot.confirmedAt,
+                  latest.count == lot.count, latest.countWording == lot.countWording, latest.observedAt == lot.confirmedAt,
                   sources[lot.id]?.source == lot.source else { throw Failure.invalidProvenance }
         }
         return Snapshot(state: final, lots: lots, reservations: claims,
@@ -192,25 +195,50 @@ final class PantryRepository {
     /// A stale review is never silently rebased. A successful old receipt reloads today's
     /// heads rather than restoring the old proposed count over intervening changes.
     func apply(_ command: InventoryCommand, reviewedInventoryRevision: Int64, at now: Date) async throws -> Result {
+        try await apply(.init(command: command, reviewedInventoryRevision: reviewedInventoryRevision), at: now)
+    }
+
+    func reviewConsumption(_ selections: [PantryConsumptionSelection], basis: InventoryState, at now: Date) async throws -> PantryConsumptionReview {
+        let current = try await loadForEditing(at: now)
+        guard current.state == basis else { throw PantryConsumptionFailure.stale }
+        let prepared = try PantryConsumptionReview.prepare(selections, before: current, at: now)
+        try validateCapacity(of: prepared.writes, replacing: current)
+        return prepared.review
+    }
+
+    func apply(_ entry: PantryPendingStore.Entry, at now: Date) async throws -> Result {
         try requireAccess()
         let lease = try mutationGate?.beginWrite()
         defer { if let lease { mutationGate?.endWrite(lease) } }
-        return try await applyUnlocked(command, reviewedInventoryRevision: reviewedInventoryRevision, at: now)
+        return try await applyUnlocked(entry, at: now)
     }
 
-    private func applyUnlocked(_ command: InventoryCommand, reviewedInventoryRevision: Int64, at now: Date,
+    private func applyUnlocked(_ entry: PantryPendingStore.Entry, at now: Date,
                                checkPending: () throws -> Void = {}) async throws -> Result {
         try requireAccess()
         try checkPending()
+        let command = entry.command, reviewedInventoryRevision = entry.reviewedInventoryRevision
         guard command.originID == store.workspaceID else { throw Failure.wrongWorkspace }
-        let request = try PantryPersistenceCodec.request(command, inventoryRevision: reviewedInventoryRevision)
+        if entry.consumption != nil { try PantryPendingStore.validateArchiveEntry(entry, inventoryWorkspaceID: store.workspaceID) }
+        let request = try entry.requestBytes()
         if let prior = try await store.inventoryCommittedOperation(id: command.id, request: request) {
             try requireAccess()
             return Result(receipt: prior, current: try await load(at: now), replayed: true)
         }
         let current = try await load(at: now)
         guard current.state.revision == reviewedInventoryRevision else { throw ComparisonStoreError.staleInventory }
-        let writes = try preparedChange(command, before: current, at: now).writes
+        let writes: [InventoryWrite]
+        if let consumption = entry.consumption {
+            do { writes = try PantryConsumptionReview.prepare(consumption.selections, before: current, at: now, replay: entry).writes }
+            catch let failure as PantryConsumptionFailure {
+                // A saved, valid review can become inapplicable if protected stock changes.
+                if failure == .reserved || failure == .insufficientFree { throw InventoryError.stale }
+                throw failure
+            }
+            try validateCapacity(of: writes, replacing: current)
+        } else {
+            writes = try preparedChange(command, before: current, at: now).writes
+        }
         let batch = InventoryBatch(workspaceID: current.state.workspaceID, operationID: command.id,
             expectedRevision: reviewedInventoryRevision, request: request, writes: writes)
         try requireAccess()
@@ -249,11 +277,15 @@ final class PantryRepository {
     /// A failed atomic-write/attribute step is reconciled by readPending; never
     /// replace a possibly written intent with a newly generated command.
     func stagePending(_ command: InventoryCommand, reviewedInventoryRevision: Int64) throws -> PantryPendingStore.Entry {
+        try stagePending(.init(command: command, reviewedInventoryRevision: reviewedInventoryRevision))
+    }
+
+    func stagePending(_ entry: PantryPendingStore.Entry) throws -> PantryPendingStore.Entry {
         try requireAccess()
         guard let pendingStore, let mutationGate,
               pendingStore.inventoryWorkspaceID == store.workspaceID else { throw Failure.pendingUnavailable }
         let lease = try mutationGate.beginExclusiveWrite(); defer { mutationGate.endExclusiveWrite(lease) }
-        return try pendingStore.save(command: command, reviewedInventoryRevision: reviewedInventoryRevision)
+        return try pendingStore.save(entry)
     }
 
     /// Restore/recognize before editable state. A cached intent whose journal was
@@ -278,7 +310,7 @@ final class PantryRepository {
             try requireAccess()
             guard try pendingStore.read() == original else { throw PantryPendingStore.Failure.operationConflict }
         }
-        let request = try PantryPersistenceCodec.request(expected.command, inventoryRevision: expected.reviewedInventoryRevision)
+        let request = try expected.requestBytes()
         let receipt = try await store.inventoryCommittedOperation(id: expected.operationID, request: request)
         try unchanged()
         if let receipt {
@@ -303,8 +335,7 @@ final class PantryRepository {
             return .cleared(current)
         }
         if commitIfUnapplied {
-            let result = try await applyUnlocked(original.command, reviewedInventoryRevision: original.reviewedInventoryRevision,
-                                                 at: now, checkPending: unchanged)
+            let result = try await applyUnlocked(original, at: now, checkPending: unchanged)
             try unchanged()
             return .committed(original, result)
         }
@@ -378,6 +409,52 @@ final class PantryRepository {
             guard page.count == InventoryPersistenceLimits.pageItems else { return result }
             cursor = page.last?.key.id
         }
+    }
+
+    func usageHistory(lotID: UUID, basis: InventoryState) async throws -> [PantryUsageHistoryRow] {
+        try requireAccess()
+        guard basis.workspaceID == originID, basis.active, try await store.inventoryState() == basis else {
+            throw PantryConsumptionFailure.stale
+        }
+        try requireAccess()
+        guard let head = try await store.inventoryRecord(.init(.lot, lotID)) else { throw PantryConsumptionFailure.stale }
+        try requireAccess()
+        let lot = try PantryPersistenceCodec.lot(head)
+        guard lot.source.originID == originID else { throw Failure.wrongWorkspace }
+        var cursor: UUID?, bytes = 0, count = 0
+        var history: [PantryUsageHistoryRow] = []
+        var seen = Set<UUID>()
+        while true {
+            let page = try await store.inventoryRecords(kind: .event, lotID: lotID, after: cursor, limit: InventoryPersistenceLimits.pageItems)
+            try requireAccess()
+            for record in page {
+                bytes += record.payload.count
+                count += 1
+                guard bytes <= limits.payloadBytes, count <= limits.observations else { throw InventoryError.capacity }
+                let event = try JSONDecoder().decode(InventoryEvent.self, from: record.payload)
+                guard record.payloadVersion == 1, record.revision == 1, event.id == record.key.id, event.lotID == lotID,
+                      event.originID == originID, record.lotID == lotID, (1...lot.revision).contains(event.revision),
+                      event.occurredAt.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalidProvenance }
+                for row in try PantryUsageHistoryRow.entries(from: event) {
+                    guard seen.insert(row.id).inserted else { throw Failure.invalidProvenance }
+                    history.append(row)
+                }
+            }
+            guard page.count == InventoryPersistenceLimits.pageItems else { break }
+            cursor = page.last?.key.id
+        }
+        let cooked = try await cookUsageHistory(lotID: lotID, basis: basis)
+        try requireAccess()
+        let archived = try await archivedUsage?(lot) ?? []
+        try requireAccess()
+        for row in cooked + archived {
+            guard seen.insert(row.id).inserted else { throw Failure.invalidProvenance }
+            history.append(row)
+        }
+        let final = try await store.inventoryState()
+        try requireAccess()
+        guard final == basis else { throw PantryConsumptionFailure.stale }
+        return history.sorted { ($0.occurredAt, $0.id.uuidString) > ($1.occurredAt, $1.id.uuidString) }
     }
 
     func pricePage(after prior: PantryPricePage? = nil) async throws -> PantryPricePage {

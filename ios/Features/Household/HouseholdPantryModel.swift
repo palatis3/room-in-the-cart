@@ -18,9 +18,13 @@ struct HouseholdPantryRuntime: Equatable {
 struct PendingPantryAddition: PendingShopWrite {
     let subject: String
     let intent: HouseholdPantryIntent
+    var reviewOnly: Bool? = nil
 
     func validate() throws {
         guard !subject.isEmpty else { throw ClientError.configuration }
+        if reviewOnly == true {
+            guard case .receipt = intent.change else { throw ClientError.invalidResponse }
+        }
         try intent.validate(for: intent.session)
     }
     func sharesScope(with other: Self) -> Bool {
@@ -53,7 +57,7 @@ protocol HouseholdPantryServing: Sendable {
 extension HouseholdService: HouseholdPantryServing {}
 
 enum HouseholdPantryConfirmation {
-    case unavailable, retryPreparation, savedForSubmission
+    case unavailable, retryPreparation, savedForSubmission, receiptNeedsReview
 }
 
 @MainActor final class HouseholdPantryModel: ObservableObject {
@@ -67,6 +71,7 @@ enum HouseholdPantryConfirmation {
     private var session: HouseholdPantrySession?
     @Published private(set) var page: HouseholdPantryPage?
     @Published private(set) var lots: [HouseholdPantryPage.Lot] = []
+    @Published private(set) var rejectedReceipt: HouseholdReceiptAcquisition?
     @Published private(set) var pending: PendingPantryAddition?
     @Published private(set) var staples: HouseholdStaplePage?
     @Published private(set) var grants: HouseholdPantryGrants?
@@ -86,6 +91,7 @@ enum HouseholdPantryConfirmation {
         page = nil
         lots.removeAll()
         pending = nil
+        rejectedReceipt = nil
         grants = nil
         staples = nil
         session = nil
@@ -186,6 +192,7 @@ enum HouseholdPantryConfirmation {
     @discardableResult
     func confirmChange(_ change: HouseholdPantryChange, reviewed: HouseholdPantryPage) async -> HouseholdPantryConfirmation {
         guard let session, let storeEpoch, pending == nil, page == reviewed else { return .unavailable }
+        if case .receipt(let receipt) = change, rejectedReceipt == receipt { return .receiptNeedsReview }
         if case .correction(let correction) = change {
             guard lots.contains(where: { $0.id == correction.lotId && $0.origin == .manual &&
                 $0.observation?.observationId == correction.predecessorId }) else { return .unavailable }
@@ -214,20 +221,40 @@ enum HouseholdPantryConfirmation {
             try check(start)
             result = .savedForSubmission
             pending = record
-            try await submit(record, session: session, epoch: storeEpoch, start: start)
+            result = try await submit(record, session: session, epoch: storeEpoch, start: start, editorOpen: true)
         }
         return result
     }
     func retry() async {
-        guard let session, let storeEpoch, let pending, page?.grantEpoch == pending.intent.grantEpoch else { return }
+        guard let session, let storeEpoch, let pending, pending.reviewOnly != true, page?.grantEpoch == pending.intent.grantEpoch else { return }
         await perform { start in
-            try await submit(pending, session: session, epoch: storeEpoch, start: start)
+            _ = try await submit(pending, session: session, epoch: storeEpoch, start: start, editorOpen: false)
         }
     }
-    private func submit(_ record: PendingPantryAddition, session: HouseholdPantrySession, epoch: UUID, start: UUID) async throws {
+    private func submit(_ record: PendingPantryAddition, session: HouseholdPantrySession, epoch: UUID, start: UUID, editorOpen: Bool) async throws -> HouseholdPantryConfirmation {
         guard try await store.contains(record, expectedEpoch: epoch) else { throw ClientError.cancelled }
         try check(start)
-        _ = try await service.submitHouseholdPantryChange(record.intent, session: session)
+        do {
+            _ = try await service.submitHouseholdPantryChange(record.intent, session: session)
+        } catch ClientError.service(status: 409, code: "receipt_layout_review", correlationID: _, retryAfter: _) {
+            // The service rejected the complete receipt transaction before changing stock.
+            try check(start)
+            guard case .receipt(let receipt) = record.intent.change else { throw ClientError.invalidResponse }
+            if editorOpen {
+                try await store.complete(record, expectedEpoch: epoch)
+                try check(start)
+                pending = nil
+                rejectedReceipt = receipt
+            } else {
+                var rejected = record
+                rejected.reviewOnly = true
+                try await store.replace(record, with: rejected, expectedEpoch: epoch)
+                try check(start)
+                pending = rejected
+            }
+            notice = Self.receiptReviewGuidance
+            return .receiptNeedsReview
+        }
         try check(start)
         clearFacts()
         do {
@@ -252,7 +279,13 @@ enum HouseholdPantryConfirmation {
                 }
             }
         }
+        return .savedForSubmission
     }
+
+    static var receiptReviewGuidance: String {
+        householdPantryText("This copy could not be matched to the saved receipt. Check the household stock. For a missed item, try the original file. If it still cannot be matched, choose Add food to storage.")
+    }
+
     func clearReviewedRetry() async {
         guard let pending, let storeEpoch, let page, pending.intent.grantEpoch == page.grantEpoch else { return }
         await perform { start in

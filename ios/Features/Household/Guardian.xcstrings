@@ -17,6 +17,54 @@
         }
       }
     },
+    "A private review has already been requested. Refresh to see your cases.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A private review has already been requested. Refresh to see your cases."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya se ha solicitado una revisión privada. Actualiza la lista para ver tus casos."
+          }
+        }
+      }
+    },
+    "A sign-in code was requested, but the child’s account has not been confirmed. Ask the review team to investigate the interrupted setup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sign-in code was requested, but the child’s account has not been confirmed. Ask the review team to investigate the interrupted setup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se solicitó un código de acceso, pero la cuenta del menor no se ha confirmado. Pide al equipo de revisión que investigue la configuración interrumpida."
+          }
+        }
+      }
+    },
+    "Additional guardian verification needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional guardian verification needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se necesita una verificación adicional del tutor"
+          }
+        }
+      }
+    },
     "Adulthood verification is complete. Review the current notice and make a separate permission decision.": {
       "localizations": {
         "en": {
@@ -97,6 +145,22 @@
         }
       }
     },
+    "Ask your parent or legal guardian to open Household requests on their own device, choose your household, then open Guardian controls and Delete a child’s account. They can do this before you finish pairing your device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask your parent or legal guardian to open Household requests on their own device, choose your household, then open Guardian controls and Delete a child’s account. They can do this before you finish pairing your device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pide a tu madre, padre o tutor legal que abra Solicitudes del hogar en su propio dispositivo, elija tu hogar y abra Controles del tutor y después Eliminar la cuenta de un menor. Puede hacerlo antes de que termines de vincular tu dispositivo."
+          }
+        }
+      }
+    },
     "Begin a new child setup": {
       "localizations": {
         "en": {
@@ -173,6 +237,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "La cancelación termina esta configuración pendiente. El permiso activo de un menor se retira desde los permisos actuales."
+          }
+        }
+      }
+    },
+    "Case available until": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Case available until"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caso disponible hasta"
+          }
+        }
+      }
+    },
+    "Case number": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Case number"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Número de caso"
           }
         }
       }
@@ -333,6 +429,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se eliminó el acceso del menor de este dispositivo. No se pudo confirmar el cierre de sesión remoto."
+          }
+        }
+      }
+    },
+    "Child account deletion receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child account deletion receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobante de eliminación de la cuenta del menor"
           }
         }
       }
@@ -577,6 +689,70 @@
         }
       }
     },
+    "Child’s account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child’s account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta del menor"
+          }
+        }
+      }
+    },
+    "Child’s approved sign-in email": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child’s approved sign-in email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correo de acceso aprobado para el menor"
+          }
+        }
+      }
+    },
+    "Choose a child setup for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a child setup for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una configuración de menor para revisar"
+          }
+        }
+      }
+    },
+    "Choose a child’s account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a child’s account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la cuenta de un menor"
+          }
+        }
+      }
+    },
     "Choose a pickup": {
       "localizations": {
         "en": {
@@ -657,6 +833,22 @@
         }
       }
     },
+    "Confirm permanent deletion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm permanent deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la eliminación permanente"
+          }
+        }
+      }
+    },
     "Confirm this child's device": {
       "localizations": {
         "en": {
@@ -669,6 +861,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirmar el dispositivo de este menor"
+          }
+        }
+      }
+    },
+    "Contact support for help verifying your guardian authority. Leave the child’s personal information out of your first message.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact support for help verifying your guardian authority. Leave the child’s personal information out of your first message."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponte en contacto con soporte para verificar tu autoridad como tutor. Evita incluir datos personales del menor en el primer mensaje."
+          }
+        }
+      }
+    },
+    "Contact support with your case number to ask how to complete guardian verification.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact support with your case number to ask how to complete guardian verification."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunícate con soporte e indica tu número de caso para saber cómo completar la verificación del tutor."
+          }
+        }
+      }
+    },
+    "Copy this address into your email app to contact support.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy this address into your email app to contact support."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia esta dirección en tu aplicación de correo para ponerte en contacto con soporte."
           }
         }
       }
@@ -717,6 +957,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aviso actual para el tutor"
+          }
+        }
+      }
+    },
+    "Delete a child’s account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete a child’s account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la cuenta de un menor"
+          }
+        }
+      }
+    },
+    "Delete my child account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete my child account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar mi cuenta de menor"
+          }
+        }
+      }
+    },
+    "Delete this child’s account…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this child’s account…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la cuenta de este menor…"
+          }
+        }
+      }
+    },
+    "Deletion complete. The service erased the child’s private account data and confirmed deletion of their sign-in.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletion complete. The service erased the child’s private account data and confirmed deletion of their sign-in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La eliminación ha finalizado. El servicio ha borrado los datos privados de la cuenta del menor y ha confirmado la eliminación de su cuenta de acceso."
+          }
+        }
+      }
+    },
+    "Draft an email about guardian verification": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft an email about guardian verification"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redactar un correo sobre la verificación del tutor"
           }
         }
       }
@@ -849,6 +1169,22 @@
         }
       }
     },
+    "Guardian review for child account deletion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardian review for child account deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificación del tutor para eliminar la cuenta de un menor"
+          }
+        }
+      }
+    },
     "Guardian-approved invitation": {
       "localizations": {
         "en": {
@@ -865,6 +1201,38 @@
         }
       }
     },
+    "Help with child account deletion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help with child account deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda para eliminar la cuenta de un menor"
+          }
+        }
+      }
+    },
+    "I am the parent or legal guardian of %@. I request a private review of this setup and my authority to delete any associated child account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I am the parent or legal guardian of %@. I request a private review of this setup and my authority to delete any associated child account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soy la madre, el padre o el tutor legal de %@. Solicito una revisión privada de esta configuración y de mi autoridad para eliminar cualquier cuenta de menor asociada."
+          }
+        }
+      }
+    },
     "I am this child's parent or legal guardian": {
       "localizations": {
         "en": {
@@ -877,6 +1245,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Soy el padre, la madre o el tutor legal de este menor"
+          }
+        }
+      }
+    },
+    "I confirm that I am the current parent or legal guardian of %@ and authorize permanent deletion of this child’s account in every household. An accepted request cannot be undone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirm that I am the current parent or legal guardian of %@ and authorize permanent deletion of this child’s account in every household. An accepted request cannot be undone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmo que actualmente soy la madre, el padre o el tutor legal de %@ y autorizo la eliminación permanente de su cuenta en todos los hogares. Una vez aceptada la solicitud, no se puede deshacer."
           }
         }
       }
@@ -929,6 +1313,38 @@
         }
       }
     },
+    "If your sign-in stopped after you requested an email code, your guardian can open a private review from that screen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If your sign-in stopped after you requested an email code, your guardian can open a private review from that screen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si el inicio de sesión se interrumpió después de solicitar un código por correo, tu tutor puede abrir una revisión privada desde esa pantalla."
+          }
+        }
+      }
+    },
+    "Interrupted sign-in · account unconfirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interrupted sign-in · account unconfirmed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio de sesión interrumpido · cuenta sin confirmar"
+          }
+        }
+      }
+    },
     "Invitation from your guardian": {
       "localizations": {
         "en": {
@@ -945,6 +1361,22 @@
         }
       }
     },
+    "Last updated": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last updated"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última actualización"
+          }
+        }
+      }
+    },
     "Leave child space": {
       "localizations": {
         "en": {
@@ -957,6 +1389,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salir del espacio del menor"
+          }
+        }
+      }
+    },
+    "Leaving child space signs you out on this device. Your guardian can request permanent deletion from every household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaving child space signs you out on this device. Your guardian can request permanent deletion from every household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al salir del espacio para menores se cierra tu sesión en este dispositivo. Tu tutor puede solicitar la eliminación permanente de tu cuenta en todos los hogares."
           }
         }
       }
@@ -1009,6 +1457,54 @@
         }
       }
     },
+    "No child setup is available for review here. In Guardian controls, check verification and consent for the intended email. Refresh after the child requests a sign-in code.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No child setup is available for review here. In Guardian controls, check verification and consent for the intended email. Refresh after the child requests a sign-in code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí no hay ninguna configuración de menor disponible para revisión. En Controles del tutor, comprueba la verificación y el permiso para el correo indicado. Actualiza la lista cuando el menor solicite un código de acceso."
+          }
+        }
+      }
+    },
+    "No status is available for this receipt. It may have expired or the request may not have arrived. Check again, or refresh and review the child’s account again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No status is available for this receipt. It may have expired or the request may not have arrived. Check again, or refresh and review the child’s account again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay información sobre el estado de este comprobante. Puede haber caducado o puede que la solicitud no haya llegado. Vuelve a consultar el estado o actualiza la lista y revisa otra vez la cuenta del menor."
+          }
+        }
+      }
+    },
+    "No verified child account is available for immediate deletion here. If sign-in was interrupted or another guardian is involved, open a private guardian review below.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified child account is available for immediate deletion here. If sign-in was interrupted or another guardian is involved, open a private guardian review below."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí no hay ninguna cuenta de menor verificada disponible para su eliminación directa. Si se interrumpió el inicio de sesión o hay otro tutor, abre una revisión privada del tutor más abajo."
+          }
+        }
+      }
+    },
     "Notice language": {
       "localizations": {
         "en": {
@@ -1041,6 +1537,22 @@
         }
       }
     },
+    "Only the child’s verified parent or legal guardian can confirm deletion. Access ends when the service accepts the request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the child’s verified parent or legal guardian can confirm deletion. Access ends when the service accepts the request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo la madre, el padre o el tutor legal verificado del menor puede confirmar la eliminación. El acceso finaliza cuando el servicio acepta la solicitud."
+          }
+        }
+      }
+    },
     "Only your own requests and their status appear here. The shopper decides what goes into the basket.": {
       "localizations": {
         "en": {
@@ -1057,6 +1569,38 @@
         }
       }
     },
+    "Open a private review case?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a private review case?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Abrir un caso de revisión privada?"
+          }
+        }
+      }
+    },
+    "Open case": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open case"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir caso"
+          }
+        }
+      }
+    },
     "Own-request access is active": {
       "localizations": {
         "en": {
@@ -1069,6 +1613,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "El acceso a las solicitudes propias está activo"
+          }
+        }
+      }
+    },
+    "Permanently delete this child’s account?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete this child’s account?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar permanentemente la cuenta de este menor?"
           }
         }
       }
@@ -1153,6 +1713,38 @@
         }
       }
     },
+    "Private guardian review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private guardian review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión privada del tutor"
+          }
+        }
+      }
+    },
+    "Private review case": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private review case"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caso de revisión privada"
+          }
+        }
+      }
+    },
     "Read the pairing code displayed on the intended child's device. Confirm that exact code here before access can activate.": {
       "localizations": {
         "en": {
@@ -1169,6 +1761,22 @@
         }
       }
     },
+    "Refresh child accounts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh child accounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar las cuentas de menores"
+          }
+        }
+      }
+    },
     "Refresh my requests": {
       "localizations": {
         "en": {
@@ -1181,6 +1789,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Actualizar mis solicitudes"
+          }
+        }
+      }
+    },
+    "Refresh my review cases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh my review cases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar mis casos de revisión"
           }
         }
       }
@@ -1265,6 +1889,22 @@
         }
       }
     },
+    "Request a private review when the service needs more evidence of your authority to delete a child’s account. Opening a case lets the review team verify your request. Deletion requires a separate decision.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request a private review when the service needs more evidence of your authority to delete a child’s account. Opening a case lets the review team verify your request. Deletion requires a separate decision."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicita una revisión privada cuando el servicio necesite más pruebas de tu autoridad para eliminar la cuenta de un menor. Al abrir un caso, el equipo de revisión podrá verificar tu solicitud. La eliminación requiere una decisión aparte."
+          }
+        }
+      }
+    },
     "Request adult verification": {
       "localizations": {
         "en": {
@@ -1293,6 +1933,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solicita la verificación de mayoría de edad con el correo confirmado de tu cuenta actual. La verificación por sí sola no concede permiso."
+          }
+        }
+      }
+    },
+    "Request or check a private guardian review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request or check a private guardian review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitar o consultar una revisión privada del tutor"
+          }
+        }
+      }
+    },
+    "Request private review…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request private review…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitar una revisión privada…"
           }
         }
       }
@@ -1393,6 +2065,38 @@
         }
       }
     },
+    "Review case closed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review case closed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caso de revisión cerrado"
+          }
+        }
+      }
+    },
+    "Review expires": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review expires"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La revisión caduca"
+          }
+        }
+      }
+    },
     "Review or withdraw current permissions": {
       "localizations": {
         "en": {
@@ -1405,6 +2109,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar o retirar los permisos actuales"
+          }
+        }
+      }
+    },
+    "Review permanent deletion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review permanent deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la eliminación permanente"
+          }
+        }
+      }
+    },
+    "Review request received": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review request received"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud de revisión recibida"
+          }
+        }
+      }
+    },
+    "Review status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado de la revisión"
           }
         }
       }
@@ -1501,6 +2253,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Configuración seleccionada"
+          }
+        }
+      }
+    },
+    "Setup ID": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup ID"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID de configuración"
           }
         }
       }
@@ -1649,6 +2417,38 @@
         }
       }
     },
+    "Sign in to your guardian account with a new email code, open this household, and review the child’s account within five minutes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to your guardian account with a new email code, open this household, and review the child’s account within five minutes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión en tu cuenta de tutor con un nuevo código enviado por correo, abre este hogar y revisa la cuenta del menor en un plazo de cinco minutos."
+          }
+        }
+      }
+    },
+    "Sign in to your guardian account with a new email code, then open this household to request a private review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to your guardian account with a new email code, then open this household to request a private review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión en tu cuenta de tutor con un nuevo código enviado por correo y abre este hogar para solicitar una revisión privada."
+          }
+        }
+      }
+    },
     "Spanish": {
       "localizations": {
         "en": {
@@ -1661,6 +2461,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Español"
+          }
+        }
+      }
+    },
+    "Support contact details are unavailable on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support contact details are unavailable on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos de contacto de soporte no están disponibles en este dispositivo."
           }
         }
       }
@@ -1713,6 +2529,38 @@
         }
       }
     },
+    "The receipt is saved on this phone. Check deletion status again when you can connect.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receipt is saved on this phone. Check deletion status again when you can connect."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El comprobante está guardado en este teléfono. Vuelve a consultar el estado de la eliminación cuando tengas conexión."
+          }
+        }
+      }
+    },
+    "The request was not sent. Unlock this phone so it can save the child’s deletion receipt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The request was not sent. Unlock this phone so it can save the child’s deletion receipt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud no se ha enviado. Desbloquea este teléfono para que pueda guardar el comprobante de eliminación de la cuenta del menor."
+          }
+        }
+      }
+    },
     "The result is not confirmed. Retry this same saved invitation or finish action.": {
       "localizations": {
         "en": {
@@ -1729,6 +2577,54 @@
         }
       }
     },
+    "The review expired. Select the child again before confirming.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The review expired. Select the child again before confirming."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La revisión ha caducado. Vuelve a seleccionar al menor antes de confirmar."
+          }
+        }
+      }
+    },
+    "The review request was not sent. Unlock this phone and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The review request was not sent. Unlock this phone and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud de revisión no se ha enviado. Desbloquea este teléfono y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "The service could not confirm the review request. Refresh your cases before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service could not confirm the review request. Refresh your cases before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no ha podido confirmar la solicitud de revisión. Actualiza la lista de casos antes de volver a intentarlo."
+          }
+        }
+      }
+    },
     "The service could not confirm this setup action. Keep the exact retry and check status.": {
       "localizations": {
         "en": {
@@ -1741,6 +2637,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "El servicio no pudo confirmar esta acción de configuración. Conserva el reintento exacto y consulta el estado."
+          }
+        }
+      }
+    },
+    "The service could not verify this child account and your authority to delete it. Check any saved receipt, then refresh the list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service could not verify this child account and your authority to delete it. Check any saved receipt, then refresh the list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no ha podido verificar la cuenta del menor y tu autorización para eliminarla. Consulta los comprobantes guardados y luego actualiza la lista."
+          }
+        }
+      }
+    },
+    "The service could not verify this guardian and child account together. Refresh the list after checking the child’s approved sign-in.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service could not verify this guardian and child account together. Refresh the list after checking the child’s approved sign-in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no ha podido verificar la relación entre el tutor y la cuenta del menor. Comprueba el correo de acceso aprobado para el menor y actualiza la lista."
+          }
+        }
+      }
+    },
+    "The service is not accepting new private review cases. You can still check your existing cases.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service is not accepting new private review cases. You can still check your existing cases."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no acepta nuevos casos de revisión privada en este momento. Puedes consultar tus casos existentes."
           }
         }
       }
@@ -1857,6 +2801,38 @@
         }
       }
     },
+    "This review case is closed. Only a deletion receipt confirms that the account was erased.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review case is closed. Only a deletion receipt confirms that the account was erased."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este caso de revisión está cerrado. Solo un comprobante de eliminación confirma que se ha borrado la cuenta."
+          }
+        }
+      }
+    },
+    "This review request has expired or changed. Refresh your cases before opening a new one.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review request has expired or changed. Refresh your cases before opening a new one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta solicitud de revisión ha caducado o ha cambiado. Actualiza tus casos antes de abrir uno nuevo."
+          }
+        }
+      }
+    },
     "This signs the child out on this device. Adult groceries, meals and costs stay locked and require device-owner authentication.": {
       "localizations": {
         "en": {
@@ -1885,6 +2861,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este espacio es para tus propias solicitudes. Tu tutor debe confirmar este dispositivo antes de que pueda comenzar el acceso."
+          }
+        }
+      }
+    },
+    "To manage a child’s account, sign in to your guardian account, choose the child’s household, and open Guardian controls.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To manage a child’s account, sign in to your guardian account, choose the child’s household, and open Guardian controls."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para gestionar la cuenta de un menor, inicia sesión en tu cuenta de tutor, elige el hogar del menor y abre Controles del tutor."
+          }
+        }
+      }
+    },
+    "Under private review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under private review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En revisión privada"
           }
         }
       }
@@ -1985,6 +2993,22 @@
         }
       }
     },
+    "Verify email and review deletion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify email and review deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar el correo y revisar la eliminación"
+          }
+        }
+      }
+    },
     "Verify the child sign-in code": {
       "localizations": {
         "en": {
@@ -2045,6 +3069,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esperando a que tu tutor confirme el código de este dispositivo."
+          }
+        }
+      }
+    },
+    "Withdrawing permission ends access to this household. Deleting the child’s account permanently removes their sign-in and private account data across all households.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdrawing permission ends access to this household. Deleting the child’s account permanently removes their sign-in and private account data across all households."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al retirar el permiso, se pone fin al acceso a este hogar. Al eliminar la cuenta del menor, se borran de forma permanente su cuenta de acceso y sus datos privados en todos los hogares."
           }
         }
       }

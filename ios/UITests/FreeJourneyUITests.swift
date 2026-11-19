@@ -44,23 +44,32 @@ import XCTest
             XCTAssertTrue(confirm.waitForNonExistence(timeout: 8), app.debugDescription)
         }
         enterReservation("2")
+        let backingPrefix = "pantry.claimBacking."
+        let newBacking = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", backingPrefix)).firstMatch
+        reveal(newBacking)
+        XCTAssertEqual(newBacking.value as? String, "2 units")
+        let claimID = try XCTUnwrap(UUID(uuidString: String(newBacking.identifier.dropFirst(backingPrefix.count))))
+        let backing = element(backingPrefix + claimID.uuidString)
+        let release = app.buttons["Release food from this reservation"]
+
         restart()
         tap(app.buttons["shop.myPantry"])
         tap(app.buttons[batchID])
-        let backing = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.claimBacking.")).firstMatch
-        XCTAssertTrue(backing.waitForExistence(timeout: 8), app.debugDescription)
+        reveal(backing)
         XCTAssertEqual(backing.value as? String, "2 units")
-        let claimID = String(backing.identifier.dropFirst("pantry.claimBacking.".count))
-        tap(app.buttons["Release food from this reservation"])
+        tap(release)
         enterReservation("1")
+        reveal(backing, initiallyUpward: false)
         XCTAssertEqual(backing.value as? String, "1 unit")
         tap(app.buttons["Used up"])
         enableSwitch("pantry.acknowledgeReservations")
         tap(confirm)
-        let shortfall = app.descendants(matching: .any).matching(identifier: "pantry.claimShortfall." + claimID).firstMatch
-        XCTAssertTrue(shortfall.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 8), app.debugDescription)
+        let shortfall = element("pantry.claimShortfall." + claimID.uuidString)
+        reveal(shortfall, initiallyUpward: false)
         XCTAssertEqual(shortfall.value as? String, "1 unit")
-        XCTAssertTrue(app.buttons["Release food from this reservation"].exists)
+        reveal(release)
+        XCTAssertTrue(release.isEnabled)
     }
 
     func testFinishPackageReviewsTwoMealsAndKeepsLunchAndHomeConsentAfterCancel() {
@@ -124,8 +133,11 @@ import XCTest
         fill("Tortillas", into: "Ingredient name")
         fill("2", into: "Amount, optional")
         enableSwitch("Required appliances reviewed")
-        tap(app.buttons["ledgerReviewDinner"])
-        tap(app.buttons["ledgerSaveDinner"])
+        // The floating tab bar can cover the center of a still-hittable Review row.
+        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "FINISH_PACKAGE_LIBRARY_REVIEW")
+        let saveDinner = app.buttons["ledgerSaveDinner"]
+        XCTAssertTrue(saveDinner.waitForExistence(timeout: 8), app.debugDescription)
+        tapVisibleFormRow(saveDinner, marker: "FINISH_PACKAGE_LIBRARY_SAVE")
         tap(app.buttons["Done"])
         restart()
         tap(app.tabBars.buttons["Shop"])
@@ -144,9 +156,11 @@ import XCTest
         tap(app.buttons["Tomorrow’s lunch"])
         fill("2", into: "pantry.reservationAmount")
         tap(app.buttons["Review reservation"])
-        tap(app.buttons["pantry.confirm"])
+        let confirmReservation = app.buttons["pantry.confirm"]
+        tap(confirmReservation)
+        XCTAssertTrue(confirmReservation.waitForNonExistence(timeout: 8), app.debugDescription)
         let backing = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.claimBacking.")).firstMatch
-        XCTAssertTrue(backing.waitForExistence(timeout: 10), app.debugDescription)
+        reveal(backing)
         XCTAssertEqual(backing.value as? String, "2 units")
         let backingID = backing.identifier
         tap(app.navigationBars.buttons.firstMatch)
@@ -201,7 +215,9 @@ import XCTest
         restart()
         tap(app.buttons["shop.myPantry"])
         tap(app.buttons[lotID])
-        XCTAssertEqual(element(backingID).value as? String, "2 units")
+        let restoredBacking = element(backingID)
+        reveal(restoredBacking)
+        XCTAssertEqual(restoredBacking.value as? String, "2 units")
         tap(app.buttons["pantry.batch.meals"])
         checkAmount("tonight.batch.available", "4 items")
         XCTAssertFalse(home.exists, app.debugDescription)
@@ -683,15 +699,15 @@ import XCTest
         XCTAssertFalse(element("pantry.foodKeeper.range").exists)
     }
 
-    func testEnglishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
-        verifyLotFoodKeeper(spanish: false)
+    func testEnglishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() throws {
+        try verifyLotFoodKeeper(spanish: false)
     }
 
-    func testSpanishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
-        verifyLotFoodKeeper(spanish: true)
+    func testSpanishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() throws {
+        try verifyLotFoodKeeper(spanish: true)
     }
 
-    private func verifyLotFoodKeeper(spanish: Bool) {
+    private func verifyLotFoodKeeper(spanish: Bool) throws {
         func openCannedChickenGuide() {
             tapVisibleFormRow(app.buttons["pantry.foodKeeper"], marker: "FOOD_KEEPER_GUIDE_TAP")
             let title = spanish ? "Guía de conservación de alimentos" : "Food storage guide"
@@ -737,8 +753,37 @@ import XCTest
         let source = element("pantry.foodKeeper.source")
         XCTAssertTrue(source.waitForExistence(timeout: 8))
         XCTAssertTrue(source.label.contains("v128 · #142"))
-        XCTAssertTrue(element("pantry.foodKeeper.range").exists)
+        let openingLabel = spanish ? "Fecha de apertura" : "Date opened"
+        let opened = app.descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@ OR label BEGINSWITH %@", openingLabel, openingLabel + ",")).firstMatch
+        reveal(opened)
+        let dateText = [opened.label, opened.value as? String ?? ""].joined(separator: " ")
+        let isoDay = try XCTUnwrap(dateText.range(of: #"[0-9]{4}-[0-9]{2}-[0-9]{2}"#, options: .regularExpression), dateText)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.dateFormat = "yyyy-MM-dd"
+        let start = try XCTUnwrap(formatter.date(from: String(dateText[isoDay])))
+        let expectedDays = try [3, 4].map { days in
+            formatter.string(from: try XCTUnwrap(calendar.date(byAdding: .day, value: days, to: start)))
+        }
+        let savedRange = element("pantry.foodKeeper.range")
+        reveal(savedRange)
+        let rangeText = [savedRange.label, savedRange.value as? String ?? ""].joined(separator: " ")
+        XCTAssertTrue(rangeText.contains(expectedDays.joined(separator: " – ")), rangeText)
         capture(spanish ? "Intervalo de calidad guardado en el lote" : "Saved USDA range on the ordinary lot after relaunch")
+        tapVisibleFormRow(app.buttons["pantry.foodKeeper"])
+        let chooseAnother = app.buttons["foodKeeper.chooseAnother"]
+        XCTAssertTrue(chooseAnother.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["foodKeeper.review.refrigerate_after_opening"].exists)
+        tap(chooseAnother)
+        let guideBar = app.navigationBars[spanish ? "Guía de conservación de alimentos" : "Food storage guide"]
+        XCTAssertTrue(guideBar.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["foodKeeper.product.142"].waitForExistence(timeout: 8))
+        tap(guideBar.buttons.firstMatch)
         tap(app.buttons["pantry.move.freezer"])
         let commit = app.buttons["pantry.confirm"]
         tap(commit)
@@ -1011,14 +1056,8 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
-    func testSystemShareSheetStagesReceiptForExplicitPrivateReview() throws {
-        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--receipt-share-test-sender", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
-        app.launch()
-        let marker = app.staticTexts["fixture.receipt.shareToken"]
-        XCTAssertTrue(marker.waitForExistence(timeout: 12), app.debugDescription)
-        let token = marker.label
-        XCTAssertEqual(token.count, 64)
-        let share = app.buttons["Share sample receipt PDF"]
+    private func openShareExtension(from source: String) {
+        let share = app.buttons[source]
         XCTAssertTrue(share.waitForExistence(timeout: 12)); share.tap()
         let destination = app.cells.matching(NSPredicate(format: "identifier == %@ AND label == %@", "shareCell", "Room in the Cart")).firstMatch
         if !destination.waitForExistence(timeout: 4) {
@@ -1028,12 +1067,14 @@ import XCTest
         let namedDestination = app.cells.matching(NSPredicate(format: "label == %@", "Room in the Cart")).firstMatch
         XCTAssertTrue(namedDestination.waitForExistence(timeout: 10), app.debugDescription)
         namedDestination.tap()
-        let stage = app.buttons["Save receipt file for review"]
+    }
+
+    private func tapSettledShareControl(_ control: XCUIElement) {
         // The remote extension publishes its button while the sheet is still sliding into place.
         var previousFrame: CGRect?
         let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard stage.exists, stage.isEnabled, stage.isHittable,
-                  let frame = try? stage.snapshot().frame, !frame.isEmpty, self.app.frame.contains(frame) else {
+            guard control.exists, control.isEnabled, control.isHittable,
+                  let frame = try? control.snapshot().frame, !frame.isEmpty, self.app.frame.contains(frame) else {
                 previousFrame = nil
                 return false
             }
@@ -1041,7 +1082,36 @@ import XCTest
             return previousFrame == frame
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 15), .completed, app.debugDescription)
-        stage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    }
+
+    func testSystemShareSheetCanReviewAPlainTextFileAsAShoppingList() {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--shopping-list-text-file",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        openShareExtension(from: "Share sample grocery text file")
+        let list = app.buttons["Use the selected text as a shopping list"]
+        XCTAssertTrue(app.buttons["Save receipt file for review"].waitForExistence(timeout: 12), app.debugDescription)
+        tapSettledShareControl(list)
+        let editor = app.textViews["Review text"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(editor.value as? String, "2 cajas de arroz\nCafé")
+        XCTAssertTrue(app.buttons["Save for review"].exists)
+        XCTAssertFalse(app.buttons["Save receipt file for review"].exists)
+        tapSettledShareControl(app.buttons["Cancel"])
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 12))
+    }
+
+    func testSystemShareSheetStagesReceiptForExplicitPrivateReview() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--receipt-share-test-sender", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let marker = app.staticTexts["fixture.receipt.shareToken"]
+        XCTAssertTrue(marker.waitForExistence(timeout: 12), app.debugDescription)
+        let token = marker.label
+        XCTAssertEqual(token.count, 64)
+        openShareExtension(from: "Share sample receipt PDF")
+        let stage = app.buttons["Save receipt file for review"]
+        tapSettledShareControl(stage)
         XCTAssertTrue(stage.waitForNonExistence(timeout: 12), app.debugDescription)
         app.terminate()
         launch(reset: true, sharedReceiptToken: token)
@@ -1081,10 +1151,14 @@ import XCTest
         })
     }
 
-    private func reviewManualOatsAtMarket(checkAssistance: Bool = false) {
+    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false) {
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
-        receiptTap(wording)
+        XCTAssertTrue(wording.waitForExistence(timeout: 8))
+        XCTAssertTrue(wording.isHittable, app.debugDescription)
+        XCTAssertTrue(scrollableArea().contains(CGPoint(x: wording.frame.midX, y: wording.frame.midY)), app.debugDescription)
+        wording.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 4))
         wording.typeText("Oats 3 count USD 4.20")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
         let label = app.textFields["Source reference label"]
@@ -1114,6 +1188,11 @@ import XCTest
         receiptTap(usable)
         usable.typeText("2")
         if app.buttons["receipt.keyboardDone"].exists { app.buttons["receipt.keyboardDone"].tap() }
+        if let storage {
+            receiptTap(app.buttons["receipt.storage.0"])
+            receiptTap(app.buttons[storage])
+        }
+        if paidPrintedTotal { receiptTap(app.buttons["receipt.printedPrice.0"]) }
         receiptTap(app.buttons["receipt.review"])
     }
 
@@ -1147,16 +1226,67 @@ import XCTest
         XCTAssertEqual(lots.count, 1)
     }
 
+    func testReceiptPaidTotalCanBeMarkedUnknownWithoutBecomingFree() {
+        launch(reset: true)
+        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.buttons["pantry.setup.apply"])
+        receiptTap(app.buttons["pantry.receipt"])
+        reviewManualOatsAtMarket(paidPrintedTotal: true)
+        receiptTap(app.buttons["receipt.commit"])
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+        receiptTap(app.buttons["pantry.receiptHistory"])
+        let edit = app.buttons["Correct this paid total"].firstMatch
+        receiptTap(edit)
+        let markUnknown = app.buttons["Mark paid total as unknown"]
+        receiptTap(markUnknown)
+        app.alerts.buttons["Cancel"].tap()
+        XCTAssertTrue(app.staticTexts["Paid line total $4.20"].exists)
+        receiptTap(markUnknown)
+        app.alerts.buttons["Mark as unknown"].tap()
+        XCTAssertTrue(app.staticTexts["Price correction saved."].waitForExistence(timeout: 8))
+
+        app.terminate()
+        launch(reset: false)
+        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.buttons["pantry.receiptHistory"])
+        receiptTap(edit)
+        XCTAssertTrue(app.navigationBars["Correct paid price"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Paid price unknown"].exists)
+        XCTAssertTrue(app.staticTexts["Receipt revision 2"].exists)
+        XCTAssertFalse(markUnknown.exists)
+        let price = app.textFields["Corrected paid line total in USD"]
+        receiptTap(price)
+        price.typeText("0")
+        receiptTap(app.buttons["receipt.correctionKeyboardDone"])
+        receiptTap(app.buttons["Save price correction"])
+        XCTAssertTrue(app.staticTexts["Price correction saved."].waitForExistence(timeout: 8))
+        receiptTap(edit)
+        XCTAssertTrue(app.staticTexts["Paid line total $0.00"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Receipt revision 3"].exists)
+        XCTAssertTrue(markUnknown.exists)
+    }
+
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         launch(reset: true)
         receiptTap(app.buttons["shop.myPantry"])
         receiptTap(app.buttons["pantry.setup.apply"])
         receiptTap(app.buttons["pantry.receipt"])
-        reviewManualOatsAtMarket(checkAssistance: true)
+        reviewManualOatsAtMarket(checkAssistance: true, storage: "Fridge")
         XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
         receiptTap(app.buttons["receipt.commit"])
         XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
         XCTAssertEqual(app.staticTexts["receipt.status"].label, "Reviewed receipt lines saved.")
+        let guide = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "receipt.storageGuide.")).firstMatch
+        XCTAssertTrue(guide.waitForExistence(timeout: 8))
+        XCTAssertTrue(guide.label.contains("Oats"))
+        XCTAssertTrue(guide.label.contains("Fridge") || (guide.value as? String) == "Fridge")
+        receiptTap(guide)
+        let guideBar = app.navigationBars["Food storage guide"]
+        XCTAssertTrue(guideBar.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["foodKeeper.product.585"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["foodKeeper.saveRange"].exists)
+        receiptTap(guideBar.buttons.firstMatch)
         receiptTap(app.buttons["Done"])
         let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Oats")).firstMatch
         XCTAssertTrue(lot.waitForExistence(timeout: 8))
@@ -1819,10 +1949,22 @@ import XCTest
         if apply.frame.midY > scrollableArea().maxY { scrollContent(upward: true) }
         tap(apply)
         tap(app.buttons["Review whole checkout"])
-        fill("Test market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Test checkout", into: "Source of these prices", replacing: true)
+        // Keep the checkout keyboard open while moving between the four adjacent fields.
+        for (name, value) in [("Store", "Test market"), ("Branch", "Main branch"),
+                              ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Test checkout")] {
+            let field = app.textFields[name]
+            tapVisibleFormRow(field, marker: "SHARE_CHECKOUT_FIELD")
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), name)
+            let current = try field.snapshot()
+            if let old = current.value as? String, !old.isEmpty, old != current.placeholderValue {
+                app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            app.typeText(value)
+            XCTAssertEqual(try field.snapshot().value as? String, value, name)
+        }
+        tap(app.buttons["Done"])
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"),
+                      "Checkout fields must be committed before reviewing the retailer total")
         enableSwitch("Retailer total already includes all charges", diagnosticName: "Checkout-inclusive-switch")
         fill("3.00", into: "Inclusive total", requireDone: true)
         tap(app.buttons["Save and evaluate checkout"])
@@ -2175,10 +2317,10 @@ import XCTest
             ("Physical amount received", "4"), ("Confirmed usable amount (optional)", "4"),
         ], doneIdentifier: "arrival.keyboardDone")
         enableSwitch("I checked the identity, units and meal constraints")
-        try fillReviewedFields([("Segment ID (distinct for each split delivery)", "segment-1")],
-                               doneIdentifier: "arrival.keyboardDone")
         tap(app.buttons["Save observed arrival"])
-        assertText("segment-1")
+        let savedArrival = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Correct usable amount")).firstMatch
+        reveal(savedArrival)
+        XCTAssertTrue(savedArrival.exists)
         capture("Free-observed-short-fill")
         tap(app.buttons["Review protected portions and repair meals"])
         assertText("Lunch")

@@ -32,11 +32,21 @@ struct ReceiptDocumentBytes: Sendable {
     static let maximumBytes = 10_000_000
     let data: Data
     let kind: ReceiptDocumentKind
+    var unmarkedUTF16: UnmarkedUTF16?
 
-    static func read(_ url: URL, kind: ReceiptDocumentKind) throws -> Self {
-        do { return Self(data: try readRegularFile(at: url, maximumBytes: maximumBytes), kind: kind) }
+    static func read(_ url: URL, kind: ReceiptDocumentKind, type: UTType? = nil) throws -> Self {
+        do {
+            let bytes = try readRegularFile(at: url, maximumBytes: maximumBytes)
+            return Self(data: bytes, kind: kind, unmarkedUTF16: kind == .text ? UnmarkedUTF16(data: bytes, type: type) : nil)
+        }
         catch SurfaceError.capacity { throw ReceiptDocumentFailure.size }
         catch { throw ReceiptDocumentFailure.unavailable }
+    }
+
+    static func shared(_ data: Data, descriptor: SharedReceiptDescriptor) -> Self {
+        let kind: ReceiptDocumentKind
+        switch descriptor.kind { case .pdf: kind = .pdf; case .image: kind = .image; case .text: kind = .text }
+        return Self(data: data, kind: kind, unmarkedUTF16: descriptor.unmarkedUTF16)
     }
 
     static func picked(_ url: URL) async throws -> Self {
@@ -56,7 +66,7 @@ struct ReceiptDocumentBytes: Sendable {
                     else if type?.conforms(to: .image) == true { kind = .image }
                     else if type?.conforms(to: .plainText) == true { kind = .text }
                     else { throw ReceiptDocumentFailure.unsupported }
-                    return try read(intent.url, kind: kind)
+                    return try read(intent.url, kind: kind, type: type)
                 })
             }
         }
@@ -97,6 +107,14 @@ struct ExtractedReceiptDocument: Sendable {
         guard rows.count == selection.count else { throw ReceiptDocumentFailure.selection }
         var source = SourceMediaRecord(id: id, target: target, originalText: rows.map(\.originalText).joined(separator: "\n"),
             reviewedLabel: merchant, imageJPEG: nil, barcode: nil, receiptLines: rows, capturedAt: date)
+        // Extraction can change row positions even when the file bytes are identical.
+        // Hash the entire coordinate map locally so picking a different subset preserves its identity.
+        var coordinates = ["receipt-file-layout-v1", target.workspaceID.uuidString]
+        for page in pages {
+            coordinates += [String(page.id), page.method.rawValue, String(page.lines.count)]
+            for line in page.lines { coordinates += [String(line.id), line.text] }
+        }
+        source.documentLayoutID = ReceiptAcquisition.identity(coordinates)
         source.documentDigest = digest
         do { try source.validate() } catch { throw ReceiptDocumentFailure.selection }
         return source
@@ -147,7 +165,7 @@ struct ReceiptDocumentReader: Sendable {
         }
         switch input.kind {
         case .text:
-            guard let text = String(data: input.data, encoding: .utf8) else { throw ReceiptDocumentFailure.unsupported }
+            guard let text = decodePlainTextFile(input.data, unmarkedUTF16: input.unmarkedUTF16) else { throw ReceiptDocumentFailure.unsupported }
             return [try page(1, method: .textFile, text: text)]
         case .image:
             try Self.checkPixels(input.data)

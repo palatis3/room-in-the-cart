@@ -3971,18 +3971,18 @@
         }
       }
     },
-    "Type or paste a list": {
+    "Add an item or paste a list": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Type or paste a list"
+            "value": "Add an item or paste a list"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Escribe o pega una lista"
+            "value": "Añadir un artículo o pegar una lista"
           }
         }
       }
@@ -6260,18 +6260,50 @@
         }
       }
     },
-    "All remaining items are marked handled. Applying this review removes them from the checkout copy.": {
+    "Deferred to a later shop": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "All remaining items are marked handled. Applying this review removes them from the checkout copy."
+            "value": "Deferred to a later shop"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los artículos restantes están marcados como resueltos. Aplicar esta revisión los quita de la copia para la compra."
+            "value": "Aplazado para otra compra"
+          }
+        }
+      }
+    },
+    "%@ changed on the list after it was deferred. Open the saved checkout and undo its deferral before reviewing these changes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ changed on the list after it was deferred. Open the saved checkout and undo its deferral before reviewing these changes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cambió en la lista después de que lo aplazaste. Abre la compra guardada y deshaz el aplazamiento antes de revisar los cambios."
+          }
+        }
+      }
+    },
+    "Your list has no items to buy. Apply this review to clear the checkout copy.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your list has no items to buy. Apply this review to clear the checkout copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu lista no tiene artículos por comprar. Aplica esta revisión para vaciar la copia de la compra."
           }
         }
       }

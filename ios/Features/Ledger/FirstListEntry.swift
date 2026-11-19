@@ -14,6 +14,28 @@ struct FirstListContents: Equatable, Codable {
     var invalidAmounts: [UUID: InvalidImportAmount] = [:]
     var explicitSeparate: Set<UUID> = []
     var matchesAreCurrent = true
+
+    func appending(_ wording: String, pantryFood: Bool, shop: ShoppingLedger) throws -> Self {
+        guard shop.id == shopID else { throw LedgerError.stalePreview }
+        let combinedWording = [original, wording].filter { !$0.isEmpty }.joined(separator: "\n")
+        try StagedListImport.validateSourceText(combinedWording, maximumLines: StagedListImport.maximumLines)
+        let before = try preview ?? shop.stageImport(text: original, source: source, importID: importID)
+        guard before.id == importID, before.originalText == original else { throw LedgerError.stalePreview }
+        let addition = try pantryFood
+            ? PantryRestockReview.stage(food: wording, text: wording, source: .typed, id: UUID(), shop: shop)
+            : shop.stageImport(text: wording)
+        let combined = try shop.appendingImport(addition, to: before)
+        var next = self
+        next.original = combined.originalText
+        next.preview = combined
+        if preview == nil { next.choices = LedgerImportReview.initialChoices(before) }
+        for row in combined.lines.dropFirst(before.lines.count) where row.duplicateLineIDs.isEmpty {
+            next.choices[row.id] = .addNew
+        }
+        guard try JSONEncoder().encode(next).count <= LedgerStore.maximumFirstListDraftBytes else { throw LedgerStoreError.payloadTooLarge }
+        return next
+    }
+
 }
 
 /// One editor serializes its replacements. Other editors must still match SQLite's token.
@@ -136,6 +158,7 @@ struct FirstListResumeButton: View {
 struct FirstListEntry: View {
     @ObservedObject var model: LedgerModel
     var prefill: String = ""
+    var pantryFoodPrefill = false
     var authorizeEntry: @MainActor () -> Bool = { true }
     let onSaved: (UUID) -> Void
     @EnvironmentObject private var access: WorkspaceAccess
@@ -152,7 +175,7 @@ struct FirstListEntry: View {
     var body: some View {
         Group {
             if let editor, editor.authorize() {
-                FirstListForm(model: model, editor: editor, prefill: prefill, onSaved: onSaved)
+                FirstListForm(model: model, editor: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, onSaved: onSaved)
             } else if failed || identity == nil || editor != nil {
                 ContentUnavailableView(ledgerText("Draft unavailable"), systemImage: "lock",
                     description: Text(ledgerText("Reopen the private shopping list to check the current workspace.")))
@@ -189,6 +212,7 @@ private struct FirstListForm: View {
     @ObservedObject var model: LedgerModel
     @ObservedObject var editor: FirstListEditor
     let prefill: String
+    let pantryFoodPrefill: Bool
     let onSaved: (UUID) -> Void
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -200,7 +224,7 @@ private struct FirstListForm: View {
                 Button(ledgerText("Discard draft"), role: .destructive) { Task { if await editor.discard() { dismiss() } } }
             }.toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
         } else {
-            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, authorizeEntry: editor.authorize, onFirstSave: onSaved)
+            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, authorizeEntry: editor.authorize, onFirstSave: onSaved)
         }
     }
 }

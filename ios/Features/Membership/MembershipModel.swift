@@ -6,6 +6,8 @@ import SwiftUI
     @Published private(set) var offer: MembershipOffer?
     @Published private(set) var isLoadingOffer = false
     @Published private(set) var isBusy = false
+    @Published private(set) var isVerifyingMembership = false
+    @Published private(set) var verificationFailed = false
     @Published private(set) var notice: Notice?
     // Apple does not identify a request/transaction in a pending purchase result.
     // Keep that report separate from the service outcome of each admitted update.
@@ -24,6 +26,7 @@ import SwiftUI
     private let storefront: any MembershipStorefront
     private let clock: () -> Date
     private var updatesTask: Task<Void, Never>?
+    private var verificationTask: Task<Void, Never>?
     private var inFlightTransactions: Set<String> = []
     private var started = false
     private(set) var isStopped = false
@@ -160,12 +163,48 @@ import SwiftUI
         default: return false
         }
     }
+    struct Renewal: Equatable {
+        let modelID: ObjectIdentifier
+        let validUntil: Date
+    }
+
+    var renewal: Renewal? {
+        guard !isStopped, let context, let snapshot = state.snapshot,
+              snapshot.status == .active || snapshot.status == .grace,
+              snapshot.purchaserID == context.purchaserID || snapshot.seats.contains(where: { $0.userID == context.purchaserID })
+        else { return nil }
+        return Renewal(modelID: ObjectIdentifier(self), validUntil: snapshot.validUntil)
+    }
+
+    var verificationIsStale: Bool { renewal.map { clock() >= $0.validUntil } ?? false }
+
+    /// The active app scene owns this task, keyed by the bound model and the server's deadline.
+    /// A failed check waits for an explicit retry or the next foreground reconciliation.
+    func renewWhileActive(_ expected: Renewal, sleep: (TimeInterval) async throws -> Void = {
+        try await Task.sleep(for: .seconds($0))
+    }) async {
+        var nextCheck = expected.validUntil.addingTimeInterval(-30)
+        while renewal == expected && !Task.isCancelled {
+            let delay = nextCheck.timeIntervalSince(clock())
+            if delay > 0 {
+                do { try await sleep(delay) } catch { return }
+            }
+            guard !Task.isCancelled, renewal == expected else { return }
+            let reachedDeadline = clock() >= expected.validUntil
+            await verifyMembership()
+            guard !verificationFailed, !reachedDeadline else { return }
+            // A subscription closer than 30 seconds to its actual end may retain the
+            // same deadline. Check once at that boundary instead of retrying immediately.
+            nextCheck = expected.validUntil
+        }
+    }
+
     var canPurchase: Bool {
         !isStopped && configuration.isReady && offer != nil && !isBusy && canStartNewPurchase
     }
 
     private var canStartNewPurchase: Bool {
-        context?.appAccountToken != nil && !canManageSeats && inFlightTransactions.isEmpty && notice != .failed(.deliveryPending)
+        context?.appAccountToken != nil && !canManageSeats && !verificationIsStale && inFlightTransactions.isEmpty && notice != .failed(.deliveryPending)
             && !deliveryOutcomes.values.contains(.failed(.deliveryPending))
     }
 
@@ -193,6 +232,10 @@ import SwiftUI
     func stop() {
         generation += 1
         isStopped = true
+        verificationTask?.cancel()
+        verificationTask = nil
+        isVerifyingMembership = false
+        verificationFailed = false
         updatesTask?.cancel()
         updatesTask = nil
         started = false
@@ -241,26 +284,50 @@ import SwiftUI
                 if let failure = await receive(outcome) { deliveryFailure = failure }
             }
         }
-        do {
-            try await refreshSeatRoster(context: context, session: session)
-            guard session == generation else { return }
-            // A successful Free projection does not erase a rejected restore or undelivered transaction.
-            if let deliveryFailure { state.fail(deliveryFailure); notice = .failed(deliveryFailure) }
-        } catch {
-            guard session == generation else { return }
-            let issue = failure(error)
-            state.fail(issue)
-            if issue == .signInRequired || issue == .membershipInactive { eligibleAdults = [] }
+        await verifyMembership()
+        guard session == generation, !verificationFailed else { return }
+        // A successful Free projection does not erase a rejected restore or undelivered transaction.
+        if let deliveryFailure { state.fail(deliveryFailure); notice = .failed(deliveryFailure) }
+    }
+
+    /// A read of the signed-in household scope, shared by foreground, renewal and manual retry.
+    /// This does not present Apple authentication or submit a purchase.
+    func verifyMembership() async {
+        guard !isStopped, let context else { return }
+        if let verificationTask { await verificationTask.value; return }
+        let session = generation
+        isVerifyingMembership = true
+        let task = Task { @MainActor in
+            defer {
+                if session == generation {
+                    isVerifyingMembership = false
+                    verificationTask = nil
+                }
+            }
+            guard session == generation, !Task.isCancelled else { return }
+            do {
+                try await refreshSeatRoster(context: context, session: session)
+                guard session == generation else { return }
+                verificationFailed = false
+            } catch {
+                guard session == generation else { return }
+                verificationFailed = true
+                let issue = failure(error)
+                state.fail(issue)
+                if issue == .signInRequired || issue == .membershipInactive { eligibleAdults = [] }
+            }
         }
+        verificationTask = task
+        await task.value
     }
 
     private func refreshSeatRoster(context: MembershipContext, session: Int) async throws {
         let snapshot = try await service.fetch(context: context)
-        guard session == generation else { return }
+        guard session == generation, self.context == context else { return }
         try state.accept(snapshot, context: context, now: clock())
         if canManageSeats {
             let adults = try await service.seatCandidates(context: context)
-            guard session == generation else { return }
+            guard session == generation, self.context == context else { return }
             eligibleAdults = adults.filter { $0.isAdult }
         } else { eligibleAdults = [] }
     }

@@ -29,6 +29,7 @@ private struct GuardianSetupHost: View {
     var body: some View {
         GuardianEnrollmentView(model: model, serviceURL: household.service?.baseURL) {
             NavigationLink(GuardianCopy.text("Review or withdraw current permissions")) { HouseholdGuardianView(model: lifecycle) }
+            GuardianChildDeletionLink(household: household)
         }
     }
 }
@@ -199,6 +200,7 @@ struct GuardianChildEntryView: View {
                 Text(GuardianCopy.text("A child invitation requires the child's own live authenticated session from an approved guardian setup. This app cannot create or substitute an adult account for that session."))
                 Text(GuardianCopy.text("Ask your guardian to keep the invitation private and check setup status. Online requests stay unavailable until verification, permission, and device pairing are complete."))
             }
+            GuardianChildDeletionHelp()
         }.navigationTitle(GuardianCopy.text("Use a child invitation"))
     }
 }

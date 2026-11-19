@@ -40,7 +40,23 @@ public struct CookCompletionDraft: Codable, Equatable, Sendable, Identifiable {
     /// A pickup replacement keeps the original ledger occurrence for provenance.
     /// Its individual portion needs are the reviewed rows, even when two use the same ingredient.
     public let recoveredMeal: RecoveryMeal?
-    public var ingredientRowIDs: [UUID] { recoveredMeal?.needs.map(\.id) ?? meal.ingredientContributionIDs }
+    /// A removed shopping contribution stays on the occurrence for recipe step indices.
+    /// Older and unedited dinners retain the original row list through a missing override.
+    private let activeContributionIDs: [UUID]?
+    public var ingredientRowIDs: [UUID] { recoveredMeal?.needs.map(\.id) ?? activeContributionIDs ?? meal.ingredientContributionIDs }
+
+    public static func activeIngredientIDs(for meal: MealOccurrence, in shop: ShoppingLedger) -> [UUID] {
+        let removed = Set(shop.contributions.lazy.filter {
+            $0.source == .meal(occurrenceID: meal.id) && $0.removedAt != nil
+        }.map(\.id))
+        return meal.ingredientContributionIDs.filter { !removed.contains($0) }
+    }
+
+    public var hasValidIngredientSnapshot: Bool {
+        guard let activeContributionIDs else { return true }
+        let ids = Set(activeContributionIDs)
+        return recoveredMeal == nil && activeContributionIDs == meal.ingredientContributionIDs.filter(ids.contains)
+    }
     public var cookedTitle: String { recoveredMeal?.title ?? meal.title }
     public let preferenceRevision: UUID?
     public var unresolvedUseIDs: [UUID] {
@@ -59,6 +75,8 @@ public struct CookCompletionDraft: Codable, Equatable, Sendable, Identifiable {
     public init(id: UUID = UUID(), inventoryID: UUID, inventoryRevision: Int64, ledgerID: UUID, shop: ShoppingLedger,
                 meal: MealOccurrence, cookedAt: Date, servingsMade: Rational, parts: [Part], leftovers: [Leftovers], preferenceRevision: UUID? = nil, recoveredMeal: RecoveryMeal? = nil) {
         self.recoveredMeal = recoveredMeal
+        let active = Self.activeIngredientIDs(for: meal, in: shop)
+        activeContributionIDs = recoveredMeal == nil && active != meal.ingredientContributionIDs ? active : nil
         self.preferenceRevision = preferenceRevision
         self.id = id; self.inventoryID = inventoryID; self.inventoryRevision = inventoryRevision; self.ledgerID = ledgerID
         shopID = shop.id; shopRevision = shop.revisionID; self.meal = meal; self.cookedAt = cookedAt
@@ -96,7 +114,7 @@ public enum CookCompletion {
                               mealClaims: [UUID: Set<UUID>], at now: Date, recoveredMeal: RecoveryMeal? = nil) throws -> Review {
         guard draft.inventoryID == inventoryID, draft.inventoryRevision == inventoryRevision, draft.ledgerID == ledgerID,
               draft.shopID == shop.id, draft.shopRevision == shop.revisionID, draft.meal.removedAt == nil,
-              shop.mealOccurrences.contains(draft.meal), draft.recoveredMeal == recoveredMeal,
+              shop.mealOccurrences.contains(draft.meal), draft.hasValidIngredientSnapshot, draft.recoveredMeal == recoveredMeal,
               recoveredMeal.map({ $0.id == draft.meal.id }) ?? true else { throw InventoryError.stale }
         guard draft.servingsMade > .zero, draft.cookedAt.timeIntervalSinceReferenceDate.isFinite, draft.cookedAt <= now,
               draft.parts.count <= 500, draft.leftovers.count <= 20 else { throw InventoryError.invalid("cookAmounts") }
@@ -106,7 +124,8 @@ public enum CookCompletion {
         if recoveredMeal == nil {
             let live = shop.contributions.filter { ingredients.contains($0.id) && $0.removedAt == nil &&
                 $0.source == .meal(occurrenceID: draft.meal.id) }
-            guard live.count == ingredients.count else { throw InventoryError.stale }
+            guard orderedIngredients == CookCompletionDraft.activeIngredientIDs(for: draft.meal, in: shop),
+                  live.count == ingredients.count else { throw InventoryError.stale }
         }
         guard Set(rows.keys) == ingredients, Set(draft.parts.map(\.id)).count == draft.parts.count,
               Set(draft.leftovers.map(\.id)).count == draft.leftovers.count,

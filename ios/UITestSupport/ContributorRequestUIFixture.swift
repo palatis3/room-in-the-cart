@@ -181,6 +181,9 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
     let rejectedCorrection = ProcessInfo.processInfo.arguments.contains("--rejected-correction-fixture")
     let cookingReport = ProcessInfo.processInfo.arguments.contains("--cook-report-fixture")
+    let messageSafety = ProcessInfo.processInfo.arguments.contains("--message-safety-fixture")
+    private var firstReportBytes: Data?
+    private var senderBlocked = false
     var helperReadback: Bool { cookingReport || ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture") }
     private let reportLock = NSLock()
     private var readOnlyReport = false
@@ -522,13 +525,39 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             if path.hasSuffix("/bootstrap") {
                 return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member,
                     "role": cookingReport ? "editor" : "helper", "grantId": grant, "shopId": shop, "enrolled": true, "queueConsent": false,
-                    "capabilities": cookingReport ? ["helper_view", "helper_propose"] : ["helper_view"]])
+                    "capabilities": (cookingReport ? ["helper_view", "helper_propose"] : ["helper_view"]) +
+                        (messageSafety && request.value(forHTTPHeaderField:"X-Shared-Content-Safety") == "1" ? ["shared_content_safety"] : [])])
+            }
+            if messageSafety, path.hasSuffix("/moderation/actions") {
+                guard request.value(forHTTPHeaderField:"X-View-Grant-ID") == grant,
+                      let source = json["source"] as? [String: Any], source["kind"] as? String == "instruction",
+                      source["field"] as? String == "shopLabel", source["id"] as? String == grant else {
+                    return try response(["error":["code":"invalid_source"]], 409)
+                }
+                if json["action"] as? String == "block", json["text"] == nil, json["reason"] == nil {
+                    reportLock.withLock { senderBlocked = true }
+                    return try response(["receiptId":member, "status":"blocked"])
+                }
+                guard json["action"] as? String == "report", json["reason"] as? String == "unsafe", json["text"] as? String == "Tuesday" else {
+                    return try response(["error":["code":"invalid_report"]], 409)
+                }
+                let original = reportLock.withLock {
+                    let value = firstReportBytes
+                    firstReportBytes = value ?? data
+                    return value
+                }
+                guard let original else { throw URLError(.networkConnectionLost) }
+                guard data == original else { return try response(["error":["code":"key_reused"]], 409) }
+                return try response(["receiptId":member, "status":"received"])
             }
             if path == "/v1/views/" + grant + "/current" {
+                if messageSafety && reportLock.withLock({ senderBlocked }) {
+                    return try response(["error":["code":"view_unavailable"]], 404)
+                }
                 helperReads += 1
                 let first = cookingReport || helperReads == 1
                 let editable = cookingReport && reportLock.withLock { !readOnlyReport }
-                return try response(["grantId": grant, "shopId": shop, "shopLabel": "Tuesday", "mode": editable ? "edit" : "read", "canPropose": editable,
+                return try response(["grantId": grant, "shopId": shop, "shopLabel": "Tuesday", "mode": editable ? "edit" : "read", "canPropose": editable, "canReportContent": messageSafety,
                     "revision": first ? 12 : 13, "asOf": first ? "2026-11-03T12:00:00Z" : "2026-11-05T12:00:00Z",
                     "expiresAt": "2099-01-01T00:00:00Z", "language": "en", "items": [["label": "Wraps", "action": first ? "Save two" : "Save three"]]])
             }

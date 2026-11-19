@@ -685,3 +685,115 @@ extension HouseholdClientTests {
         do { _ = try await task.value; XCTFail("Late readiness revived a closed flow") } catch { XCTAssertEqual(error as? ClientError, .cancelled) }
     }
 }
+
+extension HouseholdClientTests {
+    func testGuardianDeletionUsesVerifiedEmailReviewScopedAdultDeviceAndSeparateReceiptCapability() async throws {
+        let (service, auth) = try guardianService()
+        let enrollment = guardianEnrollmentID, reviewID = UUID().uuidString.lowercased()
+        let intended = "Exact.Child+scope@example.invalid"
+        let path = "/v1/households/\(household)/guardian/child-account-deletions"
+        var jobID: String?, secret: String?, accepted = 0
+        var corruptStatus = false
+        func bytes(_ value: [String: Any]) throws -> Data { try JSONSerialization.data(withJSONObject: value) }
+        let lock = installGuardianHandler { request in
+            if let reply = try self.guardianSetupResponse(request) { return reply }
+            let route = try XCTUnwrap(request.url?.path)
+            XCTAssertNil(request.url?.query)
+            if route.hasPrefix("/v1/privacy/jobs/"), let jobID, let secret {
+                XCTAssertEqual(route, "/v1/privacy/jobs/" + jobID)
+                XCTAssertEqual(request.value(forHTTPHeaderField: "X-Deletion-Token"), secret)
+                XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
+                XCTAssertNil(request.value(forHTTPHeaderField: "X-Device-Token"))
+                return (200, try bytes(["jobId":jobID, "status":"complete", "appDataErased":true,
+                    "providerAccountDeleted":!corruptStatus, "completedAt":"2026-11-18T12:00:00Z",
+                    "receiptExpiresAt":"2099-01-01T00:00:00Z"]))
+            }
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer access")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), "adult-device-secret")
+            if request.httpMethod == "GET", route == path {
+                return (200, try bytes(["children":[["enrollmentId":enrollment, "childAlias":"Sam"]]]))
+            }
+            let body = try XCTUnwrap(JSONSerialization.jsonObject(with: self.guardianBytes(request)) as? [String: Any])
+            if route == path + "/review" {
+                XCTAssertEqual(Set(body.keys), ["enrollmentId","childSignInEmail"])
+                XCTAssertEqual(body["enrollmentId"] as? String, enrollment)
+                XCTAssertEqual(body["childSignInEmail"] as? String, intended)
+                return (200, try bytes(["reviewId":reviewID, "enrollmentId":enrollment, "childAlias":"Sam",
+                    "expiresAt":"2099-01-01T00:00:00Z", "verifiedBackupRetentionDays":30]))
+            }
+            XCTAssertEqual(route, path)
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(Set(body.keys), ["enrollmentId","reviewId","clientKey","statusToken","confirm"])
+            XCTAssertEqual(body["enrollmentId"] as? String, enrollment)
+            XCTAssertEqual(body["reviewId"] as? String, reviewID)
+            XCTAssertEqual(body["confirm"] as? Bool, true)
+            let key = try XCTUnwrap(body["clientKey"] as? String)
+            let token = try XCTUnwrap(body["statusToken"] as? String)
+            XCTAssertTrue(GuardianSecret.isCanonical(token))
+            jobID = key; secret = token; accepted += 1
+            return (202, try bytes(["jobId":key, "status":"pending", "appDataErased":false,
+                "providerAccountDeleted":false, "receiptExpiresAt":"2099-01-01T00:00:00Z"]))
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        _ = try await service.enroll(householdID: household)
+        let children = try await service.guardianDeletionChildren(subject: "account", householdID: household, memberID: member)
+        let child = try XCTUnwrap(children.first)
+        let review = try await service.guardianDeletionReview(subject: "account", householdID: household, memberID: member, child: child, childSignInEmail: intended)
+        let vault = MemoryVault()
+        let (saved, denied) = try await MainActor.run {
+            let receipts = GuardianDeletionReceipts(vault: vault)
+            return (try receipts.prepare(subject: "account", householdID: household, memberID: member, review: review),
+                    try receipts.prepare(subject: "another", householdID: household, memberID: member, review: review))
+        }
+        XCTAssertFalse(try XCTUnwrap(vault.read()).contains(intended))
+        do { _ = try await service.deleteGuardianChildAccount(denied); XCTFail("Wrong guardian sent deletion") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        let status = try await service.deleteGuardianChildAccount(saved)
+        XCTAssertEqual(status.status, .pending)
+        XCTAssertEqual(lock.withLock { accepted }, 1)
+        let done = try await service.deletionStatus(saved.receipt)
+        XCTAssertEqual(done.status, .complete)
+        lock.withLock { corruptStatus = true }
+        do { _ = try await service.deletionStatus(saved.receipt); XCTFail("Reported completion without provider deletion") }
+        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+    }
+}
+
+extension HouseholdClientTests {
+    func testGuardianManualReviewListsInterruptedSetupAndBindsTheCaseReceiptToItsRequest() async throws {
+        let (service, auth) = try guardianService(), route = "/v1/households/\(household)/guardian/child-account-deletions/manual-reviews"
+        var wrongReceipt = false
+        let lock = installGuardianHandler { request in
+            if let reply = try self.guardianSetupResponse(request) { return reply }
+            XCTAssertEqual(request.url?.path, route)
+            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), "adult-device-secret")
+            if request.httpMethod == "GET" {
+                let page: [String:Any] = ["available":true, "requests":[],
+                    "children":[["enrollmentId":self.guardianEnrollmentID, "childAlias":"Sam", "identityState":"unmatched"]]]
+                return (200, try JSONSerialization.data(withJSONObject: page))
+            }
+            let body = try XCTUnwrap(JSONSerialization.jsonObject(with: self.guardianBytes(request)) as? [String: Any])
+            XCTAssertEqual(Set(body.keys), ["clientKey","enrollmentId","childSignInEmail","confirm"])
+            XCTAssertEqual(body["childSignInEmail"] as? String, "sam@example.invalid")
+            XCTAssertEqual(body["confirm"] as? Bool, true)
+            XCTAssertEqual(body["enrollmentId"] as? String, self.guardianEnrollmentID)
+            let receipt = ["requestId":wrongReceipt ? UUID().uuidString : try XCTUnwrap(body["clientKey"] as? String),
+                "status":"received", "createdAt":"2026-11-18T12:00:00Z", "updatedAt":"2026-11-18T12:00:00Z", "expiresAt":"2099-01-01T00:00:00Z"]
+            return (202, try JSONSerialization.data(withJSONObject: receipt))
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        _ = try await service.enroll(householdID: household)
+        let page = try await service.guardianManualReviews(subject: "account", householdID: household, memberID: member)
+        let child = try XCTUnwrap(page.children.first)
+        XCTAssertEqual(child.identityState, .unmatched)
+        let key = try await MainActor.run {
+            try GuardianManualReviewKeys(vault: MemoryVault()).prepare(subject: "account", householdID: household, memberID: member, enrollmentID: child.id)
+        }
+        let received = try await service.requestGuardianManualReview(key, childSignInEmail: "sam@example.invalid")
+        XCTAssertEqual(received.id, key.id)
+        XCTAssertEqual(received.status, .received)
+        lock.withLock { wrongReceipt = true }
+        do { _ = try await service.requestGuardianManualReview(key, childSignInEmail: "sam@example.invalid"); XCTFail("Confirmed another case") }
+        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+    }
+}

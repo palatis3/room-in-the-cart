@@ -19,6 +19,7 @@ export const exitChoiceSchema=z.object({householdId:id,organizer:z.enum(['none',
  if(new Set(value.shops.map(shop=>shop.shopId)).size!==value.shops.length||new Set(value.eraseChildProfiles).size!==value.eraseChildProfiles.length)ctx.addIssue({code:'custom',message:'Duplicate target'});
 });
 export const deletionSchema=z.object({clientKey:id,statusToken:secret,confirm:z.literal(true),households:z.array(exitChoiceSchema).max(100)}).strict().superRefine((v,c)=>{if(new Set(v.households.map(h=>h.householdId)).size!==v.households.length)c.addIssue({code:'custom',message:'Duplicate household'});});
+export const childAccountDeletionSchema=z.object({clientKey:id,statusToken:secret,confirm:z.literal(true),reviewId:id}).strict();
 export const exitSchema=z.object({clientKey:id,confirm:z.literal(true),disposition:exitChoiceSchema}).strict();
 export interface AccountDeletionProvider { assertAvailable(subject:string,call?:JournalCall):Promise<void>; deleteAccount(subject:string,call?:JournalCall):Promise<void> }
 const unavailable=()=>new ServiceError(503,'deletion_unavailable','Account deletion is unavailable until the configured provider can remove the account.');
@@ -77,6 +78,7 @@ async function privacyQuery(pool:Database,call:JournalCall,text:string,values:un
 }
 function digestSession(identity:VerifiedIdentity){return createHash('sha256').update(identity.issuer+'\n'+identity.subject+'\n'+identity.sessionId).digest('hex');}
 function recent(identity:VerifiedIdentity){const time=identity.authenticatedAt?.getTime();if(!time||time>Date.now()+5000||Date.now()-time>5*60_000)throw new ServiceError(401,'reauthentication_required','Sign in again, then confirm this account action within five minutes.');}
+export { recent as requireRecentPrivacyAuthentication };
 function mapped(error:unknown):never{
  const message=error instanceof Error?error.message:'';
  if(message==='session_needed')throw new ServiceError(401,'session_needed','Sign in again.');
@@ -94,23 +96,53 @@ export class PrivacyService {
  async preview(identity:VerifiedIdentity,parent?:JournalCall){
   const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{
   await this.authenticated(identity,call);
-  try{const result=(await this.query(call,'SELECT ritc.privacy_preview($1,$2,$3::uuid) AS value',[identity.issuer,identity.subject,identity.sessionId])).rows[0].value;
-   const deletionAvailable=Boolean(this.options.provider&&this.policy&&this.options.journal)&&(!this.options.available||await this.options.available(call));
+  try{const row=(await this.query(call,'SELECT ritc.privacy_preview($1,$2,$3::uuid) AS value, ritc.identity_has_child_profile($1,$2) AS child',[identity.issuer,identity.subject,identity.sessionId])).rows[0];
+   const result=row.child?{adult:false,households:[]}:row.value;
+   const deletionAvailable=result.adult&&Boolean(this.options.provider&&this.policy&&this.options.journal)&&(!this.options.available||await this.options.available(call));
    return{...result,verifiedBackupRetentionDays:this.policy?.verifiedBackupRetentionDays??null,deletionAvailable,reauthenticationRequired:!identity.authenticatedAt||Date.now()-identity.authenticatedAt.getTime()>300000,subscriptionManagementURL:'https://apps.apple.com/account/subscriptions/',subscriptionCancelledByDeletion:false};
   }catch(e){return mapped(e);}
   });}finally{scope.dispose();}
  }
  async request(identity:VerifiedIdentity,input:z.infer<typeof deletionSchema>,parent?:JournalCall){
   input=deletionSchema.parse(input);
+  return this.accept(identity, input, {kind:'adult', households:input.households}, parent);
+ }
+ async childDeletionPolicy(parent?:JournalCall){
+  const scope=new PrivacyCall(parent);
+  try{return await scope.run(async call=>{
+   if(!this.options.provider||!this.options.journal||!this.policy||
+      (this.options.available&&!await this.options.available(call)))throw unavailable();
+   return{verifiedBackupRetentionDays:this.policy.verifiedBackupRetentionDays};
+  });}finally{scope.dispose();}
+ }
+ async requestChild(identity:VerifiedIdentity, householdId:string, enrollmentId:string, input:z.infer<typeof childAccountDeletionSchema>, parent?:JournalCall){
+  const reviewed=childAccountDeletionSchema.parse(input);
+  return this.accept(identity,reviewed,{kind:'child',householdId:id.parse(householdId),enrollmentId:id.parse(enrollmentId),reviewId:reviewed.reviewId},parent);
+ }
+ private async accept(identity:VerifiedIdentity,input:{clientKey:string;statusToken:string;confirm:true},
+  target:{kind:'adult';households:z.infer<typeof exitChoiceSchema>[]} | {kind:'child';householdId:string;enrollmentId:string;reviewId:string},parent?:JournalCall){
   const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{
   recent(identity);await this.authenticated(identity,call);if(!this.options.provider||!this.policy||!this.options.journal||!identity.authenticatedMethod)throw unavailable();
   if(this.options.available&&!await this.options.available(call))throw unavailable();
   const {provider,journal}=this.options,retention=this.policy;
-  await privacyPhase(call,child=>provider.assertAvailable(identity.subject,child));
+  const actor=[identity.issuer,identity.subject,identity.sessionId];
+  let subject=identity.subject;
+  const review=target.kind==='child'?[target.householdId,target.enrollmentId,target.reviewId]:[];
+  if(target.kind==='child'){
+   try{
+    subject=id.parse((await this.query(call,'SELECT ritc.guardian_assert_deletion_review($1,$2,$3::uuid,$4::uuid,$5::uuid,$6::uuid) AS subject',[...actor,...review])).rows[0]?.subject);
+   }catch(error){return mapped(error);}
+  }
+  await privacyPhase(call,child=>provider.assertAvailable(subject,child));
+  const attestation=JSON.stringify({configurationId:journal.configurationId,authenticatedAt:identity.authenticatedAt!.toISOString(),authenticatedMethod:identity.authenticatedMethod,providerAvailability:'configured_adapter_passed',appleGate:'availability_contract_passed',policy:retention,sessionBindingHash:digestSession(identity),checkedAt:new Date().toISOString()});
   let eventId:string;
   await withPrivacyClient(this.repo.pool,call,async db=>{try{
    await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='2s'; SET LOCAL idle_in_transaction_session_timeout='7s'");
-   const event=(await db.query('SELECT ritc.privacy_journal_request($1,$2,$3::uuid,$4::uuid,$5,$6,$7::jsonb,$8,$9,$10::jsonb) AS event',[identity.issuer,identity.subject,identity.sessionId,input.clientKey,tokenHash(input.statusToken),digest({...input,statusToken:undefined}),JSON.stringify(input.households),retention.receiptRetentionDays,retention.erasureMarkerRetentionDays,JSON.stringify({configurationId:journal.configurationId,authenticatedAt:identity.authenticatedAt!.toISOString(),authenticatedMethod:identity.authenticatedMethod,providerAvailability:'configured_adapter_passed',appleGate:'availability_contract_passed',policy:retention,sessionBindingHash:digestSession(identity),checkedAt:new Date().toISOString()})])).rows[0].event;
+   const receipt=[input.clientKey,tokenHash(input.statusToken)];
+   const policy=[retention.receiptRetentionDays,retention.erasureMarkerRetentionDays,attestation];
+   const event=(target.kind==='adult'
+    ? await db.query('SELECT ritc.privacy_journal_request($1,$2,$3::uuid,$4::uuid,$5,$6,$7::jsonb,$8,$9,$10::jsonb) AS event',[...actor,...receipt,digest({...input,statusToken:undefined}),JSON.stringify(target.households),...policy])
+    : await db.query('SELECT ritc.privacy_journal_child_request($1,$2,$3::uuid,$4::uuid,$5::uuid,$6::uuid,$7,$8::uuid,$9,$10,$11,$12,$13::jsonb) AS event',[...actor,...review,subject,...receipt,digest({...input,statusToken:undefined,...target}),...policy])).rows[0].event;
    eventId=event.eventId;await privacyPhase(call,child=>journal.beforeCommit(event,child));scope.check();await db.query('COMMIT');
   }catch(e){await db.query('ROLLBACK').catch(()=>{});mapped(e);}});
   await privacyPhase(call,child=>journal.afterCommit(eventId!,child));

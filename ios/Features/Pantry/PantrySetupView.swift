@@ -9,6 +9,7 @@ struct PantrySetupView: View {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scene
+    @Environment(\.pantryVoicePrompt) private var pantryVoicePrompt
     @Environment(\.guardianChildCoordinator) private var child
     @State private var phase: Phase = .loading
     @State private var generation = UUID()
@@ -27,10 +28,15 @@ struct PantrySetupView: View {
         let generation: UUID
     }
     private var scope: Scope? {
-        guard scene == .active, child?.presented != true, pickup.pantryRouteAvailable,
+        let retainingPrompt = scene != .background && pantryVoicePrompt?.holdsPresentation() == true
+        guard UIApplication.shared.isProtectedDataAvailable, child?.presented != true,
+              pickup.pantryRouteAvailable || retainingPrompt,
               let identity = CapturePrivateIdentity.current(access: access, household: household),
               let stockID = pickup.sourceWorkspaceID, let ledgerID = ledger.sourceWorkspaceID else { return nil }
-        return Scope(adult: identity, inventory: stockID, ledger: ledgerID, generation: pickup.privatePantryGeneration)
+        let current = Scope(adult: identity, inventory: stockID, ledger: ledgerID, generation: pickup.privatePantryGeneration)
+        if scene == .active && pickup.pantryRouteAvailable { return current }
+        if retainingPrompt, case .ready(let original, _) = phase, original == current { return current }
+        return nil
     }
 
     var body: some View {

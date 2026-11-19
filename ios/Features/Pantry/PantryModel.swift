@@ -59,10 +59,11 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
 
     var canEdit: Bool { phase == .ready && snapshot != nil && !busy && pending == nil && review == nil && !requiresFreshReview }
 
-    func verifyDigestLot(_ lot: InventoryLot, origin: UUID) async throws {
+    func verifyDigestLot(_ lot: InventoryLot, origin: UUID, inventoryRevision: Int64? = nil) async throws {
         guard canEdit, repository.originID == origin else { throw PantryDigestFailure.changed }
         let current = try await repository.loadForEditing(at: clock())
-        guard canEdit, current.lots.first(where: { $0.id == lot.id }) == lot else { throw PantryDigestFailure.changed }
+        guard canEdit, inventoryRevision.map({ $0 == current.state.revision }) ?? true,
+              current.lots.first(where: { $0.id == lot.id }) == lot else { throw PantryDigestFailure.changed }
     }
 
     func accessLost() {
@@ -76,6 +77,58 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         guard accessAllowed, (try? repository.requireAccess()) != nil else { accessLost(); return }
         if phase == .ready, snapshot != nil, pending == nil, review != nil { return }
         await load()
+    }
+
+    func reviewConsumption(_ selections: [PantryConsumptionSelection], basis: InventoryState) async throws -> PantryConsumptionReview {
+        guard canEdit, snapshot?.state == basis else { throw PantryConsumptionFailure.stale }
+        let token = generation
+        let result: PantryConsumptionReview
+        do { result = try await repository.reviewConsumption(selections, basis: basis, at: clock()) }
+        catch { try requireConsumptionAccess(); throw error }
+        try requireConsumptionAccess()
+        guard generation == token, canEdit, snapshot?.state == basis else { throw PantryConsumptionFailure.stale }
+        return result
+    }
+
+    func usageHistory(lotID: UUID, basis: InventoryState) async throws -> [PantryUsageHistoryRow] {
+        guard canEdit, snapshot?.state == basis else { throw PantryConsumptionFailure.stale }
+        let token = generation
+        let rows: [PantryUsageHistoryRow]
+        do { rows = try await repository.usageHistory(lotID: lotID, basis: basis) }
+        catch { try requireConsumptionAccess(); throw error }
+        try requireConsumptionAccess()
+        guard token == generation, canEdit, snapshot?.state == basis else { throw PantryConsumptionFailure.stale }
+        return rows
+    }
+
+    func saveConsumption(_ consumption: PantryConsumptionReview) async throws {
+        let entry = consumption.entry
+        guard canEdit, let basis = snapshot?.state, basis.workspaceID == entry.command.originID,
+              basis.revision == entry.reviewedInventoryRevision else { throw PantryConsumptionFailure.stale }
+        let token = generation
+        try requireConsumptionAccess()
+        // The protected journal owns the exact identity from the first possible mutation to adoption.
+        pending = entry
+        do {
+            pending = repository.pendingStore == nil ? entry : try repository.stagePending(entry)
+        } catch {
+            try requireConsumptionAccess()
+            if let retained = try repository.readPending() { pending = retained }
+            throw error
+        }
+        pendingWasCommitted = false
+        await retryPending()
+        guard generation == token, phase == .ready else { throw PantryConsumptionFailure.unavailable }
+        guard notice != .stale else { throw PantryConsumptionFailure.stale }
+        guard notice == .saved, pending == nil else { throw PantryConsumptionFailure.unavailable }
+    }
+
+    private func requireConsumptionAccess() throws {
+        do { try repository.requireAccess() }
+        catch PantryRepository.Failure.unauthorized {
+            accessLost()
+            throw PantryConsumptionFailure.unavailable
+        }
     }
 
     func reviewReceipt(_ draft: ReceiptImportDraft) async throws -> PantryReceiptReview {
@@ -170,9 +223,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         let current = generation
         let bytes = try await repository.withSharedReceiptScope { try await $0.openReceipt(item, scope: $1, now: clock()) }
         guard current == generation, permitsReceiptSource else { throw PantryReceiptError.stale }
-        let kind: ReceiptDocumentKind
-        switch item.descriptor.kind { case .pdf: kind = .pdf; case .image: kind = .image; case .text: kind = .text }
-        return .init(data: bytes, kind: kind)
+        return .shared(bytes, descriptor: item.descriptor)
     }
 
     func finishSharedReceipt(_ item: SharedReceiptItem, committed: Bool) async throws {
@@ -360,7 +411,10 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
             case .someLeft: change = .count(.someLeft, observationID: UUID())
             case .opened: change = .opened(clock())
             case .move(let location): change = .move(location)
-            case .usedUp: change = .usedUp(observationID: UUID())
+            case .usedUp:
+                let reading = InventoryCountRevision(count: .exact(Quantity(amount: .zero, unit: lot.unit, originalLiteral: "0")),
+                                                     observationID: UUID(), observedAt: clock())
+                change = .revise(.init(observation: reading, usage: [.init(id: UUID(), kind: .all)]))
             case .recount(let amount, let unit): change = .count(try Self.count(amount, unit: unit), observationID: UUID())
             }
             await prepare(InventoryCommand(id: UUID(), originID: snapshot.state.workspaceID, lotID: lot.id,
@@ -467,8 +521,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
                 try await adopt(recovery, token: token)
                 return
             }
-            let result = try await repository.apply(pending.command,
-                reviewedInventoryRevision: pending.reviewedInventoryRevision, at: clock())
+            let result = try await repository.apply(pending, at: clock())
             guard token == generation else { return }
             snapshot = result.current; phase = .ready; self.pending = nil; review = nil
             requiresFreshReview = false; notice = .saved; savedLotID = pending.command.lotID
@@ -554,7 +607,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         if error as? ComparisonStoreError == .erased {
             accessLost(); return
         }
-        if error as? ComparisonStoreError == .staleInventory || error as? InventoryError == .stale {
+        if error as? ComparisonStoreError == .staleInventory || error as? InventoryError == .stale || error as? PantryConsumptionFailure == .stale {
             requiresFreshReview = true; notice = .stale
             return
         }

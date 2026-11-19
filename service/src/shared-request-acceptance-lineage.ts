@@ -12,7 +12,7 @@ import {liveFoodUndoStoreBasis} from './shared-demand-repository.js';
 const fail=(code='history_unavailable')=>new ServiceError(409,'request_undo_'+code,'Refresh and review this complete request change.');
 function check(v:unknown,code?:string):asserts v {if(!v)throw fail(code);}
 export async function acceptanceLinks(ctx:Context,shopId:string){return(await ctx.db.query('SELECT request_id,shop_id,line_id,reviewed_revision,operation_id FROM ritc.request_link WHERE household_id=$1 AND shop_id=$2 ORDER BY request_id',[ctx.householdId,shopId])).rows.map(r=>({requestId:r.request_id,shopId:r.shop_id,lineId:r.line_id,reviewedRevision:r.reviewed_revision,operationId:r.operation_id}));}
-export async function acceptanceRequest(ctx:Context,shopId:string,requestId:string){const r=(await ctx.db.query('SELECT * FROM ritc.request_origin WHERE household_id=$1 AND shop_id=$2 AND request_id=$3',[ctx.householdId,shopId,requestId])).rows[0];check(r,'request_unavailable');return r;}
+export async function acceptanceRequest(ctx:Context,shopId:string,requestId:string){const r=(await ctx.db.query('SELECT * FROM ritc.visible_request_origin WHERE household_id=$1 AND shop_id=$2 AND request_id=$3',[ctx.householdId,shopId,requestId])).rows[0];check(r,'request_unavailable');return r;}
 export function acceptanceContent(r:any){return{requestId:r.request_id,shopId:r.shop_id,authorId:r.author_id,authorKind:r.author_kind,consentId:r.author_consent_id??null,
  originalItem:r.original_item,ownQuantity:r.own_quantity,clarification:r.clarification,authoredAt:r.authored_at.toISOString(),receivedAt:r.received_at.toISOString(),followupTo:r.followup_to};}
 export const acceptanceState=(r:any)=>({revision:r.revision,status:r.status,route:r.route});

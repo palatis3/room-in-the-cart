@@ -19,18 +19,18 @@
         }
       }
     },
-    "A membership belongs to an authenticated household. Your Free records and manual tools remain available.": {
+    "To subscribe or restore a purchase, sign in with your adult account and select your household. You can use the free planning tools without signing in.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A membership belongs to an authenticated household. Your Free records and manual tools remain available."
+            "value": "To subscribe or restore a purchase, sign in with your adult account and select your household. You can use the free planning tools without signing in."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La membresía pertenece a un hogar autenticado. Tus registros y herramientas manuales del plan Gratis siguen disponibles."
+            "value": "Para suscribirte o restaurar una compra, inicia sesión con tu cuenta de adulto y elige tu hogar. Puedes usar las herramientas de planeación gratuitas sin iniciar sesión."
           }
         }
       }
@@ -255,24 +255,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compara cuánto cuesta comprar la cantidad aprovechable que necesitas de un artículo. No necesitas una cuenta ni conexión."
-          }
-        }
-      }
-    },
-    "Comparisons are saved only on this iPhone. This build has no account, household sync or analytics.": {
-      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Comparisons are saved only on this iPhone. This build has no account, household sync or analytics."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las comparaciones se guardan solo en este iPhone. Esta versión no incluye cuentas, sincronización familiar ni análisis de uso."
           }
         }
       }
@@ -533,24 +515,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desarrollo"
-          }
-        }
-      }
-    },
-    "Dinner planning is not available in this build. You can compare packs from Shop.": {
-      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dinner planning is not available in this build. You can compare packs from Shop."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La planificación de cenas no está disponible en esta versión. Puedes comparar paquetes desde Compras."
           }
         }
       }

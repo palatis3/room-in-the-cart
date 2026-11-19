@@ -78,7 +78,7 @@ private struct HelpArticleView: View {
                 paragraph(helpText("Report placement separately. Record substitutions and the usable quantities that actually came home, then review meal shortages. Keep a pending credit pending until it posts; do not record a refund twice."))
                 paragraph(helpText("Prepare a dated cook instruction showing portions, what to set aside and what remains unresolved. Choose the recipient language and review any private wording. Marking a copy sent and reporting acknowledgment are separate actions."))
             case .household:
-                paragraph(helpText("Open Household requests in Settings to sign in or manage connected access. Signing in does not upload your existing private workspace. If sign-in is unavailable in this build, keep using the private tools."))
+                paragraph(helpText("In Settings, open Household requests to sign in. Your private lists and plans stay on this iPhone. You can use them without an account."))
                 paragraph(helpText("A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private."))
                 paragraph(helpText("Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access."))
                 paragraph(helpText("A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process."))
@@ -92,7 +92,7 @@ private struct HelpArticleView: View {
                 paragraph(helpText("Choose a specific reminder before allowing notifications. Check local time, quiet hours and expiry. Local reminders do not guarantee live household status while this iPhone is offline."))
             case .membership:
                 paragraph(helpText("Free covers an ordinary pickup, manual planning, one reusable dinner, saved records and exports. Household adds repeated planning tools for up to two named adults. Groceries are purchased from your retailer."))
-                paragraph(helpText("Open Household membership in Settings for Apple’s actual localized offer, Restore Purchases and Manage Subscription. If the offer or account setup is unavailable, continue with Free."))
+                paragraph(helpText("In Settings, open Household membership to see the App Store price and renewal period, restore a purchase or manage your subscription. You can keep planning for free."))
                 paragraph(helpText("Restore with the original purchasing account and household. A pending or unverified purchase adds no paid access. If delivery is uncertain, retry delivery or restore rather than buying again. Ending membership preserves permitted Free work."))
             }
         }.workingSurface().navigationTitle(topic.title).navigationBarTitleDisplayMode(.inline)
@@ -113,8 +113,12 @@ struct HelpPrivacyView: View {
             }
             Section(helpText("When you connect or share")) {
                 Text(helpText("Account sign-in sends account information to the identity provider. Explicit household actions send the account, request, shop, budget or instruction fields needed for that action. The service checks the household, role and shop permissions."))
+                Text(helpText("If you report household content, the service records your reason, which item and version you reported, your member ID and the sender’s ID when known. You can submit the report without sharing the wording, or choose up to 1,000 characters for the review team to read. Reports expire after the period the operator sets for review. Blocking a sender in your household sends no message text."))
+                Text(helpText("If you request a private review of your authority to delete a child’s account, the service uses the details you provide to verify your request. It keeps a case number, account or enrollment references, status and dates. You can check the case and its expiry in Guardian controls. A separate deletion receipt confirms when the account has been erased."))
+                Text(helpText("The household service saves a shopper’s question with the contributor’s request. When you save shared instructions for a cook, it stores the wording and your member ID. If you mark the instructions as sent, it also saves the recipient you entered and the time."))
                 Text(helpText("When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone."))
                 Text(helpText("When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion."))
+                Text(helpText("When you share a reaction to a meal you shopped for, the household service saves it with your member ID. For up to 90 days, Household Tonight can use your latest reaction to that version of the recipe to break ties between dinner suggestions for you. To withdraw your reactions, open Household pantry and choose Review my shared meal feedback."))
                 Text(helpText("If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place."))
                 Text(helpText("A cook link exposes only its granted fields. A static message or exported file is a separate copy under the recipient’s control. Review the destination and private fields before sharing."))
                 Text(helpText("Apple handles subscription payment credentials. The app and household service use transaction evidence to deliver and restore membership; they do not receive your payment card or bank account number."))
@@ -122,7 +126,7 @@ struct HelpPrivacyView: View {
             Section(helpText("Photos and speech")) {
                 Text(helpText("Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file."))
                 Text(helpText("When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor."))
-                Text(helpText("Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. You can enter the product name and package size yourself."))
+                Text(helpText("Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. Its privacy policy says it keeps visitor IP addresses and logs for three years for security, technical analysis and measuring popularity. You can enter the product name and package size yourself."))
                 Text(helpText("For optional online language help, review what will go to OpenAI through Room in the Cart. Depending on the task, this can include your wording, possible matches, or selected meal titles and reasons. For a FoodKeeper match, you share the label wording and the names and IDs of the guide entries shown. You choose whether to use a suggestion."))
             }
             Section(helpText("Export and deletion")) {
@@ -136,9 +140,9 @@ struct HelpPrivacyView: View {
                 }
                 Text(helpText("This guide describes the app’s data controls. The operator’s privacy policy and terms are separate pages."))
                 if let url = configuration.privacyURL { Link(helpText("Privacy policy"), destination: url) }
-                else { Text(helpText("The privacy policy link is unavailable in this build.")) }
+                else { Text(helpText("The privacy policy link is unavailable.")) }
                 if let url = configuration.termsURL { Link(helpText("Terms of use"), destination: url) }
-                else { Text(helpText("The terms link is unavailable in this build.")) }
+                else { Text(helpText("The terms link is unavailable.")) }
             }
         }.workingSurface().navigationTitle(helpText("Privacy and data"))
     }
@@ -182,7 +186,7 @@ struct HelpSupportView: View {
                     }
                 }
                 if let url = configuration.supportURL { Link(helpText("Open support"), destination: url).accessibilityIdentifier("help.support.open") }
-                else if configuration.supportEmailURL == nil { Text(helpText("An online support destination is unavailable in this build. Offline help and the support summary are still available.")) }
+                else if configuration.supportEmailURL == nil { Text(helpText("Online support is unavailable. You can read the help articles here or share your support summary.")) }
                 NavigationLink(helpText("Read offline help")) { HelpCenterView() }
             }
             Section(helpText("Review support summary")) {

@@ -60,7 +60,7 @@ function reader(options={}){
     return{revision:r.revision,purpose:r.purpose,created_at:r.recordedAt,snapshot,digest:options.erased?'0'.repeat(64):digest(snapshot)};
    });
    else if(sql.includes('FROM ritc.shared_meal_revision'))rows=record.mealRevisions;
-   else if(sql.includes('FROM ritc.dated_cook_copy'))rows=record.cookCopies;
+   else if(sql.includes('FROM ritc.visible_dated_cook_copy'))rows=record.cookCopies;
    else if(sql.includes('FROM ritc.cook_copy_send'))rows=record.cookSends;
    else if(sql.startsWith('SELECT d.shop_id AS "originShopId"'))rows=carried.map(c=>({originShopId:c.originShopId,...c.source,retained_snapshot:carriedSnapshot(c),retained_digest:digest(carriedSnapshot(c))}));
    else if(sql.startsWith('SELECT source_id,kind,recorded_at,body'))rows=carried.flatMap(c=>c.observations.map(o=>({source_id:c.source.sourceId,kind:o.kind,recorded_at:o.recordedAt,body:o.body})));

@@ -921,6 +921,81 @@ import Combine
         XCTAssertTrue(store.finished.isEmpty)
     }
 
+    private func renewableSeat(verifiedAt: Date) -> MembershipSnapshot {
+        MembershipSnapshot(householdID: context.householdID, purchaserID: context.purchaserID, revision: 1,
+            status: .active, expiresAt: now.addingTimeInterval(3600), graceExpiresAt: nil, verifiedAt: verifiedAt,
+            validUntil: verifiedAt.addingTimeInterval(300),
+            seats: [MembershipSeat(userID: context.purchaserID, displayName: "Mia", isAdult: true)])
+    }
+
+    func testActiveSeatRenewsBeforeExpiryWithoutAppleSync() async throws {
+        var clock = now
+        let service = FakeMembershipService(snapshot: renewableSeat(verifiedAt: clock))
+        let store = FakeMembershipStorefront()
+        let model = MembershipModel(context: context, service: service, storefront: store, clock: { clock })
+        defer { model.stop() }
+        await model.verifyMembership()
+        let first = try XCTUnwrap(model.renewal)
+        var waits: [TimeInterval] = []
+        await model.renewWhileActive(first) { delay in
+            waits.append(delay)
+            clock.addTimeInterval(delay)
+            XCTAssertTrue(model.hasPaidAccess)
+            service.snapshot = self.renewableSeat(verifiedAt: clock)
+        }
+        clock = first.validUntil.addingTimeInterval(1)
+        XCTAssertEqual(waits, [270])
+        XCTAssertTrue(model.hasPaidAccess)
+        XCTAssertFalse(model.verificationIsStale)
+        XCTAssertEqual(service.fetches, 2)
+        XCTAssertEqual(store.syncCount, 0)
+        XCTAssertEqual(store.unfinishedReads, 0)
+
+        let second = try XCTUnwrap(model.renewal)
+        await model.renewWhileActive(second) { _ in model.stop() }
+        XCTAssertEqual(service.fetches, 2)
+        XCTAssertFalse(model.hasPaidAccess)
+    }
+
+    func testFailedSeatVerificationExpiresAndManualRetryCoalesces() async throws {
+        var clock = now
+        let service = FakeMembershipService(snapshot: renewableSeat(verifiedAt: clock))
+        let store = FakeMembershipStorefront()
+        let model = MembershipModel(context: context, service: service, storefront: store, clock: { clock })
+        defer { model.stop() }
+        await model.verifyMembership()
+        let first = try XCTUnwrap(model.renewal)
+        service.error = .unavailable
+        await model.renewWhileActive(first) { clock.addTimeInterval($0) }
+        XCTAssertTrue(model.verificationFailed)
+        XCTAssertTrue(model.hasPaidAccess)
+        clock = first.validUntil
+        XCTAssertTrue(model.verificationIsStale)
+        XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertFalse(model.canManageSeats)
+        XCTAssertEqual(service.fetches, 2)
+
+        service.error = nil
+        service.snapshot = renewableSeat(verifiedAt: clock)
+        var completeFetch: CheckedContinuation<Void, Never>?
+        service.fetchCredential = {
+            await withCheckedContinuation { completeFetch = $0 }
+            return "current-session"
+        }
+        let retry = Task { await model.verifyMembership() }
+        await settle { completeFetch != nil }
+        XCTAssertTrue(model.isVerifyingMembership)
+        service.fetchCredential = nil
+        Task { @MainActor in completeFetch?.resume() }
+        await model.verifyMembership()
+        await retry.value
+        XCTAssertFalse(model.verificationFailed)
+        XCTAssertTrue(model.hasPaidAccess)
+        XCTAssertFalse(model.verificationIsStale)
+        XCTAssertEqual(service.fetches, 3)
+        XCTAssertEqual(store.syncCount, 0)
+    }
+
     func testRefreshDoesNotPromptAppleSyncAndRestoreDoes() async {
         let service = FakeMembershipService(snapshot: snapshot())
         let store = FakeMembershipStorefront()

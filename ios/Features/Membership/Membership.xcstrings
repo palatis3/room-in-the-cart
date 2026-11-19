@@ -510,19 +510,19 @@
         }
       }
     },
-    "Purchases are not available in this build.": {
+    "Household subscription purchases are unavailable. You can keep using the free planning tools.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Purchases are not available in this build."
+            "value": "Household subscription purchases are unavailable. You can keep using the free planning tools."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las compras no están disponibles en esta versión."
+            "value": "No se puede comprar una suscripción a Household. Puedes seguir usando las herramientas de planeación gratuitas."
           }
         }
       }
@@ -1168,6 +1168,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo usar una actualización anterior del App Store."
+          }
+        }
+      }
+    },
+    "Check membership again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check membership again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a verificar la membresía"
+          }
+        }
+      }
+    },
+    "Free tools are available while you check your membership.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free tools are available while you check your membership."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes usar las herramientas gratuitas mientras verificas tu membresía."
+          }
+        }
+      }
+    },
+    "Membership needs verification": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership needs verification"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta verificar la membresía"
+          }
+        }
+      }
+    },
+    "Your membership details could not be refreshed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your membership details could not be refreshed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron actualizar los datos de tu membresía."
           }
         }
       }

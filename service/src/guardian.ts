@@ -6,6 +6,7 @@ import type {Database,Transaction} from './database.js';
 import {canonical,digest,tokenHash} from './database.js';
 import {HouseholdRepository,type AuthContext,type Context} from './repository.js';
 import {ServiceError,unavailable,accessEnded} from './errors.js';
+import {requireRecentPrivacyAuthentication} from './privacy.js';
 import {KWSWebhookVerifier,type GuardianVerificationGateway} from './guardian-provider.js';
 import type {BrowserAuthService,ChildSigninBinding,EmailOTPProvider} from './browser-auth.js';
 import type {GuardianNotice,GuardianEnrollment} from '../../shared/contracts/guardian-enrollment-v1.js';
@@ -17,6 +18,8 @@ export const guardianCreateSchema=z.object({clientKey:uuid,noticeVersion:z.strin
   language:z.enum(['en','es']),childLocation:z.string().regex(/^US(-[A-Z]{2})?$/),guardianDeclaration:z.literal('parent_or_legal_guardian'),childId:uuid.optional()}).strict();
 export const guardianActionSchema=z.object({clientKey:uuid,baseRevision:z.number().int().positive()}).strict();
 export const guardianConsentSchema=guardianActionSchema.extend({noticeVersion:z.string().min(1).max(100),noticeDigest:hash,childAlias:z.string().trim().min(1).max(80),decision:z.literal('grant'),childSignInEmail:z.email().max(254)}).strict();
+export const childDeletionReviewSchema=z.object({enrollmentId:uuid,childSignInEmail:z.string().trim().email().max(254)}).strict();
+export const manualChildDeletionSchema=childDeletionReviewSchema.extend({clientKey:uuid,confirm:z.literal(true)}).strict();
 export const guardianInvitationSchema=guardianActionSchema.extend({secret}).strict();
 export const guardianConfirmSchema=guardianActionSchema.extend({claimId:uuid,pairingCode:pairing}).strict();
 export const childClaimSchema=z.object({clientKey:uuid,token:z.string().max(150).regex(/^[0-9a-f-]{36}\.[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}$/i),pairingCode:pairing}).strict();
@@ -31,7 +34,7 @@ export interface GuardianApprovedNotice extends GuardianNotice {
 }
 export interface GuardianEnrollmentOptions {
   gateway?:GuardianVerificationGateway; webhookVerifier?:KWSWebhookVerifier; verifierPool?:Database;
-  retentionPolicy?:GuardianRetentionPolicy;emailDigestKey?:string; notices?:readonly GuardianApprovedNotice[];
+  manualReviewRetentionDays?:number;unmatchedReviewRetentionDays?:number;retentionPolicy?:GuardianRetentionPolicy;emailDigestKey?:string; notices?:readonly GuardianApprovedNotice[];
 }
 type Setup=Record<string,any>;
 const terminal=new Set(['cancelled','expired','withdrawn']);
@@ -64,6 +67,67 @@ export class GuardianEnrollmentService {
   }
   private keyed(kind:string,value:string){if(!this.options.emailDigestKey)throw disabled();return createHmac('sha256',Buffer.from(this.options.emailDigestKey,'base64url')).update(kind+'\n'+value).digest('hex');}
   private guardian(ctx:Context){if(ctx.member.kind!=='adult'||ctx.viewGrantId)throw unavailable();}
+  private deletionGuardian(ctx:Context){
+    this.guardian(ctx);
+    if(ctx.ownRequestsOnly)throw unavailable();
+  }
+  async deletionCandidates(ctx:Context,identity:VerifiedIdentity){
+    this.deletionGuardian(ctx);
+    if(!this.options.emailDigestKey)return {children:[]};
+    const email=await this.email(ctx,identity);
+    const result=await ctx.db.query(
+      'SELECT enrollment_id AS "enrollmentId",child_alias AS "childAlias" FROM ritc.guardian_deletion_candidates($1,$2,$3,$4,$5,$6,$7)',
+      [identity.issuer,identity.subject,identity.sessionId,ctx.householdId,ctx.member.member_id,ctx.deviceId,this.keyed('email',email)]);
+    return {children:result.rows};
+  }
+  async reviewChildDeletion(ctx:Context,identity:VerifiedIdentity,input:z.infer<typeof childDeletionReviewSchema>){
+    this.deletionGuardian(ctx);
+    requireRecentPrivacyAuthentication(identity);
+    if(!this.options.emailDigestKey)throw new ServiceError(503,'deletion_unavailable','Guardian identity verification is unavailable.');
+    const email=await this.email(ctx,identity), childEmail=input.childSignInEmail.trim().toLowerCase();
+    const review=(await ctx.db.query(
+      'SELECT review_id,child_alias,expires_at FROM ritc.guardian_review_child_deletion($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+      [identity.issuer,identity.subject,identity.sessionId,ctx.householdId,input.enrollmentId,ctx.member.member_id,ctx.deviceId,
+       this.keyed('email',email),this.keyed('child-email',childEmail),childEmail])).rows[0];
+    if(!review)throw unavailable();
+    return {enrollmentId:input.enrollmentId,childAlias:review.child_alias,reviewId:review.review_id,expiresAt:review.expires_at.toISOString()};
+  }
+  async manualDeletionCases(ctx:Context,identity:VerifiedIdentity){
+    this.deletionGuardian(ctx);
+    const email=await this.email(ctx,identity);
+    const available=Boolean(this.options.emailDigestKey&&this.options.manualReviewRetentionDays&&this.options.unmatchedReviewRetentionDays);
+    const result=await ctx.db.query('SELECT ritc.guardian_case_list($1,$2,$3,$4,$5,$6,$7,$8) AS receipt',
+      [identity.issuer,identity.subject,identity.sessionId,ctx.householdId,ctx.member.member_id,ctx.deviceId,
+       available?this.keyed('email',email):null,available]);
+    return result.rows[0].receipt;
+  }
+  async openManualDeletionCase(ctx:Context,identity:VerifiedIdentity,input:z.infer<typeof manualChildDeletionSchema>){
+    this.deletionGuardian(ctx);
+    requireRecentPrivacyAuthentication(identity);
+    const days=this.options.manualReviewRetentionDays;
+    if(!days||!this.options.unmatchedReviewRetentionDays||!this.options.emailDigestKey)throw new ServiceError(503,'manual_review_unavailable','Private guardian review is unavailable.');
+    const email=await this.email(ctx,identity),childEmail=input.childSignInEmail.trim().toLowerCase();
+    try{
+      const row=(await ctx.db.query('SELECT ritc.guardian_case_open($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) AS receipt',
+        [identity.issuer,identity.subject,identity.sessionId,ctx.householdId,ctx.member.member_id,ctx.deviceId,input.enrollmentId,input.clientKey,
+         this.keyed('email',email),this.keyed('child-email',childEmail),childEmail,days,this.options.unmatchedReviewRetentionDays])).rows[0];
+      return row.receipt;
+    }catch(error){
+      if(error instanceof Error){
+        if(error.message==='unavailable')throw unavailable();
+        if(error.message==='key_reused'||error.message==='review_already_requested')
+          throw new ServiceError(409,error.message,'Refresh your private review requests.');
+      }
+      throw error;
+    }
+  }
+  async checkDeletionReviewDevice(ctx:Context,identity:VerifiedIdentity,enrollmentId:string,reviewId:string){
+    this.deletionGuardian(ctx);
+    requireRecentPrivacyAuthentication(identity);
+    const row=(await ctx.db.query('SELECT ritc.guardian_deletion_review_device($1,$2,$3,$4,$5) AS valid',
+      [ctx.householdId,enrollmentId,reviewId,ctx.deviceId,identity.sessionId])).rows[0];
+    if(!row?.valid)throw unavailable();
+  }
   private async setup(ctx:Context,identity:VerifiedIdentity,id:string,allowEnded=false):Promise<Setup>{
     this.guardian(ctx);
     const setup=(await ctx.db.query(`SELECT * FROM ritc.guardian_enrollment WHERE household_id=$1 AND enrollment_id=$2 AND guardian_id=$3
@@ -185,6 +249,12 @@ export class GuardianEnrollmentService {
     await this.repo.transaction(householdId!,async(db,now)=>{const row=(await db.query('SELECT secret_hash FROM ritc.guardian_child_invitation WHERE household_id=$1 AND invite_id=$2 AND revoked_at IS NULL AND consumed_at IS NULL AND expires_at>$3',[householdId,inviteId,now])).rows[0];if(row?.secret_hash!==tokenHash(value!))throw unavailable();});
     return this.browserAuth.start(cookie,csrf,{email:input.email},address,{householdId:householdId!,inviteId:inviteId!});
   }
+  async noteChildSigninRequest(binding:ChildSigninBinding){
+    await this.repo.transaction(binding.householdId,async db=>{
+      const row=(await db.query('SELECT ritc.guardian_note_signup_request($1,$2) AS recorded',[binding.householdId,binding.inviteId])).rows[0];
+      if(!row?.recorded)throw ended();
+    });
+  }
   async beforeChildSignin(binding:ChildSigninBinding,email:string){
     return this.repo.transaction(binding.householdId,async(db,now)=>{
       const row=(await db.query('SELECT e.*,v.revoked_at AS invite_revoked,v.consumed_at,v.expires_at AS invite_expires FROM ritc.guardian_enrollment e JOIN ritc.guardian_child_invitation v USING(household_id,enrollment_id) WHERE v.household_id=$1 AND v.invite_id=$2',[binding.householdId,binding.inviteId])).rows[0];
@@ -219,7 +289,7 @@ export class GuardianEnrollmentService {
       await db.query('INSERT INTO ritc.guardian_native_challenge(household_id,challenge_id,invite_id,client_key,secret_hash,payload_digest,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7)',[householdId,id,inviteId,input.clientKey,tokenHash(input.challengeSecret),this.keyed('native-intent',canonical(input)),expires]);
       return{send:true,receipt:{householdId:householdId!,challengeId:id,status:'check_email' as const,expiresAt:expires.toISOString()}};
     });
-    if(prepared.send){try{await this.otpProvider.start(input.email.trim().toLowerCase());}catch{throw new ServiceError(503,'child_signin_uncertain','Sign-in delivery is uncertain. Retain this challenge and check for the code.');}}return prepared.receipt;
+    if(prepared.send){await this.noteChildSigninRequest({householdId:householdId!,inviteId:inviteId!});try{await this.otpProvider.start(input.email.trim().toLowerCase());}catch{throw new ServiceError(503,'child_signin_uncertain','Sign-in delivery is uncertain. Retain this challenge and check for the code.');}}return prepared.receipt;
   }
   async nativeSigninAdmit(identity:VerifiedIdentity,input:z.infer<typeof childNativeAdmitSchema>){
     const challenge=await this.repo.transaction(input.householdId,async(db,now)=>{

@@ -20,12 +20,13 @@ const lineSchema=z.object({
 }).strict().refine(l=>l.received.amount.numerator>0 && l.received.unit===l.usable.unit && cmp(amount(l.usable),amount(l.received))<=0
   && (l.printed?(l.printed.page-1)*200+l.printed.line-1===l.ordinal:l.ordinal<200));
 export const householdReceiptBody=z.object({
-  receiptId:id,imageId:id.nullish().default(null),merchant:text(256),purchaseDay:z.iso.date(),zone:text(100),
+  receiptId:id,imageId:id.nullish().default(null),layoutId:id.optional(),merchant:text(256),purchaseDay:z.iso.date(),zone:text(100),
   reference:text(256).nullish().default(null),lines:z.array(lineSchema).min(1).max(50)
 }).strict().refine(b=>new Set(b.lines.map(l=>l.ordinal)).size===b.lines.length &&
   new Set(b.lines.flatMap(l=>l.delivery?[l.delivery.lotId]:[])).size===b.lines.filter(l=>l.delivery).length);
 type Body=z.infer<typeof householdReceiptBody>;
 type Row=Body['lines'][number];
+const layoutReview=()=>new ServiceError(409,'receipt_layout_review','Check the saved receipt. For a missed item, reopen its original file or add the food separately.');
 const conflict=()=>new ServiceError(409,'receipt_conflict','This receipt or delivery already has different evidence.');
 function dayAt(now:Date,zone:string) {
   try { return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:zone}).format(now); }
@@ -40,14 +41,29 @@ export async function acquireHouseholdReceipt(ctx:Context,body:Body,operationId:
   const aliases=await ctx.db.query<{receipt_id:string}>('SELECT DISTINCT receipt_id FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=ANY($2::uuid[])',[h,sources]);
   if(aliases.rows.length>1) throw conflict();
   const receiptId=aliases.rows[0]?.receipt_id??body.receiptId;
-  await ctx.db.query(`INSERT INTO ritc.receipt_source_key(household_id,source_id,receipt_id)
-    SELECT $1,source,$3 FROM unnest($2::uuid[]) source ON CONFLICT DO NOTHING`,[h,sources,receiptId]);
-  const header=(await ctx.db.query(`SELECT evidence->>'merchant' AS merchant,evidence->>'purchaseDay' AS day,
-    evidence->>'reference' AS reference FROM ritc.household_receipt_line WHERE household_id=$1 AND receipt_id=$2 LIMIT 1`,[h,receiptId])).rows[0];
-  if(header && (header.merchant!==body.merchant || header.day!==body.purchaseDay ||
-                (header.reference && body.reference && header.reference!==body.reference))) throw conflict();
+  // Only UTF-8 text files have byte-defined line coordinates without an extraction marker.
+  const byteDefined=body.imageId && body.lines.every(row=>row.printed?.method==='textFile');
+  const layout=byteDefined || body.layoutId
+    ? digest({householdId:h,receiptId,imageId:body.imageId,layoutId:byteDefined?null:body.layoutId??null})
+    : null;
+  const isNewReceipt=aliases.rows.length===0;
+  const origin=isNewReceipt?null:(await ctx.db.query<{original_layout_digest:string|null}>(
+    'SELECT original_layout_digest FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=$2',[h,receiptId])).rows[0];
+  const sameLayout=isNewReceipt || (layout!==null && origin?.original_layout_digest===layout);
+  await ctx.db.query(`INSERT INTO ritc.receipt_source_key(household_id,source_id,receipt_id,original_layout_digest)
+    SELECT $1,source,$3,CASE WHEN source=$3::uuid THEN $4::text END FROM unnest($2::uuid[]) source
+    ON CONFLICT DO NOTHING`,[h,sources,receiptId,isNewReceipt?layout:null]);
+  // A later partial selection may be the first to carry a confirmed reference.
+  // Any contradicting retained line is sufficient to reject an alternate source key.
+  const mismatch=(await ctx.db.query(`SELECT evidence->>'reference' AS reference FROM ritc.household_receipt_line
+    WHERE household_id=$1 AND receipt_id=$2 AND (evidence->>'merchant'<>$3 OR evidence->>'purchaseDay'<>$4
+      OR ($5::text IS NOT NULL AND evidence->>'reference'<>$5)) LIMIT 1`,
+    [h,receiptId,body.merchant,body.purchaseDay,body.reference])).rows[0];
+  if(mismatch) throw mismatch.reference && body.reference && mismatch.reference!==body.reference ? layoutReview() : conflict();
   const ordinals=body.lines.map(l=>l.ordinal);
   if((await ctx.db.query('SELECT 1 FROM ritc.retired_receipt_line WHERE household_id=$1 AND receipt_id=$2 AND ordinal=ANY($3::int[]) LIMIT 1',[h,receiptId,ordinals])).rowCount) throw refresh();
+  // On another layout, even identical evidence at a known position could be a different printed copy.
+  if(!sameLayout) throw layoutReview();
   const prior=await ctx.db.query<{ordinal:number,lot_id:string,evidence:unknown}>('SELECT ordinal,lot_id,evidence FROM ritc.household_receipt_line WHERE household_id=$1 AND receipt_id=$2 AND ordinal=ANY($3::int[])',[h,receiptId,ordinals]);
   const existing=new Map(prior.rows.map(r=>[r.ordinal,r]));
   const links=body.lines.flatMap(row=>!existing.has(row.ordinal)&&row.delivery?[row.delivery.lotId]:[]);

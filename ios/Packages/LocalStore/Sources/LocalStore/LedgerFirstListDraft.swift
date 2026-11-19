@@ -18,6 +18,29 @@ extension LedgerStore {
     public nonisolated static let maximumFirstListDraftBytes = 1_048_576
     public nonisolated static let firstListDraftLifetime: TimeInterval = 7 * 24 * 3600
 
+    /// The review counts drafts from every owner affected by whole-workspace erasure.
+    /// Read only opaque version tokens, never the private draft wording or owner identity.
+    public func workspaceErasureBasis() throws -> (head: LedgerRecord?, draftTokens: [UUID]) {
+        try database.transaction(immediate: false) {
+            (try database.current(workspaceID: workspaceID), try liveFirstListDraftTokens())
+        }
+    }
+
+    func liveFirstListDraftTokens() throws -> [UUID] {
+        guard try database.integer("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='first_list_draft'") == 1 else { return [] }
+        let rows = try database.statement("SELECT token FROM first_list_draft WHERE workspace_id=? AND expires_at>? ORDER BY token",
+                                          values: [.text(workspaceID.uuidString), .real(Date().timeIntervalSinceReferenceDate)])
+        defer { sqlite3_finalize(rows) }
+        var tokens: [UUID] = []
+        while true {
+            let status = sqlite3_step(rows)
+            if status == SQLITE_DONE { return tokens }
+            guard status == SQLITE_ROW else { throw LedgerStoreError.database(status) }
+            guard tokens.count < 32, let token = UUID(uuidString: try database.text(rows, 0)) else { throw LedgerStoreError.corruptRecord }
+            tokens.append(token)
+        }
+    }
+
     private func prepareFirstListDrafts(owner: Data, now: Date) throws {
         guard owner.count == 32, now.timeIntervalSinceReferenceDate.isFinite else { throw LedgerStoreError.invalidInput }
         guard try database.workspace().id == workspaceID else { throw LedgerStoreError.erased }

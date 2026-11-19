@@ -320,7 +320,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     }
     private func failureText(_ failure: CaptureFailure) -> String {
         switch failure {
-        case .notConfigured: return captureText("Speech is not available in this build. Type or paste your list instead.")
+        case .notConfigured: return captureText("Dictation is unavailable. You can type or paste your list.")
         case .permissionDenied: return captureText("Microphone or speech permission was not granted. Your typed draft is unchanged; typing, paste and photo review remain available.")
         case .onDeviceUnavailable: return captureText("On-device dictation is unavailable for this language or device. You can type or paste your list.")
         case .audioUnavailable: return captureText("The microphone is unavailable. Stop another recording or type your list.")

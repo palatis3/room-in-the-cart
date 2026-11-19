@@ -15,12 +15,12 @@ final class PickupOfferReviewTests: XCTestCase {
             deadline: try RetailerDeadline(cutoff: now.addingTimeInterval(-60), timeZoneID: "America/New_York"),
             fallback: "Ask me", householdPreference: "Six wraps for dinner", retailerResponse: "")
     }
-    @MainActor private func placed(store: ComparisonStore) async throws -> PickupModel {
+    @MainActor private func placed(store: ComparisonStore, extraLines: [BasketLine] = []) async throws -> PickupModel {
         let model = PickupModel(store: store, clock: { self.now })
         let id = UUID(), lineID = UUID()
         let context = CheckoutContext(storeID: "Store", branchID: "Branch", mode: .pickup,
             slot: "Evening", commitmentsID: id, observedAt: now, source: "Reviewed")
-        let started = await model.start(from: [BasketLine(id: lineID, name: "Wraps", quantity: quantity(8), expectedCost: .exact(Money(minorUnits: 600)))], shopID: id, context: context)
+        let started = await model.start(from: [BasketLine(id: lineID, name: "Wraps", quantity: quantity(8), expectedCost: .exact(Money(minorUnits: 600)))] + extraLines, shopID: id, context: context)
         XCTAssertTrue(started)
         let quoted = await model.setQuote(CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(Money(minorUnits: 700)))), cap: nil)
         let frozen = await model.freeze(), reported = await model.reportPlaced()
@@ -28,6 +28,97 @@ final class PickupOfferReviewTests: XCTestCase {
         return model
     }
     private func location() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString) }
+
+    @MainActor func testArrivalShortcutTracksEachActiveLineAtItsObservationDate() async throws {
+        let url = location()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let rice = BasketLine(id: UUID(), name: "Rice", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 100)))
+        let model = try await placed(store: ComparisonStore(url: url), extraLines: [rice])
+        var journey = try XCTUnwrap(model.journey)
+        var ledger = try XCTUnwrap(journey.pickup)
+        let first = try XCTUnwrap(ledger.orderLines.first { $0.id != rice.id })
+        let second = try XCTUnwrap(ledger.orderLines.first { $0.id == rice.id })
+        func receipt(for line: PickupOrderLine, at date: Date) -> ReceiptFragment {
+            .init(key: ReceiptKey(sourceEventID: line.name, orderLineID: line.id, branchID: line.branchID, segmentID: "bag"),
+                  itemName: line.name, received: quantity(1), disposition: .partial, receivedAt: date)
+        }
+        journey.pickup = ledger
+        XCTAssertEqual(Set(journey.unobservedRetailerLines(at: now).map(\.id)), [first.id, second.id])
+        XCTAssertTrue(journey.shouldResumeArrival(at: now))
+        try ledger.receive(receipt(for: first, at: now))
+        journey.pickup = ledger
+        XCTAssertTrue(journey.shouldResumeArrival(at: now))
+        XCTAssertEqual(journey.unobservedRetailerLines(at: now).map(\.id), [second.id])
+        journey.offers = [try offer(lineID: second.id)]
+        XCTAssertFalse(journey.shouldResumeArrival(at: now))
+        journey.offers = [try offer(lineID: first.id)]
+        XCTAssertTrue(journey.shouldResumeArrival(at: now))
+
+        let later = now.addingTimeInterval(100)
+        try ledger.receive(receipt(for: second, at: later))
+        journey.pickup = ledger
+        XCTAssertTrue(journey.shouldResumeArrival(at: later.addingTimeInterval(-1)))
+        XCTAssertFalse(journey.shouldResumeArrival(at: later))
+        XCTAssertTrue(journey.unobservedRetailerLines(at: later).isEmpty)
+
+        var basket = try XCTUnwrap(journey.basket)
+        let placement = try XCTUnwrap(basket.placements.last)
+        try basket.confirmAmendment(.init(id: UUID(), placementID: placement.id, previousAmendmentID: nil,
+                                         lines: basket.current.lines.filter { $0.id != rice.id }, confirmedAt: now.addingTimeInterval(1), retailerReference: "desk"))
+        journey.basket = basket
+        XCTAssertFalse(journey.shouldResumeArrival(at: now))
+        journey.basket = model.journey?.basket
+        journey.closedAt = now
+        XCTAssertFalse(journey.shouldResumeArrival(at: now))
+    }
+
+    func testAutomaticArrivalIdentityReplaysAcrossReopenKeepsLinesSeparateAndProtectsLegacyReceipts() throws {
+        let order = UUID()
+        let wraps = PickupOrderLine(id: UUID(), branchID: "Branch", name: "Wraps", ordered: quantity(4))
+        let rice = PickupOrderLine(id: UUID(), branchID: "Branch", name: "Rice", ordered: quantity(2))
+        let apples = PickupOrderLine(id: UUID(), branchID: "Branch", name: "Apples", ordered: quantity(5))
+        var ledger = try PickupLedger(orderID: order, orderLines: [wraps, rice, apples])
+        func fragment(_ key: ReceiptKey) -> ReceiptFragment {
+            .init(key: key, itemName: "Observed food", received: quantity(1), disposition: .partial, receivedAt: now)
+        }
+
+        var refs = ArrivalDeliveryReferences()
+        let first = refs.key(orderID: order, line: wraps)
+        XCTAssertTrue(refs.canRecord(first, in: ledger))
+        XCTAssertTrue(try ledger.receive(fragment(first)))
+        XCTAssertFalse(try ledger.receive(fragment(first)))
+        let afterReopen = ArrivalDeliveryReferences().key(orderID: order, line: wraps)
+        XCTAssertEqual(afterReopen, first)
+        XCTAssertFalse(try ledger.receive(fragment(afterReopen)))
+        let otherLine = refs.key(orderID: order, line: rice)
+        XCTAssertEqual(otherLine.sourceEventID, first.sourceEventID)
+        XCTAssertEqual(otherLine.segmentID, first.segmentID)
+        XCTAssertNotEqual(otherLine, first)
+        XCTAssertTrue(try ledger.receive(fragment(otherLine)))
+
+        // Existing saved keys use the receipt and split entered by the shopper.
+        let historic = ReceiptKey(sourceEventID: "shop #41", orderLineID: apples.id, branchID: apples.branchID, segmentID: "first bag")
+        XCTAssertTrue(try ledger.receive(fragment(historic)))
+        XCTAssertFalse(refs.canRecord(refs.key(orderID: order, line: apples), in: ledger))
+        refs.receipt = "shop #41"
+        refs.segment = "first bag"
+        XCTAssertEqual(refs.key(orderID: order, line: apples), historic)
+        XCTAssertTrue(refs.canRecord(historic, in: ledger))
+        XCTAssertFalse(try ledger.receive(fragment(historic)))
+
+        refs.startAnother()
+        let next = refs.key(orderID: order, line: apples)
+        XCTAssertEqual(next.sourceEventID, historic.sourceEventID)
+        XCTAssertNotEqual(next.segmentID, historic.segmentID)
+        XCTAssertTrue(refs.canRecord(next, in: ledger))
+        XCTAssertTrue(try ledger.receive(fragment(next)))
+        XCTAssertEqual(refs.key(orderID: order, line: apples), next)
+        XCTAssertFalse(try ledger.receive(fragment(next)))
+        refs.startAnother()
+        XCTAssertNotEqual(refs.key(orderID: order, line: apples), next)
+        XCTAssertEqual(ledger.receipts.count, 4)
+        XCTAssertTrue(ledger.usableObservations.isEmpty)
+    }
 
     @MainActor func testFutureChargeDoesNotChangePaidTotalBeforeItsEvidenceDate() async throws {
         let url = location()

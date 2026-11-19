@@ -13,6 +13,8 @@ work. PR #10 merged as `3b767679`; plan approval and passing PR CI do not close
 original release obligations or certify unimplemented features. PR #29 merged after 61 checks passed. [PR #60](https://github.com/palatis3/room-in-the-cart/pull/60) integrated the remaining feature branches after 63 checks passed.
 [Current handoff](CURRENT-HANDOFF.md) tracks integration and staging.
 
+Before distributing the iOS build that sends a household receipt layout identifier, apply migration 068 and deploy the matching service handler in that environment. Earlier handlers reject the new field. In a synthetic household, confirm that replay returns the original result, an unambiguous missed line can be added from the original layout, and a changed layout leaves both stock and prices intact. The production rollout remains an owner decision.
+
 Xcode produced an unsigned arm64 iPhone Release archive at `b2e58601`.
 The app and both extensions matched their crash symbols. Package checks verified
 the embedded extensions, assets and privacy manifests. Signed distribution still

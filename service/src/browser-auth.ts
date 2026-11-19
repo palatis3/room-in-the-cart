@@ -62,7 +62,7 @@ interface AuthRow {
 }
 export interface BrowserIdentity {identity:VerifiedIdentity;csrf:string;cookie:string}
 export interface ChildSigninBinding {householdId:string;inviteId:string}
-export interface BrowserChildSigninGuard {beforeChildSignin(binding:ChildSigninBinding,email:string):Promise<void>;afterChildSignin(binding:ChildSigninBinding,identity:VerifiedIdentity,email:string,notBefore:Date):Promise<void>}
+export interface BrowserChildSigninGuard {noteChildSigninRequest(binding:ChildSigninBinding):Promise<void>;beforeChildSignin(binding:ChildSigninBinding,email:string):Promise<void>;afterChildSignin(binding:ChildSigninBinding,identity:VerifiedIdentity,email:string,notBefore:Date):Promise<void>}
 interface Outcome<T>{value?:T;failure?:ServiceError}
 export class BrowserAuthService {
   private readonly key:Buffer;
@@ -121,6 +121,7 @@ export class BrowserAuthService {
     const reservedUntil = this.unwrap(reservation);
     // Delivery can take seconds. Release both challenge and rate-bucket locks
     // while waiting, then verify the challenge still owns this send attempt.
+    if(binding)await this.options.childSignin!.noteChildSigninRequest(binding);
     try { await this.provider.start(email); }
     catch (error) { throw error instanceof ServiceError ? error : unavailable(); }
     return this.transaction(hash,async(db,now)=>{

@@ -161,6 +161,7 @@ extension ReceiptImportDraft {
         self.workspaceID = workspaceID
         savedPickup = nil
         imageDigest = nil
+        documentLayoutID = nil
         self.merchant = merchant
         self.purchaseDate = purchaseDate
         dateConfirmed = true

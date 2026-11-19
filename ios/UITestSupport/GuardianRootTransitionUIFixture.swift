@@ -4,6 +4,7 @@ import HouseholdClient
 import LocalStore
 import DeviceSurfaces
 import CryptoKit
+import os
 
 private final class GuardianRootMemoryVault: RefreshTokenVault, @unchecked Sendable {
     private let lock = NSLock(); private var value: String?
@@ -13,6 +14,7 @@ private final class GuardianRootMemoryVault: RefreshTokenVault, @unchecked Senda
     func clear() throws { lock.lock(); defer { lock.unlock() }; value = nil }
 }
 private final class GuardianRootFixtureProtocol: URLProtocol {
+    private static let firstWorkspaceRead = OSAllocatedUnfairLock(initialState: true)
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
@@ -32,11 +34,36 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
             case "/auth/v1/otp": body = [:]
             case "/auth/v1/verify": body = ["access_token":"fictional-access","refresh_token":"fictional-refresh","expires_in":3600,"user":user]
             case "/auth/v1/user": body = user
-            case "/v1/me/workspaces": body = ["workspaces":[["householdId":home,"label":"Fixture family","role":"shopper"]]]
+            case "/v1/me/workspaces":
+                if ProcessInfo.processInfo.arguments.contains("--lose-first-workspace-list"),
+                   Self.firstWorkspaceRead.withLock({ first in
+                       defer { first = false }
+                       return first
+                   }) {
+                    client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
+                    return
+                }
+                let memberships = [["householdId":home,"label":"Fixture family","role":"shopper"]]
+                body = ["workspaces":ProcessInfo.processInfo.arguments.contains("--no-existing-households") ? [] : memberships]
             case "/v1/households/\(home)/devices": body = ["deviceId":"fixture-device","deviceToken":"fictional-device-access"]
             case "/v1/households/\(home)/bootstrap":
                 body = ["household":["id":home,"label":"Fixture family"],"memberId":"fixture-shopper","role":"shopper",
                     "enrolled":true,"queueConsent":false,"capabilities":[]]
+            case "/v1/households/\(home)/guardian/notice":
+                body = ["available":false, "reason":"provider_configuration_required"]
+            case "/v1/households/\(home)/guardian/enrollments":
+                body = ["enrollments":[]]
+            case "/v1/households/\(home)/guardian/child-account-deletions" where request.httpMethod == "GET":
+                body = ["children":[["enrollmentId":"20000000-0000-4000-8000-000000000002", "childAlias":"Fixture child"]]]
+            case "/v1/households/\(home)/guardian/child-account-deletions/manual-reviews" where request.httpMethod == "GET":
+                body = ["available":true,
+                    "children":[["enrollmentId":"20000000-0000-4000-8000-000000000004", "childAlias":"Interrupted setup", "identityState":"unmatched"]],
+                    "requests":[["requestId":"30000000-0000-4000-8000-000000000005", "status":"closed",
+                        "createdAt":"2026-11-18T12:00:00Z", "updatedAt":"2026-11-18T12:00:00Z", "expiresAt":"2099-01-01T00:00:00Z"]]]
+            case "/v1/households/\(home)/guardian/child-account-deletions/review":
+                body = ["enrollmentId":"20000000-0000-4000-8000-000000000002", "childAlias":"Fixture child",
+                    "reviewId":"30000000-0000-4000-8000-000000000003", "expiresAt":"2099-01-01T00:00:00Z",
+                    "verifiedBackupRetentionDays":30]
             default: break
             }
             if body["error"] == nil { status = 200 }

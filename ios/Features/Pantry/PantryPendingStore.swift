@@ -18,14 +18,27 @@ import CoreDomain
     struct Entry: Codable, Equatable {
         let command: InventoryCommand
         let reviewedInventoryRevision: Int64
+        let consumption: PantryConsumptionIntent?
         fileprivate(set) var acknowledgment: Acknowledgment?
         var operationID: UUID { command.id }
-        init(command: InventoryCommand, reviewedInventoryRevision: Int64, acknowledgment: Acknowledgment? = nil) {
+        var commands: [InventoryCommand] { [command] + (consumption?.additionalCommands ?? []) }
+        init(command: InventoryCommand, reviewedInventoryRevision: Int64, acknowledgment: Acknowledgment? = nil,
+             consumption: PantryConsumptionIntent? = nil) {
+            self.consumption = consumption
             self.command = command; self.reviewedInventoryRevision = reviewedInventoryRevision
             self.acknowledgment = acknowledgment
         }
+        func requestBytes() throws -> Data {
+            if consumption == nil {
+                return try PantryPersistenceCodec.request(command, inventoryRevision: reviewedInventoryRevision)
+            }
+            // Acknowledgment is an outcome and cannot become part of the original idempotency key.
+            var original = self
+            original.acknowledgment = nil
+            return try PantryPendingStore.encode(original)
+        }
         func hasSameOriginal(as other: Entry) -> Bool {
-            command == other.command && reviewedInventoryRevision == other.reviewedInventoryRevision
+            command == other.command && reviewedInventoryRevision == other.reviewedInventoryRevision && consumption == other.consumption
         }
     }
     private struct Envelope: Codable {
@@ -63,7 +76,11 @@ import CoreDomain
 
     @discardableResult
     func save(command: InventoryCommand, reviewedInventoryRevision: Int64) throws -> Entry {
-        let candidate = Entry(command: command, reviewedInventoryRevision: reviewedInventoryRevision)
+        try save(Entry(command: command, reviewedInventoryRevision: reviewedInventoryRevision))
+    }
+
+    @discardableResult
+    func save(_ candidate: Entry) throws -> Entry {
         try validate(candidate)
         return try withLock {
             if let prior = try readUnlocked() {
@@ -87,7 +104,18 @@ import CoreDomain
               receipt.revision == expected.reviewedInventoryRevision + 1,
               currentInventoryRevision >= receipt.revision,
               receipt.comparisonHeads.isEmpty else { throw Failure.operationConflict }
-        if case .reservation(let edit) = expected.command.change {
+        if let consumption = expected.consumption {
+            let commands = [expected.command] + consumption.additionalCommands
+            guard receipt.heads.count == commands.count * 3 else { throw Failure.operationConflict }
+            for command in commands {
+                guard case .revise(let edit) = command.change, let observation = edit.observation,
+                      receipt.heads.contains(where: { $0.key == .init(.lot, command.lotID) && $0.revision == (command.expectedRevision ?? 0) + 1 }),
+                      receipt.heads.contains(where: { $0.key == .init(.event, command.eventID) && $0.revision == 1 }),
+                      receipt.heads.contains(where: { $0.key == .init(.observation, observation.observationID) && $0.revision == 1 }) else {
+                    throw Failure.operationConflict
+                }
+            }
+        } else if case .reservation(let edit) = expected.command.change {
             guard receipt.heads.count == 1, receipt.heads.first?.key == .init(.reservation, edit.id),
                   receipt.heads.first?.revision == edit.previousRevision + 1 else { throw Failure.operationConflict }
         } else {
@@ -196,9 +224,10 @@ import CoreDomain
         guard entry.reviewedInventoryRevision >= 0, entry.reviewedInventoryRevision < Int64.max,
               command.occurredAt.timeIntervalSinceReferenceDate.isFinite,
               command.expectedRevision.map({ $0 > 0 && $0 < Int64.max }) ?? true,
-              try PantryPersistenceCodec.request(command, inventoryRevision: entry.reviewedInventoryRevision).count <= InventoryPersistenceLimits.requestBytes else {
+              try entry.requestBytes().count <= InventoryPersistenceLimits.requestBytes else {
             throw Failure.invalidEntry
         }
+        try entry.consumption?.validate(first: command)
         if case .reservation(let edit) = command.change {
             try edit.validate()
             guard command.expectedRevision != nil else { throw Failure.invalidEntry }

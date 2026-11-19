@@ -690,6 +690,34 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         return StagedListImport(id: importID, shopID: id, baseRevision: revision, source: source, originalText: text, lines: staged)
     }
 
+    /// Preserve previously edited rows, including an incomplete field that the shopper is still correcting.
+    public func appendingImport(_ addition: StagedListImport, to prior: StagedListImport) throws -> StagedListImport {
+        guard prior.shopID == id, addition.shopID == id, prior.baseRevision == revision, addition.baseRevision == revision
+        else { throw LedgerError.stalePreview }
+        let text = [prior.originalText, addition.originalText].filter { !$0.isEmpty }.joined(separator: "\n")
+        try StagedListImport.validateSourceText(text, maximumLines: StagedListImport.maximumLines)
+        guard prior.lines.count + addition.lines.count <= StagedListImport.maximumLines else {
+            throw ImportTextLimit.nonblankLines(maximum: StagedListImport.maximumLines)
+        }
+        var candidates = importCandidatesByName()
+        for row in prior.lines { candidates[normalizedProduct(row.name), default: []].append(row.proposedLineID) }
+        var appended = addition.lines
+        for index in appended.indices {
+            let name = normalizedProduct(appended[index].name)
+            appended[index].duplicateLineIDs = candidates[name] ?? []
+            candidates[name, default: []].append(appended[index].proposedLineID)
+        }
+        return StagedListImport(id: prior.id, shopID: id, baseRevision: revision, source: prior.source, originalText: text,
+                                lines: prior.lines + appended)
+    }
+
+    /// Re-evaluate a saved review against the current list while keeping the shopper's edited rows and their identities.
+    public func refreshSavedImport(_ preview: StagedListImport) throws -> StagedListImport {
+        let current = StagedListImport(id: preview.id, shopID: preview.shopID, baseRevision: revision,
+            source: preview.source, originalText: preview.originalText, lines: preview.lines)
+        return try refreshImportMatches(current)
+    }
+
     /// Refresh suggestions after editing a staged product name without changing
     /// the staged identities, original evidence, or the reviewed shop revision.
     public func refreshImportMatches(_ preview: StagedListImport) throws -> StagedListImport {

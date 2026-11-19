@@ -305,6 +305,25 @@ class BuiltAppVerificationTests(unittest.TestCase):
         (debug / "PlugIns/RoomInTheCartTests.xctest").mkdir()
         verify_built_app(debug, "Debug")
 
+    def test_household_privacy_declarations_in_app_manifest(self):
+        with (self.app / "PrivacyInfo.xcprivacy").open("rb") as handle:
+            manifest = plistlib.load(handle)
+        declared = {row["NSPrivacyCollectedDataType"]: row for row in manifest["NSPrivacyCollectedDataTypes"]}
+        for kind in ("EmailsOrTextMessages", "CustomerSupport"):
+            with self.subTest(kind=kind):
+                row = declared["NSPrivacyCollectedDataType" + kind]
+                self.assertTrue(row["NSPrivacyCollectedDataTypeLinked"])
+                self.assertFalse(row["NSPrivacyCollectedDataTypeTracking"])
+                self.assertEqual(row["NSPrivacyCollectedDataTypePurposes"],
+                                 ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])
+        for kind in ("UserID", "OtherUserContent"):
+            with self.subTest(kind=kind):
+                row = declared["NSPrivacyCollectedDataType" + kind]
+                self.assertTrue(row["NSPrivacyCollectedDataTypeLinked"])
+                self.assertFalse(row["NSPrivacyCollectedDataTypeTracking"])
+                self.assertIn("NSPrivacyCollectedDataTypePurposeProductPersonalization",
+                              row["NSPrivacyCollectedDataTypePurposes"])
+
     def test_checks_each_extension_privacy_manifest(self):
         for extension in (self.widget, self.share):
             with self.subTest(bundle=extension.name):

@@ -1293,6 +1293,23 @@
         }
       }
     },
+    "The previous amount could not be converted. Enter how much you used from this batch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous amount could not be converted. Enter how much you used from this batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo convertir la cantidad anterior. Ingresa cuánto usaste de este lote."
+          }
+        }
+      }
+    },
     "The selected batch’s remaining quantity will become unknown. Existing holds are retained for review.": {
       "extractionState": "manual",
       "localizations": {
@@ -1378,19 +1395,19 @@
         }
       }
     },
-    "Unmeasured amount from a pantry batch": {
+    "Used some from a pantry batch": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unmeasured amount from a pantry batch"
+            "value": "Used some from a pantry batch"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cantidad no medida de un lote de la despensa"
+            "value": "Usé un poco de un lote de la despensa"
           }
         }
       }

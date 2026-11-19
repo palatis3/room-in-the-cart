@@ -6,6 +6,7 @@ import Speech
 @MainActor final class OnDeviceSpeechCapture: CaptureSpeechService {
     private let bundle: Bundle
     private let punctuatesList: Bool
+    private let willRequestPermission: @MainActor () -> Bool
     private var recognizer: SFSpeechRecognizer?
     private var engine: AVAudioEngine?
     private var request: SFSpeechAudioBufferRecognitionRequest?
@@ -17,7 +18,9 @@ import Speech
     private let audio: CookAudioSession
     private var audioLease: CookCaptureAudioRequest?
 
-    init(bundle: Bundle = .main, audio: CookAudioSession = .shared, punctuatesList: Bool = false) {
+    init(bundle: Bundle = .main, audio: CookAudioSession = .shared, punctuatesList: Bool = false,
+         willRequestPermission: @escaping @MainActor () -> Bool = { true }) {
+        self.willRequestPermission = willRequestPermission
         self.bundle = bundle
         self.audio = audio
         self.punctuatesList = punctuatesList
@@ -34,11 +37,17 @@ import Speech
         let locale = language == "es" ? "es-US" : "en-US"
         guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: locale)),
               recognizer.supportsOnDeviceRecognition else { throw CaptureFailure.onDeviceUnavailable }
+        if SFSpeechRecognizer.authorizationStatus() == .notDetermined && !willRequestPermission() {
+            throw CaptureFailure.permissionDenied
+        }
         let authorized = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0 == .authorized) }
         }
         guard runID == run, !Task.isCancelled else { throw CancellationError() }
         guard authorized else { throw CaptureFailure.permissionDenied }
+        if AVAudioApplication.shared.recordPermission == .undetermined && !willRequestPermission() {
+            throw CaptureFailure.permissionDenied
+        }
         let microphone = await withCheckedContinuation { continuation in
             AVAudioApplication.requestRecordPermission { continuation.resume(returning: $0) }
         }

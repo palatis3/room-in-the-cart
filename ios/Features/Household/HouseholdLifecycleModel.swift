@@ -46,6 +46,18 @@ import HouseholdClient
         self.subject = subject; self.service = service; self.store = store; self.deviceStore = deviceStore
         self.onEnrolled = onEnrolled; self.onAccessEnded = onAccessEnded
     }
+    private let safetyReviews = SharedSafetyReviews()
+    func sharedSafetyChannel(for grantID: String) -> SharedSafetyChannel? {
+        let session = scopeGeneration
+        return SharedSafetyChannel(reviews: safetyReviews, generation: session, scope: scope, service: service,
+            current: { [weak self] in self?.scopeGeneration == session &&
+                (self?.isHelper == true ? self?.helperView?.grantId == grantID : self?.proposalsGrantID == grantID) },
+            afterBlock: { [weak self] in
+                guard let self else { return }
+                if isHelper { helperView = nil; await loadHelper() }
+                else { await loadProposals(grantID: grantID) }
+            })
+    }
     var serviceURL: URL { service.baseURL }
     var isHelper: Bool { scope?.grantId != nil && ["helper", "editor"].contains(scope?.role ?? "") }
     var canAdminister: Bool { !isHelper && scope?.capabilities.contains("household_admin") == true }
@@ -68,6 +80,7 @@ import HouseholdClient
     }
     func setScope(_ value: HouseholdBootstrap) { clearScope(); scope = value }
     func clearScope() {
+        safetyReviews.clear()
         scopeGeneration = UUID(); scope = nil; members = []; invitations = []; managedViews = []; managementReviewed = false
         proposalsGrantID = nil; proposalCursor = nil; consents = []; issued = nil; helperView = nil
         pendingProposal = nil; proposalReceipt = nil; proposals = []; correction = ""; notice = nil; issuanceUncertain = false
@@ -253,6 +266,18 @@ import HouseholdClient
             notice = ht("Your suggestion was received for review. The shared instructions and shopping basket have not changed.")
         } catch {
             guard start == scopeGeneration else { return }
+            if let publicationNotice = sharedPublicationNotice(error), pendingProposal == intent {
+                do {
+                    var saved = try await store.read()
+                    saved.proposals.removeAll { $0.id == intent.id }
+                    try await store.save(saved)
+                    guard start == scopeGeneration, pendingProposal == intent else { return }
+                    pendingProposal = nil
+                    if correction.isEmpty { correction = intent.reviewedCorrection ?? "" }
+                    notice = publicationNotice
+                } catch { if start == scopeGeneration { notice = ht("Could not clear the local retry. Try again.") } }
+                return
+            }
             if proposalReceipt?.grantId == intent.grantID { notice = ht("Your suggestion was received. Local retry cleanup needs another attempt."); return }
             if let failure = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: failure) { retryAfter = Date().addingTimeInterval(delay) }
             await handle(error)
@@ -315,6 +340,7 @@ import HouseholdClient
         case .service(let status, _, _, _): return status >= 500; default: return false }
     }
     private func handle(_ error: Error, scoped: Bool = true) async {
+        if let publicationNotice = sharedPublicationNotice(error) { notice = publicationNotice; return }
         switch error as? ClientError {
         case .sessionNeeded, .accessEnded:
             clearScope(); await onAccessEnded()
@@ -463,6 +489,16 @@ struct HouseholdReviewedHelperAction: Equatable {
             notice = ht("The reviewed action was confirmed. The shopping basket was not changed.")
         } catch {
             guard live(start, context) else { return }
+            if let publicationNotice = sharedPublicationNotice(error), receipt == nil {
+                do {
+                    try await store.removeReviewAction(id: intent.id)
+                    guard live(start, context) else { return }
+                    pending = nil
+                    cancelReview()
+                    notice = publicationNotice
+                } catch { if live(start, context) { notice = ht("Could not clear the local retry. Try again.") } }
+                return
+            }
             if receipt != nil { notice = ht("The shared action was confirmed. Retry to finish clearing its local retry record.") }
             else { await fail(error) }
         }
@@ -482,6 +518,7 @@ struct HouseholdReviewedHelperAction: Equatable {
         } catch { if live(start, context) { await fail(error) } }
     }
     private func fail(_ error: Error) async {
+        if let publicationNotice = sharedPublicationNotice(error) { notice = publicationNotice; return }
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded:
             invalidate(); await accessEnded()

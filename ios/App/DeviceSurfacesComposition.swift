@@ -18,6 +18,7 @@ import DeviceSurfaces
     }
     @Published var destinationChange: DestinationChange?
     private var reviewBaseline: SurfaceImportDraft?
+    var hasUnsavedReviewChanges: Bool { draft != reviewBaseline }
     @Published var destination: SurfacePresentedDestination?
     @Published private(set) var busy = false
     @Published private(set) var message: String?
@@ -374,7 +375,7 @@ import DeviceSurfaces
     }
     func cancelReview() { guard !busy else { return }; draft = nil }
     func recoverImport() async {
-        guard privateAuthorized, !busy, let draft, let bridge else { return }
+        guard privateAuthorized, !busy, !hasUnsavedReviewChanges, let draft, let bridge else { return }
         busy = true; defer { busy = false }; let start = nonce
         do {
             let refreshed = try await bridge.refreshReview(draft.id)

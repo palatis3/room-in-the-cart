@@ -23,13 +23,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dictate your list on this iPhone or record a separate clip to review and send for online transcription."
+            "value": "Dictate a shopping list or ask about your pantry on this iPhone. For online transcription, you can record, review and send a separate clip."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dicta tu lista en este iPhone o graba un audio aparte que puedes revisar y enviar para transcribirlo en línea."
+            "value": "Dicta una lista de compras o consulta tu despensa en este iPhone. Para una transcripción en línea, puedes grabar un audio aparte, revisarlo y enviarlo."
           }
         }
       }
@@ -40,13 +40,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn dictated words into text on this iPhone so you can review them before adding anything."
+            "value": "Turn your words into text on this iPhone so you can review a shopping list, pantry update or package question."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Convierte las palabras dictadas en texto en este iPhone para revisarlas antes de agregar algo."
+            "value": "Convierte tus palabras en texto en este iPhone para que puedas revisar una lista de compras, un cambio en la despensa o una pregunta sobre un envase."
           }
         }
       }

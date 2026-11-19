@@ -1,3 +1,4 @@
+import {moderationAction,recordModerationAction} from './moderation.js';
 import {householdTonight,saveTonightRecipe} from './household-tonight.js';
 import {readMealPreferences, writeMealPreferences, preferenceGrants, changePreferenceGrant} from './meal-preferences.js';
 import {readMealFeedback,updateMealFeedback,reviewMyFeedbackWithdrawal,withdrawMyFeedback} from './household-meal-feedback.js';
@@ -42,9 +43,9 @@ import {HelperReview} from './helper-review.js';
 import {PlacementReports} from './placement-reports.js';
 import {HouseholdLifecycle} from './lifecycle.js';
 import {HouseholdDeviceManagement,deviceRevocationSchema} from './device-management.js';
-import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
+import {PrivacyService,deletionSchema,exitSchema,childAccountDeletionSchema} from './privacy.js';
 import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
-import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
+import {GuardianEnrollmentService,guardianCreateSchema,childDeletionReviewSchema,manualChildDeletionSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
 export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
@@ -102,7 +103,7 @@ export function createHTTPServer(options:HTTPOptions) {
     const withinCall=<T>(work:()=>Promise<T>):Promise<T>=>privacyCall?privacyCall.run(work):work();
     try {
       const method=req.method??'GET',url=new URL(req.url??'/','https://service.invalid');
-      if(url.pathname.startsWith('/v1/privacy/')||method==='POST'&&/^\/v1\/households\/[^/]+\/exit$/.test(url.pathname))privacyCall=privacyHTTPCall(req,res,correlationId);
+      if(url.pathname.startsWith('/v1/privacy/')||/^\/v1\/households\/[^/]+\/guardian\/child-account-deletions(?:\/(?:review|manual-reviews))?$/.test(url.pathname)||method==='POST'&&/^\/v1\/households\/[^/]+\/exit$/.test(url.pathname))privacyCall=privacyHTTPCall(req,res,correlationId);
       if(req.headers.origin&&req.headers.origin!==options.webOrigin)throw new ServiceError(403,'origin_denied','Use the configured application origin.');
       if(url.pathname==='/health'&&method==='GET'){send(200,{service:'room-in-the-cart',status:'running'});return;}
       const ip=options.clientAddress?options.clientAddress(req):req.socket.remoteAddress;
@@ -158,6 +159,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(browserCookie&&options.browserAuth){try{browserIdentity=await withinCall(()=>options.browserAuth!.authenticate(browserCookie));auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
         const value=cookie(req);if(value){session=await withinCall(()=>repository.webIdentity(value,browserIdentity?.identity));auth=session.auth;}
       }
+      if(auth && req.headers['x-shared-content-safety']==='1') auth={...auth,sharedContentSafety:true};
       if(method==='GET'&&url.pathname==='/v1/session'&&!session){send(200,{authenticated:false});return;}
       if(url.pathname==='/v1/child-invitations/session'&&method==='GET'){send(200,await guardian.childSession(browserIdentity?.identity,browserIdentity&&options.browserAuth?await options.browserAuth.childBinding(browserIdentity.cookie):undefined));return;}
       if(!auth)throw new ServiceError(401,'session_needed','Sign in; preserve private local drafts.');
@@ -170,13 +172,14 @@ export function createHTTPServer(options:HTTPOptions) {
         const helperProposal=(url.pathname===`/v1/views/${auth.viewGrantId}/proposals`&&(method==='POST'||method==='GET'))||(new RegExp('^/v1/views/'+auth.viewGrantId+'/proposals/[^/]+$').test(url.pathname)&&method==='GET');
         const helperSession=url.pathname==='/v1/session'||(url.pathname==='/v1/invites/redeem'&&method==='POST');
         const helperHousehold=/^\/v1\/households\/[^/]+\/(bootstrap|replay-windows|devices(?:\/current)?)$/.test(url.pathname);
-        if(!helperView&&!helperProposal&&!helperSession&&!helperHousehold)throw new ServiceError(404,'unavailable','Use the selected helper view.');
+        const helperSafety=method==='POST' && /^\/v1\/households\/[^/]+\/moderation\/actions$/.test(url.pathname);
+        if(!helperView&&!helperProposal&&!helperSession&&!helperHousehold&&!helperSafety)throw new ServiceError(404,'unavailable','Use the selected helper view.');
       }
       if(session?.auth.ownRequestsOnly){
         const base='/v1/households/'+session.householdId;
         const allowed=url.pathname==='/v1/session'||(method==='POST'&&url.pathname==='/v1/invites/redeem')
           ||(method==='GET'&&(url.pathname===base+'/requests/mine'||url.pathname===base+'/requests/pickups'))||(method==='POST'&&url.pathname===base+'/commands')
-          ||(method==='PUT'&&url.pathname===base+'/devices/current/request-queue');
+          ||(method==='PUT'&&url.pathname===base+'/devices/current/request-queue')||(method==='POST'&&url.pathname===base+'/moderation/actions');
         if(!allowed)throw unavailable();
       }
       if(url.pathname==='/v1/session'&&method==='POST') {
@@ -187,14 +190,14 @@ export function createHTTPServer(options:HTTPOptions) {
         const grantId=ownRequestsOnly||input.shopId?undefined:input.grantId??previous?.viewGrantId;
         const shopId=input.grantId?undefined:input.shopId??previous?.selectedShopId;
         const result=await repository.startWebSession(input.householdId,auth.identity,{
-          browserBound:Boolean(browserIdentity),ownRequestsOnly,...(grantId?{viewGrantId:grantId}:{}),...(shopId?{selectedShopId:shopId}:{}),
+          browserBound:Boolean(browserIdentity),ownRequestsOnly,sharedContentSafety:auth.sharedContentSafety===true,...(grantId?{viewGrantId:grantId}:{}),...(shopId?{selectedShopId:shopId}:{}),
           ...(previous?.trustedDeviceId&&session?{previousSession:{deviceId:previous.trustedDeviceId,csrf:session.csrf}}:{})
         });
         res.setHeader('Set-Cookie',`ritc_session=${result.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${browserIdentity?604800:Math.max(0,Math.floor((result.expiresAt.getTime()-Date.now())/1000))}`);
         send(200,result.session);return;
       }
       if(url.pathname==='/v1/session'&&session) {
-        if(method==='GET'){send(200,await repository.authorized(session.householdId,auth,async ctx=>({authenticated:true,...await repository.bootstrap(ctx),replayWindow:await repository.window(ctx),csrf:session!.csrf})));return;}
+        if(method==='GET'){send(200,await repository.authorized(session.householdId,auth,async ctx=>({authenticated:true,...await repository.bootstrap(ctx,req.headers['x-shared-content-safety']==='1'),replayWindow:await repository.window(ctx),csrf:session!.csrf})));return;}
         if(method==='DELETE'){let result:unknown=await repository.authorized(session.householdId,auth,ctx=>repository.logout(ctx));if(browserCookie&&browserIdentity&&options.browserAuth)result=await options.browserAuth.logout(browserCookie,browserIdentity.csrf);res.setHeader('Set-Cookie',[clearScope,...(browserCookie?[setAuthCookie('',0)]:[])]);send(200,result);return;}
       }
       if(url.pathname.startsWith('/v1/privacy/')){
@@ -247,11 +250,42 @@ export function createHTTPServer(options:HTTPOptions) {
       if(!match)throw new ServiceError(404,'unavailable','Return to your current workspace.');
       const householdId=uuid.parse(match[1]),path=match[2]!;
       if(session&&session.householdId!==householdId)throw accessEnded();
+      if(path==='/guardian/child-account-deletions/manual-reviews'){
+        if(method==='GET'){
+          send(200,await repository.authorized(householdId,auth,ctx=>guardian.manualDeletionCases(ctx,auth.identity)));return;
+        }
+        if(method!=='POST')throw unavailable();
+        const input=manualChildDeletionSchema.parse(await privacyCall!.run(()=>body(req,4096)));
+        send(202,await repository.authorized(householdId,auth,ctx=>guardian.openManualDeletionCase(ctx,auth.identity,input)));return;
+      }
+      if(path==='/guardian/child-account-deletions'||path==='/guardian/child-account-deletions/review'){
+        const privacy=options.privacy,call=privacyCall!.call;
+        if(path==='/guardian/child-account-deletions'&&method==='GET'){
+          send(200,await repository.authorized(householdId,auth,ctx=>guardian.deletionCandidates(ctx,auth.identity)));return;
+        }
+        if(method!=='POST')throw unavailable();
+        if(!privacy)throw new ServiceError(503,'deletion_unavailable','Account deletion is unavailable.');
+        const payload=await privacyCall!.run(()=>body(req,4096));
+        if(path.endsWith('/review')){
+          const input=childDeletionReviewSchema.parse(payload);
+          // Provider/journal readiness may contact another service. Keep it outside the household lock.
+          const review=await repository.authorized(householdId,auth,ctx=>guardian.reviewChildDeletion(ctx,auth.identity,input));
+          const policy=await privacy.childDeletionPolicy(call);
+          send(200,{...review,...policy});return;
+        }
+        const {enrollmentId,...input}=childAccountDeletionSchema.extend({enrollmentId:uuid}).parse(payload);
+        await repository.authorized(householdId,auth,ctx=>guardian.checkDeletionReviewDevice(ctx,auth.identity,enrollmentId,input.reviewId));
+        send(202,await privacy.requestChild(auth.identity,householdId,enrollmentId,input,call));return;
+      }
       if(path==='/exit'&&method==='POST'){
         if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account lifecycle is not configured.');
         const input=exitSchema.parse(await privacyCall!.run(()=>body(req)));
         const result=await options.privacy.leave(auth.identity,householdId,input,privacyCall!.call);
         if(session)res.setHeader('Set-Cookie',clearScope);send(200,result);return;
+      }
+      if(path==='/moderation/actions'&&method==='POST'){
+        const input=moderationAction.parse(await body(req,8192));
+        send(200,await repository.authorized(householdId,auth,ctx=>recordModerationAction(repository,ctx,input)));return;
       }
       if(path==='/devices'&&method==='POST') {
         z.object({}).strict().parse(await body(req));
@@ -434,7 +468,7 @@ export function createHTTPServer(options:HTTPOptions) {
           if (cursor) uuid.parse(cursor);
           return history.readableShops(ctx, cursor);
         }
-        if(path==='/bootstrap'&&method==='GET')return repository.bootstrap(ctx);
+        if(path==='/bootstrap'&&method==='GET')return repository.bootstrap(ctx,req.headers['x-shared-content-safety']==='1');
         if(path==='/replay-windows'&&method==='POST'){z.object({}).strict().parse(payload);return repository.window(ctx);}
         if(path==='/requests/mine'&&method==='GET') {
           // A browsing context can switch accounts between pages. Bind newer clients'

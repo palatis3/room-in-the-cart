@@ -20,7 +20,8 @@ import LocalStore
         let now: Date
     }
     private func quantity(_ n: Int64) throws -> Quantity { .init(amount: try Rational(n), unit: .count, originalLiteral: String(n)) }
-    private func fixture() async throws -> Fixture {
+    private func fixture(firstUnit: UnitOfMeasure = .count, secondUnit: UnitOfMeasure = .count,
+                         firstConversion: UnitBasis? = nil) async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(directory, test: self), now = Date().addingTimeInterval(-60)
@@ -43,9 +44,11 @@ import LocalStore
         let lots = [UUID(), UUID()]
         var writes: [InventoryWrite] = []
         for (index, lot) in lots.enumerated() {
+            let unit = index == 0 ? firstUnit : secondUnit
             let seed = InventoryLotSeed(foodID: UUID(), name: index == 0 ? "Wraps" : "Rice wraps",
                 source: .manual(originID: store.workspaceID, sourceID: lot), location: index == 0 ? .cupboard : .freezer,
-                unit: .count, count: .exact(try quantity(4)))
+                unit: unit, count: .exact(Quantity(amount: try Rational(4), unit: unit, originalLiteral: "4",
+                    confirmedConversion: index == 0 ? firstConversion : nil)))
             let command = InventoryCommand(id: UUID(), originID: store.workspaceID, lotID: lot, eventID: UUID(),
                 expectedRevision: nil, occurredAt: now, change: .create(seed, observationID: UUID()))
             writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: now))
@@ -69,6 +72,151 @@ import LocalStore
     private func explicitNoUse(_ model: CookCompletionEditorModel) {
         for index in model.ingredients.indices { model.ingredients[index].use = .notUsed }
         model.leftoverChoice = .none
+    }
+
+    func testRemovedShoppingContributionKeepsRemainingIngredientCookableThroughRetryAndUndo() async throws {
+        let f = try await fixture(), editor = f.editor
+        let meal = try XCTUnwrap(editor.context?.meal)
+        let kept = meal.ingredientContributionIDs[0], removed = meal.ingredientContributionIDs[1]
+        let changed = await f.ledger.editShop(key: "remove-salt", shopID: f.shop) {
+            try $0.removeContribution(contributionID: removed, at: f.now)
+        }
+        XCTAssertTrue(changed)
+        await editor.reload()
+        XCTAssertEqual(editor.ingredients.map(\.id), [kept])
+        guard editor.ingredients.count == 1 else { return }
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        editor.ingredients[0].parts[0].use = .measured
+        editor.ingredients[0].parts[0].relation = .ingredient
+        editor.ingredients[0].parts[0].lotID = f.lots[0]
+        editor.ingredients[0].parts[0].amount = "1"
+        editor.leftoverChoice = .recorded
+        editor.addLeftover()
+        editor.leftovers[0].portions = "2"
+        await editor.prepareReview()
+        let review = try XCTUnwrap(editor.review)
+        XCTAssertEqual(review.draft.meal.ingredientContributionIDs, [kept, removed])
+        XCTAssertEqual(review.draft.ingredientRowIDs, [kept])
+        await editor.confirm()
+        try await f.session.apply(review)
+        await editor.reload()
+        let after = try XCTUnwrap(editor.context)
+        XCTAssertEqual(after.completed, review.draft)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(3))
+        let leftover = try XCTUnwrap(review.draft.leftovers.first?.id)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == leftover }?.count.quantity?.amount, try Rational(2))
+        await editor.prepareUndo()
+        await editor.confirmUndo()
+        let undone = try XCTUnwrap(editor.context)
+        XCTAssertNil(undone.completed)
+        XCTAssertEqual(undone.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(4))
+        XCTAssertEqual(undone.inventory.lots.first { $0.id == leftover }?.count.quantity?.amount, .zero)
+        XCTAssertEqual(editor.ingredients.map(\.id), [kept])
+    }
+
+    func testUndoRestoresTheOriginalRemainingEstimateAndPriorUseWithoutOverwritingANewerObservation() async throws {
+        let f = try await fixture(), editor = f.editor, lotID = f.lots[0]
+        let repo = PantryRepository(store: f.store, authorize: { f.access.allowed })
+        func observe(_ wording: String, use: InventoryUsage?) async throws {
+            let snapshot = try await repo.load(at: f.now)
+            let lot = try XCTUnwrap(snapshot.lots.first { $0.id == lotID })
+            let observation = InventoryCountRevision(count: .someLeft, observationID: UUID(), observedAt: f.now, countWording: wording)
+            let command = InventoryCommand(id: UUID(), originID: snapshot.state.workspaceID, lotID: lotID, eventID: UUID(),
+                expectedRevision: lot.revision, occurredAt: f.now, change: .revise(.init(observation: observation, usage: use.map { [$0] })))
+            _ = try await repo.apply(command, reviewedInventoryRevision: snapshot.state.revision, at: f.now)
+        }
+        func cook() async throws {
+            await editor.reload()
+            explicitNoUse(editor)
+            editor.ingredients[0].use = .used
+            editor.ingredients[0].parts[0].use = .unmeasured
+            editor.ingredients[0].parts[0].relation = .ingredient
+            editor.ingredients[0].parts[0].lotID = lotID
+            await editor.prepareReview()
+            _ = try XCTUnwrap(editor.review)
+            await editor.confirm()
+            _ = try XCTUnwrap(editor.completed)
+        }
+        let wording = "menos de media botella"
+        let originalUse = InventoryUsage(id: UUID(), kind: .some)
+        try await observe(wording, use: originalUse)
+        try await cook()
+        let undo = try await f.session.reviewUndo(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(undo.restoredInputs.first?.countWording, wording)
+        let reloadedUndo = try JSONDecoder().decode(PantryCookUndoReview.self, from: JSONEncoder().encode(undo))
+        try await f.session.applyUndo(reloadedUndo)
+        try await f.session.applyUndo(reloadedUndo)
+        let restored = try await repo.load(at: f.now)
+        let restoredLot = try XCTUnwrap(restored.lots.first { $0.id == lotID })
+        XCTAssertEqual(restoredLot.count, .someLeft)
+        XCTAssertEqual(restoredLot.countWording, wording)
+        let history = try await repo.usageHistory(lotID: lotID, basis: restored.state)
+        XCTAssertEqual(history, [.init(id: originalUse.id, occurredAt: f.now, kind: .some, remainingWording: wording)])
+
+        try await cook()
+        let obsolete = try await f.session.reviewUndo(shopID: f.shop, mealID: f.meal)
+        try await observe("casi vacía", use: nil)
+        do { try await f.session.applyUndo(obsolete); XCTFail("Newer stock evidence was overwritten") }
+        catch PantryCookPort.Failure.changed {}
+        let latest = try await repo.load(at: f.now)
+        XCTAssertEqual(latest.lots.first { $0.id == lotID }?.countWording, "casi vacía")
+    }
+
+    func testChangingMeasuredBatchPreservesGramsAndDeductsTheExactAmountFromKilograms() async throws {
+        let f = try await fixture(firstUnit: .gram, secondUnit: .kilogram)
+        let editor = f.editor
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        let partID = editor.ingredients[0].parts[0].id
+        let gramBatch = try XCTUnwrap(editor.context?.inventory.lots.first { $0.id == f.lots[0] })
+        let kiloBatch = try XCTUnwrap(editor.context?.inventory.lots.first { $0.id == f.lots[1] })
+        editor.ingredients[0].parts[0].selectBatch(gramBatch)
+        XCTAssertEqual(editor.ingredients[0].parts[0].unit, .gram)
+        editor.ingredients[0].parts[0].amount = "2"
+        editor.ingredients[0].parts[0].selectBatch(kiloBatch)
+        XCTAssertEqual(editor.ingredients[0].parts[0].unit, .gram)
+        editor.ingredients[0].parts[0].selectBatch(gramBatch)
+        let suggestion = try XCTUnwrap(editor.suggestions(for: editor.ingredients[0].id).first { $0.id == kiloBatch.id })
+        try editor.chooseSuggestion(suggestion, ingredientID: editor.ingredients[0].id, partID: partID)
+        XCTAssertEqual(editor.ingredients[0].parts[0].amount, "2")
+        XCTAssertEqual(editor.ingredients[0].parts[0].unit, .gram)
+        await editor.prepareReview()
+        let preview = try XCTUnwrap(editor.review)
+        XCTAssertEqual(preview.draft.parts.first?.use, .lot(id: kiloBatch.id, revision: kiloBatch.revision,
+            amount: Quantity(amount: try Rational(2), unit: .gram, originalLiteral: "2")))
+        await editor.confirm()
+        let saved = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(saved.inventory.lots.first { $0.id == gramBatch.id }?.count, gramBatch.count)
+        XCTAssertEqual(saved.inventory.lots.first { $0.id == kiloBatch.id }?.count.quantity?.amount, try Rational(1999, 500))
+    }
+
+    func testChangingBatchWithIncompatibleUnitsRequiresANewMeasurement() async throws {
+        let basis = UnitBasis(sourceUnit: .count, targetUnit: .gram, targetAmountPerSourceUnit: try Rational(2),
+                              sourceNote: "One portion weighed two grams for this batch")
+        let f = try await fixture(firstUnit: .gram, secondUnit: .kilogram, firstConversion: basis)
+        let editor = f.editor
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        let source = try XCTUnwrap(editor.context?.inventory.lots.first { $0.id == f.lots[0] })
+        let target = try XCTUnwrap(editor.context?.inventory.lots.first { $0.id == f.lots[1] })
+        var part = editor.ingredients[0].parts[0]
+        part.amount = "1/2"; part.use = .measured; part.relation = .ingredient
+        part.selectBatch(source)
+        XCTAssertEqual(part.amount, "1/2", "This batch has a reviewed count-to-mass conversion")
+        XCTAssertEqual(part.unit, .count)
+        part.selectBatch(target)
+        XCTAssertEqual(part.amount, "")
+        XCTAssertEqual(part.unit, .kilogram, "The old batch’s count conversion cannot be used for the new batch")
+        XCTAssertTrue(part.needsNewMeasurement)
+        editor.ingredients[0].parts[0] = part
+        XCTAssertThrowsError(try editor.makeDraft())
+        part.selectBatch(nil)
+        XCTAssertFalse(part.needsNewMeasurement)
+        part.selectBatch(source)
+        XCTAssertFalse(part.needsNewMeasurement)
+        part.amount = "2"
+        XCTAssertFalse(part.needsNewMeasurement)
     }
 
     func testExplicitChoicesSplitBatchesAndLeftoversReviewThenCommitOnce() async throws {
@@ -107,6 +255,50 @@ import LocalStore
         await model.reload(); await model.confirm()
         let reopened = try await f.session.load(shopID: f.shop, mealID: f.meal)
         XCTAssertEqual(reopened.completed, original); XCTAssertEqual(reopened.inventory.state.revision, revision)
+    }
+
+    func testUsedSomeFromReviewedSubstitutePreservesChoiceAndOneHistoryRowThroughCorrectionAndUndo() async throws {
+        let f = try await fixture()
+        let editor = f.editor
+        let repository = PantryRepository(store: f.store, authorize: { f.access.allowed })
+        let lotID = f.lots[1]
+        func history(_ id: UUID) async throws -> [PantryUsageHistoryRow] {
+            let basis = try await f.store.inventoryState()
+            return try await repository.usageHistory(lotID: id, basis: basis)
+        }
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        editor.ingredients[0].parts[0].use = .unmeasured
+        let partID = editor.ingredients[0].parts[0].id
+        let ingredientID = editor.ingredients[0].id
+        let substitute = try XCTUnwrap(editor.suggestions(for: ingredientID).first { $0.id == lotID })
+        try editor.chooseSuggestion(substitute, ingredientID: ingredientID, partID: partID)
+        XCTAssertEqual(editor.ingredients[0].parts[0].use, .unmeasured)
+        await editor.prepareReview()
+        let reviewed = try XCTUnwrap(editor.review)
+        XCTAssertEqual(reviewed.draft.parts.first?.use, .lot(id: lotID, revision: substitute.lot.revision, amount: nil))
+        await editor.confirm()
+        try await f.session.apply(reviewed)
+        let original = try await history(lotID)
+        XCTAssertEqual(original, [.init(id: partID, occurredAt: reviewed.draft.cookedAt, kind: .some, remainingWording: nil)])
+        let otherLot = try await history(f.lots[0])
+        XCTAssertTrue(otherLot.isEmpty)
+
+        let correction = await resolution(f)
+        correction.action = .deduct
+        correction.usedAmount = "1"
+        await correction.prepare()
+        await correction.confirm()
+        let amended = try await history(lotID)
+        XCTAssertEqual(amended.map(\.id), [partID])
+        XCTAssertEqual(amended.first?.occurredAt, reviewed.draft.cookedAt)
+        guard case .measured(let amount) = amended.first?.kind else { return XCTFail("Expected corrected cooking quantity") }
+        XCTAssertEqual(amount.amount, try Rational(1))
+        await editor.reload()
+        await editor.prepareUndo()
+        await editor.confirmUndo()
+        let undone = try await history(lotID)
+        XCTAssertTrue(undone.isEmpty)
     }
 
     func testUnmeasuredAndUntrackedRetainDistinctUnknownUseLineage() async throws {

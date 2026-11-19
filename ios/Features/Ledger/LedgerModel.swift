@@ -30,6 +30,7 @@ struct WholeLedgerDeletionReview: Codable, Equatable {
     let revision: Int64
     let shopCount: Int
     let reusableDinnerCount: Int
+    let draftTokens: [UUID]? // Absent only in deletion journals written before drafts were reviewed.
 }
 enum LedgerDeletionError: Error { case unavailable, pendingDeletion, pendingSave, staleReview, invalidIntent }
 private struct LedgerDeletionIntent: Codable, Equatable {
@@ -57,7 +58,9 @@ private enum LedgerDeletionJournal {
         let data = try handle.read(upToCount: 4097) ?? Data()
         guard !data.isEmpty, data.count <= 4096 else { throw LedgerDeletionError.invalidIntent }
         let intent = try JSONDecoder().decode(LedgerDeletionIntent.self, from: data)
-        guard intent.formatVersion == 1, intent.review.revision >= 0,
+        let tokens = intent.review.draftTokens
+        guard (intent.formatVersion == 1 && tokens == nil) || (intent.formatVersion == 2 && tokens != nil),
+              (tokens?.count ?? 0) <= 32, intent.review.revision >= 0,
               (0...100).contains(intent.review.shopCount), (0...1000).contains(intent.review.reusableDinnerCount),
               intent.requestedAt.timeIntervalSinceReferenceDate.isFinite else { throw LedgerDeletionError.invalidIntent }
         return intent
@@ -691,10 +694,11 @@ private enum LedgerDeletionJournal {
         guard try !usesLivePantry || privatePantryDeletionCheck?() == true else { throw LedgerDeletionError.pendingSave }
         guard pending == nil, pendingPantryPack == nil, !hasPendingPantryProjection else { throw LedgerDeletionError.pendingSave }
         guard ready, !saving, !opening, pending == nil, let store else { throw LedgerDeletionError.unavailable }
-        let current = try await store.load()
-        let source = try current.map { try Self.validatePayload($0.payload) } ?? LedgerWorkspace()
-        return WholeLedgerDeletionReview(workspaceID: store.workspaceID, revision: current?.revision ?? 0,
-            shopCount: source.shops.count, reusableDinnerCount: Set(source.mealTemplates.map(\.id) + source.dinnerPlanning.acceptedDinners.map { $0.template.id }).count)
+        let basis = try await store.workspaceErasureBasis()
+        let source = try basis.head.map { try Self.validatePayload($0.payload) } ?? LedgerWorkspace()
+        return WholeLedgerDeletionReview(workspaceID: store.workspaceID, revision: basis.head?.revision ?? 0,
+            shopCount: source.shops.count, reusableDinnerCount: Set(source.mealTemplates.map(\.id) + source.dinnerPlanning.acceptedDinners.map { $0.template.id }).count,
+            draftTokens: basis.draftTokens)
     }
     func retiredLedgerWorkspaceIDs() async throws -> [UUID] {
         guard let store else { throw LedgerDeletionError.unavailable }
@@ -708,7 +712,7 @@ private enum LedgerDeletionJournal {
         if pendingLedgerDeletion != nil { return try await retryWholeLedgerDeletion() }
         guard try !usesLivePantry || privatePantryDeletionCheck?() == true else { throw LedgerDeletionError.pendingSave }
         guard ready, !saving, !opening, pending == nil, let journal = deletionJournalURL else { throw LedgerDeletionError.unavailable }
-        let intent = LedgerDeletionIntent(formatVersion: 1, review: review, operationID: UUID(), requestedAt: clock())
+        let intent = LedgerDeletionIntent(formatVersion: 2, review: review, operationID: UUID(), requestedAt: clock())
         do { try LedgerDeletionJournal.create(intent, at: journal) }
         catch {
             // Another model may already have persisted a confirmed intent.
@@ -733,7 +737,8 @@ private enum LedgerDeletionJournal {
             // Reopen even after an uncertain result: the old actor may be retired.
             let current = try LedgerStore(url: url, inventoryProjectionsEnabled: inventoryProjectionsEnabled)
             let receipt = try await current.eraseWorkspace(workspaceID: intent.review.workspaceID,
-                expectedRevision: intent.review.revision, operationID: intent.operationID, at: intent.requestedAt)
+                expectedRevision: intent.review.revision, expectedDraftTokens: intent.review.draftTokens ?? [],
+                operationID: intent.operationID, at: intent.requestedAt)
             try await current.close()
             clearRetiredState()
             let replacement = try LedgerStore(url: url, inventoryProjectionsEnabled: inventoryProjectionsEnabled)
@@ -753,7 +758,7 @@ private enum LedgerDeletionJournal {
             store = current; sourceWorkspaceID = current.workspaceID
             clearRetiredState()
             return receipt
-        } catch LedgerStoreError.staleRevision(expected: _, actual: _) {
+        } catch LedgerStoreError.staleRevision, LedgerStoreError.staleFirstListDrafts {
             try LedgerDeletionJournal.remove(intent, at: journal)
             pendingLedgerDeletion = nil; hasPendingLedgerDeletion = false
             clearRetiredState()

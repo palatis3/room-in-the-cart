@@ -1274,6 +1274,75 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(first.sourceWorkspaceID, currentID)
         XCTAssertEqual(first.workspace.shops.map(\.title), ["New work"])
     }
+    @MainActor func testEntireLedgerErasureRequiresFreshReviewAfterDraftCreationOrReplacement() async throws {
+        let url = try temporaryDirectory().appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let other = try LedgerStore(url: url)
+        let owner = Data(repeating: 1, count: 32), secondOwner = Data(repeating: 2, count: 32)
+        let empty = try await model.reviewWholeLedgerDeletion()
+        XCTAssertEqual(empty.draftTokens, [])
+        let original = try await other.replaceFirstListDraft(owner: owner, expected: nil, baseRevision: 0, payload: Data("rice".utf8))
+        do { _ = try await model.eraseWholeLedger(empty); XCTFail("A new draft must invalidate deletion") }
+        catch LedgerDeletionError.staleReview {}
+        let one = try await model.reviewWholeLedgerDeletion()
+        XCTAssertEqual(one.draftTokens, [original.token])
+        let edited = try await other.replaceFirstListDraft(owner: owner, expected: original, baseRevision: 0, payload: Data("rice and beans".utf8))
+        do { _ = try await model.eraseWholeLedger(one); XCTFail("Replacing a draft must invalidate deletion even at the same draft count") }
+        catch LedgerDeletionError.staleReview {}
+        let retained = try await other.firstListDraft(owner: owner)
+        XCTAssertEqual(retained?.payload, Data("rice and beans".utf8)); XCTAssertEqual(retained?.version, edited)
+        XCTAssertTrue(model.ready); XCTAssertFalse(model.hasPendingLedgerDeletion)
+        let added = try await other.replaceFirstListDraft(owner: secondOwner, expected: nil, baseRevision: 0, payload: Data("eggs".utf8))
+        let fresh = try await model.reviewWholeLedgerDeletion()
+        XCTAssertEqual(Set(try XCTUnwrap(fresh.draftTokens)), [edited.token, added.token])
+        XCTAssertEqual(fresh.revision, empty.revision)
+        _ = try await model.eraseWholeLedger(fresh)
+        try await model.finishWholeLedgerDeletion()
+        let newStore = try XCTUnwrap(model.firstListStore)
+        let cleared = try await newStore.workspaceErasureBasis()
+        XCTAssertNotEqual(newStore.workspaceID, fresh.workspaceID)
+        XCTAssertTrue(cleared.draftTokens.isEmpty)
+        try await other.close()
+    }
+
+    @MainActor func testLegacyLedgerDeletionIntentProtectsUnreviewedDraftsAndRecognizesPriorReceipt() async throws {
+        let url = try temporaryDirectory().appendingPathComponent("ledger.sqlite")
+        let first = LedgerModel(databaseURL: url)
+        await first.open()
+        let other = try LedgerStore(url: url)
+        let operation = UUID(), owner = Data(repeating: 1, count: 32)
+        let oldJournal = try JSONSerialization.data(withJSONObject: [
+            "formatVersion": 1, "operationID": operation.uuidString, "requestedAt": 100,
+            "review": ["workspaceID": other.workspaceID.uuidString, "revision": 0, "shopCount": 0, "reusableDinnerCount": 0]
+        ])
+        let journal = url.appendingPathExtension("erase-intent.json")
+        try oldJournal.write(to: journal)
+        _ = try await other.replaceFirstListDraft(owner: owner, expected: nil, baseRevision: 0, payload: Data("keep".utf8))
+        let restarted = LedgerModel(databaseURL: url)
+        await restarted.open()
+        do { _ = try await restarted.retryWholeLedgerDeletion(); XCTFail("Legacy confirmation must not erase an unreviewed draft") }
+        catch LedgerDeletionError.staleReview {}
+        let retained = try await other.firstListDraft(owner: owner)
+        XCTAssertEqual(retained?.payload, Data("keep".utf8))
+
+        // A pre-upgrade operation that already committed should finish cleanup even if the replacement contains drafts.
+        let receipt = try await other.eraseWorkspace(workspaceID: other.workspaceID, expectedRevision: 0,
+            expectedDraftTokens: [try XCTUnwrap(retained?.version.token)], operationID: operation, at: Date())
+        let replacement = try LedgerStore(url: url)
+        _ = try await replacement.replaceFirstListDraft(owner: owner, expected: nil, baseRevision: 0, payload: Data("new list".utf8))
+        try oldJournal.write(to: journal)
+        let recovery = LedgerModel(databaseURL: url)
+        await recovery.open()
+        let replay = try await recovery.retryWholeLedgerDeletion()
+        XCTAssertEqual(replay, receipt)
+        try await recovery.finishWholeLedgerDeletion()
+        let preserved = try await replacement.firstListDraft(owner: owner)
+        XCTAssertEqual(preserved?.payload, Data("new list".utf8))
+        try await other.close()
+        try await replacement.close()
+    }
+
     @MainActor func testStaleEntireLedgerReviewDeletesNothingAndAllowsFreshReview() async throws {
         let url = try temporaryDirectory().appendingPathComponent("ledger.sqlite")
         let actual = LedgerModel(databaseURL: url)

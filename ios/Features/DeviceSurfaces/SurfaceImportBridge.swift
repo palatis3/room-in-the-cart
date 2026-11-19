@@ -231,14 +231,20 @@ enum SurfaceImportDestinationConflict: Error {
             _ = try await inbox.acknowledgeCommitted(operationID: operationID, digest: saved.inboxDigest, now: clock())
             try journal.remove(operationID, expected: saved); return nil
         }
+        guard let shop = port.shop(saved.preview.shopID) else { throw SurfaceError.unavailable }
         var fresh = saved
         if saved.phase == .committing {
-            guard fresh.confirmedAttempts.count < 3 else { throw SurfaceError.capacity }
-            fresh.confirmedAttempts.append(SurfaceImportAttempt(preview: saved.preview, decisions: saved.decisions))
+            let attempt = SurfaceImportAttempt(preview: saved.preview, decisions: saved.decisions)
+            if !fresh.confirmedAttempts.contains(attempt) {
+                guard fresh.confirmedAttempts.count < 3 else { throw SurfaceError.capacity }
+                fresh.confirmedAttempts.append(attempt)
+            }
         }
-        fresh.preview = try port.stage(entry, shopID: saved.preview.shopID)
-        fresh.explicitSeparate = nil
-        fresh.decisions = Dictionary(uniqueKeysWithValues: fresh.preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, .addNew) })
+        if shop.revision != saved.preview.baseRevision {
+            fresh.preview = try shop.refreshSavedImport(saved.preview)
+            fresh.decisions = LedgerImportReview.afterEdit(from: saved.preview, to: fresh.preview, shop: shop,
+                choices: saved.decisions, explicitSeparate: saved.explicitSeparate ?? [])
+        }
         fresh.phase = .review
         try journal.save(fresh, replacing: saved, explicitlyRefreshed: true)
         return fresh

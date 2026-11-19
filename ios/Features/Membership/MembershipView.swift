@@ -19,13 +19,28 @@ struct MembershipView: View {
             }
             Section(mtr("Your membership")) {
                 TimelineView(.periodic(from: .now, by: 30)) { _ in
-                    Label(model.hasPaidAccess ? mtr("Household access is active") : mtr("Free access"),
-                          systemImage: model.hasPaidAccess ? "person.2.fill" : "person.fill")
-                }
-                if let snapshot = model.state.snapshot {
-                    Text(status(snapshot.status))
-                    if let until = snapshot.status == .grace ? snapshot.graceExpiresAt : snapshot.expiresAt {
-                        LabeledContent(mtr("Access through"), value: until.formatted(date: .abbreviated, time: .omitted))
+                    VStack(alignment: .leading, spacing: 8) {
+                        if model.verificationIsStale || (model.verificationFailed && model.state.snapshot == nil) {
+                            Label(mtr("Membership needs verification"), systemImage: "arrow.clockwise")
+                            Text(mtr("Free tools are available while you check your membership."))
+                        } else {
+                            Label(model.hasPaidAccess ? mtr("Household access is active") : mtr("Free access"),
+                                  systemImage: model.hasPaidAccess ? "person.2.fill" : "person.fill")
+                            if let snapshot = model.state.snapshot {
+                                Text(status(snapshot.status))
+                                if let until = snapshot.status == .grace ? snapshot.graceExpiresAt : snapshot.expiresAt {
+                                    LabeledContent(mtr("Access through"), value: until.formatted(date: .abbreviated, time: .omitted))
+                                }
+                            }
+                        }
+                        if model.verificationFailed {
+                            Text(mtr("Your membership details could not be refreshed."))
+                        }
+                        if model.verificationIsStale || model.verificationFailed {
+                            Button(mtr("Check membership again")) { Task { await model.verifyMembership() } }
+                                .disabled(model.isVerifyingMembership || model.isBusy)
+                                .accessibilityIdentifier("membership.verify")
+                        }
                     }
                 }
                 Text(mtr("Your saved records, exports, manual planning and one reusable dinner remain available on Free."))
@@ -66,7 +81,9 @@ struct MembershipView: View {
                 }
             }
             Section(mtr("Household subscription")) {
-                if let offer = model.offer {
+                if !model.configuration.isReady {
+                    Text(mtr("Household subscription purchases are unavailable. You can keep using the free planning tools."))
+                } else if let offer = model.offer {
                     Text(offer.displayName).font(.headline)
                     Text(String(format: mtr("%@ every %@"), offer.displayPrice, offer.localizedPeriod))
                         .font(.title3).monospacedDigit()
@@ -77,12 +94,9 @@ struct MembershipView: View {
                         .accessibilityIdentifier("membership.subscribe")
                 } else if model.isLoadingOffer {
                     ProgressView(mtr("Loading the subscription offer…"))
-                } else if model.configuration.productID != nil {
+                } else {
                     Text(mtr("The subscription offer is unavailable. Your Free access is ready to use."))
                     Button(mtr("Retry offer")) { Task { await model.loadOffer() } }.disabled(model.isBusy)
-                }
-                if !model.configuration.isReady {
-                    Text(mtr("Purchases are not available in this build."))
                 }
                 if model.isBusy { ProgressView(mtr("Checking with Apple and your household…")) }
                 ForEach(model.statusMessages) { message in
@@ -188,7 +202,7 @@ func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
         case .signInRequired: return mtr("Sign in to an adult account and select its household to restore or subscribe.")
         case .wrongHousehold, .accountMismatch: return mtr("An App Store transaction or membership response does not match this account or household. Use the purchasing account to restore it.")
         case .unverified, .invalidReceipt, .invalidSnapshot, .serverRejected: return mtr("An App Store transaction could not be verified. Use Restore Purchases or contact support. Current membership access is shown above.")
-        case .notConfigured: return mtr("Purchases are not available in this build.")
+        case .notConfigured: return mtr("Household subscription purchases are unavailable. You can keep using the free planning tools.")
         case .unavailable: return mtr("That membership operation could not be completed. Try again or use Restore Purchases; current access is shown above.")
         case .membershipInactive: return mtr("Household access is inactive. Your Free work remains available.")
         case .notPurchaser: return mtr("Only the adult who purchased this household’s membership can manage its subscription and assign seats.")
