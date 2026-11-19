@@ -45,14 +45,17 @@ import SwiftUI
                         Button(ht("Send reviewed request")) { Task {
                             guard authorized, approved else { return }
                             failure = nil
+                            let previousID = household.delivery.requestResultID
                             sending = true
                             await household.sendRequest(reviewed: review, approved: true)
                             sending = false
                             // Once persisted, the original exact retry belongs to the household screen.
                             // A failure before persistence keeps this reviewed text available here.
-                            switch household.delivery {
-                            case .waiting, .received, .needsReview: dismiss()
-                            default: approved = false; failure = household.notice
+                            if household.delivery.hasNewRequestResult(since: previousID) {
+                                dismiss()
+                            } else {
+                                approved = false
+                                failure = household.notice
                             }
                         } }.buttonStyle(PrimaryAction()).disabled(!authorized || !approved).accessibilityIdentifier("household.request.sendReviewed")
                         if let failure { Text(failure).accessibilityIdentifier("household.request.reviewError") }

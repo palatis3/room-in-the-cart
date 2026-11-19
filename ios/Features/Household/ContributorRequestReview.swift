@@ -2,6 +2,22 @@ import Foundation
 import CoreDomain
 import HouseholdClient
 
+extension DeliveryState {
+    /// Opening a review is allowed with a previous receipt. Only a new operation can complete this review.
+    var requestResultID: String? {
+        switch self {
+        case .received(let receipt): return receipt.operationId
+        case .waiting(let id), .needsReview(let id, _): return id
+        case .localDraft, .accessEnded: return nil
+        }
+    }
+
+    func hasNewRequestResult(since previousID: String?) -> Bool {
+        guard let requestResultID else { return false }
+        return requestResultID != previousID
+    }
+}
+
 extension OwnReceipt {
     var contributorDeliveryLabel: String {
         kind == "request.send" && request.route == "next" ? ht("Received for the next shop.") : ht("Received by the household")

@@ -461,9 +461,48 @@ import DeviceSurfaces
             XCTAssertEqual(receipt.request.originalItem, "Rice")
             XCTAssertEqual(receipt.request.ownQuantity, "2 bags")
             XCTAssertEqual(fixture.commands.count, 1)
+            XCTAssertEqual(model.draftDelivery, changeDraft ? .localDraft : .received(receipt))
             XCTAssertEqual(model.item, changeDraft ? "Coffee" : "")
             XCTAssertEqual(model.quantity, changeDraft ? "1 bag" : "")
             XCTAssertEqual(model.forNextShop, changeDraft)
+        }
+    }
+
+    func testAnotherDraftCannotReuseAnEarlierReceiptForReviewOrFocus() async throws {
+        for child in [false, true] {
+            let queue = location()
+            let directory = queue.deletingLastPathComponent()
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let fixture = ContributorCaptureFixture()
+            if child { fixture.childPickups = [try XCTUnwrap(UUID(uuidString: fixture.shop))] }
+            let model = try await model(fixture, queue: queue, child: child)
+            model.item = "Rice"
+            await model.sendRequest()
+            let firstID = try XCTUnwrap(model.delivery.requestResultID)
+            XCTAssertTrue(model.draftDelivery.hasNewRequestResult(since: nil))
+            XCTAssertFalse(model.draftDelivery.hasNewRequestResult(since: firstID))
+
+            model.item = "Coffee"
+            XCTAssertEqual(model.draftDelivery, .localDraft)
+            let review = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+            await model.sendRequest(reviewed: review, approved: false)
+            XCTAssertEqual(fixture.commands.count, 1)
+            XCTAssertFalse(model.draftDelivery.hasNewRequestResult(since: firstID))
+
+            fixture.windowFailure = .offline
+            await model.sendRequest(reviewed: review, approved: true)
+            XCTAssertEqual(fixture.commands.count, 1)
+            XCTAssertEqual(model.item, "Coffee")
+            XCTAssertEqual(model.draftDelivery, .localDraft)
+            XCTAssertFalse(model.delivery.hasNewRequestResult(since: firstID))
+
+            fixture.windowFailure = nil
+            await model.sendRequest(reviewed: review, approved: true)
+            XCTAssertEqual(fixture.commands.count, 2)
+            guard case .received(let receipt) = model.draftDelivery else { return XCTFail("Expected a new receipt") }
+            XCTAssertEqual(receipt.request.originalItem, "Coffee")
+            XCTAssertTrue(model.draftDelivery.hasNewRequestResult(since: firstID))
         }
     }
 

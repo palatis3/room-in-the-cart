@@ -139,6 +139,7 @@ struct GuardianChildRequestsView: View {
     var recheckAccess: (() async -> Void)? = nil
     @AccessibilityFocusState private var resultFocused: Bool
     @State private var review: ReviewDestination?
+    @State private var resultBeforeReview: String?
     private struct ReviewDestination: Identifiable {
         let id = UUID()
         let scope: ContributorRequestScope
@@ -180,16 +181,17 @@ struct GuardianChildRequestsView: View {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                         if let scope = household.contributorRequestScope {
                             let pickup = household.requestPickups.first { $0.shopId == UUID(uuidString: scope.targetShopID) }
+                            resultBeforeReview = household.delivery.requestResultID
                             review = .init(scope: scope, pickupLabel: pickup.map(pickupLabel) ?? String(scope.targetShopID.prefix(8)))
                         }
                     }.buttonStyle(PrimaryAction()).disabled(household.contributorRequestScope == nil || household.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("guardian.childRequestReview")
-                    switch household.delivery {
+                    switch household.draftDelivery {
                     case .waiting:
                         Text(household.waitingRequestText).accessibilityFocused($resultFocused)
                         Button(ht("Retry the same request")) { Task { await household.retry() } }
                     case .needsReview:
-                        Text(ht("Review needed. Check received requests before creating a new request."))
+                        Text(ht("Review needed. Check received requests before creating a new request.")).accessibilityFocused($resultFocused)
                         if household.canReviewRejectedCorrection {
                             ContributorCorrectionButton(model: household)
                         }
@@ -240,10 +242,8 @@ struct GuardianChildRequestsView: View {
         }.disabled(household.busy)
         .navigationTitle(GuardianCopy.text("My requests"))
         .sheet(item: $review, onDismiss: {
-            switch household.delivery {
-            case .waiting, .received: resultFocused = true
-            default: break
-            }
+            resultFocused = household.draftDelivery.hasNewRequestResult(since: resultBeforeReview)
+            resultBeforeReview = nil
         }) { value in
             NavigationStack {
                 ContributorRequestCaptureView(household: household, scope: value.scope, capture: false, pickupLabel: value.pickupLabel)

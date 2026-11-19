@@ -36,6 +36,14 @@ struct DeviceReminderPersona: Equatable {
     @Published private(set) var selectedRequestPickupID: UUID?
     @Published private(set) var nextRequestPickupCursor: UUID?
     @Published private(set) var delivery: DeliveryState = .localDraft
+    /// The confirmed operation may belong to an earlier request while this editor holds new wording.
+    var draftDelivery: DeliveryState {
+        if case .received = delivery, !item.isEmpty || !quantity.isEmpty || forNextShop {
+            return .localDraft
+        }
+        return delivery
+    }
+
     private var unsentOfflineRequestID: String?
     var waitingRequestText: String {
         if case .waiting(let id) = delivery, unsentOfflineRequestID == id {

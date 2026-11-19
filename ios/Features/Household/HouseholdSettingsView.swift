@@ -12,6 +12,7 @@ struct HouseholdSettingsView: View {
     @FocusState private var lastCallItemFocused: Bool
     @AccessibilityFocusState private var resultFocused: Bool
     @State private var requestReview: RequestReviewPresentation?
+    @State private var resultBeforeReview: String?
     private struct RequestReviewPresentation: Identifiable {
         let id = UUID()
         let scope: ContributorRequestScope
@@ -258,10 +259,8 @@ struct HouseholdSettingsView: View {
         .disabled(model.busy)
         .navigationTitle(ht("Household"))
         .sheet(item: $requestReview, onDismiss: {
-            switch model.delivery {
-            case .waiting, .received: resultFocused = true
-            default: break
-            }
+            resultFocused = model.draftDelivery.hasNewRequestResult(since: resultBeforeReview)
+            resultBeforeReview = nil
         }) { selected in
             NavigationStack { ContributorRequestCaptureView(household: model, scope: selected.scope, capture: selected.capture) }
         }
@@ -302,20 +301,23 @@ struct HouseholdSettingsView: View {
     private func openRequestReview(capture: Bool) {
         // Finish the draft field's editing callbacks before presenting its review.
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-        if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: capture) }
+        if let scope = model.contributorRequestScope {
+            resultBeforeReview = model.delivery.requestResultID
+            requestReview = .init(scope: scope, capture: capture)
+        }
     }
     private var canSend: Bool {
         guard !model.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         return model.contributorRequestScope != nil
     }
     @ViewBuilder private var delivery: some View {
-        switch model.delivery {
+        switch model.draftDelivery {
         case .localDraft: Text(ht("Draft on this iPhone."))
         case .waiting:
             Label(model.waitingRequestText, systemImage: "clock").accessibilityFocused($resultFocused)
             Button(ht("Retry the same request")) { Task { await model.retry() } }
         case .needsReview:
-            Text(ht("Review needed. Check received requests before creating a new request."))
+            Text(ht("Review needed. Check received requests before creating a new request.")).accessibilityFocused($resultFocused)
             if model.canReviewRejectedCorrection {
                 ContributorCorrectionButton(model: model)
             }
