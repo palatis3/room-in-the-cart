@@ -816,10 +816,11 @@ export class WebApp {
       else if(previous.revision<=received.revision)this.requests=this.requests.map(row=>row===previous?received:row);
       this.reconcileRequestActions();
     }
-    // The command receipt remains authoritative if the next read disconnects.
+    // A transient failure on the following read cannot undo the command receipt.
     try { await this.load(); }
     catch(error) {
-      if(!(error instanceof ApiError) || (error.status!==0 && error.status<500))throw error;
+      if(error instanceof ApiError && (error.status===0 || error.status===429 || error.status>=500))return;
+      throw error;
     }
   }
   private showQueued(pending:Pending):void {

@@ -108,3 +108,72 @@ test('Refresh reconciles a queued request after IndexedDB eviction without resen
   assert.equal((await status.textContent()).trim(), 'A pending request is no longer stored on this browser. Check Your requests for its status.');
   assert.deepEqual(posts, [commandsPath], 'Refresh must not send another command');
 });
+
+test('confirmed receipt, posting suspension and lost access have distinct effects on the outbox', async t => {
+  const server = await preview({ configFile: false, build: { outDir: 'public-build' }, preview: { host: '127.0.0.1', port: 0 } });
+  t.after(() => server.close());
+  const context = await browser.newContext({ locale: 'en-US' });
+  t.after(() => context.close());
+  const page = await context.newPage();
+  page.setDefaultTimeout(5000);
+  const active = { ...session, requestQueueGrant: '1519b2f0-e731-4dc1-bfc7-09d099f86077', requestQueueUntil: new Date(Date.now() + 86400000).toISOString() };
+  const commands = [];
+  let readStatus = 200;
+  let writeStatus = 503;
+  await page.route('**/v1/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/v1/session' && readStatus === 429) return route.fulfill({ status: 429, json: { error: { code: 'rate_limited' } } });
+    if (path === '/v1/session') return route.fulfill({ json: active });
+    if (path === '/v1/auth/session') return route.fulfill({ json: { available: true, authenticated: true, csrf: 'identity-token' } });
+    if (path === requestsPath && readStatus === 403) return route.fulfill({ status: 403, json: { error: { code: 'access_ended' } } });
+    if (path === requestsPath) return route.fulfill({ json: { requests: [], nextCursor: null } });
+    assert.equal(path, commandsPath);
+    const command = route.request().postDataJSON();
+    commands.push(command.body.originalItem);
+    if (writeStatus !== 200) return route.fulfill({ status: writeStatus, json: { error: { code: writeStatus === 403 ? 'shared_posting_unavailable' : 'unavailable' } } });
+    readStatus = 429;
+    return route.fulfill({ json: { kind: command.kind, operationId: 'operation-a', request: {
+      requestId: command.body.clientRequestId, shopId: command.shopId, revision: 1, originalItem: command.body.originalItem,
+      ownQuantity: null, route: command.body.route, authoredAt: command.body.authoredAt, receivedAt: new Date().toISOString(),
+      status: 'pending', ownActionAllowed: true
+    } } });
+  });
+
+  const item = page.getByLabel('Item', { exact: true });
+  const button = name => page.getByRole('button', { name, exact: true });
+  const status = page.getByRole('status');
+  const send = async wording => {
+    await item.fill(wording);
+    await button('Review request').click();
+    await button('Send request').click();
+    await page.locator('main[aria-busy="false"]').waitFor();
+  };
+  const storedItems = async () => {
+    const { origins } = await context.storageState({ indexedDB: true });
+    const outbox = origins.flatMap(origin => origin.indexedDB ?? []).find(db => db.name === 'room-in-the-cart-own-outbox-v1');
+    return outbox.stores.find(store => store.name === 'pending').records.map(row => row.value.command.body.originalItem);
+  };
+  await page.goto(new URL('/requests', server.resolvedUrls.local[0]).href);
+  await send('Queued rice');
+  assert.deepEqual(await storedItems(), ['Queued rice']);
+
+  writeStatus = 403;
+  await send('Keep these oats');
+  assert.match(await status.innerText(), /Shared posting is unavailable/);
+  assert.equal(await item.inputValue(), 'Keep these oats');
+  assert.deepEqual(await storedItems(), ['Queued rice']);
+
+  writeStatus = 200;
+  await send('Keep these oats');
+  assert.equal(await status.innerText(), 'Received by the shopper.');
+  assert.equal(await item.inputValue(), '');
+  await page.getByRole('heading', { name: 'Keep these oats', exact: true }).waitFor();
+  assert.deepEqual(await storedItems(), ['Queued rice']);
+
+  readStatus = 403;
+  await button('Refresh').click();
+  await page.getByText('Access has ended. Ask your household for a new invitation.', { exact: true }).waitFor();
+  assert.equal(await item.count(), 0);
+  assert.deepEqual(await storedItems(), []);
+  assert.deepEqual(commands, ['Queued rice', 'Keep these oats', 'Keep these oats']);
+});

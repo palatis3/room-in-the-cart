@@ -497,14 +497,14 @@ for (const action of ['Edit', 'Follow up']) {
  });
 }
 
-for (const action of ['send', 'edit', 'withdraw']) {
- test(`a confirmed ${action} receipt survives a disconnected refresh`, async t => {
+for (const action of ['send', 'edit', 'withdraw']) for (const [failure, status] of [['disconnected', 0], ['rate-limited', 429]]) {
+ test(`a confirmed ${action} receipt survives a ${failure} refresh`, async t => {
   const original = own();
   let confirmed;
   let writes = 0;
   const {root, dom} = await setup(fakeAPI({
    requests: async () => {
-    if (confirmed) throw new ApiError('network', 0);
+    if (confirmed) throw new ApiError(failure, status);
     return action === 'send' ? [] : [original];
    },
    command: async (_, command) => {
