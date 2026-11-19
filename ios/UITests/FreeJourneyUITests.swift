@@ -1949,10 +1949,22 @@ import XCTest
         if apply.frame.midY > scrollableArea().maxY { scrollContent(upward: true) }
         tap(apply)
         tap(app.buttons["Review whole checkout"])
-        fill("Test market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Test checkout", into: "Source of these prices", replacing: true)
+        // Keep the checkout keyboard open while moving between the four adjacent fields.
+        for (name, value) in [("Store", "Test market"), ("Branch", "Main branch"),
+                              ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Test checkout")] {
+            let field = app.textFields[name]
+            tapVisibleFormRow(field, marker: "SHARE_CHECKOUT_FIELD")
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), name)
+            let current = try field.snapshot()
+            if let old = current.value as? String, !old.isEmpty, old != current.placeholderValue {
+                app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            app.typeText(value)
+            XCTAssertEqual(try field.snapshot().value as? String, value, name)
+        }
+        tap(app.buttons["Done"])
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"),
+                      "Checkout fields must be committed before reviewing the retailer total")
         enableSwitch("Retailer total already includes all charges", diagnosticName: "Checkout-inclusive-switch")
         fill("3.00", into: "Inclusive total", requireDone: true)
         tap(app.buttons["Save and evaluate checkout"])
