@@ -320,7 +320,9 @@ private struct PantryProductCandidateEditor: View {
                             ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
                         }
                         LabeledContent(pantryText("Packages received")) {
-                            TextField(pantryText("Packages received"), text: $row.packages)
+                            TextField(text: $row.packages, prompt: Text(verbatim: "—")) {
+                                Text(pantryText("Packages received"))
+                            }
                                 .multilineTextAlignment(.trailing).keyboardType(.numberPad)
                                 .focused($field, equals: "count").accessibilityIdentifier("productBatch.packCount")
                         }
