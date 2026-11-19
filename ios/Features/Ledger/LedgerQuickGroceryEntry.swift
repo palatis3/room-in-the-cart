@@ -61,6 +61,12 @@ private struct QuickGroceryField: View {
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return Array(recent.lazy.filter { query.isEmpty || $0.lowercased().hasPrefix(query) }.prefix(4))
     }
+    private var emptyLineHeight: CGFloat? {
+        guard text.isEmpty else { return nil }
+        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
+        return ceil(UIFont.preferredFont(forTextStyle: .body, compatibleWith: traits).lineHeight)
+    }
+
     private var groceryInput: Binding<String> {
         Binding(get: { text }, set: { updated in
             // A wrapping field inserts the Return key as a newline. Commit that
@@ -86,7 +92,8 @@ private struct QuickGroceryField: View {
             layout {
                 TextField("", text: groceryInput, axis: .vertical)
                     .textFieldStyle(.plain).font(.body)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: false, vertical: !text.isEmpty)
+                    .frame(height: emptyLineHeight)
                     .padding(.horizontal, 8).padding(.vertical, 6)
                     .frame(minHeight: 44)
                     .background(.background, in: RoundedRectangle(cornerRadius: 8))

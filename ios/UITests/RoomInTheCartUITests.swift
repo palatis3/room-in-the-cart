@@ -27,13 +27,17 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(label.exists && shopViewport.contains(label.frame))
         XCTAssertEqual(field.label, label.label)
         screenshot("Largest-text-Spanish-grocery-name")
+        let emptyHeight = field.frame.height
+        let name = "aceite de oliva virgen extra"
         field.tap()
-        field.typeText("huevos")
-        XCTAssertEqual(field.value as? String, "huevos")
+        field.typeText(name)
+        XCTAssertEqual(field.value as? String, name)
+        XCTAssertGreaterThan(field.frame.height, emptyHeight, "A long entry should wrap at this text size.")
         field.typeText("\n")
         let undo = app.buttons["quickGrocery.undo"]
         XCTAssertTrue(undo.waitForExistence(timeout: 10))
-        XCTAssertTrue(undo.label.contains("huevos"))
+        XCTAssertTrue(undo.label.contains(name))
+        XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
     }
 
     func testQuickGroceryReturnUndoAndDuplicateReviewInSpanish() {
@@ -542,9 +546,19 @@ final class RoomInTheCartUITests: XCTestCase {
         // Collect failures from every viewport in this audit-only test.
         continueAfterFailure = true
         launch()
+        let grocery = element("quickGrocery.name")
+        let repair = element("urgentRepairShortcut")
+        XCTAssertTrue(grocery.waitForExistence(timeout: 5))
+        let groceryBefore = grocery.frame
+        let repairBefore = repair.frame
         captureShopFrames("Initial-Shop-before-audit")
         screenshot("Initial-Shop-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Initial Shop"))
+        let groceryAfter = grocery.frame
+        XCTAssertEqual(groceryAfter.height, groceryBefore.height, accuracy: 1,
+                       "The empty field should return to one line at the original text size.")
+        XCTAssertEqual(repair.frame.minY - groceryAfter.minY, repairBefore.minY - groceryBefore.minY, accuracy: 1,
+                       "The restored text size should preserve the distance between the field and repair shortcut.")
         // Retain the initial audit; add full-category coverage after the
         // complete repair shortcut is visible above bottom navigation.
         revealFullyInShop(element("urgentRepairShortcut"))
@@ -615,7 +629,11 @@ final class RoomInTheCartUITests: XCTestCase {
     private func captureShopFrames(_ name: String) {
         let scroll = app.scrollViews["shopContentScroll"]
         let target = element("urgentRepairShortcut")
+        let grocery = element("quickGrocery.name")
+        let addButton = app.buttons["quickGrocery.add"]
         let rows = ["Window: \(app.windows.firstMatch.frame)", "Shop scroll: \(scroll.frame)",
+                    grocery.exists ? "Grocery field: \(grocery.frame)" : "Grocery field: absent",
+                    addButton.exists ? "Add grocery: \(addButton.frame)" : "Add grocery: absent",
                     "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(tabFrameDescription)",
                     "Visible Shop: \(shopViewport)",
                     target.exists ? "Repair shortcut: \(target.frame); hittable=\(target.isHittable); \(target.label)" : "Repair shortcut: absent"]
