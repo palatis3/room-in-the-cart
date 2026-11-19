@@ -1,0 +1,154 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {adultPickupConfiguration} from '../dist/adult-pickup.js';
+
+const pilot={adultLastCall:true,adultProductReferenceDays:2,adultProductReferenceMedia:true};
+const ok=res=>{assert.equal(res.status,200,JSON.stringify(res.data));return res.data;};
+const future=minutes=>new Date(Date.now()+minutes*60_000).toISOString();
+export function adultPickupTests({fixture,admin,repo}){
+  const run=(title,body)=>test('adult pickup pilot '+title,async t=>{
+    Object.assign(repo.options,pilot);
+    t.after(()=>{for(const key of Object.keys(pilot))delete repo.options[key];});
+    await body(await fixture({otherAdult:true}));
+  });
+  run('gates each feature independently and sends no media on disabled paths',async f=>{
+    const {shopId,http}=f,path='/shops/'+shopId;
+    assert.deepEqual(adultPickupConfiguration({}),{adultLastCall:false,adultProductReferenceMedia:false});
+    assert.throws(()=>adultPickupConfiguration({ADULT_PRODUCT_MEDIA_ENABLED:'true'}));
+    assert.throws(()=>adultPickupConfiguration({ADULT_PRODUCT_MEDIA_ENABLED:'true',ADULT_PRODUCT_MEDIA_APPROVAL:'synthetic'}));
+    assert.throws(()=>adultPickupConfiguration({ADULT_PRODUCT_REFERENCE_ENABLED:'true',ADULT_PRODUCT_REFERENCE_APPROVAL:'synthetic'}));
+    const capabilities=async name=>(ok(await http(name,'GET','/bootstrap'))).capabilities;
+    assert((await capabilities('Mia')).includes('adult_last_call'));
+    assert(!(await capabilities('Sam')).some(x=>x.startsWith('adult_')));
+    assert.equal((await http('Sam','GET',path+'/last-call')).status,404);
+    repo.options.adultLastCall=false;
+    assert.equal((await http('Mia','GET',path+'/last-call')).status,404);
+    assert(!(await capabilities('Mia')).includes('adult_last_call'));
+    repo.options.adultProductReferenceDays=undefined;
+    assert.equal((await http('Alex','GET',path+'/requests/'+randomUUID()+'/product-reference')).status,404);
+    assert(!(await capabilities('Alex')).includes('adult_product_reference'));
+  });
+  run('keeps one invitation on retry, honors a changed cutoff and routes late requests once',async f=>{
+    const {h,shopId,http,actors,send}=f,path='/shops/'+shopId+'/last-call';
+    const read=async name=>ok(await http(name,'GET',path));
+    const publish=body=>http('Mia','POST',path,body);
+    const response=(revision,action)=>http('Alex','POST',path+'/response',{revision,action});
+    assert.equal((await read('Alex')).revision,0);
+    let input={expectedRevision:0,authorityEpoch:1,cutoffAt:future(60)};
+    assert.equal((await http('Alex','POST',path,input)).status,404);
+    assert.equal(ok(await publish(input)).revision,1);assert.equal(ok(await publish(input)).revision,1);
+    assert.equal(ok(await response(1,'mute')).muted,true);
+    input={...input,expectedRevision:1,cutoffAt:future(90)};
+    assert.equal(ok(await publish(input)).revision,2);
+    assert.equal((await response(1,'pass')).status,409);
+    assert.deepEqual(await read('Alex'),{managed:false,revision:2,cutoffAt:input.cutoffAt,responded:false,muted:true,nextShopOnly:false});
+    assert.equal(ok(await response(2,'unmute')).muted,false);
+    assert.equal(ok(await response(2,'pass')).responded,true);
+    assert.equal((await send('Alex')).request.route,'current');
+    assert.equal((await admin.query('SELECT count(*) AS n FROM ritc.pickup_last_call_recipient WHERE household_id=$1',[h])).rows[0].n,'2');
+    await admin.query("UPDATE ritc.pickup_last_call SET cutoff_at=now()-interval '1 second' WHERE household_id=$1",[h]);
+    assert.equal((await read('Alex')).nextShopOnly,true);
+    assert.equal(ok(await http('Alex','GET','/bootstrap')).nextShopOnly,true);
+    assert.equal(ok(await http('Alex','GET','/requests/pickups')).shops[0].nextShopOnly,true);
+    const delivered=await send('Alex');
+    assert.equal(delivered.request.route,'next');
+    assert.equal(ok(await http('Alex','POST','/commands',delivered.envelope)).request.requestId,delivered.request.requestId);
+    assert.equal((await send('Sam')).request.route,'current');
+    await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[h,actors.Alex.id]);
+    assert.equal((await http('Alex','GET',path)).status,403);
+    assert.equal((await admin.query('SELECT member_id FROM ritc.pickup_last_call_recipient WHERE household_id=$1 AND member_id=$2',[h,actors.Alex.id])).rowCount,0);
+  });
+  async function product(f){
+    const request=(await f.send('Alex')).request,path='/shops/'+f.shopId+'/requests/'+request.requestId+'/product-reference';
+    const crop={width:8,height:8,pixels:Buffer.alloc(8*8*3,21).toString('base64')};
+    const reference={brand:'One brand',size:'350 mL',barcode:'001234567890',description:'Green cap, unsweetened',crop};
+    const input={expectedRevision:0,requestRevision:request.revision,authorityEpoch:1,recipientId:f.actors.Mia.id,clientKey:randomUUID(),consent:true,reference};
+    return {request,path,crop,reference,input,post:(actor,data=input,suffix='')=>f.http(actor,'POST',path+suffix,data),read:actor=>f.http(actor,'GET',path)};
+  }
+  run('binds a metadata-free crop to an explicit adult sender, exact recipient and moderated publication',async f=>{
+    const {path,crop,input,post,read,request}=await product(f);
+    assert.equal(ok(await read('Alex')).recipientLabel,'Mia');
+    assert.equal((await read('Sam')).status,404);
+    assert.equal((await read('Lee')).status,404);
+    assert.equal((await post('Mia')).status,404);
+    assert.equal((await post('Alex',{...input,consent:false})).status,422);
+    assert.equal((await post('Alex',{...input,recipientId:f.actors.Jo.id})).status,409);
+    assert.equal((await post('Alex',{...input,reference:{...input.reference,crop:{...crop,exif:'no upload'}}})).status,422);
+    assert.equal((await post('Alex',{...input,reference:{description:'go kill yourself'}})).status,422);
+    repo.options.adultProductReferenceMedia=false;assert.equal((await post('Alex')).status,404);
+    repo.options.adultProductReferenceMedia=true;
+    const author=ok(await post('Alex'));assert.deepEqual(author.reference.crop,crop);assert.equal(author.reference.mediaStatus,'pending');
+    assert.deepEqual(ok(await post('Alex')),author);
+    assert.equal((await post('Alex',{...input,reference:{description:'another bottle'}})).status,409);
+    const pending=await read('Mia');assert.equal(pending.headers.get('cache-control'),'no-store');
+    assert.equal(ok(pending).reference.description,'Green cap, unsweetened');assert(!pending.data.reference.crop);
+    const q=(await admin.query('SELECT * FROM ritc.product_media_queue()')).rows.find(r=>r.pixels.equals(Buffer.from(crop.pixels,'base64')));
+    assert(q?.publication_id);assert(!('household_id' in q));
+    assert.equal((await admin.query("SELECT has_function_privilege('ritc_app','ritc.product_media_queue()','EXECUTE') AS app")).rows[0].app,false);
+    assert.equal((await admin.query("SELECT ritc.product_media_resolve($1,'approved') AS ok",[q.publication_id])).rows[0].ok,true);
+    assert.deepEqual(ok(await read('Mia')).reference.crop,crop);
+    repo.options.adultProductReferenceMedia=false;
+    assert(!ok(await read('Mia')).reference.crop);
+    repo.options.adultProductReferenceMedia=true;
+    const report={expectedRevision:1,action:'report',clientKey:randomUUID(),reason:'unsafe'};
+    assert.deepEqual(ok(await post('Mia',report,'/moderation')),{status:'received'});
+    assert.deepEqual(ok(await post('Mia',report,'/moderation')),{status:'received'});
+    assert(!ok(await read('Mia')).reference);
+    assert.equal((await admin.query("SELECT ritc.product_media_resolve($1,'rejected') AS ok",[q.publication_id])).rows[0].ok,true);
+    assert.equal(ok(await read('Alex')).reference.mediaStatus,'rejected');
+    assert(!ok(await read('Alex')).reference.crop);
+    assert.equal((await admin.query('SELECT count(*)::int AS n FROM ritc.moderation_case WHERE household_id=$1',[f.h])).rows[0].n,1);
+    const removal={expectedRevision:1,clientKey:randomUUID()};
+    assert(!ok(await post('Alex',removal,'/remove')).reference);
+    assert.equal(ok(await post('Alex',removal,'/remove')).revision,2);
+    assert.equal((await post('Alex',input)).status,409);
+    assert.equal((await admin.query('SELECT pixels,description FROM ritc.adult_product_reference WHERE request_id=$1',[request.requestId])).rows[0].pixels,null);
+    assert(!(await admin.query('SELECT publication_id FROM ritc.product_media_queue() WHERE publication_id=$1',[q.publication_id])).rowCount);
+    assert.equal((await f.http('Jo','GET',path)).status,404);
+  });
+  run('recovers a block receipt after the source disappears and denies an unrelated household adult',async f=>{
+    const {post,read,input}=await product(f);
+    const approved=ok(await post('Alex',input));
+    assert.equal(approved.revision,1);
+    const action={expectedRevision:1,action:'block',clientKey:randomUUID()};
+    assert.equal((await post('Lee',action,'/moderation')).status,404);
+    assert.deepEqual(ok(await post('Mia',action,'/moderation')),{status:'blocked'});
+    assert.equal((await read('Mia')).status,404);
+    assert.deepEqual(ok(await post('Mia',action,'/moderation')),{status:'blocked'});
+  });
+  run('drops restored consent and media before a quarantined destination can serve requests',async f=>{
+    const {post,request}=await product(f);
+    ok(await post('Alex'));
+    ok(await f.http('Mia','POST','/shops/'+f.shopId+'/last-call',{expectedRevision:0,authorityEpoch:1,cutoffAt:future(10)}));
+    const db=await admin.connect();
+    try{
+      await db.query('BEGIN');
+      await db.query("INSERT INTO ritc.privacy_restore_run(run_id,destination_oid,bundle_digest,head) SELECT $1,oid,repeat('a',64),'{}'::jsonb FROM pg_database WHERE datname=current_database()",[randomUUID()]);
+      assert.equal((await db.query('SELECT 1 FROM ritc.adult_product_reference WHERE request_id=$1',[request.requestId])).rowCount,0);
+      assert.equal((await db.query('SELECT 1 FROM ritc.pickup_last_call_recipient WHERE household_id=$1',[f.h])).rowCount,0);
+    }finally{await db.query('ROLLBACK');db.release();}
+  });
+  run('expires live text and pixels, purges on reassignment, withdrawal and membership revocation',async f=>{
+    const {post,read,input,request}=await product(f);
+    ok(await post('Alex'));
+    await admin.query("UPDATE ritc.adult_product_reference SET expires_at=now()-interval '1 second' WHERE household_id=$1",[f.h]);
+    assert(!ok(await read('Mia')).reference);
+    assert.equal((await admin.query('SELECT ritc.prune_product_references(100) AS n')).rows[0].n,1);
+    assert(!ok(await read('Alex')).reference);
+    const text={...input,expectedRevision:2,clientKey:randomUUID(),reference:{description:'Unsweetened, blue cap'}};
+    assert.equal(ok(await post('Alex',text)).reference.description,text.reference.description);
+    ok(await f.command('Alex','request.withdraw',{requestId:request.requestId},{shopRevision:0,authorityEpoch:0,requestRevision:1}));
+    assert.equal((await read('Mia')).status,404);
+    const image=await product(f);ok(await image.post('Alex'));
+    ok(await f.command('Mia','shop.transferAuthority',{newShopperId:f.actors.Alex.id}));
+    assert.equal((await image.read('Alex')).status,404);
+    assert.equal((await admin.query('SELECT request_id FROM ritc.adult_product_reference WHERE household_id=$1',[f.h])).rowCount,0);
+    const next=(await f.send('Mia')).request;
+    const path='/shops/'+f.shopId+'/requests/'+next.requestId+'/product-reference';
+    ok(await f.http('Mia','POST',path,{...input,recipientId:f.actors.Alex.id,authorityEpoch:2,clientKey:randomUUID()}));
+    await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Alex.id]);
+    assert.equal((await admin.query('SELECT request_id FROM ritc.adult_product_reference WHERE household_id=$1',[f.h])).rowCount,0);
+    assert.equal((await f.http('Mia','GET',path)).status,404);
+  });
+}
