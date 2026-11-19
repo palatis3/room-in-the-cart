@@ -1239,6 +1239,788 @@
           }
         }
       }
+    },
+    "%@ due when you confirm with Apple.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ due when you confirm with Apple."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se cobrarán %@ cuando confirmes con Apple."
+          }
+        }
+      }
+    },
+    "%@ will gain access to Household planning tools.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will gain access to Household planning tools."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ podrá usar las herramientas de planificación de Household."
+          }
+        }
+      }
+    },
+    "%@ will lose access to Household planning tools.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will lose access to Household planning tools."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ perderá el acceso a las herramientas de planificación de Household."
+          }
+        }
+      }
+    },
+    "%lld of 2 planning seats assigned": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of 2 planning seats assigned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plazas de planificación asignadas: %lld de 2"
+          }
+        }
+      }
+    },
+    "Access checked. You have Free planning.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access checked. You have Free planning."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se comprobó tu acceso. Puedes planificar gratis."
+          }
+        }
+      }
+    },
+    "Apple’s transaction was received. Your household is confirming access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple’s transaction was received. Your household is confirming access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se recibió la transacción de Apple. Se está confirmando tu acceso al hogar."
+          }
+        }
+      }
+    },
+    "Assign a planning seat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign a planning seat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asignar una plaza de planificación"
+          }
+        }
+      }
+    },
+    "Billing grace through": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Billing grace through"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Período de gracia de facturación hasta el"
+          }
+        }
+      }
+    },
+    "Checking your household access…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking your household access…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando tu acceso al hogar…"
+          }
+        }
+      }
+    },
+    "Confirm seat change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm seat change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar el cambio de plaza"
+          }
+        }
+      }
+    },
+    "Continue planning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue planning"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir planificando"
+          }
+        }
+      }
+    },
+    "Continue planning for free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue planning for free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir planificando gratis"
+          }
+        }
+      }
+    },
+    "Current paid term ends": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current paid term ends"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fin del período pagado actual"
+          }
+        }
+      }
+    },
+    "Dinner comparison example": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner comparison example"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ejemplo de comparación de cenas"
+          }
+        }
+      }
+    },
+    "Free planning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free planning"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planificación gratuita"
+          }
+        }
+      }
+    },
+    "Included with Free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Included with Free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluido en el plan gratuito"
+          }
+        }
+      }
+    },
+    "Manage planning seat for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage planning seat for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administrar la plaza de planificación de %@"
+          }
+        }
+      }
+    },
+    "No other eligible adults are available to assign.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No other eligible adults are available to assign."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay otra persona adulta disponible que reúna los requisitos para ocupar una plaza."
+          }
+        }
+      }
+    },
+    "Open adult household setup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open adult household setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la configuración del hogar para adultos"
+          }
+        }
+      }
+    },
+    "Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repite planes semanales y compara combinaciones de cenas con los precios que ingreses. Pueden planificar hasta dos adultos designados."
+          }
+        }
+      }
+    },
+    "Purchase canceled.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase canceled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra cancelada."
+          }
+        }
+      }
+    },
+    "Purchase pending. You can keep planning while Apple reviews it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase pending. You can keep planning while Apple reviews it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra pendiente. Puedes seguir planificando mientras Apple la revisa."
+          }
+        }
+      }
+    },
+    "Purchasing account: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchasing account: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta que realiza la compra: %@"
+          }
+        }
+      }
+    },
+    "Refresh my planning access": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh my planning access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar mi acceso a la planificación"
+          }
+        }
+      }
+    },
+    "Renews at %@ each year. Manage or cancel in Apple subscriptions at least 24 hours before renewal. Apple shows the final charge.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renews at %@ each year. Manage or cancel in Apple subscriptions at least 24 hours before renewal. Apple shows the final charge."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La suscripción se renueva por %@ cada año. Puedes administrarla en las suscripciones de Apple. Para cancelarla, hazlo al menos 24 horas antes de la renovación. Apple muestra el cobro final."
+          }
+        }
+      }
+    },
+    "Review Household for dinner comparisons": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Household for dinner comparisons"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver Household para comparar cenas"
+          }
+        }
+      }
+    },
+    "Review planning seat change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review planning seat change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el cambio de plaza"
+          }
+        }
+      }
+    },
+    "Selected household: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected household: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hogar seleccionado: %@"
+          }
+        }
+      }
+    },
+    "This changes planning access only. Household records, billing and pickup roles stay the same.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This changes planning access only. Household records, billing and pickup roles stay the same."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo cambia el acceso a la planificación. Se conservan los registros del hogar, la facturación y las funciones de cada persona en la recogida."
+          }
+        }
+      }
+    },
+    "This view is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This view is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta vista no está disponible."
+          }
+        }
+      }
+    },
+    "Use your shopping list and authorized family requests. Plan dinners by hand, keep one dinner ready to reuse and compare two store quotes you enter yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your shopping list and authorized family requests. Plan dinners by hand, keep one dinner ready to reuse and compare two store quotes you enter yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa tu lista de compras y las solicitudes familiares a las que tienes acceso. Planifica las cenas por tu cuenta, guarda una para reutilizarla y compara dos cotizaciones de tiendas que ingreses."
+          }
+        }
+      }
+    },
+    "You can keep making your own authorized requests and planning manually.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can keep making your own authorized requests and planning manually."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes seguir enviando tus propias solicitudes autorizadas y planificando por tu cuenta."
+          }
+        }
+      }
+    },
+    "You entered %@ for rice. Beans still need a price. The comparison shows the rice cost and leaves the full dinner total open.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You entered %@ for rice. Beans still need a price. The comparison shows the rice cost and leaves the full dinner total open."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresaste %@ para el arroz. Aún falta el precio de los frijoles. La comparación muestra el costo del arroz y deja pendiente el total de la cena."
+          }
+        }
+      }
+    },
+    "You have a named adult seat. The purchasing adult manages billing and seats.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have a named adult seat. The purchasing adult manages billing and seats."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienes una plaza de planificación a tu nombre. La persona adulta que pagó administra la facturación y las plazas."
+          }
+        }
+      }
+    },
+    "You manage the subscription. Your account has no assigned planning seat.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You manage the subscription. Your account has no assigned planning seat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administras la suscripción. Tu cuenta no tiene una plaza de planificación asignada."
+          }
+        }
+      }
+    },
+    "Your account holds a named adult planning seat.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account holds a named adult planning seat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cuenta tiene una plaza de planificación a tu nombre."
+          }
+        }
+      }
+    },
+    "Your authorized records and exports stay available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your authorized records and exports stay available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigues teniendo acceso a tus registros y exportaciones autorizados."
+          }
+        }
+      }
+    },
+    "Your household service received the verified Apple transaction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household service received the verified Apple transaction."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio del hogar recibió la transacción verificada de Apple."
+          }
+        }
+      }
+    },
+    "Your membership update could not be completed. Try again or restore purchases.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your membership update could not be completed. Try again or restore purchases."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar tu membresía. Inténtalo de nuevo o restaura tus compras."
+          }
+        }
+      }
+    },
+    "Your named planning seat was refreshed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your named planning seat was refreshed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se actualizó la plaza de planificación a tu nombre."
+          }
+        }
+      }
+    },
+    "Your planning access": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your planning access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu acceso a la planificación"
+          }
+        }
+      }
+    },
+    "Your planning access is ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your planning access is ready"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya puedes usar las herramientas de planificación"
+          }
+        }
+      }
+    },
+    "per year": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "per year"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "al año"
+          }
+        }
+      }
+    },
+    "Retry purchase delivery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry purchase delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a intentar la entrega de la compra"
+          }
+        }
+      }
+    },
+    "Get membership help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get membership help"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener ayuda con la membresía"
+          }
+        }
+      }
+    },
+    "Your Household subscription is active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Household subscription is active"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu suscripción a Household está activa"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

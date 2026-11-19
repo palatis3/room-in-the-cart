@@ -8,36 +8,64 @@ struct MembershipEntryView: View {
     @EnvironmentObject private var membership: MembershipCoordinator
     @Environment(\.dismiss) private var dismiss
 
+    @Environment(\.guardianChildCoordinator) private var child
+
     var body: some View {
         Group {
-            if !household.configured {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text(mtr("Household subscription purchases are unavailable. You can keep using the free planning tools."))
-                    Button(mtr("Continue with Free")) { dismiss() }
-                        .frame(minHeight: 44).accessibilityIdentifier("membership.free")
-                }.padding(20)
-            } else if household.membershipSession == nil {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text(tr("Choose your household first")).font(.title2.bold())
-                    Text(tr("To subscribe or restore a purchase, sign in with your adult account and select your household. You can use the free planning tools without signing in."))
-                    NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
-                }.padding(20)
-            } else if let model = membership.model { MembershipView(model: model, household: household) }
-            else if membership.failure {
-                VStack(spacing: 20) {
-                    Text(tr("Membership could not be verified. Your Free work is still available."))
-                    Button(tr("Try again")) { Task { await membership.retry() } }
-                        .frame(minHeight: 44).disabled(household.busy)
-                    Button(mtr("Continue with Free")) { dismiss() }
-                        .frame(minHeight: 44).accessibilityIdentifier("membership.free")
-                }.padding(20)
-            } else { ProgressView() }
-        }.workingSurface().navigationTitle(tr("Household membership"))
-            .task { membership.bind(to: household) }
+            if !household.canOpenMembership || child?.presented == true {
+                Text(mtr("This view is unavailable.")).navigationTitle("")
+            } else if let session = household.membershipSession, let model = membership.model,
+                      session.householdID == model.context?.householdID,
+                      session.memberID == model.context?.purchaserID, !model.isStopped {
+                MembershipView(model: model, household: household).id(ObjectIdentifier(model))
+            } else {
+                MembershipPage {
+                    if !household.configured {
+                        MembershipHeading(title: mtr("Household subscription"), symbol: "person.2")
+                        Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
+                        Text(mtr("Household subscription purchases are unavailable. You can keep using the free planning tools."))
+                    } else if household.membershipSession == nil {
+                        MembershipHeading(title: tr("Choose your household first"), symbol: "house")
+                        Text(tr("To subscribe or restore a purchase, sign in with your adult account and select your household. You can use the free planning tools without signing in."))
+                        NavigationLink(mtr("Open adult household setup")) {
+                            HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true)
+                        }.buttonStyle(PrimaryAction())
+                    } else if membership.failure {
+                        MembershipHeading(title: mtr("Membership needs verification"), symbol: "arrow.clockwise")
+                        Text(tr("Membership could not be verified. Your Free work is still available."))
+                        Button(mtr("Check membership again")) { Task { await membership.retry() } }
+                            .buttonStyle(PrimaryAction()).disabled(household.busy)
+                    } else {
+                        MembershipHeading(title: mtr("Your planning access"), symbol: "person.crop.circle")
+                        ProgressView(mtr("Checking your household access…"))
+                    }
+                    if !household.configured {
+                        Button(mtr("Continue planning for free")) { dismiss() }
+                            .buttonStyle(PrimaryAction()).accessibilityIdentifier("membership.free")
+                    } else {
+                        Button(mtr("Continue planning for free")) { dismiss() }
+                            .frame(minHeight: 44).accessibilityIdentifier("membership.free")
+                    }
+                    Divider()
+                    MembershipFreeTools()
+                    MembershipLegalLinks(configuration: .fromBundle())
+                }
+                .navigationTitle(tr("Household membership"))
+                .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+        .workingSurface()
+        .task { membership.bind(to: household) }
     }
 }
 
 extension HouseholdModel: MembershipSessionSource {
+    var canOpenMembership: Bool {
+        guard !guardianChildOnly, !locked else { return false }
+        guard let projection else { return true }
+        return projection.grantId == nil && ["organizer", "shopper", "contributor"].contains(projection.role)
+    }
+
     var membershipSession: MembershipSession? {
         guard !guardianChildOnly, !locked, let identity, let projection, projection.enrolled,
               projection.grantId == nil, ["organizer", "shopper", "contributor"].contains(projection.role),

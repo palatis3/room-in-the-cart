@@ -208,6 +208,21 @@ import SwiftUI
             && !deliveryOutcomes.values.contains(.failed(.deliveryPending))
     }
 
+    /// Show a first-charge offer only after the service has confirmed the viewer's
+    /// own Free/lapsed state. Recovery stays with the original purchase.
+    var presentsAnnualOffer: Bool {
+        guard !isStopped, context?.appAccountToken != nil, !verificationFailed,
+              let status = state.snapshot?.status, [.free, .expired, .revoked].contains(status),
+              purchaseReport != .pending, purchaseReport != .awaitingResult else { return false }
+        if (purchaseReport == .unverified || purchaseRejection != nil) && notice != .restoredFree { return false }
+        return !deliveryOutcomes.values.contains { outcome in
+            switch outcome {
+            case .inFlight, .failed: return true
+            case .delivered: return false
+            }
+        }
+    }
+
     /// Retain at app scope; calling this from a settings screen as well is idempotent.
     func start() async {
         guard !started, !isStopped else { return }
@@ -250,7 +265,7 @@ import SwiftUI
     }
 
     func loadOffer() async {
-        guard !isStopped, !isLoadingOffer, let id = configuration.productID else { return }
+        guard !isStopped, context?.appAccountToken != nil, !isLoadingOffer, let id = configuration.productID else { return }
         let session = generation
         isLoadingOffer = true
         defer { isLoadingOffer = false }
@@ -332,8 +347,8 @@ import SwiftUI
         } else { eligibleAdults = [] }
     }
 
-    func purchase() async {
-        guard !isBusy, !isStopped else { return }
+    func purchase(fromPresentedOffer: Bool = false) async {
+        guard !isBusy, !isStopped, !fromPresentedOffer || presentsAnnualOffer else { return }
         guard configuration.isReady else { notice = .failed(.notConfigured); return }
         guard let context else { notice = .failed(.signInRequired); return }
         guard let appAccountToken = context.appAccountToken else { notice = .failed(.notPurchaser); return }
@@ -355,7 +370,7 @@ import SwiftUI
         // Another adult may have become the purchaser since this screen opened.
         do {
             let currentToken = try await service.purchaseContext(householdID: context.householdID)
-            guard session == generation, canStartNewPurchase else { return }
+            guard session == generation, canStartNewPurchase, !fromPresentedOffer || presentsAnnualOffer else { return }
             guard currentToken == appAccountToken else { throw MembershipFailure.accountMismatch }
         } catch {
             guard session == generation else { return }

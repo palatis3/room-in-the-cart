@@ -49,7 +49,8 @@ enum MembershipPurchaseOutcome: Sendable {
         product = nil
         guard let loaded = try await Product.products(for: [productID]).first(where: { $0.id == productID }),
               loaded.type == .autoRenewable, let subscription = loaded.subscription,
-              subscription.subscriptionPeriod.unit == .year, subscription.subscriptionPeriod.value == 1 else {
+              subscription.subscriptionPeriod.unit == .year, subscription.subscriptionPeriod.value == 1,
+              subscription.introductoryOffer == nil, !loaded.isFamilyShareable else {
             throw MembershipFailure.unavailable
         }
         product = loaded
