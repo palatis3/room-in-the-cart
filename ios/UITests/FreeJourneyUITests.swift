@@ -44,23 +44,32 @@ import XCTest
             XCTAssertTrue(confirm.waitForNonExistence(timeout: 8), app.debugDescription)
         }
         enterReservation("2")
+        let backingPrefix = "pantry.claimBacking."
+        let newBacking = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", backingPrefix)).firstMatch
+        reveal(newBacking)
+        XCTAssertEqual(newBacking.value as? String, "2 units")
+        let claimID = try XCTUnwrap(UUID(uuidString: String(newBacking.identifier.dropFirst(backingPrefix.count))))
+        let backing = element(backingPrefix + claimID.uuidString)
+        let release = app.buttons["Release food from this reservation"]
+
         restart()
         tap(app.buttons["shop.myPantry"])
         tap(app.buttons[batchID])
-        let backing = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.claimBacking.")).firstMatch
-        XCTAssertTrue(backing.waitForExistence(timeout: 8), app.debugDescription)
+        reveal(backing)
         XCTAssertEqual(backing.value as? String, "2 units")
-        let claimID = String(backing.identifier.dropFirst("pantry.claimBacking.".count))
-        tap(app.buttons["Release food from this reservation"])
+        tap(release)
         enterReservation("1")
+        reveal(backing, initiallyUpward: false)
         XCTAssertEqual(backing.value as? String, "1 unit")
         tap(app.buttons["Used up"])
         enableSwitch("pantry.acknowledgeReservations")
         tap(confirm)
-        let shortfall = app.descendants(matching: .any).matching(identifier: "pantry.claimShortfall." + claimID).firstMatch
-        XCTAssertTrue(shortfall.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 8), app.debugDescription)
+        let shortfall = element("pantry.claimShortfall." + claimID.uuidString)
+        reveal(shortfall, initiallyUpward: false)
         XCTAssertEqual(shortfall.value as? String, "1 unit")
-        XCTAssertTrue(app.buttons["Release food from this reservation"].exists)
+        reveal(release)
+        XCTAssertTrue(release.isEnabled)
     }
 
     func testFinishPackageReviewsTwoMealsAndKeepsLunchAndHomeConsentAfterCancel() {
