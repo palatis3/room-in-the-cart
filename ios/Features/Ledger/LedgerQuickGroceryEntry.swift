@@ -40,6 +40,7 @@ private struct QuickGroceryField: View {
     let workspaceID: UUID
     let householdMember: Bool
     let authorize: @MainActor () -> Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var text = ""
     @State private var recent: [String] = []
     @State private var submitting = false
@@ -60,25 +61,53 @@ private struct QuickGroceryField: View {
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return Array(recent.lazy.filter { query.isEmpty || $0.lowercased().hasPrefix(query) }.prefix(4))
     }
+    private var groceryInput: Binding<String> {
+        Binding(get: { text }, set: { updated in
+            // A wrapping field inserts the Return key as a newline. Commit that
+            // single edit while preserving pasted lists for the normal review.
+            if updated.utf8.count == text.utf8.count + 1, updated.contains("\n") {
+                let prefix = updated.commonPrefix(with: text).count
+                let suffix = updated.dropFirst(prefix)
+                if suffix.first == "\n", suffix.dropFirst() == text.dropFirst(prefix) {
+                    submit()
+                    return
+                }
+            }
+            text = updated
+        })
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(quickGroceryText(householdMember ? "Add to my private list" : "Add a grocery")).font(.headline)
-            HStack {
-                TextField(quickGroceryText("Grocery name"), text: $text)
-                    .textFieldStyle(.roundedBorder).focused($editing)
+            Text(quickGroceryText("Grocery name")).font(.subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+            let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout())
+            layout {
+                TextField("", text: groceryInput, axis: .vertical)
+                    .textFieldStyle(.plain).font(.body)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 8).padding(.vertical, 6)
+                    .frame(minHeight: 44)
+                    .background(.background, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(.secondary) }
+                    .focused($editing)
+                    .accessibilityLabel(quickGroceryText("Grocery name"))
                     .accessibilityIdentifier("quickGrocery.name")
                     .submitLabel(.next).onSubmit { submit() }
-                Button { submit() } label: {
-                    Image(systemName: "plus.circle.fill").font(.title2).frame(minWidth: 44, minHeight: 44)
-                }.buttonStyle(.borderless).accessibilityLabel(quickGroceryText("Add grocery"))
-                    .accessibilityIdentifier("quickGrocery.add")
-                    .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
-                if editing {
-                    Button { editing = false } label: {
-                        Image(systemName: "keyboard.chevron.compact.down").frame(minWidth: 44, minHeight: 44)
-                    }.buttonStyle(.borderless)
-                        .accessibilityLabel(quickGroceryText("Dismiss keyboard"))
-                        .accessibilityIdentifier("quickGrocery.dismissKeyboard")
+                HStack {
+                    Button { submit() } label: {
+                        Image(systemName: "plus.circle.fill").font(.title2).frame(minWidth: 44, minHeight: 44)
+                    }.buttonStyle(.borderless).accessibilityLabel(quickGroceryText("Add grocery"))
+                        .accessibilityIdentifier("quickGrocery.add")
+                        .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
+                    if editing {
+                        Button { editing = false } label: {
+                            Image(systemName: "keyboard.chevron.compact.down").frame(minWidth: 44, minHeight: 44)
+                        }.buttonStyle(.borderless)
+                            .accessibilityLabel(quickGroceryText("Dismiss keyboard"))
+                            .accessibilityIdentifier("quickGrocery.dismissKeyboard")
+                    }
                 }
             }
             if editing && !suggestions.isEmpty {

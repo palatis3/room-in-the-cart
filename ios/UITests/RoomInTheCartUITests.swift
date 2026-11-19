@@ -16,9 +16,29 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testLargestTextQuickGroceryFitsAndSubmitsWithReturn() {
+        launch(language: "es", largeDark: true)
+        let field = element("quickGrocery.name")
+        revealFullyInShop(field)
+        let largest = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+        let lineHeight = UIFont.preferredFont(forTextStyle: .body, compatibleWith: largest).lineHeight
+        XCTAssertGreaterThanOrEqual(field.frame.height, floor(lineHeight))
+        let label = app.staticTexts["Nombre del producto"]
+        XCTAssertTrue(label.exists && shopViewport.contains(label.frame))
+        XCTAssertEqual(field.label, label.label)
+        screenshot("Largest-text-Spanish-grocery-name")
+        field.tap()
+        field.typeText("huevos")
+        XCTAssertEqual(field.value as? String, "huevos")
+        field.typeText("\n")
+        let undo = app.buttons["quickGrocery.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        XCTAssertTrue(undo.label.contains("huevos"))
+    }
+
     func testQuickGroceryReturnUndoAndDuplicateReviewInSpanish() {
         launch(language: "es")
-        let field = app.textFields["quickGrocery.name"]
+        let field = element("quickGrocery.name")
         tap(field)
         field.typeText("huevos\n")
         let undo = app.buttons["quickGrocery.undo"]
@@ -541,7 +561,9 @@ final class RoomInTheCartUITests: XCTestCase {
         // restart check still runs. No issue categories/elements are filtered.
         XCTAssertNoThrow(try auditAccessibility("Initial comparison results"))
         assertKnownTotals()
-        assertContains("Room within the item limit: $26.00")
+        let headroom = app.staticTexts["Room within the item limit: $26.00"]
+        reveal(headroom)
+        positionPackBForAudit(headroom: headroom)
         screenshot("Scrolled-result-before-audit")
         captureComparisonFrames("Scrolled-result-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Scrolled comparison results"))
@@ -610,6 +632,41 @@ final class RoomInTheCartUITests: XCTestCase {
         let bottom = min(list.maxY, window.maxY, tabs.exists ? tabs.frame.minY : window.maxY)
         return CGRect(x: max(list.minX, window.minX), y: top,
                       width: min(list.maxX, window.maxX) - max(list.minX, window.minX), height: max(0, bottom - top))
+    }
+
+    private func positionPackBForAudit(headroom: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let header = app.staticTexts["bHeader"]
+        let source = app.staticTexts["comparisonSourceNote"]
+        let purchase = app.staticTexts["bPacks"]
+        let total = app.staticTexts["bTotal"]
+        // Keep the complete purchase, limit and source together in the middle viewport.
+        // A hittable result can have ink behind the navigation bar or the following row
+        // partly under the tab bar after a swipe. The other audits cover both ends.
+        reveal(source, file: file, line: line)
+        for _ in 0..<10 {
+            let viewport = comparisonViewport
+            guard header.exists, source.exists, viewport.height > 0 else { break }
+            let group = header.frame.union(source.frame)
+            // Align the final source row to the bottom content inset. The last
+            // audit separately shows the full Save button on the following row.
+            let offset = viewport.maxY - 12 - group.maxY
+            if abs(offset) <= 12 && viewport.contains(group) {
+                for row in [header, total, purchase, headroom, source] {
+                    XCTAssertTrue(row.exists && row.isHittable && viewport.contains(row.frame),
+                                  "Expected a complete Pack B result in the audit viewport: \(row)", file: file, line: line)
+                }
+                return
+            }
+            guard group.height <= viewport.height else { break }
+            let window = app.windows.firstMatch
+            let origin = window.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: viewport.midX - window.frame.minX, dy: viewport.midY - window.frame.minY))
+            let distance = min(viewport.height / 3, max(-viewport.height / 3, offset))
+            let end = start.withOffset(CGVector(dx: 0, dy: distance))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        }
+        captureComparisonFrames("Pack-B-position-failure")
+        XCTFail("Could not position the complete Pack B results and their source for the audit.", file: file, line: line)
     }
 
     private func revealFullyInComparison(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
