@@ -1049,17 +1049,29 @@ import XCTest
             }
             return nil
         }
-        var thumbnail: CGRect?
-        let loaded = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard let screen = try? self.app.snapshot() else { return false }
-            thumbnail = firstPhoto(in: screen)
-            return thumbnail != nil
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [loaded], timeout: 60), .completed)
-        let frame = try XCTUnwrap(thumbnail, app.debugDescription)
-        let origin = app.frame.origin
-        app.coordinate(withNormalizedOffset: .zero)
-            .withOffset(CGVector(dx: frame.midX - origin.x, dy: frame.midY - origin.y)).tap()
+        let picker = app.scrollViews["photosView_content_scroll_view"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 60), app.debugDescription)
+        for _ in 0..<2 {
+            // The first-use privacy banner can move the grid after its images appear.
+            // Sample the center in picker coordinates until it stays in place.
+            var center: CGPoint?
+            let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let view = try? picker.snapshot(), let photo = firstPhoto(in: view),
+                      view.frame.contains(photo) else {
+                    center = nil
+                    return false
+                }
+                let point = CGPoint(x: photo.midX - view.frame.minX, y: photo.midY - view.frame.minY)
+                defer { center = point }
+                return center == point
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 60), .completed, app.debugDescription)
+            let point = try XCTUnwrap(center)
+            picker.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: point.x, dy: point.y)).tap()
+            if picker.waitForNonExistence(timeout: 5) { return }
+        }
+        XCTFail("Photos remained open after selecting the newest image. " + app.debugDescription)
     }
 
     private func saveSourcePhoto() {
