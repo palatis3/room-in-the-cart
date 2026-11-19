@@ -115,6 +115,54 @@ import LocalStore
         XCTAssertEqual(editor.ingredients.map(\.id), [kept])
     }
 
+    func testUndoRestoresTheOriginalRemainingEstimateAndPriorUseWithoutOverwritingANewerObservation() async throws {
+        let f = try await fixture(), editor = f.editor, lotID = f.lots[0]
+        let repo = PantryRepository(store: f.store, authorize: { f.access.allowed })
+        func observe(_ wording: String, use: InventoryUsage?) async throws {
+            let snapshot = try await repo.load(at: f.now)
+            let lot = try XCTUnwrap(snapshot.lots.first { $0.id == lotID })
+            let observation = InventoryCountRevision(count: .someLeft, observationID: UUID(), observedAt: f.now, countWording: wording)
+            let command = InventoryCommand(id: UUID(), originID: snapshot.state.workspaceID, lotID: lotID, eventID: UUID(),
+                expectedRevision: lot.revision, occurredAt: f.now, change: .revise(.init(observation: observation, usage: use.map { [$0] })))
+            _ = try await repo.apply(command, reviewedInventoryRevision: snapshot.state.revision, at: f.now)
+        }
+        func cook() async throws {
+            await editor.reload()
+            explicitNoUse(editor)
+            editor.ingredients[0].use = .used
+            editor.ingredients[0].parts[0].use = .unmeasured
+            editor.ingredients[0].parts[0].relation = .ingredient
+            editor.ingredients[0].parts[0].lotID = lotID
+            await editor.prepareReview()
+            _ = try XCTUnwrap(editor.review)
+            await editor.confirm()
+            _ = try XCTUnwrap(editor.completed)
+        }
+        let wording = "menos de media botella"
+        let originalUse = InventoryUsage(id: UUID(), kind: .some)
+        try await observe(wording, use: originalUse)
+        try await cook()
+        let undo = try await f.session.reviewUndo(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(undo.restoredInputs.first?.countWording, wording)
+        let reloadedUndo = try JSONDecoder().decode(PantryCookUndoReview.self, from: JSONEncoder().encode(undo))
+        try await f.session.applyUndo(reloadedUndo)
+        try await f.session.applyUndo(reloadedUndo)
+        let restored = try await repo.load(at: f.now)
+        let restoredLot = try XCTUnwrap(restored.lots.first { $0.id == lotID })
+        XCTAssertEqual(restoredLot.count, .someLeft)
+        XCTAssertEqual(restoredLot.countWording, wording)
+        let history = try await repo.usageHistory(lotID: lotID, basis: restored.state)
+        XCTAssertEqual(history, [.init(id: originalUse.id, occurredAt: f.now, kind: .some, remainingWording: wording)])
+
+        try await cook()
+        let obsolete = try await f.session.reviewUndo(shopID: f.shop, mealID: f.meal)
+        try await observe("casi vacía", use: nil)
+        do { try await f.session.applyUndo(obsolete); XCTFail("Newer stock evidence was overwritten") }
+        catch PantryCookPort.Failure.changed {}
+        let latest = try await repo.load(at: f.now)
+        XCTAssertEqual(latest.lots.first { $0.id == lotID }?.countWording, "casi vacía")
+    }
+
     func testChangingMeasuredBatchPreservesGramsAndDeductsTheExactAmountFromKilograms() async throws {
         let f = try await fixture(firstUnit: .gram, secondUnit: .kilogram)
         let editor = f.editor

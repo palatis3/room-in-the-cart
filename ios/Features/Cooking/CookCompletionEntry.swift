@@ -410,7 +410,7 @@ private struct CookCompletionUndoView: View {
                     ForEach(Array(review.preservedCountNames.enumerated()), id: \.offset) { _, name in Text(name) }
                 }
                 ForEach(Array(review.restoredInputs.enumerated()), id: \.offset) { _, input in
-                    LabeledContent(input.name, value: pantryCount(input.count))
+                    LabeledContent(input.name, value: input.countWording ?? pantryCount(input.count))
                 }
                 ForEach(Array(review.removedLeftovers.enumerated()), id: \.offset) { _, name in
                     Text(cookCompletionText("Remove leftover batch") + ": " + name)

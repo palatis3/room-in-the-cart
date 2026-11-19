@@ -20,6 +20,7 @@ struct PantryCookUndoReview: Codable, Equatable {
         let lotID: UUID
         let name: String
         let count: InventoryCount
+        var countWording: String? = nil
     }
     let id: UUID
     let cookID: UUID
@@ -69,6 +70,7 @@ extension PantryCookPort {
 
     private struct UndoInput {
         let restore: InventoryCount
+        let originalObservationID: UUID
         var revision: Int64
         var observation: UUID
         var amended = false
@@ -82,7 +84,8 @@ extension PantryCookPort {
         for prior in record.priorCounts {
             guard prior.revision > 0, prior.revision < Int64.max,
                   let observation = record.resultingObservations[prior.lotID] else { throw Failure.changed }
-            inputs[prior.lotID] = UndoInput(restore: prior.count, revision: prior.revision + 1, observation: observation)
+            inputs[prior.lotID] = UndoInput(restore: prior.count, originalObservationID: prior.observationID,
+                                            revision: prior.revision + 1, observation: observation)
         }
         guard let resolutions = record.resolutions else { return (inputs, nil) }
         var preserved = Set<UUID>()
@@ -99,7 +102,8 @@ extension PantryCookPort {
                 preserved.insert(lotID)
             case .deduct:
                 guard let basis = row.basis else { throw Failure.changed }
-                var input = inputs[lotID] ?? UndoInput(restore: basis.count, revision: basis.revision, observation: basis.observationID)
+                var input = inputs[lotID] ?? UndoInput(restore: basis.count, originalObservationID: basis.observationID,
+                                                       revision: basis.revision, observation: basis.observationID)
                 guard input.revision == basis.revision, input.observation == basis.observationID,
                       !preserved.contains(lotID) else { throw PantryCookUndoFailure.amendedInputChanged(lot: name) }
                 input.amended = true
@@ -118,7 +122,7 @@ extension PantryCookPort {
         return (inputs, .init(eventIDs: resolutions.map(\.eventID), preservedCountNames: names))
     }
 
-    private func undoPlan(_ read: Read, operationID: UUID) throws -> UndoPlan {
+    private func undoPlan(_ read: Read, operationID: UUID) async throws -> UndoPlan {
         let context = read.context
         let inventory = context.inventory
         guard let records = read.journey.cookedMeals, let index = records.firstIndex(where: {
@@ -135,14 +139,31 @@ extension PantryCookPort {
             return try InventoryEngine.prepare(command, current: lot, at: context.asOf)
         }
         let lineage = try undoInputs(record, lots: lots)
-        let restoredInputs = try lineage.inputs.keys.sorted(by: { $0.uuidString < $1.uuidString }).map { id -> PantryCookUndoReview.Input in
+        var restoredInputs: [PantryCookUndoReview.Input] = []
+        for id in lineage.inputs.keys.sorted(by: { $0.uuidString < $1.uuidString }) {
             guard let input = lineage.inputs[id] else { throw Failure.changed }
             guard let lot = lots[id], lot.revision == input.revision, lot.observationID == input.observation else {
                 if input.amended { throw PantryCookUndoFailure.amendedInputChanged(lot: lots[id]?.name) }
                 throw Failure.changed
             }
-            changes.append(try change(lot, .count(input.restore, observationID: UUID())))
-            return .init(lotID: id, name: lot.name, count: input.restore)
+            var wording: String?
+            if input.restore == .someLeft {
+                // Existing cook receipts already point to the immutable pre-cook reading.
+                guard let stored = try await store.inventoryRecord(.init(.observation, input.originalObservationID)),
+                      authorize() else { throw Failure.unavailable }
+                let original = try PantryPersistenceCodec.observation(stored)
+                guard original.lotID == id, original.count == input.restore else { throw Failure.changed }
+                wording = original.countWording
+            }
+            let restore: InventoryChange
+            if let wording {
+                let reading = InventoryCountRevision(count: input.restore, observationID: UUID(), observedAt: context.asOf, countWording: wording)
+                restore = .revise(.init(observation: reading))
+            } else {
+                restore = .count(input.restore, observationID: UUID())
+            }
+            changes.append(try change(lot, restore))
+            restoredInputs.append(.init(lotID: id, name: lot.name, count: input.restore, countWording: wording))
         }
         let outputs = Set(record.draft.leftovers.map(\.id))
         let outputFoods = Set(record.draft.leftovers.map(\.foodID))
@@ -197,7 +218,7 @@ extension PantryCookPort {
             return
         }
         let read = try await read(shopID: review.shopID, mealID: review.mealID)
-        let plan = try undoPlan(read, operationID: review.id)
+        let plan = try await undoPlan(read, operationID: review.id)
         guard plan.review == review else { throw Failure.changed }
         var next = read.journey
         next.cookedMeals?[plan.index].undo = .init(id: review.id, confirmedAt: read.context.asOf,
