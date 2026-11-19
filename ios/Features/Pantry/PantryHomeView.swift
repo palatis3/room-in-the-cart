@@ -338,14 +338,11 @@ private struct PantryShelfLotLabel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(lot.name).font(.headline).foregroundStyle(Theme.ink)
-            if let wording = lot.countWording {
-                Text(pantryFormat("Remaining estimate: %@", wording)).foregroundStyle(Theme.warning)
-            }
-            Text(pantryCount(lot.count)).monospacedDigit().foregroundStyle(Theme.ink)
+            Text(pantryCount(lot.count, estimate: lot.countWording)).monospacedDigit().foregroundStyle(Theme.ink)
             if let availability, availability.issues.isEmpty, let held = availability.held, held.amount > .zero {
                 Text(pantryFormat("%@ reserved · %@ available", pantryQuantity(held), pantryQuantity(availability.free)))
                     .font(.subheadline).foregroundStyle(Theme.secondary)
-            } else if availability == nil || availability?.issues.isEmpty == false {
+            } else if !onlyNeedsRecount(lot, availability), availability == nil || availability?.issues.isEmpty == false {
                 Text(pantryText("Availability needs review. Unknown food is not counted as free."))
                     .font(.subheadline).foregroundStyle(Theme.warning)
             }
@@ -357,23 +354,25 @@ private struct PantryShelfLotLabel: View {
     }
 }
 
+private func onlyNeedsRecount(_ lot: InventoryLot, _ availability: InventoryLotAvailability?) -> Bool {
+    lot.countWording != nil && availability?.issues == [.countUnknown]
+}
+
 struct PantryLotSummary: View {
     let lot: InventoryLot
     let availability: InventoryLotAvailability?
     var availabilityNeedsReview = false
+    private var canRecountForMeals: Bool { !availabilityNeedsReview && onlyNeedsRecount(lot, availability) }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(lot.name).font(.title2.weight(.semibold))
-            Text(pantryCount(lot.count)).font(.title3).monospacedDigit()
-            if let wording = lot.countWording {
-                Text(pantryFormat("Remaining estimate: %@", wording)).foregroundStyle(Theme.warning)
-            }
+            Text(pantryCount(lot.count, estimate: lot.countWording)).font(.title3).monospacedDigit()
             Divider()
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .top, spacing: 24) { allocation }.fixedSize(horizontal: true, vertical: false)
                 VStack(alignment: .leading, spacing: 10) { allocation }
             }
-            if availabilityNeedsReview || availability == nil || availability?.issues.isEmpty == false {
+            if !canRecountForMeals, availabilityNeedsReview || availability == nil || availability?.issues.isEmpty == false {
                 Label(pantryText("Availability needs review. Unknown food is not counted as free."), systemImage: "questionmark.circle")
                     .foregroundStyle(Theme.warning)
             }
@@ -384,17 +383,19 @@ struct PantryLotSummary: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("pantry.lotSummary")
     }
 
     @ViewBuilder private var allocation: some View {
-        allocationFact("Reserved", quantity: availability?.held)
-        allocationFact("Available for other meals", quantity: availabilityNeedsReview ? nil : availability?.free)
+        allocationFact("Reserved", value: pantryQuantity(availability?.held))
+        allocationFact("Available for other meals", value: canRecountForMeals
+                       ? pantryText("Recount to check") : pantryQuantity(availabilityNeedsReview ? nil : availability?.free))
     }
 
-    private func allocationFact(_ title: String, quantity: Quantity?) -> some View {
+    private func allocationFact(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(pantryText(title)).font(.subheadline).foregroundStyle(Theme.secondary)
-            Text(pantryQuantity(quantity)).font(.headline).monospacedDigit()
+            Text(value).font(.headline).monospacedDigit()
         }
     }
 }

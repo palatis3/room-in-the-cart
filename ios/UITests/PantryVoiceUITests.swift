@@ -175,7 +175,7 @@ import XCTest
 
         app.terminate()
         openPantry(reset: false, spanish: spanish, expectEmptyShop: true)
-        assertLot(id, contains: spanish ? "cantidad desconocida" : "amount unknown")
+        assertLot(id, contains: spanish ? "(estimación)" : "(estimate)")
         assertLot(id, contains: observation)
     }
 
@@ -184,14 +184,27 @@ import XCTest
         let id = addLot("Ketchup", amount: "3")
         tap(app.buttons[id])
         tap(app.buttons["pantry.voiceUsedSome"])
+        XCTAssertTrue(app.navigationBars["Record use"].waitForExistence(timeout: 8))
+        XCTAssertFalse(element("pantry.voiceOriginal.0").exists)
+        tap(app.buttons["pantry.voiceHalf.0"])
         tap(app.buttons["pantry.voicePreview"])
+        let preview = element("pantry.voiceSummary.0")
+        XCTAssertTrue(preview.waitForExistence(timeout: 8))
+        XCTAssertTrue(preview.label.contains("After this change, About half left (estimate)"), preview.label)
         tap(app.buttons["pantry.voiceConfirm"])
         XCTAssertTrue(element("pantry.voiceSaved").waitForExistence(timeout: 10))
+        XCTAssertTrue(element("pantry.voiceSavedWording.0").label.contains("About half left"))
+        tap(app.buttons["Done"])
+        let detail = element("pantry.lotSummary")
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        XCTAssertTrue(detail.label.hasPrefix("Ketchup, About half left (estimate)"), detail.label)
+        XCTAssertTrue(detail.label.contains("Available for other meals, Recount to check"), detail.label)
         app.terminate()
 
         openPantry(reset: false, expectEmptyShop: true)
-        assertLot(id, contains: "amount unknown")
+        assertLot(id, contains: "About half left (estimate)")
         enterCommand("I used some ketchup")
+        XCTAssertTrue(element("pantry.voiceOriginal.0").label.localizedCaseInsensitiveContains("ketchup"))
         let explanation = app.staticTexts["Record one use. The amount remaining will be unknown."]
         reveal(explanation)
         tap(app.buttons["pantry.voicePreview"])
@@ -200,6 +213,7 @@ import XCTest
         app.terminate()
 
         openPantry(reset: false, expectEmptyShop: true)
+        assertLot(id, contains: "amount unknown")
         tap(app.buttons[id])
         tap(app.buttons["pantry.usageHistory"])
         let count = element("pantry.usageCount")
@@ -239,7 +253,7 @@ import XCTest
         app.terminate()
         openPantry(reset: false, spanish: true, expectEmptyShop: true)
         assertLot(id, contains: reply)
-        assertLot(id, contains: "cantidad desconocida")
+        assertLot(id, contains: "(estimación)")
     }
 
     func testOnDeviceDictationOffersTypingWhenRecognitionOrPermissionIsUnavailable() {
