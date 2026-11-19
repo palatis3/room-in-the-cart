@@ -245,29 +245,44 @@ import XCTest
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<24 {
-            let area = scrollableArea()
-            if target.exists && target.isHittable,
-               !fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY) { return }
+            let exists = target.exists
+            let hittable = exists && target.isHittable
+            if hittable && !fullyVisible { return }
+            let (bounds, area) = scrollGeometry()
+            let frame = exists ? target.frame : .zero
+            if hittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             let upward: Bool
-            if target.exists && !target.frame.isEmpty {
-                upward = target.frame.midY > area.midY
+            if !frame.isEmpty {
+                upward = frame.midY > area.midY
             } else { upward = attempt < 16 ? searchTowardEndFirst : !searchTowardEndFirst }
-            scrollContent(upward: upward)
+            scrollContent(upward: upward, area: area, bounds: bounds)
         }
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
-    private func scrollableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+    private func scrollGeometry() -> (bounds: CGRect, area: CGRect) {
+        // Opening a review can dismiss the keyboard between live XCUI queries.
+        // Use one captured layout for the keyboard, navigation bars and drag.
+        let snapshot = try? app.snapshot()
+        let bounds = snapshot?.frame ?? app.frame
+        var keyboardTop = bounds.maxY
+        var barBottom = bounds.minY + 88
+        var elements = snapshot.map { [$0] } ?? []
+        while let element = elements.popLast() {
+            let frame = element.frame
+            if !frame.isEmpty && frame.intersects(bounds) {
+                if element.elementType == .keyboard { keyboardTop = min(keyboardTop, frame.minY) }
+                if element.elementType == .navigationBar { barBottom = max(barBottom, frame.maxY) }
+            }
+            elements.append(contentsOf: element.children)
+        }
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
-        return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+        let area = CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+        return (bounds, area)
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, area: CGRect, bounds: CGRect) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
-        let area = scrollableArea(), bounds = app.frame
         let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
