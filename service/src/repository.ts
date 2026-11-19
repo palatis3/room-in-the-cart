@@ -1,3 +1,4 @@
+import {type AdultPickupOptions,respondWithRequest} from './adult-pickup.js';
 import {checkPublishingMember,reviewSharedWording} from './shared-content-filter.js';
 import {applyPair,checkPairReplay,inboxPairs,rememberPair,reviewPair} from './request-pair.js';
 import {proveSameItem,rememberSameItem,sameItemUndo,applySameItem,checkSameItemReplay} from './request-same-item.js';
@@ -48,7 +49,7 @@ export function ownRequest(r:RequestRow):OwnRequest {
     ownActionAllowed:editable(r),clarification:r.clarification,followupTo:r.followup_to};
 }
 export class HouseholdRepository {
-  constructor(readonly pool:Database,readonly options:{allowChildNetwork:boolean;noticeVersion:string;sessionStatus?:SessionStatusVerifier;trackingV2?:boolean;sharedContentSafety?:boolean;moderationRetentionDays?:number}) {}
+  constructor(readonly pool:Database,readonly options:AdultPickupOptions & {allowChildNetwork:boolean;noticeVersion:string;sessionStatus?:SessionStatusVerifier;trackingV2?:boolean;sharedContentSafety?:boolean;moderationRetentionDays?:number}) {}
   async assertIdentityAllowed(db:Transaction,issuer:string,subject:string){
     const lock=(await db.query("SELECT pg_try_advisory_xact_lock_shared(hashtextextended($1,0)) AS acquired",[tokenHash(issuer+'\n'+subject)])).rows[0]?.acquired;
     if(!lock)throw new ServiceError(409,'account_action_pending','Wait for the pending account action to finish.');
@@ -203,12 +204,18 @@ export class HouseholdRepository {
     const planning = !ctx.ownRequestsOnly && !ctx.viewGrantId && !helperRole && !isShopper && shop && ctx.member.kind==='adult' &&
       (await ctx.db.query(`SELECT 1 FROM ritc.meal_planner p JOIN ritc.shop s USING(household_id,shop_id,authority_epoch)
        WHERE p.household_id=$1 AND p.shop_id=$2 AND p.planner_id=$3 AND s.phase<>'closed'`,[ctx.householdId,shop.shop_id,ctx.member.member_id])).rowCount;
+    const lateCutoff=shop?.phase==='draft'&&this.options.adultLastCall&&ctx.member.kind==='adult'&&ctx.member.can_contribute&&
+      !helperRole&&!ctx.viewGrantId&&shop.shopper_id!==ctx.member.member_id&&
+      (await ctx.db.query('SELECT ritc.pickup_cutoff_passed($1,$2,$3,$4) AS late',[ctx.householdId,shop.shop_id,ctx.member.member_id,ctx.now])).rows[0]?.late;
+    const adultPickup=!helperRole&&!ctx.viewGrantId&&!ctx.ownRequestsOnly&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||isShopper);
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!ctx.ownRequestsOnly&&!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:false,
-      ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'} : {}),
+      ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'||Boolean(lateCutoff)} : {}),
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
-      capabilities:[...(includeSharedContentSafety&&this.options.sharedContentSafety?['shared_content_safety']:[]),...(preferenceAccess?['meal_preferences_read']:[]),
+      capabilities:[...(adultPickup&&this.options.adultLastCall?['adult_last_call']:[]),
+        ...(adultPickup&&this.options.sharedContentSafety&&this.options.adultProductReferenceDays?['adult_product_reference',...(this.options.adultProductReferenceMedia?['adult_product_reference_media']:[])]:[]),
+        ...(includeSharedContentSafety&&this.options.sharedContentSafety?['shared_content_safety']:[]),...(preferenceAccess?['meal_preferences_read']:[]),
         ...(preferenceAccess&&ctx.member.organizer?['meal_preferences_admin']:[]),...(pantryAccess?['household_pantry','household_tonight','my_feedback_withdrawal']:[]),...(pantryAccess && isShopper && shop?.placed_revision!=null?['cook_completion','meal_feedback']:[]),...(pantryAccess&&ctx.member.organizer?['household_pantry_grants']:[]),...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation','request_purchase_attribution']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','request_same_item','request_pair_review','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned'|'history-owned'|'requests',after:string|null){
@@ -238,10 +245,15 @@ export class HouseholdRepository {
       values.push(record.created_at,after);
       boundary=` AND (s.created_at,s.shop_id)<($${values.length-1}::timestamptz,$${values.length}::uuid)`;
     }
-    const rows=(await ctx.db.query(`SELECT s.shop_id,s.shopper_id,s.created_at,s.phase,s.revision,s.authority_epoch
+    let cutoff='false';
+    if(scope==='requests'&&this.options.adultLastCall&&ctx.member.kind==='adult'){
+      values.push(ctx.member.member_id,ctx.now);
+      cutoff=`ritc.pickup_cutoff_passed(s.household_id,s.shop_id,$${values.length-1},$${values.length})`;
+    }
+    const rows=(await ctx.db.query(`SELECT s.shop_id,s.shopper_id,s.created_at,s.phase,s.revision,s.authority_epoch,${cutoff} AS late
       ${source}${boundary} ORDER BY s.created_at DESC,s.shop_id DESC LIMIT 51`,values)).rows;
     if(scope==='requests')return{shops:rows.slice(0,50).map(s=>({
-      shopId:s.shop_id,createdAt:s.created_at.toISOString(),nextShopOnly:s.phase!=='draft'
+      shopId:s.shop_id,createdAt:s.created_at.toISOString(),nextShopOnly:s.phase!=='draft'||s.late
     })),nextCursor:rows.length>50?rows[49].shop_id:null};
     return{shops:rows.slice(0,50).map(s=>({shopId:s.shop_id,createdAt:s.created_at.toISOString(),phase:s.phase,role:s.shopper_id===ctx.member.member_id?'shopper':'contributor',...(s.shopper_id===ctx.member.member_id?{revision:s.revision,authorityEpoch:s.authority_epoch}:{})})),nextCursor:rows.length>50?rows[49].shop_id:null};
   }
@@ -529,8 +541,9 @@ export class HouseholdRepository {
       if(Date.parse(b.authoredAt)>ctx.now.getTime()+24*60*60_000)throw invalid();
       const dup=await ctx.db.query('SELECT 1 FROM ritc.request WHERE household_id=$1 AND author_id=$2 AND client_request_id=$3',[ctx.householdId,ctx.member.member_id,b.clientRequestId]);
       if(dup.rowCount)throw new ServiceError(409,'request_id_reused','Refresh your request list before submitting a new request.');
+      const cutoffPassed=this.options.adultLastCall&&await respondWithRequest(ctx,shop);
       await ctx.db.query(`INSERT INTO ritc.request(household_id,request_id,author_id,client_request_id,shop_id,original_item,own_quantity,route,authored_at,followup_to,author_consent_id)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,(SELECT guardian_consent_id FROM ritc.device WHERE household_id=$1 AND device_id=$11 AND member_id=$3))`,[ctx.householdId,id,ctx.member.member_id,b.clientRequestId,shop.shop_id,b.originalItem,b.ownQuantity,shop.phase==='draft'?b.route:'next',b.authoredAt,b.followupTo??null,ctx.deviceId]);
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,(SELECT guardian_consent_id FROM ritc.device WHERE household_id=$1 AND device_id=$11 AND member_id=$3))`,[ctx.householdId,id,ctx.member.member_id,b.clientRequestId,shop.shop_id,b.originalItem,b.ownQuantity,shop.phase==='draft'&&!cutoffPassed?b.route:'next',b.authoredAt,b.followupTo??null,ctx.deviceId]);
     }else {
       const edited=c.kind==='request.edit'?bodySchemas['request.edit'].parse(c.body):undefined;
       id=(edited??bodySchemas['request.withdraw'].parse(c.body)).requestId;

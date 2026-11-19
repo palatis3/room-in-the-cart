@@ -1,3 +1,4 @@
+import {adultPickupTests} from './adult-pickup.wire.mjs';
 import test,{before,after} from 'node:test';
 import {grocery30Routing} from './grocery30-routing.mjs';
 import assert from 'node:assert/strict';
@@ -21,11 +22,11 @@ const server=createHTTPServer({repository:repo,verifier,billing:new BillingServi
 let origin;
 before(async()=>{await admin.query('CREATE SCHEMA IF NOT EXISTS auth; CREATE TABLE IF NOT EXISTS auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz)');await migrate(adminURL);await assertRuntimeRole(runtime);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;});
 after(async()=>{await new Promise(resolve=>server.close(resolve));await Promise.all([runtime.end(),admin.end()]);});
-async function fixture({createShop=true}={}) {
+async function fixture({createShop=true,otherAdult=false}={}) {
   const h=randomUUID(),shopId=randomUUID(),lineId=randomUUID(),actors={};
   const c=await admin.connect();try{
     await c.query('BEGIN');await c.query('INSERT INTO ritc.household(household_id,label) VALUES($1,$2)',[h,'Fictional household']);
-    for(const name of ['Mia','Alex','Sam','Jo']) {
+    for(const name of ['Mia','Alex','Sam','Jo',...(otherAdult?['Lee']:[])]) {
       const id=randomUUID(),session=randomUUID(),subject=randomUUID(),kind=['Sam','Jo'].includes(name)?'child':'adult';
       await c.query('INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer,can_contribute) VALUES($1,$2,$3,$4,$5,$6,\'active\',$7,true)',[h,id,issuer,subject,name,kind,name==='Mia']);
       const token=await new SignJWT({session_id:session}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setAudience(audience).setSubject(subject).setIssuedAt().setExpirationTime('1h').sign(privateKey);
@@ -68,6 +69,8 @@ async function fixture({createShop=true}={}) {
   }
   return{h,shopId,lineId,line,quote,actors,http,envelope,command,send,preview};
 }
+
+adultPickupTests({fixture,admin,repo});
 
 if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS',async()=>{
   const f=await deferredFixture('Alex',{originalItem:'Original basket'});

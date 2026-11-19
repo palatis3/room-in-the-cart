@@ -1,3 +1,4 @@
+import {lastCallRoute,productReferenceRoute} from './adult-pickup.js';
 import {moderationAction,recordModerationAction} from './moderation.js';
 import {householdTonight,saveTonightRecipe} from './household-tonight.js';
 import {readMealPreferences, writeMealPreferences, preferenceGrants, changePreferenceGrant} from './meal-preferences.js';
@@ -60,6 +61,7 @@ async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown>{try{re
 // A disclosed recipe may be larger than an ordinary command. Keep the
 // command's byte limit for every other kind, including JSON whitespace.
 async function householdBody(req:IncomingMessage,path:string) {
+  if(path.endsWith('/product-reference'))return body(req,151_552);
   if(path.endsWith('/demand/tracking/candidates')||path.endsWith('/demand/tracking/previews'))return body(req,1_800_000);
   if(path.endsWith('/demand/previews')) return body(req,1_800_000);
   if(path.endsWith('/accepted-fallbacks')) return body(req,540_000);
@@ -488,6 +490,9 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          if(tail==='/last-call'||tail==='/last-call/response')return lastCallRoute(repository,ctx,await repository.shop(ctx,shopId),tail,method,payload);
+          const product=/^\/requests\/([^/]+)\/product-reference(?:\/(remove|moderation))?$/.exec(tail??'');
+          if(product)return productReferenceRoute(repository,ctx,await repository.shop(ctx,shopId),uuid.parse(product[1]),product[2],method,payload);
           const feedback = /^\/cook-feedback\/([^/]+)$/.exec(tail ?? '');
           if(feedback && (method==='GET' || method==='PUT')){
             const shop=await repository.shop(ctx,shopId.toLowerCase());
