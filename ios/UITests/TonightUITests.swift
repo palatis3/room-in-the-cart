@@ -29,6 +29,7 @@ import XCTest
         XCTAssertEqual(error.label, "Enter an amount greater than zero for Corn.")
         XCTAssertTrue(amount.isHittable)
         amount.typeText("1")  // Validation focuses the ingredient needing correction.
+        dismissRecipeKeyboard()
         XCTAssertTrue(error.waitForNonExistence(timeout: 5))
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
@@ -112,14 +113,24 @@ import XCTest
         XCTFail("Expected the requested row in the visible list: " + app.debugDescription)
     }
     private func fill(_ element: XCUIElement, _ value: String) {
-        tap(element); element.typeText(value)
-        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(element)
+        element.typeText(value)
+        dismissRecipeKeyboard()
+    }
+    private func dismissRecipeKeyboard() {
+        let done = app.buttons["tonight.recipe.keyboardDone"]
+        XCTAssertTrue(done.waitForExistence(timeout: 3))
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "tonight.recipe.keyboardDone"))
     }
     private func tap(_ element: XCUIElement) {
         _ = element.waitForExistence(timeout: 3)
-        for _ in 0..<14 {
+        for index in 0..<16 {
             if element.exists && element.isHittable { break }
-            app.swipeUp()
+            let moveDown = element.exists ? element.frame.midY > app.frame.midY : index < 8
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.94, dy: moveDown ? 0.65 : 0.36))
+            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.94, dy: moveDown ? 0.38 : 0.63))
+            start.press(forDuration: 0.05, thenDragTo: end)
         }
         XCTAssertTrue(element.isHittable, element.debugDescription)
         element.tap()

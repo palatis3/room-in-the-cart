@@ -27,7 +27,7 @@ struct TonightRecipeReview: View {
     @State private var candidate: MealTemplate?
     @State private var error: String?
     @State private var invalidAmountID: UUID?
-    @FocusState private var focusedAmount: String?
+    @FocusState private var focusedInput: String?
     @State private var busy = false
     private struct Ingredient: Identifiable {
         var id = UUID()
@@ -86,22 +86,26 @@ struct TonightRecipeReview: View {
                         Section(tonightText("Recipe")) {
                             WorkingField(ledgerText("Dinner title")) {
                                 TextField(ledgerText("Dinner title"), text: $title, prompt: Text(verbatim: "—"))
+                                    .focused($focusedInput, equals: "title")
                                     .accessibilityIdentifier("tonight.recipe.title")
                             }
                             WorkingField(ledgerText("Servings")) {
                                 TextField(ledgerText("Servings"), text: $servings, prompt: Text(verbatim: "—"))
                                     .keyboardType(.numbersAndPunctuation)
+                                    .focused($focusedInput, equals: "servings")
                                     .accessibilityIdentifier("tonight.recipe.servings")
                             }
                             WorkingField(tonightText("Preparation minutes, unknown if blank")) {
                                 TextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes, prompt: Text(verbatim: "—"))
                                     .keyboardType(.numberPad)
+                                    .focused($focusedInput, equals: "minutes")
                             }
                         }
                         Section(ledgerText("Ingredients")) {
                             ForEach($ingredients) { $ingredient in
                                 WorkingField(tonightText("Ingredient")) {
                                     TextField(tonightText("Ingredient"), text: $ingredient.name, prompt: Text(verbatim: "—"))
+                                        .focused($focusedInput, equals: "ingredient-\(ingredient.id)")
                                         .accessibilityIdentifier("tonight.recipe.ingredient")
                                 }.id(ingredient.id)
                                 if invalidAmountID == ingredient.id {
@@ -110,7 +114,7 @@ struct TonightRecipeReview: View {
                                         .accessibilityIdentifier("tonight.recipe.amountError")
                                 }
                                 LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit,
-                                    amountFocus: ($focusedAmount, ingredient.id.uuidString), amountLabel: tonightText("Amount (required)"))
+                                    amountFocus: ($focusedInput, ingredient.id.uuidString), amountLabel: tonightText("Amount (required)"))
                                     .onChange(of: ingredient.amount) { _, _ in
                                         if invalidAmountID == ingredient.id, ingredient.positiveQuantity != nil { invalidAmountID = nil }
                                     }
@@ -121,11 +125,20 @@ struct TonightRecipeReview: View {
                         Section(tonightText("Reviewed restriction details")) {
                             Text(tonightText("Leave details unknown unless you reviewed them. Recipe details never confirm the ingredients or brand of a pantry product."))
                             Toggle(tonightText("I reviewed all ingredient details"), isOn: $detailsReviewed)
-                            if detailsReviewed { TextField(tonightText("Complete ingredient details, one per line"), text: $details, axis: .vertical) }
+                            if detailsReviewed {
+                                TextField(tonightText("Complete ingredient details, one per line"), text: $details, axis: .vertical)
+                                    .focused($focusedInput, equals: "details")
+                            }
                             Toggle(tonightText("I reviewed required appliances"), isOn: $appliancesReviewed)
-                            if appliancesReviewed { TextField(tonightText("Required appliances, one per line; empty means none"), text: $appliances, axis: .vertical) }
+                            if appliancesReviewed {
+                                TextField(tonightText("Required appliances, one per line; empty means none"), text: $appliances, axis: .vertical)
+                                    .focused($focusedInput, equals: "appliances")
+                            }
                             Toggle(tonightText("I reviewed recipe brands"), isOn: $brandsReviewed)
-                            if brandsReviewed { TextField(tonightText("Brands, one per line; empty means none"), text: $brands, axis: .vertical) }
+                            if brandsReviewed {
+                                TextField(tonightText("Brands, one per line; empty means none"), text: $brands, axis: .vertical)
+                                    .focused($focusedInput, equals: "brands")
+                            }
                             Picker(tonightText("Preparation effort"), selection: $effort) {
                                 Text(tonightText("Unknown")).tag(MealEffort?.none)
                                 ForEach(MealEffort.allCases, id: \.self) { Text(tonightText($0.rawValue)).tag(Optional($0)) }
@@ -139,7 +152,11 @@ struct TonightRecipeReview: View {
                     } else {
                         Text(ledgerText("Local to this iPhone")).font(.footnote)
                     }
-                }.disabled(busy)
+                }
+                .keyboardDoneAction(visible: focusedInput != nil, title: ledgerText("Done"),
+                                    identifier: "tonight.recipe.keyboardDone") { focusedInput = nil }
+                .scrollDismissesKeyboard(.interactively)
+                .disabled(busy)
             }
         }.navigationTitle(tonightText("Review a recipe"))
             .privacySensitive()
@@ -181,7 +198,7 @@ struct TonightRecipeReview: View {
                     error = nil
                     invalidAmountID = ingredient.id
                     scroll.scrollTo(ingredient.id, anchor: .center)
-                    focusedAmount = ingredient.id.uuidString
+                    focusedInput = ingredient.id.uuidString
                     UIAccessibility.post(notification: .announcement, argument: amountError(for: ingredient))
                     return
                 }
@@ -206,7 +223,7 @@ struct TonightRecipeReview: View {
             evidence.effort = effort
             result.eligibilityEvidence = evidence
             try result.validate()
-            focusedAmount = nil; invalidAmountID = nil
+            focusedInput = nil; invalidAmountID = nil
             candidate = result; error = nil
         } catch { self.error = tonightText("Enter a title, positive servings and ingredient amounts, and valid reviewed details.") }
     }
