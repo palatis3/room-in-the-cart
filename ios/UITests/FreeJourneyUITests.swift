@@ -16,6 +16,38 @@ import XCTest
     }
 
 #if DEBUG && targetEnvironment(simulator)
+    func testMembershipFreeReturnsToRecordsAtLargestText() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        tap(app.tabBars.buttons["Records"])
+        tap(app.buttons["settings"])
+        let title = app.navigationBars["Settings"].staticTexts["Settings"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        XCTAssertLessThanOrEqual(title.frame.height, 44, "Use the compact navigation title at accessibility sizes.")
+        tap(app.buttons["Household membership"])
+
+        let free = app.buttons["membership.free"]
+        XCTAssertTrue(free.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.windows.firstMatch.frame.contains(free.frame), "Free must be visible before scrolling.")
+        let account = app.buttons["membership.accountOptions"]
+        if account.exists {
+            tap(account)
+            let existingAccountsOnly = app.staticTexts["Email sign-in is unavailable. You can still use your private shopping tools."].exists
+            tap(app.navigationBars.buttons["BackButton"])
+            if existingAccountsOnly {
+                XCTAssertEqual(account.label, "Saved adult account options")
+                XCTAssertLessThan(free.frame.maxY, account.frame.minY, "Free should come first when new accounts cannot sign in.")
+            }
+        }
+
+        tap(free)
+        XCTAssertTrue(app.navigationBars["Records"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.tabBars.buttons["Records"].isSelected)
+        XCTAssertFalse(app.navigationBars["Settings"].exists)
+        XCTAssertTrue(app.buttons["settings"].isHittable)
+    }
+
     func testLunchHoldShowsBackingAndShortfallAfterRestartAndPartialRelease() throws {
         launch(reset: true)
         tap(app.shopToolButton("shop.myPantry"))

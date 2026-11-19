@@ -2038,6 +2038,57 @@
           }
         }
       }
+    },
+    "Use the purchasing adult’s account and household to restore a purchase.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the purchasing adult’s account and household to restore a purchase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para restaurar una compra, usa la cuenta y el hogar de la persona adulta que la hizo."
+          }
+        }
+      }
+    },
+    "Saved adult account options": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved adult account options"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opciones de la cuenta de adulto guardada"
+          }
+        }
+      }
+    },
+    "Email sign-in is unavailable. To restore a purchase, use a purchasing adult account already saved on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email sign-in is unavailable. To restore a purchase, use a purchasing adult account already saved on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El inicio de sesión por correo no está disponible. Para restaurar una compra, usa la cuenta de la persona adulta que la hizo si ya está guardada en este iPhone."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

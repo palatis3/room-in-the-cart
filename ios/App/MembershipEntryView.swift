@@ -2,9 +2,21 @@ import SwiftUI
 import Combine
 import HouseholdClient
 
+private struct MembershipSettingsReturnKey: EnvironmentKey {
+    static let defaultValue: (@MainActor () -> Void)? = nil
+}
+
+extension EnvironmentValues {
+    var returnFromMembershipSettings: (@MainActor () -> Void)? {
+        get { self[MembershipSettingsReturnKey.self] }
+        set { self[MembershipSettingsReturnKey.self] = newValue }
+    }
+}
+
 /// The app owns the coordinator; navigating away leaves transaction observation running.
 struct MembershipEntryView: View {
     @ObservedObject var household: HouseholdModel
+    @Environment(\.returnFromMembershipSettings) private var returnFromSettings
     @EnvironmentObject private var membership: MembershipCoordinator
     @Environment(\.dismiss) private var dismiss
 
@@ -17,34 +29,22 @@ struct MembershipEntryView: View {
             } else if let session = household.membershipSession, let model = membership.model,
                       session.householdID == model.context?.householdID,
                       session.memberID == model.context?.purchaserID, !model.isStopped {
-                MembershipView(model: model, household: household).id(ObjectIdentifier(model))
+                MembershipView(model: model, household: household, onContinuePlanning: continuePlanning)
+                    .id(ObjectIdentifier(model))
             } else {
                 MembershipPage {
-                    if !household.configured {
-                        MembershipHeading(title: mtr("Household subscription"), symbol: "person.2")
-                        Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
-                        Text(mtr("Subscribing requires an adult account and a selected household. Household sign-in is unavailable on this iPhone."))
-                    } else if household.membershipSession == nil {
-                        MembershipHeading(title: tr("Choose your household first"), symbol: "house")
-                        Text(tr("To subscribe or restore a purchase, sign in with your adult account and select your household. You can use the free planning tools without signing in."))
-                        NavigationLink(mtr("Open adult household setup")) {
-                            HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true)
-                        }.buttonStyle(PrimaryAction())
+                    if household.membershipSession == nil {
+                        householdEntry
                     } else if membership.failure {
                         MembershipHeading(title: mtr("Membership needs verification"), symbol: "arrow.clockwise")
                         Text(tr("Membership could not be verified. Your Free work is still available."))
                         Button(mtr("Check membership again")) { Task { await membership.retry() } }
                             .buttonStyle(PrimaryAction()).disabled(household.busy)
+                        freeButton.buttonStyle(MembershipReturnButtonStyle())
                     } else {
                         MembershipHeading(title: mtr("Your planning access"), symbol: "person.crop.circle")
                         ProgressView(mtr("Checking your household access…"))
-                    }
-                    if !household.configured {
-                        Button(mtr("Continue planning for free")) { dismiss() }
-                            .buttonStyle(PrimaryAction()).accessibilityIdentifier("membership.free")
-                    } else {
-                        Button(mtr("Continue planning for free")) { dismiss() }
-                            .buttonStyle(MembershipReturnButtonStyle()).accessibilityIdentifier("membership.free")
+                        freeButton.buttonStyle(MembershipReturnButtonStyle())
                     }
                     Divider()
                     MembershipFreeTools()
@@ -56,6 +56,40 @@ struct MembershipEntryView: View {
         }
         .workingSurface()
         .task { membership.bind(to: household) }
+    }
+
+    @ViewBuilder private var householdEntry: some View {
+        if household.configured && (household.identity != nil || household.emailOTPEnabled) {
+            Text(tr("Choose your household first")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
+            householdSetup(mtr("Open adult household setup")).buttonStyle(PrimaryAction())
+            freeButton.buttonStyle(MembershipReturnButtonStyle())
+            Text(mtr("Use the purchasing adult’s account and household to restore a purchase."))
+        } else {
+            Text(mtr("Free planning")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
+            freeButton.buttonStyle(PrimaryAction())
+            if household.configured {
+                householdSetup(mtr("Saved adult account options")).buttonStyle(MembershipReturnButtonStyle())
+                Text(mtr("Email sign-in is unavailable. To restore a purchase, use a purchasing adult account already saved on this iPhone."))
+            } else {
+                Text(mtr("Subscribing requires an adult account and a selected household. Household sign-in is unavailable on this iPhone."))
+                Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
+            }
+        }
+    }
+
+    private func householdSetup(_ title: String) -> some View {
+        NavigationLink(title) {
+            HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true)
+        }.accessibilityIdentifier("membership.accountOptions")
+    }
+
+    private var freeButton: some View {
+        Button(mtr("Continue planning for free"), action: continuePlanning)
+            .accessibilityIdentifier("membership.free")
+    }
+
+    private func continuePlanning() {
+        if let returnFromSettings { returnFromSettings() } else { dismiss() }
     }
 }
 

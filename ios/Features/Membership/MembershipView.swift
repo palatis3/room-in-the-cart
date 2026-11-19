@@ -60,7 +60,7 @@ struct MembershipLegalLinks: View {
 struct MembershipView: View {
     @ObservedObject var model: MembershipModel
     @ObservedObject var household: HouseholdModel
-    @Environment(\.dismiss) private var dismiss
+    let onContinuePlanning: () -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showingManage = false
     @State private var retryingDelivery = false
@@ -189,7 +189,7 @@ struct MembershipView: View {
     }
 
     private var returnButton: some View {
-        Button(model.hasPaidAccess ? mtr("Continue planning") : mtr("Continue planning for free")) { dismiss() }
+        Button(model.hasPaidAccess ? mtr("Continue planning") : mtr("Continue planning for free"), action: onContinuePlanning)
             .buttonStyle(MembershipReturnButtonStyle())
             .accessibilityIdentifier(model.hasPaidAccess ? "membership.continue" : "membership.free")
     }

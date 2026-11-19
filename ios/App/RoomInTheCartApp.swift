@@ -846,7 +846,10 @@ private struct SettingsButton: ViewModifier {
                 Button { presented = true } label: { Image(systemName: "gearshape").frame(minWidth: 44, minHeight: 44) }
                     .accessibilityLabel(tr("Settings")).accessibilityIdentifier("settings")
             }
-        }.sheet(isPresented: $presented) { NavigationStack { SettingsView() } }
+        }.sheet(isPresented: $presented) {
+            NavigationStack { SettingsView() }
+                .environment(\.returnFromMembershipSettings, { presented = false })
+        }
     }
 }
 extension View { func settingsButton() -> some View { modifier(SettingsButton()) } }
@@ -857,10 +860,11 @@ struct SettingsView: View {
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @AppStorage("appearance") private var appearance = "system"
     var body: some View {
         WorkingForm {
-            Section(tr("Appearance")) {
+            Section {
                 Picker(tr("Appearance"), selection: $appearance) {
                     Text(tr("System")).tag("system")
                     Text(tr("Light")).tag("light")
@@ -902,6 +906,7 @@ struct SettingsView: View {
             Section(tr("Development")) { NavigationLink(tr("Component gallery")) { ComponentGallery() } }
             #endif
         }.navigationTitle(tr("Settings"))
+            .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(tr("Done")) { dismiss() } } }
     }
 }
