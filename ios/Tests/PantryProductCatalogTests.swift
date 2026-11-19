@@ -19,12 +19,12 @@ final class PantryProductCatalogTests: XCTestCase {
         batch.candidates[0].perPack = "3"
         batch.candidates[0].packages = "1"
         let original = batch.candidates[0]
-        let captured = CapturedBarcode(symbology: "EAN13", value: "3017620422003")
+        let captured = CapturedBarcode(symbology: "EAN13", value: "0200000033149")
         let photo = ScannedSource(originalText: "", uncertainLines: [], originalImageData: Data([1]), referenceJPEG: Data(), barcodes: [captured])
         XCTAssertEqual(try batch.addPhoto(photo), 1)
         batch.candidates[1].included = false
         let before = batch.candidates
-        XCTAssertThrowsError(try batch.correctManualBarcode("03017620422003", for: original.id)) {
+        XCTAssertThrowsError(try batch.correctManualBarcode("00200000033149", for: original.id)) {
             guard case ProductBatchError.duplicateBarcode = $0 else { return XCTFail("Expected a duplicate barcode") }
         }
         XCTAssertThrowsError(try batch.correctManualBarcode(" ", for: original.id))
@@ -50,7 +50,7 @@ final class PantryProductCatalogTests: XCTestCase {
 
     func testCorrectingBarcodeDropsPreviousCatalogEvidenceAndKeepsManuallyEditedPackageValues() throws {
         var batch = PantryProductBatch(workspaceID: UUID())
-        let proposal = ProductCatalogProposal(barcode: "3017620422003", name: "Suggested jar", quantity: "375 g", fetched: Date(), modified: nil)
+        let proposal = ProductCatalogProposal(barcode: "0200000033149", name: "Suggested jar", quantity: "375 g", fetched: Date(), modified: nil)
         XCTAssertTrue(try batch.addManual(name: "", code: proposal.barcode))
         let id = batch.candidates[0].id
         batch.candidates[0].catalog = proposal
