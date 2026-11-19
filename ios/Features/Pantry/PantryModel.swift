@@ -223,9 +223,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         let current = generation
         let bytes = try await repository.withSharedReceiptScope { try await $0.openReceipt(item, scope: $1, now: clock()) }
         guard current == generation, permitsReceiptSource else { throw PantryReceiptError.stale }
-        let kind: ReceiptDocumentKind
-        switch item.descriptor.kind { case .pdf: kind = .pdf; case .image: kind = .image; case .text: kind = .text }
-        return .init(data: bytes, kind: kind)
+        return .shared(bytes, descriptor: item.descriptor)
     }
 
     func finishSharedReceipt(_ item: SharedReceiptItem, committed: Bool) async throws {

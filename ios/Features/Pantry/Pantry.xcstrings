@@ -4503,18 +4503,18 @@
         }
       }
     },
-    "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 text file up to 10 MB. PDFs can have up to 20 pages.": {
+    "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 or UTF-16 text file up to 10 MB. PDFs can have up to 20 pages.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 text file up to 10 MB. PDFs can have up to 20 pages."
+            "value": "Use a PDF, JPEG, PNG, HEIC photo or UTF-8 or UTF-16 text file up to 10 MB. PDFs can have up to 20 pages."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige un PDF, una foto JPEG, PNG o HEIC, o un archivo de texto UTF-8 de hasta 10 MB. El PDF puede tener hasta 20 páginas."
+            "value": "Elige un PDF, una foto JPEG, PNG o HEIC, o un archivo de texto UTF-8 o UTF-16 de hasta 10 MB. El PDF puede tener hasta 20 páginas."
           }
         }
       }

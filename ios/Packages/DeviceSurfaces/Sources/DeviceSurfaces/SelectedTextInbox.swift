@@ -153,6 +153,35 @@ public actor SelectedTextInbox {
     }
 }
 
+/// A byte-order hint is needed only when the provider declares UTF-16 without a byte-order mark.
+public enum UnmarkedUTF16: String, Codable, Sendable {
+    case littleEndian, bigEndian
+
+    public init?(data: Data, type: UTType?) {
+        guard !Self.hasMark(data) else { return nil }
+        if type == .utf16PlainText { self = .littleEndian }
+        else if type == .utf16ExternalPlainText { self = .bigEndian }
+        else { return nil }
+    }
+
+    fileprivate static func hasMark(_ bytes: Data) -> Bool {
+        bytes.starts(with: [0xff, 0xfe]) || bytes.starts(with: [0xfe, 0xff])
+    }
+}
+
+public func decodePlainTextFile(_ bytes: Data, unmarkedUTF16: UnmarkedUTF16? = nil) -> String? {
+    let hasMark = UnmarkedUTF16.hasMark(bytes)
+    if hasMark || unmarkedUTF16 != nil {
+        // Foundation can discard a trailing half of a UTF-16 code unit.
+        guard bytes.count.isMultiple(of: 2) else { return nil }
+        let encoding: String.Encoding
+        if hasMark { encoding = .utf16 }
+        else { encoding = unmarkedUTF16 == .littleEndian ? .utf16LittleEndian : .utf16BigEndian }
+        return String(data: bytes, encoding: encoding)
+    }
+    return String(data: bytes, encoding: .utf8)
+}
+
 extension SelectedTextInbox {
     public static func loadSelectedText(from item: NSExtensionItem,
                                         completion: @escaping @Sendable (Result<String, SurfaceError>) -> Void) {
@@ -192,18 +221,9 @@ extension SelectedTextInbox {
     public static func decodePlainText(_ bytes: Data, type: UTType) throws -> String {
         guard type.conforms(to: .plainText) else { throw SurfaceError.unsupported }
         guard bytes.count <= maximumEntryBytes else { throw SurfaceError.capacity }
-        let hasUTF16Mark = bytes.starts(with: [0xFF, 0xFE]) || bytes.starts(with: [0xFE, 0xFF])
-        let text: String?
-        if hasUTF16Mark || type == .utf16ExternalPlainText || type == .utf16PlainText {
-            // Foundation can silently discard a trailing half of a UTF-16 code unit.
-            guard bytes.count.isMultiple(of: 2) else { throw SurfaceError.invalid }
-            let encoding: String.Encoding = !hasUTF16Mark && type == .utf16PlainText ? .utf16LittleEndian : .utf16
-            text = String(data: bytes, encoding: encoding)
-        } else {
-            let payload = bytes.starts(with: [0xEF, 0xBB, 0xBF]) ? bytes.dropFirst(3) : bytes[...]
-            text = String(data: payload, encoding: .utf8)
-        }
-        guard let text, text.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.inverted) != nil, !text.contains("\0") else { throw SurfaceError.invalid }
+        guard let text = decodePlainTextFile(bytes, unmarkedUTF16: UnmarkedUTF16(data: bytes, type: type)),
+              text.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.inverted) != nil,
+              !text.contains("\0") else { throw SurfaceError.invalid }
         guard fitsEnvelope(original: text) else { throw SurfaceError.capacity }
         return text
     }

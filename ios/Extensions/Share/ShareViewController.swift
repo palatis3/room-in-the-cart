@@ -31,8 +31,7 @@ final class ShareViewController: UIViewController {
             else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) { type = .image }
             else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier),
                     provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
-                type = provider.registeredTypeIdentifiers.compactMap { UTType($0) }
-                    .first { $0.conforms(to: .plainText) } ?? .plainText
+                type = .plainText
             } else { type = nil }
             if let type {
                 loadReceipt(provider, type: type, generation: expected)
@@ -85,7 +84,9 @@ final class ShareViewController: UIViewController {
             }
         }
     }
-    private func loadReceipt(_ provider: NSItemProvider, type: UTType, generation expected: UUID) {
+    private func loadReceipt(_ provider: NSItemProvider, type requested: UTType, generation expected: UUID) {
+        let type = requested == .plainText ? provider.registeredTypeIdentifiers.compactMap { UTType($0) }
+            .first { $0.conforms(to: .plainText) } ?? .plainText : requested
         let kind: SharedReceiptDescriptor.Kind = type == .pdf ? .pdf : type.conforms(to: .plainText) ? .text : .image
         provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { [weak self] url, _ in
             let result = Result { () throws -> Data in
@@ -103,6 +104,7 @@ final class ShareViewController: UIViewController {
 
 @MainActor private final class ShareComposerModel: ObservableObject {
     @Published var receiptData: Data?
+    private var receiptType: UTType?
     var receiptKind: SharedReceiptDescriptor.Kind = .text
     var fileForReceiptReview: Data? { original.isEmpty ? receiptData : nil }
     @Published var link: SharedCaptureEnvelope?
@@ -138,6 +140,7 @@ final class ShareViewController: UIViewController {
             let bytes = try result.get()
             receiptData = bytes
             receiptKind = kind
+            receiptType = type
             if let type, type.conforms(to: .plainText),
                let text = try? SelectedTextInbox.decodePlainText(bytes, type: type),
                (try? StagedListImport.validateSourceText(text, maximumLines: SelectedTextInbox.maximumLines)) != nil {
@@ -158,7 +161,7 @@ final class ShareViewController: UIViewController {
                 #else
                 inbox = try IOSSurfaceContainers.sharedCaptures()
                 #endif
-                let saved = try await inbox.stageReceipt(data, kind: kind, id: operationID, now: Date())
+                let saved = try await inbox.stageReceipt(data, kind: kind, id: operationID, now: Date(), type: receiptType)
                 guard saved.disposition == .pending else { throw SurfaceError.stale }
                 onSaved?()
             } catch {
