@@ -174,6 +174,9 @@ private struct VoicePantryRow {
                     }
                     if dateOnly {
                         dateSection
+                    } else if remainingReply == nil && !rows.isEmpty && rows.allSatisfy({ $0.mode == .skip }) {
+                        Text(pantryText("No pantry changes selected."))
+                            .accessibilityIdentifier("pantry.voiceStatus")
                     } else {
                         Button(pantryText("Preview pantry changes")) { Task { await prepare() } }.buttonStyle(PrimaryAction())
                             .disabled(!readyToReview)
@@ -185,6 +188,7 @@ private struct VoicePantryRow {
             }
         }
         .navigationTitle(pantryText(startingLot == nil ? "Talk or type" : "Record use"))
+        .toolbar(.hidden, for: .tabBar)
         .privacySensitive()
         .keyboardDoneAction(visible: editing, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { editing = false }
         .toolbar {

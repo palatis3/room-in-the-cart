@@ -135,11 +135,15 @@ import XCTest
         XCTAssertTrue(unsure.waitForExistence(timeout: 6), app.debugDescription)
         XCTAssertEqual(unsure.label, spanish ? "No lo sé" : "Not sure")
         unsure.tap()
-        tap(app.buttons["pantry.voicePreview"])
-        XCTAssertTrue(element("pantry.voiceStatus").waitForExistence(timeout: 8))
+        let unchanged = element("pantry.voiceStatus")
+        reveal(unchanged)
+        XCTAssertEqual(unchanged.label, spanish ? "No seleccionaste ningún cambio para la despensa." : "No pantry changes selected.")
+        XCTAssertFalse(app.buttons["pantry.voicePreview"].exists)
         XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
+        XCTAssertFalse(app.tabBars.firstMatch.isHittable)
         tap(app.buttons["pantry.voiceCancel"])
         assertLot(id, contains: spanish ? "3 unidades" : "3 units")
+        XCTAssertTrue(app.tabBars.firstMatch.isHittable)
 
         let about = spanish ? "Me queda como media botella de kétchup" : "I have about half a bottle of ketchup left"
         enterCommand(about)
