@@ -278,11 +278,25 @@ struct LedgerQuantityFields: View {
     @Binding var amount: String
     @Binding var unit: UnitOfMeasure
     var amountFocus: (binding: FocusState<String?>.Binding, id: String)? = nil
-    var amountLabel: String = ledgerText("Amount, unknown if blank")
-    var body: some View {
-        let field = TextField(amountLabel, text: $amount).keyboardType(.numbersAndPunctuation)
+    var amountLabel: String? = nil
+
+    @ViewBuilder private var amountField: some View {
+        let title = amountLabel ?? ledgerText("Amount, unknown if blank")
+        let field = TextField(title, text: $amount, prompt: amountLabel == nil ? nil : Text(verbatim: "—"))
+            .keyboardType(.numbersAndPunctuation)
         if let amountFocus { field.focused(amountFocus.binding, equals: amountFocus.id) }
         else { field }
+    }
+
+    var body: some View {
+        if let amountLabel {
+            LabeledContent {
+                amountField.multilineTextAlignment(.trailing)
+                    .accessibilityLabel(Text(verbatim: amountLabel))
+            } label: {
+                Text(verbatim: amountLabel).accessibilityHidden(true)
+            }
+        } else { amountField }
         Picker(ledgerText("Unit"), selection: $unit) {
             ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
         }

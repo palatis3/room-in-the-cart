@@ -42,6 +42,10 @@ struct TonightRecipeReview: View {
     private var authorized: Bool {
         identity != nil && currentIdentity() == identity && ledger.sourceWorkspaceID == origin
     }
+    private var replacedRecipe: MealTemplate? {
+        guard let original, template.map(original.mealTemplates.contains) != true else { return nil }
+        return original.mealTemplates.first
+    }
     var body: some View {
         ScrollViewReader { scroll in form(scroll) }
     }
@@ -61,12 +65,12 @@ struct TonightRecipeReview: View {
                             ForEach(candidate.ingredients) { ingredient in LabeledContent(ingredient.name, value: ledgerQuantity(ingredient.quantity)) }
                             if let template, original?.mealTemplates.contains(template) == true {
                                 Text(tonightText("Saving updates this recipe in your library."))
+                            } else if let replacedRecipe {
+                                Text(String(format: tonightText("Saving replaces “%@” as your Free reusable dinner. Previously chosen dinners and imported recipes keep their saved details."), replacedRecipe.title))
                             } else {
-                                Text(tonightText(original?.mealTemplates.isEmpty == false ?
-                                    "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged." :
-                                    "Saving creates your Free reusable dinner. It does not start a pickup or add groceries."))
+                                Text(tonightText("Saving creates your Free reusable dinner. It does not start a pickup or add groceries."))
                             }
-                            Button(tonightText("Save reviewed recipe")) { Task { await save(candidate) } }.buttonStyle(PrimaryAction())
+                            Button(tonightText(replacedRecipe == nil ? "Save reviewed recipe" : "Replace recipe")) { Task { await save(candidate) } }.buttonStyle(PrimaryAction())
                                 .disabled(busy || ledger.hasPendingSave).accessibilityIdentifier("tonight.recipe.save")
                             Button(tonightText("Keep editing")) { self.candidate = nil }.disabled(busy)
                         }
@@ -81,7 +85,15 @@ struct TonightRecipeReview: View {
                         }
                         Section(tonightText("Recipe")) {
                             TextField(ledgerText("Dinner title"), text: $title).accessibilityIdentifier("tonight.recipe.title")
-                            TextField(ledgerText("Servings"), text: $servings).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("tonight.recipe.servings")
+                            LabeledContent {
+                                TextField(ledgerText("Servings"), text: $servings, prompt: Text(verbatim: "—"))
+                                    .keyboardType(.numbersAndPunctuation)
+                                    .multilineTextAlignment(.trailing)
+                                    .accessibilityLabel(ledgerText("Servings"))
+                                    .accessibilityIdentifier("tonight.recipe.servings")
+                            } label: {
+                                Text(ledgerText("Servings")).accessibilityHidden(true)
+                            }
                             TextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes).keyboardType(.numberPad)
                             ForEach($ingredients) { $ingredient in
                                 TextField(tonightText("Ingredient"), text: $ingredient.name).accessibilityIdentifier("tonight.recipe.ingredient")
@@ -116,7 +128,11 @@ struct TonightRecipeReview: View {
                         Button(tonightText("Review recipe facts")) { review(scroll) }.accessibilityIdentifier("tonight.recipe.review")
                     }
                     if let error { Text(error) }
-                    LedgerSaveStatus(model: ledger)
+                    if ledger.saving || ledger.hasPendingSave || ledger.error != nil {
+                        LedgerSaveStatus(model: ledger, showsLastSave: false)
+                    } else {
+                        Text(ledgerText("Local to this iPhone")).font(.footnote)
+                    }
                 }.disabled(busy)
             }
         }.navigationTitle(tonightText("Review a recipe"))
