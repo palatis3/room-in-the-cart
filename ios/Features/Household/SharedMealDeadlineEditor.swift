@@ -31,7 +31,6 @@ private struct SharedMealDeadlinePicker: View {
     @Environment(\.locale) private var locale
     @State private var zoneID: String
     @State private var selected: Date?
-    @State private var search = ""
 
     init(meal: SharedMeal, save: @escaping (SharedMealDeadline) -> Void) {
         self.meal = meal; self.save = save
@@ -60,13 +59,7 @@ private struct SharedMealDeadlinePicker: View {
     var body: some View {
         WorkingForm {
             LabeledContent(sharedRecoveryText("Scheduled day"), value: sharedMealScheduleText(meal.day, locale: locale))
-            NavigationLink {
-                List(zones, id: \.self) { zone in
-                    ZoneRow(zone: zone, selected: zone == zoneID) { changeZone(zone) }
-                }
-                .searchable(text: $search)
-                .navigationTitle(sharedRecoveryText("Scheduled time zone"))
-            } label: {
+            NavigationLink(value: Destination.timeZone) {
                 LabeledContent(sharedRecoveryText("Scheduled time zone"), value: zoneID)
             }.accessibilityIdentifier("sharedMeal.deadlineZone")
             if let interval {
@@ -92,16 +85,15 @@ private struct SharedMealDeadlinePicker: View {
                     .accessibilityIdentifier("sharedMeal.useDeadline")
             } else { Text(sharedRecoveryText("This date does not occur in the selected time zone.")) }
         }
+        .navigationDestination(for: Destination.self) { _ in
+            ScheduledTimeZoneList(selected: zoneID, choose: changeZone)
+        }
         .navigationTitle(sharedRecoveryText("Meal deadline"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
     }
 
-    private var zones: [String] {
-        Set(TimeZone.knownTimeZoneIdentifiers.filter { $0.contains("/") } + ["UTC",zoneID]).sorted().filter {
-            search.isEmpty || $0.localizedCaseInsensitiveContains(search)
-        }
-    }
+    private enum Destination: Hashable { case timeZone }
 
     private func changeZone(_ zone: String) {
         guard zoneID != zone else { return }
@@ -117,16 +109,33 @@ private struct SharedMealDeadlinePicker: View {
         }.filter { $0 < interval.end }
         return Array(Set(times)).sorted()
     }
+}
 
-    private struct ZoneRow: View {
-        let zone: String
-        let selected: Bool
-        let choose: () -> Void
-        @Environment(\.dismiss) private var dismiss
-        var body: some View {
-            Button { choose(); dismiss() } label: {
-                if selected { Label(zone, systemImage: "checkmark") } else { Text(verbatim: zone) }
+private struct ScheduledTimeZoneList: View {
+    let selected: String
+    let choose: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var search = ""
+
+    private static let standardZones = Set(TimeZone.knownTimeZoneIdentifiers.filter { $0.contains("/") } + ["UTC"]).sorted()
+
+    private var zones: [String] {
+        let standard = Self.standardZones
+        let available = standard.contains(selected) ? standard : (standard + [selected]).sorted()
+        return search.isEmpty ? available : available.filter { $0.localizedCaseInsensitiveContains(search) }
+    }
+
+    var body: some View {
+        List(zones, id: \.self) { zone in
+            Button {
+                choose(zone)
+                dismiss()
+            } label: {
+                if selected == zone { Label(zone, systemImage: "checkmark") }
+                else { Text(verbatim: zone) }
             }
         }
+        .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always))
+        .navigationTitle(sharedRecoveryText("Scheduled time zone"))
     }
 }

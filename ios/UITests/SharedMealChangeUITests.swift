@@ -119,6 +119,14 @@ import XCTest
         assertElementContains("sharedMeal.deadlinePreview", "November 1, 2026")
         XCTAssertTrue(preview.label.contains("1:30"))
         XCTAssertTrue(preview.label.contains("America/New_York (UTC−04:00)"))
+        tap(element("sharedMeal.deadlineZone"))
+        XCTAssertTrue(app.navigationBars["Scheduled time zone"].waitForExistence(timeout: 8))
+        let zoneSearch = app.searchFields.firstMatch
+        if !zoneSearch.exists { app.swipeDown() }
+        tap(zoneSearch)
+        zoneSearch.typeText("America/New_York")
+        tap(app.buttons["America/New_York"])
+        assertElementContains("sharedMeal.deadlinePreview", "America/New_York (UTC−04:00)")
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Repeated clock time")).firstMatch)
         tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "UTC−05:00")).firstMatch)
         assertElementContains("sharedMeal.deadlinePreview", "1:30")
