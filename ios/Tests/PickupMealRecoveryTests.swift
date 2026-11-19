@@ -263,6 +263,63 @@ import LocalStore
         XCTAssertEqual(unresolved.steps, reviewed.steps)
     }
 
+    func testMovedDinnerCanFulfillOnlyItsOriginalWrapHoldAndEditedQuantityCannotReuseIt() async throws {
+        let f = try await fixture(canonical: true, usableWraps: 12)
+        let shopID = try XCTUnwrap(f.ledger.shop?.id)
+        let movedDay = try MealDay(year: 2026, month: 11, day: 13, timeZoneIdentifier: "America/New_York")
+        let moved = await f.ledger.editShop(key: "move-only-the-date", shopID: shopID) {
+            try $0.scheduleMeal(occurrenceID: f.wednesday, day: movedDay, at: self.now)
+        }
+        XCTAssertTrue(moved)
+        let session = PantryCookSession(ledger: f.ledger, pickup: f.model, authorize: { true })
+        let before = try await session.load(shopID: shopID, mealID: f.wednesday)
+        XCTAssertEqual(before.meal.scheduledDay, movedDay)
+        let row = try XCTUnwrap(before.meal.ingredientContributionIDs.first)
+        let wraps = try XCTUnwrap(before.inventory.lots.first { $0.name == "Wraps" })
+        let claim = try XCTUnwrap(before.inventory.reservations.first { $0.foodID == wraps.foodID && $0.amount?.amount == q(4).amount })
+        XCTAssertEqual(before.inventory.availability.lots.first { $0.id == wraps.id }?.free?.amount, .zero)
+        func draft(_ context: PantryCookSession.Context) throws -> CookCompletionDraft {
+            let batch = try XCTUnwrap(context.inventory.lots.first { $0.id == wraps.id })
+            return CookCompletionDraft(inventoryID: context.inventory.state.workspaceID, inventoryRevision: context.inventory.state.revision,
+                ledgerID: context.ledgerID, shop: context.shop, meal: context.meal, cookedAt: now, servingsMade: q(4).amount,
+                parts: [.init(contributionID: row, use: .lot(id: batch.id, revision: batch.revision, amount: q(4)))], leftovers: [])
+        }
+        let review = try await session.review(draft(before))
+        XCTAssertEqual(review.reservations.map(\.id), [claim.id])
+        try await session.apply(review)
+        try await session.apply(review)
+        let after = try await session.load(shopID: shopID, mealID: f.wednesday)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == wraps.id }?.count.quantity?.amount, q(8).amount)
+        XCTAssertEqual(after.inventory.reservations.filter { $0.id != claim.id }, before.inventory.reservations.filter { $0.id != claim.id })
+        let movedAgain = await f.ledger.editShop(key: "move-after-cooking", shopID: shopID) {
+            try $0.scheduleMeal(occurrenceID: f.wednesday, day: nil, at: self.now)
+        }
+        XCTAssertTrue(movedAgain)
+        let renamed = await f.ledger.editShop(key: "change-the-cooked-meal", shopID: shopID) {
+            try $0.updateMeal(occurrenceID: f.wednesday, title: "Different dinner", notes: before.meal.notes, at: self.now)
+        }
+        XCTAssertTrue(renamed)
+        do { _ = try await session.reviewUndo(shopID: shopID, mealID: f.wednesday); XCTFail("Changed dinner accepted") }
+        catch PantryCookPort.Failure.changed {}
+        let restoredTitle = await f.ledger.editShop(key: "restore-the-cooked-meal", shopID: shopID) {
+            try $0.updateMeal(occurrenceID: f.wednesday, title: before.meal.title, notes: before.meal.notes, at: self.now)
+        }
+        XCTAssertTrue(restoredTitle)
+        let undo = try await session.reviewUndo(shopID: shopID, mealID: f.wednesday)
+        try await session.applyUndo(undo)
+        let changed = await f.ledger.editShop(key: "edit-the-contribution", shopID: shopID) {
+            try $0.updateContribution(contributionID: row, quantity: self.q(5), notes: "Changed quantity", at: self.now)
+        }
+        XCTAssertTrue(changed)
+        let edited = try await session.load(shopID: shopID, mealID: f.wednesday)
+        do {
+            _ = try await session.review(draft(edited))
+            XCTFail("An edited contribution cannot spend its earlier checkout reservation")
+        } catch {
+            XCTAssertEqual(error as? InventoryError, .invalid("cookUseExceedsAvailable"))
+        }
+    }
+
     func testCookingReplacementConsumesBeansOnceAndUndoRestoresOnlyItsOwnReservation() async throws {
         let f = try await fixture(canonical: true)
         let shop = try XCTUnwrap(f.ledger.shop)

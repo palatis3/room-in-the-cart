@@ -29,7 +29,7 @@ struct PantryCookRecord: Codable, Equatable {
             return nil
         })
         let outputs = Set(draft.leftovers.map(\.id))
-        guard draft.shopID == shopID, draft.meal.removedAt == nil, draft.inventoryRevision >= 0,
+        guard draft.shopID == shopID, draft.meal.removedAt == nil, draft.hasValidIngredientSnapshot, draft.inventoryRevision >= 0,
               draft.servingsMade > .zero, draft.cookedAt.timeIntervalSinceReferenceDate.isFinite,
               draft.parts.count <= 500, draft.leftovers.count <= 20, Set(draft.parts.map(\.id)).count == draft.parts.count,
               Set(draft.parts.map(\.contributionID)) == Set(draft.ingredientRowIDs),
@@ -76,8 +76,10 @@ struct PantryCookRecord: Codable, Equatable {
         let recovery: PickupRecoveryMealDefinition?
 
         func matches(_ draft: CookCompletionDraft) -> Bool {
-            draft.meal == meal && draft.recoveredMeal == recovery?.meal &&
-                draft.ledgerID == ledgerID && draft.inventoryID == inventory.state.workspaceID
+            guard draft.recoveredMeal == recovery?.meal, draft.ledgerID == ledgerID,
+                  draft.inventoryID == inventory.state.workspaceID else { return false }
+            if draft.recoveredMeal != nil { return draft.meal == meal }
+            return draft.meal.matchesIgnoringScheduledDay(meal)
         }
         var title: String { recovery?.meal.title ?? meal.title }
         var servings: Rational { recovery?.meal.servings ?? meal.servings }
@@ -98,6 +100,35 @@ struct PantryCookRecord: Codable, Equatable {
     func apply(_ review: CookCompletion.Review) async throws {
         try await pickup.cookCompletionPort(ledger: ledger, authorize: authorize).apply(review)
         if authorize() { await pickup.refreshPantryStock() }
+    }
+}
+
+private extension MealOccurrence {
+    func matchesIgnoringScheduledDay(_ other: Self) -> Bool {
+        var rescheduled = self
+        rescheduled.scheduledDay = other.scheduledDay
+        return rescheduled == other
+    }
+}
+
+private extension PickupCheckoutMealSource {
+    /// Moving a dinner keeps its holds. Match each food to the sealed checkout before
+    /// crediting it, so editing or dropping one ingredient cannot spend its old hold.
+    func claimableContributions(for meal: MealOccurrence, in live: ShoppingLedger, ledgerID: UUID,
+                                planning: DinnerPlanningState) -> Set<UUID> {
+        guard ledgerWorkspaceID == ledgerID, shop.id == live.id,
+              let sealed = shop.mealOccurrences.first(where: { $0.id == meal.id }),
+              sealed.matchesIgnoringScheduledDay(meal) else { return [] }
+        let originals = Dictionary(uniqueKeysWithValues: shop.contributions.map { ($0.id, $0) })
+        let current = Dictionary(uniqueKeysWithValues: live.contributions.map { ($0.id, $0) })
+        let originalLinks = Dictionary(grouping: shop.allocations, by: \.demandContributionID)
+        let currentLinks = Dictionary(grouping: live.allocations, by: \.demandContributionID)
+        let originalPortions = Dictionary(grouping: bindings, by: \.contributionID)
+        let currentPortions = Dictionary(grouping: planning.portionBindings, by: \.contributionID)
+        return Set(meal.ingredientContributionIDs.filter { id in
+            guard let row = current[id], row.removedAt == nil, row.source == .meal(occurrenceID: meal.id) else { return false }
+            return originals[id] == row && originalLinks[id] == currentLinks[id] && originalPortions[id] == currentPortions[id]
+        })
     }
 }
 
@@ -159,7 +190,9 @@ struct PantryCookRecord: Codable, Equatable {
             completedRecord: completedRecord, asOf: now, preferences: workspace.dinnerPlanning.privateMealPreferences, recovery: recovery)
         var owned: [UUID: Set<UUID>] = [:]
         var sourceNeeds: [UUID: StockNeed] = [:]
-        if recovery != nil || (journey.mealSource?.ledgerWorkspaceID == ledger.workspaceID && journey.mealSource?.shop.mealOccurrences.contains(meal) == true) {
+        let originalContributions = journey.mealSource?.claimableContributions(for: meal, in: shop, ledgerID: ledger.workspaceID,
+                                                                               planning: workspace.dinnerPlanning) ?? []
+        if recovery != nil || !originalContributions.isEmpty {
             let sources = try await store.list().map(PantryLegacyMigration.SourceHead.init)
             guard authorize() else { throw Failure.unavailable }
             let plan = try PantryLegacyMigration.map(originID: store.workspaceID, heads: sources,
@@ -172,7 +205,7 @@ struct PantryCookRecord: Codable, Equatable {
             } else {
                 bindings = journey.needDetails.compactMap { detail in
                     guard detail.sourceOccurrenceID == mealID, let row = detail.sourceContributionID,
-                          meal.ingredientContributionIDs.contains(row) else { return nil }
+                          originalContributions.contains(row) else { return nil }
                     return (row, detail.id)
                 }
             }

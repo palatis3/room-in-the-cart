@@ -132,8 +132,8 @@ import CoreDomain
                 }
             } else {
                 let contributions = Dictionary(uniqueKeysWithValues: loaded.shop.contributions.filter { $0.removedAt == nil }.map { ($0.id, $0) })
-                loadedIngredients = try loaded.meal.ingredientContributionIDs.map { id in
-                    guard let row = contributions[id] else { throw Failure.stale }
+                loadedIngredients = try CookCompletionDraft.activeIngredientIDs(for: loaded.meal, in: loaded.shop).map { id in
+                    guard let row = contributions[id], row.source == .meal(occurrenceID: loaded.meal.id) else { throw Failure.stale }
                     return Ingredient(id: id, name: row.productName, planned: row.quantity, exclusions: row.exclusions)
                 }
             }

@@ -74,6 +74,47 @@ import LocalStore
         model.leftoverChoice = .none
     }
 
+    func testRemovedShoppingContributionKeepsRemainingIngredientCookableThroughRetryAndUndo() async throws {
+        let f = try await fixture(), editor = f.editor
+        let meal = try XCTUnwrap(editor.context?.meal)
+        let kept = meal.ingredientContributionIDs[0], removed = meal.ingredientContributionIDs[1]
+        let changed = await f.ledger.editShop(key: "remove-salt", shopID: f.shop) {
+            try $0.removeContribution(contributionID: removed, at: f.now)
+        }
+        XCTAssertTrue(changed)
+        await editor.reload()
+        XCTAssertEqual(editor.ingredients.map(\.id), [kept])
+        guard editor.ingredients.count == 1 else { return }
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        editor.ingredients[0].parts[0].use = .measured
+        editor.ingredients[0].parts[0].relation = .ingredient
+        editor.ingredients[0].parts[0].lotID = f.lots[0]
+        editor.ingredients[0].parts[0].amount = "1"
+        editor.leftoverChoice = .recorded
+        editor.addLeftover()
+        editor.leftovers[0].portions = "2"
+        await editor.prepareReview()
+        let review = try XCTUnwrap(editor.review)
+        XCTAssertEqual(review.draft.meal.ingredientContributionIDs, [kept, removed])
+        XCTAssertEqual(review.draft.ingredientRowIDs, [kept])
+        await editor.confirm()
+        try await f.session.apply(review)
+        await editor.reload()
+        let after = try XCTUnwrap(editor.context)
+        XCTAssertEqual(after.completed, review.draft)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(3))
+        let leftover = try XCTUnwrap(review.draft.leftovers.first?.id)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == leftover }?.count.quantity?.amount, try Rational(2))
+        await editor.prepareUndo()
+        await editor.confirmUndo()
+        let undone = try XCTUnwrap(editor.context)
+        XCTAssertNil(undone.completed)
+        XCTAssertEqual(undone.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(4))
+        XCTAssertEqual(undone.inventory.lots.first { $0.id == leftover }?.count.quantity?.amount, .zero)
+        XCTAssertEqual(editor.ingredients.map(\.id), [kept])
+    }
+
     func testChangingMeasuredBatchPreservesGramsAndDeductsTheExactAmountFromKilograms() async throws {
         let f = try await fixture(firstUnit: .gram, secondUnit: .kilogram)
         let editor = f.editor
