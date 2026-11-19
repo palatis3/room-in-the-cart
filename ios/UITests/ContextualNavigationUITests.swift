@@ -429,7 +429,7 @@ import UIKit
         saveFacts()
 
         openFacts()
-        replaceRetailerField("ledgerBranch", with: "East Market")
+        replaceRetailerField(element("ledgerBranch"), with: "East Market")
         tap(element("ledgerReviewFacts"))
         assertText("West Market"); assertText("Retailer preview: $37.20")
         assertText("East Market"); assertText("Fees: Unknown")
@@ -521,7 +521,7 @@ import UIKit
         let done = app.buttons["Done"]
         enterCheckoutTerms([("Store", "Market"), ("Branch", "West branch"),
                             ("Pickup or delivery slot", "Tuesday 5 PM")], above: done)
-        replaceRetailerField("Source of these prices", with: "West checkout", above: done)
+        replaceRetailerField(app.textFields["Source of these prices"], with: "West checkout", above: done)
         let save = app.buttons["Save and evaluate checkout"]
         func saveInclusiveTotal(_ total: String) {
             enableSwitch("Retailer total already includes all charges")
@@ -539,7 +539,7 @@ import UIKit
         assertText("Saved checkout result")
 
         for _ in 0..<4 where !app.textFields["Branch"].isHittable { scrollContent(upward: false) }
-        replaceRetailerField("Branch", with: "East")
+        replaceRetailerField(app.textFields["Branch"], with: "East")
         revealContent(save)
         XCTAssertFalse(save.isEnabled)
         tap(app.buttons["Replace pricing after review"])
@@ -1012,8 +1012,7 @@ import UIKit
         XCTAssertEqual(header.value as? String, "Expanded")
     }
 
-    private func replaceRetailerField(_ id: String, with text: String, above inputBar: XCUIElement? = nil) {
-        let field = element(id)
+    private func replaceRetailerField(_ field: XCUIElement, with text: String, above inputBar: XCUIElement? = nil) {
         revealContent(field, above: inputBar)
         field.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
@@ -1025,7 +1024,7 @@ import UIKit
         app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
         // A focused empty field can expose its shortened placeholder as its AX value.
         let emptyPresentation = field.value as? String ?? ""
-        XCTContext.runActivity(named: "Replace \(id) after deletion displayed \(String(reflecting: emptyPresentation))") { _ in
+        XCTContext.runActivity(named: "Replace \(field.label) after deletion displayed \(String(reflecting: emptyPresentation))") { _ in
             app.typeText(text)
             XCTAssertEqual(field.value as? String, text)
         }
