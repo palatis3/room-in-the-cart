@@ -138,7 +138,7 @@ struct PantryReceiptDocuments: View {
             }
         }
         .privacySensitive()
-        .navigationTitle(pantryText("Read a receipt file"))
+        .navigationTitle(document == nil ? pantryText("Read a receipt file") : pantryText("Select receipt lines"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(pantryText("Close")) { cancel(); dismiss() }

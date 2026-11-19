@@ -467,7 +467,7 @@ struct ReceiptPhotoShortcuts: View {
     @ViewBuilder private var imageButtons: some View {
         Button { start = .camera } label: { sourceButton("Take a photo", symbol: "camera") }
             .accessibilityIdentifier("receipt.takePhoto")
-        Button { pickingScreenshot = true } label: { sourceButton("Choose receipt screenshot", symbol: "photo") }
+        Button { pickingScreenshot = true } label: { sourceButton("Choose photo or screenshot", symbol: "photo") }
             .accessibilityIdentifier("receipt.chooseScreenshot")
     }
 
@@ -611,7 +611,7 @@ private struct ReceiptSectionCapture: View {
                 }
             }
             if start != .camera {
-                Button(captureText(start == .sections ? "Choose next section from Photos" : "Choose receipt screenshot")) {
+                Button(captureText(start == .sections ? "Choose next section from Photos" : "Choose photo or screenshot")) {
                     index = draft.sections.count; picker = true
                 }.accessibilityIdentifier("receipt.openSelectedPhoto")
             }

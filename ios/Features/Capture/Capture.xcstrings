@@ -209,18 +209,18 @@
         }
       }
     },
-    "Choose receipt screenshot": {
+    "Choose photo or screenshot": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose receipt screenshot"
+            "value": "Choose photo or screenshot"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elegir una captura del recibo"
+            "value": "Elegir foto o captura de pantalla"
           }
         }
       }
