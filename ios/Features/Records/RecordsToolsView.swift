@@ -75,6 +75,7 @@ struct RecordsToolsView: View {
                     recipePageButton
                     manualRecipeButton
                     recipeFileButton
+                    recipeFileHelp
                 }
             } else {
                 currentSources
@@ -330,6 +331,9 @@ struct RecordsToolsView: View {
         Button(recordsText("Import a recipe link")) { model.beginImport(.recipePage) }
             .accessibilityIdentifier("records.recipeLink")
     }
+    private var recipeFileHelp: some View {
+        Text(recordsText("Choose a Paprika recipe collection (.paprikarecipes), Recipe JSON-LD, or a saved draft. Review and edit recipes before saving. For large Paprika libraries, export one category at a time.")).font(.footnote).foregroundStyle(.secondary)
+    }
     private var recipeFileButton: some View {
         Button(recordsText("Choose a recipe or draft file…")) { chooseImportFile(recipes: true) }
             .accessibilityIdentifier("records.chooseRecipeFile")
@@ -342,8 +346,7 @@ struct RecordsToolsView: View {
             recipePageButton
             recipeFileButton
             manualRecipeButton
-            Text(recordsText("Recipe files may contain a Recipe, an array, or a graph. Original ingredient and yield text are preserved."))
-                .font(.footnote).foregroundStyle(.secondary)
+            recipeFileHelp
         }
     }
     private func reviewSection(_ review: RecoveryReview) -> some View {
@@ -595,7 +598,7 @@ struct RecordsToolsView: View {
         case .staleReview: return recordsText("Your local copies changed during review. Select the file again before importing.")
         case .exportSelectionChanged: return recordsText("Your selection changed. Review the selected records and source references, then prepare the file again.")
         case .deletionSelectionChanged: return recordsText("The selected records changed. Review them again before deleting.")
-        case .invalidRecipe: return recordsText("Check the recipe title, source URL and text. Use a supported Recipe JSON-LD file or enter it manually.")
+        case .invalidRecipe: return recordsText("Check the recipe title, source link and text. Choose a Paprika collection or Recipe JSON-LD file, or enter the recipe manually.")
         case .unavailable: return recordsText("The local operation could not finish. Your current records are still available. Try again.")
         }
     }

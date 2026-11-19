@@ -423,17 +423,21 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         busy = true; review = nil; reviewAuthorization = nil; recipeReport = nil; error = nil
         defer { busy = false }
         do {
-            let data = try await RecordsFileDocument.readPickedBytes(at: url)
+            let paprika = recipes && url.pathExtension.lowercased() == "paprikarecipes"
+            let maximum = paprika ? PaprikaCollection.maximumCollectionBytes : ArchiveCodec.maximumFileBytes
+            let data = try await RecordsFileDocument.readPickedBytes(at: url, maximum: maximum)
             try Task.checkCancellation()
             try requireAuthorization(authorize)
-            try ArchiveCodec.preflight(data)
-            if recipes {
+            if paprika {
+                try await stageRecipeDocument(data, paprika: true, authorize: authorize)
+            } else if recipes {
                 if let (report, records) = try RecipeDraftFile.readIfPresent(data) {
                     try await stageRecipeReview(report, records: records, authorize: authorize)
                 } else {
                     try await stageRecipeDocument(data, authorize: authorize)
                 }
             } else {
+                try ArchiveCodec.preflight(data)
                 guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
                     throw ArchiveError.malformed
                 }
@@ -465,7 +469,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         try await stageRecipeDocument(data, authorize: presentation.authorize)
     }
 
-    private func stageRecipeDocument(_ data: Data, authorize: @escaping Authorization) async throws {
+    private func stageRecipeDocument(_ data: Data, paprika: Bool = false, authorize: @escaping Authorization) async throws {
         let saved = try await registry.refreshList()
         try Task.checkCancellation()
         var correctedSources = Set<String>()
@@ -477,7 +481,9 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             return recipe
         }
         try requireAuthorization(authorize)
-        let report = try RecipeImporter.stage(data, existing: existing, existingSourceIDs: correctedSources)
+        let report = try await Self.readRecipeCollection(data, paprika: paprika, existing: existing, correctedSources: correctedSources)
+        try Task.checkCancellation()
+        try requireAuthorization(authorize)
         let records = try report.recipes.map { try $0.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0)) }
         if records.isEmpty {
             discardImportReview()
@@ -487,6 +493,12 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             return
         }
         try await stageRecipeReview(report, records: records, authorize: authorize)
+    }
+
+    private nonisolated static func readRecipeCollection(_ data: Data, paprika: Bool, existing: [ImportedRecipe],
+                                                         correctedSources: Set<String>) async throws -> RecipeImportReport {
+        if paprika { return try PaprikaCollection.stage(data, existing: existing, existingSourceIDs: correctedSources) }
+        return try RecipeImporter.stage(data, existing: existing, existingSourceIDs: correctedSources)
     }
 
     func stageManualRecipe(_ recipe: ImportedRecipe, from presentation: ImportPresentation) async throws {

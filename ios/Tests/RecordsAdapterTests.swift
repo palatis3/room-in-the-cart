@@ -899,6 +899,31 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertTrue(saved.isEmpty)
     }
 
+    @MainActor func testSelectedPaprikaCollectionReviewsBeforeSaveAndSupportsUndo() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        // A ZIP containing one gzipped fictional recipe.
+        let bytes = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAMEVc10iT4+2WwAAAFsAAAASAAAAc291cC5wYXByaWthcmVjaXBlH4sIAAAAAAAC/6tWykvMTVWyUgrOLy1Q0lEqTi0qy8xLLwaKGCkk5ZfnFAMFgQJFqSmZqXklIHGn1MQ8kGhKZlFqcklmfh5IMDgzNze1SE+pFgCUHxOJUQAAAFBLAQIUAxQAAAAAAMEVc10iT4+2WwAAAFsAAAASAAAAAAAAAAAAAACAAQAAAABzb3VwLnBhcHJpa2FyZWNpcGVQSwUGAAAAAAEAAQBAAAAAiwAAAAAA"))
+        let url = directory.appendingPathComponent("Family.paprikarecipes")
+        try bytes.write(to: url)
+        let entry = try XCTUnwrap(model.beginImport(.recipeFile))
+        await model.finishFileImport(.success(url), from: entry)
+        XCTAssertEqual(model.review?.rows.map { $0.record.title }, ["Soup"])
+        let beforeSave = try await registry.refreshList()
+        XCTAssertTrue(beforeSave.isEmpty)
+        model.cancelReview()
+        await model.importFile(url, recipes: true)
+        await model.applyReviewedImport()
+        let saved = try await registry.refreshList()
+        XCTAssertEqual(saved.map { $0.record.title }, ["Soup"])
+        await model.undoImport()
+        let afterUndo = try await registry.refreshList()
+        XCTAssertTrue(afterUndo.isEmpty)
+        XCTAssertEqual(try Data(contentsOf: url), bytes)
+    }
+
     @MainActor func testPartialRecipeCorrectionPreservesBatchAndOriginalSourceOnRetry() async throws {
         let directory = try temporaryDirectory()
         let manifest = directory.appendingPathComponent("manifest.json")

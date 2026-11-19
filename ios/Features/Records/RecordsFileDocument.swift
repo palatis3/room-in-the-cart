@@ -22,7 +22,7 @@ struct RecordsFileDocument: FileDocument {
     }
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
 
-    static func readPickedBytes(at url: URL) async throws -> Data {
+    static func readPickedBytes(at url: URL, maximum: Int = ArchiveCodec.maximumFileBytes) async throws -> Data {
         guard url.isFileURL else { throw ArchiveError.unavailable }
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
@@ -35,7 +35,7 @@ struct RecordsFileDocument: FileDocument {
                     continuation.resume(throwing: ArchiveError.unavailable)
                     return
                 }
-                continuation.resume(with: Result { try RecoveryRegistry.boundedRead(intent.url) })
+                continuation.resume(with: Result { try RecoveryRegistry.boundedRead(intent.url, maximum: maximum) })
             }
         }
     }
