@@ -537,6 +537,7 @@ import UIKit
         }
         saveInclusiveTotal("37.20")
         assertText("Saved checkout result")
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
 
         for _ in 0..<4 where !app.textFields["Branch"].isHittable { scrollContent(upward: false) }
         replaceRetailerField(app.textFields["Branch"], with: "East")
@@ -556,6 +557,7 @@ import UIKit
         tap(app.buttons["Save reviewed checkout"])
         XCTAssertTrue(app.navigationBars["Review checkout changes"].waitForNonExistence(timeout: 8))
         assertText("Saved checkout result"); assertText("$39.05")
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         openHistoryDisclosure("checkout.earlierQuotes", label: "Earlier checkout quotes")
         assertText("Market · West branch"); assertText("West checkout"); assertText("$37.20")
         capture("S05-original-and-reviewed-replacement-checkout")

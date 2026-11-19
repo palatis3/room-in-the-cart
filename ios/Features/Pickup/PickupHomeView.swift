@@ -500,6 +500,7 @@ struct PickupCheckoutView: View {
             guard let value = model.journey else { throw PickupCheckoutDraftError.staleSource }
             let submission = try reviewed.submission(for: value, workspaceID: model.sourceWorkspaceID)
             let review = QuoteReview(draft: reviewed, quote: submission.quote, cap: submission.cap)
+            field = nil
             if reviewed.changedRetailerTerms && reviewed.replacingPricing {
                 quoteReview = review
             } else {
