@@ -4,6 +4,7 @@ import UIKit
 struct PantryVoicePromptScope: Equatable {
     let adult: CapturePrivateIdentity
     let origin: UUID
+    let ledger: UUID
     let generation: UUID
 }
 
@@ -24,8 +25,12 @@ struct PantryVoicePromptScope: Equatable {
         return id
     }
 
+    func holdsPresentation(_ current: PantryVoicePromptScope?) -> Bool {
+        token != nil && self.phase != .background && scope == current
+    }
+
     func retains(_ current: PantryVoicePromptScope?, phase: ScenePhase) -> Bool {
-        phase == .inactive && token != nil && scope == current
+        phase == .inactive && holdsPresentation(current)
     }
 
     func allowsPantryAction(appActive: Bool) -> Bool {
@@ -54,7 +59,7 @@ struct PantryVoicePromptScope: Equatable {
 }
 
 struct PantryVoicePromptAccess {
-    let retainsInactiveScope: Bool
+    let holdsPresentation: @MainActor () -> Bool
     let begin: @MainActor () -> UUID?
     let ready: @MainActor (UUID) -> Void
     let cancel: @MainActor (UUID) -> Void

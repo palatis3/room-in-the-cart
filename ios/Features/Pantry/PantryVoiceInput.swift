@@ -69,7 +69,7 @@ struct PantryVoiceInput: View {
             if authorized() {
                 if let model = voice.capture {
                     PantryVoiceControls(model: model, start: start, cancel: voice.cancel, use: {
-                        guard scenePhase == .active, UIApplication.shared.isProtectedDataAvailable else { return }
+                        guard scenePhase == .active, UIApplication.shared.applicationState == .active, UIApplication.shared.isProtectedDataAvailable else { return }
                         voice.use(model, authorizedNow: authorized, onUse: onUse)
                     })
                 } else {
@@ -85,7 +85,7 @@ struct PantryVoiceInput: View {
     }
 
     private func start() {
-        guard scenePhase == .active, UIApplication.shared.isProtectedDataAvailable else { return }
+        guard scenePhase == .active, UIApplication.shared.applicationState == .active, UIApplication.shared.isProtectedDataAvailable else { return }
         voice.start(localeIdentifier: locale.identifier, authorized: authorized, prompt: prompt)
     }
 }

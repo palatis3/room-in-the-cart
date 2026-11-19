@@ -106,7 +106,9 @@ struct GroceryWindow: View {
                     .accessibilityHidden(retainsVoicePrompt)
                     .background { if retainsVoicePrompt { PantryVoicePrivacyCover() } }
             }
-        }.environment(\.pantryVoicePrompt, PantryVoicePromptAccess(retainsInactiveScope: retainsVoicePrompt, begin: {
+        }.environment(\.pantryVoicePrompt, PantryVoicePromptAccess(holdsPresentation: {
+            UIApplication.shared.applicationState != .background && voicePrompt.holdsPresentation(voicePromptScope)
+        }, begin: {
             guard let scope = voicePromptScope, pickup.pantryRouteAvailable else { return nil }
             return voicePrompt.begin(scope, phase: scenePhase)
         }, ready: { voicePrompt.recognitionReady($0, appActive: UIApplication.shared.applicationState == .active) },
@@ -209,8 +211,9 @@ struct GroceryWindow: View {
     private var voicePromptScope: PantryVoicePromptScope? {
         guard UIApplication.shared.isProtectedDataAvailable, !guardianChild.presented, household.projection?.grantId == nil,
               let adult = CapturePrivateIdentity.current(access: access, household: household),
-              let origin = pickup.sourceWorkspaceID, ledger.sourceWorkspaceID == origin, !ledger.hasPendingLedgerDeletion else { return nil }
-        return PantryVoicePromptScope(adult: adult, origin: origin, generation: pickup.privatePantryGeneration)
+              let origin = pickup.sourceWorkspaceID, let ledgerOrigin = ledger.sourceWorkspaceID, !ledger.hasPendingLedgerDeletion else { return nil }
+        // Inventory and the shopping ledger have independent database origins.
+        return PantryVoicePromptScope(adult: adult, origin: origin, ledger: ledgerOrigin, generation: pickup.privatePantryGeneration)
     }
 
     private var retainsVoicePrompt: Bool {
@@ -445,7 +448,7 @@ struct ShopView: View {
                             .font(.headline).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
-                    if pickup.pantryRouteAvailable || pantryVoicePrompt?.retainsInactiveScope == true {
+                    if pickup.pantryRouteAvailable || pantryVoicePrompt?.holdsPresentation() == true {
                         if #available(iOS 18, *), household.projection?.canBrowseHouseholdTonight != true {
                             NavigationLink { PantrySetupView(pickup: pickup, ledger: ledger) } label: { pantryLabel }
                                 .accessibilityIdentifier("shop.myPantry")

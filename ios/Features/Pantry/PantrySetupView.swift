@@ -28,13 +28,13 @@ struct PantrySetupView: View {
         let generation: UUID
     }
     private var scope: Scope? {
-        let retainingPrompt = scene == .inactive && pantryVoicePrompt?.retainsInactiveScope == true
+        let retainingPrompt = scene != .background && pantryVoicePrompt?.holdsPresentation() == true
         guard UIApplication.shared.isProtectedDataAvailable, child?.presented != true,
               pickup.pantryRouteAvailable || retainingPrompt,
               let identity = CapturePrivateIdentity.current(access: access, household: household),
               let stockID = pickup.sourceWorkspaceID, let ledgerID = ledger.sourceWorkspaceID else { return nil }
         let current = Scope(adult: identity, inventory: stockID, ledger: ledgerID, generation: pickup.privatePantryGeneration)
-        if scene == .active { return current }
+        if scene == .active && pickup.pantryRouteAvailable { return current }
         if retainingPrompt, case .ready(let original, _) = phase, original == current { return current }
         return nil
     }

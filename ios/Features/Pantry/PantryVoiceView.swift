@@ -72,7 +72,7 @@ private struct VoicePantryRow {
     @State private var message: String?
 
     private var currentIdentity: CapturePrivateIdentity? {
-        let retainingPrompt = identity != nil && scene == .inactive && pantryVoicePrompt?.retainsInactiveScope == true
+        let retainingPrompt = identity != nil && scene != .background && pantryVoicePrompt?.holdsPresentation() == true
         guard scene == .active || retainingPrompt, UIApplication.shared.isProtectedDataAvailable,
               child?.presented != true, household.projection?.grantId == nil,
               pickup.pantryRouteAvailable || retainingPrompt, pickup.sourceWorkspaceID == origin,
@@ -83,7 +83,7 @@ private struct VoicePantryRow {
         identity != nil && identity == currentIdentity && generation == pickup.privatePantryGeneration
     }
 
-    private var authorized: Bool { boundScope && scene == .active }
+    private var authorized: Bool { boundScope && scene == .active && UIApplication.shared.applicationState == .active }
     private var canRetainDictation: Bool {
         boundScope && model.canEdit && !working && startingLot == nil && basis == nil && saved == nil
     }
