@@ -41,8 +41,10 @@ async function currentLastCall(ctx:Context,shop:Shop) {
     LEFT JOIN ritc.pickup_last_call_recipient r ON (r.household_id,r.shop_id)=(c.household_id,c.shop_id) AND r.member_id=$3
     WHERE c.household_id=$1 AND c.shop_id=$2 AND c.authority_epoch=$4 AND ($5 OR (r.member_id IS NOT NULL AND ritc.shared_content_visible(c.household_id,$3,c.sender_id,'lastCall',c.shop_id,1,c.revision)))`,
     [ctx.householdId,shop.shop_id,ctx.member.member_id,shop.authority_epoch,managed])).rows[0];
+  const late=row?row.cutoff_at<=ctx.now:!managed&&
+    (await ctx.db.query('SELECT ritc.pickup_cutoff_passed($1,$2,$3,$4) AS late',[ctx.householdId,shop.shop_id,ctx.member.member_id,ctx.now])).rows[0]?.late;
   return {managed,revision:Number(row?.revision??0),...(row?{cutoffAt:row.cutoff_at.toISOString() as string}:{}),
-    responded:Boolean(row?.response),muted:Boolean(row?.muted),nextShopOnly:shop.phase!=='draft'||Boolean(row&&row.cutoff_at<=ctx.now)};
+    responded:Boolean(row?.response),muted:Boolean(row?.muted),nextShopOnly:shop.phase!=='draft'||Boolean(late)};
 }
 export async function lastCallRoute(repo:HouseholdRepository,ctx:Context,shop:Shop,tail:string,method:string,body:unknown) {
   if(!repo.options.adultLastCall)throw unavailable();
@@ -64,11 +66,14 @@ export async function lastCallRoute(repo:HouseholdRepository,ctx:Context,shop:Sh
       VALUES($1,$2,$3,$4,1,$5) ON CONFLICT(household_id,shop_id) DO UPDATE SET revision=ritc.pickup_last_call.revision+1,cutoff_at=excluded.cutoff_at`,
       [h,s,m,shop.authority_epoch,cutoff]);
     if(current.revision===0)await ctx.db.query(`INSERT INTO ritc.pickup_last_call_recipient(household_id,shop_id,member_id)
-      SELECT household_id,$2,member_id FROM ritc.member WHERE household_id=$1 AND member_id<>$3 AND state='active' AND kind='adult' AND can_contribute`,[h,s,m]);
+      SELECT household_id,$2,member_id FROM ritc.member WHERE household_id=$1 AND member_id<>$3 AND state='active' AND kind='adult' AND can_contribute
+      AND ritc.shared_content_visible(household_id,member_id,$3,'lastCall',$2,1,1)`,[h,s,m]);
   }else if(tail==='/last-call/response'){
     const input=respond.parse(body);
     if(current.managed||current.revision===0)throw unavailable();
     if(input.revision!==current.revision)throw stale();
+    if(input.action==='pass'&&current.nextShopOnly&&!current.responded)
+      throw new ServiceError(409,'last_call_ended','The last call has ended. A late request is for the next trip.');
     if(input.action==='pass')await ctx.db.query(`UPDATE ritc.pickup_last_call_recipient SET response=coalesce(response,'pass') WHERE household_id=$1 AND shop_id=$2 AND member_id=$3`,[h,s,m]);
     else await ctx.db.query('UPDATE ritc.pickup_last_call_recipient SET muted=$4 WHERE household_id=$1 AND shop_id=$2 AND member_id=$3',[h,s,m,input.action==='mute']);
   }else throw unavailable();
@@ -80,7 +85,7 @@ export async function respondWithRequest(ctx:Context,shop:Shop) {
   if(ctx.member.kind!=='adult'||shop.shopper_id===ctx.member.member_id)return false;
   const row=(await ctx.db.query(`UPDATE ritc.pickup_last_call_recipient r SET response='sent'
     FROM ritc.pickup_last_call c WHERE (c.household_id,c.shop_id)=(r.household_id,r.shop_id)
-    AND r.household_id=$1 AND r.shop_id=$2 AND r.member_id=$3 AND c.authority_epoch=$4 AND ritc.shared_content_visible(c.household_id,$3,c.sender_id,'lastCall',c.shop_id,1,c.revision) RETURNING c.cutoff_at<=$5 AS late`,
+    AND r.household_id=$1 AND r.shop_id=$2 AND r.member_id=$3 AND c.authority_epoch=$4 RETURNING c.cutoff_at<=$5 AS late`,
     [ctx.householdId,shop.shop_id,ctx.member.member_id,shop.authority_epoch,ctx.now])).rows[0];
   return row?.late===true;
 }
@@ -160,7 +165,7 @@ export async function productReferenceRoute(repo:HouseholdRepository,ctx:Context
     else {
       await ctx.db.query(`INSERT INTO ritc.moderation_case(case_id,household_id,reporter_id,author_id,source_kind,source_id,source_revision,source_field,reason,created_at,expires_at)
         VALUES($1,$2,$3,$4,'productReference',$5,$6,'reference',$7,$8,$9)`,[receipt,h,viewer,request.author_id,row!.publication_id,version,input.reason,ctx.now,expires]);
-      await ctx.db.query(`UPDATE ritc.adult_product_reference SET reported=true,
+      await ctx.db.query(`UPDATE ritc.adult_product_reference SET reported=true,media_review_id=gen_random_uuid(),media_reviewed_at=NULL,media_reviewed_by=NULL,
         media_status=CASE WHEN media_status='approved' THEN 'pending' ELSE media_status END WHERE household_id=$1 AND request_id=$2`,[h,id]);
     }
     const status=input.action==='block'?'blocked':'received';
@@ -182,6 +187,9 @@ export async function productReferenceRoute(repo:HouseholdRepository,ctx:Context
   const r=publication.reference;
   if(r.crop&&!repo.options.adultProductReferenceMedia)throw unavailable();
   await checkPublishingMember(ctx);
+  const sharing=(await ctx.db.query(`SELECT ritc.shared_content_visible($1,$2,$3,'productReference',$4,1,1)
+    AND ritc.shared_content_visible($1,$3,$2,'productReference',$4,1,1) AS allowed`,[h,shop.shopper_id,viewer,id])).rows[0];
+  if(!sharing?.allowed)throw unavailable();
   reviewSharedWording(r.description,r.brand??null,r.size??null);
   if(r.crop){
     const uploads=(await ctx.db.query('SELECT count(*)::int AS n FROM ritc.adult_product_reference WHERE household_id=$1 AND author_id=$2 AND request_id<>$3 AND pixels IS NOT NULL AND expires_at>$4',[h,viewer,id,ctx.now])).rows[0];
@@ -191,7 +199,7 @@ export async function productReferenceRoute(repo:HouseholdRepository,ctx:Context
   await ctx.db.query(`INSERT INTO ritc.adult_product_reference(household_id,request_id,shop_id,author_id,recipient_id,authority_epoch,revision,
       publication_id,client_key,fingerprint,brand,package_size,barcode,description,crop_width,crop_height,pixels,media_status,expires_at,created_at)
     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
-    ON CONFLICT(household_id,request_id) DO UPDATE SET revision=excluded.revision,publication_id=excluded.publication_id,
+    ON CONFLICT(household_id,request_id) DO UPDATE SET revision=excluded.revision,publication_id=excluded.publication_id,media_review_id=excluded.media_review_id,
       client_key=excluded.client_key,fingerprint=excluded.fingerprint,brand=excluded.brand,package_size=excluded.package_size,
       barcode=excluded.barcode,description=excluded.description,crop_width=excluded.crop_width,crop_height=excluded.crop_height,
       pixels=excluded.pixels,media_status=excluded.media_status,expires_at=excluded.expires_at,created_at=excluded.created_at,reported=false,media_reviewed_at=NULL,media_reviewed_by=NULL`,

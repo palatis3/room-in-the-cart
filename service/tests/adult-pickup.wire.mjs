@@ -49,6 +49,13 @@ export function adultPickupTests({fixture,admin,repo}){
     assert.equal((await admin.query('SELECT count(*) AS n FROM ritc.pickup_last_call_recipient WHERE household_id=$1',[h])).rows[0].n,'2');
     await admin.query("UPDATE ritc.pickup_last_call SET cutoff_at=now()-interval '1 second' WHERE household_id=$1",[h]);
     assert.equal((await read('Alex')).nextShopOnly,true);
+    assert.equal(ok(await response(2,'pass')).responded,true);
+    const latePass=await http('Lee','POST',path+'/response',{revision:2,action:'pass'});
+    assert.equal(latePass.status,409);assert.equal(latePass.data.error.code,'last_call_ended');
+    assert.equal((await read('Lee')).responded,false);
+    await admin.query('INSERT INTO ritc.moderation_block(household_id,viewer_id,author_id) VALUES($1,$2,$3)',[h,actors.Lee.id,actors.Mia.id]);
+    const hidden=await read('Lee');assert.equal(hidden.revision,0);assert.equal(hidden.cutoffAt,undefined);
+    assert.equal(hidden.nextShopOnly,true);assert.equal((await send('Lee')).request.route,'next');
     assert.equal(ok(await http('Alex','GET','/bootstrap')).nextShopOnly,true);
     assert.equal(ok(await http('Alex','GET','/requests/pickups')).shops[0].nextShopOnly,true);
     const delivered=await send('Alex');
@@ -84,9 +91,9 @@ export function adultPickupTests({fixture,admin,repo}){
     const pending=await read('Mia');assert.equal(pending.headers.get('cache-control'),'no-store');
     assert.equal(ok(pending).reference.description,'Green cap, unsweetened');assert(!pending.data.reference.crop);
     const q=(await admin.query('SELECT * FROM ritc.product_media_queue()')).rows.find(r=>r.pixels.equals(Buffer.from(crop.pixels,'base64')));
-    assert(q?.publication_id);assert(!('household_id' in q));
+    assert(q?.review_id);assert(!('household_id' in q));
     assert.equal((await admin.query("SELECT has_function_privilege('ritc_app','ritc.product_media_queue()','EXECUTE') AS app")).rows[0].app,false);
-    assert.equal((await admin.query("SELECT ritc.product_media_resolve($1,'approved') AS ok",[q.publication_id])).rows[0].ok,true);
+    assert.equal((await admin.query("SELECT ritc.product_media_resolve($1,'approved') AS ok",[q.review_id])).rows[0].ok,true);
     assert.deepEqual(ok(await read('Mia')).reference.crop,crop);
     repo.options.adultProductReferenceMedia=false;
     assert(!ok(await read('Mia')).reference.crop);
@@ -95,7 +102,10 @@ export function adultPickupTests({fixture,admin,repo}){
     assert.deepEqual(ok(await post('Mia',report,'/moderation')),{status:'received'});
     assert.deepEqual(ok(await post('Mia',report,'/moderation')),{status:'received'});
     assert(!ok(await read('Mia')).reference);
-    assert.equal((await admin.query("SELECT ritc.product_media_resolve($1,'rejected') AS ok",[q.publication_id])).rows[0].ok,true);
+    const reported=(await admin.query('SELECT * FROM ritc.product_media_queue() WHERE reported')).rows[0];
+    assert(reported?.review_id);assert.notEqual(reported.review_id,q.review_id);
+    assert.equal((await admin.query("SELECT ritc.product_media_resolve($1,'approved') AS ok",[q.review_id])).rows[0].ok,false);
+    assert.equal((await admin.query("SELECT ritc.product_media_resolve($1,'rejected') AS ok",[reported.review_id])).rows[0].ok,true);
     assert.equal(ok(await read('Alex')).reference.mediaStatus,'rejected');
     assert(!ok(await read('Alex')).reference.crop);
     assert.equal((await admin.query('SELECT count(*)::int AS n FROM ritc.moderation_case WHERE household_id=$1',[f.h])).rows[0].n,1);
@@ -104,8 +114,16 @@ export function adultPickupTests({fixture,admin,repo}){
     assert.equal(ok(await post('Alex',removal,'/remove')).revision,2);
     assert.equal((await post('Alex',input)).status,409);
     assert.equal((await admin.query('SELECT pixels,description FROM ritc.adult_product_reference WHERE request_id=$1',[request.requestId])).rows[0].pixels,null);
-    assert(!(await admin.query('SELECT publication_id FROM ritc.product_media_queue() WHERE publication_id=$1',[q.publication_id])).rowCount);
+    assert(!(await admin.query('SELECT review_id FROM ritc.product_media_queue() WHERE review_id=$1',[q.review_id])).rowCount);
     assert.equal((await f.http('Jo','GET',path)).status,404);
+  });
+  run('excludes a pre-existing block from the original last-call audience',async f=>{
+    await admin.query('INSERT INTO ritc.moderation_block(household_id,viewer_id,author_id) VALUES($1,$2,$3)',[f.h,f.actors.Alex.id,f.actors.Mia.id]);
+    const path='/shops/'+f.shopId+'/last-call';
+    ok(await f.http('Mia','POST',path,{expectedRevision:0,authorityEpoch:1,cutoffAt:future(10)}));
+    assert.equal(ok(await f.http('Alex','GET',path)).revision,0);
+    await admin.query("UPDATE ritc.pickup_last_call SET cutoff_at=now()-interval '1 second' WHERE household_id=$1",[f.h]);
+    assert.equal((await f.send('Alex')).request.route,'current');
   });
   run('recovers a block receipt after the source disappears and denies an unrelated household adult',async f=>{
     const {post,read,input}=await product(f);
@@ -113,7 +131,12 @@ export function adultPickupTests({fixture,admin,repo}){
     assert.equal(approved.revision,1);
     const action={expectedRevision:1,action:'block',clientKey:randomUUID()};
     assert.equal((await post('Lee',action,'/moderation')).status,404);
+    const pending=(await admin.query('SELECT media_review_id FROM ritc.adult_product_reference WHERE household_id=$1',[f.h])).rows[0].media_review_id;
     assert.deepEqual(ok(await post('Mia',action,'/moderation')),{status:'blocked'});
+    assert.equal((await admin.query('SELECT ritc.product_media_pending($1) AS pending',[pending])).rows[0].pending,false);
+    assert.equal((await admin.query("SELECT ritc.product_media_resolve($1,'approved') AS saved",[pending])).rows[0].saved,false);
+    const remaining=ok(await read('Alex'));assert(!remaining.reference);
+    assert.equal((await post('Alex',{...input,expectedRevision:remaining.revision,clientKey:randomUUID()})).status,404);
     assert.equal((await read('Mia')).status,404);
     assert.deepEqual(ok(await post('Mia',action,'/moderation')),{status:'blocked'});
   });

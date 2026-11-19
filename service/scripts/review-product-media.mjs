@@ -25,6 +25,34 @@ export function reviewFrame({pixels,width,height,description},columns,rows){
   return frame;
 }
 
+// The expiry timer is independent of the database probe, including a stalled connection.
+// Losing the ticket closes the whole prompt so partially typed input cannot decide a later image.
+export async function reviewChoice({expiresAt,show,clear,ask,stillPending,pollMs=2000}){
+  if(expiresAt<=Date.now())return;
+  const controller=new AbortController();
+  let poll,expired,closed=false;
+  const close=()=>{
+    if(closed)return;
+    closed=true;
+    clearTimeout(poll);clearTimeout(expired);
+    controller.abort();clear();
+  };
+  const probe=async()=>{
+    try{
+      if(!await stillPending()){close();return;}
+    }catch{close();return;}
+    if(!closed)poll=setTimeout(probe,pollMs);
+  };
+  try{
+    expired=setTimeout(close,Math.max(0,expiresAt-Date.now()));
+    poll=setTimeout(probe,pollMs);
+    show();
+    const choice=await ask(controller.signal);
+    if(!closed&&expiresAt>Date.now())return choice;
+  }catch(error){if(!controller.signal.aborted)throw error;}
+  finally{close();}
+}
+
 async function review(){
   if(!process.stdin.isTTY||!process.stdout.isTTY)throw Error('Use an interactive true-color terminal without output capture.');
   const url=process.env.PRODUCT_MEDIA_REVIEW_DATABASE_URL;
@@ -43,13 +71,21 @@ async function review(){
     while(true){
       const row=(await pool.query('SELECT * FROM ritc.product_media_queue() LIMIT 1')).rows[0];
       if(!row)break;
-      screen.write('\x1b[2J\x1b[H'+reviewFrame(row,screen.columns,screen.rows));
-      screen.write('Expires '+row.expires_at.toISOString()+'\n');
-      const choice=(await rl.question('Type approve, reject or quit: ')).trim().toLowerCase();
-      if(choice==='quit')break;
+      const choice=await reviewChoice({
+        expiresAt:row.expires_at.getTime(),
+        show:()=>{
+          screen.write('\x1b[2J\x1b[H'+reviewFrame(row,screen.columns,screen.rows));
+          if(row.reported)screen.write('The recipient reported this image. Review it again.\n');
+          screen.write('Expires '+row.expires_at.toISOString()+'\n');
+        },
+        clear:()=>screen.write('\x1b[0m\x1b[2J\x1b[H'),
+        ask:async signal=>(await rl.question('Type approve, reject or quit: ',{signal})).trim().toLowerCase(),
+        stillPending:async()=>(await pool.query('SELECT ritc.product_media_pending($1) AS pending',[row.review_id])).rows[0]?.pending===true,
+      });
+      if(!choice||choice==='quit')break;
       if(choice!=='approve'&&choice!=='reject')continue;
       const result=(await pool.query('SELECT ritc.product_media_resolve($1,$2) AS saved',
-        [row.publication_id,choice==='approve'?'approved':'rejected'])).rows[0];
+        [row.review_id,choice==='approve'?'approved':'rejected'])).rows[0];
       if(!result?.saved)await rl.question('This publication changed or expired. Press Return to refresh.');
     }
   }finally{process.removeListener('exit',restore);restore();rl.close();await pool.end();}
