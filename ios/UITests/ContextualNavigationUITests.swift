@@ -250,7 +250,8 @@ import UIKit
     func testLargeTextKeepsLongNativePasteEditableAndReviewReachable() throws {
         let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "ReleaseLedger500", withExtension: "txt"))
         let fixture = try String(contentsOf: url, encoding: .utf8)
-        XCTAssertEqual(fixture.split(separator: "\n").count, 500)
+        let sourceLines = fixture.split(separator: "\n")
+        XCTAssertEqual(sourceLines.count, 500)
         UIPasteboard.general.string = fixture
 
         launch(reset: true, largestText: true)
@@ -344,8 +345,19 @@ import UIKit
         capture("S02-review-action-reachable-at-largest-text")
         let origin = app.coordinate(withNormalizedOffset: .zero)
         origin.withOffset(CGVector(dx: point.x - app.frame.minX, dy: point.y - app.frame.minY)).tap()
-        let previewAmount = app.textFields.matching(NSPredicate(format: "placeholderValue == %@", "Amount, unknown if blank")).firstMatch
-        XCTAssertTrue(previewAmount.waitForExistence(timeout: 8), "Tapping Review list must show an editable staged row")
+        let amountPrefix = "ledgerImportAmount-"
+        let importForm = app.collectionViews["ledgerImportForm"]
+        let mountedAmount = importForm.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", amountPrefix)).firstMatch
+        XCTAssertTrue(mountedAmount.waitForExistence(timeout: 8), "Tapping Review list must show an editable staged row")
+        // The Form mounts different rows depending on the Dynamic Type layout and scroll position.
+        let amountID = mountedAmount.identifier
+        let rowNumber = try XCTUnwrap(Int(amountID.dropFirst(amountPrefix.count)))
+        XCTAssertTrue((1...sourceLines.count).contains(rowNumber))
+        let originalLine = sourceLines[rowNumber - 1]
+        let originalAmount = String(try XCTUnwrap(originalLine.split(separator: " ").first))
+        let amount = importForm.textFields[amountID]
+        XCTAssertEqual(amount.value as? String, originalAmount)
+        XCTAssertTrue(importForm.staticTexts[String(originalLine)].exists)
         XCTAssertFalse(editor.exists)
         let commitActions = app.buttons.matching(identifier: "ledgerCommitImport")
         let commit = commitActions.firstMatch
@@ -356,6 +368,17 @@ import UIKit
         XCTAssertLessThanOrEqual(commit.frame.maxY, app.windows.firstMatch.frame.maxY)
         XCTAssertGreaterThanOrEqual(commit.frame.height, 44)
         capture("S02-editable-staged-preview-at-largest-text")
+        revealContent(amount, above: commit)
+        amount.tap()
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        app.typeText(originalAmount)
+        XCTAssertEqual(amount.value as? String, originalAmount + originalAmount)
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 5))
+        XCTAssertTrue(commit.isEnabled && commit.isHittable)
+        commit.tap()
+        XCTAssertTrue(navigation.waitForNonExistence(timeout: 20), "Adding the edited list must finish the review")
+        XCTAssertTrue(app.textFields["ledgerSearch"].waitForExistence(timeout: 8))
     }
 
     func testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch() {
