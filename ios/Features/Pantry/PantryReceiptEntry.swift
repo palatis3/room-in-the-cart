@@ -656,75 +656,9 @@ struct ReceiptTripDifferenceReview: View {
     }
     var body: some View {
         List {
-            Picker(captureText("Planned shop"), selection: Binding(get: { state.trip?.id }, set: { id in
-                state = .init(trip: trips.first { $0.id == id })
-            })) {
-                Text(captureText("Choose explicitly")).tag(nil as UUID?)
-                ForEach(trips) { trip in
-                    Text(trip.branch + " · " + trip.date.formatted(date: .abbreviated, time: .shortened) + " · " + String(trip.id.uuidString.suffix(6))).tag(Optional(trip.id))
-                }
-            }.accessibilityIdentifier("receipt.tripPicker")
+            tripPicker
             if let trip = state.trip, trips.contains(trip) {
-                Section {
-                    Text(captureText("Compare only the pages you have. Missing evidence does not establish a shortage or overcharge. This review changes neither inventory nor spending."))
-                }
-                if draft.lines.contains(where: { $0.documentLine?.stage == .order }) {
-                    Text(captureText("An order confirmation describes the plan. Use a purchase receipt or final invoice to compare what was charged."))
-                }
-                let suggested = suggestions(trip)
-                let suggestedIDs = Set(suggested.map(\.receiptLineID))
-                let unmatched = selectable.filter { state.links[$0.id] == nil && !suggestedIDs.contains($0.id) }
-                if !unmatched.isEmpty {
-                    Section(captureText("Receipt lines to review")) {
-                        ForEach(unmatched) { row in
-                            Button { editing = row } label: {
-                                VStack(alignment: .leading) {
-                                    Text(row.original)
-                                    if let candidate = candidate(row, trip: trip),
-                                       let planned = trip.lines.first(where: { $0.id == candidate }) {
-                                        Text(captureText("Previously linked product") + " · " + planned.name).font(.caption)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                let proposedPlans = Set(suggested.flatMap { $0.portions.keys })
-                let differences = trip.lines.filter { !proposedPlans.contains($0.id) && ReceiptTripLink.compare($0, with: state.links) != .matched }
-                if !differences.isEmpty {
-                    Section(captureText("Differences and unknowns")) {
-                        ForEach(differences) { planned in plannedRow(planned) }
-                    }
-                }
-                if !suggested.isEmpty {
-                    Section(captureText("Suggested exact matches")) {
-                        ForEach(selectable.filter { suggestedIDs.contains($0.id) }) { row in
-                            Button { editing = row } label: {
-                                VStack(alignment: .leading) {
-                                    Text(row.original)
-                                    if let id = candidate(row, trip: trip), let line = trip.lines.first(where: { $0.id == id }) {
-                                        Text(line.name + " · " + pantryQuantity(line.quantity)).font(.caption)
-                                    }
-                                }
-                            }
-                        }
-                        Button(captureText("Confirm these reviewed matches")) {
-                            for link in suggestions(trip) { state.links[link.receiptLineID] = link }
-                        }
-                    }
-                }
-                let matched = trip.lines.filter { ReceiptTripLink.compare($0, with: state.links) == .matched }
-                if !matched.isEmpty {
-                    DisclosureGroup(captureText("Confirmed matches") + " (" + String(matched.count) + ")") {
-                        ForEach(matched) { planned in plannedRow(planned) }
-                    }
-                }
-                let reviewed = selectable.filter { state.links[$0.id] != nil }
-                if !reviewed.isEmpty {
-                    DisclosureGroup(captureText("Edit reviewed receipt lines")) {
-                        ForEach(reviewed) { row in Button(row.original) { editing = row } }
-                    }
-                }
+                comparisonSections(for: trip)
             } else if state.trip != nil {
                 Text(captureText("This shop changed. Choose it again to compare the current plan."))
                 Button(captureText("Clear comparison")) { state = .init() }
@@ -735,16 +669,115 @@ struct ReceiptTripDifferenceReview: View {
                let trip = trips.first(where: { $0.id == source.id }) { state.trip = trip }
         }
         .navigationTitle(captureText("Receipt differences"))
-        .sheet(item: $editing) { row in
-            if let trip = state.trip, trips.contains(trip) {
-                NavigationStack {
-                    ReceiptTripAssignLine(row: row, trip: trip, existing: state.links[row.id],
-                        suggestion: candidate(row, trip: trip)) { match in
-                        guard trips.contains(trip), state.trip == trip else { return }
-                        state.links[row.id] = match
-                        if match == nil { state.leftUnresolved.insert(row.id) } else { state.leftUnresolved.remove(row.id) }
-                        editing = nil
+        .sheet(item: $editing) { row in assignment(for: row) }
+    }
+
+    private var tripPicker: some View {
+        let selection = Binding<UUID?>(get: { state.trip?.id }, set: { id in
+            state = .init(trip: trips.first { $0.id == id })
+        })
+        return Picker(captureText("Planned shop"), selection: selection) {
+            Text(captureText("Choose explicitly")).tag(nil as UUID?)
+            ForEach(trips) { trip in
+                let date = trip.date.formatted(date: .abbreviated, time: .shortened)
+                let label = [trip.branch, date, String(trip.id.uuidString.suffix(6))].joined(separator: " · ")
+                Text(label).tag(Optional(trip.id))
+            }
+        }
+        .accessibilityIdentifier("receipt.tripPicker")
+    }
+
+    @ViewBuilder private func comparisonSections(for trip: ReceiptTripPlan) -> some View {
+        let suggested = suggestions(trip)
+        let suggestedIDs = Set(suggested.map(\.receiptLineID))
+        let proposedPlans = Set(suggested.flatMap { $0.portions.keys })
+        Section {
+            Text(captureText("Compare only the pages you have. Missing evidence does not establish a shortage or overcharge. This review changes neither inventory nor spending."))
+        }
+        if draft.lines.contains(where: { $0.documentLine?.stage == .order }) {
+            Text(captureText("An order confirmation describes the plan. Use a purchase receipt or final invoice to compare what was charged."))
+        }
+        unmatchedSection(trip, suggestedIDs: suggestedIDs)
+        differencesSection(trip, proposedPlans: proposedPlans)
+        suggestionsSection(trip, suggestedIDs: suggestedIDs)
+        matchedSection(trip)
+        reviewedSection
+    }
+
+    @ViewBuilder private func unmatchedSection(_ trip: ReceiptTripPlan, suggestedIDs: Set<UUID>) -> some View {
+        let unmatched = selectable.filter { state.links[$0.id] == nil && !suggestedIDs.contains($0.id) }
+        if !unmatched.isEmpty {
+            Section(captureText("Receipt lines to review")) {
+                ForEach(unmatched) { row in
+                    Button { editing = row } label: {
+                        VStack(alignment: .leading) {
+                            Text(row.original)
+                            if let id = candidate(row, trip: trip), let planned = trip.lines.first(where: { $0.id == id }) {
+                                Text(captureText("Previously linked product") + " · " + planned.name).font(.caption)
+                            }
+                        }
                     }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func differencesSection(_ trip: ReceiptTripPlan, proposedPlans: Set<UUID>) -> some View {
+        let differences = trip.lines.filter { !proposedPlans.contains($0.id) && ReceiptTripLink.compare($0, with: state.links) != .matched }
+        if !differences.isEmpty {
+            Section(captureText("Differences and unknowns")) {
+                ForEach(differences) { planned in plannedRow(planned) }
+            }
+        }
+    }
+
+    @ViewBuilder private func suggestionsSection(_ trip: ReceiptTripPlan, suggestedIDs: Set<UUID>) -> some View {
+        if !suggestedIDs.isEmpty {
+            Section(captureText("Suggested exact matches")) {
+                ForEach(selectable.filter { suggestedIDs.contains($0.id) }) { row in
+                    Button { editing = row } label: {
+                        VStack(alignment: .leading) {
+                            Text(row.original)
+                            if let id = candidate(row, trip: trip), let line = trip.lines.first(where: { $0.id == id }) {
+                                Text(line.name + " · " + pantryQuantity(line.quantity)).font(.caption)
+                            }
+                        }
+                    }
+                }
+                Button(captureText("Confirm these reviewed matches")) {
+                    for link in suggestions(trip) { state.links[link.receiptLineID] = link }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func matchedSection(_ trip: ReceiptTripPlan) -> some View {
+        let matched = trip.lines.filter { ReceiptTripLink.compare($0, with: state.links) == .matched }
+        if !matched.isEmpty {
+            DisclosureGroup(captureText("Confirmed matches") + " (" + String(matched.count) + ")") {
+                ForEach(matched) { planned in plannedRow(planned) }
+            }
+        }
+    }
+
+    @ViewBuilder private var reviewedSection: some View {
+        let reviewed = selectable.filter { state.links[$0.id] != nil }
+        if !reviewed.isEmpty {
+            DisclosureGroup(captureText("Edit reviewed receipt lines")) {
+                ForEach(reviewed) { row in Button(row.original) { editing = row } }
+            }
+        }
+    }
+
+    @ViewBuilder private func assignment(for row: ReceiptImportDraft.Line) -> some View {
+        if let trip = state.trip, trips.contains(trip) {
+            NavigationStack {
+                ReceiptTripAssignLine(row: row, trip: trip, existing: state.links[row.id],
+                    suggestion: candidate(row, trip: trip)) { match in
+                    guard trips.contains(trip), state.trip == trip else { return }
+                    state.links[row.id] = match
+                    if match == nil { state.leftUnresolved.insert(row.id) } else { state.leftUnresolved.remove(row.id) }
+                    editing = nil
                 }
             }
         }
@@ -831,6 +864,42 @@ private struct ReceiptTripAssignLine: View {
         guard entry.isEmpty || money != nil else { return nil }
         return .init(receiptLineID: row.id, printed: total, portions: portions, printedTotal: money)
     }
+    @ViewBuilder private var quantityAndPrice: some View {
+        TextField(captureText("Printed quantity"), text: $amount).focused($focus, equals: "amount")
+        if trip.countsPacks {
+            Text(captureText("Enter the number of comparable packs shown on the receipt."))
+        } else {
+            Picker(captureText("Printed unit"), selection: $unit) {
+                ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(pantryUnit(unit)).tag(unit) }
+            }
+        }
+        TextField(captureText("Printed line total in USD, if known"), text: $price).keyboardType(.decimalPad).focused($focus, equals: "price")
+    }
+
+    @ViewBuilder private var splitControls: some View {
+        Toggle(captureText("Split the quantity between two planned lines"), isOn: $split)
+        if split {
+            Picker(captureText("Second planned product"), selection: $secondary) {
+                Text(captureText("Choose explicitly")).tag(nil as UUID?)
+                ForEach(trip.lines.filter { $0.id != primary }) { line in Text(line.name + " · " + pantryQuantity(line.quantity)).tag(Optional(line.id)) }
+            }
+            TextField(captureText("Quantity for the second line"), text: $secondAmount).focused($focus, equals: "split")
+            Text(captureText("The rest goes to the first line. The price stays with the printed line."))
+        }
+    }
+
+    @ViewBuilder private var packConfirmation: some View {
+        if !selectedPacks.isEmpty || trip.countsPacks {
+            ForEach(selectedPacks) { line in
+                Text(line.name)
+                ForEach(Array((line.packages ?? []).enumerated()), id: \.offset) { _, pack in
+                    Text(String(pack.count) + " × " + pack.amountPerPack.description + " " + pantryUnit(pack.unit))
+                }
+            }
+            Toggle(captureText("I checked the pack sizes and converted the receipt quantity to the chosen unit."), isOn: $checkedPacks)
+        }
+    }
+
     var body: some View {
         Form {
             Text(row.original).font(.headline)
@@ -839,30 +908,9 @@ private struct ReceiptTripAssignLine: View {
                 Text(captureText("Choose explicitly")).tag(nil as UUID?)
                 ForEach(trip.lines) { line in Text(line.name + " · " + pantryQuantity(line.quantity)).tag(Optional(line.id)) }
             }
-            TextField(captureText("Printed quantity"), text: $amount).focused($focus, equals: "amount")
-            if trip.countsPacks { Text(captureText("Enter the number of comparable packs shown on the receipt.")) }
-            else { Picker(captureText("Printed unit"), selection: $unit) {
-                ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(pantryUnit(unit)).tag(unit) }
-            } }
-            TextField(captureText("Printed line total in USD, if known"), text: $price).keyboardType(.decimalPad).focused($focus, equals: "price")
-            Toggle(captureText("Split the quantity between two planned lines"), isOn: $split)
-            if split {
-                Picker(captureText("Second planned product"), selection: $secondary) {
-                    Text(captureText("Choose explicitly")).tag(nil as UUID?)
-                    ForEach(trip.lines.filter { $0.id != primary }) { line in Text(line.name + " · " + pantryQuantity(line.quantity)).tag(Optional(line.id)) }
-                }
-                TextField(captureText("Quantity for the second line"), text: $secondAmount).focused($focus, equals: "split")
-                Text(captureText("The rest goes to the first line. The price stays with the printed line."))
-            }
-            if !selectedPacks.isEmpty || trip.countsPacks {
-                ForEach(selectedPacks) { line in
-                    Text(line.name)
-                    ForEach(Array((line.packages ?? []).enumerated()), id: \.offset) { _, pack in
-                        Text(String(pack.count) + " × " + pack.amountPerPack.description + " " + pantryUnit(pack.unit))
-                    }
-                }
-                Toggle(captureText("I checked the pack sizes and converted the receipt quantity to the chosen unit."), isOn: $checkedPacks)
-            }
+            quantityAndPrice
+            splitControls
+            packConfirmation
             Button(captureText("Confirm product and amount")) { if let proposed { accept(proposed) } }.disabled(proposed == nil)
             Button(captureText("Leave line unresolved")) { accept(nil) }
         }

@@ -89,64 +89,112 @@ struct QuickGroceryAtHome: View {
         }
     }
 
-    @ViewBuilder private func matchView(_ evidence: Evidence) -> some View {
+    private typealias Lot = PantryLiveStockProjection.Lot
+
+    private struct Matches {
+        let wording: String
+        let byProduct: [UUID: [Lot]]
+        let selected: UUID?
+    }
+
+    private func matches(in evidence: Evidence) -> Matches {
         let key = InventoryReceiptAlias.key(name)
-        let aliases = Set(evidence.aliases.filter { InventoryReceiptAlias.key($0.wording) == key }.map(\.foodID))
+        let aliases = evidence.aliases.filter { InventoryReceiptAlias.key($0.wording) == key }
         let lots = evidence.projection.lots
-        let matches = GroceryPantryCandidates(name: key, products: lots.map { ($0.current.foodID, $0.current.name) },
-                                             confirmedAliases: aliases)
+        let products = lots.map { (id: $0.current.foodID, name: $0.current.name) }
+        let matches = GroceryPantryCandidates(name: key, products: products, confirmedAliases: Set(aliases.map(\.foodID)))
         let possible = lots.filter { matches.possible.contains($0.current.foodID) }
-        let candidates = Dictionary(grouping: possible, by: { $0.current.foodID })
         let chosen = choice.flatMap { $0.wording == key ? $0.foodID : nil } ?? matches.unambiguous
-        if !possible.isEmpty {
+        return Matches(wording: key, byProduct: Dictionary(grouping: possible) { $0.current.foodID }, selected: chosen)
+    }
+
+    @ViewBuilder private func matchView(_ evidence: Evidence) -> some View {
+        let matches = matches(in: evidence)
+        if !matches.byProduct.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
-                if let chosen, let matches = candidates[chosen] {
-                    Text(quickGroceryText("Already at home?")).font(.subheadline.bold())
-                    let ordered = matches.sorted { ($0.current.confirmedAt, $0.id.uuidString) > ($1.current.confirmedAt, $1.id.uuidString) }
-                    ForEach(allBatches ? ordered : Array(ordered.prefix(1))) { lot in
-                        let label = pantryLocationName(lot.current.location)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(lot.current.name + " · " + label)
-                            Text(pantryText("Last quantity confirmation") + " · " + lot.current.confirmedAt.formatted(date: .abbreviated, time: .shortened))
-                            Text(pantryText("Available for other meals") + " · " + pantryQuantity(lot.free))
-                            Text(pantryText("Reserved") + " · " + pantryQuantity(lot.availability.held))
-                            if lot.current.count.quantity == nil { Text(pantryCount(lot.current.count)) }
-                            if lot.issues.isEmpty {
-                                ForEach((evidence.holds[lot.id] ?? []).prefix(2)) { claim in
-                                    Text([claim.name, claim.personal?.day?.iso8601].compactMap { $0 }.joined(separator: " · "))
-                                }
-                            }
-                            if !lot.issues.isEmpty || lot.free == nil {
-                                Text(pantryText("Availability needs review. Unknown food is not counted as free."))
-                            }
-                        }.font(.footnote).accessibilityElement(children: .combine)
-                        Button(quickGroceryText("View batch or check amount")) {
-                            guard authorize(), self.context.map(basis) == evidence.basis, let model = pickup.makePantryModel() else { return }
-                            batch = Batch(id: lot.id, generation: pickup.privatePantryGeneration, model: model, needsReview: !lot.issues.isEmpty)
-                        }.buttonStyle(.borderless).frame(minHeight: 44)
-                    }
-                    if matches.count > 1 {
-                        Button(quickGroceryText(allBatches ? "Show one batch" : "Show all matching batches")) {
-                            allBatches.toggle()
-                        }.buttonStyle(.borderless).frame(minHeight: 44)
-                    }
+                if let id = matches.selected, let lots = matches.byProduct[id] {
+                    batchRows(lots, evidence: evidence)
                 }
-                if chosen != nil {
+                if matches.selected != nil {
                     Button(quickGroceryText("Keep on list"), action: keepOnList)
                         .buttonStyle(.borderless).frame(minHeight: 44).disabled(addingDisabled)
                 }
-                if chosen == nil || candidates.count > 1 {
-                    DisclosureGroup(quickGroceryText("Choose a pantry product"), isExpanded: $expanded) {
-                        ForEach(candidates.keys.sorted { $0.uuidString < $1.uuidString }, id: \.self) { id in
-                            if let lot = candidates[id]?.first {
-                                Button(lot.current.name + " · " + pantryLocationName(lot.current.location) + " · " + String(id.uuidString.suffix(6))) {
-                                    choice = Choice(wording: key, foodID: id); expanded = false; allBatches = false
-                                }.buttonStyle(.borderless).frame(minHeight: 44)
-                            }
-                        }
-                    }
+                if matches.selected == nil || matches.byProduct.count > 1 {
+                    productPicker(matches)
                 }
             }.accessibilityIdentifier("quickGrocery.atHome")
+        }
+    }
+
+    @ViewBuilder private func batchRows(_ lots: [Lot], evidence: Evidence) -> some View {
+        let ordered = lots.sorted { lhs, rhs in
+            if lhs.current.confirmedAt == rhs.current.confirmedAt { return lhs.id.uuidString > rhs.id.uuidString }
+            return lhs.current.confirmedAt > rhs.current.confirmedAt
+        }
+        let visible = allBatches ? ordered : Array(ordered.prefix(1))
+        Text(quickGroceryText("Already at home?")).font(.subheadline.bold())
+        ForEach(visible) { lot in
+            QuickGroceryBatchRow(lot: lot, holds: evidence.holds[lot.id] ?? [],
+                                 open: { open(lot, reviewedBasis: evidence.basis) })
+        }
+        if lots.count > 1 {
+            Button(quickGroceryText(allBatches ? "Show one batch" : "Show all matching batches")) {
+                allBatches.toggle()
+            }.buttonStyle(.borderless).frame(minHeight: 44)
+        }
+    }
+
+    private func open(_ lot: Lot, reviewedBasis: Basis) {
+        guard authorize(), context.map(basis) == reviewedBasis, let model = pickup.makePantryModel() else { return }
+        batch = Batch(id: lot.id, generation: pickup.privatePantryGeneration, model: model, needsReview: !lot.issues.isEmpty)
+    }
+
+    private func productPicker(_ matches: Matches) -> some View {
+        let productIDs = matches.byProduct.keys.sorted { $0.uuidString < $1.uuidString }
+        return DisclosureGroup(quickGroceryText("Choose a pantry product"), isExpanded: $expanded) {
+            ForEach(productIDs, id: \.self) { id in
+                if let lot = matches.byProduct[id]?.first {
+                    let title = [lot.current.name, pantryLocationName(lot.current.location), String(id.uuidString.suffix(6))]
+                        .joined(separator: " · ")
+                    Button(title) {
+                        choice = Choice(wording: matches.wording, foodID: id)
+                        expanded = false
+                        allBatches = false
+                    }.buttonStyle(.borderless).frame(minHeight: 44)
+                }
+            }
+        }
+    }
+}
+
+private struct QuickGroceryBatchRow: View {
+    let lot: PantryLiveStockProjection.Lot
+    let holds: [InventoryReservation]
+    let open: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(lot.current.name + " · " + pantryLocationName(lot.current.location))
+                let confirmed = lot.current.confirmedAt.formatted(date: .abbreviated, time: .shortened)
+                Text(pantryText("Last quantity confirmation") + " · " + confirmed)
+                Text(pantryText("Available for other meals") + " · " + pantryQuantity(lot.free))
+                Text(pantryText("Reserved") + " · " + pantryQuantity(lot.availability.held))
+                if lot.current.count.quantity == nil { Text(pantryCount(lot.current.count)) }
+                if lot.issues.isEmpty { holdRows }
+                if !lot.issues.isEmpty || lot.free == nil {
+                    Text(pantryText("Availability needs review. Unknown food is not counted as free."))
+                }
+            }.font(.footnote).accessibilityElement(children: .combine)
+            Button(quickGroceryText("View batch or check amount"), action: open)
+                .buttonStyle(.borderless).frame(minHeight: 44)
+        }
+    }
+
+    private var holdRows: some View {
+        ForEach(holds.prefix(2)) { claim in
+            let label = [claim.name, claim.personal?.day?.iso8601].compactMap { $0 }.joined(separator: " · ")
+            Text(label)
         }
     }
 }

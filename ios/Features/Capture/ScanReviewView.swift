@@ -468,6 +468,39 @@ private struct ReceiptSectionCapture: View {
     @Environment(\.scenePhase) private var scene
 
     var body: some View {
+        captureContent
+            .privacySensitive()
+            .photosPicker(isPresented: $picker, selection: $item, matching: .images, preferredItemEncoding: .current)
+            .onChange(of: item) { _, selected in
+                guard let selected else { return }
+                read { guard let photo = try await selected.loadTransferable(type: ReceiptPhotoSelection.self) else { throw ReceiptDocumentFailure.unavailable }; return try photo.bytes }
+            }
+            .fullScreenCover(isPresented: $camera) {
+                CameraCaptureView(authorize: authorize, previousReceiptEdge: previousEdge) { result in
+                    camera = false
+                    switch result {
+                    case .success(let data): read { ReceiptDocumentBytes(data: data, kind: .image) }
+                    case .failure: error = captureText("The camera is unavailable. Choose a photo or type the lines instead.")
+                    case nil: break
+                    }
+                }.ignoresSafeArea()
+            }
+            .onChange(of: scene) { _, phase in if phase == .background { clear(); dismiss() } }
+            .onDisappear { if !camera && !picker { clear() } }
+            .task {
+                if !didStart, authorize() {
+                    didStart = true
+                    if start == .camera { openCamera(at: 0) }
+                    else if start == .screenshot, let initialPhoto { item = initialPhoto }
+                }
+                while !Task.isCancelled {
+                    guard authorize() else { clear(); dismiss(); return }
+                    try? await Task.sleep(for: .milliseconds(250))
+                }
+            }
+    }
+
+    private var captureContent: some View {
         VStack(spacing: 0) {
             if let review {
                 PantryReceiptDocuments(target: target, authorize: authorize, initialDocument: review, omittedLines: omitted,
@@ -475,88 +508,75 @@ private struct ReceiptSectionCapture: View {
                     if authorize() { reviewed(source) }
                 }
             } else {
-                Form {
-                    Text(captureText("Only the photo you take or choose is read on this iPhone. Choosing an iCloud photo may download it through Apple."))
-                    if start == .sections {
-                        Text(captureText("Capture from top to bottom. Include the last printed line again at the top of the next photo. Up to six sections, 10 MB per photo and 30 MB total."))
-                        ForEach(draft.sections.indices, id: \.self) { position in
-                            let section = draft.sections[position]
-                            Section(captureText("Section") + " " + String(position + 1)) {
-                                if let preview = section.preview, let image = UIImage(data: preview) {
-                                    Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 160)
-                                        .accessibilityLabel(captureText("Selected source photo"))
-                                }
-                                Text(section.page.lines.suffix(3).map(\.text).joined(separator: "\n")).textSelection(.enabled)
-                                Button(captureText("Retake this section")) { openCamera(at: position) }
-                                Button(captureText("Replace with a selected photo")) { index = position; picker = true }
-                                let overlaps = draft.likelyOverlaps(at: position)
-                                if !overlaps.isEmpty {
-                                    Text(captureText("These lines may repeat the previous photo. Keep both if they were separate printed purchases."))
-                                    Picker(captureText("Lines repeated from the previous section"), selection: Binding(
-                                        get: { draft.omittedPrefixes[position] ?? -1 },
-                                        set: { draft.resolve(at: position, omitting: $0) })) {
-                                        Text(captureText("Choose explicitly")).tag(-1)
-                                        Text(captureText("Keep all printed lines")).tag(0)
-                                        ForEach(overlaps, id: \.self) { count in
-                                            Text(captureText("Omit repeated lines") + " (" + String(count) + "): " +
-                                                 String(section.page.lines[count - 1].text.prefix(70))).tag(count)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if draft.sections.count < ReceiptSectionDraft.maximumSections {
-                        if start != .screenshot {
-                            Button(captureText(start == .sections ? "Photograph next section" : "Take a photo")) {
-                                openCamera(at: draft.sections.count)
-                            }
-                        }
-                        if start != .camera {
-                            Button(captureText(start == .sections ? "Choose next section from Photos" : "Choose receipt screenshot")) {
-                                index = draft.sections.count; picker = true
-                            }.accessibilityIdentifier("receipt.openSelectedPhoto")
-                        }
-                    }
-                    if !draft.sections.isEmpty {
-                        Button(captureText("Review receipt lines")) { beginReview() }
-                            .disabled(draft.hasUnresolvedOverlap).accessibilityIdentifier("receipt.sections.review")
-                    }
-                    if let error { Text(error).accessibilityIdentifier("receipt.sections.error") }
-                    if job != nil { ProgressView(captureText("Preparing source for review…")) }
-                }
-                .disabled(job != nil || !authorize())
-                .navigationTitle(captureText(start == .sections ? "Scan receipt sections" : "Receipt photo"))
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { clear(); dismiss() } } }
+                captureForm
             }
         }
-        .privacySensitive()
-        .photosPicker(isPresented: $picker, selection: $item, matching: .images, preferredItemEncoding: .current)
-        .onChange(of: item) { _, selected in
-            guard let selected else { return }
-            read { guard let photo = try await selected.loadTransferable(type: ReceiptPhotoSelection.self) else { throw ReceiptDocumentFailure.unavailable }; return try photo.bytes }
-        }
-        .fullScreenCover(isPresented: $camera) {
-            CameraCaptureView(authorize: authorize, previousReceiptEdge: previousEdge) { result in
-                camera = false
-                switch result {
-                case .success(let data): read { ReceiptDocumentBytes(data: data, kind: .image) }
-                case .failure: error = captureText("The camera is unavailable. Choose a photo or type the lines instead.")
-                case nil: break
+    }
+
+    private var captureForm: some View {
+        Form {
+            Text(captureText("Only the photo you take or choose is read on this iPhone. Choosing an iCloud photo may download it through Apple."))
+            if start == .sections {
+                Text(captureText("Capture from top to bottom. Include the last printed line again at the top of the next photo. Up to six sections, 10 MB per photo and 30 MB total."))
+                ForEach(draft.sections.indices, id: \.self) { position in
+                    photoSection(at: position)
                 }
-            }.ignoresSafeArea()
-        }
-        .onChange(of: scene) { _, phase in if phase == .background { clear(); dismiss() } }
-        .onDisappear { if !camera && !picker { clear() } }
-        .task {
-            if !didStart, authorize() {
-                didStart = true
-                if start == .camera { openCamera(at: 0) }
-                else if start == .screenshot, let initialPhoto { item = initialPhoto }
             }
-            while !Task.isCancelled {
-                guard authorize() else { clear(); dismiss(); return }
-                try? await Task.sleep(for: .milliseconds(250))
+            nextPhotoControls
+            if !draft.sections.isEmpty {
+                Button(captureText("Review receipt lines")) { beginReview() }
+                    .disabled(draft.hasUnresolvedOverlap).accessibilityIdentifier("receipt.sections.review")
+            }
+            if let error { Text(error).accessibilityIdentifier("receipt.sections.error") }
+            if job != nil { ProgressView(captureText("Preparing source for review…")) }
+        }
+        .disabled(job != nil || !authorize())
+        .navigationTitle(captureText(start == .sections ? "Scan receipt sections" : "Receipt photo"))
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { clear(); dismiss() } } }
+    }
+
+    private func photoSection(at position: Int) -> some View {
+        let section = draft.sections[position]
+        return Section(captureText("Section") + " " + String(position + 1)) {
+            if let preview = section.preview, let image = UIImage(data: preview) {
+                Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 160)
+                    .accessibilityLabel(captureText("Selected source photo"))
+            }
+            Text(section.page.lines.suffix(3).map(\.text).joined(separator: "\n")).textSelection(.enabled)
+            Button(captureText("Retake this section")) { openCamera(at: position) }
+            Button(captureText("Replace with a selected photo")) { index = position; picker = true }
+            overlapPicker(at: position, section: section)
+        }
+    }
+
+    @ViewBuilder private func overlapPicker(at position: Int, section: ReceiptSectionDraft.Section) -> some View {
+        let overlaps = draft.likelyOverlaps(at: position)
+        if !overlaps.isEmpty {
+            Text(captureText("These lines may repeat the previous photo. Keep both if they were separate printed purchases."))
+            Picker(captureText("Lines repeated from the previous section"), selection: Binding(
+                get: { draft.omittedPrefixes[position] ?? -1 },
+                set: { draft.resolve(at: position, omitting: $0) })) {
+                Text(captureText("Choose explicitly")).tag(-1)
+                Text(captureText("Keep all printed lines")).tag(0)
+                ForEach(overlaps, id: \.self) { count in
+                    Text(captureText("Omit repeated lines") + " (" + String(count) + "): " +
+                         String(section.page.lines[count - 1].text.prefix(70))).tag(count)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var nextPhotoControls: some View {
+        if draft.sections.count < ReceiptSectionDraft.maximumSections {
+            if start != .screenshot {
+                Button(captureText(start == .sections ? "Photograph next section" : "Take a photo")) {
+                    openCamera(at: draft.sections.count)
+                }
+            }
+            if start != .camera {
+                Button(captureText(start == .sections ? "Choose next section from Photos" : "Choose receipt screenshot")) {
+                    index = draft.sections.count; picker = true
+                }.accessibilityIdentifier("receipt.openSelectedPhoto")
             }
         }
     }
