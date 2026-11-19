@@ -290,11 +290,8 @@ struct LedgerQuantityFields: View {
 
     var body: some View {
         if let amountLabel {
-            LabeledContent {
-                amountField.multilineTextAlignment(.trailing)
-                    .accessibilityLabel(Text(verbatim: amountLabel))
-            } label: {
-                Text(verbatim: amountLabel).accessibilityHidden(true)
+            WorkingField(amountLabel) {
+                amountField
             }
         } else { amountField }
         Picker(ledgerText("Unit"), selection: $unit) {

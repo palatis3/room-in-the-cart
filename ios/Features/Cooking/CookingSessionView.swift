@@ -140,9 +140,11 @@ import SwiftUI
         }
         .onDisappear { readback = nil; noteExcerpt = nil }
         .confirmationDialog(recordsText("End this cooking session?"), isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button(recordsText("End session and remove its timers"), role: .destructive) { if model.end() { dismiss() } }
+            Button(recordsText("End session"), role: .destructive) { if model.end() { dismiss() } }
                 .accessibilityIdentifier("cooking.confirmEnd")
             Button(recordsText("Cancel"), role: .cancel) {}
+        } message: {
+            Text(recordsText("Ending this session removes its timers."))
         }
     }
 

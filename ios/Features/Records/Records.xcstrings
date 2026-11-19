@@ -5442,6 +5442,23 @@
         }
       }
     },
+    "End session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizar sesión"
+          }
+        }
+      }
+    },
     "End session and remove its timers": {
       "extractionState": "manual",
       "localizations": {
@@ -5472,6 +5489,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Finalizar esta sesión de cocina?"
+          }
+        }
+      }
+    },
+    "Ending this session removes its timers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ending this session removes its timers."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al finalizar esta sesión, se eliminarán sus temporizadores."
           }
         }
       }
