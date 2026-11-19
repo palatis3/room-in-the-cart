@@ -55,7 +55,11 @@ struct PantrySetupView: View {
                 switch destination {
                 case .prices: PantryPriceHistoryView(model: model)
                 case .receipts: PantryReceiptHistory(model: model, showsDone: false)
-                case .home: PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true, household: household)
+                case .home:
+                    PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true,
+                                   household: household, holdsLoadedReview: {
+                        pantryVoicePrompt?.holdsPresentation() == true && scope == original
+                    })
                 }
             } else {
                 List {

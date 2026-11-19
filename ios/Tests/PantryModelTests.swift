@@ -35,6 +35,39 @@ final class PantryModelTests: XCTestCase {
         return try XCTUnwrap(model.snapshot?.lots.first { $0.id == model.savedLotID })
     }
 
+    func testCoveredDigestRemountRetainsOnlyThePreviouslyLoadedPantry() async throws {
+        let (directory, store) = try await database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var allowed = true
+        let model = PantryModel(repository: PantryRepository(store: store, authorize: { allowed }))
+        await model.load()
+        let lot = try await add(model)
+        allowed = false
+
+        await model.loadOnAppearance(accessAllowed: true, holdsLoadedReview: true)
+        XCTAssertEqual(model.snapshot?.lots.first?.id, lot.id)
+        do {
+            try await model.verifyDigestLot(lot, origin: store.workspaceID)
+            XCTFail("A covered review cannot authorize a batch action.")
+        } catch {}
+
+        allowed = true
+        await model.loadOnAppearance(accessAllowed: true)
+        try await model.verifyDigestLot(lot, origin: store.workspaceID)
+
+        allowed = false
+        await model.loadOnAppearance(accessAllowed: false, holdsLoadedReview: true)
+        XCTAssertNil(model.snapshot)
+        XCTAssertEqual(model.phase, .accessDenied)
+        await model.loadOnAppearance(accessAllowed: true, holdsLoadedReview: true)
+        XCTAssertNil(model.snapshot)
+        await model.loadDigestReview { false }
+        XCTAssertNil(model.snapshot)
+        allowed = true
+        await model.loadDigestReview { true }
+        XCTAssertEqual(model.snapshot?.lots.first?.id, lot.id)
+    }
+
     private func reserve(_ lot: InventoryLot, store: ComparisonStore) async throws -> InventoryReservation {
         let state = try await store.inventoryState()
         let claim = InventoryReservation(id: UUID(), originID: store.workspaceID, revision: 1,

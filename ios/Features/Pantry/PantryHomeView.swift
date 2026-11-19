@@ -16,6 +16,7 @@ struct PantryHomeView: View {
     var offersTonight = false
     var offersStaplePrompts = false
     var household: HouseholdModel?
+    var holdsLoadedReview: () -> Bool = { false }
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
     @State private var sheet: PantrySheet?
     @State private var selectedLocation: InventoryLocation?
@@ -29,7 +30,7 @@ struct PantryHomeView: View {
     var body: some View {
         ScrollViewReader { reader in
             pantryList.modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet,
-                handlesReview: sheet != nil, revealSavedLot: { id in
+                holdsLoadedReview: holdsLoadedReview, handlesReview: sheet != nil, revealSavedLot: { id in
                     guard accessAllowed, model.phase == .ready, model.snapshot?.lots.contains(where: { $0.id == id }) == true else { return }
                     selectedLocation = nil
                     Task { @MainActor in
@@ -286,6 +287,7 @@ struct PantryEntryPresentation: ViewModifier {
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
     @Binding var sheet: PantrySheet?
+    var holdsLoadedReview: () -> Bool = { false }
     // The list owns its add and purchase sheets. A pushed lot owns its own actions.
     var handlesReview = true
     var availabilityNeedsReview = false
@@ -297,7 +299,7 @@ struct PantryEntryPresentation: ViewModifier {
         content
         .task(id: accessAllowed) {
             if !accessAllowed { sheet = nil }
-            await model.loadOnAppearance(accessAllowed: accessAllowed)
+            await model.loadOnAppearance(accessAllowed: accessAllowed, holdsLoadedReview: holdsLoadedReview())
         }
         .onChange(of: accessAllowed) { _, allowed in
             if !allowed { sheet = nil; model.accessLost() }

@@ -45,7 +45,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     private let purchaseOptions: (@MainActor (InventoryState) -> [PantryRecentPurchase])?
     private let willMutateOrRecover: (@MainActor () -> Void)?
     private let didSave: (@MainActor () async -> Void)?
-    private var generation = UUID()
+    private(set) var generation = UUID()
 
     init(repository: PantryRepository, clock: @escaping () -> Date = Date.init,
          receiptTrips: @escaping @MainActor (InventoryState) -> [ReceiptTripPlan] = { _ in [] },
@@ -80,10 +80,28 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     }
 
     /// Reappearing below the edit sheet keeps the reviewed command. An explicit refresh still reloads it.
-    func loadOnAppearance(accessAllowed: Bool) async {
-        guard accessAllowed, (try? repository.requireAccess()) != nil else { accessLost(); return }
+    func loadOnAppearance(accessAllowed: Bool, holdsLoadedReview: Bool = false) async {
+        guard accessAllowed else { accessLost(); return }
+        // Remounting the covered, verified workspace must not start a read while
+        // its repository correctly blocks actions during the system permission alert.
+        if holdsLoadedReview && phase == .ready && snapshot != nil { return }
+        guard (try? repository.requireAccess()) != nil else { accessLost(); return }
         if phase == .ready, snapshot != nil, pending == nil, review != nil { return }
         await load()
+    }
+
+    /// A permission return can remount the source screen, invalidating a read
+    /// already in flight. Restore only verified inventory; a digest never replays a pending save.
+    func loadDigestReview(authorized: () -> Bool) async {
+        guard authorized(), snapshot == nil, pending == nil, !busy else { return }
+        let original = generation
+        busy = true
+        defer { if original == generation { busy = false } }
+        // The repository checks the pending journal and live access under the same lease.
+        guard let current = try? await repository.loadForEditing(at: clock()),
+              !Task.isCancelled, generation == original, authorized() else { return }
+        snapshot = current
+        phase = .ready
     }
 
     func reviewConsumption(_ selections: [PantryConsumptionSelection], basis: InventoryState) async throws -> PantryConsumptionReview {
