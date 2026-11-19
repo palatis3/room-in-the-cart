@@ -388,7 +388,7 @@ final class PantryModelTests: XCTestCase {
     var onRequest: (() -> Void)?
     var deliveries: [PantryDigestDelivery] = []
     var removed = Set<UUID>()
-    func permission(request: Bool) async throws -> Bool {
+    func permission(request: Bool, presenting: PantryNotificationPresenter?) async throws -> Bool {
         if request { requests += 1; onRequest?() }
         return granted
     }

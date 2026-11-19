@@ -180,8 +180,11 @@ struct PantryDigestDocument: Codable, Equatable {
 enum PantryDigestFailure: Error { case invalid, changed, denied, capacity }
 struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let zone: TimeZone }
 
+typealias PantryNotificationRequest = @MainActor () async throws -> Bool
+typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) async throws -> Bool
+
 @MainActor protocol PantryDigestScheduling {
-    func permission(request: Bool) async throws -> Bool
+    func permission(request: Bool, presenting: PantryNotificationPresenter?) async throws -> Bool
     func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws
     func remove(_ handles: Set<UUID>) async
     func prune(keepingPending: Set<UUID>, keepingDelivered: Set<UUID>) async
@@ -216,13 +219,16 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         }
     }
 
-    func permission(request: Bool) async throws -> Bool {
+    func permission(request: Bool, presenting: PantryNotificationPresenter?) async throws -> Bool {
         guard !isolated else { return false }
         let scheduler = IOSNotificationScheduler()
         switch await scheduler.permission() {
         case .authorized: return true
         case .denied: return false
-        case .unknown: return request ? try await scheduler.requestPermission() : false
+        case .unknown:
+            guard request else { return false }
+            if let presenting { return try await presenting { try await scheduler.requestPermission() } }
+            return try await scheduler.requestPermission()
         }
     }
     func remove(_ handles: Set<UUID>) async {
@@ -336,7 +342,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     }
     private func schedule(_ doc: PantryDigestDocument?) async throws {
         try await serialized { [self] in
-            let granted = doc?.enabled == true ? try await scheduler.permission(request: false) : false
+            let granted = doc?.enabled == true ? try await scheduler.permission(request: false, presenting: nil) : false
             try await scheduler.replace(granted ? doc?.deliveries(now: now()) ?? [] : [],
                                         keepingDelivered: granted ? Set(doc?.rules.map(\.handle) ?? []) : [])
             notificationsUnavailable = doc?.enabled == true && !granted
@@ -392,11 +398,12 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         let today = try range.map { try MealDay(date: now(), timeZoneIdentifier: $0.start.timeZoneIdentifier) }
         try await change(scope) { try $0.setRange(range, for: lot, today: today) }
     }
-    func setAlerts(_ scope: PantryDigestScope, enabled: Bool, minute: Int, timeZone: TimeZone = .current, authorized: () -> Bool) async throws {
+    func setAlerts(_ scope: PantryDigestScope, enabled: Bool, minute: Int, timeZone: TimeZone = .current,
+                   presenting: PantryNotificationPresenter? = nil, authorized: () -> Bool) async throws {
         guard authorized(), (0..<1440).contains(minute) else { throw PantryDigestFailure.changed }
         if enabled {
             let request = try !document(scope).enabled
-            guard try await scheduler.permission(request: request) else { throw PantryDigestFailure.denied }
+            guard try await scheduler.permission(request: request, presenting: presenting) else { throw PantryDigestFailure.denied }
         }
         if !enabled {
             try await pruneOrphanedNotifications()

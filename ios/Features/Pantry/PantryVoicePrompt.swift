@@ -15,6 +15,7 @@ struct PantryVoicePromptScope: Equatable {
     private var phase: ScenePhase = .active
     private var finished = false
     private var sawInactive = false
+    private var notificationReturn: CheckedContinuation<Void, Never>?
 
     func begin(_ scope: PantryVoicePromptScope, phase: ScenePhase) -> UUID? {
         guard phase == .active, token == nil else { return nil }
@@ -45,6 +46,25 @@ struct PantryVoicePromptScope: Equatable {
         if sawInactive && phase == .active && appActive { clear() }
     }
 
+    /// Release the operating-system answer only on return to the same live pantry.
+    /// A real background transition cancels the token even if the adult later unlocks.
+    func requestNotification(in expected: PantryVoicePromptScope, phase: ScenePhase,
+                             currentScope: () -> PantryVoicePromptScope?, appActive: () -> Bool,
+                             request: PantryNotificationRequest) async throws -> Bool {
+        guard currentScope() == expected, appActive(), let id = begin(expected, phase: phase) else {
+            throw PantryDigestFailure.changed
+        }
+        defer { cancel(id) }
+        let granted = try await request()
+        if token == id, self.phase != .active || !appActive() {
+            await withCheckedContinuation { notificationReturn = $0 }
+        }
+        guard token == id, self.phase == .active, appActive(), currentScope() == expected else {
+            throw PantryDigestFailure.changed
+        }
+        return granted
+    }
+
     func nextPermission(_ id: UUID) {
         guard token == id else { return }
         sawInactive = phase == .inactive
@@ -57,6 +77,7 @@ struct PantryVoicePromptScope: Equatable {
         phase = next
         if next == .inactive && token != nil { sawInactive = true }
         if next == .background || (next == .active && finished && sawInactive) { clear() }
+        if next == .active { resumeNotificationReturn() }
     }
 
     private func clear() {
@@ -65,6 +86,13 @@ struct PantryVoicePromptScope: Equatable {
         finished = false
         sawInactive = false
         token = nil
+        resumeNotificationReturn()
+    }
+
+    private func resumeNotificationReturn() {
+        let waiter = notificationReturn
+        notificationReturn = nil
+        waiter?.resume()
     }
 }
 

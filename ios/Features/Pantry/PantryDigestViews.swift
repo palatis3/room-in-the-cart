@@ -14,6 +14,19 @@ struct PantryDigestAccess {
     let scope: PantryDigestScope
     let authorized: @MainActor () -> Bool
 }
+struct PantryDigestPermissionPrompt {
+    let scope: PantryDigestScope
+    let present: PantryNotificationPresenter
+}
+private struct PantryDigestPermissionPromptKey: EnvironmentKey {
+    static let defaultValue: PantryDigestPermissionPrompt? = nil
+}
+extension EnvironmentValues {
+    var pantryDigestPermissionPrompt: PantryDigestPermissionPrompt? {
+        get { self[PantryDigestPermissionPromptKey.self] }
+        set { self[PantryDigestPermissionPromptKey.self] = newValue }
+    }
+}
 private struct PantryDigestAccessKey: EnvironmentKey { static let defaultValue: PantryDigestAccess? = nil }
 extension EnvironmentValues {
     var pantryDigestAccess: PantryDigestAccess? {
@@ -148,6 +161,7 @@ extension PantryDigestAccess {
 }
 
 struct PantryDigestList: View {
+    @Environment(\.pantryDigestPermissionPrompt) private var notificationPrompt
     @ObservedObject var model: PantryModel
     let access: PantryDigestAccess
     @ObservedObject private var store = PantryDigestStore.shared
@@ -216,7 +230,9 @@ struct PantryDigestList: View {
             defer { busy = false }
             do {
                 let parts = Calendar.current.dateComponents([.hour,.minute], from: time)
-                try await store.setAlerts(access.scope, enabled: enabled, minute: (parts.hour ?? 9) * 60 + (parts.minute ?? 0)) {
+                if enabled && notificationPrompt?.scope != access.scope { throw PantryDigestFailure.changed }
+                try await store.setAlerts(access.scope, enabled: enabled, minute: (parts.hour ?? 9) * 60 + (parts.minute ?? 0),
+                                          presenting: notificationPrompt?.present) {
                     access.authorized() && model.snapshot?.state.workspaceID == access.scope.origin
                 }
                 if access.authorized() { message = pantryText(enabled ? "Daily notifications are on." : "Daily notifications are off.") }

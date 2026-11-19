@@ -115,6 +115,7 @@ struct GroceryWindow: View {
            cancel: { voicePrompt.cancel($0) }))
         .modifier(DinnerPrepAlertRuntime(ledger: ledger, pickup: pickup, access: access, household: household, child: guardianChild))
         .modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
+            .environment(\.pantryDigestPermissionPrompt, digestPermissionPrompt)
             .environment(\.pickupLedger, ledger)
             .environment(\.offersDuplicateAssistance, true)
             .environment(\.privatePantryRetry, pantryRetry)
@@ -219,6 +220,15 @@ struct GroceryWindow: View {
               let origin = pickup.sourceWorkspaceID, let ledgerOrigin = ledger.sourceWorkspaceID, !ledger.hasPendingLedgerDeletion else { return nil }
         // Inventory and the shopping ledger have independent database origins.
         return PantryVoicePromptScope(adult: adult, origin: origin, ledger: ledgerOrigin, generation: pickup.privatePantryGeneration)
+    }
+
+    private var digestPermissionPrompt: PantryDigestPermissionPrompt? {
+        guard let original = voicePromptScope else { return nil }
+        return PantryDigestPermissionPrompt(scope: .init(origin: original.origin, identity: original.adult)) { request in
+            try await voicePrompt.requestNotification(in: original, phase: scenePhase,
+                currentScope: { voicePromptScope }, appActive: { UIApplication.shared.applicationState == .active },
+                request: request)
+        }
     }
 
     private var retainsVoicePrompt: Bool {
