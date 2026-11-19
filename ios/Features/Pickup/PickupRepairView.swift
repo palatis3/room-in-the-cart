@@ -20,26 +20,38 @@ struct UrgentRepairView: View {
         WorkingForm {
             PickupSaveStatus(model: model)
             Text(pTr("Make a private meal need from food you have checked. This does not create an order, delivery or charge."))
-            PickupLabeledField(pTr("Food that is short"), text: $food)
-                .focused($field, equals: .food)
-                .autocorrectionDisabled()
-                .submitLabel(.next)
-                .onSubmit { field = .meal }
-            PickupLabeledField(pTr("Meal or purpose"), text: $meal)
-                .focused($field, equals: .meal)
-                .autocorrectionDisabled()
-                .submitLabel(.next)
-                .onSubmit { field = .required }
-            PickupLabeledField(pTr("Required amount"), text: $required)
-                .focused($field, equals: .required)
-                .keyboardType(.numbersAndPunctuation)
-                .submitLabel(.next)
-                .onSubmit { field = .available }
-            PickupLabeledField(pTr("Usable amount available now"), text: $available)
-                .focused($field, equals: .available)
-                .keyboardType(.numbersAndPunctuation)
-                .submitLabel(.done)
-                .onSubmit { field = nil }
+            WorkingField(pTr("Food that is short")) {
+                TextField("", text: $food)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($field, equals: .food)
+                    .autocorrectionDisabled()
+                    .submitLabel(.next)
+                    .onSubmit { field = .meal }
+            }
+            WorkingField(pTr("Meal or purpose")) {
+                TextField("", text: $meal)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($field, equals: .meal)
+                    .autocorrectionDisabled()
+                    .submitLabel(.next)
+                    .onSubmit { field = .required }
+            }
+            WorkingField(pTr("Required amount")) {
+                TextField("", text: $required)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($field, equals: .required)
+                    .keyboardType(.numbersAndPunctuation)
+                    .submitLabel(.next)
+                    .onSubmit { field = .available }
+            }
+            WorkingField(pTr("Usable amount available now")) {
+                TextField("", text: $available)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($field, equals: .available)
+                    .keyboardType(.numbersAndPunctuation)
+                    .submitLabel(.done)
+                    .onSubmit { field = nil }
+            }
             Picker(pTr("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
             Toggle(pTr("I checked this food’s identity and usable amount"), isOn: Binding(
                 get: { confirmedAt != nil }, set: { confirmedAt = $0 ? Date() : nil }

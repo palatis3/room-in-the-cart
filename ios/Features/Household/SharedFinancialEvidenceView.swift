@@ -174,7 +174,7 @@ private struct SharedFinancialEditor: View {
                     linkage(pTr("Original payment hold"), placeholder: pTr("Choose a hold"), entries: holds)
                     if let originalHold { settlementFact(pTr("Amount"), value: pMoney(originalHold.money)) }
                 } else {
-                    PickupEvidenceField(title: pTr("Amount"), amount: $amount).focused($field, equals: .amount).accessibilityIdentifier("financial.amount")
+                    PickupEvidenceField(title: pTr("Amount"), amount: $amount, focus: $field, field: .amount, identifier: "financial.amount")
                 }
                 TextField(financialText("Receipt or statement evidence"), text: $evidence).focused($field, equals: .evidence).accessibilityIdentifier("financial.evidence")
                 DatePicker(pTr("Evidence date"), selection: $date, in: ...Date())

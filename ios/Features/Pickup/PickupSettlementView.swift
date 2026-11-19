@@ -78,7 +78,7 @@ struct PickupSettlementView: View {
                     }
                     if let selectedHold { settlementFact(pTr("Amount"), value: pMoney(selectedHold.amount)) }
                 } else {
-                    PickupEvidenceField(title: pTr("Amount"), amount: $amount).focused($field, equals: .amount)
+                    PickupEvidenceField(title: pTr("Amount"), amount: $amount, focus: $field, field: .amount)
                 }
                 TextField(pTr("Unique receipt or transaction evidence ID"), text: $evidence)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .evidence)

@@ -62,7 +62,14 @@ import XCTest
         }
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
-        tap(app.buttons["Save and evaluate checkout"])
+        XCTAssertEqual(app.textFields["Inclusive total"].value as? String, "3.00")
+        let save = app.buttons["Save and evaluate checkout"]
+        reveal(save, requireVisibleCenter: true)
+        XCTAssertTrue(save.isEnabled)
+        save.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        // Saving the local quote is asynchronous. Keep this screen open until
+        // the same saved-result section a shopper reviews is visible.
+        assertText("Saved checkout result")
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"])

@@ -205,12 +205,23 @@ private struct SharedAmendmentLineEditor: View {
         NavigationStack {
             WorkingForm {
                 if choice.line == nil {
-                    PickupLabeledField(OrderAmendmentCopy.text("Item name"), text: $name).focused($focus, equals: .name)
+                    WorkingField(OrderAmendmentCopy.text("Item name")) {
+                        TextField("", text: $name)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($focus, equals: .name)
+                    }
                 } else { Text(name) }
-                PickupLabeledField(OrderAmendmentCopy.text("Confirmed packs"), text: $packs).keyboardType(.numberPad)
-                    .focused($focus, equals: .packs).accessibilityIdentifier("sharedOrder.packs")
-                PickupLabeledField(OrderAmendmentCopy.text("Confirmed price per pack (USD), if provided"), text: $price)
-                    .keyboardType(.decimalPad).focused($focus, equals: .price)
+                WorkingField(OrderAmendmentCopy.text("Confirmed packs")) {
+                    TextField("", text: $packs)
+                        .textFieldStyle(.roundedBorder)
+                        .keyboardType(.numberPad)
+                        .focused($focus, equals: .packs).accessibilityIdentifier("sharedOrder.packs")
+                }
+                WorkingField(OrderAmendmentCopy.text("Confirmed price per pack (USD), if provided")) {
+                    TextField("", text: $price)
+                        .textFieldStyle(.roundedBorder)
+                        .keyboardType(.decimalPad).focused($focus, equals: .price)
+                }
                 Button(OrderAmendmentCopy.text("Keep line for review")) {
                     do {
                         guard let count = Int(packs), (1...10_000).contains(count), !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
