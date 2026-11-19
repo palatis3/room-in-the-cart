@@ -1255,6 +1255,23 @@
         }
       }
     },
+    "Delete local shopping data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete local shopping data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar datos de compras de este iPhone"
+          }
+        }
+      }
+    },
     "Delete this source": {
       "extractionState": "manual",
       "localizations": {

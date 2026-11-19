@@ -11,7 +11,7 @@ struct RecordsRecoveryLink: View {
     var dinnerModel: DinnerFeatureModel? = nil
 
     var body: some View {
-        NavigationLink(dinnerModel == nil ? tr("Recovery, exports and saved records") : recordsText("Import and use recipes")) {
+        NavigationLink {
             RecordsToolsEntryView(app: app, ledger: ledger, pickup: pickup,
                 erasureCleanup: RecordsErasureCleanup(eraseLedgerWorkspace: { id in
                     try await surfaces.eraseLedgerWorkspace(id)
@@ -21,6 +21,13 @@ struct RecordsRecoveryLink: View {
                 }, erasePickupRecord: { workspaceID, recordID in
                     try await surfaces.erasePickupRecord(workspaceID: workspaceID, recordID: recordID)
                 }), dinnerModel: dinnerModel)
-        }.accessibilityIdentifier(accessibilityID)
+        } label: {
+            if dinnerModel == nil {
+                Label(tr("Recovery, exports and saved records"), systemImage: "archivebox")
+            } else {
+                Text(recordsText("Import and use recipes"))
+            }
+        }
+        .accessibilityIdentifier(accessibilityID)
     }
 }

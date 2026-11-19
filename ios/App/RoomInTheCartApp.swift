@@ -767,6 +767,9 @@ struct RecordsView: View {
                     } label: { Label(tr("Pickup, repairs and handoffs"), systemImage: "shippingbox") }
                 }
             }
+            Section(recordsText("Files and recovery")) {
+                RecordsRecoveryLink()
+            }
             Section(recordsText("Saved comparisons")) {
                 if !model.hasLoadedRecords, model.error == nil {
                     ProgressView(recordsText("Loading saved comparisons…"))
@@ -794,9 +797,6 @@ struct RecordsView: View {
                     }
                     Button(tr("Try again")) { Task { await model.refresh() } }.frame(minHeight: 44)
                 }
-            }
-            Section(recordsText("Files and recovery")) {
-                RecordsRecoveryLink()
             }
             if hasSharedRecordsAccess, let scope = household.projection {
                 Section(ht("Shared pickup records")) {

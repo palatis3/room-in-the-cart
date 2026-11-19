@@ -104,17 +104,19 @@ struct RecordsToolsView: View {
             } else {
                 recoveredSection
                 Section(recordsText("Privacy and support")) {
-                    if model.canReviewWholeLedgerDeletion {
-                        Button(recordsText("Delete all shopping lists and saved dinners…"), role: .destructive) {
-                            Task { await model.reviewWholeLedgerDeletion() }
-                        }
-                        Text(recordsText("This separate action reviews the entire local ledger and its history before deletion.")).font(.footnote)
-                    }
                     Text(recordsText("Only explicitly selected source references are included in encrypted recovery. Readable and helper copies contain no attachment bytes. No file is uploaded automatically. Shared copies cannot be recalled."))
                         .font(.footnote)
                     ShareLink(item: model.supportText) { Label(recordsText("Share redacted support details"), systemImage: "lifepreserver") }
                     Text(recordsText("Support details include only format, record count and an error code. They omit food names, receipts, account details and file paths."))
                         .font(.footnote).foregroundStyle(.secondary)
+                }
+                if model.canReviewWholeLedgerDeletion {
+                    Section(recordsText("Delete local shopping data")) {
+                        Text(recordsText("This separate action reviews the entire local ledger and its history before deletion.")).font(.footnote)
+                        Button(recordsText("Delete all shopping lists and saved dinners…"), role: .destructive) {
+                            Task { await model.reviewWholeLedgerDeletion() }
+                        }
+                    }
                 }
             }
         }
