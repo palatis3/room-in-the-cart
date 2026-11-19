@@ -184,7 +184,7 @@ private struct VoicePantryRow {
                 if working { ProgressView(pantryText("Working…")) }
             }
         }
-        .navigationTitle(pantryText(startingLot == nil ? "Talk or type about pantry food" : "Record use"))
+        .navigationTitle(pantryText(startingLot == nil ? "Talk or type" : "Record use"))
         .privacySensitive()
         .keyboardDoneAction(visible: editing, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { editing = false }
         .toolbar {
@@ -289,7 +289,7 @@ private struct VoicePantryRow {
         let unmatched = !unnamed && suggestions.isEmpty && !lots.isEmpty
         let candidates = row.showsAllLots || unnamed ? lots : suggestions
         return Section {
-            if startingLot == nil {
+            if startingLot == nil, rows.count > 1 || row.original != draft {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(pantryText("Your words")).font(.subheadline).foregroundStyle(Theme.secondary)
                     Text(row.original).font(.headline).accessibilityIdentifier("pantry.voiceOriginal.\(index)")

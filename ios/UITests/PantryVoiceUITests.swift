@@ -79,7 +79,11 @@ import XCTest
         app.terminate()
         openPantry(reset: false, spanish: true)
         for (id, name) in [(recorded, "Salsa de tomate clásica"), (unrecorded, "Salsa de tomate picante")] {
-            enterCommand("¿Está vencida mi salsa de tomate?")
+            let question = "¿Está vencida mi salsa de tomate?"
+            enterCommand(question)
+            XCTAssertTrue(app.navigationBars["Dictar o escribir"].exists)
+            XCTAssertEqual(element("pantry.voiceText").value as? String, question)
+            XCTAssertFalse(element("pantry.voiceOriginal.0").exists)
             XCTAssertFalse(element("pantry.voiceDateResult").exists)
             tap(element("pantry.voiceLot.0"))
             let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
@@ -139,15 +143,14 @@ import XCTest
 
         let about = spanish ? "Me queda como media botella de kétchup" : "I have about half a bottle of ketchup left"
         enterCommand(about)
-        XCTAssertTrue(element("pantry.voiceOriginal.0").label.contains(about))
+        XCTAssertEqual(element("pantry.voiceText").value as? String, about)
         tap(app.buttons["pantry.voicePreview"])
         XCTAssertTrue(element("pantry.voiceSummary.0").waitForExistence(timeout: 8))
         tap(app.buttons["pantry.voiceCancel"])
         assertLot(id, contains: spanish ? "3 unidades" : "3 units")
 
         enterCommand(low)
-        let original = element("pantry.voiceOriginal.0")
-        XCTAssertTrue(original.label.contains(low), original.label)
+        XCTAssertEqual(element("pantry.voiceText").value as? String, low)
         tap(app.buttons["pantry.voicePreview"])
         let summary = element("pantry.voiceSummary.0")
         reveal(summary)

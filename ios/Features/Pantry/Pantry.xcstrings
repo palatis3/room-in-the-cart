@@ -10269,6 +10269,22 @@
         }
       }
     },
+    "Talk or type": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk or type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictar o escribir"
+          }
+        }
+      }
+    },
     "Talk or type about pantry food": {
       "localizations": {
         "en": {
