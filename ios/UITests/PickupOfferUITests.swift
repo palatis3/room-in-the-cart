@@ -63,8 +63,9 @@ import XCTest
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
         XCTAssertEqual(app.textFields["Inclusive total"].value as? String, "3.00")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         let save = app.buttons["Save and evaluate checkout"]
-        reveal(save, requireVisibleCenter: true)
+        reveal(save, requireVisibleCenter: true, reserveKeyboardSpace: false)
         XCTAssertTrue(save.isEnabled)
         save.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         // Saving the local quote is asynchronous. Keep this screen open until
