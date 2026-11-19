@@ -690,6 +690,13 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         return StagedListImport(id: importID, shopID: id, baseRevision: revision, source: source, originalText: text, lines: staged)
     }
 
+    /// Re-evaluate a saved review against the current list while keeping the shopper's edited rows and their identities.
+    public func refreshSavedImport(_ preview: StagedListImport) throws -> StagedListImport {
+        let current = StagedListImport(id: preview.id, shopID: preview.shopID, baseRevision: revision,
+            source: preview.source, originalText: preview.originalText, lines: preview.lines)
+        return try refreshImportMatches(current)
+    }
+
     /// Refresh suggestions after editing a staged product name without changing
     /// the staged identities, original evidence, or the reviewed shop revision.
     public func refreshImportMatches(_ preview: StagedListImport) throws -> StagedListImport {

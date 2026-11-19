@@ -107,7 +107,7 @@ private struct SurfaceImportReview: View {
                             .disabled(draft.phase == .review ? !review.isComplete || !pendingEdits.isEmpty :
                                 draft.preview.lines.isEmpty || draft.decisions.count != draft.preview.lines.count)
                         Button(SurfaceCopy.text("Reopen saved list before retry")) { Task { await composition.recoverImport() } }
-                            .disabled(!pendingEdits.isEmpty)
+                            .disabled(!pendingEdits.isEmpty || composition.hasUnsavedReviewChanges)
                         Text(SurfaceCopy.text("An interrupted import reopens the same reviewed operation. It never adds the list again automatically."))
                         if let message = composition.message { Text(message) }
                     }

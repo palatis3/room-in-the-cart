@@ -353,10 +353,14 @@ import CoreDomain
             XCTAssertEqual(f.composition.draft, baseline)
         }
 
-        var explicitlySaved = try XCTUnwrap(f.composition.draft)
-        explicitlySaved.decisions[duplicate.id] = .skip
-        f.composition.saveDraft(explicitlySaved)
+        f.composition.chooseImportResolution(.skip, for: duplicate.id)
+        XCTAssertTrue(f.composition.editDraftLine(pear.id, name: "Ripe pears", amount: "4", unit: .count))
+        let explicitlySaved = try XCTUnwrap(f.composition.draft)
+        await f.composition.recoverImport()
+        XCTAssertEqual(f.composition.draft, explicitlySaved, "Reopening cannot discard unsaved edits")
         f.composition.saveReviewDraft()
+        await f.composition.recoverImport()
+        XCTAssertEqual(f.composition.draft, explicitlySaved, "Keep saved corrections and duplicate choices on an unchanged list")
         XCTAssertEqual(try journal.read(entry.id), explicitlySaved)
         f.composition.editDraftLine(pear.id, name: "Another unsaved edit", amount: "7", unit: .count)
         f.composition.cancelReview()
