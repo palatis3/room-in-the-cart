@@ -13,6 +13,27 @@ import XCTest
         }
         app.terminate()
     }
+    func testDinnersCanSaveAndReopenRecipeBeforeStartingPickupOrPantry() throws {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.saveFirstRecipe"])
+        fill(app.textFields["tonight.recipe.title"], "Corn and beans")
+        fill(app.textFields["tonight.recipe.servings"], "2")
+        fill(app.textFields["tonight.recipe.ingredient"], "Corn")
+        fill(app.textFields["Amount, unknown if blank"], "1")
+        tap(app.buttons["tonight.recipe.review"])
+        tap(app.buttons["tonight.recipe.save"])
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.savedRecipe.")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        XCTAssertTrue(saved.label.contains("Corn and beans"))
+        tap(saved)
+        XCTAssertEqual(app.textFields["tonight.recipe.title"].value as? String, "Corn and beans")
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(app.staticTexts["No dinner planned"].exists)
+        XCTAssertTrue(app.buttons["dinnerStartPickup"].exists)
+    }
+
     func testBothPrivateTonightEntriesWorkWithoutShopAndCancelCreatesNothing() throws {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }

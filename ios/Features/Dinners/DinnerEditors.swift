@@ -558,6 +558,9 @@ struct BrandCartMotion: View {
                 }
             } else { BrandCartMark() }
         }
+        .onChange(of: cue, initial: true) { _, incoming in
+            if scene != .active || reduceMotion { cancelled = incoming?.id }
+        }
         .onDisappear { cancelled = cue?.id }
         .onChange(of: scene) { _, phase in if phase != .active { cancelled = cue?.id } }
         .onChange(of: reduceMotion) { _, reduced in if reduced { cancelled = cue?.id } }

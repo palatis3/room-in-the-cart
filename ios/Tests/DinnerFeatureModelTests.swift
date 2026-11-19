@@ -79,7 +79,7 @@ import CoreDomain
                 XCTAssertEqual(first.editor, model.editorIdentity)
             }
             let repeated = await model.accept(template, id: firstID, fallback: false) { events.append($0) }
-            let second = await model.accept(template, id: UUID(), fallback: false) { events.append($0) }
+            let second = await model.accept(try recipe(), id: UUID(), fallback: false) { events.append($0) }
             XCTAssertTrue(repeated && second)
             XCTAssertEqual(events.count, enrollment == 2 ? 1 : 0)
             XCTAssertEqual(store.commits, 2)
@@ -139,7 +139,7 @@ import CoreDomain
         XCTAssertEqual(reopened.workspace.dinnerPlanning.acceptedDinners.map(\.id), events.map(\.acceptedID))
         XCTAssertEqual(events.count, 1)
         XCTAssertNil(reopened.workspace.firstDinnerFeedbackOrigin)
-        let later = await editor(reopened).accept(recipe, id: UUID(), fallback: false) { events.append($0) }
+        let later = await editor(reopened).accept(try self.recipe(), id: UUID(), fallback: false) { events.append($0) }
         XCTAssertTrue(later)
         XCTAssertEqual(events.count, 1)
     }

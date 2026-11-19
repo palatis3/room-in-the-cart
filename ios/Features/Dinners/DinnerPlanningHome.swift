@@ -41,21 +41,33 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     ProgressView()
                 } else if model.shop == nil {
                     Section {
-                        VStack(alignment: .leading, spacing: 18) {
+                        VStack(alignment: .leading, spacing: 16) {
                             DinnerTonightHeading(title: dinnerText(model.workspace.shops.isEmpty ? "No dinner planned" : "No pickup selected"),
-                                detail: dinnerText("Start a pickup to plan dinners and review the groceries you’ll need.")) { EmptyView() }
-                            Button(ledgerText("Start pickup"), action: startPickup)
-                                .buttonStyle(PrimaryAction()).accessibilityIdentifier("dinnerStartPickup")
+                                detail: dinnerText("You can save a recipe now and choose it for a pickup later.")) { EmptyView() }
+                            if let liveLedger, model.store === liveLedger, model.basketPrepAccess() {
+                                DinnerManualRecipeLink(ledger: liveLedger).buttonStyle(PrimaryAction())
+                            }
                         }.padding(.vertical, 6)
                     }
-                    if let liveLedger, liveLedger.ready, model.store === liveLedger {
-                        Section {
-                            if model.basketPrepAccess() { DinnerManualRecipeLink(ledger: liveLedger) }
+                    if let liveLedger, model.store === liveLedger, model.basketPrepAccess(), !liveLedger.workspace.mealTemplates.isEmpty {
+                        Section(tonightText("Recipe library")) {
+                            ForEach(liveLedger.workspace.mealTemplates) { recipe in
+                                DinnerManualRecipeLink(ledger: liveLedger, recipe: recipe)
+                            }
+                        }
+                    }
+                    Section {
+                        Button(ledgerText("Start pickup"), action: startPickup)
+                            .frame(minHeight: 44)
+                            .accessibilityIdentifier("dinnerStartPickup")
+                        if let liveLedger, liveLedger.ready, model.store === liveLedger {
                             tonightLink
                             RecordsRecoveryLink(accessibilityID: "dinner.recipeFiles", dinnerModel: model)
-                        } footer: {
-                            Text(dinnerText("You can save a recipe now and choose it for a pickup later."))
                         }
+                    } header: {
+                        Text(dinnerText("Plan"))
+                    } footer: {
+                        Text(dinnerText("Start a pickup to plan dinners and review the groceries you’ll need."))
                     }
                 } else if !model.accessAvailable {
                     Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
@@ -545,6 +557,7 @@ private struct DinnerTableSetting: View {
 /// A recipe can occupy the Free slot before the first pickup exists.
 private struct DinnerManualRecipeLink: View {
     @ObservedObject var ledger: LedgerModel
+    var recipe: MealTemplate? = nil
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.guardianChildCoordinator) private var child
@@ -553,11 +566,19 @@ private struct DinnerManualRecipeLink: View {
 
     var body: some View {
         Button { presenting = true } label: {
-            Label(dinnerText("Save a familiar dinner"), systemImage: "book")
+            if let recipe {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: recipe.title).font(.system(.title3, design: .serif, weight: .semibold))
+                    Text(tonightText("Free reusable dinner")).font(.subheadline).foregroundStyle(Theme.secondary)
+                }.frame(minHeight: 44, alignment: .leading)
+            } else {
+                Label(dinnerText("Save a familiar dinner"), systemImage: "book")
+            }
         }
+        .accessibilityIdentifier(recipe.map { "dinner.savedRecipe." + $0.id.uuidString } ?? "dinner.saveFirstRecipe")
         .sheet(isPresented: $presenting) {
             NavigationStack {
-                TonightRecipeReview(ledger: ledger, source: nil) {
+                TonightRecipeReview(ledger: ledger, source: nil, template: recipe) {
                     guard scene == .active, UIApplication.shared.isProtectedDataAvailable,
                           child?.presented != true, household.projection?.grantId == nil else { return nil }
                     return CapturePrivateIdentity.current(access: access, household: household)
