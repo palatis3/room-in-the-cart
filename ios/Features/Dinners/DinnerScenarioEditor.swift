@@ -248,8 +248,12 @@ private struct DinnerScenarioMealFields: View {
             ForEach(draft.meals) { meal in
                 let fields = dinnerDraftBinding(meal, in: $draft.meals)
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Commitment name"), text: fields.name)
-                    TextField(dinnerText("Required portions"), text: fields.portions)
+                    WorkingField(dinnerText("Commitment name")) {
+                        TextField(dinnerText("Commitment name"), text: fields.name, prompt: Text(verbatim: "—"))
+                    }
+                    WorkingField(dinnerText("Required portions")) {
+                        TextField(dinnerText("Required portions"), text: fields.portions, prompt: Text(verbatim: "—"))
+                    }
                     recipePicker(dinnerText("Current accepted recipe"), selection: fields.currentDinnerID)
                     recipePicker(dinnerText("Candidate accepted recipe"), selection: fields.candidateDinnerID)
                     Toggle(dinnerText("Protected commitment"), isOn: fields.protected)
