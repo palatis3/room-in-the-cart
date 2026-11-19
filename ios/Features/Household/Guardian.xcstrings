@@ -17,6 +17,22 @@
         }
       }
     },
+    "Keep this setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar esta configuración"
+          }
+        }
+      }
+    },
     "Child access is unavailable": {
       "localizations": {
         "en": {

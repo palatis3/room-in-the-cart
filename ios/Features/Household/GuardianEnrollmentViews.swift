@@ -152,7 +152,7 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
         .onDisappear { model.invalidate() }
         .confirmationDialog(GuardianCopy.text("Cancel this child setup?"), isPresented: $cancelSelected, titleVisibility: .visible) {
             Button(GuardianCopy.text("Cancel this setup"), role: .destructive) { Task { await model.cancelEnrollment() } }
-            Button(GuardianCopy.text("Cancel")) { cancelSelected = false }.accessibilityIdentifier("guardian.cancelSetupCancel")
+            Button(GuardianCopy.text("Keep this setup")) { cancelSelected = false }.accessibilityIdentifier("guardian.cancelSetupCancel")
         } message: { Text(GuardianCopy.text("Cancellation ends this pending setup. An active child's permission is withdrawn through current permissions.")) }
         .confirmationDialog(GuardianCopy.text("Clear this local retry?"), isPresented: $clearSelected, titleVisibility: .visible) {
             Button(GuardianCopy.text("Check status, then clear local retry"), role: .destructive) { Task { await model.clearRetryAfterStatusReview() } }
