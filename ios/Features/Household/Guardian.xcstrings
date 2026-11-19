@@ -81,34 +81,34 @@
         }
       }
     },
-    "Next shop only · created %@ · ID %@": {
+    "Next shop only · ID %@ · created %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Next shop only · created %@ · ID %@"
+            "value": "Next shop only · ID %@ · created %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo la próxima compra · creada el %1$@ · ID %2$@"
+            "value": "Solo la próxima compra · ID %1$@ · creada el %2$@"
           }
         }
       }
     },
-    "This pickup · created %@ · ID %@": {
+    "This pickup · ID %@ · created %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This pickup · created %@ · ID %@"
+            "value": "This pickup · ID %@ · created %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta recogida · creada el %1$@ · ID %2$@"
+            "value": "Esta recogida · ID %1$@ · creada el %2$@"
           }
         }
       }

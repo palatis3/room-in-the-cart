@@ -283,9 +283,9 @@ struct GuardianChildRequestsView: View {
         let prefix = String(id.prefix(8))
         let collision = household.requestPickups.contains { $0.shopId != pickup.shopId && $0.shopId.uuidString.lowercased().hasPrefix(prefix) }
         let format = pickup.nextShopOnly
-            ? GuardianCopy.text("Next shop only · created %@ · ID %@")
-            : GuardianCopy.text("This pickup · created %@ · ID %@")
-        return String(format: format, locale: .current, GuardianCopy.date(pickup.createdAt), collision ? id : prefix)
+            ? GuardianCopy.text("Next shop only · ID %@ · created %@")
+            : GuardianCopy.text("This pickup · ID %@ · created %@")
+        return String(format: format, locale: .current, collision ? id : prefix, GuardianCopy.date(pickup.createdAt, dateStyle: .numeric))
     }
 
 }
