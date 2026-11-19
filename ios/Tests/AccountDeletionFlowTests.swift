@@ -37,6 +37,11 @@ private final class DeletionProtocol: URLProtocol {
     private let otherHouse = UUID().uuidString.lowercased()
     private let consentID = UUID().uuidString.lowercased()
     private var testingMemberships = false
+    private var loseNextWorkspaceRead = false
+    private var duringWorkspaceRead: (() -> Void)?
+    private var verifiedCodes = 0
+    private var workspaceReads = 0
+    private var deviceEnrollments = 0
     private var soleGuardian = true
     private var exited = false
     private var loseExitReply = false
@@ -63,13 +68,19 @@ private final class DeletionProtocol: URLProtocol {
         var code = 200
         var output: [String: Any] = [:]
         switch path {
-        case "/auth/v1/verify": output = ["access_token":"verified","refresh_token":"rotated","expires_in":3600,"user":user]
+        case "/auth/v1/verify": verifiedCodes += 1; output = ["access_token":"verified","refresh_token":"rotated","expires_in":3600,"user":user]
         case "/auth/v1/user": output = user
         case "/auth/v1/logout": break
         case "/v1/me/workspaces":
+            workspaceReads += 1
+            duringWorkspaceRead?()
+            if loseNextWorkspaceRead {
+                loseNextWorkspaceRead = false
+                throw URLError(.networkConnectionLost)
+            }
             let ids = testingMemberships ? (exited ? [otherHouse] : [house, otherHouse]) : []
             output = ["workspaces": ids.map { ["householdId":$0,"label":"House","role":"organizer"] }]
-        case "/v1/households/\(house)/devices": output = ["deviceId":"device","deviceToken":"device-token"]
+        case "/v1/households/\(house)/devices": deviceEnrollments += 1; output = ["deviceId":"device","deviceToken":"device-token"]
         case "/v1/households/\(house)/devices/current": break
         case "/v1/households/\(house)/bootstrap":
             output = ["household":["id":house,"label":"House"],"memberId":"guardian","role":"organizer",
@@ -162,6 +173,36 @@ private final class DeletionProtocol: URLProtocol {
         flow.choices.shops[.init(household: house, id: shop)] = .archiveOrClose
         flow.choices.children.insert(.init(household: house, id: child))
     }
+    func testVerifiedAccountRetriesHouseholdsWithoutAnotherCodeOrAutomaticEnrollment() async throws {
+        testingMemberships = true
+        loseNextWorkspaceRead = true
+        let account = try await model()
+        XCTAssertEqual(account.workspaceListState, .unavailable)
+        XCTAssertNil(account.projection)
+        XCTAssertTrue(account.workspaces.isEmpty)
+        await account.retryWorkspaceList()
+        XCTAssertEqual(account.workspaceListState, .loaded)
+        XCTAssertEqual(account.workspaces.map(\.id), [house, otherHouse])
+        XCTAssertFalse(account.keepLocalPrivate)
+        XCTAssertEqual(verifiedCodes, 1)
+        XCTAssertEqual(workspaceReads, 2)
+        XCTAssertEqual(deviceEnrollments, 0)
+    }
+
+    func testLockDuringMembershipRetryDropsLateListAndRecoveryState() async throws {
+        testingMemberships = true
+        loseNextWorkspaceRead = true
+        let account = try await model()
+        duringWorkspaceRead = { account.lock() }
+        await account.retryWorkspaceList()
+        XCTAssertTrue(account.locked)
+        XCTAssertTrue(account.workspaces.isEmpty)
+        XCTAssertEqual(account.workspaceListState, .notLoaded)
+        await account.retryWorkspaceList()
+        XCTAssertEqual(workspaceReads, 2)
+        duringWorkspaceRead = nil
+    }
+
     func testLostHouseholdExitRetriesOriginalBytesWithoutADeviceAfterMembershipIsGone() async throws {
         testingMemberships = true; soleGuardian = false; available = false
         let account = try await model()
@@ -198,7 +239,14 @@ private final class DeletionProtocol: URLProtocol {
         let choices = try XCTUnwrap(payload["disposition"] as? [String:Any])
         XCTAssertEqual(choices["householdId"] as? String, house)
         XCTAssertEqual(choices["eraseChildProfiles"] as? [String], [])
+        loseNextWorkspaceRead = true
         await account.householdExited(try XCTUnwrap(left))
+        XCTAssertEqual(account.workspaceListState, .unavailable)
+        XCTAssertEqual(account.workspaces.map(\.id), [otherHouse])
+        await account.retryWorkspaceList()
+        XCTAssertEqual(account.workspaceListState, .loaded)
+        XCTAssertEqual(exitBodies.count, 2)
+        XCTAssertEqual(deviceEnrollments, 1)
         XCTAssertNil(account.projection)
         XCTAssertEqual(account.identity?.subject, "same-subject")
         XCTAssertEqual(account.workspaces.map(\.id), [otherHouse])

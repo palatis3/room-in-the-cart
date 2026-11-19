@@ -63,6 +63,13 @@ struct HouseholdSettingsView: View {
                     }
                 }
             } else {
+                if model.workspaceListState == .unavailable {
+                    Section(ht("Choose household")) {
+                        Text(ht("Your household list could not be loaded. Check your connection and try again."))
+                        Button(ht("Retry loading households")) { Task { await model.retryWorkspaceList() } }
+                            .accessibilityIdentifier("household.workspaces.retry")
+                    }
+                }
                 if let projection = model.projection {
                     Section(ht("Connected household")) {
                         Text(projection.household.label)
@@ -181,7 +188,12 @@ struct HouseholdSettingsView: View {
                             }
                         }
                     }
-                    if let lifecycle = model.lifecycle { HouseholdSetupSections(model: lifecycle) }
+                    if model.workspaceListState == .loaded, model.workspaces.isEmpty {
+                        Text(ht("This account has no active household access. Your private work stays on this phone."))
+                    }
+                    if let lifecycle = model.lifecycle {
+                        HouseholdSetupSections(model: lifecycle, showsNewSetup: model.workspaceListState == .loaded)
+                    }
                 }
                 Section {
                     Button(ht("Sign out"), role: .destructive) { Task { await model.signOut() } }

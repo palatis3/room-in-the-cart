@@ -131,11 +131,12 @@ public actor HouseholdService {
         let status: DeletionStatus = try await transport.json(req)
         return try status.checked(for: receipt)
     }
-    public func workspaces() async throws -> WorkspaceList {
+    public func workspaces(subject expectedSubject: String? = nil) async throws -> WorkspaceList {
         guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         let start = generation
         let access = try await auth.access()
         guard generation == start else { throw ClientError.cancelled }
+        if let expectedSubject, expectedSubject != access.identity.subject { throw ClientError.accessEnded }
         let result: WorkspaceList = try await transport.json(request(base: configuration.baseURL,
             path: "v1/me/workspaces", method: "GET", token: access.accessToken))
         guard generation == start else { throw ClientError.cancelled }

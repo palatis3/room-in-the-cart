@@ -3,6 +3,7 @@ import HouseholdClient
 
 struct HouseholdSetupSections: View {
     @ObservedObject var model: HouseholdLifecycleModel
+    var showsNewSetup = true
     @State private var clearRetry = false
     var body: some View {
         Group {
@@ -17,7 +18,7 @@ struct HouseholdSetupSections: View {
                     Button(ht("Retry the same household action")) { Task { await model.retryMembership() } }
                     Button(ht("Clear after checking households")) { clearRetry = true }
                 }
-            } else {
+            } else if showsNewSetup {
                 Section(ht("Adult household setup")) {
                     TextField(ht("Your household alias"), text: $model.alias)
                     Toggle(ht("I confirm I am an adult"), isOn: $model.adultAttestation)

@@ -4,6 +4,7 @@ import HouseholdClient
 import LocalStore
 import DeviceSurfaces
 import CryptoKit
+import os
 
 private final class GuardianRootMemoryVault: RefreshTokenVault, @unchecked Sendable {
     private let lock = NSLock(); private var value: String?
@@ -13,6 +14,7 @@ private final class GuardianRootMemoryVault: RefreshTokenVault, @unchecked Senda
     func clear() throws { lock.lock(); defer { lock.unlock() }; value = nil }
 }
 private final class GuardianRootFixtureProtocol: URLProtocol {
+    private static let firstWorkspaceRead = OSAllocatedUnfairLock(initialState: true)
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
@@ -33,6 +35,14 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
             case "/auth/v1/verify": body = ["access_token":"fictional-access","refresh_token":"fictional-refresh","expires_in":3600,"user":user]
             case "/auth/v1/user": body = user
             case "/v1/me/workspaces":
+                if ProcessInfo.processInfo.arguments.contains("--lose-first-workspace-list"),
+                   Self.firstWorkspaceRead.withLock({ first in
+                       defer { first = false }
+                       return first
+                   }) {
+                    client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
+                    return
+                }
                 let memberships = [["householdId":home,"label":"Fixture family","role":"shopper"]]
                 body = ["workspaces":ProcessInfo.processInfo.arguments.contains("--no-existing-households") ? [] : memberships]
             case "/v1/households/\(home)/devices": body = ["deviceId":"fixture-device","deviceToken":"fictional-device-access"]

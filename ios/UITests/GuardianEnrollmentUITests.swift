@@ -124,10 +124,11 @@ import XCTest
         let screenshot = XCTAttachment(screenshot:app.screenshot()); screenshot.name = name; screenshot.lifetime = .keepAlways; add(screenshot)
         let accessibility = XCTAttachment(string:app.debugDescription); accessibility.name = name + " accessibility"; accessibility.lifetime = .keepAlways; add(accessibility)
     }
-    private func signInFromPrivateSettings(hasHousehold: Bool) {
+    private func signInFromPrivateSettings(hasHousehold: Bool, loseFirstWorkspaceList: Bool = false) {
         app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","--guardian-fixture-root",
             "--reset-guardian-root-fixture","--household-first-sign-in","-AppleLanguages","(en)","-AppleLocale","en_US"]
         if !hasHousehold { app.launchArguments.append("--no-existing-households") }
+        if loseFirstWorkspaceList { app.launchArguments.append("--lose-first-workspace-list") }
         app.launch()
         let settings = app.buttons["settings"]
         XCTAssertTrue(settings.waitForExistence(timeout:15))
@@ -137,6 +138,21 @@ import XCTest
         tap("Email me a code")
         type("Email sign-in code", "123456")
         tap("Verify code")
+    }
+
+    func testMembershipListRetriesAfterVerifiedSignInWithoutAnotherCode() {
+        signInFromPrivateSettings(hasHousehold: true, loseFirstWorkspaceList: true)
+        let retry = app.buttons["household.workspaces.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Create household"].exists)
+        XCTAssertFalse(app.buttons["Email me a code"].exists)
+        tap("household.workspaces.retry")
+        let family = app.buttons["Fixture family"]
+        XCTAssertTrue(family.waitForExistence(timeout: 10))
+        XCTAssertFalse(family.isEnabled)
+        toggle("Keep my existing work private on this phone")
+        tap("Fixture family")
+        XCTAssertTrue(app.buttons["Refresh household"].waitForExistence(timeout: 10))
     }
 
     func testFirstSignInWithoutHouseholdsShowsOnlySetupPrivacyChoice() {

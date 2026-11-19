@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Your household list could not be loaded. Check your connection and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household list could not be loaded. Check your connection and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar la lista de tus hogares. Revisa tu conexión y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Retry loading households": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry loading households"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar los hogares"
+          }
+        }
+      }
+    },
     "Posting shared messages is unavailable for this account. You can still read messages and use the safety controls.": {
       "localizations": {
         "en": {
