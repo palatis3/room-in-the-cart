@@ -85,12 +85,12 @@ import XCTest
             fill("1", into: "tonight.recipe.servings")
             fill("Tortillas", into: "tonight.recipe.ingredient")
             // Two tortillas remain after the first meal. The third needs a purchase.
-            fill("3", into: "Amount, unknown if blank")
+            fill("3", into: "Amount (required)")
             if app.keyboards.firstMatch.exists {
                 app.typeText(XCUIKeyboardKey.return.rawValue)
                 XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
             }
-            XCTAssertEqual(app.textFields["Amount, unknown if blank"].value as? String, "3")
+            XCTAssertEqual(app.textFields["Amount (required)"].value as? String, "3")
             enableSwitch("I reviewed required appliances")
             tap(element("tonight.recipe.review"))
             tap(element("tonight.recipe.save"))
@@ -538,7 +538,7 @@ import XCTest
         fill(title, into: "tonight.recipe.title")
         fill("1", into: "tonight.recipe.servings")
         fill("Lentils", into: "tonight.recipe.ingredient")
-        fill("1", into: "Amount, unknown if blank")
+        fill("1", into: "Amount (required)")
         let requirements = app.switches["I reviewed required appliances"]
         reveal(requirements)
         requirements.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()

@@ -26,17 +26,27 @@ struct TonightRecipeReview: View {
     @State private var effort: MealEffort?
     @State private var candidate: MealTemplate?
     @State private var error: String?
+    @State private var invalidAmountID: UUID?
+    @FocusState private var focusedAmount: String?
     @State private var busy = false
     private struct Ingredient: Identifiable {
         var id = UUID()
         var name = ""
         var amount = ""
         var unit: UnitOfMeasure = .count
+        @MainActor var positiveQuantity: Quantity? {
+            guard let quantity = try? LedgerEntry.quantity(amount, unit), quantity.amount > .zero else { return nil }
+            return quantity
+        }
     }
     private var authorized: Bool {
         identity != nil && currentIdentity() == identity && ledger.sourceWorkspaceID == origin
     }
     var body: some View {
+        ScrollViewReader { scroll in form(scroll) }
+    }
+
+    private func form(_ scroll: ScrollViewProxy) -> some View {
         Group {
             if !authorized { Text(tonightText("Unlock your private workspace to review tonight’s meals.")) }
             else {
@@ -75,7 +85,17 @@ struct TonightRecipeReview: View {
                             TextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes).keyboardType(.numberPad)
                             ForEach($ingredients) { $ingredient in
                                 TextField(tonightText("Ingredient"), text: $ingredient.name).accessibilityIdentifier("tonight.recipe.ingredient")
-                                LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit)
+                                    .id(ingredient.id)
+                                if invalidAmountID == ingredient.id {
+                                    Label(amountError(for: ingredient), systemImage: "exclamationmark.circle")
+                                        .foregroundStyle(Theme.warning)
+                                        .accessibilityIdentifier("tonight.recipe.amountError")
+                                }
+                                LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit,
+                                    amountFocus: ($focusedAmount, ingredient.id.uuidString), amountLabel: tonightText("Amount (required)"))
+                                    .onChange(of: ingredient.amount) { _, _ in
+                                        if invalidAmountID == ingredient.id, ingredient.positiveQuantity != nil { invalidAmountID = nil }
+                                    }
                             }
                             .onDelete { ingredients.remove(atOffsets: $0) }
                             Button(tonightText("Add ingredient")) { ingredients.append(Ingredient()) }
@@ -93,7 +113,7 @@ struct TonightRecipeReview: View {
                                 ForEach(MealEffort.allCases, id: \.self) { Text(tonightText($0.rawValue)).tag(Optional($0)) }
                             }
                         }
-                        Button(tonightText("Review recipe facts")) { review() }.accessibilityIdentifier("tonight.recipe.review")
+                        Button(tonightText("Review recipe facts")) { review(scroll) }.accessibilityIdentifier("tonight.recipe.review")
                     }
                     if let error { Text(error) }
                     LedgerSaveStatus(model: ledger)
@@ -123,15 +143,29 @@ struct TonightRecipeReview: View {
             }
     }
     private func lines(_ text: String) -> [String] { text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty } }
-    private func review() {
+    private func amountError(for ingredient: Ingredient) -> String {
+        let name = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if name.isEmpty { return tonightText("Enter an ingredient amount greater than zero.") }
+        return String(format: tonightText("Enter an amount greater than zero for %@."), name)
+    }
+    private func review(_ scroll: ScrollViewProxy) {
         do {
             guard (source?.recipe.ingredients.count ?? 0) <= 200, authorized, let servings = try LedgerEntry.rational(servings), servings > .zero else { throw TonightMealModel.Failure.unavailable }
             let amount = minutes.trimmingCharacters(in: .whitespacesAndNewlines)
             guard amount.isEmpty || Int(amount) != nil else { throw TonightMealModel.Failure.unavailable }
-            let rows = try ingredients.map { ingredient -> MealIngredient in
-                guard let quantity = try LedgerEntry.quantity(ingredient.amount, ingredient.unit), quantity.amount > .zero else { throw TonightMealModel.Failure.unavailable }
+            var rows: [MealIngredient] = []
+            for ingredient in ingredients {
+                guard let quantity = ingredient.positiveQuantity else {
+                    error = nil
+                    invalidAmountID = ingredient.id
+                    scroll.scrollTo(ingredient.id, anchor: .center)
+                    focusedAmount = ingredient.id.uuidString
+                    UIAccessibility.post(notification: .announcement, argument: amountError(for: ingredient))
+                    return
+                }
                 let prior = template?.ingredients.first { $0.id == ingredient.id }
-                return MealIngredient(id: ingredient.id, name: ingredient.name, quantity: quantity, notes: prior?.notes ?? "", exclusions: prior?.exclusions ?? [])
+                rows.append(MealIngredient(id: ingredient.id, name: ingredient.name, quantity: quantity,
+                    notes: prior?.notes ?? "", exclusions: prior?.exclusions ?? []))
             }
             guard !rows.isEmpty else { throw TonightMealModel.Failure.unavailable }
             // Editing the current Free recipe preserves its identity. Reviewing
@@ -150,6 +184,7 @@ struct TonightRecipeReview: View {
             evidence.effort = effort
             result.eligibilityEvidence = evidence
             try result.validate()
+            focusedAmount = nil; invalidAmountID = nil
             candidate = result; error = nil
         } catch { self.error = tonightText("Enter a title, positive servings and ingredient amounts, and valid reviewed details.") }
     }

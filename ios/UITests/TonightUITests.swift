@@ -21,16 +21,25 @@ import XCTest
         fill(app.textFields["tonight.recipe.title"], "Corn and beans")
         fill(app.textFields["tonight.recipe.servings"], "2")
         fill(app.textFields["tonight.recipe.ingredient"], "Corn")
-        fill(app.textFields["Amount, unknown if blank"], "1")
+        let amount = app.textFields["Amount (required)"]
+        XCTAssertTrue(amount.exists)
+        tap(app.buttons["tonight.recipe.review"])
+        let error = app.descendants(matching: .any)["tonight.recipe.amountError"]
+        XCTAssertTrue(error.waitForExistence(timeout: 5))
+        XCTAssertEqual(error.label, "Enter an amount greater than zero for Corn.")
+        XCTAssertTrue(amount.isHittable)
+        amount.typeText("1")  // Validation focuses the ingredient needing correction.
+        XCTAssertTrue(error.waitForNonExistence(timeout: 5))
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
         let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.savedRecipe.")).firstMatch
         XCTAssertTrue(saved.waitForExistence(timeout: 8))
-        XCTAssertTrue(saved.label.contains("Corn and beans"))
+        XCTAssertEqual(saved.label, "Edit saved recipe, Corn and beans")
         tap(saved)
         XCTAssertEqual(app.textFields["tonight.recipe.title"].value as? String, "Corn and beans")
         tap(app.buttons["Cancel"])
-        XCTAssertTrue(app.staticTexts["No dinner planned"].exists)
+        XCTAssertEqual(app.buttons["dinner.saveFirstRecipe"].label, "Replace Free reusable dinner")
+        XCTAssertTrue(saved.exists)
         XCTAssertTrue(app.buttons["dinnerStartPickup"].exists)
     }
 
@@ -54,7 +63,7 @@ import XCTest
         fill(app.textFields["tonight.recipe.title"], "No-shop rice dinner")
         fill(app.textFields["tonight.recipe.servings"], "1")
         fill(app.textFields["tonight.recipe.ingredient"], "Rice")
-        fill(app.textFields["Amount, unknown if blank"], "1")
+        fill(app.textFields["Amount (required)"], "1")
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 10))

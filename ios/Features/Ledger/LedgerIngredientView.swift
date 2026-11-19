@@ -278,8 +278,9 @@ struct LedgerQuantityFields: View {
     @Binding var amount: String
     @Binding var unit: UnitOfMeasure
     var amountFocus: (binding: FocusState<String?>.Binding, id: String)? = nil
+    var amountLabel: String = ledgerText("Amount, unknown if blank")
     var body: some View {
-        let field = TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
+        let field = TextField(amountLabel, text: $amount).keyboardType(.numbersAndPunctuation)
         if let amountFocus { field.focused(amountFocus.binding, equals: amountFocus.id) }
         else { field }
         Picker(ledgerText("Unit"), selection: $unit) {
