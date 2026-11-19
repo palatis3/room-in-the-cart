@@ -27,6 +27,7 @@ import CoreDomain
     @State private var barcodeID: String?
     @State private var manualCode = ""
     @State private var matchedProduct = false
+    @State private var inspectedLineID: UUID?
     @State private var receiptLines: [ScanReceiptLine]?
     @State private var recipe: RecipeCaptureDraft?
     @State private var ingredients: [CaptureLineDraft] = []
@@ -58,7 +59,7 @@ import CoreDomain
     }
 
     private func scanForm(_ scroll: ScrollViewProxy) -> some View {
-        Form {
+        WorkingForm {
             if reviewingIngredients {
                 StructuredCaptureReviewView(lines: $ingredients, corrections: corrections, correctionScope: correctionScope,
                     fieldFocus: $structuredFieldFocus,
@@ -151,8 +152,20 @@ import CoreDomain
             focusedField = nil
             structuredFieldFocus = nil
         }
-        .navigationTitle(captureText("Photo and scan review"))
+        .navigationTitle(captureText(kind == .receipt ? "Review printed lines" : "Photo and scan review"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { close(); dismiss() } } }
+        .sheet(isPresented: Binding(get: { inspectedLineID != nil }, set: { if !$0 { inspectedLineID = nil } })) {
+            if authorize(), !model.closed, let rows = receiptLines,
+               let index = rows.firstIndex(where: { $0.id == inspectedLineID }) {
+                NavigationStack {
+                    ReceiptPrintedLineInspector(lines: rows.enumerated().map { offset, row in
+                        ReceiptDocumentPage.Line(id: offset + 1, text: row.originalText, uncertain: row.uncertainOCR == true)
+                    }, pageNumber: nil, index: index, originalPage: {
+                        authorize() ? model.accepted?.originalImageData : nil
+                    })
+                }
+            }
+        }
         .fullScreenCover(isPresented: $showCamera) {
             CameraCaptureView(authorize: authorize) { result in
                 showCamera = false
@@ -174,7 +187,7 @@ import CoreDomain
                 if acceptedPhoto { resetDerived() }
             }
         }
-        .onChange(of: model.text) { _, _ in receiptLines = nil; matchedProduct = false }
+        .onChange(of: model.text) { _, _ in inspectedLineID = nil; receiptLines = nil; matchedProduct = false }
         .onChange(of: label) { _, _ in model.confirmed = false; matchedProduct = false }
         .onChange(of: barcodeID) { _, selection in
             if selection != nil { manualCode = "" }
@@ -266,7 +279,14 @@ import CoreDomain
                 ForEach(receiptLines ?? []) { snapshot in
                     let row = captureDraftBinding(ScanReceiptLine(id: snapshot.id, originalText: ""), in: receiptBinding)
                     VStack(alignment: .leading) {
-                        Text(row.wrappedValue.originalText).font(.footnote).textSelection(.enabled)
+                        Text(row.wrappedValue.originalText)
+                            .font(.system(.headline, design: .monospaced)).textSelection(.enabled)
+                        Button {
+                            focusedField = nil
+                            inspectedLineID = snapshot.id
+                        } label: { Label(pantryText("Original lines"), systemImage: "text.magnifyingglass").frame(minHeight: 44) }
+                        .buttonStyle(.borderless)
+                        .accessibilityIdentifier("scan.receipt.inspect.\(snapshot.id)")
                         TextField(captureText("Reviewed line wording"), text: row.reviewedText, axis: .vertical)
                             .focused($focusedField, equals: .receiptWording(snapshot.id))
                         TextField(captureText("Quantity wording, unknown if blank"), text: row.quantityNote)
@@ -412,12 +432,14 @@ struct ReceiptPhotoShortcuts: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(captureText("Only the photo you take or choose is read on this iPhone. Choosing an iCloud photo may download it through Apple.")).font(.footnote)
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 16) { imageButtons }.fixedSize(horizontal: true, vertical: false)
-                VStack(alignment: .leading, spacing: 12) { imageButtons }
+            imageButtons
+            Button { start = .sections } label: {
+                Label(captureText("Scan a long receipt in sections"), systemImage: "rectangle.stack")
+                    .frame(minHeight: 44)
             }
-            Button(captureText("Scan a long receipt in sections")) { start = .sections }.accessibilityIdentifier("receipt.sections")
+            .accessibilityIdentifier("receipt.sections")
+            Text(captureText("Only the photo you take or choose is read on this iPhone. Choosing an iCloud photo may download it through Apple."))
+                .font(.footnote).foregroundStyle(Theme.secondary)
         }
         .buttonStyle(.borderless)
         .disabled(!authorize())
@@ -442,8 +464,21 @@ struct ReceiptPhotoShortcuts: View {
     }
 
     @ViewBuilder private var imageButtons: some View {
-        Button(captureText("Take a photo")) { start = .camera }.accessibilityIdentifier("receipt.takePhoto")
-        Button(captureText("Choose receipt screenshot")) { pickingScreenshot = true }.accessibilityIdentifier("receipt.chooseScreenshot")
+        Button { start = .camera } label: { sourceButton("Take a photo", symbol: "camera") }
+            .accessibilityIdentifier("receipt.takePhoto")
+        Button { pickingScreenshot = true } label: { sourceButton("Choose receipt screenshot", symbol: "photo") }
+            .accessibilityIdentifier("receipt.chooseScreenshot")
+    }
+
+    private func sourceButton(_ title: String, symbol: String) -> some View {
+        Label(captureText(title), systemImage: symbol)
+            .font(.headline)
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+            .padding(.horizontal, 12)
+            .foregroundStyle(Theme.action)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Theme.controlEdge) }
+            .contentShape(Rectangle())
     }
 }
 
@@ -503,7 +538,8 @@ private struct ReceiptSectionCapture: View {
     private var captureContent: some View {
         VStack(spacing: 0) {
             if let review {
-                PantryReceiptDocuments(target: target, authorize: authorize, initialDocument: review, omittedLines: omitted,
+                PantryReceiptDocuments(target: target, authorize: authorize, initialDocument: review,
+                    sectionPreviews: draft.sections.map(\.preview), omittedLines: omitted,
                     backToSections: start == .sections ? { self.review = nil; self.omitted = [] } : nil) { source, _ in
                     if authorize() { reviewed(source) }
                 }
@@ -514,7 +550,7 @@ private struct ReceiptSectionCapture: View {
     }
 
     private var captureForm: some View {
-        Form {
+        WorkingForm {
             Text(captureText("Only the photo you take or choose is read on this iPhone. Choosing an iCloud photo may download it through Apple."))
             if start == .sections {
                 Text(captureText("Capture from top to bottom. Include the last printed line again at the top of the next photo. Up to six sections, 10 MB per photo and 30 MB total."))

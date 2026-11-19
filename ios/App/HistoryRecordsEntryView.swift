@@ -19,7 +19,7 @@ struct HistoryRecordsEntryView: View {
                 List {
                     Text(HistoryCopy.text("Connect your household to open saved price records and period plans."))
                     NavigationLink(HistoryCopy.text("Open household")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
-                }.navigationTitle(HistoryCopy.text("Prices and period budgets"))
+                }.workingSurface().navigationTitle(HistoryCopy.text("Prices and period budgets"))
             }
         }
         .sheet(isPresented: $choosingScope) {

@@ -80,6 +80,23 @@ import XCTest
         XCTAssertEqual(draft.lines.last?.printed?.kind, .adjustment)
     }
 
+    func testSourceInspectorReturnsOnlyAnAvailableImagePage() async throws {
+        let text = ReceiptDocumentBytes(data: Data("YOGURT $1.50".utf8), kind: .text)
+        let typedImage = await ReceiptDocumentReader.originalPage(text, pageNumber: 1)
+        XCTAssertNil(typedImage)
+
+        let pdf = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 200, height: 240)).pdfData { context in
+            context.beginPage()
+            ("YOGURT $1.50" as NSString).draw(at: CGPoint(x: 12, y: 18), withAttributes: [.font: UIFont.systemFont(ofSize: 18)])
+        }
+        let input = ReceiptDocumentBytes(data: pdf, kind: .pdf)
+        let firstPage = await ReceiptDocumentReader.originalPage(input, pageNumber: 1)
+        let bytes = try XCTUnwrap(firstPage)
+        XCTAssertNotNil(UIImage(data: bytes))
+        let missingPage = await ReceiptDocumentReader.originalPage(input, pageNumber: 2)
+        XCTAssertNil(missingPage)
+    }
+
     func testSpanishWeightedReceiptKeepsDateAndPaidAmbiguitiesOutOfStock() throws {
         func proposal(_ text: String) -> ReceiptPrintedEvidence {
             .init(.init(originalText: text), knownStorage: ["peras":[.fridge]])

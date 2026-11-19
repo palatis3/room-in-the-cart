@@ -5,7 +5,15 @@ import SwiftUI
 struct PantrySetupView: View {
     @ObservedObject var pickup: PickupModel
     @ObservedObject var ledger: LedgerModel
-    var opensPriceHistory = false
+    enum Destination { case home, prices, receipts }
+    var destination: Destination = .home
+    private var title: String {
+        switch destination {
+        case .home: pantryText("My Pantry")
+        case .prices: pantryText("Private price history")
+        case .receipts: pantryText("Receipt history")
+        }
+    }
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scene
@@ -44,24 +52,35 @@ struct PantrySetupView: View {
             if scope == nil {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if case .ready(let original, let model) = phase, original == scope, model.phase != .accessDenied {
-                if opensPriceHistory { PantryPriceHistoryView(model: model) }
-                else { PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true, household: household) }
+                switch destination {
+                case .prices: PantryPriceHistoryView(model: model)
+                case .receipts: PantryReceiptHistory(model: model, showsDone: false)
+                case .home: PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true, household: household)
+                }
             } else {
                 List {
-                    if !opensPriceHistory { HouseholdTonightLink(household: household) }
                     if busy { ProgressView(pantryText("Working…")) }
                     switch phase {
                     case .loading: EmptyView()
                     case .review(_, let review):
-                        Section(pantryText("Set up My Pantry")) {
-                            Text(pantryText("Review the food and reservations from your saved pickups. You can add food by hand after setup."))
-                            LabeledContent(pantryText("Saved pickups"), value: review.sourceCount.formatted())
-                            LabeledContent(pantryText("Food batches"), value: review.lotCount.formatted())
-                            LabeledContent(pantryText("Reservations"), value: review.reservationCount.formatted())
+                        let startsEmpty = review.sourceCount == 0 && review.lotCount == 0 && review.reservationCount == 0 && review.issues.isEmpty
+                        Section {
+                            VStack(alignment: .leading, spacing: 12) {
+                                BrandScopeLabel(pantryText("Private · On this iPhone"), systemImage: "lock")
+                                Text(pantryText("Set up My Pantry")).font(.title2.bold())
+                                Text(pantryText(startsEmpty ? "Add your first food by hand or review a receipt." : "Review the food and reservations from your saved pickups. You can add food by hand after setup."))
+                                    .foregroundStyle(Theme.secondary)
+                            }
+                            .padding(.vertical, 8)
+                            ViewThatFits(in: .horizontal) {
+                                HStack(alignment: .top, spacing: 20) { setupFigures(review) }.fixedSize(horizontal: true, vertical: false)
+                                VStack(alignment: .leading, spacing: 12) { setupFigures(review) }
+                            }
                             ForEach(issueRows(review), id: \.label) { row in
                                 LabeledContent(pantryText(row.label), value: row.count.formatted())
                             }
-                            Button(pantryText("Confirm pantry setup")) { Task { await perform(.apply) } }
+                            Button(pantryText(startsEmpty ? "Start my pantry" : "Confirm pantry setup")) { Task { await perform(.apply) } }
+                                .buttonStyle(PrimaryAction())
                                 .accessibilityIdentifier("pantry.setup.apply")
                         }
                     case .staging:
@@ -73,11 +92,12 @@ struct PantrySetupView: View {
                         Button(pantryText("Review pantry setup again")) { Task { await perform(.inspect) } }
                     case .ready: EmptyView()
                     }
-                }.disabled(busy)
+                    if destination == .home { HouseholdTonightLink(household: household) }
+                }.workingSurface().disabled(busy)
             }
         }
         .privacySensitive()
-        .navigationTitle(opensPriceHistory ? pantryText("Private price history") : pantryText("My Pantry"))
+        .navigationTitle(title)
         .task(id: scope) {
             if case .ready(let original, let model) = phase {
                 if original == scope && model.phase != .accessDenied { return }
@@ -86,6 +106,22 @@ struct PantrySetupView: View {
             generation = UUID(); phase = .loading; busy = false
             if scope != nil { await perform(.inspect) }
         }
+    }
+
+    @ViewBuilder private func setupFigures(_ review: PantryMigrationCoordinator.Review) -> some View {
+        setupFigure("Saved pickups", count: review.sourceCount)
+        setupFigure("Food batches", count: review.lotCount)
+        setupFigure("Reservations", count: review.reservationCount)
+    }
+
+    private func setupFigure(_ label: String, count: Int) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(count.formatted()).font(.title2.weight(.semibold)).monospacedDigit()
+            Text(pantryText(label)).font(.subheadline).foregroundStyle(Theme.secondary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(pantryText(label))
+        .accessibilityValue(count.formatted())
     }
 
     @MainActor private func perform(_ action: Action) async {

@@ -7,7 +7,7 @@ struct PlacementEntryView: View {
     @State private var retireReview = false
     @State private var discardCapture = false
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(PlacementCopy.text("Report what happened outside this app"))
                 Text(PlacementCopy.text("Saving a snapshot, sharing a list, or opening a retailer does not place an order. Only report placement after you have checked what happened with the retailer."))
@@ -38,6 +38,7 @@ struct PlacementEntryView: View {
                 }
             }
         }
+        .workingSurface()
         .navigationTitle(PlacementCopy.text("Shared placement reports"))
         .accessibilityIdentifier("placement.home")
         .task { await model.load() }

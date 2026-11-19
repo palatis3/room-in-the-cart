@@ -25,7 +25,7 @@ struct RecordsToolsView: View {
     #endif
     var body: some View {
         ScrollViewReader { proxy in
-        Form {
+        WorkingForm {
             if !recipeLibraryOnly {
                 Section {
                     Text(recordsText("Keep your records"))

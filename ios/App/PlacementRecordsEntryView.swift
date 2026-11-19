@@ -22,7 +22,7 @@ struct PlacementRecordsEntryView: View {
                     }
                     Text(PlacementCopy.text("Connect your household to report an external placement or review a pending report."))
                     NavigationLink(PlacementCopy.text("Open household")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
-                }.navigationTitle(PlacementCopy.text("Shared placement reports"))
+                }.workingSurface().navigationTitle(PlacementCopy.text("Shared placement reports"))
             }
         }
         .task { if model == nil { model = household.makePlacementModel() } }

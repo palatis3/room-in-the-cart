@@ -92,7 +92,7 @@ struct PantryVoiceInput: View {
                         Text(pantryText("On-device dictation is unavailable for this language or device. You can type instead."))
                             .accessibilityIdentifier("pantry.voice.status")
                     }
-                    Button(pantryText("Start dictation"), action: start)
+                    Button(action: start) { Label(pantryText("Start dictation"), systemImage: "mic").frame(minHeight: 44) }
                         .accessibilityIdentifier("pantry.voice.start")
                 }
             }
@@ -113,7 +113,7 @@ private struct PantryVoiceControls: View {
 
     var body: some View {
         if model.listening {
-            Text(pantryText("Listening — tap Stop when finished"))
+            Label(pantryText("Listening — tap Stop when finished"), systemImage: "waveform").font(.headline)
                 .accessibilityIdentifier("pantry.voice.listening")
             Button(pantryText("Stop")) { model.stopSpeech() }
                 .accessibilityIdentifier("pantry.voice.stop")
@@ -145,7 +145,7 @@ private struct PantryVoiceControls: View {
                     .accessibilityIdentifier("pantry.voice.use")
             }
         } else if !model.busy {
-            Button(pantryText("Start dictation"), action: start)
+            Button(action: start) { Label(pantryText("Start dictation"), systemImage: "mic").frame(minHeight: 44) }
                 .accessibilityIdentifier("pantry.voice.start")
         }
         Button(pantryText("Cancel"), action: cancel).accessibilityIdentifier("pantry.voice.cancel")

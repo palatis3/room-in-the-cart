@@ -36,6 +36,7 @@ struct PantryPriceHistoryView: View {
                 }
             }
         }
+        .workingSurface()
         .navigationTitle(pantryText("Private price history"))
         .privacySensitive()
         .task {
@@ -243,7 +244,7 @@ private struct PantryPriceCreditEditor: View {
     @State private var saving = false
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let notice { Text(verbatim: notice) }
             Text(verbatim: price.name + " · " + priceAmount(price))
             if let review {
@@ -394,7 +395,7 @@ private struct PantryPriceEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let notice { Text(notice) }
             if let review {
                 Text(verbatim: review.name).font(.headline)

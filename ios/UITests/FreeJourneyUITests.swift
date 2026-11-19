@@ -922,6 +922,13 @@ import XCTest
         XCTAssertTrue(oats.label.contains("OATS"))
         XCTAssertTrue(fee.label.contains("SERVICE FEE"))
         XCTAssertEqual(fee.value as? String, "0")
+        let inspectOats = app.buttons["receipt.document.inspect.1.1"]
+        tap(inspectOats)
+        XCTAssertTrue(app.staticTexts["Selected printed line"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "SERVICE FEE")).firstMatch.exists)
+        tap(app.buttons["Done"])
+        XCTAssertEqual(oats.value as? String, "0")
+        XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
         let name = app.textFields["Store or branch"]
         tap(name); name.typeText("Room Market")
@@ -2430,7 +2437,6 @@ import XCTest
         tap(app.tabBars.buttons["Dinners"])
         verifyChosenDinnerInWeek(expectedShopTitle: "Next shop")
         tap(app.tabBars.buttons["Records"])
-        tap(app.buttons["Family decision history"])
         tap(app.buttons["Saved pickup decisions on this iPhone"])
         assertText("Set aside two lunch wraps first")
         assertText("Meal outcome unconfirmed")

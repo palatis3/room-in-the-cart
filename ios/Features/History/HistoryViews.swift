@@ -18,9 +18,9 @@ struct HistoryEntryView: View {
     @FocusState private var focusedAmount: NumericField?
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
-                Text(HistoryCopy.text("Entered prices and period plans"))
+                Label(HistoryCopy.text("Entered prices and period plans"), systemImage: "calendar").font(.headline)
                 Text(HistoryCopy.text("These are household-entered records, not retailer prices, bank balances or verified savings."))
                     .font(.footnote)
             }
