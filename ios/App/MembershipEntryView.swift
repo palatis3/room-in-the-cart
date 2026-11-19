@@ -23,7 +23,7 @@ struct MembershipEntryView: View {
                     if !household.configured {
                         MembershipHeading(title: mtr("Household subscription"), symbol: "person.2")
                         Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
-                        Text(mtr("Household subscription purchases are unavailable. You can keep using the free planning tools."))
+                        Text(mtr("Subscribing requires an adult account and a selected household. Household sign-in is unavailable on this iPhone."))
                     } else if household.membershipSession == nil {
                         MembershipHeading(title: tr("Choose your household first"), symbol: "house")
                         Text(tr("To subscribe or restore a purchase, sign in with your adult account and select your household. You can use the free planning tools without signing in."))
@@ -67,9 +67,7 @@ extension HouseholdModel: MembershipSessionSource {
     }
 
     var membershipSession: MembershipSession? {
-        guard !guardianChildOnly, !locked, let identity, let projection, projection.enrolled,
-              projection.grantId == nil, ["organizer", "shopper", "contributor"].contains(projection.role),
-              let serviceURL else { return nil }
+        guard canOpenMembership, let identity, let projection, projection.enrolled, let serviceURL else { return nil }
         return MembershipSession(subjectID: identity.subject, memberID: projection.memberId,
             accountName: identity.email ?? projection.memberId, householdID: projection.household.id,
             householdName: projection.household.label, serviceURL: serviceURL)

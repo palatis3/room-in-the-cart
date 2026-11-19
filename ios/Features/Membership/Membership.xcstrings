@@ -2021,6 +2021,23 @@
           }
         }
       }
+    },
+    "Subscribing requires an adult account and a selected household. Household sign-in is unavailable on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscribing requires an adult account and a selected household. Household sign-in is unavailable on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para suscribirte necesitas una cuenta de adulto y un hogar seleccionado. El inicio de sesión del hogar no está disponible en este iPhone."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
