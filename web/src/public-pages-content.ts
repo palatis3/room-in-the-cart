@@ -153,8 +153,8 @@ export const publicPages = {
         },
         "paragraphs": [
           {
-            "en": "In Records, open Recovery, exports and saved records. Select readable records, then preview a helper copy, a readable owner export or a structured recovery file. Owner files can include private data. Choose where to save or share them.",
-            "es": "En Historial, abre Recuperación, exportaciones y registros guardados. Selecciona los registros que se pueden leer y revisa una copia para ayudante, una exportación legible para el propietario o un archivo estructurado de recuperación. Los archivos del propietario pueden incluir datos privados. Elige dónde guardarlos o compartirlos."
+            "en": "In Records, open Recovery, exports and saved records. Choose one source to prepare and preview a readable cook copy. For a readable owner export, select your records and acknowledge the private data before preparing it. For encrypted recovery, save your key separately from the file. Choose where to save or share each copy.",
+            "es": "En Historial, abre Recuperación, exportaciones y registros guardados. Elige una fuente para preparar y revisar una copia legible para quien cocina. Para una exportación legible del propietario, selecciona los registros y confirma que entiendes que incluye datos privados antes de prepararla. Para la recuperación cifrada, guarda la clave por separado del archivo. Elige dónde guardar o compartir cada copia."
           },
           {
             "en": "To recover a file, review its source, date, identity, revision and conflicts before importing. A recovery copy opens separately from newer work. A malformed or unsupported file must not replace your saved records.",
