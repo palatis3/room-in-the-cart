@@ -402,12 +402,10 @@ struct PantryReceiptLineEditor: View {
 
     private func labeledField(_ title: String, text: Binding<String>, focusKey: String,
                               identifier: String? = nil, keyboard: UIKeyboardType = .default) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
-                .fixedSize(horizontal: false, vertical: true).accessibilityHidden(true)
+        WorkingField(title) {
             TextField(title, text: text, prompt: Text(""))
                 .keyboardType(keyboard).focused(field, equals: focusKey)
-                .accessibilityLabel(title).accessibilityIdentifier(identifier ?? title)
+                .accessibilityIdentifier(identifier ?? title)
         }
     }
 
