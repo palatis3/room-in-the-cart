@@ -37,28 +37,21 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
     var body: some View {
         List {
             Group {
-                Section {
-                    Text(dinnerText("Plan dinners, one decision at a time.")).font(.title2.bold())
-                    if let shop = model.shop { Text(shop.title).font(.headline) }
-                    Text(dinnerText("Manual dinners and calendar changes stay available on Free. A preview changes nothing until you apply it."))
-                }
-                if let household { HouseholdTonightLink(household: household) }
-                if let liveLedger, liveLedger.ready, model.store === liveLedger {
+                if !model.store.ready {
+                    ProgressView()
+                } else if model.shop == nil {
                     Section {
-                        NavigationLink(dinnerText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: liveLedger) }
-                            .accessibilityIdentifier("dinner.mealPreferences")
-                        NavigationLink(tonightText("Tonight")) { TonightEntry() }
-                            .accessibilityIdentifier("dinner.tonight")
-                    }
-                }
-                if model.shop == nil {
-                    Section {
-                        Text(dinnerText("Start a pickup to plan dinners and review the groceries you’ll need."))
-                        Button(ledgerText("Start pickup"), action: startPickup)
-                            .accessibilityIdentifier("dinnerStartPickup")
+                        VStack(alignment: .leading, spacing: 18) {
+                            DinnerTonightHeading(title: dinnerText(model.workspace.shops.isEmpty ? "No dinner planned" : "No pickup selected"),
+                                detail: dinnerText("Start a pickup to plan dinners and review the groceries you’ll need.")) { EmptyView() }
+                            Button(ledgerText("Start pickup"), action: startPickup)
+                                .buttonStyle(PrimaryAction()).accessibilityIdentifier("dinnerStartPickup")
+                        }.padding(.vertical, 6)
                     }
                     if let liveLedger, liveLedger.ready, model.store === liveLedger {
                         Section {
+                            if model.basketPrepAccess() { DinnerManualRecipeLink(ledger: liveLedger) }
+                            tonightLink
                             RecordsRecoveryLink(accessibilityID: "dinner.recipeFiles", dinnerModel: model)
                         } footer: {
                             Text(dinnerText("You can save a recipe now and choose it for a pickup later."))
@@ -66,42 +59,42 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     }
                 } else if !model.accessAvailable {
                     Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
-                } else {
+                } else if let shop = model.shop {
                     Section {
-                        if let shop = model.shop {
-                            NavigationLink(dinnerText("This week")) {
-                                DinnerWeekView(model: model, shopID: shop.id, weekStart: $weekStart,
-                                    showWeekGrid: $showWeekGrid, saveStatus: saveStatus)
-                            }.accessibilityIdentifier("dinnerWeekEntry")
-                            DinnerDecisionButton(model: model, title: dinnerText("Repeat last week"),
-                                                 identifier: "dinner.repeatWeek") {
-                                DinnerRepeatWeekView(model: model, initialDate: weekStart)
-                            }.disabled(!model.editable)
-                        }
+                        DinnerTonightPlan(model: model, shop: shop)
+                        NavigationLink {
+                            DinnerWeekView(model: model, shopID: shop.id, weekStart: $weekStart,
+                                showWeekGrid: $showWeekGrid, saveStatus: saveStatus)
+                        } label: { Label(dinnerText("This week"), systemImage: "calendar") }
+                            .accessibilityIdentifier("dinnerWeekEntry")
+                        NavigationLink {
+                            DinnerLibraryView(model: model)
+                        } label: { Label(dinnerText("Dinner library"), systemImage: "books.vertical") }
+                            .accessibilityIdentifier("dinnerLibrary")
+                        if let liveLedger, liveLedger.ready, model.store === liveLedger { tonightLink }
                     }
                     if model.basketPrepAccess(), model.localIdeaWorkspaceID != nil {
                         DinnerPrepAgenda(model: model)
                     }
                     Section(dinnerText("Plan")) {
                         NavigationLink(dinnerText("All chosen dinners, including earlier dates")) { DinnerAllMealsView(model: model) }
-                        NavigationLink(dinnerText("Add a manual dinner")) { DinnerTemplateEditor(model: model, purpose: .manual) }
-                            .accessibilityIdentifier("dinnerManual")
                         NavigationLink(captureText("Review a recipe from text or photo")) { RecipeCaptureEntry(model: model) }
                             .accessibilityIdentifier("dinner.scanRecipe")
-                        NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) { DinnerLibraryView(model: model) }.accessibilityIdentifier("dinnerLibrary")
+                        DinnerDecisionButton(model: model, title: dinnerText("Repeat last week"),
+                                             identifier: "dinner.repeatWeek") {
+                            DinnerRepeatWeekView(model: model, initialDate: weekStart)
+                        }
                         NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: model.shop?.id) }
                         NavigationLink(dinnerText("Review a dinner idea")) { DinnerIdeasView(model: model) }
                         NavigationLink(dinnerText("Dinner rotations")) { DinnerRotationsView(model: model, weekStart: weekStart) }
                         NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }
                         if model.budgetVisible {
-                            if let shop = model.shop {
-                                if model.basketPrepAccess(), model.localIdeaWorkspaceID != nil, model.phaseProvider(shop.id) == .draft {
-                                    DinnerDecisionButton(model: model, title: dinnerPlanText("Three dinners, one basket"), identifier: "dinner.threeNightBasket") {
-                                        ThreeDinnerBasketView(model: model, shop: shop)
-                                    }
+                            if model.basketPrepAccess(), model.localIdeaWorkspaceID != nil, model.phaseProvider(shop.id) == .draft {
+                                DinnerDecisionButton(model: model, title: dinnerPlanText("Three dinners, one basket"), identifier: "dinner.threeNightBasket") {
+                                    ThreeDinnerBasketView(model: model, shop: shop)
                                 }
-                                DinnerDecisionButton(model: model, title: dinnerText("Price a dinner plan or compare pairings"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
                             }
+                            DinnerDecisionButton(model: model, title: dinnerText("Price a dinner plan or compare pairings"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
                             NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
                         }
                     }.disabled(!model.editable)
@@ -109,10 +102,23 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                         Section { DinnerDecisionButton(model: model, title: dinnerText("Review pending dinner changes"), identifier: "dinnerPending", preservePending: false) { DinnerPreviewView(model: model) } }
                     }
                 }
+                if let household { HouseholdTonightLink(household: household) }
+                if let liveLedger, liveLedger.ready, model.store === liveLedger, model.basketPrepAccess() {
+                    Section {
+                        NavigationLink(dinnerText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: liveLedger) }
+                            .accessibilityIdentifier("dinner.mealPreferences")
+                    }
+                }
                 DinnerFeedback(model: model)
                 Section { saveStatus() }
             }.listRowBackground(Theme.surface)
         }.workingSurface().navigationTitle(dinnerText("Dinners")).listStyle(.insetGrouped)
+    }
+
+    private var tonightLink: some View {
+        NavigationLink { TonightEntry() } label: {
+            Label(dinnerText("Find a dinner from the pantry"), systemImage: "carrot")
+        }.accessibilityIdentifier("dinner.tonight")
     }
 }
 
@@ -281,7 +287,7 @@ struct DinnerFeedback: View {
     @ObservedObject var model: DinnerFeatureModel
     @AccessibilityFocusState private var errorFocused: Bool
     var body: some View {
-        if let error = model.error { Section { Text(error).foregroundStyle(.red).accessibilityIdentifier("dinnerError").accessibilityFocused($errorFocused)
+        if let error = model.error { Section { Text(error).foregroundStyle(Theme.error).accessibilityIdentifier("dinnerError").accessibilityFocused($errorFocused)
             .onAppear { errorFocused = true }.onChange(of: error) { _, _ in errorFocused = true } } }
         if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("dinnerNotice") } }
     }
@@ -440,5 +446,123 @@ struct DinnerAllMealsView: View {
                 }
             }.listRowBackground(Theme.surface)
         }.workingSurface().navigationTitle(dinnerText("All chosen dinners")).dinnerAccess(model)
+    }
+}
+
+private struct DinnerTonightPlan: View {
+    @ObservedObject var model: DinnerFeatureModel
+    let shop: ShoppingLedger
+    @EnvironmentObject private var pickup: PickupModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            TimelineView(.everyMinute) { timeline in
+                if let day = try? MealDay(date: timeline.date, timeZoneIdentifier: shop.basis.timeZoneIdentifier),
+                   let current = try? model.currentMeals(pickup: pickup) {
+                    let away = model.state.weekNotes.contains { $0.shopID == shop.id && $0.kind == .away && $0.day.hasSameCivilDate(as: day) }
+                    let meals = current.on(day).filter { meal in
+                        guard !meal.isHidden else { return false }
+                        if case .original(let original) = meal { return original.carryover == nil }
+                        return true
+                    }
+                    DinnerTonightHeading(title: away ? dinnerText("Night away") :
+                        meals.isEmpty ? dinnerText("No dinner planned") : nil, detail: shop.title) {
+                        if !away {
+                            ForEach(meals) { meal in
+                                NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(verbatim: meal.title).font(.system(.title2, design: .serif, weight: .semibold))
+                                        Text(dinnerFormat("Servings: %@", meal.servings.description))
+                                            .font(.body).foregroundStyle(Theme.secondary)
+                                    }.frame(minHeight: 44, alignment: .leading)
+                                }.buttonStyle(.borderless)
+                            }
+                        }
+                    }
+                } else {
+                    Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
+                }
+            }
+            NavigationLink { DinnerTemplateEditor(model: model, purpose: .manual) } label: {
+                Label(dinnerText("Add a manual dinner"), systemImage: "plus")
+            }.buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("dinnerManual")
+        }.padding(.vertical, 6)
+    }
+}
+
+private struct DinnerTonightHeading<Meals: View>: View {
+    let title: String?
+    let detail: String
+    @ViewBuilder var meals: () -> Meals
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(tonightText("Tonight")).font(.headline).foregroundStyle(Theme.action)
+                    .accessibilityAddTraits(.isHeader)
+                if let title { Text(title).font(.title2.weight(.semibold)) }
+                meals()
+                Text(verbatim: detail).font(.body).foregroundStyle(Theme.secondary)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+            if !typeSize.isAccessibilitySize {
+                DinnerTableSetting().frame(width: 70, height: 62).accessibilityHidden(true)
+            }
+        }
+    }
+}
+
+/// An overhead place setting on folded linen.
+private struct DinnerTableSetting: View {
+    var body: some View {
+        Canvas { context, size in
+            context.scaleBy(x: size.width / 70, y: size.height / 62)
+            let napkin = Path { p in
+                p.move(to: CGPoint(x: 22, y: 4))
+                p.addLine(to: CGPoint(x: 64, y: 10))
+                p.addLine(to: CGPoint(x: 57, y: 59))
+                p.addLine(to: CGPoint(x: 15, y: 53))
+                p.closeSubpath()
+            }
+            context.fill(napkin, with: .color(Theme.selection))
+            let plate = Path(ellipseIn: CGRect(x: 17, y: 10, width: 46, height: 46))
+            context.fill(plate, with: .color(Theme.surface))
+            context.stroke(plate, with: .color(Theme.action), lineWidth: 1.5)
+            context.stroke(Path(ellipseIn: CGRect(x: 22, y: 15, width: 36, height: 36)), with: .color(Theme.controlEdge), lineWidth: 0.8)
+            let fork = Path { p in
+                p.move(to: CGPoint(x: 4, y: 13))
+                p.addLine(to: CGPoint(x: 4, y: 23))
+                p.addQuadCurve(to: CGPoint(x: 11, y: 23), control: CGPoint(x: 7.5, y: 30))
+                p.addLine(to: CGPoint(x: 11, y: 13))
+                p.move(to: CGPoint(x: 7.5, y: 13))
+                p.addLine(to: CGPoint(x: 7.5, y: 51))
+            }
+            context.stroke(fork, with: .color(Theme.action), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+        }
+    }
+}
+
+/// A recipe can occupy the Free slot before the first pickup exists.
+private struct DinnerManualRecipeLink: View {
+    @ObservedObject var ledger: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.guardianChildCoordinator) private var child
+    @Environment(\.scenePhase) private var scene
+    @State private var presenting = false
+
+    var body: some View {
+        Button { presenting = true } label: {
+            Label(dinnerText("Save a familiar dinner"), systemImage: "book")
+        }
+        .sheet(isPresented: $presenting) {
+            NavigationStack {
+                TonightRecipeReview(ledger: ledger, source: nil) {
+                    guard scene == .active, UIApplication.shared.isProtectedDataAvailable,
+                          child?.presented != true, household.projection?.grantId == nil else { return nil }
+                    return CapturePrivateIdentity.current(access: access, household: household)
+                }
+            }
+        }
     }
 }

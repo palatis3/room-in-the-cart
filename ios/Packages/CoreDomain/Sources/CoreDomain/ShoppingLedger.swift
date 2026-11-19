@@ -427,6 +427,8 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     public var shops: [ShoppingLedger]
     public var mealTemplates: [MealTemplate]
     public var selectedShopID: UUID?
+    /// Present only in a locally created workspace awaiting its first accepted dinner.
+    public var firstDinnerFeedbackOrigin: UUID?
     public var dinnerPlanning: DinnerPlanningState
     public internal(set) var privateMealFeedback: [PrivateMealFeedback] = []
     public var shoppingLists = PrivateShoppingLists()
@@ -438,9 +440,10 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         self.dinnerPlanning = dinnerPlanning
         self.packSelections = packSelections
     }
-    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout, privateMealFeedback, shoppingLists }
+    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout, privateMealFeedback, shoppingLists, firstDinnerFeedbackOrigin }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(firstDinnerFeedbackOrigin, forKey: .firstDinnerFeedbackOrigin)
         if shoppingLists != PrivateShoppingLists() { try c.encode(shoppingLists, forKey: .shoppingLists) }
         if !privateMealFeedback.isEmpty { try c.encode(privateMealFeedback, forKey: .privateMealFeedback) }
         try c.encode(shops, forKey: .shops)
@@ -453,6 +456,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        firstDinnerFeedbackOrigin = try c.decodeIfPresent(UUID.self, forKey: .firstDinnerFeedbackOrigin)
         shoppingLists = try c.decodeIfPresent(PrivateShoppingLists.self, forKey: .shoppingLists) ?? PrivateShoppingLists()
         privateMealFeedback = try c.decodeIfPresent([PrivateMealFeedback].self, forKey: .privateMealFeedback) ?? []
         listLayout = try c.decodeIfPresent(LedgerListLayout.self, forKey: .listLayout) ?? LedgerListLayout()

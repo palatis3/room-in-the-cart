@@ -317,6 +317,12 @@ private enum LedgerDeletionJournal {
             try candidate.validate()
             guard candidate != workspace else { error = nil; return true }
             guard let store else { return false }
+            // Enroll only on the first real local write, within its existing atomic snapshot.
+            // Older and imported libraries carry no eligible origin.
+            if revision == 0, workspace == LedgerWorkspace(), candidate.mealTemplates.isEmpty,
+               candidate.dinnerPlanning.acceptedDinners.isEmpty {
+                candidate.firstDinnerFeedbackOrigin = store.workspaceID
+            }
             // Reserve this revision while the immutable snapshot is encoded off the UI thread.
             saving = true
             defer { saving = false }

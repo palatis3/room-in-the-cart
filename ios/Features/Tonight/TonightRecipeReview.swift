@@ -40,10 +40,10 @@ struct TonightRecipeReview: View {
         Group {
             if !authorized { Text(tonightText("Unlock your private workspace to review tonight’s meals.")) }
             else {
-                Form {
+                WorkingForm {
                     if let candidate {
                         Section(tonightText("Review recipe facts")) {
-                            Text(candidate.title).font(.headline)
+                            Text(candidate.title).font(.system(.title2, design: .serif, weight: .semibold))
                             if let template, original?.mealTemplates.contains(template) != true {
                                 Text(tonightText("This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts."))
                             }
@@ -52,7 +52,7 @@ struct TonightRecipeReview: View {
                             Text(tonightText(original?.mealTemplates.isEmpty == false ?
                                 "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged." :
                                 "Saving creates your Free reusable dinner. It does not start a pickup or add groceries."))
-                            Button(tonightText("Save reviewed recipe")) { Task { await save(candidate) } }
+                            Button(tonightText("Save reviewed recipe")) { Task { await save(candidate) } }.buttonStyle(PrimaryAction())
                                 .disabled(busy || ledger.hasPendingSave).accessibilityIdentifier("tonight.recipe.save")
                             Button(tonightText("Keep editing")) { self.candidate = nil }.disabled(busy)
                         }

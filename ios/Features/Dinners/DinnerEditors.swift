@@ -49,6 +49,13 @@ struct DinnerTemplateEditor: View {
     @State private var completed = false
     @State private var savedAsDraft = false
     @State private var accepting = false
+    @Environment(\.dinnerMilestoneAccess) private var milestoneAccess
+    @State private var activeAttempt: UUID?
+    @State private var firstSaveCue: BrandCartMotion.Cue?
+    @State private var presentInEditor = false
+    @AccessibilityFocusState private var savedResultFocused: Bool
+    @Environment(\.scenePhase) private var scene
+    @Environment(\.dynamicTypeSize) private var typeSize
     @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
     init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil, servingsUnknown: Bool = false) {
@@ -89,6 +96,15 @@ struct DinnerTemplateEditor: View {
                 }
             }
         }
+        .onAppear { presentInEditor = true }
+        .onDisappear {
+            presentInEditor = false
+            activeAttempt = nil
+            firstSaveCue = nil
+        }
+        .onChange(of: scene) { _, phase in
+            if phase != .active { activeAttempt = nil; firstSaveCue = nil }
+        }
         .dinnerAccess(model)
         .dinnerApplyPresentation(model, presented: $showPreview)
     }
@@ -96,16 +112,25 @@ struct DinnerTemplateEditor: View {
         WorkingForm {
             if completed {
                 Section {
-                    if savedAsDraft {
-                        Text(dinnerText("Idea draft saved. You can edit it again in Dinner ideas."))
-                    } else {
-                        Text(dinnerText("Dinner saved. Choose it separately to add grocery needs."))
+                    HStack(alignment: .center, spacing: 14) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            if let reviewed { Text(verbatim: reviewed.title).font(.system(.title2, design: .serif, weight: .semibold)) }
+                            Text(dinnerText(savedAsDraft ? "Idea draft saved. You can edit it again in Dinner ideas." :
+                                "Dinner saved. Choose it separately to add grocery needs."))
+                                .accessibilityFocused($savedResultFocused)
+                        }
+                        if firstSaveCue != nil, milestoneAccess(), !typeSize.isAccessibilitySize {
+                            BrandCartMotion(cue: firstSaveCue, kind: .firstDinner)
+                                .frame(width: 48, height: 48)
+                        }
                     }
+                    .accessibilityElement(children: .contain)
+                    .onAppear { savedResultFocused = true }
                     Button(dinnerText("Done")) { dismiss() }.buttonStyle(PrimaryAction())
                 }
             } else if let reviewed {
                 Section(dinnerText("Review dinner")) {
-                    Text(reviewed.title).font(.headline)
+                    Text(reviewed.title).font(.system(.title2, design: .serif, weight: .semibold))
                     Text(dinnerFormat("Servings: %@", reviewed.servings.description))
                     MealPreferenceIssues(result: MealEligibilityPolicy.evaluate(profile: model.mealPreferences, template: reviewed))
                     ForEach(reviewed.ingredients) { ingredient in
@@ -127,10 +152,8 @@ struct DinnerTemplateEditor: View {
                         }
                         .disabled(accepting)
                         Button(dinnerText("Accept idea")) {
-                            accepting = true
-                            Task {
-                                completed = await model.acceptIdea(idea, acceptedID: acceptedID)
-                                accepting = false
+                            saveAccepted { feedback in
+                                await model.acceptIdea(idea, acceptedID: acceptedID, onFirstSave: feedback)
                             }
                         }
                         .buttonStyle(DinnerIdeaAcceptanceButtonStyle())
@@ -150,10 +173,8 @@ struct DinnerTemplateEditor: View {
                             .foregroundStyle(Theme.action).disabled(!model.editable)
                     } else {
                         Button(dinnerText("Save accepted dinner")) {
-                            accepting = true
-                            Task {
-                                completed = await model.accept(reviewed, id: acceptedID, fallback: fallback)
-                                accepting = false
+                            saveAccepted { feedback in
+                                await model.accept(reviewed, id: acceptedID, fallback: fallback, onFirstSave: feedback)
                             }
                         }
                             .buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("ledgerSaveDinner")
@@ -199,9 +220,28 @@ struct DinnerTemplateEditor: View {
                 }
                 Section { Button(dinnerText("Review"), action: review).buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("ledgerReviewDinner") }
             }
-            DinnerFeedback(model: model)
+            if !completed { DinnerFeedback(model: model) }
         }
     }
+
+    private func saveAccepted(_ save: @escaping (@escaping (DinnerFeatureModel.FirstDinnerSave) -> Void) async -> Bool) {
+        guard !accepting, let originalIdentity, model.editorIdentity == originalIdentity else { return }
+        let attempt = UUID()
+        activeAttempt = attempt
+        accepting = true
+        Task {
+            let saved = await save { receipt in
+                guard activeAttempt == attempt, presentInEditor, scene == .active,
+                      milestoneAccess(), originalIdentity == receipt.editor, model.editorIdentity == receipt.editor,
+                      acceptedID == receipt.acceptedID else { return }
+                firstSaveCue = .init()
+            }
+            accepting = false
+            activeAttempt = nil
+            if saved, presentInEditor, model.editorIdentity == originalIdentity { completed = true }
+        }
+    }
+
     private func continueEditing() {
         reviewed = nil
         reviewedIdea = nil
@@ -339,10 +379,15 @@ struct DinnerLibraryView: View {
                     ForEach(model.state.acceptedDinners) { dinner in
                         let isFreeReusable = model.state.freeReusableDinnerID == dinner.id
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(dinner.template.title).font(.headline)
-                            Text(dinnerFormat("Servings: %@", dinner.template.servings.description))
+                            Text(dinner.template.title).font(.system(.title2, design: .serif, weight: .semibold))
+                            DinnerServingNote(template: dinner.template)
                             if dinner.acceptedFallback { Text(dinnerText("Accepted fallback")) }
-                            if isFreeReusable { Text(dinnerText("Your Free reusable dinner")) }
+                            if isFreeReusable {
+                                Label(dinnerText("Your Free reusable dinner"), systemImage: "checkmark.circle.fill")
+                                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.onSelection)
+                                    .padding(.horizontal, 9).padding(.vertical, 5)
+                                    .background(Theme.selection, in: RoundedRectangle(cornerRadius: 9))
+                            }
                         }.padding(.vertical, 6)
                         if let evidence = dinner.template.sourceEvidence {
                             NavigationLink(captureText("Original recipe source")) {
@@ -373,6 +418,42 @@ struct DinnerLibraryView: View {
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }
+private struct DinnerServingNote: View {
+    let template: MealTemplate
+    @State private var expanded = false
+    @State private var reveal = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(dinnerFormat("Servings: %@", template.servings.description)).monospacedDigit()
+            if !template.servingGroups.isEmpty {
+                Button {
+                    reveal = false
+                    expanded.toggle()
+                } label: {
+                    Label(dinnerText("Serving details"), systemImage: expanded ? "chevron.down" : "chevron.forward")
+                        .frame(minHeight: 44)
+                }.buttonStyle(.borderless)
+                    .accessibilityValue(expanded ? Text("Expanded") : Text("Collapsed"))
+                if expanded {
+                    VStack(alignment: .leading, spacing: 5) {
+                        ForEach(template.servingGroups) { group in
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(dinnerFormat("%@ · %@ servings", group.name, group.servings.description))
+                                if group.isProtected { Text(dinnerText("Protected group")).foregroundStyle(Theme.secondary) }
+                            }.accessibilityElement(children: .combine)
+                        }
+                    }
+                    .opacity(reduceMotion || reveal ? 1 : 0.8)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: reveal)
+                    .onAppear { reveal = true }
+                }
+            }
+        }
+    }
+}
+
 struct DinnerIdeasView: View {
     @ObservedObject var model: DinnerFeatureModel
     @State private var patternIndex = 0
@@ -447,5 +528,64 @@ struct DinnerFocusedDoneBar: View {
         .background(Theme.canvas, ignoresSafeAreaEdges: [])
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dinnerFocusedKeyboardDoneBar")
+    }
+}
+
+/// Each cue starts at the originating user or commit event. Recreating its view
+/// later can only show the remaining interval, never restart a completed event.
+struct BrandCartMotion: View {
+    struct Cue: Equatable {
+        let id = UUID()
+        let began = ContinuousClock.now
+    }
+    enum Kind { case firstDinner, aboutReplay }
+    let cue: Cue?
+    let kind: Kind
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scene
+    @State private var cancelled: UUID?
+
+    var body: some View {
+        Group {
+            if let cue, !reduceMotion, scene == .active, cancelled != cue.id {
+                TimelineView(.animation) { _ in
+                    let pose = pose(at: elapsed(since: cue))
+                    BrandCartMark(pearOffset: pose.offset, pearAngle: pose.angle)
+                }
+                .task(id: cue.id) {
+                    try? await ContinuousClock().sleep(until: cue.began.advanced(by: .milliseconds(duration)))
+                    if !Task.isCancelled { cancelled = cue.id }
+                }
+            } else { BrandCartMark() }
+        }
+        .onDisappear { cancelled = cue?.id }
+        .onChange(of: scene) { _, phase in if phase != .active { cancelled = cue?.id } }
+        .onChange(of: reduceMotion) { _, reduced in if reduced { cancelled = cue?.id } }
+        .accessibilityHidden(true)
+    }
+
+    private var duration: Int { kind == .firstDinner ? 120 : 480 }
+
+    private func elapsed(since cue: Cue) -> Double {
+        let delta = cue.began.duration(to: .now).components
+        return Double(delta.seconds) * 1_000 + Double(delta.attoseconds) / 1e15
+    }
+
+    private func pose(at milliseconds: Double) -> (offset: CGSize, angle: Double) {
+        let tip: Double = kind == .firstDinner ? 35 : 125
+        let tuck: Double = kind == .firstDinner ? 80 : 300
+        func progress(_ start: Double, _ end: Double) -> Double {
+            let x = min(1, max(0, (milliseconds - start) / (end - start)))
+            return x * x * (3 - 2 * x)
+        }
+        if milliseconds < tip {
+            return (CGSize(width: 2, height: -3), 5 * progress(0, tip))
+        }
+        if milliseconds < tuck {
+            let p = progress(tip, tuck)
+            return (CGSize(width: 2 - 2 * p, height: -3 + 2 * p), 5 - 3 * p)
+        }
+        let p = progress(tuck, Double(duration))
+        return (CGSize(width: 0, height: -1 + p), 2 - 2 * p)
     }
 }

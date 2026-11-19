@@ -65,9 +65,13 @@ struct TonightEntry: View {
                 Text(tonightText("Unlock your private workspace to review tonight’s meals."))
             } else if !pickup.pantryIsActive {
                 List {
-                    Text(tonightText("Set up My Pantry to review recipes against food available at home."))
-                    NavigationLink(tonightText("Open My Pantry")) { PantrySetupView(pickup: pickup, ledger: ledger) }
-                }
+                    plannedMeals
+                    Section {
+                        Text(tonightText("Set up My Pantry to review recipes against food available at home."))
+                        NavigationLink(tonightText("Open My Pantry")) { PantrySetupView(pickup: pickup, ledger: ledger) }
+                        Button(tonightText("Review a recipe by hand")) { manual = true }
+                    }.listRowBackground(Theme.surface)
+                }.workingSurface()
             } else if let batch = model.batch, let scope, batch.originID != scope.inventory {
                 Text(tonightText("This batch is no longer in the open pantry."))
             } else {
@@ -89,6 +93,7 @@ struct TonightEntry: View {
         .privacySensitive()
         .task(id: scope) {
             model.invalidate(); preview = nil; choosing = nil; sourceToReview = nil; manual = false; foodToReview = nil; recipeToReview = nil
+            message = nil; newTitle = ""; destination = nil; suggestedSecond = nil; requestedSection = nil
             if scope != nil && pickup.pantryIsActive { await refresh() }
         }
         .onChange(of: model.reviews) { _, _ in refreshHome() }
@@ -120,123 +125,154 @@ struct TonightEntry: View {
             NavigationStack { TonightRecipeReview(ledger: ledger, source: source, currentIdentity: currentIdentity) }
         }
     }
+    @ViewBuilder private var plannedMeals: some View {
+        if model.batch == nil, ledger.ready, pickup.ready, !ledger.hasPendingSave, !pickup.hasPendingSave,
+           let origin = ledger.sourceWorkspaceID {
+            Section {
+                TimelineView(.everyMinute) { timeline in
+                    if let rows = try? TonightPlannedDinners.meals(workspace: ledger.workspace, ledgerID: origin,
+                        journeys: pickup.journeys, now: timeline.date, zone: .current) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label(dinnerText("Private dinner plan"), systemImage: "calendar").font(.headline).foregroundStyle(Theme.action)
+                                .accessibilityAddTraits(.isHeader)
+                            if rows.isEmpty { Text(dinnerText("No dinner planned")).font(.title2.weight(.semibold)) }
+                            ForEach(rows) { meal in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(verbatim: meal.title).font(.system(.title2, design: .serif, weight: .semibold))
+                                    Text(verbatim: meal.pickup).font(.body).foregroundStyle(Theme.secondary)
+                                }.accessibilityElement(children: .combine)
+                            }
+                        }.padding(.vertical, 6)
+                    } else {
+                        Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
+                    }
+                }
+            }.listRowBackground(Theme.surface)
+        }
+    }
+
     private var content: some View {
         List {
-            if model.batch != nil, model.input != nil {
-                Section(tonightText("Selected batch")) {
-                    if let lot = model.selectedLot {
-                        LabeledContent(lot.name, value: ledgerQuantity(lot.usable))
-                            .accessibilityIdentifier("tonight.batch.available")
-                        Text(tonightText("Available after reservations. Match a recipe ingredient to this food to see how much it can use."))
-                    } else {
-                        Text(tonightText("This batch has no confirmed unreserved quantity. Check its count and reservations in My Pantry."))
+            Group {
+                if choosing == nil { plannedMeals }
+                if model.batch != nil, model.input != nil {
+                    Section(tonightText("Selected batch")) {
+                        if let lot = model.selectedLot {
+                            LabeledContent(lot.name, value: ledgerQuantity(lot.usable))
+                                .accessibilityIdentifier("tonight.batch.available")
+                            Text(tonightText("Available after reservations. Match a recipe ingredient to this food to see how much it can use."))
+                        } else {
+                            Text(tonightText("This batch has no confirmed unreserved quantity. Check its count and reservations in My Pantry."))
+                        }
                     }
                 }
-            }
-            if let current = homeAccess { AdultHomeSummaryPreference(kind: .tonight, access: current, ledgerID: ledger.sourceWorkspaceID) }
-            Section {
                 NavigationLink(tonightText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: ledger) }
                     .accessibilityIdentifier("tonight.preferences")
-                Text(tonightText("Review your private preferences first, then match recipe ingredients to pantry food. Food reserved for other plans is already excluded."))
-                if model.input?.workspace.dinnerPlanning.privateMealPreferences == nil {
-                    Text(tonightText("No private preference profile is saved. Restrictions have not been checked."))
+                if model.busy { ProgressView(tonightText("Refreshing recipes and pantry…")) }
+                if model.failed {
+                    Section { Text(tonightText("Recipes or pantry changed or could not be read. Refresh before reviewing a meal.")) }
                 }
-                Text(tonightText("This view is private. It does not use a household pantry or change a shopping list while you browse."))
-            }
-            if model.busy { ProgressView(tonightText("Refreshing recipes and pantry…")) }
-            if model.failed {
-                Section { Text(tonightText("Recipes or pantry changed or could not be read. Refresh before reviewing a meal.")) }
-            }
-            if let message { Section { Text(message).accessibilityIdentifier("tonight.status") } }
-            if let preview {
-                Section(tonightText("Review dinner choice")) {
-                    Text(preview.recipe.title).font(.headline)
-                        .id(ChoiceSection.review)
-                        .accessibilityFocused($focusedSection, equals: .review)
-                    Text(preview.destinationTitle)
-                    Text(tonightText(preview.createsPickup ? "Apply creates a new pickup and one dinner. Cancel creates neither." : "Apply adds one dinner to this pickup."))
-                    ForEach(preview.recipe.ingredients) { ingredient in
-                        LabeledContent(ingredient.name, value: ledgerQuantity(ingredient.quantity))
+                if let message { Section { Text(message).accessibilityIdentifier("tonight.status") } }
+                if let preview {
+                    Section(tonightText("Review dinner choice")) {
+                        Text(preview.recipe.title).font(.system(.title2, design: .serif, weight: .semibold))
+                            .id(ChoiceSection.review)
+                            .accessibilityFocused($focusedSection, equals: .review)
+                        Text(preview.destinationTitle)
+                        Text(tonightText(preview.createsPickup ? "Apply creates a new pickup and one dinner. Cancel creates neither." : "Apply adds one dinner to this pickup."))
+                        ForEach(preview.recipe.ingredients) { ingredient in
+                            LabeledContent(ingredient.name, value: ledgerQuantity(ingredient.quantity))
+                        }
+                        TonightPricesView(estimate: preview.estimate)
+                        Text(tonightText("Choosing records the full recipe need. It does not consume pantry food or reserve the matched batches."))
+                        Button(tonightText("Apply dinner choice")) { Task { await apply(preview) } }.buttonStyle(PrimaryAction())
+                            .disabled(applying || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("tonight.apply")
+                        Button(tonightText("Cancel preview")) { self.preview = nil; choosing = nil }.disabled(applying)
                     }
-                    TonightPricesView(estimate: preview.estimate)
-                    Text(tonightText("Choosing records the full recipe need. It does not consume pantry food or reserve the matched batches."))
-                    Button(tonightText("Apply dinner choice")) { Task { await apply(preview) } }
-                        .disabled(applying || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("tonight.apply")
-                    Button(tonightText("Cancel preview")) { self.preview = nil; choosing = nil }.disabled(applying)
-                }
-            } else if let choosing {
-                Section(tonightText("Choose a destination")) {
-                    Text(choosing.title).font(.headline)
-                        .id(ChoiceSection.destination)
-                        .accessibilityFocused($focusedSection, equals: .destination)
-                    Picker(tonightText("Pickup"), selection: $destination) {
-                        Text(tonightText("Start a new pickup")).tag(UUID?.none)
-                        ForEach(ledger.workspace.shops) { shop in Text(shop.title).tag(Optional(shop.id)) }
+                } else if let choosing {
+                    Section(tonightText("Choose a destination")) {
+                        Text(choosing.title).font(.system(.title2, design: .serif, weight: .semibold))
+                            .id(ChoiceSection.destination)
+                            .accessibilityFocused($focusedSection, equals: .destination)
+                        Picker(tonightText("Pickup"), selection: $destination) {
+                            Text(tonightText("Start a new pickup")).tag(UUID?.none)
+                            ForEach(ledger.workspace.shops) { shop in Text(shop.title).tag(Optional(shop.id)) }
+                        }
+                        if destination == nil { TextField(tonightText("New pickup name"), text: $newTitle) }
+                        Button(tonightText("Preview dinner choice")) { Task { await prepareChoice(choosing) } }
+                            .disabled(model.busy || (destination == nil && newTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                        Button(tonightText("Cancel")) { self.choosing = nil }
                     }
-                    if destination == nil { TextField(tonightText("New pickup name"), text: $newTitle) }
-                    Button(tonightText("Preview dinner choice")) { Task { await prepareChoice(choosing) } }
-                        .disabled(model.busy || (destination == nil && newTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
-                    Button(tonightText("Cancel")) { self.choosing = nil }
                 }
-            }
-            if model.input != nil && model.savedRecipes.isEmpty && !model.busy {
-                Section(tonightText("Save a reviewed recipe")) {
-                    Text(tonightText("No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup."))
+                if model.input != nil && model.savedRecipes.isEmpty && !model.busy {
+                    Section(tonightText("Save a reviewed recipe")) {
+                        Text(tonightText("No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup."))
+                        Button(tonightText("Review a recipe by hand")) { manual = true }.buttonStyle(PrimaryAction())
+                    }
                 }
-            }
-            if !model.conflictingRecipes.isEmpty {
-                Section(tonightText("Choose the saved recipe version")) {
-                    Text(tonightText("These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches."))
-                    ForEach(model.conflictingRecipes) { source in
-                        VStack(alignment: .leading) {
-                            Text(source.template.title).font(.headline)
-                            Text(source.acceptedAt.map { tonightText("Accepted dinner") + " · " + $0.formatted(date: .abbreviated, time: .shortened) } ?? tonightText("Free reusable dinner"))
-                            Text(tonightText("Recipe revision") + ": " + source.template.revision.formatted())
-                            Button(tonightText("Use this saved version")) {
-                                do { try model.selectVersion(source); preview = nil; choosing = nil }
-                                catch { message = tonightText("Refresh before reviewing this match.") }
+                if !model.conflictingRecipes.isEmpty {
+                    Section(tonightText("Choose the saved recipe version")) {
+                        Text(tonightText("These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches."))
+                        ForEach(model.conflictingRecipes) { source in
+                            VStack(alignment: .leading) {
+                                Text(source.template.title).font(.headline)
+                                Text(source.acceptedAt.map { tonightText("Accepted dinner") + " · " + $0.formatted(date: .abbreviated, time: .shortened) } ?? tonightText("Free reusable dinner"))
+                                Text(tonightText("Recipe revision") + ": " + source.template.revision.formatted())
+                                Button(tonightText("Use this saved version")) {
+                                    do { try model.selectVersion(source); preview = nil; choosing = nil }
+                                    catch { message = tonightText("Refresh before reviewing this match.") }
+                                }
+                                Button(tonightText("Review recipe facts")) { recipeToReview = source.template }
                             }
-                            Button(tonightText("Review recipe facts")) { recipeToReview = source.template }
                         }
                     }
                 }
-            }
-            if !model.suggestions.isEmpty {
-                Section(tonightText("Pantry matches to review")) {
-                    ForEach(model.suggestions) { review in recipeRow(review) }
+                if !model.suggestions.isEmpty {
+                    Section(tonightText("Pantry matches to review")) {
+                        ForEach(model.suggestions) { review in recipeRow(review) }
+                    }
                 }
-            }
-            if let original = scope, let ledgerID = ledger.sourceWorkspaceID {
-                if model.suggestions.contains(where: canChoose) {
-                    wordingLink(following: false)
+                if let original = scope, let ledgerID = ledger.sourceWorkspaceID {
+                    if model.suggestions.contains(where: canChoose) {
+                        wordingLink(following: false)
+                    }
+                    TonightExplanationEntry(meals: model, ledgerID: ledgerID,
+                        authorize: { scope == original && !ledger.saving && !ledger.hasPendingSave },
+                        refresh: { await refresh() }, choose: { recipe in
+                            guard scope == original else { return }
+                            beginChoice(recipe)
+                        })
                 }
-                TonightExplanationEntry(meals: model, ledgerID: ledgerID,
-                    authorize: { scope == original && !ledger.saving && !ledger.hasPendingSave },
-                    refresh: { await refresh() }, choose: { recipe in
-                        guard scope == original else { return }
-                        beginChoice(recipe)
-                    })
-            }
-            if !model.needsReview.isEmpty {
-                Section(tonightText("Needs information or a pantry match")) {
-                    ForEach(model.needsReview) { review in recipeRow(review) }
+                if !model.needsReview.isEmpty {
+                    Section(tonightText("Needs information or a pantry match")) {
+                        ForEach(model.needsReview) { review in recipeRow(review) }
+                    }
                 }
-            }
-            Section(tonightText("Recipe library")) {
-                Button(tonightText("Review a recipe by hand")) { manual = true }
-                RecordsRecoveryLink(accessibilityID: "tonight.records")
-                ForEach(model.input?.sources ?? []) { source in
-                    Button { sourceToReview = source } label: {
-                        VStack(alignment: .leading) {
-                            Text(source.recipe.title)
-                            Text(tonightText("Saved source — review servings and ingredient amounts")).font(.caption)
-                        }
-                    }.accessibilityIdentifier("tonight.source.\(source.id)")
+                Section(tonightText("Recipe library")) {
+                    if model.input == nil || !model.savedRecipes.isEmpty || model.busy {
+                        Button(tonightText("Review a recipe by hand")) { manual = true }
+                    }
+                    RecordsRecoveryLink(accessibilityID: "tonight.records")
+                    ForEach(model.input?.sources ?? []) { source in
+                        Button { sourceToReview = source } label: {
+                            VStack(alignment: .leading) {
+                                Text(source.recipe.title)
+                                Text(tonightText("Saved source — review servings and ingredient amounts")).font(.caption)
+                            }
+                        }.accessibilityIdentifier("tonight.source.\(source.id)")
+                    }
+                    Button(tonightText("Refresh recipes and pantry")) { Task { await refresh() } }.disabled(model.busy || applying)
+                        .accessibilityIdentifier("tonight.refresh")
                 }
-                Button(tonightText("Refresh recipes and pantry")) { Task { await refresh() } }.disabled(model.busy || applying)
-                    .accessibilityIdentifier("tonight.refresh")
-            }
-            Section { LedgerSaveStatus(model: ledger) }
+                if let current = homeAccess { AdultHomeSummaryPreference(kind: .tonight, access: current, ledgerID: ledger.sourceWorkspaceID) }
+                Section {
+                    if let input = model.input, input.workspace.dinnerPlanning.privateMealPreferences == nil {
+                        Text(tonightText("No private preference profile is saved. Restrictions have not been checked."))
+                    }
+                    Text(tonightText("This view is private. It does not use a household pantry or change a shopping list while you browse."))
+                }
+                Section { LedgerSaveStatus(model: ledger) }
+            }.listRowBackground(Theme.surface)
         }.listStyle(.insetGrouped).workingSurface()
     }
     @ViewBuilder private func recipeRow(_ review: PantryMealMatcher.Review) -> some View {
@@ -307,12 +343,12 @@ struct TonightEntry: View {
                     workspaceID: ledgerID, shopID: input.workspace.selectedShopID, at: Date()))
             }
         } label: {
-            VStack(alignment: .leading) {
-                Text(review.recipe.title).font(.headline)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(review.recipe.title).font(.system(.title3, design: .serif, weight: .semibold))
                 Text(tonightText(!review.eligibility.eligible ? "Review restrictions and missing information" :
                     review.allIngredientsCovered ? "Ingredients covered — review to choose" : "Review ingredient matches and missing amounts"))
-                    .font(.caption)
-            }
+                    .font(.body).foregroundStyle(Theme.secondary)
+            }.padding(.vertical, 4)
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("tonight.result." + review.id.uuidString)
         }
@@ -415,11 +451,11 @@ struct TonightEntry: View {
         } catch { preview = nil; message = tonightText("The recipe, preferences, pantry or destination changed. Review the current information again.") }
     }
     @MainActor private func apply(_ review: TonightPlanChoice.Review) async {
-        guard !applying, scope != nil else { return }
+        guard !applying, let startingScope = scope else { return }
         applying = true
         let ok = await TonightPlanChoice.apply(review, ledger: ledger, pickup: pickup, currentIdentity: currentIdentity)
         applying = false
-        guard scope != nil else { model.invalidate(); preview = nil; return }
+        guard scope == startingScope else { return }
         if ok { preview = nil; choosing = nil; message = tonightText("One dinner was added to your pickup."); await refresh() }
         else { message = tonightText("Dinner was not confirmed. Review changed information or retry the pending save.") }
     }

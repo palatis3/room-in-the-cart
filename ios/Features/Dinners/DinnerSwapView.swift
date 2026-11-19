@@ -7,6 +7,7 @@ struct DinnerSwapView: View {
     @EnvironmentObject private var pickup: PickupModel
     @Environment(\.advanceToDinnerApply) private var advance
     @Environment(\.closeDinnerDecision) private var close
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var owner: DinnerFeatureModel.EditorIdentity?
     @State private var groupID: UUID?
     @State private var options: [DinnerSwapOption] = []
@@ -14,10 +15,10 @@ struct DinnerSwapView: View {
     @State private var matches: [UUID: UUID] = [:]
 
     var body: some View {
-        Form {
+        WorkingForm {
             if owner == model.editorIdentity, model.accessAvailable {
                 Section {
-                    Text(meal.title).font(.headline)
+                    Text(meal.title).font(.system(.title2, design: .serif, weight: .semibold))
                     Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
                     if !meal.servingGroups.isEmpty {
                         Picker(dinnerText("Portion to replace"), selection: $groupID) {
@@ -43,11 +44,22 @@ struct DinnerSwapView: View {
                             Button {
                                 if selected != option.id { selected = option.id; matches = [:] }
                             } label: {
-                                HStack {
-                                    Text(option.title)
-                                    if selected == option.id { Image(systemName: "checkmark").accessibilityHidden(true) }
+                                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                    Image(systemName: selected == option.id ? "checkmark.circle.fill" : "circle")
+                                        .accessibilityHidden(true)
+                                    Text(option.title).font(.system(.title3, design: .serif, weight: .medium))
                                 }
-                            }.disabled(!option.canChoose)
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .padding(.horizontal, 10)
+                                .foregroundStyle(selected == option.id ? Theme.onSelection : Theme.ink)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Theme.selection)
+                                        .opacity(selected == option.id ? 1 : 0)
+                                        .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: selected)
+                                }
+                                .contentShape(Rectangle())
+                            }.buttonStyle(.plain).disabled(!option.canChoose)
                                 .accessibilityAddTraits(selected == option.id ? .isSelected : [])
                                 .accessibilityIdentifier("swap.option." + option.id.uuidString)
                             if let issue = option.issue { Text(issueText(issue)).font(.subheadline) }
@@ -81,7 +93,7 @@ struct DinnerSwapView: View {
                             let reviewed = try model.prepareSwap(option, pickup: pickup, reviewedFoods: matches)
                             if model.installSwap(reviewed, pickup: pickup) { advance?() }
                         } catch { model.report(error) }
-                    }.disabled(!model.editable).accessibilityIdentifier("swap.preview")
+                    }.buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("swap.preview")
                 }
                 DinnerFeedback(model: model)
             }
