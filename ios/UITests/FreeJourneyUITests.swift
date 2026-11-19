@@ -1152,6 +1152,17 @@ import XCTest
         XCTAssertTrue(open.waitForNonExistence(timeout: 8))
     }
 
+    private func openReceiptAfterPantrySetup() {
+        receiptTap(app.buttons["pantry.setup.apply"])
+        // Setup persists asynchronously. Scrolling before the ready list appears can
+        // move its first actions offscreen before XCTest ever sees the receipt row.
+        guard app.buttons["pantry.add"].waitForExistence(timeout: 8) else {
+            XCTFail("My Pantry did not finish setup. " + app.debugDescription)
+            return
+        }
+        tap(app.buttons["pantry.receipt"])
+    }
+
     private func receiptTap(_ control: XCUIElement) {
         for _ in 0..<4 {
             if control.exists, control.isHittable { control.tap(); return }
@@ -1221,8 +1232,7 @@ import XCTest
     func testRescanReviewRequiresChoosingTheOriginalBeforeSaving() {
         launch(reset: true)
         receiptTap(app.buttons["shop.myPantry"])
-        receiptTap(app.buttons["pantry.setup.apply"])
-        receiptTap(app.buttons["pantry.receipt"])
+        openReceiptAfterPantrySetup()
         reviewManualOatsAtMarket()
         receiptTap(app.buttons["receipt.commit"])
         XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
@@ -1251,8 +1261,7 @@ import XCTest
     func testReceiptPaidTotalCanBeMarkedUnknownWithoutBecomingFree() {
         launch(reset: true)
         receiptTap(app.buttons["shop.myPantry"])
-        receiptTap(app.buttons["pantry.setup.apply"])
-        receiptTap(app.buttons["pantry.receipt"])
+        openReceiptAfterPantrySetup()
         reviewManualOatsAtMarket(paidPrintedTotal: true)
         receiptTap(app.buttons["receipt.commit"])
         XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
@@ -1292,8 +1301,7 @@ import XCTest
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         launch(reset: true)
         receiptTap(app.buttons["shop.myPantry"])
-        receiptTap(app.buttons["pantry.setup.apply"])
-        receiptTap(app.buttons["pantry.receipt"])
+        openReceiptAfterPantrySetup()
         let camera = app.buttons["receipt.takePhoto"]
         let screenshot = app.buttons["receipt.chooseScreenshot"]
         XCTAssertTrue(camera.waitForExistence(timeout: 5) && camera.isHittable)

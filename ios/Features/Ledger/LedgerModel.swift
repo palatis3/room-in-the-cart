@@ -107,7 +107,9 @@ private enum LedgerDeletionJournal {
     private let inventoryProjectionsEnabled: Bool
     private let mutationGate: PantryMutationGate?
     private let usesLivePantry: Bool
-    private var privatePantryAuthorization: (() -> Bool)?
+    // The ledger opens before the adult's paired pantry finishes authorization.
+    // Private entry controls observe this model to become available after binding.
+    @Published private var privatePantryAuthorization: (() -> Bool)?
     private var privatePantryDeletionCheck: (() throws -> Bool)?
     private var privatePantryWritable: Bool { !usesLivePantry || privatePantryAuthorization?() == true }
     @Published private(set) var hasPendingPantryProjection = false

@@ -1,4 +1,5 @@
 import XCTest
+import Combine
 import SQLite3
 import CoreDomain
 import LocalStore
@@ -20,8 +21,15 @@ import LocalStore
         let directory = try directory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("ledger.sqlite")
-        let model = LedgerModel(databaseURL: url)
+        let model = LedgerModel(databaseURL: url, usesLivePantry: true)
         await model.open()
+        XCTAssertNil(model.firstListStore)
+        var notified = false
+        let observer = model.objectWillChange.sink { notified = true }
+        try await model.bindPrivatePantryRecovery(nil, authorize: { true }, allowLedgerErasure: { true })
+        observer.cancel()
+        XCTAssertTrue(notified, "The inline grocery field must refresh when private entry becomes available.")
+        XCTAssertNotNil(model.firstListStore)
         let workspaceID = try XCTUnwrap(model.sourceWorkspaceID)
         let first = try XCTUnwrap(QuickGrocery.stage("eggs", in: ShoppingLedger()))
         let denied = await model.addQuickGrocery(first, selectedShopID: nil, workspaceID: workspaceID, authorize: { false })
