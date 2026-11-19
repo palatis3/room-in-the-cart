@@ -37,8 +37,14 @@ import XCTest
         entry.typeText("eggs\n")
         let eggsAdded = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@", "quickGrocery.undo", "eggs")).firstMatch
         XCTAssertTrue(eggsAdded.waitForExistence(timeout: 10))
-        tap(app.buttons["quickGrocery.dismissKeyboard"])
-        tap(app.buttons["openPickupList"])
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        let viewList = app.buttons["quickGrocery.viewList"]
+        XCTAssertTrue(viewList.isHittable)
+        XCTAssertEqual(viewList.label, "View list")
+        XCTAssertLessThanOrEqual(viewList.frame.maxY, keyboard.frame.minY)
+        capture("Quick entry with View list and Undo")
+        viewList.tap()
         let milk = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "milk")).firstMatch
         let eggs = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "eggs")).firstMatch
         XCTAssertTrue(milk.waitForExistence(timeout: 10))

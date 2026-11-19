@@ -228,8 +228,9 @@ struct LedgerHomeView: View {
 
     private var searchField: some View {
         let title = ledgerText("Search active items")
+        let prompt = dynamicTypeSize.isAccessibilitySize ? Text(verbatim: "") : Text(title).foregroundStyle(Theme.secondary)
         return HStack {
-            TextField(title, text: $model.search, prompt: dynamicTypeSize.isAccessibilitySize ? Text(verbatim: "") : nil)
+            TextField(title, text: $model.search, prompt: prompt)
                 .textFieldStyle(.roundedBorder).accessibilityLabel(title).accessibilityIdentifier("ledgerSearch")
             if !model.search.isEmpty {
                 Button { model.search = "" } label: {

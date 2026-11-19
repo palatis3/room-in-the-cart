@@ -125,6 +125,42 @@ private struct QuickGroceryField: View {
                     .accessibilityIdentifier("quickGrocery.add")
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
             }
+            if let batch = model.shop?.importBatches.last(where: { $0.id == undoBatch && $0.undoneAt == nil }) {
+                let result = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 12))
+                result {
+                    Label(quickGroceryFormat("Added %@", batch.originalText), systemImage: "checkmark.circle.fill")
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.onSelection)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("quickGrocery.added")
+                    Button {
+                        guard let shopID = model.shop?.id else { return }
+                        Task {
+                            if await model.editShop(key: "undo-quick-\(batch.id)", shopID: shopID,
+                                authorize: { authorize() && model.shop?.id == shopID }, { try $0.undoImport(batchID: batch.id) }) {
+                                undoBatch = nil
+                            }
+                        }
+                    } label: {
+                        Text(quickGroceryText("Undo")).underline()
+                            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Theme.onSelection)
+                    .accessibilityLabel(quickGroceryFormat("Undo adding %@", batch.originalText))
+                    .disabled(busy).accessibilityIdentifier("quickGrocery.undo")
+                    if prominent {
+                        RestorableShoppingListLink {
+                            Text(quickGroceryText("View list")).underline()
+                                .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(Theme.onSelection)
+                        .accessibilityIdentifier("quickGrocery.viewList")
+                    }
+                }
+                .padding(.horizontal, 12).padding(.vertical, 2)
+                .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
+            }
             if editing {
                 Button { editing = false } label: {
                     Label(quickGroceryText("Dismiss keyboard"), systemImage: "keyboard.chevron.compact.down")
@@ -145,30 +181,6 @@ private struct QuickGroceryField: View {
             if let name = QuickGrocery.plainName(text) {
                 QuickGroceryAtHome(name: name, branch: model.shop?.basis.branch ?? "", ledgerWorkspaceID: workspaceID,
                                    authorize: authorize, addingDisabled: busy, keepOnList: submit)
-            }
-            if let batch = model.shop?.importBatches.last(where: { $0.id == undoBatch && $0.undoneAt == nil }) {
-                let result = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 12))
-                result {
-                    Label(quickGroceryFormat("Added %@", batch.originalText), systemImage: "checkmark.circle.fill")
-                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.onSelection)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("quickGrocery.added")
-                    Button {
-                        guard let shopID = model.shop?.id else { return }
-                        Task {
-                            if await model.editShop(key: "undo-quick-\(batch.id)", shopID: shopID,
-                                authorize: { authorize() && model.shop?.id == shopID }, { try $0.undoImport(batchID: batch.id) }) {
-                                undoBatch = nil
-                            }
-                        }
-                    } label: { Text(quickGroceryText("Undo")).underline() }
-                    .buttonStyle(.borderless).frame(minWidth: 44, minHeight: 44)
-                        .foregroundStyle(Theme.onSelection)
-                        .accessibilityLabel(quickGroceryFormat("Undo adding %@", batch.originalText))
-                        .disabled(busy).accessibilityIdentifier("quickGrocery.undo")
-                }
-                .padding(.horizontal, 12).padding(.vertical, 2)
-                .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
             }
         }
         .onAppear { visible = true }

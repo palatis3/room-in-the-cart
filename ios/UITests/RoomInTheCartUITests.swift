@@ -38,6 +38,11 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(undo.waitForExistence(timeout: 10))
         XCTAssertTrue(undo.label.contains(name))
         XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
+        let viewList = app.buttons["quickGrocery.viewList"]
+        XCTAssertTrue(viewList.waitForExistence(timeout: 5))
+        XCTAssertEqual(viewList.label, "Ver lista")
+        XCTAssertLessThanOrEqual(undo.frame.maxY, viewList.frame.minY, "Accessibility text sizes should stack the receipt actions.")
+        XCTAssertGreaterThanOrEqual(viewList.frame.height, 44)
     }
 
     func testPrivateQuickEntrySurvivesAnOrdinaryBackgroundInterruption() {
@@ -67,7 +72,9 @@ final class RoomInTheCartUITests: XCTestCase {
         let milkUndo = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
                                                         "quickGrocery.undo", "leche")).firstMatch
         XCTAssertTrue(milkUndo.waitForExistence(timeout: 10))
-        tap(milkUndo)
+        XCTAssertGreaterThanOrEqual(milkUndo.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(milkUndo.frame.height, 44)
+        milkUndo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
         XCTAssertTrue(milkUndo.waitForNonExistence(timeout: 10))
         tap(field)
         field.typeText("huevos\n")

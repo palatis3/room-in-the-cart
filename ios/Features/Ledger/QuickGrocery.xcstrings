@@ -241,6 +241,22 @@
         }
       }
     },
+    "View list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver lista"
+          }
+        }
+      }
+    },
     "Dismiss keyboard": {
       "localizations": {
         "en": {
