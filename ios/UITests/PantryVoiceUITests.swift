@@ -88,13 +88,14 @@ import XCTest
             let result = element("pantry.voiceDateResult")
             XCTAssertTrue(result.waitForExistence(timeout: 10))
             reveal(result)
-            XCTAssertTrue(result.label.contains("FoodKeeper"), result.label)
+            let noQuality = app.staticTexts["No hay un periodo de calidad verificado de FoodKeeper para este lote."]
+            reveal(noQuality)
             if id == recorded {
-                XCTAssertTrue(result.label.contains(wording), result.label)
+                XCTAssertTrue(app.staticTexts[wording].exists, app.debugDescription)
                 capture("Pantry-voice-03-fecha-impresa")
             } else {
-                XCTAssertFalse(result.label.contains(wording), result.label)
-                XCTAssertTrue(result.label.contains("fecha impresa"), result.label)
+                XCTAssertFalse(app.staticTexts[wording].exists)
+                XCTAssertTrue(app.staticTexts["No hay una fecha impresa verificada para este envase."].exists, app.debugDescription)
             }
             XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
             app.terminate()
@@ -123,8 +124,13 @@ import XCTest
         // A fraction used tells the app nothing about the stock still present.
         enterCommand(used)
         XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
-        tap(element("pantry.voiceRemaining.0"))
-        tap(app.buttons[spanish ? "No lo sé" : "Not sure"])
+        let remaining = app.buttons["pantry.voiceRemaining.0"]
+        reveal(remaining)
+        remaining.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let unsure = app.buttons["pantry.voiceNotSure.0"]
+        XCTAssertTrue(unsure.waitForExistence(timeout: 6), app.debugDescription)
+        XCTAssertEqual(unsure.label, spanish ? "No lo sé" : "Not sure")
+        unsure.tap()
         tap(app.buttons["pantry.voicePreview"])
         XCTAssertTrue(element("pantry.voiceStatus").waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
@@ -211,7 +217,7 @@ import XCTest
         app.resetAuthorizationStatus(for: .microphone)
         defer { app.resetAuthorizationStatus(for: .microphone) }
         openPantry(reset: true)
-        tap(app.buttons["pantry.voiceEntry"])
+        openVoiceEntry()
         assertDictationIdle()
         tap(app.buttons["pantry.voice.start"])
         let alert = system.alerts.firstMatch
@@ -232,8 +238,29 @@ import XCTest
         XCTAssertFalse(element("pantry.voiceConfirm").exists)
     }
 
+    private func openVoiceEntry() {
+        let entry = app.buttons["pantry.voiceEntry"]
+        let list = app.collectionViews.firstMatch
+        // After a lot is saved, the form may scroll to its status or last focused row.
+        // Wait for an unobscured, settled row before using its center hit point.
+        let area = app.frame.insetBy(dx: 12, dy: 130)
+        for _ in 0..<5 {
+            if entry.exists, entry.isHittable, area.contains(CGPoint(x: entry.frame.midX, y: entry.frame.midY)) { break }
+            list.swipeDown()
+        }
+        var prior: CGRect?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard entry.exists, entry.isHittable else { return false }
+            let frame = entry.frame
+            defer { prior = frame }
+            return frame == prior && area.contains(CGPoint(x: frame.midX, y: frame.midY))
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 8), .completed, app.debugDescription)
+        entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    }
+
     private func assertDictationIdle() {
-        XCTAssertTrue(app.buttons["pantry.voice.start"].exists)
+        XCTAssertTrue(app.buttons["pantry.voice.start"].waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertFalse(element("pantry.voice.listening").exists)
         XCTAssertFalse(element("pantry.voice.stop").exists)
         XCTAssertFalse(system.alerts.firstMatch.exists)
@@ -245,7 +272,7 @@ import XCTest
     }
 
     private func enterCommand(_ wording: String) {
-        tap(app.buttons["pantry.voiceEntry"])
+        openVoiceEntry()
         assertDictationIdle()
         fill(wording, into: "pantry.voiceText")
         dismissVoiceKeyboard()
@@ -286,7 +313,7 @@ import XCTest
     }
 
     private func tap(_ control: XCUIElement) {
-        if !control.waitForExistence(timeout: 2) || !control.isHittable { reveal(control) }
+        if (!control.exists && !control.waitForExistence(timeout: 2)) || !control.isHittable { reveal(control) }
         control.tap()
     }
 
@@ -315,7 +342,7 @@ import XCTest
     private func assertLot(_ id: String, contains expected: String) {
         let row = app.buttons[id]
         reveal(row)
-        XCTAssertTrue(row.label.contains(expected), row.label)
+        XCTAssertTrue(row.label.localizedCaseInsensitiveContains(expected), row.label)
     }
 
     private func capture(_ name: String) {
