@@ -8,8 +8,68 @@ public enum PaprikaCollection {
     private static let memberLimit = ArchiveCodec.maximumNativeBytes
     private static let libraryLimit = ArchiveCodec.maximumFileBytes * 4
 
+    private static let sourcePrefix = "paprika-v1/"
+    public static func isTracked(_ record: ArchiveRecord) -> Bool {
+        record.origin == "recipe-library-v1" && record.kind == .recipe &&
+        record.id.hasPrefix(sourcePrefix) && ArchiveCodec.validProjectionDigest(String(record.id.dropFirst(sourcePrefix.count)))
+    }
+
+    /// For a local edit, remember which incoming revision it corrected even after further edits.
+    public static func correctedRecord(_ recipe: ImportedRecipe, previous: ArchiveRecord) throws -> ArchiveRecord {
+        var updated = try recipe.archiveRecord(origin: previous.origin, savedAt: Date(timeIntervalSince1970: 0))
+        updated.id = previous.id
+        let original = isTracked(previous) ? previous.parentRevision ?? previous.revision : previous.id
+        updated.parentRevision = updated.revision == original ? nil : original
+        return updated
+    }
+
+    /// An older content-only import cannot establish ownership of a UID. Let the shopper decide
+    /// whether this matching older copy is sufficient before recording a separate tracked version.
+    public static func legacyMatches(_ records: [ArchiveRecord], saved: [ArchiveRecord]) -> Set<String> {
+        let existing = saved.filter { $0.kind == .recipe && $0.origin == "recipe-library-v1" && $0.nativePayload != nil && !isTracked($0) }
+        let revisions = Set(existing.flatMap { [$0.id, $0.revision] })
+        return Set(records.filter { isTracked($0) && (revisions.contains($0.revision) || $0.parentRevision.map(revisions.contains) == true) }.map(\.id))
+    }
+
+    private struct Version: Hashable {
+        let source: String
+        let revision: String
+    }
+
+    private struct Known {
+        var allContent: Set<String> = []
+        var versions: Set<Version> = []
+    }
+
     public static func stage(_ data: Data, existing: [ImportedRecipe] = [],
                              existingSourceIDs: Set<String> = []) throws -> RecipeImportReport {
+        let legacy = existingSourceIDs.union(existing.map(\.id))
+        let staged = try read(data, known: Known(allContent: legacy)).report
+        let recipes = staged.recipes.filter { !legacy.contains($0.id) }
+        return RecipeImportReport(recipes: recipes, duplicateCount: staged.duplicateCount + staged.recipes.count - recipes.count,
+                                  skippedRows: staged.skippedRows, unsupportedFields: staged.unsupportedFields)
+    }
+
+    /// Unkeyed recipes and older Paprika imports retain their original content-addressed archive identities.
+    public static func stageRecords(_ data: Data, saved: [ArchiveRecord]) throws -> (report: RecipeImportReport, records: [ArchiveRecord]) {
+        var known = Known()
+        for record in saved where record.kind == .recipe {
+            guard let bytes = record.nativePayload, let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: bytes) else { continue }
+            let content = recipe.id
+            known.allContent.insert(content)
+            if isTracked(record) {
+                known.versions.insert(Version(source: record.id, revision: content))
+                if let imported = record.parentRevision { known.versions.insert(Version(source: record.id, revision: imported)) }
+            } else {
+                if record.origin == "recipe-library-v1", record.parentRevision == record.id, content == record.revision {
+                    known.allContent.insert(record.id)
+                }
+            }
+        }
+        return try read(data, known: known)
+    }
+
+    private static func read(_ data: Data, known: Known) throws -> (report: RecipeImportReport, records: [ArchiveRecord]) {
         guard data.count <= maximumCollectionBytes else { throw ArchiveError.tooLarge }
         let archive = Bytes(data: Data(data))
         let end = try archive.directoryEnd()
@@ -22,7 +82,8 @@ public enum PaprikaCollection {
 
         var cursor = start, decodedBytes = 0, memberBytes = 0, recipeEntries = 0
         var recipes: [ImportedRecipe] = [], skipped = 0, duplicates = 0
-        var known = existingSourceIDs.union(existing.map(\.id))
+        var known = known
+        var records: [ArchiveRecord] = []
         var unsupported = Set<String>()
         for _ in 0..<count {
             try Task.checkCancellation()
@@ -45,18 +106,29 @@ public enum PaprikaCollection {
             try ArchiveCodec.preflight(json, maximum: memberLimit)
             guard let fields = try JSONSerialization.jsonObject(with: json) as? [String: Any],
                   let recipe = readRecipe(fields, unsupported: &unsupported) else { skipped += 1; continue }
-            guard known.insert(recipe.id).inserted else { duplicates += 1; continue }
+            let revision = recipe.id
+            var record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
+            if let uid = fields["uid"] as? String, !uid.isEmpty, uid.utf8.count <= 512, !uid.contains("\0") {
+                let normalized = UUID(uuidString: uid)?.uuidString.lowercased() ?? uid
+                record.id = sourcePrefix + ArchiveCodec.digest(Data(normalized.utf8))
+                let version = Version(source: record.id, revision: revision)
+                guard known.versions.insert(version).inserted else { duplicates += 1; continue }
+            } else {
+                guard !known.allContent.contains(revision) else { duplicates += 1; continue }
+            }
+            known.allContent.insert(revision)
             recipes.append(recipe)
+            records.append(record)
         }
         guard cursor == end else { throw ArchiveError.malformed }
         guard !recipes.isEmpty || duplicates > 0 else { throw ArchiveError.invalidRecipe }
-        return RecipeImportReport(recipes: recipes, duplicateCount: duplicates, skippedRows: skipped,
-                                  unsupportedFields: unsupported.sorted())
+        return (RecipeImportReport(recipes: recipes, duplicateCount: duplicates, skippedRows: skipped,
+                                   unsupportedFields: unsupported.sorted()), records)
     }
 
     private static func readRecipe(_ fields: [String: Any], unsupported: inout Set<String>) -> ImportedRecipe? {
         let mapped = ["name", "servings", "ingredients", "directions", "source_url", "source", "notes"]
-        for (key, value) in fields where !mapped.contains(key) && !(value is NSNull) {
+        for (key, value) in fields where key != "uid" && !mapped.contains(key) && !(value is NSNull) {
             unsupported.insert(String(key.prefix(80)))
         }
         guard let title = fields["name"] as? String,

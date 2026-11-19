@@ -394,7 +394,7 @@ struct RecordsToolsView: View {
                 .font(.footnote)
             Button(recipeLibraryOnly ? recordsText("Save reviewed recipes") : recordsText("Import reviewed copies")) {
                 Task { await model.applyReviewedImport() }
-            }.disabled(!review.canApply).accessibilityIdentifier("records.applyImport")
+            }.disabled(!review.canApply || !model.paprikaVersionsReviewed).accessibilityIdentifier("records.applyImport")
             if model.recipeReport != nil, review.canApply {
                 Button(recordsText("Save recipe draft to Files")) {
                     Task { if await model.prepareRecipeDraft() { savePreparedFile() } }
@@ -414,13 +414,20 @@ struct RecordsToolsView: View {
                 Label(missingRecipeField(field), systemImage: "exclamationmark.circle").font(.subheadline)
             }
             if review.canApply {
+                if model.paprikaVersionChoices.contains(row.id) {
+                    Text(recordsText("Another version or a recipe with matching content is already in this review or your library. Skip this version or save it separately."))
+                    Toggle(recordsText("Save this version as a separate copy"), isOn: Binding(
+                        get: { model.acceptedPaprikaVersions.contains(row.id) },
+                        set: { model.confirmPaprikaVersion(row, selected: $0) }))
+                        .accessibilityIdentifier("records.paprikaVersion." + row.record.revision)
+                }
                 HStack(spacing: 16) {
                     if row.disposition == .absent || row.disposition == .sibling {
                         Button(recordsText("Edit recipe")) { model.beginRecipeCorrection(row) }
                             .accessibilityLabel(recordsText("Edit recipe") + ", " + recipe.title)
                             .accessibilityIdentifier("records.editRecipe." + row.record.id)
                     }
-                    if review.rows.count > 1 {
+                    if review.rows.count > 1 || model.paprikaVersionChoices.contains(row.id) {
                         Button(recordsText("Skip this recipe")) { Task { await model.skipRecipe(row) } }
                             .accessibilityLabel(recordsText("Skip this recipe") + ", " + recipe.title)
                     }

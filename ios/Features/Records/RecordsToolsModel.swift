@@ -58,6 +58,15 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         return matches
     }
     @Published private(set) var recipeReport: RecipeImportReport?
+    @Published private(set) var paprikaVersionChoices = Set<ArchiveIdentity>()
+    @Published private(set) var acceptedPaprikaVersions = Set<ArchiveIdentity>()
+    var paprikaVersionsReviewed: Bool { paprikaVersionChoices.isSubset(of: acceptedPaprikaVersions) }
+
+    func confirmPaprikaVersion(_ row: RecoveryReviewRow, selected: Bool) {
+        guard !busy, reviewAuthorization?() == true, review?.rows.contains(row) == true,
+              paprikaVersionChoices.contains(row.id) else { return }
+        if selected { acceptedPaprikaVersions.insert(row.id) } else { acceptedPaprikaVersions.remove(row.id) }
+    }
     @Published private(set) var busy = false
     private struct ActionStatus {
         let text: String
@@ -472,19 +481,10 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     private func stageRecipeDocument(_ data: Data, paprika: Bool = false, authorize: @escaping Authorization) async throws {
         let saved = try await registry.refreshList()
         try Task.checkCancellation()
-        var correctedSources = Set<String>()
-        let existing = saved.compactMap { record -> ImportedRecipe? in
-            guard record.record.kind == .recipe, let bytes = record.record.nativePayload else { return nil }
-            let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: bytes)
-            if record.record.origin == "recipe-library-v1", record.record.parentRevision == record.record.id,
-               recipe?.id == record.record.revision { correctedSources.insert(record.record.id) }
-            return recipe
-        }
         try requireAuthorization(authorize)
-        let report = try await Self.readRecipeCollection(data, paprika: paprika, existing: existing, correctedSources: correctedSources)
+        let (report, records) = try await Self.readRecipeCollection(data, paprika: paprika, saved: saved.map(\.record))
         try Task.checkCancellation()
         try requireAuthorization(authorize)
-        let records = try report.recipes.map { try $0.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0)) }
         if records.isEmpty {
             discardImportReview()
             recipeReport = report
@@ -495,10 +495,23 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         try await stageRecipeReview(report, records: records, authorize: authorize)
     }
 
-    private nonisolated static func readRecipeCollection(_ data: Data, paprika: Bool, existing: [ImportedRecipe],
-                                                         correctedSources: Set<String>) async throws -> RecipeImportReport {
-        if paprika { return try PaprikaCollection.stage(data, existing: existing, existingSourceIDs: correctedSources) }
-        return try RecipeImporter.stage(data, existing: existing, existingSourceIDs: correctedSources)
+    private nonisolated static func readRecipeCollection(_ data: Data, paprika: Bool, saved: [ArchiveRecord]) async throws
+        -> (RecipeImportReport, [ArchiveRecord]) {
+        if paprika { return try PaprikaCollection.stageRecords(data, saved: saved) }
+        var correctedSources = Set<String>()
+        let existing = saved.compactMap { record -> ImportedRecipe? in
+            guard record.kind == .recipe, let bytes = record.nativePayload else { return nil }
+            let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: bytes)
+            if record.origin == "recipe-library-v1", record.parentRevision == record.id,
+               recipe?.id == record.revision { correctedSources.insert(record.id) }
+            if PaprikaCollection.isTracked(record), recipe?.id == record.revision, let original = record.parentRevision {
+                correctedSources.insert(original)
+            }
+            return recipe
+        }
+        let report = try RecipeImporter.stage(data, existing: existing, existingSourceIDs: correctedSources)
+        let records = try report.recipes.map { try $0.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0)) }
+        return (report, records)
     }
 
     func stageManualRecipe(_ recipe: ImportedRecipe, from presentation: ImportPresentation) async throws {
@@ -513,9 +526,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         if let saved = presentation.savedRecipe {
             guard try await registry.refreshList().contains(saved), accepts(presentation) else { throw ArchiveError.staleReview }
             // Bind the new revision to the original source and its erasure history.
-            record.origin = saved.record.origin
-            record.id = saved.record.id
-            record.parentRevision = record.id == record.revision ? nil : record.id
+            record = try PaprikaCollection.correctedRecord(recipe, previous: saved.record)
         }
         try await stageRecipeReview(.manual(recipe), records: [record], authorize: presentation.authorize)
     }
@@ -526,26 +537,29 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
               let row = review.rows.first(where: { $0.id == correction.row && [.absent, .sibling].contains($0.disposition) }),
               let index = report.recipes.firstIndex(of: correction.recipe) else { throw ArchiveError.staleReview }
 
-        var updated = try recipe.archiveRecord(origin: row.record.origin, savedAt: Date(timeIntervalSince1970: 0))
-        guard !report.recipes.indices.contains(where: { $0 != index && report.recipes[$0].id == updated.revision }) else {
-            throw ArchiveError.conflict
-        }
-        // Keep the source file identity through corrections, so retry and erasure still target the same recipe.
-        updated.id = row.record.id
-        updated.parentRevision = updated.revision == updated.id ? nil : updated.id
+        let updated = try PaprikaCollection.correctedRecord(recipe, previous: row.record)
+        guard !review.rows.contains(where: { other in
+            guard other.id != row.id, other.record.revision == updated.revision else { return false }
+            return other.record.id == updated.id || (!PaprikaCollection.isTracked(other.record) && !PaprikaCollection.isTracked(updated))
+        }) else { throw ArchiveError.conflict }
         report.recipes[index] = recipe
         let records = review.rows.map { $0.id == row.id ? updated : $0.record }
         try await stageRecipeReview(report, records: records, authorize: authorize)
     }
 
     func skipRecipe(_ row: RecoveryReviewRow) async {
-        guard !busy, let review, review.canApply, review.rows.count > 1, review.rows.contains(row),
+        guard !busy, let review, review.canApply, review.rows.contains(row),
               var report = recipeReport, let authorize = reviewAuthorization,
               let index = report.recipes.firstIndex(where: { $0.id == row.record.revision }) else { return }
         busy = true
         defer { busy = false }
         do {
             try requireAuthorization(authorize)
+            if review.rows.count == 1 {
+                guard paprikaVersionChoices.contains(row.id) else { return }
+                cancelReview()
+                return
+            }
             report.recipes.remove(at: index)
             report.skippedRows += 1
             try await stageRecipeReview(report, records: review.rows.filter { $0.id != row.id }.map(\.record), authorize: authorize)
@@ -556,7 +570,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
                                    authorize: @escaping Authorization) async throws {
         let envelope = try ArchiveCodec.make(records: records, kind: .personalRecovery, origin: "recipe-library-v1",
                                              revision: ArchiveCodec.digest(try ArchiveCodec.canonical(report.recipes)))
-        try await stage(envelope, authorize: authorize)
+        try await stage(envelope, authorize: authorize, reviewPaprika: records.contains(where: PaprikaCollection.isTracked))
         try requireAuthorization(authorize)
         recipeReport = report
     }
@@ -586,7 +600,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     }
 
     private var reviewAuthorization: Authorization?
-    private func stage(_ envelope: ArchiveEnvelope, authorize: @escaping Authorization) async throws {
+    private func stage(_ envelope: ArchiveEnvelope, authorize: @escaping Authorization, reviewPaprika: Bool = false) async throws {
         for record in envelope.payload.records { try await validateRecord(record); try requireAuthorization(authorize) }
         let liveSources = Set(sourceListing.liveSharedRecordIDs.map(\.source))
         if envelope.documentKind == .personalRecovery,
@@ -599,10 +613,28 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
                 // The file can still be reviewed without a fresh household comparison.
             }
         }
-        let staged = try await registry.review(envelope)
+        let staged: RecoveryReview
+        let legacyMatches: Set<String>
+        if reviewPaprika {
+            (staged, legacyMatches) = try await registry.reviewPaprikaRecipes(envelope)
+        } else {
+            staged = try await registry.review(envelope)
+            legacyMatches = []
+        }
         try Task.checkCancellation()
         try requireAuthorization(authorize)
         reviewAuthorization = authorize
+        if reviewPaprika {
+            let bySource = Dictionary(grouping: staged.rows.filter { PaprikaCollection.isTracked($0.record) }, by: { $0.record.id })
+            paprikaVersionChoices = Set(bySource.values.flatMap { versions in
+                versions.filter { row in
+                    row.disposition == .sibling || (row.disposition == .absent && (versions.count > 1 || legacyMatches.contains(row.record.id)))
+                }.map(\.id)
+            })
+        } else {
+            paprikaVersionChoices = []
+        }
+        acceptedPaprikaVersions = []
         review = staged
         actionStatus = nil
     }
@@ -621,7 +653,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     private func discardImportReview() { review = nil; reviewAuthorization = nil; recipeReport = nil }
     func cancelReview() { discardImportReview(); publishOutcome(recordsText("Import cancelled. Your records are unchanged.")) }
     func applyReviewedImport() async {
-        guard !busy, let review else { return }
+        guard !busy, let review, paprikaVersionsReviewed else { return }
         busy = true; error = nil
         defer { busy = false }
         do {

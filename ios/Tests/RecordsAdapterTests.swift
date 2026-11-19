@@ -924,6 +924,43 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: url), bytes)
     }
 
+    @MainActor func testChangedPaprikaUIDRequiresSeparateCopyApprovalAndSupportsSkipping() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let url = directory.appendingPathComponent("Dinner.paprikarecipes")
+        // Two synthetic exports of the same UID, before and after revising the source ingredients.
+        let first = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAAAAIVAKup0VRwAAAEcAAAAUAAAARGlubmVyLnBhcHJpa2FyZWNpcGUfiwgAAAAAAAL/q1YqzUxRslJQMkw0SjJOVtJRUMpLzE0Fibhk5uWlFoFEMvPSi1JTMlPzSopBEkGZyalKtQDitPgaOgAAAFBLAQIUAxQAAAAAAAAAIVAKup0VRwAAAEcAAAAUAAAAAAAAAAAAAACAAQAAAABEaW5uZXIucGFwcmlrYXJlY2lwZVBLBQYAAAAAAQABAEIAAAB5AAAAAAA="))
+        let second = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAAAAIVCLo5kaUQAAAFEAAAAUAAAARGlubmVyLnBhcHJpa2FyZWNpcGUfiwgAAAAAAAL/q1YqzUxRslJQMkw0SjJOVtJRUMpLzE0Fibhk5uWlFoFEMvPSi1JTMlPzSopBEkGZyakKiXkpCklF+SUZSrUAElELP0QAAABQSwECFAMUAAAAAAAAACFQi6OZGlEAAABRAAAAFAAAAAAAAAAAAAAAgAEAAAAARGlubmVyLnBhcHJpa2FyZWNpcGVQSwUGAAAAAAEAAQBCAAAAgwAAAAAA"))
+        try first.write(to: url)
+        await model.importFile(url, recipes: true)
+        await model.applyReviewedImport()
+        let before = try await registry.refreshList()
+        XCTAssertEqual(before.count, 1)
+
+        try second.write(to: url)
+        await model.importFile(url, recipes: true)
+        let changed = try XCTUnwrap(model.review?.rows.first)
+        XCTAssertEqual(changed.disposition, .sibling)
+        XCTAssertTrue(model.paprikaVersionChoices.contains(changed.id))
+        await model.applyReviewedImport()
+        let withoutConsent = try await registry.refreshList()
+        XCTAssertEqual(withoutConsent, before)
+        await model.skipRecipe(changed)
+        XCTAssertNil(model.review)
+        await model.importFile(url, recipes: true)
+        let reviewed = try XCTUnwrap(model.review?.rows.first)
+        model.confirmPaprikaVersion(reviewed, selected: true)
+        await model.applyReviewedImport()
+        let after = try await registry.refreshList()
+        XCTAssertEqual(after.count, 2)
+        XCTAssertTrue(after.contains(before[0]))
+        await model.undoImport()
+        let restored = try await registry.refreshList()
+        XCTAssertEqual(restored, before)
+    }
+
     @MainActor func testPartialRecipeCorrectionPreservesBatchAndOriginalSourceOnRetry() async throws {
         let directory = try temporaryDirectory()
         let manifest = directory.appendingPathComponent("manifest.json")
