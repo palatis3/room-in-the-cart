@@ -463,6 +463,39 @@ import RecordArchive
         f.cleanup.track(repository, legacy, otherActor)
     }
 
+    func testUnknownReceiptPaidTotalSurvivesReopenAndKeepsKnownZeroDistinct() async throws {
+        let f = try await fixture()
+        let repository = PantryRepository(store: f.store, authorize: { true })
+        var draft = try receiptDraft(f.store)
+        draft.lines[0].paid = "4.20"
+        let review = try await repository.reviewReceipt(draft, expected: f.store.inventoryState(), at: now)
+        let original = try XCTUnwrap(review.facts.first)
+        try await repository.applyReceipt(review, at: now)
+        let initial = try await repository.load(at: now)
+        try await repository.correctPaidTotal(original, total: nil, state: initial.state, at: now)
+
+        let reopenedStore = try ComparisonStore(url: f.directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        let reopened = PantryRepository(store: reopenedStore, authorize: { true })
+        f.cleanup.track(repository, reopened, reopenedStore)
+        let updated = try await reopened.latestReceiptRevision(original)
+        XCTAssertNil(updated.paidLineTotal)
+        XCTAssertEqual(updated.supersedesID, original.id)
+        let history = try await reopened.acquisitionHistory(receiptID: original.receiptID)
+        XCTAssertEqual(Set(history.map(\.id)), [original.id, updated.id])
+        let page = try await reopened.pricePage()
+        XCTAssertEqual(page.receipts.count, 1)
+        let unknownPrice = try XCTUnwrap(page.receipts.first)
+        XCTAssertNil(unknownPrice.amountMinor)
+        try await reopened.correctPaidTotal(updated, total: .zero, state: page.state, at: now)
+        let zero = try await reopened.latestReceiptRevision(original)
+        XCTAssertEqual(zero.paidLineTotal, .zero)
+        XCTAssertEqual(zero.supersedesID, updated.id)
+        let snapshot = try await reopened.load(at: now)
+        XCTAssertEqual(snapshot.lots, initial.lots)
+        let priced = try await reopened.pricePage()
+        XCTAssertEqual(priced.receipts.first?.amountMinor, 0)
+    }
+
     func testReceiptPartialReviewRetryPriceCorrectionRecoveryAndErasure() async throws {
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })

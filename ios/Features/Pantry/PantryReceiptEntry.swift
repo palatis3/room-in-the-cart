@@ -426,6 +426,8 @@ struct PantryReceiptHistory: View {
     @State private var reviewedState: InventoryState?
     @State private var price = ""
     @State private var correctionMessage: String?
+    @State private var confirmingUnknown = false
+    @FocusState private var priceFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -477,32 +479,60 @@ struct PantryReceiptHistory: View {
                     if let current = original.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(current))) }
                     else { Text(pantryText("Paid price unknown")) }
                     Text(original.merchant + " · " + original.purchaseDate.formatted(date: .abbreviated, time: .omitted))
-                    TextField(pantryText("Corrected paid line total in USD"), text: $price).keyboardType(.decimalPad)
+                    TextField(pantryText("Corrected paid line total in USD"), text: $price)
+                        .keyboardType(.decimalPad).focused($priceFocused)
                     Text(pantryText("A correction adds a price revision. Pantry quantities and posted spending stay the same."))
                     Button(pantryText("Save price correction")) {
-                        guard let state = reviewedState, let total = try? Money(decimal: price), total >= .zero else { return }
-                        busy = true
-                        Task {
-                            do {
-                                try await model.correctReceiptPrice(original, total: total, reviewedState: state)
-                                message = pantryText("Price correction saved.")
-                            } catch {
-                                await model.load()
-                                if model.canEdit, let latest = try? await model.latestReceiptRevision(original) {
-                                    reviewedState = model.snapshot?.state
-                                    correcting = latest
-                                    correctionMessage = pantryText("Review the current price and your correction, then confirm again.")
-                                    busy = false
-                                    return
-                                }
-                                message = pantryText("The receipt changed or the price is invalid. Reopen the latest revision.")
-                            }
-                            correcting = nil; facts = []; lastReadID = nil; hasMore = true; busy = false
-                            await loadPage()
-                        }
-                    }.disabled(busy || (try? Money(decimal: price)) == nil || (try? Money(decimal: price)) == original.paidLineTotal)
+                        guard let total = enteredTotal else { return }
+                        saveCorrection(original, total: total)
+                    }.disabled(busy || enteredTotal == nil || enteredTotal == original.paidLineTotal)
+                    if original.paidLineTotal != nil {
+                        Button(pantryText("Mark paid total as unknown")) {
+                            priceFocused = false
+                            confirmingUnknown = true
+                        }.disabled(busy)
+                    }
+                }
+                .keyboardDoneAction(visible: priceFocused, title: pantryText("Done"), identifier: "receipt.correctionKeyboardDone") {
+                    priceFocused = false
+                }
+                .alert(pantryText("Mark paid total as unknown?"), isPresented: $confirmingUnknown) {
+                    Button(pantryText("Mark as unknown")) { saveCorrection(original, total: nil) }
+                    Button(pantryText("Cancel"), role: .cancel) {}
+                } message: {
+                    Text(pantryText("The earlier price stays in receipt history. Future price comparisons will omit this amount."))
                 }.navigationTitle(pantryText("Correct paid price"))
             }.interactiveDismissDisabled(busy)
+        }
+    }
+
+    private var enteredTotal: Money? {
+        guard let total = try? Money(decimal: price), total >= .zero else { return nil }
+        return total
+    }
+
+    private func saveCorrection(_ original: ReceiptAcquisition, total: Money?) {
+        guard !busy, let state = reviewedState, original.paidLineTotal != total,
+              total.map({ $0 >= .zero }) ?? true else { return }
+        busy = true
+        priceFocused = false
+        Task {
+            do {
+                try await model.correctReceiptPrice(original, total: total, reviewedState: state)
+                message = pantryText("Price correction saved.")
+            } catch {
+                await model.load()
+                if model.canEdit, let latest = try? await model.latestReceiptRevision(original) {
+                    reviewedState = model.snapshot?.state
+                    correcting = latest
+                    correctionMessage = pantryText("Review the current price and your correction, then confirm again.")
+                    busy = false
+                    return
+                }
+                message = pantryText("The receipt changed or the price is invalid. Reopen the latest revision.")
+            }
+            correcting = nil; facts = []; lastReadID = nil; hasMore = true; busy = false
+            await loadPage()
         }
     }
 

@@ -33,6 +33,57 @@
         }
       }
     },
+    "Mark as unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar como desconocido"
+          }
+        }
+      }
+    },
+    "Mark paid total as unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark paid total as unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar el total pagado como desconocido"
+          }
+        }
+      }
+    },
+    "Mark paid total as unknown?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark paid total as unknown?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Marcar el total pagado como desconocido?"
+          }
+        }
+      }
+    },
     "Stock action": {
       "localizations": {
         "en": {
@@ -109,6 +160,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirmado de este lote"
+          }
+        }
+      }
+    },
+    "The earlier price stays in receipt history. Future price comparisons will omit this amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier price stays in receipt history. Future price comparisons will omit this amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El precio anterior se conserva en el historial de recibos. Las futuras comparaciones de precios omitirán este importe."
           }
         }
       }

@@ -1115,7 +1115,7 @@ import XCTest
         })
     }
 
-    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil) {
+    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false) {
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         XCTAssertTrue(wording.waitForExistence(timeout: 8))
@@ -1156,6 +1156,7 @@ import XCTest
             receiptTap(app.buttons["receipt.storage.0"])
             receiptTap(app.buttons[storage])
         }
+        if paidPrintedTotal { receiptTap(app.buttons["receipt.printedPrice.0"]) }
         receiptTap(app.buttons["receipt.review"])
     }
 
@@ -1187,6 +1188,47 @@ import XCTest
         let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Oats"))
         XCTAssertTrue(lots.firstMatch.waitForExistence(timeout: 8))
         XCTAssertEqual(lots.count, 1)
+    }
+
+    func testReceiptPaidTotalCanBeMarkedUnknownWithoutBecomingFree() {
+        launch(reset: true)
+        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.buttons["pantry.setup.apply"])
+        receiptTap(app.buttons["pantry.receipt"])
+        reviewManualOatsAtMarket(paidPrintedTotal: true)
+        receiptTap(app.buttons["receipt.commit"])
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+        receiptTap(app.buttons["pantry.receiptHistory"])
+        let edit = app.buttons["Correct this paid total"].firstMatch
+        receiptTap(edit)
+        let markUnknown = app.buttons["Mark paid total as unknown"]
+        receiptTap(markUnknown)
+        app.alerts.buttons["Cancel"].tap()
+        XCTAssertTrue(app.staticTexts["Paid line total $4.20"].exists)
+        receiptTap(markUnknown)
+        app.alerts.buttons["Mark as unknown"].tap()
+        XCTAssertTrue(app.staticTexts["Price correction saved."].waitForExistence(timeout: 8))
+
+        app.terminate()
+        launch(reset: false)
+        receiptTap(app.buttons["shop.myPantry"])
+        receiptTap(app.buttons["pantry.receiptHistory"])
+        receiptTap(edit)
+        XCTAssertTrue(app.navigationBars["Correct paid price"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Paid price unknown"].exists)
+        XCTAssertTrue(app.staticTexts["Receipt revision 2"].exists)
+        XCTAssertFalse(markUnknown.exists)
+        let price = app.textFields["Corrected paid line total in USD"]
+        receiptTap(price)
+        price.typeText("0")
+        receiptTap(app.buttons["receipt.correctionKeyboardDone"])
+        receiptTap(app.buttons["Save price correction"])
+        XCTAssertTrue(app.staticTexts["Price correction saved."].waitForExistence(timeout: 8))
+        receiptTap(edit)
+        XCTAssertTrue(app.staticTexts["Paid line total $0.00"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Receipt revision 3"].exists)
+        XCTAssertTrue(markUnknown.exists)
     }
 
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
