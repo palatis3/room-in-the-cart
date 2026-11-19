@@ -133,8 +133,11 @@ import XCTest
         fill("Tortillas", into: "Ingredient name")
         fill("2", into: "Amount, optional")
         enableSwitch("Required appliances reviewed")
-        tap(app.buttons["ledgerReviewDinner"])
-        tap(app.buttons["ledgerSaveDinner"])
+        // The floating tab bar can cover the center of a still-hittable Review row.
+        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "FINISH_PACKAGE_LIBRARY_REVIEW")
+        let saveDinner = app.buttons["ledgerSaveDinner"]
+        XCTAssertTrue(saveDinner.waitForExistence(timeout: 8), app.debugDescription)
+        tapVisibleFormRow(saveDinner, marker: "FINISH_PACKAGE_LIBRARY_SAVE")
         tap(app.buttons["Done"])
         restart()
         tap(app.tabBars.buttons["Shop"])
@@ -153,9 +156,11 @@ import XCTest
         tap(app.buttons["Tomorrow’s lunch"])
         fill("2", into: "pantry.reservationAmount")
         tap(app.buttons["Review reservation"])
-        tap(app.buttons["pantry.confirm"])
+        let confirmReservation = app.buttons["pantry.confirm"]
+        tap(confirmReservation)
+        XCTAssertTrue(confirmReservation.waitForNonExistence(timeout: 8), app.debugDescription)
         let backing = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.claimBacking.")).firstMatch
-        XCTAssertTrue(backing.waitForExistence(timeout: 10), app.debugDescription)
+        reveal(backing)
         XCTAssertEqual(backing.value as? String, "2 units")
         let backingID = backing.identifier
         tap(app.navigationBars.buttons.firstMatch)
@@ -210,7 +215,9 @@ import XCTest
         restart()
         tap(app.buttons["shop.myPantry"])
         tap(app.buttons[lotID])
-        XCTAssertEqual(element(backingID).value as? String, "2 units")
+        let restoredBacking = element(backingID)
+        reveal(restoredBacking)
+        XCTAssertEqual(restoredBacking.value as? String, "2 units")
         tap(app.buttons["pantry.batch.meals"])
         checkAmount("tonight.batch.available", "4 items")
         XCTAssertFalse(home.exists, app.debugDescription)
