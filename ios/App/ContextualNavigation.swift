@@ -125,9 +125,10 @@ struct ContextualDinnerFeature: View {
     let destination: ContextualDinnerDestination
     init(ledger: LedgerModel, destination: ContextualDinnerDestination,
          access: @escaping DinnerFeatureModel.AccessProvider, phase: @escaping (UUID) -> BasketPhase,
-         runtimeChanges: AnyPublisher<Void, Never>) {
+         runtimeChanges: AnyPublisher<Void, Never>, milestoneAccess: @escaping () -> Bool) {
         self.destination = destination
-        let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns)
+        let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
+            milestoneAccess: milestoneAccess)
         model.observe(ledger.objectWillChange); model.observeRuntime(runtimeChanges)
         _model = StateObject(wrappedValue: model)
     }

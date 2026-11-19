@@ -49,7 +49,6 @@ struct DinnerTemplateEditor: View {
     @State private var completed = false
     @State private var savedAsDraft = false
     @State private var accepting = false
-    @Environment(\.dinnerMilestoneAccess) private var milestoneAccess
     @State private var activeAttempt: UUID?
     @State private var firstSaveCue: BrandCartMotion.Cue?
     @State private var presentInEditor = false
@@ -111,6 +110,7 @@ struct DinnerTemplateEditor: View {
     private var editorForm: some View {
         WorkingForm {
             if completed {
+                let showsFirstSaveMark = firstSaveCue != nil && model.milestoneAccess() && !typeSize.isAccessibilitySize
                 Section {
                     HStack(alignment: .center, spacing: 14) {
                         VStack(alignment: .leading, spacing: 8) {
@@ -118,8 +118,9 @@ struct DinnerTemplateEditor: View {
                             Text(dinnerText(savedAsDraft ? "Idea draft saved. You can edit it again in Dinner ideas." :
                                 "Dinner saved. Choose it separately to add grocery needs."))
                                 .accessibilityFocused($savedResultFocused)
+                                .accessibilityIdentifier(showsFirstSaveMark ? "dinner.firstSaveConfirmation" : "dinner.savedConfirmation")
                         }
-                        if firstSaveCue != nil, milestoneAccess(), !typeSize.isAccessibilitySize {
+                        if showsFirstSaveMark {
                             BrandCartMotion(cue: firstSaveCue, kind: .firstDinner)
                                 .frame(width: 48, height: 48)
                         }
@@ -232,7 +233,7 @@ struct DinnerTemplateEditor: View {
         Task {
             let saved = await save { receipt in
                 guard activeAttempt == attempt, presentInEditor, scene == .active,
-                      milestoneAccess(), originalIdentity == receipt.editor, model.editorIdentity == receipt.editor,
+                      model.milestoneAccess(), originalIdentity == receipt.editor, model.editorIdentity == receipt.editor,
                       acceptedID == receipt.acceptedID else { return }
                 firstSaveCue = .init()
             }

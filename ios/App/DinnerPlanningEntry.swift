@@ -2,17 +2,6 @@ import SwiftUI
 import CoreDomain
 import Combine
 
-private struct DinnerMilestoneAccessKey: EnvironmentKey {
-    static let defaultValue: @MainActor () -> Bool = { false }
-}
-
-extension EnvironmentValues {
-    var dinnerMilestoneAccess: @MainActor () -> Bool {
-        get { self[DinnerMilestoneAccessKey.self] }
-        set { self[DinnerMilestoneAccessKey.self] = newValue }
-    }
-}
-
 /// The local ledger remains private even while an account is signed in. Restored
 /// planning documents never supply the installation actor, permission or paid seat.
 struct DinnerPlanningEntry: View {
@@ -40,21 +29,14 @@ struct DinnerPlanningEntry: View {
                 DinnerSharedPlanningEntry(household: household)
             } else if let destination {
                 ContextualDinnerFeature(ledger: ledger, destination: destination, access: localAccess, phase: phase,
-                    runtimeChanges: runtimeChanges)
+                    runtimeChanges: runtimeChanges, milestoneAccess: permitsPrivatePlanning)
             } else {
                 DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
-                    runtimeChanges: runtimeChanges, basketPrepAccess: {
-                        child?.presented != true && household.projection?.grantId == nil &&
-                            CapturePrivateIdentity.current(access: access, household: household) != nil
-                    })
+                    runtimeChanges: runtimeChanges, basketPrepAccess: permitsPrivatePlanning, milestoneAccess: permitsPrivatePlanning)
             }
         }
         .privacySensitive()
         .environment(\.dinnerHousehold, household)
-        .environment(\.dinnerMilestoneAccess, {
-            child?.presented != true && household.projection?.grantId == nil &&
-                CapturePrivateIdentity.current(access: access, household: household) != nil
-        })
         .toolbar {
             if access.unlocked, !household.locked, child?.presented != true,
                let shopID = ledger.shop?.id, pickup.selectedID == shopID,
@@ -74,6 +56,11 @@ struct DinnerPlanningEntry: View {
         }
         .task { await pickup.load() }
     }
+    private func permitsPrivatePlanning() -> Bool {
+        child?.presented != true && household.projection?.grantId == nil &&
+            CapturePrivateIdentity.current(access: access, household: household) != nil
+    }
+
     private var runtimeChanges: AnyPublisher<Void, Never> {
         Publishers.Merge4(access.objectWillChange, pickup.objectWillChange,
             household.objectWillChange, membership.objectWillChange).eraseToAnyPublisher()

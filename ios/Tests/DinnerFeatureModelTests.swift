@@ -58,6 +58,17 @@ import CoreDomain
         }, phase: { _ in .draft }, ideaCatalog: catalog, clock: { self.now })
         return (store, model)
     }
+    func testMilestonePresentationRequiresLivePrivateAccess() {
+        let (store, restricted) = fixture()
+        XCTAssertFalse(restricted.milestoneAccess())
+        var privateAccess = true
+        let live = DinnerFeatureModel(store: store, access: restricted.accessProvider,
+            phase: restricted.phaseProvider, milestoneAccess: { privateAccess })
+        XCTAssertTrue(live.milestoneAccess())
+        privateAccess = false
+        XCTAssertFalse(live.milestoneAccess())
+    }
+
     func testFirstAcceptedDinnerFeedbackRequiresMatchingFreshOriginAndDurableCommit() async throws {
         let template = try recipe()
         for enrollment in [0, 1, 2] {

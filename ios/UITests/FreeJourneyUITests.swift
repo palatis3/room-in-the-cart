@@ -3293,6 +3293,8 @@ import XCTest
         fillDinner("Rice bowls", ingredient: "Rice")
         tap(app.buttons["ledgerReviewDinner"])
         tap(app.buttons["ledgerSaveDinner"])
+        XCTAssertTrue(app.staticTexts["dinner.firstSaveConfirmation"].waitForExistence(timeout: 8),
+                      "The private Dinners library must carry first-save access through both navigation links.")
         tap(app.buttons["Done"])
         let makeFree = app.buttons["Use as Free reusable dinner"].firstMatch
         if makeFree.waitForExistence(timeout: 4) { tap(makeFree) }

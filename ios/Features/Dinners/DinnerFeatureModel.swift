@@ -40,6 +40,9 @@ extension DinnerWorkspaceStore {
     let phaseProvider: (UUID) -> BasketPhase
     let ideaCatalog: [MealTemplate]
     let basketPrepAccess: () -> Bool
+    // View-based navigation destinations do not inherit the entry view’s local environment.
+    // Only the live private planning composition supplies this live privacy check.
+    let milestoneAccess: () -> Bool
     let clock: () -> Date
     private(set) weak var repeatWeekPickup: PickupModel?
     private weak var swapPickup: PickupModel?
@@ -53,9 +56,11 @@ extension DinnerWorkspaceStore {
 
     init(store: any DinnerWorkspaceStore, access: @escaping AccessProvider,
          phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [],
-         clock: @escaping () -> Date = Date.init, basketPrepAccess: @escaping () -> Bool = { false }) {
+         clock: @escaping () -> Date = Date.init, basketPrepAccess: @escaping () -> Bool = { false },
+         milestoneAccess: @escaping () -> Bool = { false }) {
         self.store = store; accessProvider = access; phaseProvider = phase
         self.ideaCatalog = ideaCatalog; self.clock = clock; self.basketPrepAccess = basketPrepAccess
+        self.milestoneAccess = milestoneAccess
     }
     func observe(_ publisher: ObservableObjectPublisher) {
         observation = publisher.sink { [weak self] _ in self?.objectWillChange.send() }

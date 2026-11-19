@@ -10,9 +10,10 @@ struct DinnerPlanningHome: View {
     @State private var startingPickup = false
     init(ledger: LedgerModel, access: @escaping DinnerFeatureModel.AccessProvider,
          phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [], runtimeChanges: AnyPublisher<Void, Never>? = nil,
-         basketPrepAccess: @escaping () -> Bool = { false }) {
+         basketPrepAccess: @escaping () -> Bool = { false }, milestoneAccess: @escaping () -> Bool = { false }) {
         self.ledger = ledger
-        let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: ideaCatalog, basketPrepAccess: basketPrepAccess)
+        let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: ideaCatalog,
+            basketPrepAccess: basketPrepAccess, milestoneAccess: milestoneAccess)
         model.observe(ledger.objectWillChange)
         if let runtimeChanges { model.observeRuntime(runtimeChanges) }
         _model = StateObject(wrappedValue: model)
