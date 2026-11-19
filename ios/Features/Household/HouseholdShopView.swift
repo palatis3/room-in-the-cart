@@ -43,6 +43,10 @@ private struct SharedShopContent: View {
                 }
                 if model.pending == nil {
                     if let shop = model.shop {
+                        if model.canManage, shop.phase == "draft", let shopID = UUID(uuidString: shop.shopId),
+                           household.adultRequestScope(shop: shopID, capability: "adult_last_call") != nil {
+                            AdultShopLastCall(household: household, shopID: shopID, authorityEpoch: shop.authorityEpoch)
+                        }
                         Section(["placed", "closed"].contains(shop.phase) ? OrderAmendmentCopy.text("Original checkout") : ht("Current shared shop")) {
                             LabeledContent(ht("Revision"), value: shop.shopRevision.formatted())
                             Text(phaseName(shop.phase))

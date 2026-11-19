@@ -1025,13 +1025,30 @@ import XCTest
         XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
         add.tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let prompt = springboard.alerts.firstMatch
-        if prompt.waitForExistence(timeout: 6) {
-            let allow = prompt.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Allow")).firstMatch
-            if allow.exists {
-                allow.tap()
-            } else if prompt.label.contains("Room in the Cart"), prompt.label.contains("Add to Your Photos") {
-                prompt.buttons["OK"].tap()
+        // Only dismiss this fixture's add-only Photos prompt. SpringBoard can
+        // expose a hittable Allow button while its presentation is still animating.
+        let purpose = "Add a synthetic receipt to this test simulator for the Photos picker check."
+        let title = NSPredicate(format: "label CONTAINS[c] %@ AND (label CONTAINS[c] %@ OR label CONTAINS[c] %@)",
+                                "Room in the Cart", "add photos and videos to your photo library", "add to your photos")
+        let byTitle = springboard.alerts.matching(title).firstMatch
+        let byPurpose = springboard.alerts.containing(.staticText, identifier: purpose).firstMatch
+        if springboard.alerts.firstMatch.waitForExistence(timeout: 6) {
+            let prompt = byTitle.exists ? byTitle : byPurpose
+            if prompt.exists {
+                let allow = prompt.buttons["Allow"].exists ? prompt.buttons["Allow"] : prompt.buttons["OK"]
+                for attempt in 0..<2 {
+                    guard prompt.exists else { break }
+                    guard allow.wait(for: \.isHittable, toEqual: true, timeout: 3) else {
+                        XCTFail("The simulator Photos permission button is unavailable. " + springboard.debugDescription)
+                        return
+                    }
+                    allow.tap()
+                    if prompt.waitForNonExistence(timeout: 3) { break }
+                    if attempt == 1 {
+                        XCTFail("The simulator Photos add-only prompt remained after Allow. " + springboard.debugDescription)
+                        return
+                    }
+                }
             }
         }
         let saved = app.staticTexts["fixture.receipt.photoResult"]
@@ -1046,13 +1063,18 @@ import XCTest
         app.terminate()
         launch(reset: true)
         tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
-        tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
-        tap(app.buttons["Choose a receipt from Photos"])
+        tap(app.buttons["pantry.receipt"])
+        let screenshot = app.buttons["receipt.chooseScreenshot"]
+        XCTAssertTrue(screenshot.waitForExistence(timeout: 5) && screenshot.isHittable, app.debugDescription)
+        screenshot.tap()
         try chooseNewestSourcePhoto()
         let oats = app.switches["receipt.document.line.1.1"]
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
         XCTAssertEqual(oats.value as? String, "0")
+        let fee = app.switches["receipt.document.line.1.2"]
+        XCTAssertTrue(fee.exists && fee.label.uppercased().contains("SERVICE FEE"))
+        XCTAssertEqual(fee.value as? String, "0")
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
@@ -1272,6 +1294,18 @@ import XCTest
         receiptTap(app.buttons["shop.myPantry"])
         receiptTap(app.buttons["pantry.setup.apply"])
         receiptTap(app.buttons["pantry.receipt"])
+        let camera = app.buttons["receipt.takePhoto"]
+        let screenshot = app.buttons["receipt.chooseScreenshot"]
+        XCTAssertTrue(camera.waitForExistence(timeout: 5) && camera.isHittable)
+        XCTAssertTrue(screenshot.exists && screenshot.isHittable)
+        XCTAssertTrue(app.windows.firstMatch.frame.contains(camera.frame))
+        XCTAssertTrue(app.windows.firstMatch.frame.contains(screenshot.frame))
+        receiptTap(app.buttons["receipt.sections"])
+        XCTAssertTrue(app.navigationBars["Scan receipt sections"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Photograph next section"].isHittable)
+        XCTAssertTrue(app.buttons["Choose next section from Photos"].isHittable)
+        XCTAssertFalse(app.buttons["receipt.sections.review"].exists)
+        receiptTap(app.buttons["Cancel"])
         reviewManualOatsAtMarket(checkAssistance: true, storage: "Fridge")
         XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
         receiptTap(app.buttons["receipt.commit"])

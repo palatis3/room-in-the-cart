@@ -14,7 +14,7 @@ extension PantryLegacyMigration.SourceHead {
 @MainActor enum PantryPickupDelta {
     enum Failure: Error, Equatable {
         case invalidSource, staleSource, inactive, missingCanonicalSource, ambiguousPhysicalChange
-        case removedSourceHead, invalidReceiptHistory, multipleObservations, capacity
+        case removedSourceHead, invalidReceiptHistory, multipleObservations, capacity, portionRecountRequired
     }
     struct Request: Codable, Equatable {
         let version: Int
@@ -189,6 +189,15 @@ extension PantryLegacyMigration.SourceHead {
                 ? .exact(observation.usable) : .unknown
             revisions[source] = .init(observation: .init(count: count,
                 observationID: try identity(operationID, "observation", source), observedAt: observation.confirmedAt))
+        }
+        // A receipt correction and a changed legacy stock count both describe the whole
+        // historical source. Do not assign that total to one portion, even after its
+        // siblings moved, were consumed, or have an unknown count. The canonical batch
+        // editor can recount the portion the shopper has physically identified.
+        for (source, revision) in revisions where revision.observation != nil {
+            if let id = sourceIDs[source], let lot = lots[id], inventory.requiresPortionRecount(lot) {
+                throw Failure.portionRecountRequired
+            }
         }
         var writes: [InventoryWrite] = []
         for (source, observation) in carryoverCounts {

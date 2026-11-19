@@ -39,6 +39,45 @@ import LocalStore
         return Source(workspace: workspace, origin: origin, original: original, accepted: accepted,
                       planned: .init(acceptedDinnerID: accepted.id, template: next, day: original.scheduledDay), food: food)
     }
+    func testBasketKeepsCheckedGroceriesSeparateFromNewMealDemand() throws {
+        let basis = try source()
+        var shop = try XCTUnwrap(basis.workspace.shops.first)
+        try shop.setChecked(lineID: basis.food, checked: true, at: now)
+        let recipe = AcceptedDinner(id: UUID(), template: MealTemplate(title: "Another dinner",
+            ingredients: [.init(name: "Wraps", quantity: q(2))]), acceptedAt: now)
+        let rows = try DinnerBasketGroceryDraft.prepare(recipes: [recipe], shop: shop, history: [], workspace: basis.origin)
+        XCTAssertEqual(rows.count, 2)
+        XCTAssertTrue(try XCTUnwrap(rows.first { $0.existingLine == basis.food }).members.isEmpty)
+        XCTAssertEqual(try XCTUnwrap(rows.first { $0.existingLine == nil }).members.first?.0.recipe, recipe.id)
+    }
+    func testBasketPresentsCurrentShoppingNotesAndDoesNotGroupDifferentVariants() throws {
+        let basis = try source()
+        var shop = try XCTUnwrap(basis.workspace.shops.first)
+        try shop.updateLine(lineID: basis.food, name: "Wraps", notes: "Gluten-free only", aisle: "", at: now)
+        let recipe = AcceptedDinner(id: UUID(), template: MealTemplate(title: "Wrap dinner",
+            ingredients: [.init(name: "Wraps", quantity: q(1))]), acceptedAt: now)
+        let rows = try DinnerBasketGroceryDraft.prepare(recipes: [recipe], shop: shop, history: [], workspace: basis.origin)
+        let fixed = try XCTUnwrap(rows.first { $0.existingLine == basis.food })
+        XCTAssertEqual(fixed.label.notes, "Gluten-free only")
+        XCTAssertTrue(fixed.members.isEmpty)
+        XCTAssertEqual(rows.count, 2)
+    }
+    func testBasketDoesNotPriceRenamedOrEditedLineFromEarlierPackSelection() throws {
+        let basis = try source(), history = basis.workspace.packSelections
+        let original = try XCTUnwrap(basis.workspace.shops.first)
+        func grocery(in shop: ShoppingLedger) throws -> DinnerBasketGroceryDraft {
+            try XCTUnwrap(DinnerBasketGroceryDraft.prepare(recipes: [], shop: shop, history: history,
+                                                           workspace: basis.origin).first { $0.existingLine == basis.food })
+        }
+        XCTAssertEqual(try grocery(in: original).price, "1.25")
+        for (name, notes) in [("Saffron", ""), ("Wraps", "Gluten-free variant")] {
+            var changed = original
+            try changed.updateLine(lineID: basis.food, name: name, notes: notes, aisle: "", at: now)
+            let row = try grocery(in: changed)
+            XCTAssertTrue(row.price.isEmpty)
+            XCTAssertNil(try row.resolved().first?.offer)
+        }
+    }
     private func preview(_ source: Source, budget: Bool = true) throws -> DinnerPreview {
         let shop = try XCTUnwrap(source.workspace.shops.first)
         return try DinnerSwapEngine.preview(occurrenceID: source.original.id, replacement: source.planned,

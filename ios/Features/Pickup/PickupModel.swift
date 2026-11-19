@@ -796,6 +796,21 @@ struct PickupPersistenceLocation {
         }
         return .init(snapshot: snapshot, mapping: mapping, asOf: clock())
     }
+    func quickGroceryPantryContext(ledgerWorkspaceID: UUID) throws -> PantryPackStockReview.Context? {
+        guard pantryConfiguration?.ledger.workspaceID == ledgerWorkspaceID else { return nil }
+        return try pantryReviewContext()
+    }
+
+    func quickGroceryAliases(merchant: String, language: String, origin: UUID) async throws -> [InventoryReceiptAlias] {
+        guard !merchant.isEmpty, let persona = receiptAliasPersona, let configuration = pantryConfiguration,
+              configuration.authorize(), let store, store.workspaceID == origin else { return [] }
+        let generation = privatePantryGeneration
+        let aliases = try await store.receiptAliases(personaID: persona, merchant: merchant, language: language)
+        guard generation == privatePantryGeneration, configuration.authorize(), receiptAliasPersona == persona,
+              sourceWorkspaceID == origin else { return [] }
+        return aliases
+    }
+
     func makePantryPackSelectionPort() throws -> PantryPackSelectionCommitPort {
         guard pantryIsActive, let configuration = pantryConfiguration, configuration.authorize(), let store,
               store.workspaceID == configuration.pendingStore.inventoryWorkspaceID else { throw PickupModelError.missing }
@@ -841,6 +856,11 @@ struct PickupPersistenceLocation {
                   pending.fileURL == defaultPending.fileURL else { throw PickupModelError.missing }
             return PantryModel(repository: PantryRepository(store: store, mutationGate: configuration.gate,
                 pendingStore: pending, aliasPersonaID: receiptAliasPersona, authorize: configuration.authorize), clock: clock,
+                receiptTrips: { [weak self] state in
+                    guard let self, self.ready, self.pantryIsActive, self.pantryReadIsCurrent, !self.saving,
+                          !self.hasPendingSave, self.pantryConfiguration?.authorize() == true, self.pantrySnapshot?.state == state else { return [] }
+                    return self.journeys.compactMap(ReceiptTripPlan.init(journey:)).sorted { $0.date > $1.date }
+                },
                 recentPurchases: { [weak self] state in self?.recentPurchases(for: state) ?? [] },
                 willMutateOrRecover: { [weak self] in self?.pantryReadIsCurrent = false }, didSave: { [weak self] in
                     _ = await self?.refreshPantryStock()
@@ -1152,6 +1172,9 @@ struct PickupPersistenceLocation {
         } catch ComparisonStoreError.staleInventory {
             ready = false; await load()
             error = pantryText("Food or reservations changed. Refresh and review again before saving.")
+            return false
+        } catch PantryPickupDelta.Failure.portionRecountRequired {
+            error = pantryText("The original batch was split or had food discarded. Recount each remaining portion in My Pantry.")
             return false
         } catch PantryPickupDelta.Failure.staleSource {
             ready = false; await load()

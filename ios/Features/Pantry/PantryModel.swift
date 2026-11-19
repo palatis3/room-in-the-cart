@@ -37,17 +37,24 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     @Published private(set) var pendingWasCommitted = false
     private let repository: PantryRepository
     private let clock: () -> Date
+    private let receiptTripOptions: @MainActor (InventoryState) -> [ReceiptTripPlan]
+    var receiptTrips: [ReceiptTripPlan] {
+        guard canEdit, let state = snapshot?.state else { return [] }
+        return receiptTripOptions(state)
+    }
     private let purchaseOptions: (@MainActor (InventoryState) -> [PantryRecentPurchase])?
     private let willMutateOrRecover: (@MainActor () -> Void)?
     private let didSave: (@MainActor () async -> Void)?
     private var generation = UUID()
 
     init(repository: PantryRepository, clock: @escaping () -> Date = Date.init,
+         receiptTrips: @escaping @MainActor (InventoryState) -> [ReceiptTripPlan] = { _ in [] },
          recentPurchases: (@MainActor (InventoryState) -> [PantryRecentPurchase])? = nil,
          willMutateOrRecover: (@MainActor () -> Void)? = nil,
          didSave: (@MainActor () async -> Void)? = nil) {
         self.repository = repository
         self.clock = clock
+        self.receiptTripOptions = receiptTrips
         self.purchaseOptions = recentPurchases
         self.willMutateOrRecover = willMutateOrRecover
         self.didSave = didSave
@@ -165,6 +172,32 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         return next
     }
 
+    func paidPurchases(named name: String) async throws -> (prices: [PrivatePriceEvidence], state: InventoryState) {
+        let product = ShelfPriceOffer.normalized(name)
+        var matches: [PrivatePriceEvidence] = []
+        var bytes = 0
+        var page: PantryPricePage?
+        repeat {
+            try Task.checkCancellation()
+            let next = try await priceHistory(after: page)
+            for row in next.standalone + next.receipts where row.isPaidPrice && ShelfPriceOffer.normalized(row.name) == product {
+                bytes += try PantryAcquisitionCodec.data(row).count
+                guard bytes <= repository.limits.payloadBytes, matches.count < repository.limits.observations else { throw InventoryError.capacity }
+                matches.append(row)
+            }
+            if next.nextStandalone == nil && next.nextReceipt == nil { return (matches, next.state) }
+            page = next
+        } while true
+    }
+
+    func paidPurchaseCredits(for price: PrivatePriceEvidence, expected: InventoryState) async throws -> [PrivatePriceEvidence] {
+        let token = generation
+        guard phase != .accessDenied else { throw PantryReceiptError.stale }
+        let credits = try await repository.priceAdjustments(for: price.id, expected: expected)
+        guard token == generation, phase != .accessDenied else { throw PantryReceiptError.stale }
+        return credits
+    }
+
     func writePrice(_ evidence: PrivatePriceEvidence, expected: InventoryState) async throws {
         try await changeReceipt(expected) {
             try await repository.savePrice(evidence, expected: expected, at: clock())
@@ -275,6 +308,14 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         try await repository.answerStaple(answer, prompt: prompt, revision: revision, expected: review.state)
     }
 
+    func withPrivateDeliveryScope<T>(_ action: (ComparisonStore, UUID) async throws -> T) async throws -> T {
+        let token = generation
+        guard canEdit else { throw PantryRepository.Failure.unauthorized }
+        let result = try await repository.withPrivateDeliveryScope(action)
+        guard token == generation, canEdit else { throw PantryRepository.Failure.unauthorized }
+        return result
+    }
+
     var supportsReceiptAliases: Bool { repository.aliasPersonaID != nil }
 
     func receiptAliases(merchant: String? = nil, language: String? = nil) async throws -> [InventoryReceiptAlias] {
@@ -347,7 +388,12 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
 
     var recentPurchases: [PantryRecentPurchase] {
         guard phase == .ready, let snapshot else { return [] }
-        return purchaseOptions?(snapshot.state) ?? []
+        let lots = Dictionary(uniqueKeysWithValues: snapshot.lots.map { ($0.id, $0) })
+        let parents = Set(snapshot.lots.compactMap(\.splitFromLotID))
+        return (purchaseOptions?(snapshot.state) ?? []).filter { purchase in
+            guard let lot = lots[purchase.id] else { return false }
+            return !parents.contains(lot.id) && lot.splitFromLotID == nil && (lot.discardedTimes ?? 0) == 0
+        }
     }
 
     /// A single revision contains both the observed remaining quantity and
@@ -419,6 +465,30 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
             }
             await prepare(InventoryCommand(id: UUID(), originID: snapshot.state.workspaceID, lotID: lot.id,
                 eventID: UUID(), expectedRevision: lot.revision, occurredAt: clock(), change: change))
+        } catch { notice = .invalidEntry }
+    }
+
+    func discardHistory(foodID: UUID, basis: InventoryState) async throws -> [PantryDiscardRow] {
+        guard canEdit, snapshot?.state == basis else { throw PantryConsumptionFailure.stale }
+        let token = generation
+        let rows = try await repository.discardHistory(foodID: foodID, basis: basis, at: clock())
+        guard canEdit, snapshot?.state == basis, token == generation else { throw PantryConsumptionFailure.stale }
+        return rows
+    }
+
+    func preparePortion(_ portion: InventoryPortionAction, from lot: InventoryLot) async {
+        guard let snapshot, snapshot.lots.contains(lot) else { notice = .stale; return }
+        do {
+            let count = try portion.remainder(of: lot)
+            var wording: String?
+            if case .undoDiscard = portion { wording = lot.discardUndo?.previousWording }
+            let observation = InventoryCountRevision(count: count, observationID: UUID(), observedAt: lot.confirmedAt, countWording: wording)
+            let command = InventoryCommand(id: UUID(), originID: snapshot.state.workspaceID, lotID: lot.id,
+                eventID: UUID(), expectedRevision: lot.revision, occurredAt: clock(),
+                change: .revise(.init(observation: observation, portion: portion)))
+            let basis = PantryReviewedFood(id: lot.foodID, name: lot.name, inventoryWorkspaceID: snapshot.state.workspaceID,
+                                          inventoryRevision: snapshot.state.revision)
+            await prepare(command, reviewedFood: basis)
         } catch { notice = .invalidEntry }
     }
 

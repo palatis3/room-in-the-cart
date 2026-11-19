@@ -16,6 +16,32 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testQuickGroceryReturnUndoAndDuplicateReviewInSpanish() {
+        launch(language: "es")
+        let field = app.textFields["quickGrocery.name"]
+        tap(field)
+        field.typeText("huevos\n")
+        let undo = app.buttons["quickGrocery.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        XCTAssertTrue(undo.label.contains("huevos"))
+        field.typeText("leche\n")
+        let milkUndo = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                        "quickGrocery.undo", "leche")).firstMatch
+        XCTAssertTrue(milkUndo.waitForExistence(timeout: 10))
+        tap(milkUndo)
+        XCTAssertTrue(milkUndo.waitForNonExistence(timeout: 10))
+        tap(field)
+        field.typeText("huevos\n")
+        XCTAssertTrue(element("ledgerImportForm").waitForExistence(timeout: 10))
+        app.terminate()
+        launch(language: "es", reset: false)
+        tap(element("openPickupList"))
+        let items = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
+        XCTAssertTrue(items.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertEqual(items.count, 1)
+        XCTAssertTrue(items.firstMatch.label.contains("huevos"))
+    }
+
     func testColdAddItemShortcutOpensEditableFirstDraftWithoutCreatingPickup() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--test-shopping-add-intent",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]

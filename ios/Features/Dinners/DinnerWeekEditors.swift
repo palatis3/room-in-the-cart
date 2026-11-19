@@ -9,6 +9,8 @@ struct DinnerOccurrenceView: View {
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.guardianChildCoordinator) private var child
     let occurrenceID: UUID
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var calendarPresentation: CalendarOrigin?
     @State private var date = Date()
     @State private var scheduled = false
     @State private var showPreview = false
@@ -37,8 +39,47 @@ struct DinnerOccurrenceView: View {
                     description: Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes.")))
                     .accessibilityIdentifier("dinner.currentMealsUnavailable")
             }
+        }.toolbar {
+            if let origin = calendarOrigin {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { calendarPresentation = origin } label: {
+                        Label(applePlanningText("Add dinner to Calendar"), systemImage: "calendar.badge.plus")
+                    }
+                    .accessibilityIdentifier("dinner.calendarCopy")
+                }
+            }
         }
+        .sheet(item: $calendarPresentation) { origin in
+            NavigationStack {
+                if calendarOrigin == origin {
+                    DinnerCalendarCopyView(day: origin.day, authorize: { calendarOrigin == origin })
+                        .toolbar { ToolbarItem(placement: .cancellationAction) {
+                            Button(applePlanningText("Close")) { calendarPresentation = nil }
+                        } }
+                }
+            }
+        }
+        .onChange(of: calendarOrigin) { _, current in
+            if let presented = calendarPresentation, current != presented { calendarPresentation = nil }
+        }
+        .onChange(of: scenePhase) { _, phase in if phase == .background { calendarPresentation = nil } }
     }
+    private struct CalendarOrigin: Equatable, Identifiable {
+        var id: UUID { occurrence }
+        let identity: CapturePrivateIdentity
+        let occurrence: UUID
+        let planner: DinnerFeatureModel.EditorIdentity
+        let day: MealDay
+    }
+    private var calendarOrigin: CalendarOrigin? {
+        guard UIApplication.shared.isProtectedDataAvailable, child?.presented != true, household.projection?.grantId == nil,
+              let identity = CapturePrivateIdentity.current(access: access, household: household),
+              let planner = model.editorIdentity,
+              let current = try? model.currentMeals(pickup: pickup).occurrence(occurrenceID),
+              !current.isHidden, let day = current.scheduledDay else { return nil }
+        return CalendarOrigin(identity: identity, occurrence: occurrenceID, planner: planner, day: day)
+    }
+
     private var draftSwapUndo: DinnerApplyReceipt? {
         guard let shop = model.shop, model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID,
               pickup.recoveryLedger === ledger, model.phaseProvider(shop.id) == .draft else { return nil }
@@ -112,6 +153,11 @@ struct DinnerOccurrenceView: View {
                         }
                     }
                 }
+                if model.basketPrepAccess(), model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID,
+                   household.projection?.grantId == nil, child?.presented != true,
+                   CapturePrivateIdentity.current(access: access, household: household) != nil {
+                    DinnerPrepSection(model: model, meal: meal, canScheduleAlerts: pickup.recoveryLedger === ledger)
+                }
                 Section { DinnerAwayCarryoverLink(model: model, occurrenceID: meal.id) }
                 Section(dinnerText("Move this dinner")) {
                     Toggle(dinnerText("Assign a date"), isOn: $scheduled)
@@ -121,6 +167,10 @@ struct DinnerOccurrenceView: View {
                             .accessibilityIdentifier("dinnerMoveDate")
                     }
                     Text(calendarZone)
+                    if let task = model.state.prepTasks.first(where: { $0.shopID == model.shop?.id && $0.occurrenceID == meal.id }),
+                       task.completedAt == nil, model.basketPrepAccess(), model.localIdeaWorkspaceID != nil, proposedDay != meal.scheduledDay {
+                        Text(dinnerPlanText("After moving dinner, review the new prep time here."))
+                    }
                     Button(dinnerText("Preview calendar change")) {
                         do {
                             guard let shop = model.shop else { return }

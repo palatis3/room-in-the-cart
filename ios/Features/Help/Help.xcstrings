@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "If last calls are available, the shopper can set a cutoff that eligible adults see in the app. The service records your response and whether you mute the invitation. Requests after the cutoff go to the next trip.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If last calls are available, the shopper can set a cutoff that eligible adults see in the app. The service records your response and whether you mute the invitation. Requests after the cutoff go to the next trip."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si están disponibles los avisos antes de la compra, quien hace la compra puede fijar una hora límite que las personas adultas con permiso ven en la app. El servicio registra tu respuesta y si silencias el aviso. Las solicitudes posteriores a la hora límite pasan a la siguiente compra."
+          }
+        }
+      }
+    },
+    "If product references are available, an adult can choose to share a description, brand, size or barcode with the named shopper. When photo sharing is enabled separately, the service receives only the crop you review, without location metadata. An authorized moderator reviews it before the shopper can see it. You can remove a shared reference. Access expires within seven days.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If product references are available, an adult can choose to share a description, brand, size or barcode with the named shopper. When photo sharing is enabled separately, the service receives only the crop you review, without location metadata. An authorized moderator reviews it before the shopper can see it. You can remove a shared reference. Access expires within seven days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si están disponibles las referencias de productos, una persona adulta puede compartir una descripción, marca, tamaño o código de barras con la persona indicada para hacer la compra. Si además se habilita el uso de fotos, el servicio recibe solo el recorte que revises, sin metadatos de ubicación. Una persona autorizada lo revisa antes de que lo vea quien hace la compra. Puedes retirar una referencia compartida. El acceso caduca en un máximo de siete días."
+          }
+        }
+      }
+    },
     "Choose a different guide entry": {
       "localizations": {
         "en": {
@@ -1756,19 +1788,19 @@
         }
       }
     },
-    "Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file.": {
+    "Ordinary dictation and photo text recognition run on this iPhone. Your private evidence photos are saved in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file."
+            "value": "Ordinary dictation and photo text recognition run on this iPhone. Your private evidence photos are saved in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El dictado habitual y el reconocimiento de texto en fotos se realizan en este iPhone. Las fotos guardadas como evidencia permanecen en el almacenamiento protegido del dispositivo. Apple puede descargar una foto que elijas de iCloud. Puedes incluir las fotos revisadas en un archivo de recuperación cifrado."
+            "value": "El dictado habitual y el reconocimiento de texto en fotos se realizan en este iPhone. Tus fotos privadas de referencia se guardan en el almacenamiento protegido del dispositivo. Apple puede descargar una foto que elijas de iCloud. Puedes incluir las fotos revisadas en un archivo de recuperación cifrado."
           }
         }
       }

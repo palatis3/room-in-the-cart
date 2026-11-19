@@ -1,5 +1,6 @@
 import XCTest
 import CoreDomain
+import LocalStore
 import RecordArchive
 @testable import RoomInTheCart
 
@@ -7,6 +8,60 @@ final class LedgerReadableRecordTests: XCTestCase {
     private struct Document: Encodable {
         let formatVersion = 1
         let workspace: LedgerWorkspace
+    }
+
+    @MainActor func testShoppingLibraryRecoveryIsPrivateAndIndependentOfTransferredPickup() async throws {
+        var shop = ShoppingLedger(title: "West trip", basis: ShopBasis(branch: "West"))
+        _ = try shop.addManualLine(name: "Pickup only", quantity: nil)
+        var source = LedgerWorkspace(shops: [shop], mealTemplates: [MealTemplate(title: "Dinner only")], selectedShopID: shop.id)
+        let row = ShoppingKitRow(name: "Private brand", notes: "Only the green box", exclusions: ["nut"], optional: true)
+        let kit = ShoppingKit(name: "Weekend", rows: [row])
+        try source.shoppingLists.saveKit(kit, replacing: nil)
+        let pending = StandingListItem(row: ShoppingKitRow(name: "A private planned item"), stores: ["Far market"])
+        let moved = StandingListItem(row: ShoppingKitRow(name: "Moved already"), stores: ["East","West"])
+        try source.shoppingLists.saveStanding(pending, replacing: nil)
+        try source.shoppingLists.saveStanding(moved, replacing: nil)
+        try source.transferStanding(moved, shopID: shop.id, revision: shop.revisionID)
+        let library = try XCTUnwrap(RecordsNativeCodec.shoppingLibraryRecord(source, origin: "ledger/" + UUID().uuidString, date: Date()))
+        XCTAssertEqual(library.id, "shopping-library")
+        try RecordsNativeCodec.validate(library)
+        let backup = try ArchiveCodec.make(records: [library], kind: .personalRecovery, origin: library.origin, revision: library.revision)
+        let key = EncryptedArchive.generateKey()
+        let envelope = try EncryptedArchive.open(EncryptedArchive.seal(backup, key: key), key: key)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let registry = try RecoveryRegistry(url: root.appendingPathComponent("copies.json"))
+        let review = try await registry.review(envelope)
+        let imported = try await registry.apply(review)
+        let recovered = try XCTUnwrap(imported.records.first)
+        let opened = try await RecordsRecoveryCapture.openLedger(copy: recovered, directory: root.appendingPathComponent(recovered.id), authorize: { true })
+        let record = try await opened.store.save(payload: XCTUnwrap(recovered.record.nativePayload),
+            expectedRevision: 0, operationID: UUID(), savedAt: Date())
+        let exported = try RecordsNativeCodec.recoveredLedger(recovered, current: record, scope: opened.scope, sources: [])
+        try await opened.store.close()
+        XCTAssertEqual(exported.count, 1)
+        XCTAssertEqual(exported[0].id, library.id)
+        let bytes = try XCTUnwrap(exported[0].nativePayload)
+        let reopened = try RecordsNativeCodec.ledger(bytes)
+        XCTAssertEqual(reopened.shoppingLists.kits, [kit])
+        XCTAssertEqual(reopened.shoppingLists.standing, [pending])
+        XCTAssertTrue(reopened.shops.isEmpty)
+        let readable = try LedgerReadableRecord.text(bytes)
+        XCTAssertTrue(readable.contains("Only the green box"))
+        XCTAssertTrue(readable.contains("Far market"))
+        XCTAssertFalse(readable.contains("Moved already"))
+        XCTAssertFalse(readable.contains("Dinner only"))
+        let scoped = try RecordsNativeCodec.ledgerScope(source, shop: source.shops[0])
+        XCTAssertTrue(scoped.shops[0].lines.contains(where: { $0.name == "Moved already" }))
+        XCTAssertEqual(scoped.shoppingLists, PrivateShoppingLists())
+        XCTAssertEqual(try RecordsNativeCodec.ledgerLibrary(source)?.shoppingLists, PrivateShoppingLists())
+        let helper = try ArchiveCodec.make(records: [library], kind: .helperShop, origin: library.origin, revision: library.revision)
+        XCTAssertNil(helper.payload.records.first?.nativePayload)
+        XCTAssertEqual(helper.payload.records.first?.helperLines.count, 0)
+        var mislabeled = library
+        mislabeled.id = "meal-library"
+        XCTAssertThrowsError(try RecordsNativeCodec.validate(mislabeled))
     }
 
     @MainActor func testMealFeedbackPersonalBackupKeepsSelectedAdultAndSourceWhileHelperDropsReactions() throws {

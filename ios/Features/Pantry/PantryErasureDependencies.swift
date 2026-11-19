@@ -105,7 +105,7 @@ import RecordArchive
         let journey: UUID?
         let all: Bool
         init(_ selection: Selection, context: Context, historicalSourceLots: Set<UUID> = []) throws {
-            let ids: Set<UUID>
+            var ids: Set<UUID>
             switch selection {
             case let .lot(id, revision):
                 guard context.lots.contains(where: { $0.id == id && $0.revision == revision }) else { throw Failure.stale }
@@ -119,6 +119,20 @@ import RecordArchive
                 journey = id; all = false
             case .price: throw Failure.invalidContext
             case .wholeOrigin: ids = Set(context.lots.map(\.id)); journey = nil; all = true
+            }
+            // A transfer has immutable provenance on both portions. Review every linked
+            // portion together so a surviving batch never loses half its physical history.
+            if !all {
+                var neighbors: [UUID: [UUID]] = [:]
+                for lot in context.lots {
+                    guard let parent = lot.splitFromLotID else { continue }
+                    neighbors[parent, default: []].append(lot.id)
+                    neighbors[lot.id, default: []].append(parent)
+                }
+                var pending = Array(ids)
+                while let id = pending.popLast() {
+                    for peer in neighbors[id] ?? [] where ids.insert(peer).inserted { pending.append(peer) }
+                }
             }
             lots = ids; sources = Set(context.lots.filter { ids.contains($0.id) }.map(\.source))
             let foods = Set(context.lots.filter { ids.contains($0.id) }.map(\.foodID))
@@ -150,6 +164,11 @@ import RecordArchive
         mutating func lot(_ value: InventoryLot, _ role: Role) {
             guard value.source.originID == context.originID else { unresolved.insert(.foreignLineage); return }
             add(.lot(value.id), role); add(.source(value.source), role)
+            if let parent = value.splitFromLotID { add(.lot(parent), .identityLink) }
+        }
+        mutating func portionLinks(_ change: InventoryChange) {
+            if case let .create(seed, _) = change, let parent = seed.splitFromLotID { add(.lot(parent), .identityLink) }
+            if case .revise(let edit) = change, case let .split(_, _, child, _, _) = edit.portion { add(.lot(child), .identityLink) }
         }
         mutating func claim(_ value: InventoryReservation, _ role: Role) {
             guard value.originID == context.originID else { unresolved.insert(.foreignLineage); return }
@@ -309,6 +328,7 @@ import RecordArchive
                 guard record.key.id == value.id, record.source == nil, record.lotID == value.lotID, record.revision == 1, value.originID == context.originID else { throw Failure.invalidContext }
                 try PantryArchiveCodec.validateHistory(.originalEvent(value), at: context.at); try knownFields(value, bytes: record.payload)
                 result.add(.lot(value.lotID), .physicalFact)
+                result.portionLinks(value.change)
                 if case .create(let seed, _) = value.change { result.source(seed.source, .physicalFact) }
             case .intent:
                 guard let object = try JSONSerialization.jsonObject(with: record.payload) as? [String: Any] else { throw Failure.invalidContext }
@@ -388,6 +408,7 @@ import RecordArchive
             case .originalEvent(let value):
                 guard value.originID == context.originID else { result.unresolved.insert(.foreignLineage); break }
                 result.add(.lot(value.lotID), .incidentalCopy)
+                result.portionLinks(value.change)
                 if case .create(let seed, _) = value.change { result.source(seed.source, .incidentalCopy) }
             case .originalReservation(let value): result.claim(value, .incidentalCopy)
             case .originalSourceLink(let value): result.source(value.source, .incidentalCopy); result.add(.lot(value.lotID), .incidentalCopy)
@@ -396,6 +417,7 @@ import RecordArchive
                 for command in value.commands {
                     result.add(.lot(command.lotID), .incidentalCopy)
                     if case .reservation(let edit) = command.change { result.add(.claim(edit.id), .incidentalCopy) }
+                    result.portionLinks(command.change)
                     if case .create(let seed, _) = command.change { result.source(seed.source, .incidentalCopy) }
                 }
             case .packPending(let value):
@@ -499,7 +521,7 @@ import RecordArchive
     private static func preview(selection: Selection, target: Target, context: Context, inspections: [Inspection], ledgerOrigins: Set<UUID>) throws -> Preview {
         guard inspections.count <= 250_000 else { throw Failure.capacity }
         let explicit: Set<UUID>
-        switch selection { case .lot(let id, _): explicit = [id]; case .wholeOrigin: explicit = Set(context.lots.map(\.id)); case .pickup, .price: explicit = [] }
+        switch selection { case .lot: explicit = target.lots; case .wholeOrigin: explicit = Set(context.lots.map(\.id)); case .pickup, .price: explicit = [] }
         let collateral = Set(inspections.compactMap { value -> UUID? in
             guard case .pickup(let id, _) = value.container, value.containsPrivateDependency, target.journey != id else { return nil }; return id
         })

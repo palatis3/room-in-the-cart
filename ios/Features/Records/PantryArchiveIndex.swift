@@ -103,7 +103,8 @@ final class PantryArchiveIndex {
                 if case let .originalLot(original, baselineID) = envelope.body {
                     let baseline = InventoryLot(id: original.id, foodID: original.foodID, name: original.name, source: original.source,
                         revision: 1, location: original.location, openedAt: original.openedAt, unit: original.unit, count: original.count,
-                        observationID: baselineID, confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording)
+                        observationID: baselineID, confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording,
+                        splitFromLotID: original.splitFromLotID, discardedTimes: original.discardedTimes)
                     try execute("INSERT INTO baselines(lot,payload) VALUES (?,?)", texts: [original.id.uuidString], data: ArchiveCodec.canonical(baseline))
                 }
             default: break
@@ -249,6 +250,7 @@ final class PantryArchiveIndex {
         }
         // Only the explicitly domain-bounded live head projection is materialized;
         // observation/event/provenance history never joins these arrays.
+        _ = try InventoryLot.splitRoots(in: lots)
         _ = try InventoryProjection.build(originID: descriptor.originID, lots: lots, reservations: claims, at: descriptor.capturedAt)
     }
     private func initial(_ lot: InventoryLot) throws -> InventoryLot {

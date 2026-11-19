@@ -130,7 +130,7 @@ private struct HouseholdPantryView: View {
                 NavigationStack {
                     switch item {
                     case .receipt(let reviewed): HouseholdReceiptEntry(model: model, page: reviewed,
-                        household: household.projection?.household.label ?? householdPantryText("Household pantry"), closeEditor: closeEditor)
+                        household: household.projection?.household.label ?? householdPantryText("Household pantry"), householdModel: household, closeEditor: closeEditor)
                     case .addition(let reviewed): HouseholdPantryEditor(model: model, page: reviewed, closeEditor: closeEditor)
                     case .correction(let page, let lot): HouseholdPantryCountEditor(model: model, page: page, lot: lot, closeEditor: closeEditor)
                     case .staples: HouseholdStaplesView(model: model)

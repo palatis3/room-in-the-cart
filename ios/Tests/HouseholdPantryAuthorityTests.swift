@@ -347,6 +347,46 @@ private actor PantryTestService: HouseholdPantryServing {
         XCTAssertNil(resumed.pending)
     }
 
+    func testSegmentedReceiptNeedsPrintedIdentityEvenWhenSelectingOnlyItsFirstLine() async throws {
+        let service = try PantryTestService(), store = HouseholdPantryPendingStore(url: temporaryURL())
+        let model = try makeModel(service: service, store: store)
+        await model.load()
+        let page = try XCTUnwrap(model.page)
+        let target = CaptureTarget(workspaceID: page.householdId, containerID: UUID(), objectID: UUID(), revision: 0, kind: .receiptEvidence)
+        func photo(_ byte: UInt8) -> ExtractedReceiptDocument {
+            .init(digest: Data(repeating: byte, count: 32), pages: [.init(id: 1, method: .imageOCR, lines: [.init(id: 1, text: "YOGUR")])])
+        }
+        var sections = ReceiptSectionDraft()
+        func make(_ reference: String?) throws -> HouseholdReceiptAcquisition {
+            let source = try sections.review().document.source(target: target, merchant: "Mercado Café", stage: .receipt,
+                selection: [.init(page: 1, line: 1)], at: Date())
+            var draft = try ReceiptImportDraft(source: source)
+            draft.reference = reference ?? ""; draft.dateConfirmed = true
+            draft.lines[0].treatment = .add; draft.lines[0].received = "1"; draft.lines[0].usable = "1"
+            return try draft.householdReceipt(for: page, deliveries: [])
+        }
+        try sections.put(photo(1), bytes: 100, preview: nil, at: 0)
+        let single = try make(nil)
+        XCTAssertNil(single.segmentedPhotos)
+        try sections.put(photo(2), bytes: 100, preview: nil, at: 1)
+        sections.resolve(at: 1, omitting: 0)
+        XCTAssertThrowsError(try make(nil))
+        let pair = try make("Receipt 724")
+        XCTAssertEqual(pair.receiptId.uuidString.lowercased(), "05e32c0b-b8cf-87cb-bda7-d6a70f780aa7")
+        XCTAssertEqual(pair.segmentedPhotos, true)
+        XCTAssertEqual(pair.imageId, single.imageId)
+        XCTAssertNotEqual(pair.layoutId, single.layoutId)
+        for (position, photoID) in [(2, UInt8(3)), (1, 4), (0, 5)] {
+            try sections.put(photo(photoID), bytes: 100, preview: nil, at: position)
+            sections.resolve(at: 1, omitting: 0); sections.resolve(at: 2, omitting: 0)
+            XCTAssertThrowsError(try make(" "))
+            let revised = try make("Receipt 724")
+            XCTAssertEqual(revised.receiptId, pair.receiptId)
+            XCTAssertNotEqual(revised.layoutId, pair.layoutId)
+            XCTAssertNotEqual(try make("Receipt 725").receiptId, pair.receiptId)
+        }
+    }
+
     func testReceiptLayoutUsesOnlyScopedIdentityAndRejectedCopyClearsOnlyItsPendingSubmission() async throws {
         let service = try PantryTestService(), store = HouseholdPantryPendingStore(url: temporaryURL())
         let model = try makeModel(service: service, store: store)

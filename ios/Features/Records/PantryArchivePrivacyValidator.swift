@@ -218,6 +218,8 @@ import RecordArchive
         }
         func lot(_ value: InventoryLot) throws {
             try key(.lot, value.id, value.source.originID)
+            try key(.lot, value.splitFromLotID, value.source.originID)
+            try key(.event, value.discardUndo?.eventID, value.source.originID)
             try key(.observation, value.observationID, value.source.originID)
             try source(value.source)
         }
@@ -245,9 +247,14 @@ import RecordArchive
             }
             try key(.event, event, origin)
             switch value {
-            case let .create(seed, id): try source(seed.source); try key(.observation, id, origin)
+            case let .create(seed, id): try source(seed.source); try key(.observation, id, origin); try key(.lot, seed.splitFromLotID, origin)
             case .count(_, let id), .usedUp(let id): try key(.observation, id, origin)
-            case .revise(let update): try key(.observation, update.observation?.observationID, origin)
+            case .revise(let update):
+                try key(.observation, update.observation?.observationID, origin)
+                if case let .split(_, _, child, childEvent, observation) = update.portion {
+                    try key(.lot, child, origin); try key(.event, childEvent, origin); try key(.observation, observation, origin)
+                }
+                if case .undoDiscard(let eventID) = update.portion { try key(.event, eventID, origin) }
             case .move, .opened, .reservation: break
             }
         }

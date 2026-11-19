@@ -18,7 +18,9 @@ import UniformTypeIdentifiers
 }
 /// Still photo only; no microphone, library write, video or background capture.
 @MainActor struct CameraCaptureView: UIViewControllerRepresentable {
+    struct PreviousReceiptEdge { let image: Data?; let wording: String }
     let authorize: () -> Bool
+    var previousReceiptEdge: PreviousReceiptEdge? = nil
     let onResult: (Result<Data, ScanFailure>?) -> Void
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIViewController(context: Context) -> UIViewController {
@@ -30,6 +32,37 @@ import UniformTypeIdentifiers
         picker.sourceType = .camera; picker.cameraCaptureMode = .photo
         picker.mediaTypes = [UTType.image.identifier]; picker.allowsEditing = false
         picker.delegate = context.coordinator
+        if let previousReceiptEdge {
+            let overlay = UIView(frame: picker.view.bounds)
+            overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            overlay.isUserInteractionEnabled = false
+            let strip = UIStackView()
+            strip.axis = .vertical; strip.spacing = 2
+            strip.translatesAutoresizingMaskIntoConstraints = false
+            strip.backgroundColor = UIColor.black.withAlphaComponent(0.75)
+            if let data = previousReceiptEdge.image, let image = UIImage(data: data)?.cgImage {
+                let height = max(1, image.height / 5)
+                if let edge = image.cropping(to: CGRect(x: 0, y: image.height - height, width: image.width, height: height)) {
+                    let ghost = UIImageView(image: UIImage(cgImage: edge))
+                    ghost.contentMode = .scaleAspectFit
+                    ghost.heightAnchor.constraint(equalToConstant: 48).isActive = true
+                    ghost.isAccessibilityElement = false
+                    strip.addArrangedSubview(ghost)
+                }
+            }
+            let caption = UILabel()
+            caption.numberOfLines = 2; caption.textAlignment = .center; caption.textColor = .white
+            caption.font = .preferredFont(forTextStyle: .footnote); caption.adjustsFontForContentSizeCategory = true
+            caption.text = captureText("Previous section ends with") + " · " + previousReceiptEdge.wording
+            strip.addArrangedSubview(caption)
+            overlay.addSubview(strip)
+            NSLayoutConstraint.activate([
+                strip.topAnchor.constraint(equalTo: overlay.safeAreaLayoutGuide.topAnchor, constant: 60),
+                strip.leadingAnchor.constraint(equalTo: overlay.leadingAnchor, constant: 16),
+                strip.trailingAnchor.constraint(equalTo: overlay.trailingAnchor, constant: -16)
+            ])
+            picker.cameraOverlayView = overlay
+        }
         return picker
     }
     func updateUIViewController(_ controller: UIViewController, context: Context) {

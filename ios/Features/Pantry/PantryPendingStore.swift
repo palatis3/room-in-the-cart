@@ -124,6 +124,13 @@ import CoreDomain
                 throw Failure.operationConflict
             }
         }
+        if case .revise(let edit) = expected.command.change,
+           case let .split(_, _, child, event, observation) = edit.portion {
+            let childKeys: Set<InventoryRecordKey> = [.init(.lot, child), .init(.sourceLink, child), .init(.event, event), .init(.observation, observation)]
+            guard receipt.heads.count == 7, childKeys.isSubset(of: receipt.heads.filter { $0.revision == 1 }.map(\.key)) else {
+                throw Failure.operationConflict
+            }
+        }
         let acknowledgment = Acknowledgment(operationID: receipt.operationID, committedInventoryRevision: receipt.revision,
             adoptedInventoryRevision: currentInventoryRevision, receiptDigest: Self.digest(try Self.encode(receipt)))
         return try withLock {

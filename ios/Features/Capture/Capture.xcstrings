@@ -1,6 +1,1030 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Enter the printed transaction reference for this multi-photo receipt. Use the same reference when retaking or extending it. If none is printed, add genuinely missing food separately in the household pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the printed transaction reference for this multi-photo receipt. Use the same reference when retaking or extending it. If none is printed, add genuinely missing food separately in the household pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe la referencia de transacción impresa en este recibo de varias fotos. Usa la misma referencia si vuelves a tomar una foto o agregas secciones. Si no hay una referencia impresa, agrega por separado a la despensa del hogar los alimentos que falten."
+          }
+        }
+      }
+    },
+    "Printed transaction reference (required)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed transaction reference (required)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de transacción impresa (obligatoria)"
+          }
+        }
+      }
+    },
+    "An order confirmation describes the plan. Use a purchase receipt or final invoice to compare what was charged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An order confirmation describes the plan. Use a purchase receipt or final invoice to compare what was charged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La confirmación del pedido describe lo planificado. Usa un recibo de compra o una factura final para comparar lo que se cobró."
+          }
+        }
+      }
+    },
+    "Previous section ends with": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous section ends with"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La sección anterior termina con"
+          }
+        }
+      }
+    },
+    "Suggested exact matches": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested exact matches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coincidencias exactas sugeridas"
+          }
+        }
+      }
+    },
+    "Confirm these reviewed matches": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm these reviewed matches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar estas coincidencias revisadas"
+          }
+        }
+      }
+    },
+    "Back to receipt sections": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to receipt sections"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a las secciones del recibo"
+          }
+        }
+      }
+    },
+    "This photo is already in the receipt. Choose a different section or retake the original one.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This photo is already in the receipt. Choose a different section or retake the original one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta foto ya está en el recibo. Elige otra sección o vuelve a fotografiar la original."
+          }
+        }
+      }
+    },
+    "Planned packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes planificados"
+          }
+        }
+      }
+    },
+    "Enter the number of comparable packs shown on the receipt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the number of comparable packs shown on the receipt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe el número de paquetes comparables que aparecen en el recibo."
+          }
+        }
+      }
+    },
+    "The confirmed order is unavailable. You can still review the receipt on its own.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The confirmed order is unavailable. You can still review the receipt on its own."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El pedido confirmado no está disponible. Aún puedes revisar el recibo por separado."
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a intentar"
+          }
+        }
+      }
+    },
+    "Take a photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomar una foto"
+          }
+        }
+      }
+    },
+    "Choose receipt screenshot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose receipt screenshot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una captura del recibo"
+          }
+        }
+      }
+    },
+    "Scan a long receipt in sections": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan a long receipt in sections"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear un recibo largo por secciones"
+          }
+        }
+      }
+    },
+    "Only the photo you take or choose is read on this iPhone. Choosing an iCloud photo may download it through Apple.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the photo you take or choose is read on this iPhone. Choosing an iCloud photo may download it through Apple."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este iPhone solo lee la foto que tomes o elijas. Si eliges una foto de iCloud, puede descargarse a través de Apple."
+          }
+        }
+      }
+    },
+    "Capture from top to bottom. Include the last printed line again at the top of the next photo. Up to six sections, 10 MB per photo and 30 MB total.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture from top to bottom. Include the last printed line again at the top of the next photo. Up to six sections, 10 MB per photo and 30 MB total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotografía el recibo de arriba abajo. Incluye la última línea impresa al principio de la siguiente foto. Puedes usar hasta seis secciones, 10 MB por foto y 30 MB en total."
+          }
+        }
+      }
+    },
+    "Section": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Section"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sección"
+          }
+        }
+      }
+    },
+    "Retake this section": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retake this section"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a fotografiar esta sección"
+          }
+        }
+      }
+    },
+    "Replace with a selected photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace with a selected photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar con una foto elegida"
+          }
+        }
+      }
+    },
+    "These lines may repeat the previous photo. Keep both if they were separate printed purchases.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These lines may repeat the previous photo. Keep both if they were separate printed purchases."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas líneas podrían repetirse en la foto anterior. Conserva ambas si eran compras impresas por separado."
+          }
+        }
+      }
+    },
+    "Lines repeated from the previous section": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines repeated from the previous section"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Líneas que se repiten de la sección anterior"
+          }
+        }
+      }
+    },
+    "Keep all printed lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep all printed lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar todas las líneas impresas"
+          }
+        }
+      }
+    },
+    "Omit repeated lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omit repeated lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir líneas repetidas"
+          }
+        }
+      }
+    },
+    "Photograph next section": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photograph next section"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotografiar la siguiente sección"
+          }
+        }
+      }
+    },
+    "Choose next section from Photos": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose next section from Photos"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir la siguiente sección de Fotos"
+          }
+        }
+      }
+    },
+    "Review receipt lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar las líneas del recibo"
+          }
+        }
+      }
+    },
+    "Scan receipt sections": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan receipt sections"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear secciones del recibo"
+          }
+        }
+      }
+    },
+    "Receipt photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto del recibo"
+          }
+        }
+      }
+    },
+    "The camera is unavailable. Choose a photo or type the lines instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera is unavailable. Choose a photo or type the lines instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no está disponible. Elige una foto o escribe las líneas."
+          }
+        }
+      }
+    },
+    "No section was changed. Choose a readable photo under 10 MB and 25 megapixels, or type the lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No section was changed. Choose a readable photo under 10 MB and 25 megapixels, or type the lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna sección cambió. Elige una foto legible de menos de 10 MB y 25 megapíxeles, o escribe las líneas."
+          }
+        }
+      }
+    },
+    "Compare receipt with a planned shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare receipt with a planned shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar el recibo con una compra planificada"
+          }
+        }
+      }
+    },
+    "Planned shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra planificada"
+          }
+        }
+      }
+    },
+    "Compare only the pages you have. Missing evidence does not establish a shortage or overcharge. This review changes neither inventory nor spending.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare only the pages you have. Missing evidence does not establish a shortage or overcharge. This review changes neither inventory nor spending."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara solo las páginas que tengas. La falta de información no demuestra un faltante ni un cobro excesivo. Esta revisión no cambia las existencias ni los gastos."
+          }
+        }
+      }
+    },
+    "Receipt lines to review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt lines to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Líneas del recibo por revisar"
+          }
+        }
+      }
+    },
+    "Previously linked product": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously linked product"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Producto vinculado anteriormente"
+          }
+        }
+      }
+    },
+    "Differences and unknowns": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Differences and unknowns"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diferencias y datos pendientes"
+          }
+        }
+      }
+    },
+    "Confirmed matches": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed matches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coincidencias confirmadas"
+          }
+        }
+      }
+    },
+    "Edit reviewed receipt lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit reviewed receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar las líneas revisadas"
+          }
+        }
+      }
+    },
+    "This shop changed. Choose it again to compare the current plan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shop changed. Choose it again to compare the current plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra cambió. Vuelve a elegirla para comparar el plan actual."
+          }
+        }
+      }
+    },
+    "Clear comparison": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar comparación"
+          }
+        }
+      }
+    },
+    "Receipt differences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt differences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diferencias del recibo"
+          }
+        }
+      }
+    },
+    "Planned amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad planificada"
+          }
+        }
+      }
+    },
+    "Planned line total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned line total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total planificado de la línea"
+          }
+        }
+      }
+    },
+    "Receipt line total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt line total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de la línea del recibo"
+          }
+        }
+      }
+    },
+    "Product, quantity and line total match.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product, quantity and line total match."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El producto, la cantidad y el total de la línea coinciden."
+          }
+        }
+      }
+    },
+    "No confirmed receipt link for this planned item.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No confirmed receipt link for this planned item."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una línea del recibo confirmada para este artículo planificado."
+          }
+        }
+      }
+    },
+    "The units are not comparable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The units are not comparable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las unidades no son comparables."
+          }
+        }
+      }
+    },
+    "The reviewed quantity differs from the planned quantity.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed quantity differs from the planned quantity."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad revisada difiere de la planificada."
+          }
+        }
+      }
+    },
+    "The reviewed line total differs from the planned total.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed line total differs from the planned total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El total revisado de la línea difiere del planificado."
+          }
+        }
+      }
+    },
+    "Quantity matches. A comparable price is unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity matches. A comparable price is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad coincide. No se conoce un precio comparable."
+          }
+        }
+      }
+    },
+    "Choose only a planned product you can verify from the receipt. Leave possible substitutions unresolved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose only a planned product you can verify from the receipt. Leave possible substitutions unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige solo un producto planificado que puedas verificar en el recibo. Deja pendientes las posibles sustituciones."
+          }
+        }
+      }
+    },
+    "Planned product": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned product"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Producto planificado"
+          }
+        }
+      }
+    },
+    "Printed quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad impresa"
+          }
+        }
+      }
+    },
+    "Printed unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad impresa"
+          }
+        }
+      }
+    },
+    "Printed line total in USD, if known": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed line total in USD, if known"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total impreso de la línea en USD, si lo conoces"
+          }
+        }
+      }
+    },
+    "Split the quantity between two planned lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split the quantity between two planned lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dividir la cantidad entre dos líneas planificadas"
+          }
+        }
+      }
+    },
+    "Second planned product": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second planned product"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segundo producto planificado"
+          }
+        }
+      }
+    },
+    "Quantity for the second line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity for the second line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad para la segunda línea"
+          }
+        }
+      }
+    },
+    "The rest goes to the first line. The price stays with the printed line.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rest goes to the first line. The price stays with the printed line."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resto corresponde a la primera línea. El precio se conserva con la línea impresa."
+          }
+        }
+      }
+    },
+    "I checked the pack sizes and converted the receipt quantity to the chosen unit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the pack sizes and converted the receipt quantity to the chosen unit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobé los tamaños de los paquetes y convertí la cantidad del recibo a la unidad elegida."
+          }
+        }
+      }
+    },
+    "Confirm product and amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm product and amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar el producto y la cantidad"
+          }
+        }
+      }
+    },
+    "Leave line unresolved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave line unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dejar la línea pendiente"
+          }
+        }
+      }
+    },
+    "Review product link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review product link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el vínculo del producto"
+          }
+        }
+      }
+    },
     "Type or paste receipt lines": {
       "localizations": {
         "en": {

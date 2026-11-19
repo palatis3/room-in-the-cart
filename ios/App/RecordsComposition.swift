@@ -23,6 +23,7 @@ private struct RecordsPlanningProjection: Codable {
     let portionBindings: [DinnerPortionBinding]
     let protectedDays: [DinnerProtectedDay]
     let weekNotes: [DinnerWeekNote]
+    let prepTasks: [DinnerPrepTask]?
     let ideas: [DinnerIdeaDraft]
     let proposals: [DinnerProposal]
     let applyReceipts: [DinnerApplyReceipt]
@@ -49,13 +50,15 @@ private struct RecordsPlanningProjection: Codable {
             portionBindings = state.portionBindings.filter { occurrenceIDs.contains($0.occurrenceID) }
             protectedDays = state.protectedDays.filter { $0.shopID == shop.id }
             weekNotes = state.weekNotes.filter { $0.shopID == shop.id }
+            let prep = state.prepTasks.filter { $0.shopID == shop.id }
+            prepTasks = prep.isEmpty ? nil : prep
             let ideaIDs = Set(acceptedDinners.compactMap(\.sourceIdeaID))
             ideas = state.ideas.filter { ideaIDs.contains($0.id) }
             quotePairs = state.quotePairs.filter { $0.shopID == shop.id }
         } else {
             acceptedDinners = state.acceptedDinners; freeReusableDinnerID = state.freeReusableDinnerID
             rotations = state.rotations; ideas = state.ideas
-            portionBindings = []; protectedDays = []; weekNotes = []; proposals = []; applyReceipts = []; quotePairs = []
+            prepTasks = nil; portionBindings = []; protectedDays = []; weekNotes = []; proposals = []; applyReceipts = []; quotePairs = []
         }
     }
     func decoded() throws -> DinnerPlanningState {
@@ -119,6 +122,21 @@ private struct RecordsPlanningProjection: Codable {
         try value.validate()
         return value
     }
+    static func shoppingLibrary(_ workspace: LedgerWorkspace) -> LedgerWorkspace? {
+        let lists = workspace.shoppingLists.librarySelection
+        guard lists != PrivateShoppingLists() else { return nil }
+        var selection = LedgerWorkspace()
+        selection.shoppingLists = lists
+        return selection
+    }
+
+    static func shoppingLibraryRecord(_ workspace: LedgerWorkspace, origin: String, date: Date) throws -> ArchiveRecord? {
+        guard let selection = shoppingLibrary(workspace) else { return nil }
+        let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: selection))
+        return ArchiveRecord(id: "shopping-library", origin: origin, revision: ArchiveCodec.digest(bytes),
+            kind: .ledger, title: "Shopping kits and standing list", savedAtMilliseconds: ArchiveCodec.milliseconds(date), nativePayload: bytes)
+    }
+
     static func ledgerLibrary(_ workspace: LedgerWorkspace, feedbackOwner: String? = nil) throws -> LedgerWorkspace? {
         let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: nil).decoded()
         guard !workspace.mealTemplates.isEmpty || !planning.acceptedDinners.isEmpty || !planning.rotations.isEmpty || !planning.ideas.isEmpty else { return nil }
@@ -184,6 +202,10 @@ private struct RecordsPlanningProjection: Codable {
             let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
             result.append(try revised(saved.record, nativePayload: bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
         }
+        if let library = try shoppingLibraryRecord(workspace, origin: saved.record.origin, date: current.savedAt),
+           let bytes = library.nativePayload {
+            result.append(try revised(saved.record, nativePayload: bytes, id: library.id, title: library.title, date: current.savedAt, lines: []))
+        }
         return try result.map { try RecordsMediaCodec.attaching(sources, to: $0, liveScope: scope) }
     }
     static func validate(_ record: ArchiveRecord) throws {
@@ -197,7 +219,14 @@ private struct RecordsPlanningProjection: Codable {
             normalized = try canonical(value)
         case .ledger:
             let workspace = try ledger(bytes)
-            guard (workspace.shops.count == 1 && workspace.shops[0].id.uuidString == record.id) || (workspace.shops.isEmpty && record.id == "meal-library") else { throw ArchiveError.invalidIdentity }
+            if record.id == "shopping-library" {
+                guard shoppingLibrary(workspace) == workspace, record.title == "Shopping kits and standing list",
+                      record.helperLines.isEmpty, record.media?.isEmpty != false else { throw ArchiveError.invalidIdentity }
+            } else {
+                guard workspace.shoppingLists == PrivateShoppingLists(),
+                      (workspace.shops.count == 1 && workspace.shops[0].id.uuidString == record.id) ||
+                        (workspace.shops.isEmpty && record.id == "meal-library") else { throw ArchiveError.invalidIdentity }
+            }
             normalized = try canonicalLedgerForImport(workspace, original: bytes)
         case .pickup:
             let value = try pickup(bytes)
@@ -279,7 +308,8 @@ struct RecordsToolsEntryView: View {
             NavigationStack {
                 Group {
                     switch destination.content {
-                    case let .comparison(app, draft, record): ComparisonView(draft: draft, saved: record).environmentObject(app)
+                    case let .comparison(app, draft, record):
+                        ComparisonView(draft: draft, saved: record, allowsPersonalPrices: false).environmentObject(app)
                     case let .ledger(model):
                         List {
                             Text(recordsText("This is a separate recovered workspace. Your current pickup is unchanged."))
@@ -309,6 +339,8 @@ struct RecordsToolsEntryView: View {
 private struct RecordsRecoveredDinnersView: View {
     @ObservedObject var ledger: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.guardianChildCoordinator) private var child
     var body: some View {
         Group {
             if ledger.shop == nil {
@@ -325,7 +357,10 @@ private struct RecordsRecoveredDinnersView: View {
                         shopID: shopID, assignedShopperID: actor, canPlan: true, canReadBudget: true,
                         hasPaidTools: false, roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(30),
                         sharedCommitAuthorized: false)
-                }, phase: { _ in .draft })
+                }, phase: { _ in .draft }, basketPrepAccess: {
+                    child?.presented != true && household.projection?.grantId == nil &&
+                        CapturePrivateIdentity.current(access: access, household: household) != nil
+                })
             }
         }.navigationTitle(recordsText("Recovered workspace"))
     }
@@ -806,6 +841,8 @@ private struct RecordsRecoveredPantryView: View {
                     revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title,
                     savedAtMilliseconds: ArchiveCodec.milliseconds(ledger.savedAt ?? Date(timeIntervalSince1970: 0)), helperLines: lines, nativePayload: bytes))
             }
+            if let lists = try RecordsNativeCodec.shoppingLibraryRecord(workspace, origin: "ledger/" + originID.uuidString,
+                date: ledger.savedAt ?? Date(timeIntervalSince1970: 0)) { result.append(lists) }
             if let library = try RecordsNativeCodec.ledgerLibrary(workspace, feedbackOwner: feedbackOwner) {
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
                 result.append(ArchiveRecord(id: "meal-library", origin: "ledger/" + originID.uuidString,

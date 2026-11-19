@@ -16,6 +16,35 @@ import LocalStore
         return try encoder.encode(Document(formatVersion: 1, workspace: workspace))
     }
 
+    func testPrivateQuickGroceryFirstShopRetryReopenAndAuthorityChange() async throws {
+        let directory = try directory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let workspaceID = try XCTUnwrap(model.sourceWorkspaceID)
+        let first = try XCTUnwrap(QuickGrocery.stage("eggs", in: ShoppingLedger()))
+        let denied = await model.addQuickGrocery(first, selectedShopID: nil, workspaceID: workspaceID, authorize: { false })
+        XCTAssertFalse(denied)
+        XCTAssertTrue(model.workspace.shops.isEmpty)
+        let created = await model.addQuickGrocery(first, selectedShopID: nil, workspaceID: workspaceID, authorize: { true })
+        XCTAssertTrue(created)
+        XCTAssertEqual(model.shop?.lines.map(\.name), ["eggs"])
+        let reopened = LedgerModel(databaseURL: url)
+        await reopened.open()
+        let replayed = await reopened.addQuickGrocery(first, selectedShopID: nil, workspaceID: workspaceID, authorize: { true })
+        XCTAssertTrue(replayed)
+        let shop = try XCTUnwrap(reopened.shop)
+        XCTAssertEqual(reopened.workspace.shops.count, 1)
+        XCTAssertEqual(shop.lines.count, 1)
+        let pending = try XCTUnwrap(QuickGrocery.stage("milk", in: shop))
+        let switched = await reopened.startShop(title: "Next pickup")
+        XCTAssertTrue(switched)
+        let stale = await reopened.addQuickGrocery(pending, selectedShopID: shop.id, workspaceID: workspaceID, authorize: { true })
+        XCTAssertFalse(stale)
+        XCTAssertEqual(reopened.workspace.shops.flatMap(\.lines).map(\.name), ["eggs"])
+    }
+
     func testReviewedMealCannotFollowPickupOrWorkspaceAndExactRetryAddsNoNeeds() async throws {
         let directory = try directory(); defer { try? FileManager.default.removeItem(at: directory) }
         let model = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))

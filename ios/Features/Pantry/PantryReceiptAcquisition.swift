@@ -38,6 +38,7 @@ struct ReceiptImportDraft {
         var unit: UnitOfMeasure = .count
         var location: InventoryLocation = .cupboard
         var paid: String = ""
+        var canComparePurchase: Bool { documentLine?.stage != .order && printed?.kind != .date && printed?.kind != .adjustment }
     }
 
     let draftID: UUID
@@ -45,6 +46,7 @@ struct ReceiptImportDraft {
     let savedPickup: ReceiptAcquisition.SavedPickup?
     let imageDigest: Data?
     let documentLayoutID: UUID?
+    var firstSectionDigest: Data? = nil
     var supportsRescan = true
     var rescanDecision: ReceiptRescanDecision?
     var merchant: String
@@ -62,6 +64,7 @@ struct ReceiptImportDraft {
         draftID = source.id
         workspaceID = source.target.workspaceID
         documentLayoutID = source.documentLayoutID
+        firstSectionDigest = source.firstSectionDigest
         imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
         merchant = source.reviewedLabel
         printedDate = ReceiptPrintedDate.unique(in: source.receiptLines, now: now)

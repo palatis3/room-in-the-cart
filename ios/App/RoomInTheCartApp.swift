@@ -113,6 +113,7 @@ struct GroceryWindow: View {
             return voicePrompt.begin(scope, phase: scenePhase)
         }, nextPermission: { voicePrompt.nextPermission($0) }, ready: { voicePrompt.recognitionReady($0, appActive: UIApplication.shared.applicationState == .active) },
            cancel: { voicePrompt.cancel($0) }))
+        .modifier(DinnerPrepAlertRuntime(ledger: ledger, pickup: pickup, access: access, household: household, child: guardianChild))
         .modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
             .environment(\.pickupLedger, ledger)
             .environment(\.offersDuplicateAssistance, true)
@@ -347,6 +348,7 @@ struct ShopView: View {
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var navigation: NavigationRestorationModel
+    @State private var showingStandingList = false
     @State private var showingFirstList = false
     @State private var showingPantry = false
     @Environment(\.pantryVoicePrompt) private var pantryVoicePrompt
@@ -372,6 +374,9 @@ struct ShopView: View {
                             }
                         }
                 }
+            }
+            .sheet(isPresented: $showingStandingList) {
+                PrivateShoppingSheet(model: ledger) { StandingListView(model: ledger) }
             }
             .sheet(isPresented: $showingFirstList) {
                 NavigationStack {
@@ -434,17 +439,20 @@ struct ShopView: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 12) {
+                    LedgerQuickGroceryEntry(model: ledger)
                     if let shop = ledger.shop {
                         Text(shop.title).font(.title2.bold()).accessibilityAddTraits(.isHeader)
                         if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
                             Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
                         }
                     } else {
-                        comparePacks.buttonStyle(PrimaryAction())
+                        comparePacks.foregroundStyle(Theme.action)
                         Button { showingFirstList = true } label: {
                             Label(ledgerText("Add a list"), systemImage: "list.bullet")
                                 .font(.headline).frame(minHeight: 44)
                         }.disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("shop.addFirstList")
+                        Button(shoppingText("Standing list")) { showingStandingList = true }
+                            .frame(minHeight: 44).disabled(!ledger.ready).accessibilityIdentifier("shop.standingList")
                         Text(tr("Works offline. No account needed.")).font(.footnote).foregroundStyle(Theme.secondary)
                     }
                     RestorableShoppingListLink {

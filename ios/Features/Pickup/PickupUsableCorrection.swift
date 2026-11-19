@@ -87,6 +87,7 @@ extension PickupModel {
 struct PickupUsableCorrectionView: View {
     @ObservedObject var model: PickupModel
     let receipt: ReceiptFragment
+    @EnvironmentObject private var ledger: LedgerModel
     @State private var head: PickupReceiptHead?
     @State private var amount = ""
     @State private var matched = false
@@ -110,7 +111,12 @@ struct PickupUsableCorrectionView: View {
                         if !previous.confirmedMatchToOrderLine { Text(pTr("identityMatchUnconfirmed")) }
                     } else { Text(pTr("Usable amount unverified")) }
                 }
-                if !head.matches(model.journey) {
+                if let snapshot = model.pantrySnapshot, model.pantryReadIsCurrent,
+                   let lot = snapshot.lots.first(where: { $0.source == .receipt(originID: snapshot.state.workspaceID, key: receipt.key) }),
+                   snapshot.requiresPortionRecount(lot) {
+                    Text(pantryText("The original batch was split or had food discarded. Recount each remaining portion in My Pantry."))
+                    NavigationLink(tonightText("Open My Pantry")) { PantrySetupView(pickup: model, ledger: ledger) }
+                } else if !head.matches(model.journey) {
                     Text(pTr("The saved usable amount changed. Reopen this delivery to review the current observation."))
                 } else {
                     Section {

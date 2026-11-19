@@ -66,6 +66,9 @@ struct PantryDigestDocument: Codable, Equatable {
     var rules: [PantryDigestRule] = []
     // Optional for documents written before the offline guide could save a reviewed range.
     var foodKeeper: [PantryFoodKeeperSelection]?
+    var shelf: PantryShelfCount?
+    var presence: [PantryPresence]?
+    var minimums: [PantryStapleMinimum]?
     var selections: [PantryFoodKeeperSelection] { foodKeeper ?? [] }
 
     func currentGuideRange(for lot: InventoryLot) -> FoodKeeperReviewedRange? {
@@ -87,6 +90,19 @@ struct PantryDigestDocument: Codable, Equatable {
             try range.start.validate()
             try range.earliest.validate()
             try range.latest.validate()
+        }
+        if let shelf {
+            guard shelf.name.utf8.count <= 128, shelf.batches.count <= 128,
+                  Set(shelf.batches.map(\.id)).count == shelf.batches.count,
+                  shelf.batches.allSatisfy({ $0.revision > 0 }) else { throw PantryDigestFailure.invalid }
+        }
+        let sightings = presence ?? [], targets = minimums ?? []
+        guard sightings.count <= 256, targets.count <= 64,
+              Set(sightings.map(\.lotID)).count == sightings.count, Set(targets.map(\.foodID)).count == targets.count,
+              sightings.allSatisfy({ $0.date.timeIntervalSinceReferenceDate.isFinite }) else { throw PantryDigestFailure.invalid }
+        for target in targets {
+            try target.target.validate()
+            guard target.target.amount > .zero else { throw PantryDigestFailure.invalid }
         }
         let days = Dictionary(grouping: rules, by: \.day.iso8601)
         guard days.values.allSatisfy({ Set($0.map(\.handle)).count == 1 }),
@@ -262,7 +278,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         folder.appendingPathComponent(scope.origin.uuidString + "-" + scope.owner + ".json")
     }
     private func read(_ url: URL) throws -> PantryDigestDocument {
-        let bytes = try PantryArchiveFiles.read(url, maximum: 32_768)
+        let bytes = try PantryArchiveFiles.read(url, maximum: 262_144)
         let doc = try JSONDecoder().decode(PantryDigestDocument.self, from: bytes)
         try doc.validate()
         return doc
@@ -279,6 +295,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         try invalidateHome(.useSoon, doc.origin, false)
         try PantryArchiveFiles.directory(folder, create: true)
         let data = try JSONEncoder().encode(doc)
+        guard data.count <= 262_144 else { throw PantryDigestFailure.capacity }
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         try PantryArchiveFiles.protect(url, permissions: 0o600)
         generation = UUID()
@@ -313,6 +330,34 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
             notificationsUnavailable = false
         }
     }
+    func updateShelf(_ expected: PantryShelfCount?, next: PantryShelfCount?, sighting: UUID? = nil,
+                     access: PantryDigestAccess) throws {
+        guard access.authorized() else { throw PantryDigestFailure.changed }
+        var doc = try document(access.scope)
+        guard doc.shelf == expected else { throw PantryDigestFailure.changed }
+        doc.shelf = next
+        if let sighting {
+            var observations = (doc.presence ?? []).filter { $0.lotID != sighting }
+            observations.append(.init(lotID: sighting, date: now()))
+            doc.presence = Array(observations.suffix(256))
+        }
+        try write(doc, to: file(access.scope))
+    }
+
+    func updateMinimum(_ expected: PantryStapleMinimum?, next: PantryStapleMinimum?, foodID: UUID,
+                       access: PantryDigestAccess) throws {
+        guard access.authorized() else { throw PantryDigestFailure.changed }
+        var doc = try document(access.scope)
+        var targets = doc.minimums ?? []
+        guard targets.first(where: { $0.foodID == foodID }) == expected, next?.foodID == foodID || next == nil else {
+            throw PantryDigestFailure.changed
+        }
+        targets.removeAll { $0.foodID == foodID }
+        if let next { targets.append(next) }
+        doc.minimums = targets.isEmpty ? nil : targets
+        try write(doc, to: file(access.scope))
+    }
+
     func saveDay(_ scope: PantryDigestScope, lot: InventoryLot, day: MealDay?, authorized: () -> Bool) async throws {
         guard authorized() else { throw PantryDigestFailure.changed }
         try await change(scope) { try $0.set(lot: lot, day: day) }
@@ -445,7 +490,17 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
                     erasedChoices.insert(choice.lotID)
                 }
             }
-            if !removed.isEmpty || !erasedChoices.isEmpty {
+            let before = doc
+            let workflowLots = Set((doc.shelf?.batches.map(\.id) ?? []) + (doc.presence?.map(\.lotID) ?? []) + (doc.minimums?.map(\.anchorLotID) ?? []))
+            for id in workflowLots {
+                if try await inventory.inventoryRecord(.init(.lot, id)) == nil {
+                    doc.shelf?.batches.removeAll { $0.id == id }
+                    doc.presence?.removeAll { $0.lotID == id }
+                    doc.minimums?.removeAll { $0.anchorLotID == id }
+                }
+            }
+            if doc.shelf?.batches.isEmpty == true { doc.shelf = nil }
+            if doc != before || !removed.isEmpty || !erasedChoices.isEmpty {
                 let kept = doc.selections.filter { !erasedChoices.contains($0.lotID) }
                 doc.foodKeeper = kept.isEmpty ? nil : kept
                 doc.rules.removeAll { removed.contains($0.lotID) }

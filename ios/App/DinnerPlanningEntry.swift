@@ -15,6 +15,7 @@ struct DinnerPlanningEntry: View {
     @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var membership: MembershipCoordinator
+    @Environment(\.guardianChildCoordinator) private var child
 
     var body: some View {
         Group {
@@ -29,7 +30,10 @@ struct DinnerPlanningEntry: View {
                     runtimeChanges: runtimeChanges)
             } else {
                 DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
-                    runtimeChanges: runtimeChanges)
+                    runtimeChanges: runtimeChanges, basketPrepAccess: {
+                        child?.presented != true && household.projection?.grantId == nil &&
+                            CapturePrivateIdentity.current(access: access, household: household) != nil
+                    })
             }
         }
         .environment(\.dinnerHousehold, household)

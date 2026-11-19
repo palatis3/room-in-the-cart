@@ -45,6 +45,8 @@
 	<string>$(RITC_SUPABASE_URL)</string>
 	<key>SupabasePublishableKey</key>
 	<string>$(RITC_SUPABASE_PUBLISHABLE_KEY)</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Choose a Reminders list to copy selected incomplete grocery titles into a shopping draft.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to unlock your private shopping workspace.</string>
 	<key>UTExportedTypeDeclarations</key>

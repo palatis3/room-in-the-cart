@@ -29,6 +29,38 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testPrepStaysInItsOwnShopArchiveAndRoundTripsWithoutDeviceConsent() throws {
+        let now = Date(), zone = "America/New_York"
+        var first = ShoppingLedger(title: "Monday", basis: ShopBasis(timeZoneIdentifier: zone))
+        let other = ShoppingLedger(title: "Other")
+        let template = MealTemplate(title: "Beans")
+        let meal = try first.chooseMeal(template, on: now, at: now)
+        var workspace = LedgerWorkspace(shops: [first, other], mealTemplates: [template], selectedShopID: first.id)
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "me", shopID: first.id,
+            assignedShopperID: "me", canPlan: true, canReadBudget: true, hasPaidTools: false, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let old = try RecordsNativeCodec.ledgerScope(workspace, shop: first)
+        let oldBytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: old))
+        func record(_ bytes: Data) -> ArchiveRecord {
+            ArchiveRecord(id: first.id.uuidString, origin: "ledger/fixture", revision: ArchiveCodec.digest(bytes),
+                kind: .ledger, title: first.title, savedAtMilliseconds: ArchiveCodec.milliseconds(now), nativePayload: bytes)
+        }
+        XCTAssertFalse(String(decoding: oldBytes, as: UTF8.self).contains("prepTasks"))
+        XCTAssertNoThrow(try RecordsNativeCodec.validate(record(oldBytes)))
+        let task = DinnerPrepTask(shopID: first.id, occurrenceID: meal, instruction: "Soak beans", daysBefore: 1, hour: 18,
+                                  dinnerDay: try MealDay(date: now, timeZoneIdentifier: zone))
+        try workspace.dinnerPlanning.setPrep(task, replacing: nil, mealID: meal, ledger: first, expectedRevision: first.revisionID, access: access, at: now)
+        XCTAssertTrue(try RecordsNativeCodec.ledgerScope(workspace, shop: other).dinnerPlanning.prepTasks.isEmpty)
+        XCTAssertTrue(try XCTUnwrap(RecordsNativeCodec.ledgerLibrary(workspace)).dinnerPlanning.prepTasks.isEmpty)
+        let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: first)
+        let bytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: scoped))
+        try RecordsNativeCodec.validate(record(bytes))
+        let imported = try RecordsNativeCodec.ledger(bytes)
+        XCTAssertEqual(imported.dinnerPlanning.prepTasks, [task])
+        let exported = try RecordsNativeCodec.ledgerScope(imported, shop: first)
+        XCTAssertEqual(try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: exported)), bytes)
+        XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains("local-consent"))
+    }
     @MainActor func testPickerCompletionAndManualRecipeStayWithTheirPresentingScope() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))

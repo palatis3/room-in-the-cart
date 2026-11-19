@@ -208,6 +208,34 @@ import RecordArchive
         XCTAssertEqual(committed.lots.first(where: { $0.name == "Oats" })?.count.quantity?.amount, .one)
     }
 
+    func testShelfComparisonReadsEveryPrivatePageAndStopsWhenAccessEnds() async throws {
+        let f = try await fixture()
+        var allowed = true
+        let repo = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { allowed })
+        f.cleanup.track(repo)
+        let model = PantryModel(repository: repo)
+        let pack = PrivatePriceEvidence.Pack(perPackage: Quantity(amount: .one, unit: .count, originalLiteral: "1"))
+        var paidIDs = Set<UUID>()
+        for index in 0..<27 {
+            let isPaid = index != 13
+            let price = PrivatePriceEvidence(id: UUID(), source: isPaid ? .paidManual : .shelf,
+                name: "Oats", variant: "Plain", store: "Market", date: now, currencyCode: "USD",
+                amountMinor: Int64(index), pack: pack, sourceText: "Private fixture", taxTreatment: .excluded)
+            let state = try await f.store.inventoryState()
+            try await repo.savePrice(price, expected: state, at: now)
+            if isPaid { paidIDs.insert(price.id) }
+        }
+        let before = try await f.store.inventoryState()
+        let result = try await model.paidPurchases(named: " oats ")
+        XCTAssertEqual(Set(result.prices.map(\.id)), paidIDs)
+        XCTAssertEqual(result.state, before)
+        allowed = false
+        do {
+            _ = try await model.paidPurchases(named: "Oats")
+            XCTFail("Closed private workspace must not return past prices")
+        } catch PantryRepository.Failure.unauthorized {}
+    }
+
     func testRepeatedReviewedShelfImageKeepsOneSourceAndNoPaidPurchase() async throws {
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
@@ -964,6 +992,13 @@ import RecordArchive
                                expectedRevision: original.revision, occurredAt: now,
                                change: .revise(.init(observation: firstReading, usage: [firstUse]))),
                          current: original, to: f.store)
+        let afterUse = try await firstLot(f.store)
+        let discardID = UUID()
+        let discard = InventoryPortionAction.discard(amount: nil, reason: "Spoiled")
+        let discarded = InventoryCountRevision(count: .unknown, observationID: UUID(), observedAt: afterUse.confirmedAt)
+        try await append(.init(id: UUID(), originID: f.store.workspaceID, lotID: original.id, eventID: discardID,
+                               expectedRevision: afterUse.revision, occurredAt: now,
+                               change: .revise(.init(observation: discarded, portion: discard))), current: afterUse, to: f.store)
         let source = try await f.capture.captureHandle(worker: f.worker, at: now)
         let gate = PantryMutationGate()
         let coordinator = try PantryRecoveryCoordinator(root: f.directory.appendingPathComponent("usage-copies"), worker: f.worker,
@@ -978,8 +1013,8 @@ import RecordArchive
                                expectedRevision: baseline.revision, occurredAt: daysLater,
                                change: .revise(.init(observation: nextReading, usage: [nextUse]))),
                          current: baseline, to: copy.store)
-        let repo = PantryRepository(store: copy.store, archivedUsage: { lot in
-            try await f.worker.archivedUsage(source, context: copy.identity, lot: lot)
+        let repo = PantryRepository(store: copy.store, archivedActions: { lot in
+            try await f.worker.archivedActions(source, context: copy.identity, lot: lot)
         }, authorize: { true })
         let copyState = try await copy.store.inventoryState()
         let history = try await repo.usageHistory(lotID: baseline.id, basis: copyState)
@@ -993,13 +1028,17 @@ import RecordArchive
         let nested = try await coordinator.create(copyID: UUID(), reference: exported.reference, at: daysLater)
         f.cleanup.track(nested.store)
         let second = try await firstLot(nested.store)
-        let nestedRows = try await f.worker.archivedUsage(exported, context: nested.identity, lot: second)
-        XCTAssertEqual(nestedRows, history)
+        let nestedActions = try await f.worker.archivedActions(exported, context: nested.identity, lot: second)
+        XCTAssertEqual(nestedActions.usage, history)
+        XCTAssertEqual(nestedActions.discards.map(\.id), [discardID])
+        XCTAssertEqual(nestedActions.discards.first?.reason, "Spoiled")
+        XCTAssertEqual(second.discardedTimes, 1)
+        XCTAssertNil(second.discardUndo)
         let unrelated = InventoryLot(id: second.id, foodID: second.foodID, name: second.name,
             source: .manual(originID: nested.store.workspaceID, sourceID: UUID()), revision: second.revision,
             location: second.location, openedAt: second.openedAt, unit: second.unit, count: second.count,
             observationID: second.observationID, confirmedAt: second.confirmedAt, updatedAt: second.updatedAt)
-        let unrelatedRows = try await f.worker.archivedUsage(exported, context: nested.identity, lot: unrelated)
+        let unrelatedRows = try await f.worker.archivedActions(exported, context: nested.identity, lot: unrelated).usage
         XCTAssertTrue(unrelatedRows.isEmpty)
     }
 

@@ -19,6 +19,9 @@ struct LedgerImportView: View {
     @Environment(\.scenePhase) private var scenePhase
     let shopID: UUID
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.guardianChildCoordinator) private var child
+    @State private var reminderPicker: LedgerReminderPresentation?
+    @State private var reminderDestination: UUID?
     @State private var original = ""
     @State private var inputLimit: ImportTextLimit?
     @State private var preview: StagedListImport?
@@ -40,14 +43,24 @@ struct LedgerImportView: View {
     let authorizeEntry: @MainActor () -> Bool
     private let prefill: String
     private let pantryFoodPrefill: Bool
+    private let pantrySuggestedAmount: Quantity?
+    private let pantryProductLink: UUID?
     @State private var incomingWording: String?
     @State private var appendError: String?
-    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", pantryFoodPrefill: Bool = false, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
+    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
         self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onFirstSave = onFirstSave
         self.authorizeEntry = authorizeEntry
         self.prefill = prefill
         self.pantryFoodPrefill = pantryFoodPrefill
+        self.pantrySuggestedAmount = pantrySuggestedAmount
+        self.pantryProductLink = pantryProductLink
         _original = State(initialValue: prefill)
+        if firstDraft == nil, let initialPreview, initialPreview.shopID == shopID,
+           initialPreview.originalText == prefill {
+            _preview = State(initialValue: initialPreview)
+            _importID = State(initialValue: initialPreview.id)
+            _choices = State(initialValue: LedgerImportReview.initialChoices(initialPreview))
+        }
         if let firstDraft { _importID = State(initialValue: firstDraft.content.importID) }
         if let content = firstDraft?.content, firstDraft?.version != nil {
             _original = State(initialValue: content.original); _source = State(initialValue: content.source)
@@ -76,7 +89,7 @@ struct LedgerImportView: View {
     }
     private var currentShop: ShoppingLedger? { reviewWorkspace?.shops.first { $0.id == shopID } }
     private var shop: ShoppingLedger? {
-        reviewWorkspace?.shops.first { $0.id == (preview?.shopID ?? shopID) }
+        reviewWorkspace?.shops.first { $0.id == (preview?.shopID ?? reminderDestination ?? shopID) }
     }
 
     var body: some View {
@@ -101,6 +114,9 @@ struct LedgerImportView: View {
                 }
                 if let preview, let review {
                     Section(ledgerText("Original wording")) {
+                        if preview.source == .selectedText, let shop {
+                            LabeledContent(applePlanningText("Destination pickup"), value: shop.title)
+                        }
                         Text(original).textSelection(.enabled).accessibilityFocused($focus, equals: .preview)
                         if let pickup = captured?.naturalBatch?.pickup {
                             Text(captureText("Pickup for all items") + ": " + pickup.title)
@@ -147,6 +163,12 @@ struct LedgerImportView: View {
                             original = values.joined(separator: "\n")
                             source = .paste
                         }.accessibilityLabel(ledgerText("Paste list"))
+                        if !pantryFoodPrefill, let binding = reminderCopyBinding {
+                            Button(applePlanningText("Copy from Reminders")) {
+                                inputFocus = nil
+                                reminderPicker = LedgerReminderPresentation(binding: binding)
+                            }.accessibilityIdentifier("ledger.remindersCopy")
+                        }
                     }.disabled(model.saving || model.hasPendingSave)
                     Section {
                         Button(firstDraft == nil ? captureText("Capture and review fields") : ledgerText("Add by photo or voice")) { beginCapture() }
@@ -158,7 +180,7 @@ struct LedgerImportView: View {
                             inputFocus = nil
                             do {
                                 let staged = try pantryFoodPrefill
-                                    ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop)
+                                    ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
                                     : shop.stageImport(text: original, source: source, importID: importID)
                                 invalidAmounts = [:]
                                 preview = staged
@@ -201,6 +223,11 @@ struct LedgerImportView: View {
                     } else { dismiss() }
                 }.disabled(model.saving) } }
                 .interactiveDismissDisabled(model.saving || firstDraft != nil)
+                .sheet(item: $reminderPicker, content: reminderSelection)
+                .onChange(of: reminderCopyBinding) { _, value in
+                    if let picker = reminderPicker, picker.binding != value { reminderPicker = nil }
+                    if reminderDestination != nil, let binding = captureBinding, binding != value { invalidateCapture() }
+                }
                 .sheet(item: $capturePresentation) { presentation in
                     let binding = presentation.binding
                     let pickups = liveCaptureBinding == binding ? reviewWorkspace?.shops.map(CapturePickup.init) ?? [] : []
@@ -218,7 +245,7 @@ struct LedgerImportView: View {
                 .onChange(of: liveCaptureBinding) { _, current in
                     if let binding = capturePresentation?.binding ?? captureBinding, current != binding { invalidateCapture() }
                 }
-                .onChange(of: scenePhase) { _, phase in if phase == .background { invalidateCapture() } }
+                .onChange(of: scenePhase) { _, phase in if phase == .background { reminderPicker = nil; invalidateCapture() } }
                 .task(id: ImportStatusFocusKey(previewID: preview?.id, error: model.error,
                                                saving: model.saving, pending: model.hasPendingSave)) {
                     guard showingImportStatus else { return }
@@ -235,7 +262,7 @@ struct LedgerImportView: View {
         guard let firstDraft, firstDraft.authorize(), authorizeEntry(), !model.saving, !model.hasPendingSave,
               let currentShop, incomingWording == wording else { return }
         do {
-            let next = try firstContents.appending(wording, pantryFood: pantryFoodPrefill, shop: currentShop)
+            let next = try firstContents.appending(wording, pantryFood: pantryFoodPrefill, shop: currentShop, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink)
             original = next.original
             preview = next.preview
             choices = next.choices
@@ -276,9 +303,13 @@ struct LedgerImportView: View {
     private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview) -> some View {
         let needsAmountCorrection = invalidAmounts.keys.contains { review.choices[$0] != .skip }
         let reviewedBinding = captureBinding
+        let reminderBinding = reminderDestination == nil ? nil : reviewedBinding
+        let authorizeSave: @MainActor () -> Bool = {
+            authorizeEntry() && (reminderBinding == nil || reminderCopyBinding == reminderBinding)
+        }
         return Button(ledgerText("Add reviewed list")) {
             Task {
-                guard authorizeEntry(), self.preview == preview, captureBinding == reviewedBinding,
+                guard authorizeSave(), self.preview == preview, captureBinding == reviewedBinding,
                       reviewedBinding == nil || captureAuthorized else {
                     model.error = captureText("This capture belongs to an earlier workspace or list revision. Review it again before adding anything.")
                     focus = .status; return
@@ -294,12 +325,46 @@ struct LedgerImportView: View {
                         }
                         focus = .status
                     }
-                } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, authorize: authorizeEntry, { try $0.commitImport(preview, decisions: decisions) }) {
+                } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, authorize: authorizeSave, { try $0.commitImport(preview, decisions: decisions) }) {
                     dismiss()
                 } else { focus = .status }
             }
         }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete || needsAmountCorrection || (firstDraft != nil && !review.choices.values.contains(where: { $0 != .skip })))
             .accessibilityIdentifier("ledgerCommitImport")
+    }
+
+    @ViewBuilder private func reminderSelection(_ presentation: LedgerReminderPresentation) -> some View {
+        if reminderCopyBinding == presentation.binding, let destination = shop {
+            let destinations = original.isEmpty ? reviewWorkspace?.shops.map(CapturePickup.init) ?? [] : [CapturePickup(destination)]
+            AppleGroceryReminders(original: original, destinations: destinations, destination: destination.id,
+                authorize: { reminderCopyBinding == presentation.binding },
+                review: { text, target in reviewReminderCopy(text, target: target, binding: presentation.binding) })
+        }
+    }
+
+    private func reviewReminderCopy(_ text: String, target: CapturePickup, binding: LedgerCaptureBinding) -> Bool {
+        guard reminderCopyBinding == binding, !model.saving, !model.hasPendingSave, availablePickup(target),
+              let pickedShop = reviewWorkspace?.shops.first(where: { $0.id == target.id }),
+              let staged = try? pickedShop.stageImport(text: text, source: .selectedText, importID: importID) else { return false }
+        reminderDestination = target.id
+        original = text
+        source = .selectedText
+        captureBinding = binding
+        captured = nil
+        preview = staged
+        choices = LedgerImportReview.initialChoices(staged)
+        invalidAmounts = [:]
+        explicitSeparate = []
+        matchesAreCurrent = true
+        inputLimit = nil
+        focus = .preview
+        model.error = nil
+        return true
+    }
+
+    private var reminderCopyBinding: LedgerCaptureBinding? {
+        guard child?.presented != true, household.projection?.grantId == nil, UIApplication.shared.isProtectedDataAvailable else { return nil }
+        return liveCaptureBinding
     }
 
     private var liveCaptureBinding: LedgerCaptureBinding? {
@@ -334,6 +399,7 @@ struct LedgerImportView: View {
             let staged = try CaptureLedgerImport.stage(capture, in: reviewWorkspace, currentShopID: shopID)
             if staged.alreadyApplied { capturePresentation = nil; dismiss(); return }
             captureBinding = binding
+            reminderDestination = nil
             captured = capture; importID = capture.id; original = capture.originalText
             source = staged.preview.source; preview = staged.preview
             invalidAmounts = [:]
@@ -351,7 +417,7 @@ struct LedgerImportView: View {
     }
     private func invalidateCapture() {
         guard capturePresentation != nil || captureBinding != nil else { return }
-        capturePresentation = nil; captured = nil; captureBinding = nil
+        capturePresentation = nil; captured = nil; captureBinding = nil; reminderDestination = nil
         if firstDraft != nil { return } // Only reviewed text/fields survive; captured media is dropped above.
         invalidAmounts = [:]
         preview = nil; choices = [:]; original = ""; importID = UUID()
@@ -407,6 +473,11 @@ private struct LedgerCaptureBinding: Equatable {
     let role: String?
     let localeIdentifier: String
     let captureLanguage: String
+}
+
+private struct LedgerReminderPresentation: Identifiable {
+    let id = UUID()
+    let binding: LedgerCaptureBinding
 }
 
 private struct LedgerCapturePresentation: Identifiable {

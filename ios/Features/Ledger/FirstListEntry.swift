@@ -15,14 +15,14 @@ struct FirstListContents: Equatable, Codable {
     var explicitSeparate: Set<UUID> = []
     var matchesAreCurrent = true
 
-    func appending(_ wording: String, pantryFood: Bool, shop: ShoppingLedger) throws -> Self {
+    func appending(_ wording: String, pantryFood: Bool, shop: ShoppingLedger, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil) throws -> Self {
         guard shop.id == shopID else { throw LedgerError.stalePreview }
         let combinedWording = [original, wording].filter { !$0.isEmpty }.joined(separator: "\n")
         try StagedListImport.validateSourceText(combinedWording, maximumLines: StagedListImport.maximumLines)
         let before = try preview ?? shop.stageImport(text: original, source: source, importID: importID)
         guard before.id == importID, before.originalText == original else { throw LedgerError.stalePreview }
         let addition = try pantryFood
-            ? PantryRestockReview.stage(food: wording, text: wording, source: .typed, id: UUID(), shop: shop)
+            ? PantryRestockReview.stage(food: wording, text: wording, source: .typed, id: UUID(), shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
             : shop.stageImport(text: wording)
         let combined = try shop.appendingImport(addition, to: before)
         var next = self
@@ -120,7 +120,7 @@ struct FirstListContents: Equatable, Codable {
     }
 }
 
-private func firstListOwner(_ identity: CapturePrivateIdentity) throws -> Data {
+func firstListOwner(_ identity: CapturePrivateIdentity) throws -> Data {
     let fields: [String?] = [identity.actorID.uuidString, identity.subject, identity.householdID, identity.memberID, identity.role]
     return Data(SHA256.hash(data: try JSONEncoder().encode(fields)))
 }
@@ -159,6 +159,8 @@ struct FirstListEntry: View {
     @ObservedObject var model: LedgerModel
     var prefill: String = ""
     var pantryFoodPrefill = false
+    var pantrySuggestedAmount: Quantity? = nil
+    var pantryProductLink: UUID? = nil
     var authorizeEntry: @MainActor () -> Bool = { true }
     let onSaved: (UUID) -> Void
     @EnvironmentObject private var access: WorkspaceAccess
@@ -175,7 +177,7 @@ struct FirstListEntry: View {
     var body: some View {
         Group {
             if let editor, editor.authorize() {
-                FirstListForm(model: model, editor: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, onSaved: onSaved)
+                FirstListForm(model: model, editor: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, onSaved: onSaved)
             } else if failed || identity == nil || editor != nil {
                 ContentUnavailableView(ledgerText("Draft unavailable"), systemImage: "lock",
                     description: Text(ledgerText("Reopen the private shopping list to check the current workspace.")))
@@ -213,6 +215,8 @@ private struct FirstListForm: View {
     @ObservedObject var editor: FirstListEditor
     let prefill: String
     let pantryFoodPrefill: Bool
+    let pantrySuggestedAmount: Quantity?
+    let pantryProductLink: UUID?
     let onSaved: (UUID) -> Void
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -224,7 +228,7 @@ private struct FirstListForm: View {
                 Button(ledgerText("Discard draft"), role: .destructive) { Task { if await editor.discard() { dismiss() } } }
             }.toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
         } else {
-            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, authorizeEntry: editor.authorize, onFirstSave: onSaved)
+            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, authorizeEntry: editor.authorize, onFirstSave: onSaved)
         }
     }
 }

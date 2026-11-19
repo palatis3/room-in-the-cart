@@ -115,6 +115,17 @@ struct PrintedPackageDate: Equatable, Codable {
         try saved.evidence.validate()
         return saved.evidence
     }
+    func inherited(_ scope: PantryDigestScope, lot: InventoryLot, among lots: [InventoryLot]) throws -> PrintedPackageDate? {
+        let indexed = Dictionary(uniqueKeysWithValues: lots.map { ($0.id, $0) })
+        var source = lot.splitFromLotID
+        var visited = Set<UUID>()
+        while let id = source {
+            guard visited.insert(id).inserted, let parent = indexed[id], parent.source.originID == scope.origin else { throw PantryDigestFailure.invalid }
+            if let evidence = try load(scope, lot: id) { return evidence }
+            source = parent.splitFromLotID
+        }
+        return nil
+    }
     func replace(_ previous: PrintedPackageDate?, with evidence: PrintedPackageDate?, scope: PantryDigestScope,
                  lot: UUID, authorized: () -> Bool) throws {
         guard authorized(), try load(scope, lot: lot) == previous else { throw PantryDigestFailure.changed }

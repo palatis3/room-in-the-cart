@@ -296,7 +296,9 @@ import RecordArchive
         return SQLImpact(documentDigests: receipts.digests, revision: context.inventoryRevision, token: context.sourceToken, rules: rules,
             links: context.mapping.sourceLinks, ledgerOrigins: scan.ledgerOrigins, entries: graph.entries, blockers: blockers,
             aliasCount: try await inventory.receiptAliasCount(lotIDs: lots), receiptRevisionCount: receipts.count,
-            priceRevisionCount: try await inventory.priceRevisionCount(lotIDs: lots), foodNames: context.lots.filter { lots.contains($0.id) }.map(\.name), pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
+            priceRevisionCount: try await inventory.priceRevisionCount(lotIDs: lots), foodNames: context.lots.filter { lots.contains($0.id) }.map {
+                lots.count > 1 ? $0.name + " · " + pantryLocationName($0.location) + " · " + String($0.id.uuidString.suffix(8)) : $0.name
+            }, pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
             retainedReceiptNames: context.lots.filter { scan.retainedReceiptLotIDsInCollateralPickups.contains($0.id) || receipts.retainedLots.contains($0.id) }.map(\.name),
             affectedReservationNames: context.claims.filter { graph.reservations.contains($0.id) }.map(\.name))
     }

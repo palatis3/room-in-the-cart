@@ -68,6 +68,7 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
     let capturedAt: Date
     var documentLayoutID: UUID? = nil
     var documentDigest: Data? = nil
+    var firstSectionDigest: Data? = nil
     var reviewedImageLines: [Int: ReviewedImageWording]? = nil
     var reference: SourceMediaReference { .init(workspaceID: target.workspaceID, mediaID: id) }
     func validate() throws {
@@ -82,6 +83,10 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
                 try reading.validate()
                 guard lines.indices.contains(index), lines[index] == reading.text else { throw ScanFailure.invalidText }
             }
+        }
+        if let firstSectionDigest {
+            guard firstSectionDigest.count == 32, documentDigest != nil, target.kind == .receiptEvidence,
+                  receiptLines.allSatisfy({ $0.documentLine?.method == .imageOCR }) else { throw ScanFailure.invalidText }
         }
         if let documentDigest {
             guard documentDigest.count == 32, imageJPEG == nil, !receiptLines.isEmpty,
