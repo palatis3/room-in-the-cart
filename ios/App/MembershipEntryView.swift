@@ -44,7 +44,7 @@ struct MembershipEntryView: View {
                             .buttonStyle(PrimaryAction()).accessibilityIdentifier("membership.free")
                     } else {
                         Button(mtr("Continue planning for free")) { dismiss() }
-                            .frame(minHeight: 44).accessibilityIdentifier("membership.free")
+                            .buttonStyle(MembershipReturnButtonStyle()).accessibilityIdentifier("membership.free")
                     }
                     Divider()
                     MembershipFreeTools()

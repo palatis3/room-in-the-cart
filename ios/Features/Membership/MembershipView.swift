@@ -190,6 +190,7 @@ struct MembershipView: View {
 
     private var returnButton: some View {
         Button(model.hasPaidAccess ? mtr("Continue planning") : mtr("Continue planning for free")) { dismiss() }
+            .buttonStyle(MembershipReturnButtonStyle())
             .accessibilityIdentifier(model.hasPaidAccess ? "membership.continue" : "membership.free")
     }
 
@@ -391,6 +392,35 @@ struct MembershipView: View {
             }
             Button(tr("Cancel")) { review = nil }.frame(minHeight: 44)
         }
+    }
+}
+
+struct MembershipReturnButtonStyle: ButtonStyle {
+    @Environment(\.isFocused) private var isFocused
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func makeBody(configuration: Configuration) -> some View {
+        let outline = RoundedRectangle(cornerRadius: 14, style: .continuous)
+        configuration.label
+            .font(.headline)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .foregroundStyle(configuration.isPressed ? Theme.onAction : Theme.action)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .background(configuration.isPressed ? Theme.action : Theme.surface, in: outline)
+            .overlay {
+                outline.strokeBorder(Theme.action, lineWidth: contrast == .increased ? 2 : 1.5)
+                    .accessibilityHidden(true)
+                if isFocused {
+                    outline.inset(by: -3).strokeBorder(Theme.surface, lineWidth: 3)
+                        .accessibilityHidden(true)
+                    outline.inset(by: -6).strokeBorder(Theme.focus, lineWidth: 3)
+                        .accessibilityHidden(true)
+                }
+            }
+            .contentShape(outline)
     }
 }
 
