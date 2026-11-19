@@ -549,7 +549,7 @@ private struct VoicePantryRow {
     }
 
     private func previewSection(_ review: PantryConsumptionReview) -> some View {
-        Section(pantryText("Review pantry changes")) {
+        Section {
             ForEach(Array(review.lines.enumerated()), id: \.offset) { index, line in
                 let use = review.entry.consumption?.selections[index].use
                 VStack(alignment: .leading, spacing: 12) {
