@@ -161,17 +161,21 @@ extension PantryDigestAccess {
 }
 
 struct PantryDigestList: View {
+    @Environment(\.scenePhase) private var scene
     @Environment(\.pantryDigestPermissionPrompt) private var notificationPrompt
     @ObservedObject var model: PantryModel
     let access: PantryDigestAccess
     @ObservedObject private var store = PantryDigestStore.shared
     @State private var message: String?
     @State private var busy = false
+    @State private var loadedTime = false
     @State private var time = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
+
+    private var originalAccessReady: Bool { scene == .active && access.authorized() }
 
     var body: some View {
         WorkingForm {
-            if access.authorized(), let snapshot = model.snapshot, snapshot.state.workspaceID == access.scope.origin,
+            if originalAccessReady, let snapshot = model.snapshot, snapshot.state.workspaceID == access.scope.origin,
                let doc = currentDocument(snapshot.lots) {
                 Section(pantryText("Foods to check")) {
                     if doc.rules.isEmpty { Text(pantryText("Choose a batch in My Pantry and set a check date.")) }
@@ -211,10 +215,12 @@ struct PantryDigestList: View {
             else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
         }
         .privacySensitive().navigationTitle(pantryText("Use soon"))
-        .task {
+        .task(id: originalAccessReady) {
+            guard originalAccessReady else { return }
             if model.snapshot == nil { await model.load() }
-            if access.authorized(), let doc = try? store.document(access.scope) {
+            if !loadedTime, !Task.isCancelled, originalAccessReady, let doc = try? store.document(access.scope) {
                 time = Calendar.current.date(bySettingHour: doc.minute / 60, minute: doc.minute % 60, second: 0, of: Date()) ?? time
+                loadedTime = true
             }
         }
     }

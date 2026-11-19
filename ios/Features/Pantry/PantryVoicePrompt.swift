@@ -16,9 +16,14 @@ struct PantryVoicePromptScope: Equatable {
     private var finished = false
     private var sawInactive = false
     private var notificationReturn: CheckedContinuation<Void, Never>?
+    private var completedNotification: UUID?
 
     func begin(_ scope: PantryVoicePromptScope, phase: ScenePhase) -> UUID? {
-        guard phase == .active, token == nil else { return nil }
+        guard phase == .active else { return nil }
+        // A completed notification request can hand off to the next explicit prompt
+        // when iOS did not interrupt the scene for its earlier request.
+        if let completedNotification, token == completedNotification, self.phase == .active { clear() }
+        guard token == nil else { return nil }
         self.phase = phase
         self.scope = scope
         finished = false
@@ -54,15 +59,21 @@ struct PantryVoicePromptScope: Equatable {
         guard currentScope() == expected, appActive(), let id = begin(expected, phase: phase) else {
             throw PantryDigestFailure.changed
         }
-        defer { cancel(id) }
-        let granted = try await request()
+        let result: Result<Bool, Error>
+        do { result = .success(try await request()) }
+        catch { result = .failure(error) }
         if token == id, self.phase != .active || !appActive() {
             await withCheckedContinuation { notificationReturn = $0 }
         }
         guard token == id, self.phase == .active, appActive(), currentScope() == expected else {
+            cancel(id)
             throw PantryDigestFailure.changed
         }
-        return granted
+        // On iOS the answer may be delivered before SwiftUI receives the inactive
+        // transition. Cover that transition just as we do for the voice prompt.
+        completedNotification = id
+        recognitionReady(id, appActive: true)
+        return try result.get()
     }
 
     func nextPermission(_ id: UUID) {
@@ -83,6 +94,7 @@ struct PantryVoicePromptScope: Equatable {
     private func clear() {
         guard token != nil else { return }
         scope = nil
+        completedNotification = nil
         finished = false
         sawInactive = false
         token = nil

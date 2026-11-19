@@ -19,6 +19,11 @@ struct PantryHomeView: View {
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
     @State private var sheet: PantrySheet?
     @State private var selectedLocation: InventoryLocation?
+    @State private var selectedDigest: DigestSelection?
+    private struct DigestSelection {
+        let model: PantryModel
+        let access: PantryDigestAccess
+    }
     @AccessibilityFocusState private var focusedLot: UUID?
 
     var body: some View {
@@ -36,6 +41,9 @@ struct PantryHomeView: View {
                 }))
         }
         .navigationTitle(pantryText("My Pantry"))
+        .navigationDestination(isPresented: Binding(get: { selectedDigest != nil }, set: { if !$0 { selectedDigest = nil } })) {
+            if let selectedDigest { PantryDigestList(model: selectedDigest.model, access: selectedDigest.access) }
+        }
         .privacySensitive()
     }
 
@@ -83,9 +91,16 @@ struct PantryHomeView: View {
                         }
                         Section {
                             if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID, digestAccess.authorized() {
-                                NavigationLink {
-                                    PantryDigestList(model: model, access: digestAccess)
-                                } label: { Label(pantryText("Use soon"), systemImage: "calendar.badge.clock") }
+                                Button {
+                                    selectedDigest = DigestSelection(model: model, access: digestAccess)
+                                } label: {
+                                    HStack {
+                                        Label(pantryText("Use soon"), systemImage: "calendar.badge.clock")
+                                        Spacer()
+                                        Image(systemName: "chevron.forward").font(.footnote.weight(.semibold))
+                                            .foregroundStyle(Theme.secondary).accessibilityHidden(true)
+                                    }
+                                }
                                 .accessibilityIdentifier("pantry.digest")
                             }
                             Picker(pantryText("Storage location"), selection: $selectedLocation) {

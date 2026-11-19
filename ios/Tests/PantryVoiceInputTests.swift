@@ -59,6 +59,20 @@ import UIKit
         XCTAssertNil(window.token)
     }
 
+    func testNotificationResponseBeforeSceneInterruptionRetainsOnlyTheReviewedScope() async throws {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
+        let window = PantryVoicePromptWindow()
+        let allowed = try await window.requestNotification(in: scope, phase: .active,
+            currentScope: { scope }, appActive: { true }) { false }
+        XCTAssertFalse(allowed)
+        window.sceneChanged(.inactive)
+        XCTAssertTrue(window.retains(scope, phase: .inactive))
+        XCTAssertFalse(window.allowsPantryAction(appActive: false))
+        window.sceneChanged(.active)
+        XCTAssertNil(window.token)
+    }
+
     func testNotificationPermissionCannotCarryAcrossBackgroundOrAnotherAdult() async throws {
         let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
         let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
