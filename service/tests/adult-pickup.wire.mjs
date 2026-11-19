@@ -69,15 +69,15 @@ export function adultPickupTests({fixture,admin,repo}){
     assert.equal((await http('Alex','GET',path)).status,403);
     assert.equal((await admin.query('SELECT member_id FROM ritc.pickup_last_call_recipient WHERE household_id=$1 AND member_id=$2',[h,actors.Alex.id])).rowCount,0);
   });
-  async function product(f){
+  async function product(f,dimension=8){
     const request=(await f.send('Alex')).request,path='/shops/'+f.shopId+'/requests/'+request.requestId+'/product-reference';
-    const crop={width:8,height:8,pixels:Buffer.alloc(8*8*3,21).toString('base64')};
+    const crop={width:dimension,height:dimension,pixels:Buffer.alloc(dimension*dimension*3,21).toString('base64')};
     const reference={brand:'One brand',size:'350 mL',barcode:'001234567890',description:'Green cap, unsweetened',crop};
     const input={expectedRevision:0,requestRevision:request.revision,authorityEpoch:1,recipientId:f.actors.Mia.id,clientKey:randomUUID(),consent:true,reference};
     return {request,path,crop,reference,input,post:(actor,data=input,suffix='')=>f.http(actor,'POST',path+suffix,data),read:actor=>f.http(actor,'GET',path)};
   }
-  run('binds a metadata-free crop to an explicit adult sender, exact recipient and moderated publication',async f=>{
-    const {path,crop,input,post,read,request}=await product(f);
+  run('binds a maximum-size 192×192 crop to an explicit adult sender, exact recipient and moderated publication',async f=>{
+    const {path,crop,input,post,read,request}=await product(f,192);
     assert.equal(ok(await read('Alex')).recipientLabel,'Mia');
     assert.equal((await read('Sam')).status,404);
     assert.equal((await read('Lee')).status,404);

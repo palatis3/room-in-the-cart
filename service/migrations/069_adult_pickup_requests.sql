@@ -22,7 +22,7 @@ CREATE TABLE ritc.adult_product_reference (
  PRIMARY KEY(household_id,request_id), CHECK(author_id<>recipient_id),
  CHECK((pixels IS NULL AND crop_width IS NULL AND crop_height IS NULL) OR
        (pixels IS NOT NULL AND crop_width IS NOT NULL AND crop_height IS NOT NULL AND media_status IS NOT NULL AND
-        crop_width BETWEEN 8 AND 192 AND crop_height BETWEEN 8 AND 192 AND octet_length(pixels)=crop_width*crop_height*3)),
+        crop_width BETWEEN 8 AND 192 AND crop_height BETWEEN 8 AND 192 AND octet_length(pixels)=crop_width::integer*crop_height*3)),
  CHECK(description IS NOT NULL OR (brand IS NULL AND package_size IS NULL AND barcode IS NULL AND pixels IS NULL)),
  FOREIGN KEY(household_id,request_id) REFERENCES ritc.request ON DELETE CASCADE,
  FOREIGN KEY(household_id,shop_id) REFERENCES ritc.shop ON DELETE CASCADE,
