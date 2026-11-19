@@ -71,6 +71,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     private struct ActionStatus {
         let text: String
         var reopenedCopyIDs: Set<String> = []
+        var requiresPreparedFile = false
     }
     @Published private var actionStatus: ActionStatus?
     var status: String? { actionStatus?.text }
@@ -324,7 +325,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             exportContext = ExportContext(authorize: authorize, backup: backup, selectedRecords: requested,
                                           disclosedMedia: disclosed, recoveredCopyIDs: recoveredIDs)
             preparedDocument = document
-            actionStatus = ActionStatus(text: recordsText("Your file is ready to review and save."))
+            publishOutcome(recordsText("Your file is ready to review and save."), requiresPreparedFile: true)
         } catch { fail(error, reveal: true) }
     }
 
@@ -842,6 +843,10 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         exportContext = nil
         preparedDocument = nil
         preparedLiveIDs.removeAll()
+        if actionStatus?.requiresPreparedFile == true {
+            actionStatus = nil
+            actionOutcomeID = nil
+        }
     }
 
     func backupDateText(for record: ArchiveRecord) -> String? {
@@ -870,7 +875,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         guard context.authorize() else { invalidateForSourceErasure(); return }
         if case let .failure(error) = result {
             if Self.fileSelectionCancelled(error) {
-                publishOutcome(recordsText("Save cancelled. Your file is still ready."))
+                publishOutcome(recordsText("Save cancelled. Your file is still ready."), requiresPreparedFile: !savingDraft)
             } else { fail(error, reveal: true) }
             return
         }
@@ -899,9 +904,9 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     private func requireAuthorization(_ authorize: Authorization) throws {
         guard authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
     }
-    private func publishOutcome(_ text: String, reopenedCopyIDs: Set<String> = []) {
+    private func publishOutcome(_ text: String, reopenedCopyIDs: Set<String> = [], requiresPreparedFile: Bool = false) {
         error = nil
-        actionStatus = ActionStatus(text: text, reopenedCopyIDs: reopenedCopyIDs)
+        actionStatus = ActionStatus(text: text, reopenedCopyIDs: reopenedCopyIDs, requiresPreparedFile: requiresPreparedFile)
         actionOutcomeID = UUID()
     }
     private func fail(_ error: Error, reveal: Bool = false) {

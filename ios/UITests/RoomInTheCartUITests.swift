@@ -225,9 +225,15 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(acknowledgement.value as? String, "1")
         XCTAssertTrue(ownerExport.isEnabled)
         tap(ownerExport)
-        assertContains("Private owner file ready")
-        let previewRow = app.cells.containing(.staticText, identifier: "Preview readable copy").firstMatch
-        tap(previewRow)
+        let previewRow = app.buttons["records.readablePreview"]
+        let saveFile = app.buttons["records.saveFile"]
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: previewRow)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed, "Preparing a readable file must reveal its preview without scrolling")
+        XCTAssertTrue(app.staticTexts["Private owner file ready"].exists)
+        XCTAssertFalse(app.staticTexts["Redacted copy ready"].exists)
+        XCTAssertTrue(saveFile.exists)
+        XCTAssertLessThanOrEqual(previewRow.frame.maxY, saveFile.frame.minY + 1)
+        previewRow.tap()
         let preview = app.staticTexts.containing(NSPredicate(format:
             "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", title, "Source:", "Revision:")).firstMatch
         XCTAssertTrue(preview.waitForExistence(timeout: 5), "The reviewed file must contain the selected source and revision")
@@ -240,6 +246,7 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Private-owner-export-reviewed-with-fictional-data")
         tap(app.buttons["Discard prepared file"])
         XCTAssertFalse(app.buttons["Save file…"].exists, "Discard must remove the prepared export")
+        XCTAssertFalse(app.staticTexts["Your file is ready to review and save."].exists)
         app.terminate()
         launch(reset: false)
         reopenSavedRecord(recordsLabel: "Records", item: title)

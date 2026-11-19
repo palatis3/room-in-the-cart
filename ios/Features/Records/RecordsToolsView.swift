@@ -70,6 +70,9 @@ struct RecordsToolsView: View {
                     }
                 }
             }
+            if !recipeLibraryOnly, let export = model.preparedDocument, export.kind != .recipeDraft {
+                Section { preparedExportActions(export) }
+            }
             if recipeLibraryOnly {
                 Section {
                     recipePageButton
@@ -270,20 +273,29 @@ struct RecordsToolsView: View {
                     .accessibilityIdentifier("records.prepareRecovery")
             }
             .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Encrypted personal recovery"), identifier: "records.encryptedRecovery"))
-            if let document = model.preparedDocument, document.kind != .recipeDraft {
-                Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"), systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
-                Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file)).font(.caption)
-                Button(recordsText("Save file…")) { savePreparedFile() }.accessibilityIdentifier("records.saveFile")
-                if document.kind != .text {
-                    ShareLink(item: RecordsShareFile(data: document.data, kind: document.kind), preview: SharePreview(model.preparedName)) { Label(recordsText("Share prepared file…"), systemImage: "square.and.arrow.up") }
-                } else if let text = String(data: document.data, encoding: .utf8) {
-                    ShareLink(item: text) { Label(recordsText("Share prepared text…"), systemImage: "square.and.arrow.up") }
-                    DisclosureGroup(recordsText("Preview readable copy")) { Text(text).textSelection(.enabled).accessibilityIdentifier("records.readableText") }
-                        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Preview readable copy"), identifier: "records.readablePreview"))
-                }
-                Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }.accessibilityIdentifier("records.discardFile")
+        }
+    }
+    @ViewBuilder private func preparedExportActions(_ document: RecordsFileDocument) -> some View {
+        let readableText = document.kind == .text ? String(data: document.data, encoding: .utf8) : nil
+        Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"),
+              systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
+        Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file)).font(.caption)
+        if let readableText {
+            DisclosureGroup(recordsText("Preview readable copy")) {
+                Text(readableText).textSelection(.enabled).accessibilityIdentifier("records.readableText")
+            }
+            .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Preview readable copy"), identifier: "records.readablePreview"))
+            .id(model.preparedName)
+        }
+        Button(recordsText("Save file…")) { savePreparedFile() }.accessibilityIdentifier("records.saveFile")
+        if let readableText {
+            ShareLink(item: readableText) { Label(recordsText("Share prepared text…"), systemImage: "square.and.arrow.up") }
+        } else if document.kind != .text {
+            ShareLink(item: RecordsShareFile(data: document.data, kind: document.kind), preview: SharePreview(model.preparedName)) {
+                Label(recordsText("Share prepared file…"), systemImage: "square.and.arrow.up")
             }
         }
+        Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }.accessibilityIdentifier("records.discardFile")
     }
     private var selectedMedia: some View {
         Group {
