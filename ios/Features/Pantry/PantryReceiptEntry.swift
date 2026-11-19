@@ -671,8 +671,10 @@ private struct ReceiptPriceCorrection: View {
             if let current = original.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(current))) }
             else { Text(pantryText("Paid price unknown")) }
             Text(original.merchant + " · " + original.purchaseDate.formatted(date: .abbreviated, time: .omitted))
-            TextField(pantryText("Corrected paid line total in USD"), text: $price)
-                .keyboardType(.decimalPad).focused($priceFocused)
+            WorkingField(pantryText("Corrected paid line total in USD")) {
+                TextField(pantryText("Corrected paid line total in USD"), text: $price, prompt: Text(""))
+                    .keyboardType(.decimalPad).focused($priceFocused)
+            }
             Text(pantryText("A correction adds a price revision. Pantry quantities and posted spending stay the same."))
             Button(pantryText("Save price correction")) {
                 guard let total = enteredTotal else { return }
