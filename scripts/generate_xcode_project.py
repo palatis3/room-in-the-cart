@@ -86,6 +86,7 @@ def target(key, name, source_paths, product_type, bundle, dependencies=(), packa
             if kind:
                 resources.append(build_file(str(p.relative_to(IOS)), kind))
     elif extension_folder:
+        resources.append(build_file("Resources/Assets.xcassets", "folder.assetcatalog"))
         catalog = IOS / "Features/DeviceSurfaces/DeviceSurfaces.xcstrings"
         if catalog.exists():
             resources.append(build_file(str(catalog.relative_to(IOS)), "text.json.xcstrings"))
@@ -106,7 +107,7 @@ def target(key, name, source_paths, product_type, bundle, dependencies=(), packa
     product = obj(key + ":output", "PBXFileReference", explicitFileType="wrapper.application" if key == "app" else "wrapper.app-extension" if extension_folder else "wrapper.cfbundle", includeInIndex="0", path=name + (".app" if key == "app" else ".appex" if extension_folder else ".xctest"), sourceTree="BUILT_PRODUCTS_DIR")
     settings = dict(PRODUCT_NAME="$(TARGET_NAME)", PRODUCT_BUNDLE_IDENTIFIER=bundle, GENERATE_INFOPLIST_FILE="YES", CODE_SIGN_STYLE="Automatic", SWIFT_EMIT_LOC_STRINGS="YES")
     if key == "app":
-        settings.update(INFOPLIST_FILE="App/Info.plist", INFOPLIST_KEY_UIApplicationSceneManifest_Generation="YES", INFOPLIST_KEY_UILaunchScreen_Generation="YES", INFOPLIST_KEY_UISupportedInterfaceOrientations="UIInterfaceOrientationPortrait", LD_RUNPATH_SEARCH_PATHS=["$(inherited)", "@executable_path/Frameworks"])
+        settings.update(INFOPLIST_FILE="App/Info.plist", INFOPLIST_KEY_UIApplicationSceneManifest_Generation="YES", INFOPLIST_KEY_UISupportedInterfaceOrientations="UIInterfaceOrientationPortrait", LD_RUNPATH_SEARCH_PATHS=["$(inherited)", "@executable_path/Frameworks"])
         if dependencies:
             settings["CODE_SIGN_ENTITLEMENTS"] = "Configuration/App.entitlements"
     elif extension_folder:

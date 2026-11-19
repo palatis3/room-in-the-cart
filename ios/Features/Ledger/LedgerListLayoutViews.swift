@@ -193,7 +193,8 @@ struct LargePrintList: View {
     let shop: ShoppingLedger
     let layout: LedgerListLayout
     private let itemDetails: [UUID: [String]]
-    @State private var printError = false
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var printSession = GroceryPrintSession()
 
     init(shop: ShoppingLedger, layout: LedgerListLayout) {
         self.shop = shop
@@ -238,7 +239,8 @@ struct LargePrintList: View {
                 if !shop.basis.branch.isEmpty { Text(shop.basis.branch).font(.title2) }
                 Text(ledgerText("Print active items and quantities in the current list order."))
                 Button(ledgerText("Print shopping list")) { printList(groups) }
-                    .disabled(groups.allSatisfy { $0.lines.isEmpty }).accessibilityIdentifier("printShoppingList")
+                    .disabled(printSession.active || groups.allSatisfy { $0.lines.isEmpty })
+                    .accessibilityIdentifier("printShoppingList")
             }
             ForEach(groups) { group in
                 Section {
@@ -255,7 +257,12 @@ struct LargePrintList: View {
             }
         }.navigationTitle(ledgerText("Large-print list"))
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
-        .alert(ledgerText("Printing is unavailable"),isPresented:$printError) { Button(ledgerText("Done")) {} }
+        .workingSurface()
+        .alert(ledgerText("Printing is unavailable"), isPresented: $printSession.showError) { Button(ledgerText("Done")) {} }
+        .onChange(of: shop) { _, _ in printSession.dismiss() }
+        .onChange(of: layout) { _, _ in printSession.dismiss() }
+        .onChange(of: scenePhase) { _, phase in if phase == .background { printSession.dismiss() } }
+        .onDisappear { printSession.dismiss() }
     }
     private func heading(_ group: LedgerListLayout.Group) -> String? {
         if !group.aisle.isEmpty { return group.aisle }
@@ -274,7 +281,9 @@ struct LargePrintList: View {
         h1 { font-size: 28pt; margin: 0 }
         h2 { font-size: 24pt; margin: 16pt 0 0; page-break-after: avoid }
         header p { font-size: 22pt; margin: 0 }
-        .item { page-break-inside: avoid; padding-top: 14pt }
+        .item { position: relative; padding: 12pt 0 0 26pt; page-break-inside: avoid; overflow-wrap: anywhere }
+        .item::before { content: ""; position: absolute; left: 0; top: 16pt;
+                        width: 14pt; height: 14pt; border: 1.5pt solid black; border-radius: 2pt }
         strong { font-size: 22pt }
         h1, h2, p, strong { white-space: pre-wrap; overflow-wrap: anywhere }
         </style></head><body><header><h1>\(escaped(shop.title))</h1>
@@ -293,18 +302,48 @@ struct LargePrintList: View {
         return UIMarkupTextPrintFormatter(markupText: html + "</body></html>")
     }
     private func printList(_ groups: [LedgerListLayout.Group]) {
-        guard groups.contains(where: { !$0.lines.isEmpty }), UIPrintInteractionController.isPrintingAvailable else {
-            printError = true
-            return
-        }
+        guard scenePhase == .active, groups.contains(where: { !$0.lines.isEmpty }) else { return }
+        printSession.present(PickupPrintPageRenderer(formatter: printFormatter()))
+    }
+}
+
+/// A print sheet is shared by UIKit, but each private view owns its renderer.
+@MainActor final class GroceryPrintSession: ObservableObject {
+    @Published private(set) var renderer: UIPrintPageRenderer?
+    @Published var showError = false
+    var active: Bool { renderer != nil }
+
+    func present(_ document: UIPrintPageRenderer) {
+        guard !active else { return }
+        guard UIPrintInteractionController.isPrintingAvailable else { showError = true; return }
         let controller = UIPrintInteractionController.shared
-        let info = UIPrintInfo(dictionary:nil); info.jobName = shop.title; info.outputType = .grayscale
+        let info = UIPrintInfo(dictionary: nil)
+        info.jobName = "Room in the Cart"
+        info.outputType = .grayscale
         controller.printInfo = info
-        controller.printPageRenderer = PickupPrintPageRenderer(formatter: printFormatter())
-        let presented = controller.present(animated: true) { _, _, error in
-            if error != nil { printError = true }
+        controller.printPageRenderer = document
+        renderer = document
+        let presented = controller.present(animated: true) { [weak self] controller, _, error in
+            if controller.printPageRenderer === document { controller.printPageRenderer = nil }
+            guard let self, self.renderer === document else { return }
+            self.renderer = nil
+            self.showError = error != nil
         }
-        if !presented { printError = true }
+        if !presented, renderer === document {
+            if controller.printPageRenderer === document { controller.printPageRenderer = nil }
+            renderer = nil
+            showError = true
+        }
+    }
+
+    func dismiss() {
+        guard let document = renderer else { return }
+        renderer = nil
+        let controller = UIPrintInteractionController.shared
+        if controller.printPageRenderer === document {
+            controller.dismiss(animated: false)
+            controller.printPageRenderer = nil
+        }
     }
 }
 
@@ -325,7 +364,17 @@ class PickupPrintPageRenderer: UIPrintPageRenderer {
             .font: UIFont.systemFont(ofSize: 16),
             .foregroundColor: UIColor.black
         ])
-        let size = name.size()
-        name.draw(at: CGPoint(x: footerRect.midX - size.width / 2, y: footerRect.midY - size.height / 2))
+        let page = NSAttributedString(
+            string: ledgerFormat("Page %lld of %lld", Int64(pageIndex + 1), Int64(numberOfPages)),
+            attributes: [.font: UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .medium),
+                         .foregroundColor: UIColor.black]
+        )
+        let nameSize = name.size(), pageSize = page.size()
+        if footerRect.width >= nameSize.width + pageSize.width + 16 {
+            name.draw(at: CGPoint(x: footerRect.minX, y: footerRect.midY - nameSize.height / 2))
+            page.draw(at: CGPoint(x: footerRect.maxX - pageSize.width, y: footerRect.midY - pageSize.height / 2))
+        } else {
+            page.draw(at: CGPoint(x: footerRect.midX - pageSize.width / 2, y: footerRect.midY - pageSize.height / 2))
+        }
     }
 }

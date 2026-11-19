@@ -192,11 +192,15 @@ import CoreDomain
         for index in 0..<pdf.pageCount {
             let page = try XCTUnwrap(pdf.page(at: index))
             let lines = page.selection(for: page.bounds(for: .mediaBox))?.selectionsByLine() ?? []
-            let footers = lines.filter { $0.string == "Room in the Cart" }
+            let folio = ledgerFormat("Page %lld of %lld", Int64(index + 1), Int64(pdf.pageCount))
+            XCTAssertTrue(page.string?.contains(folio) == true)
+            let footers = lines.filter { $0.string?.contains("Room in the Cart") == true }
             XCTAssertEqual(footers.count, 1, "Page \(index + 1)")
             let footer = try XCTUnwrap(footers.first).bounds(for: page)
             XCTAssertLessThan(footer.maxY, 70)
-            let body = lines.filter { $0.string != "Room in the Cart" }
+            let body = lines.filter {
+                $0.string?.contains("Room in the Cart") == false && $0.string?.contains(folio) == false
+            }
             numberedItems += body.compactMap(\.string).filter { $0.hasPrefix("Package number ") }
             if let last = body.last?.string {
                 XCTAssertFalse(last.hasPrefix("Package number "), "Each item and its quantity must print on the same page")

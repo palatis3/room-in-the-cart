@@ -29,7 +29,8 @@ import LocalAuthentication
     func unlock() async {
         guard !checking else { return }
         checking = true
-        defer { checking = false }
+        error = nil
+        defer { checking = false; authentication = nil }
         let context = LAContext()
         authentication = context
         let attempt = generation
@@ -62,25 +63,52 @@ struct WorkspaceUnlockView: View {
     @ObservedObject var access: WorkspaceAccess
     @ObservedObject var household: HouseholdModel
     var childExitNotice: String? = nil
+    @AccessibilityFocusState private var errorFocused: Bool
+
     var body: some View {
         NavigationStack {
             ScrollView {
-              VStack(alignment: .leading, spacing: 20) {
-                Image(systemName: "lock.shield").font(.largeTitle).accessibilityHidden(true)
-                Text(tr("Private workspace")).font(.largeTitle.bold())
-                Text(tr("Unlock to return to your saved groceries, meals and costs."))
-                Button(tr("Unlock private workspace")) { Task { await access.unlock() } }
+                VStack(alignment: .leading, spacing: 20) {
+                    Label {
+                        Text(tr("Private workspace")).font(.largeTitle.bold())
+                    } icon: {
+                        Image(systemName: "lock.fill").font(.title2).foregroundStyle(Theme.action)
+                    }
+                    .accessibilityAddTraits(.isHeader)
+                    if let childExitNotice {
+                        Text(childExitNotice)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("guardian.childExitNotice")
+                    }
+                    Text(tr("Unlock to return to your saved groceries, meals and costs."))
+                        .foregroundStyle(Theme.secondary)
+
+                    Button {
+                        Task { await access.unlock() }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if access.checking { ProgressView().accessibilityHidden(true) }
+                            Text(tr("Unlock private workspace"))
+                        }
+                    }
                     .buttonStyle(PrimaryAction()).disabled(access.checking)
-                NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household) }
-                    .frame(minHeight: 44)
-                if let error = access.error { Text(error).foregroundStyle(Color("error")) }
-                if let childExitNotice {
-                    Text(childExitNotice).font(.footnote).foregroundStyle(Theme.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("guardian.childExitNotice")
+                    if let error = access.error {
+                        Label(error, systemImage: "exclamationmark.circle")
+                            .foregroundStyle(Theme.error)
+                            .accessibilityFocused($errorFocused)
+                    }
+                    NavigationLink {
+                        HouseholdSettingsView(model: household)
+                    } label: {
+                        Label(tr("Household requests"), systemImage: "person.2")
+                            .frame(minHeight: 44)
+                    }
                 }
-              }.frame(maxWidth: .infinity, alignment: .leading).padding(20)
-            }.workingSurface()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+            }
+            .workingSurface()
+            .onChange(of: access.error) { _, error in errorFocused = error != nil }
             .navigationDestination(isPresented: Binding(
                 get: { household.showingVerifiedHousehold },
                 set: { if !$0 { household.dismissVerifiedHousehold() } }
