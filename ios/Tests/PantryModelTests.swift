@@ -37,7 +37,8 @@ final class PantryModelTests: XCTestCase {
 
     func testCoveredDigestRemountRetainsOnlyThePreviouslyLoadedPantry() async throws {
         let (directory, store) = try await database()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        cleanup.track(store)
         var allowed = true
         let model = PantryModel(repository: PantryRepository(store: store, authorize: { allowed }))
         await model.load()
