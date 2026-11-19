@@ -82,7 +82,7 @@ import XCTest
             let question = "¿Está vencida mi salsa de tomate?"
             enterCommand(question)
             XCTAssertTrue(app.navigationBars["Dictar o escribir"].exists)
-            XCTAssertEqual(element("pantry.voiceText").value as? String, question)
+            assertTranscript(question)
             XCTAssertFalse(element("pantry.voiceOriginal.0").exists)
             XCTAssertFalse(element("pantry.voiceDateResult").exists)
             tap(element("pantry.voiceLot.0"))
@@ -141,20 +141,29 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.voicePreview"].exists)
         XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
         XCTAssertFalse(app.tabBars.firstMatch.isHittable)
+        capture(spanish ? "Pantry-voice-sin-cambios" : "Pantry-voice-no-changes")
         tap(app.buttons["pantry.voiceCancel"])
         assertLot(id, contains: spanish ? "3 unidades" : "3 units")
         XCTAssertTrue(app.tabBars.firstMatch.isHittable)
 
         let about = spanish ? "Me queda como media botella de kétchup" : "I have about half a bottle of ketchup left"
         enterCommand(about)
-        XCTAssertEqual(element("pantry.voiceText").value as? String, about)
+        assertTranscript(about)
+        if !spanish {
+            tap(element("pantry.voiceTranscript"))
+            let input = element("pantry.voiceText")
+            XCTAssertTrue(input.waitForExistence(timeout: 8))
+            XCTAssertEqual(input.value as? String, about)
+            dismissVoiceKeyboard()
+            tap(app.buttons["pantry.voiceReview"])
+        }
         tap(app.buttons["pantry.voicePreview"])
         XCTAssertTrue(element("pantry.voiceSummary.0").waitForExistence(timeout: 8))
         tap(app.buttons["pantry.voiceCancel"])
         assertLot(id, contains: spanish ? "3 unidades" : "3 units")
 
         enterCommand(low)
-        XCTAssertEqual(element("pantry.voiceText").value as? String, low)
+        assertTranscript(low)
         tap(app.buttons["pantry.voicePreview"])
         let summary = element("pantry.voiceSummary.0")
         reveal(summary)
@@ -211,7 +220,7 @@ import XCTest
         openPantry(reset: false, expectEmptyShop: true)
         assertLot(id, contains: "About half left (estimate)")
         enterCommand("I used some ketchup")
-        XCTAssertTrue(element("pantry.voiceOriginal.0").label.localizedCaseInsensitiveContains("ketchup"))
+        assertTranscript("I used some ketchup")
         let explanation = app.staticTexts["Record one use. The amount remaining will be unknown."]
         reveal(explanation)
         tap(app.buttons["pantry.voicePreview"])
@@ -349,6 +358,12 @@ import XCTest
         tap(app.shopToolButton("shop.myPantry"))
         if reset { tap(app.buttons["pantry.setup.apply"]) }
         XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 10))
+    }
+
+    private func assertTranscript(_ expected: String) {
+        let original = element("pantry.voiceTranscript")
+        reveal(original)
+        XCTAssertEqual(original.value as? String, expected)
     }
 
     private func element(_ id: String) -> XCUIElement {
