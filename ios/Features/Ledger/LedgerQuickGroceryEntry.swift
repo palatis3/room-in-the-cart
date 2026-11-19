@@ -66,7 +66,6 @@ private struct QuickGroceryField: View {
         let id = UUID()
         let shopID: UUID?
         let text: String
-        let previousBatchID: UUID?
         let preview: StagedListImport?
     }
     private var busy: Bool { submitting || model.saving || model.hasPendingSave }
@@ -191,10 +190,6 @@ private struct QuickGroceryField: View {
         .onChange(of: model.revision, initial: true) { _, _ in
             recent = QuickGrocery.recentNames(in: model.workspace)
             finishCommittedEntry()
-            if let review, review.shopID == model.shop?.id, let batch = model.shop?.importBatches.last,
-               batch.id != review.previousBatchID {
-                text = ""; self.review = nil
-            }
         }
         .onChange(of: model.workspace.selectedShopID) { old, next in
             guard old != nil || next != submitted?.shopID else { return }
@@ -206,7 +201,8 @@ private struct QuickGroceryField: View {
                 if authorize(), model.shop?.id == original.shopID {
                     if let id = original.shopID {
                         LedgerImportView(model: model, shopID: id, prefill: original.text, initialPreview: original.preview,
-                            authorizeEntry: { authorize() && model.shop?.id == id })
+                            authorizeEntry: { authorize() && model.shop?.id == id },
+                            onSaved: { _ in if text == original.text { text = "" } })
                     } else {
                         FirstListEntry(model: model, prefill: original.text,
                             authorizeEntry: { authorize() && model.shop == nil }) { _ in review = nil; text = "" }
@@ -222,7 +218,7 @@ private struct QuickGroceryField: View {
         let shop = model.shop ?? ShoppingLedger(title: ledgerText("Pickup"))
         guard let preview = try? QuickGrocery.stage(text, in: shop) else {
             editing = false
-            review = Review(shopID: selectedID, text: text, previousBatchID: model.shop?.importBatches.last?.id,
+            review = Review(shopID: selectedID, text: text,
                             preview: selectedID == nil ? nil : try? shop.stageImport(text: text))
             return
         }

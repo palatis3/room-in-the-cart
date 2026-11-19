@@ -60,6 +60,30 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(added.label.contains("fresh milk"))
     }
 
+    func testReviewedQuickGroceryClearsOnlyAfterSavingToExistingPickup() {
+        launch()
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText("Oats\n")
+        XCTAssertTrue(element("quickGrocery.undo").waitForExistence(timeout: 10))
+        let name = "Peppers / pimientos"
+        field.typeText(name + "\n")
+        let commit = element("ledgerCommitImport")
+        XCTAssertTrue(commit.waitForExistence(timeout: 10))
+        tap(app.buttons["Cancel"])
+        XCTAssertEqual(field.value as? String, name)
+        tap(element("quickGrocery.add"))
+        let amount = element("ledgerImportAmount-1")
+        tap(amount)
+        amount.typeText("2")
+        tap(app.buttons.matching(identifier: "Done").firstMatch)
+        tap(commit)
+        XCTAssertTrue(commit.waitForNonExistence(timeout: 10))
+        tap(field)
+        field.typeText("Milk")
+        XCTAssertEqual(field.value as? String, "Milk")
+    }
+
     func testQuickGroceryReturnUndoAndDuplicateReviewInSpanish() {
         launch(language: "es")
         let field = element("quickGrocery.name")

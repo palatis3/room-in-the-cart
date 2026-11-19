@@ -39,7 +39,7 @@ struct LedgerImportView: View {
     private enum Focus: Hashable { case preview, status, inputLimit }
     @AccessibilityFocusState private var focus: Focus?
     let firstDraft: FirstListEditor?
-    let onFirstSave: ((UUID) -> Void)?
+    let onSaved: ((UUID) -> Void)?
     let authorizeEntry: @MainActor () -> Bool
     private let prefill: String
     private let pantryFoodPrefill: Bool
@@ -47,8 +47,8 @@ struct LedgerImportView: View {
     private let pantryProductLink: UUID?
     @State private var incomingWording: String?
     @State private var appendError: String?
-    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
-        self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onFirstSave = onFirstSave
+    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onSaved: ((UUID) -> Void)? = nil) {
+        self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onSaved = onSaved
         self.authorizeEntry = authorizeEntry
         self.prefill = prefill
         self.pantryFoodPrefill = pantryFoodPrefill
@@ -299,8 +299,14 @@ struct LedgerImportView: View {
     }
 
     private var importSaveStatus: some View {
-        LedgerSaveStatus(model: model, onRetried: { onFirstSave?(shopID); dismiss() })
-            .accessibilityFocused($focus, equals: .status)
+        LedgerSaveStatus(model: model, onRetried: {
+            if let preview,
+               model.workspace.shops.first(where: { $0.id == preview.shopID })?.importBatches
+                .contains(where: { $0.id == preview.id && $0.undoneAt == nil }) == true {
+                onSaved?(preview.shopID)
+            }
+            dismiss()
+        }).accessibilityFocused($focus, equals: .status)
     }
 
     private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview) -> some View {
@@ -321,7 +327,7 @@ struct LedgerImportView: View {
                 if let firstDraft {
                     guard preview.shopID == shopID, firstDraft.authorize(), let draft = await firstDraft.flush(firstContents) else { return }
                     if await model.commitFirstList(preview, decisions: decisions, draft: draft, title: ledgerText("Pickup"), authorize: firstDraft.authorize) {
-                        onFirstSave?(shopID); dismiss()
+                        onSaved?(shopID); dismiss()
                     } else {
                         if !model.hasPendingSave, model.error == nil {
                             model.error = ledgerText("Could not save on this iPhone. Your entries are still here. Retry the same change.")
@@ -329,6 +335,7 @@ struct LedgerImportView: View {
                         focus = .status
                     }
                 } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, authorize: authorizeSave, { try $0.commitImport(preview, decisions: decisions) }) {
+                    onSaved?(preview.shopID)
                     dismiss()
                 } else { focus = .status }
             }
