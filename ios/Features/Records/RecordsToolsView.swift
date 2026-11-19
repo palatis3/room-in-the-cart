@@ -32,7 +32,7 @@ struct RecordsToolsView: View {
                         .font(.title2.bold())
                     Text(recordsText("Export, recover and delete your own data. These tools stay free, including after membership ends."))
                     Text(recordsText("Recovery saves a separate copy. A file never restores membership, consent, permissions or a retailer order."))
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(Theme.secondary)
                 }
             }
             if model.busy { ProgressView(recordsText("Working on this iPhone…")) }
@@ -105,7 +105,7 @@ struct RecordsToolsView: View {
                 recoveredSection
                 Section(recordsText("Privacy and support")) {
                     Text(recordsText("Support details include only format, record count and an error code. They omit food names, receipts, account details and file paths."))
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(Theme.secondary)
                     ShareLink(item: model.supportText) { Label(recordsText("Share redacted support details"), systemImage: "lifepreserver") }
                 }
                 if model.canReviewWholeLedgerDeletion {
@@ -213,10 +213,10 @@ struct RecordsToolsView: View {
                             if selected { model.selectedIDs.insert(key) } else { model.selectedIDs.remove(key) }
                         })) { Text(recordsTitle(record)) }
                             .accessibilityIdentifier("records.source." + record.id)
-                        Text(recordKindLabel(record.kind)).font(.caption).foregroundStyle(.secondary)
+                        Text(recordKindLabel(record.kind)).font(.caption).foregroundStyle(Theme.secondary)
                         if record.kind == .sharedHistory {
                             ForEach(SharedHistoryArchiveAdapter.coverageKeys(record), id: \.self) { key in
-                                Text(recordsText(key)).font(.caption).foregroundStyle(.secondary)
+                                Text(recordsText(key)).font(.caption).foregroundStyle(Theme.secondary)
                             }
                         }
                         recordDates(record)
@@ -274,7 +274,7 @@ struct RecordsToolsView: View {
             }
             .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Encrypted personal recovery"), identifier: "records.encryptedRecovery"))
             Text(recordsText("Only explicitly selected source references are included in encrypted recovery. Readable and helper copies contain no attachment bytes. No file is uploaded automatically. Shared copies cannot be recalled."))
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(Theme.secondary)
         }
     }
     @ViewBuilder private func preparedExportActions(_ document: RecordsFileDocument) -> some View {
@@ -346,7 +346,7 @@ struct RecordsToolsView: View {
             .accessibilityIdentifier("records.recipeLink")
     }
     private var recipeFileHelp: some View {
-        Text(recordsText("Choose a Paprika recipe collection (.paprikarecipes), Recipe JSON-LD, or a saved draft. Review and edit recipes before saving. For large Paprika libraries, export one category at a time.")).font(.footnote).foregroundStyle(.secondary)
+        Text(recordsText("Choose a Paprika recipe collection (.paprikarecipes), Recipe JSON-LD, or a saved draft. Review and edit recipes before saving. For large Paprika libraries, export one category at a time.")).font(.footnote).foregroundStyle(Theme.secondary)
     }
     private var recipeFileButton: some View {
         Button(recordsText("Choose a recipe or draft file…")) { chooseImportFile(recipes: true) }
@@ -488,7 +488,7 @@ struct RecordsToolsView: View {
 
     private func importDetail(_ label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(label).font(.caption).foregroundStyle(Theme.secondary)
             Text(verbatim: value).textSelection(.enabled)
         }.accessibilityElement(children: .combine)
     }
@@ -504,7 +504,7 @@ struct RecordsToolsView: View {
             }
             if referenceCount > 0, let projection {
                 Text(String(format: recordsText("Selected references · %lld"), Int64(referenceCount)))
-                Text(String(format: recordsText("Selection ID · %@"), projection)).foregroundStyle(.secondary)
+                Text(String(format: recordsText("Selection ID · %@"), projection)).foregroundStyle(Theme.secondary)
             }
         }.font(.caption).textSelection(.enabled).accessibilityElement(children: .combine)
     }
