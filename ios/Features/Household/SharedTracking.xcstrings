@@ -290,6 +290,23 @@
         }
       }
     },
+    "Check and freeze pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check and freeze pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar y congelar la recogida"
+          }
+        }
+      }
+    },
     "Checking shared pickup…": {
       "extractionState": "manual",
       "localizations": {
@@ -507,6 +524,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No cuenta para el mínimo que determina el cargo"
+          }
+        }
+      }
+    },
+    "Done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
           }
         }
       }
@@ -1174,6 +1208,23 @@
         }
       }
     },
+    "Pickup frozen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup frozen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recogida congelada"
+          }
+        }
+      }
+    },
     "Privacy changed this record. Only the surviving facts below can be reviewed; old previews and copied text cannot be restored.": {
       "extractionState": "manual",
       "localizations": {
@@ -1612,6 +1663,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar por separado el alimento utilizable y los paquetes enteros"
+          }
+        }
+      }
+    },
+    "Review saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión guardada"
           }
         }
       }

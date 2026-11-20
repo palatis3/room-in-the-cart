@@ -2,6 +2,13 @@ import Foundation
 import SwiftUI
 import HouseholdClient
 
+struct TrackingCheckoutAttempt: Equatable {
+    let operationID: String
+    let lease: UUID
+}
+
+enum TrackingCheckoutResult: Equatable { case refreshing, renewed, frozen }
+
 @MainActor protocol SharedTrackingFlowAccess: AnyObject {
     var trackingShop: ShopperShop? { get }
     var trackingAllowed: Bool { get }
@@ -44,6 +51,7 @@ extension SharedTrackingServiceOwner {
     @Published private(set) var busy = false
     @Published private(set) var submitted = false
     @Published private(set) var notice: String?
+    @Published private(set) var checkoutAttempt: TrackingCheckoutAttempt?
     @Published var gate = TrackingReviewGate()
     @Published var draft = TrackingFlowDraft() { didSet { if draft != oldValue { candidate = nil; gate.reset() } } }
     let access: any SharedTrackingFlowAccess
@@ -116,7 +124,8 @@ extension SharedTrackingServiceOwner {
             meal.rows[index].conversion = .init(); meal.reviewed = false; value.wrappedValue = meal
         })
     }
-    func clear() {
+    func clear(keepingCheckout: Bool = false) {
+        if !keepingCheckout { checkoutAttempt = nil }
         generation = UUID(); lease = nil; page = nil; shop = nil; candidate = nil; history = nil
         draft = .init(); gate.reset(); actionSources = nil; mealSources = nil; acceptOverage = false; acceptUnknown = false; busy = false; submitted = false; notice = nil
     }
@@ -195,6 +204,7 @@ extension SharedTrackingServiceOwner {
             guard token == generation, permitted, self.candidate == candidate, gate.canApply, moneyAccepted, acceptOverage == overage, acceptUnknown == unknown else { return }
             let operation = try await access.prepareTracking(accepted)
             guard token == generation, permitted, self.candidate == candidate, gate.canApply, moneyAccepted, acceptOverage == overage, acceptUnknown == unknown else { return }
+            if freezing { checkoutAttempt = .init(operationID: operation.id, lease: access.trackingLease) }
             try await access.sendTracking(operation, selectionID: selectionID)
             guard token == generation else { return }; finish()
         } catch { fail(error, token: token) }
@@ -205,6 +215,7 @@ extension SharedTrackingServiceOwner {
         do {
             let operation = try await access.freezeTracking(page: page)
             guard token == generation, permitted, self.page == page, gate.canApply else { return }
+            checkoutAttempt = .init(operationID: operation.id, lease: access.trackingLease)
             try await access.sendTracking(operation, selectionID: selectionID)
             guard token == generation else { return }; finish()
         } catch { fail(error, token: token) }

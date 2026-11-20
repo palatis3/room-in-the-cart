@@ -102,6 +102,7 @@ struct SharedShopTransfer: Equatable {
     @Published private(set) var foodEditor: SharedFoodEditorContext?
     @Published private(set) var pending: PendingOperation?
     @Published private(set) var delivery: ShopperDelivery = .none
+    private var confirmedTrackingOperationID: String?
     @Published private(set) var reviewedCurrentFacts = false
     @Published private(set) var notice: String?
     @Published var draft = SharedShopDraft() {
@@ -156,6 +157,9 @@ struct SharedShopTransfer: Equatable {
 
     func updateScope(_ value: HouseholdBootstrap) {
         guard value.household.id == householdID, value.memberId == memberID, value.grantId == nil else { clear(); return }
+        if scope.shopId != value.shopId || value.role != "shopper" || !value.capabilities.contains("shopper_commands") {
+            confirmedTrackingOperationID = nil
+        }
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
             cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; trackingEditor = nil; editorLookup = UUID(); graphShopID = nil
             financialRecord = nil; financialRetry = nil; deliveryRecord = nil; review = nil; acknowledged = false
@@ -1062,6 +1066,7 @@ struct SharedShopTransfer: Equatable {
         } catch { await handle(error, start: start) }
     }
     func clear() {
+        confirmedTrackingOperationID = nil
         cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; trackingEditor = nil; editorLookup = UUID(); graphShopID = nil
         reviewedAmendmentOperation = nil; reviewedCurrentFacts = false
         reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
@@ -1206,6 +1211,20 @@ extension HouseholdShopModel: SharedOperationUndoAccess {
 
 
 extension HouseholdShopModel: SharedTrackingServiceOwner {
+    func checkoutResult(for attempt: TrackingCheckoutAttempt?) -> TrackingCheckoutResult? {
+        guard let attempt, attempt.lease == generation, attempt.operationID == confirmedTrackingOperationID,
+              authorized, pending == nil, scope.grantId == nil, scope.role == "shopper",
+              scope.capabilities.contains("shopper_commands"), case .confirmed(let receipt) = delivery,
+              scope.shopId == receipt.shopId else { return nil }
+        if requiresRefresh { return .refreshing }
+        guard let shop, shop.shopId == receipt.shopId, shop.authorityEpoch == receipt.authorityEpoch,
+              shop.shopRevision == receipt.shopRevision else { return nil }
+        switch (receipt.kind, shop.phase) {
+        case ("shop.freeze", "frozen") where shop.frozenRevision == receipt.shopRevision: return .frozen
+        case ("shop.patch", "draft"): return .renewed
+        default: return nil
+        }
+    }
     var trackingService: HouseholdService { service }
     var trackingShop: ShopperShop? { shop }
     var trackingAllowed: Bool { canReadFood && canManage }
@@ -1222,10 +1241,18 @@ extension HouseholdShopModel: SharedTrackingServiceOwner {
         do {
             let receipt = try await service.sendSharedTracking(operation, outbox: outbox)
             guard generation == token, scope == actor, pending == operation else { throw ClientError.cancelled }
+            confirmedTrackingOperationID = operation.id
             pending = nil; delivery = .confirmed(receipt); review = nil; acknowledged = false; editing = false
             cancelFoodEditor(); requiresRefresh = true
             do { try await refreshFacts(start: token); await onConfirmed() }
-            catch { if token == generation { notice = st("Confirmed. Refresh the shop to see its current revision.") } }
+            catch {
+                guard token == generation else { return }
+                switch error as? ClientError {
+                case .accessEnded, .sessionNeeded, .service(403, _, _, _), .service(404, _, _, _):
+                    clear(); await onAccessEnded()
+                default: notice = st("Confirmed. Refresh the shop to see its current revision.")
+                }
+            }
         } catch {
             guard token == generation, scope == actor else { throw ClientError.cancelled }
             let saved = try? await outbox.operations()
