@@ -4210,9 +4210,7 @@ import XCTest
             deny.tap()
         }
 
-        let typeItem = element("scan.typeItem")
-        XCTAssertTrue(typeItem.waitForExistence(timeout: 8))
-        tap(typeItem)
+        tap(element("scan.typeItem"))
         let editor = app.textViews["scan.sourceEditor"]
         let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
