@@ -120,8 +120,14 @@ struct PantryProductBatch {
 
     init(workspaceID: UUID) { self.workspaceID = workspaceID }
 
-    private func codeKey(_ code: CapturedBarcode) -> String {
-        code.canonicalGTIN ?? code.value
+    private enum CodeKey: Equatable {
+        case tradeItem(String)
+        case unrecognized(String)
+    }
+
+    private func codeKey(_ code: CapturedBarcode) -> CodeKey {
+        if let gtin = code.canonicalGTIN { return .tradeItem(gtin) }
+        return .unrecognized(code.value)
     }
 
     func candidate(matching code: CapturedBarcode) -> Candidate? {

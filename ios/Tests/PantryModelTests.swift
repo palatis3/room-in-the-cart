@@ -128,6 +128,17 @@ final class PantryModelTests: XCTestCase {
         XCTAssertEqual(unicode.name, "Café")
     }
 
+    func testNumericQRDoesNotConsumeTheRetailTradeItemWithTheSameDigits() throws {
+        var batch = PantryProductBatch(workspaceID: UUID())
+        let digits = "03017620422003"
+        let opaque = CapturedBarcode(symbology: "QR", value: digits)
+        XCTAssertTrue(try batch.addScan(opaque))
+        XCTAssertTrue(try batch.addManual(name: "Reviewed jar", code: digits))
+        XCTAssertFalse(try batch.addScan(opaque))
+        XCTAssertFalse(try batch.addScan(.init(symbology: "EAN13", value: "3017620422003")))
+        XCTAssertEqual(batch.candidates.count, 2)
+    }
+
     func testTwoLocalProductPhotosAndRepeatedBarcodeCommitOnlyReviewedPackagesOnce() async throws {
         let (directory, db) = try await database()
         defer { try? FileManager.default.removeItem(at: directory) }
