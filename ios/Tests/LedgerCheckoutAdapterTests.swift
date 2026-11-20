@@ -101,14 +101,15 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         XCTAssertEqual(review.details.map(\.sourceOccurrenceID), [dinners[1].occurrenceID, dinners[2].occurrenceID])
         XCTAssertEqual(shop.contributions(forLineID: lineID).first?.checkedWithoutAmount, true)
 
+        try shop.pickPart(lineID: lineID, amount: Rational(2), expectedRevision: shop.revisionID)
         var unknown = shop
         try unknown.updateContribution(contributionID: dinners[2].contributionIDs[0], quantity: nil, notes: "Amount unknown")
+        XCTAssertNil(try unknown.pickedQuantity(forLineID: lineID))
         XCTAssertThrowsError(try LedgerCheckoutAdapter.review(shop: unknown, workspaceRevision: 2, previous: nil)) { error in
             XCTAssertEqual(error as? LedgerCheckoutError, .missingQuantity)
         }
 
         // The shopper still has two items in hand after removing both measured dinners.
-        try shop.pickPart(lineID: lineID, amount: Rational(2), expectedRevision: shop.revisionID)
         try shop.removeMeal(occurrenceID: dinners[1].occurrenceID)
         try shop.removeMeal(occurrenceID: dinners[2].occurrenceID)
         XCTAssertEqual(shop.lines.filter { !$0.isTrashed }.map(\.id), [lineID])
@@ -880,6 +881,10 @@ extension LedgerCheckoutAdapterTests {
         XCTAssertEqual(matched.lines.first?.expectedCost, .exact(.init(minorUnits: 550)))
         XCTAssertEqual(matched.packSelections.count, 1)
         XCTAssertEqual(matched.needs.map(\.amount.amount), [try Rational(2)])
+        let retained = try XCTUnwrap(matched.packSelections.first)
+        let basketLine = try XCTUnwrap(matched.lines.first)
+        XCTAssertEqual(basketLine.quantity, try shop.pickedQuantity(forLineID: id))
+        XCTAssertTrue(retained.matchesAppliedPurchase(basketLine, shop: shop), "Retained evidence must recognize the recorded pick with its original wording")
 
         let mismatch = try review(shop, choosing: "pair")
         XCTAssertEqual(mismatch.lines.first?.quantity.amount, try Rational(3))
