@@ -42,38 +42,38 @@ final class ShoppingDisplayTimer: ObservableObject {
     }
 }
 
-struct InStoreDisplayPreference: ViewModifier {
-    let trip: UUID
-    let available: Bool
+struct InStoreDisplayToggle: View {
+    let owner: UUID
     @Environment(\.scenePhase) private var scene
     @Environment(\.shoppingListAuthorization) private var authorize
     @ObservedObject private var timer = ShoppingDisplayTimer.shared
-    @State private var owner = UUID()
+
+    var body: some View {
+        Toggle(isOn: Binding(
+            get: { timer.active.contains(owner) },
+            set: { enabled in
+                if enabled && scene == .active && authorize() {
+                    timer.begin(owner)
+                } else {
+                    timer.end(owner)
+                }
+            }
+        )) {
+            Label(shoppingText("Keep screen awake for 15 minutes"), systemImage: "sun.max")
+        }
+        .accessibilityIdentifier("inStoreKeepAwake")
+    }
+}
+
+struct InStoreDisplayPreference: ViewModifier {
+    let trip: UUID
+    let owner: UUID
+    let available: Bool
+    @Environment(\.scenePhase) private var scene
+    private let timer = ShoppingDisplayTimer.shared
 
     func body(content: Content) -> some View {
         content
-            .toolbar {
-                if available {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Menu {
-                            Toggle(shoppingText("Keep screen awake for 15 minutes"), isOn: Binding(
-                                get: { timer.active.contains(owner) },
-                                set: { value in
-                                    if value && scene == .active && authorize() {
-                                        timer.begin(owner)
-                                    } else {
-                                        timer.end(owner)
-                                    }
-                                }
-                            ))
-                            .accessibilityIdentifier("inStoreKeepAwake")
-                        } label: {
-                            Label(shoppingText("Display options"), systemImage: "sun.max")
-                        }
-                        .accessibilityIdentifier("inStoreDisplayOptions")
-                    }
-                }
-            }
             .onChange(of: scene) { _, newPhase in
                 if newPhase != .active { timer.end(owner) }
             }

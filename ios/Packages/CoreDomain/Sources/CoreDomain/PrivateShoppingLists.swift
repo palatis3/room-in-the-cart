@@ -9,6 +9,7 @@ public struct PickedLinePrice: Codable, Sendable, Equatable {
     let name: String
     let quantity: Quantity?
     let basisRevision: Int
+    public internal(set) var shelf: PickedShelfPrice? = nil
 
     func validate() throws {
         // Bounded well above a grocery line, so the subtotal of 10,000 lines also fits.
@@ -16,6 +17,11 @@ public struct PickedLinePrice: Codable, Sendable, Equatable {
         guard checkedAt.timeIntervalSinceReferenceDate.isFinite, basisRevision >= 0 else { throw LedgerError.invalid("pickedPrice") }
         try ledgerText(name, nonempty: true, maximum: 512)
         try quantity?.validate()
+        if let shelf {
+            guard try shelf.lineTotal() == total, weighted == (shelf.unit.dimension == .mass) else {
+                throw LedgerError.invalid("shelfPrice")
+            }
+        }
     }
 
     public var includedTotal: Money? { (!membership && !weighted) || conditionsConfirmed ? total : nil }
@@ -34,14 +40,14 @@ extension ShoppingLedger {
     }
 
     private func currentPrice(for line: ShoppingLine) -> PickedLinePrice? {
-        guard let price = line.pickedPrice, !line.isTrashed, !line.isHandled, price.checkedAt == line.checkedAt,
-              price.name == line.name, price.basisRevision == basisRevision,
-              price.quantity == (try? quantity(forLineID: line.id)) else { return nil }
-        return price
+        guard let price = line.pickedPrice, !line.isTrashed, !line.isHandled, price.checkedAt == line.inStorePickedAt,
+              price.name == line.name, price.basisRevision == basisRevision else { return nil }
+        let actual = line.tripPick?.amount ?? (try? quantity(forLineID: line.id))
+        return price.quantity == actual ? price : nil
     }
 
     public var pickedCartSubtotal: PickedCartSubtotal {
-        let picked = lines.filter { $0.isChecked && !$0.isTrashed && !$0.isHandled }
+        let picked = lines.filter { $0.inStorePickedAt != nil && !$0.isTrashed && !$0.isHandled }
         let amounts = picked.compactMap { currentPrice(for: $0)?.includedTotal }
         return PickedCartSubtotal(total: Money(minorUnits: amounts.reduce(0) { $0 + $1.minorUnits }),
                                   priced: amounts.count, picked: picked.count)
@@ -220,6 +226,7 @@ extension LedgerWorkspace {
               item.eligible(at: target.basis.branch),
               item.row.overlaps(in: target).isEmpty else { throw LedgerError.stalePreview }
         let lineID = try item.row.append(to: &target)
+        try target.setPreferredStores(item.stores, lineID: lineID, expectedRevision: target.revisionID)
         guard let source = target.contributions(forLineID: lineID).first else { throw LedgerError.stalePreview }
         shoppingLists.standing[index].transfer = .init(shopID: shopID, lineID: lineID, contributionID: source.id)
         shops[targetIndex] = target
@@ -227,7 +234,7 @@ extension LedgerWorkspace {
 
     public func canReturnStanding(_ item: StandingListItem, from target: ShoppingLedger) -> Bool {
         guard let transfer = item.transfer, transfer.shopID == target.id, let line = target.lines.first(where: { $0.id == transfer.lineID }),
-              !line.isChecked, !line.isHandled, line.stapleApproval == nil, line.name == item.row.name, line.notes == item.row.notes,
+              line.inStorePickedAt == nil, line.stopObservation == nil, !line.isHandled, line.stapleApproval == nil, line.name == item.row.name, line.notes == item.row.notes,
               !packSelections.contains(where: { $0.shopID == target.id && $0.lineID == transfer.lineID }),
               let source = target.contributions.first(where: { $0.id == transfer.contributionID }),
               source.lineID == line.id, source.quantity == item.row.quantity, source.notes == item.row.notes, source.exclusions == item.row.exclusions

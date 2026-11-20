@@ -115,7 +115,10 @@ struct PickupCheckoutMealSource: Codable, Equatable {
         }
         var expectedNeeds: [AllocationNeed] = [], expectedDetails: [PickupNeedDetail] = []
         for line in shop.lines where !line.isTrashed && !line.isHandled {
-            guard let quantity = try shop.quantity(forLineID: line.id) else { throw PickupMealRecoveryError.invalid }
+            guard let quantity = try shop.quantity(forLineID: line.id) else {
+                if !shop.belongsInCurrentBasket(line) { continue }
+                throw PickupMealRecoveryError.invalid
+            }
             let named = try LedgerCheckoutAdapter.namedReservations(shop: shop, lineID: line.id, unit: quantity.unit, bindings: bindings)
             expectedNeeds += named.needs; expectedDetails += named.details
         }

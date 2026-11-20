@@ -209,22 +209,6 @@
         }
       }
     },
-    "Display options": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Display options"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opciones de pantalla"
-          }
-        }
-      }
-    },
     "Edit %@": {
       "localizations": {
         "en": {

@@ -55,7 +55,9 @@ enum LedgerCheckoutAdapter {
                        packSelections: [LedgerPackSelection] = [], workspaceID: UUID? = nil, pickupWorkspaceID: UUID? = nil, bindings: [DinnerPortionBinding] = [],
                        canonicalEvidence: [UUID: LedgerCanonicalPackStockEvidence] = [:], pantryIsActive: Bool = false) throws -> LedgerCheckoutReview {
         try shop.validate()
-        let activeLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
+        let sourceNeedLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
+        let activeLines = sourceNeedLines.filter(shop.belongsInCurrentBasket)
+        let activeByID = Dictionary(uniqueKeysWithValues: activeLines.map { ($0.id, $0) })
         // Trashed and handled rows both leave the editable list. A saved basket
         // still needs a review that can remove its final purchase.
         let canReviewRemovals = previous?.id == shop.id && previous?.basket != nil && !shop.lines.isEmpty
@@ -64,7 +66,9 @@ enum LedgerCheckoutAdapter {
         var selectedPacks: [UUID: LedgerPackSelection] = [:]
         for selection in packSelections where selection.shopID == shop.id {
             try selection.validateReference(in: shop)
-            guard let workspaceID else { continue }
+            // A pack preview for the full request cannot describe a smaller physical pick.
+            guard let line = activeByID[selection.lineID],
+                  line.tripPick == nil || line.isChecked, let workspaceID else { continue }
             if pantryIsActive, selection.isGrossOnlyPurchase {
                 if try selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: bindings) {
                     selectedPacks[selection.lineID] = selection
@@ -81,7 +85,9 @@ enum LedgerCheckoutAdapter {
         let itemPackages = shop.itemPackages
         let sourceLines = try activeLines.compactMap { line -> BasketLine? in
             if selectedPacks[line.id]?.isNoPurchase == true { return nil }
-            guard let quantity = try shop.quantity(forLineID: line.id) else { throw LedgerCheckoutError.missingQuantity }
+            guard let requested = try shop.quantity(forLineID: line.id) else { throw LedgerCheckoutError.missingQuantity }
+            let partial = line.isChecked ? nil : line.tripPick?.amount
+            let quantity = partial ?? requested
             let exclusions = itemExclusions[line.id] ?? []
             if let selection = selectedPacks[line.id], let purchased = selection.purchasedQuantity, let price = selection.selectedResult.totalCost {
                 let offer = selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA : selection.request.offerB
@@ -90,7 +96,15 @@ enum LedgerCheckoutAdapter {
                 return BasketLine(id: line.id, name: line.name, quantity: purchased, expectedCost: .exact(price),
                                   itemExclusions: exclusions, packages: packs)
             }
-            let packs = itemPackages[line.id] ?? []
+            var packs = itemPackages[line.id] ?? []
+            if let partial {
+                // Only pass an exact number of identical observed-size packs.
+                if let first = packs.first, packs.allSatisfy({ $0.unit == first.unit && $0.amountPerPack == first.amountPerPack }),
+                   let amount = try partial.converted(to: first.unit),
+                   let count = try? amount.divided(by: first.amountPerPack), count.denominator == 1 {
+                    packs = [BasketPackage(count: count.numerator, amountPerPack: first.amountPerPack, unit: first.unit)]
+                } else { packs = [] }
+            }
             let old = previous?.basket?.current.lines.first {
                 $0.id == line.id && $0.name == line.name && $0.quantity == quantity && ($0.itemExclusions ?? []) == exclusions && ($0.packages ?? []) == packs
             }
@@ -99,8 +113,11 @@ enum LedgerCheckoutAdapter {
                               itemExclusions: exclusions, packages: packs)
         }
         var needs: [AllocationNeed] = [], details: [PickupNeedDetail] = []
-        for line in activeLines {
-            guard let sourceQuantity = try shop.quantity(forLineID: line.id) else { throw LedgerCheckoutError.missingQuantity }
+        for line in sourceNeedLines {
+            guard let sourceQuantity = try shop.quantity(forLineID: line.id) else {
+                if activeByID[line.id] == nil { continue }
+                throw LedgerCheckoutError.missingQuantity
+            }
             let sourceAmount = sourceQuantity.amount
             let named = try namedReservations(shop: shop, lineID: line.id, unit: sourceQuantity.unit, bindings: bindings)
             let namedAmount = named.amount
@@ -136,7 +153,7 @@ enum LedgerCheckoutAdapter {
             }
         }
         let lines = sourceLines.filter { !deferredLineIDs.contains($0.id) }
-        let plannedNeeds = needs.filter { !deferredLineIDs.contains($0.orderLineID) }
+        let plannedNeeds = needs.filter { activeByID[$0.orderLineID] != nil && !deferredLineIDs.contains($0.orderLineID) }
         let preview = shop.basis.retailerPreview
         guard let observedAt = preview?.capturedAt ?? shop.revisions.last?.createdAt else { throw LedgerCheckoutError.staleSource }
         let mode: ShoppingMode
