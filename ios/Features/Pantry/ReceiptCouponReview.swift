@@ -165,6 +165,7 @@ private struct ReceiptCouponList: View {
                 }
             }
         }
+        .workingSurface()
         .navigationTitle(shelfText("Pinned coupon terms"))
         .task { await load() }
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
