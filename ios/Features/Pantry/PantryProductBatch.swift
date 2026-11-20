@@ -1,6 +1,7 @@
 import CoreDomain
 import CryptoKit
 import Foundation
+import LocalStore
 
 enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode }
 
@@ -16,6 +17,14 @@ struct PantryProductBatch {
         var unit: UnitOfMeasure
         var packages = ""
         var usable = ""
+        var requiresExplicitUsable = false
+        func usableQuantity() throws -> Quantity {
+            let literal = usable.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let total, !requiresExplicitUsable || !literal.isEmpty,
+                  let quantity = try ComparisonModel.quantity(literal.isEmpty ? total.description : literal, unit),
+                  quantity.amount >= .zero, quantity.amount <= total else { throw ProductBatchError.invalid }
+            return quantity
+        }
         var location = InventoryLocation.cupboard
         enum StockAction: Equatable {
             case separate
@@ -26,7 +35,30 @@ struct PantryProductBatch {
             guard case .link(let delivery) = stockAction else { return nil }
             return delivery
         }
+        var existingReceipt: ReceiptAcquisition?
+        var receiptLinkSaved = false
         var included = true
+        mutating func selectExistingReceipt(_ source: ReceiptAcquisition) {
+            existingReceipt = source
+            included = false
+            stockAction = nil
+            receiptLinkSaved = false
+        }
+        var enteredByHand = false
+        var retailer = ""
+        var remembered: ConfirmedPantryPack?
+        var confirmedPackID: UUID? {
+            guard let remembered, name == remembered.name,
+                  let size = try? ComparisonModel.quantity(perPack, unit), size.amount == remembered.size.amount,
+                  size.unit == remembered.size.unit else { return nil }
+            return remembered.id
+        }
+        mutating func use(_ confirmed: ConfirmedPantryPack) {
+            name = confirmed.name
+            perPack = confirmed.size.amount.description
+            unit = confirmed.size.unit
+            remembered = confirmed
+        }
         var catalog: ProductCatalogProposal?
         var appliedCatalog: ProductCatalogProposal?
 
@@ -56,9 +88,9 @@ struct PantryProductBatch {
         }
 
         func evidenceLine(unitLabel: String) -> String {
-            var parts = [barcode?.value, original.isEmpty ? nil : original,
+            var parts = [barcode?.displayValue, original.isEmpty ? nil : original,
                          "\(packages) × \(perPack) \(unitLabel)"].compactMap { $0 }
-            if let proposal = appliedCatalog { parts.append(proposal.attribution) }
+            if let source = appliedCatalog?.attribution ?? (confirmedPackID != nil ? remembered?.attribution : nil) { parts.append(source) }
             return parts.joined(separator: " · ")
         }
 
@@ -89,7 +121,7 @@ struct PantryProductBatch {
     init(workspaceID: UUID) { self.workspaceID = workspaceID }
 
     private func codeKey(_ code: CapturedBarcode) -> String {
-        code.validGTIN ? String(repeating: "0", count: 14 - code.value.count) + code.value : code.value
+        code.canonicalGTIN ?? code.value
     }
 
     func candidate(matching code: CapturedBarcode) -> Candidate? {
@@ -99,16 +131,21 @@ struct PantryProductBatch {
 
     mutating func correctManualBarcode(_ value: String, for id: UUID) throws {
         guard let index = candidates.firstIndex(where: { $0.id == id }),
-              candidates[index].photoID == nil, candidates[index].barcode?.symbology == "manual" else {
+              !candidates[index].receiptLinkSaved, candidates[index].enteredByHand, let original = candidates[index].barcode else {
             throw ProductBatchError.invalid
         }
-        let corrected = CapturedBarcode(symbology: "manual", value: value.trimmingCharacters(in: .whitespacesAndNewlines))
+        let corrected = CapturedBarcode(symbology: original.symbology, value: value.trimmingCharacters(in: .whitespacesAndNewlines))
         try corrected.validate()
         if let other = candidate(matching: corrected), other.id != id { throw ProductBatchError.duplicateBarcode }
         guard candidates[index].barcode != corrected else { return }
 
         var row = candidates[index]
         row.barcode = corrected
+        if let remembered = row.remembered {
+            if row.name == remembered.name { row.name = "" }
+            if row.unit == remembered.size.unit, row.perPack == remembered.size.amount.description { row.perPack = "" }
+        }
+        row.remembered = nil
         if let proposal = row.appliedCatalog {
             if row.name == proposal.name { row.name = "" }
             if let quantity = proposal.quantity, let pack = Candidate.pack(quantity), row.perPack == pack.0, row.unit == pack.1 {
@@ -121,13 +158,15 @@ struct PantryProductBatch {
         candidates[index] = row
     }
 
-    mutating func addManual(name: String, code: String?) throws -> Bool {
+    mutating func addManual(name: String, code: String?, symbology: String = "manual") throws -> Bool {
         let text = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let raw = code?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let reference = raw.isEmpty ? nil : CapturedBarcode(symbology: "manual", value: raw)
+        let reference = raw.isEmpty ? nil : CapturedBarcode(symbology: symbology, value: raw)
         try reference?.validate()
         guard text.utf8.count <= 512, !text.contains("\0"), !text.isEmpty || reference != nil else { throw ProductBatchError.invalid }
-        return try add(code: reference, photo: nil, original: text)
+        let added = try add(code: reference, photo: nil, original: text)
+        if added { candidates[candidates.count - 1].enteredByHand = true }
+        return added
     }
 
     mutating func addPhoto(_ source: ScannedSource) throws -> Int {
@@ -170,19 +209,44 @@ struct PantryProductBatch {
         return true
     }
 
+    mutating func addScan(_ code: CapturedBarcode) throws -> Bool {
+        try code.validate()
+        return try add(code: code, photo: nil, original: "")
+    }
+
+    mutating func separate(_ id: UUID, scanned: CapturedBarcode? = nil) throws {
+        guard let original = candidates.first(where: { $0.id == id }), nextOrdinal < 200, candidates.count < 12 else { throw ProductBatchError.full }
+        if let scanned { try scanned.validate(); guard original.barcode.map(codeKey) == codeKey(scanned) else { throw ProductBatchError.invalid } }
+        // A new physical batch may have another stamp or lot even when its trade item is identical.
+        let identityOnly = original.barcode?.gs1.map { CapturedBarcode(symbology: "manual", value: $0.gtin) } ?? original.barcode
+        var copy = Candidate(ordinal: nextOrdinal, barcode: scanned ?? identityOnly, photoID: original.photoID,
+                             original: "", name: original.name, perPack: original.perPack, unit: original.unit)
+        copy.retailer = original.retailer
+        copy.remembered = original.remembered
+        copy.appliedCatalog = original.appliedCatalog
+        copy.location = original.location
+        // The second physical package needs its own count, dates and stock decision.
+        if let i = candidates.firstIndex(where: { $0.id == id }), let count = Int(candidates[i].packages), count > 1 {
+            let hasPartial = !original.usable.isEmpty && (try? original.usableQuantity())?.amount != original.total
+            copy.requiresExplicitUsable = hasPartial || original.requiresExplicitUsable
+            candidates[i].requiresExplicitUsable = copy.requiresExplicitUsable
+            candidates[i].packages = String(count - 1)
+            candidates[i].usable = ""
+            copy.packages = "1"
+        }
+        candidates.append(copy); nextOrdinal += 1
+    }
+
     mutating func revokePhotos() { candidates.removeAll { $0.photoID != nil } }
 
     func draft(merchant: String, purchaseDate: Date, confirmed: Bool, deliveries: [PantryReceiptDelivery] = []) throws -> ReceiptImportDraft {
         let rows = try candidates.filter(\.included).map { candidate -> ReceiptImportDraft.Line in
-            guard let total = candidate.total, !candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            guard candidate.existingReceipt == nil, let total = candidate.total, !candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw ProductBatchError.invalid
             }
-            let amountUsable = candidate.usable.trimmingCharacters(in: .whitespacesAndNewlines)
-            let usable = amountUsable.isEmpty ? total.description : amountUsable
-            guard let quantity = try ComparisonModel.quantity(usable, candidate.unit), quantity.amount >= .zero,
-                  quantity.amount <= total else { throw ProductBatchError.invalid }
+            let usable = try candidate.usableQuantity().amount.description
             let treatment = try candidate.treatment(deliveries: deliveries, workspaceID: workspaceID)
-            return .init(id: candidate.id, ordinal: candidate.ordinal, original: candidate.evidenceLine(unitLabel: candidate.unit.rawValue), name: candidate.name,
+            return .init(id: candidate.id, ordinal: candidate.ordinal, original: candidate.evidenceLine(unitLabel: candidate.unit.rawValue), confirmedPackID: candidate.confirmedPackID, packageCode: candidate.barcode, name: candidate.name,
                          treatment: treatment, received: total.description, usable: usable, unit: candidate.unit, location: candidate.location)
         }
         guard confirmed, !rows.isEmpty else { throw ProductBatchError.invalid }
@@ -233,5 +297,31 @@ extension PantryModel {
     func saveProducts(_ batch: PantryProductBatch, review: PantryReceiptReview) async throws {
         try verifyProductActions(batch)
         try await saveReceipt(review)
+    }
+}
+
+extension PantryRepository {
+    /// A counted package at home has a physical source, with no merchant, price or receipt.
+    func reviewHomePacks(_ intake: PantryProductBatch, basis: InventoryState, at time: Date) async throws -> PantryReceiptReview {
+        let before = try await loadForEditing(at: time)
+        let rows = intake.candidates.filter(\.included)
+        guard basis == before.state, originID == intake.workspaceID, !rows.isEmpty else { throw PantryReceiptError.stale }
+        var writes: [InventoryWrite] = []
+        for row in rows {
+            guard row.existingReceipt == nil, row.linkedDelivery == nil else { throw ProductBatchError.invalid }
+            let amount = try row.usableQuantity()
+            let name = row.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let seed = InventoryLotSeed(foodID: row.confirmedPackID ?? row.id, name: name,
+                source: .manual(originID: originID, sourceID: row.id), location: row.location, unit: row.unit, count: .exact(amount), observedAt: time, packageCode: row.barcode, intakeOrdinal: row.ordinal)
+            let command = InventoryCommand(id: ReceiptAcquisition.identity(["home-pack", row.id.uuidString]), originID: originID,
+                lotID: row.id, eventID: ReceiptAcquisition.identity(["event", row.id.uuidString]), expectedRevision: nil,
+                occurredAt: time, change: .create(seed, observationID: ReceiptAcquisition.identity(["count", row.id.uuidString])))
+            writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: time))
+        }
+        try validateCapacity(of: writes, replacing: before)
+        try requireAccess()
+        let batch = InventoryBatch(workspaceID: originID, operationID: intake.id, expectedRevision: basis.revision,
+            request: Data(SHA256.hash(data: try PantryAcquisitionCodec.data(writes))), writes: writes)
+        return .init(id: intake.id, workspaceID: originID, revision: basis.revision, facts: [], existing: [], batch: batch)
     }
 }
