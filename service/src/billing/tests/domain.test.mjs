@@ -56,7 +56,7 @@ test('the two Apple notification URLs pin signed TEST delivery to the designated
   const gateway = environment => ({
     async verifyNotification(payload) {
       calls.push([environment, payload]);
-      return { notificationID:base.appAccountToken, transaction:null };
+      return { kind:'TEST', notificationID:base.appAccountToken };
     },
   });
   const billing = new BillingService(gateway('Production'), { householdIDs:new Set([base.appAccountToken]), sandbox:gateway('Sandbox') });
@@ -71,4 +71,28 @@ test('the two Apple notification URLs pin signed TEST delivery to the designated
     assert.deepEqual(await result.json(), {accepted:true});
   }
   assert.deepEqual(calls, [['Production',signedPayload],['Sandbox',signedPayload]]);
+});
+
+test('a consent-only service receives both Apple routes with purchases disabled', async t => {
+  const writes = [];
+  const repository = {pool:{async query(statement, values) {
+    assert.match(statement, /INSERT INTO ritc\.apple_consent_notification/);
+    writes.push(values);
+  }}};
+  const gateway = environment => ({async verifyNotification(payload) {
+    assert.equal(payload, 'consent-from-the-fixture');
+    return {kind:'RESCIND_CONSENT', notificationID:base.appAccountToken, environment, signedAt:now};
+  }});
+  const billing = new BillingService(null, undefined, {primary:gateway('Production'),sandbox:gateway('Sandbox')});
+  const server = createHTTPServer({repository, billing});
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  for (const path of ['/v1/apple/notifications','/v1/apple/notifications/sandbox']) {
+    const response = await fetch('http://127.0.0.1:'+server.address().port+path, {method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({signedPayload:'consent-from-the-fixture'})});
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {accepted:true});
+  }
+  assert.deepEqual(writes, ['Production','Sandbox'].map(env=>[env,base.appAccountToken,new Date(now)]));
+  await assert.rejects(()=>billing.prepare({member:{kind:'adult'}, householdId:'test-household'}),error=>error.code==='billing_unavailable');
 });

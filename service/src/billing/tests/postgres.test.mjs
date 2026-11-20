@@ -17,7 +17,7 @@ test('PostgreSQL durable billing / RLS / named seats contract', {skip:!runtimeUR
     // This test substitutes only Apple's remote authority. Separate tests exercise actual SDK signature rejection.
     async verifyTransaction(){return {originalTransactionID:current.originalTransactionID,transactionID:original+'1',appAccountToken:current.appAccountToken};},
     async current(){return structuredClone(current);},
-    async verifyNotification(){return {notificationID:'00000000-0000-4000-8000-000000000001',transaction:await this.verifyTransaction()};},
+    async verifyNotification(){return {kind:'subscription',notificationID:'00000000-0000-4000-8000-000000000001',transaction:await this.verifyTransaction()};},
   };
   const service=new BillingService(fakeApple);
   const run=async(actor,fn,household=hh,date=now)=>{
@@ -49,6 +49,27 @@ test('PostgreSQL durable billing / RLS / named seats contract', {skip:!runtimeUR
       const receipts=await admin.query('SELECT * FROM ritc.billing_delivery WHERE household_id=$1',[hh]);
       assert.equal(receipts.rowCount,1);
       await assert.rejects(()=>admin.query("UPDATE ritc.billing_delivery SET accepted_at=now() WHERE household_id=$1",[hh]),error=>error.code==='23514');
+    });
+    await t.test('concurrent signed consent deliveries commit one receipt per environment without changing household access', async () => {
+      const id = randomUUID(), signedAt = Date.now();
+      const receipt = environment => ({verifyNotification:async () => ({kind:'RESCIND_CONSENT',notificationID:id,environment,signedAt})});
+      const consent = new BillingService(null, undefined, {primary:receipt('Production'),sandbox:receipt('Sandbox')});
+      const state = async () => (await admin.query(`SELECT household_id,member_id,state FROM ritc.member
+        WHERE household_id=ANY($1::uuid[]) ORDER BY household_id,member_id`, [[hh, foreignHH]])).rows;
+      const before = await state(), paid = await run(purchaser,ctx=>service.snapshot(ctx));
+      try {
+        const replies = await Promise.all(['primary','primary','reviewSandbox'].map(route => consent.notification(runtime, 'verified', route)));
+        assert.deepEqual(replies, Array(3).fill({accepted:true}));
+        const rows = (await admin.query('SELECT environment,signed_at FROM ritc.apple_consent_notification WHERE notification_id=$1 ORDER BY environment',[id])).rows;
+        assert.deepEqual(rows.map(row=>[row.environment,row.signed_at.getTime()]), [['Production',signedAt],['Sandbox',signedAt]]);
+        assert.deepEqual(await state(), before);
+        assert.deepEqual(await run(purchaser,ctx=>service.snapshot(ctx)), paid);
+        await assert.rejects(()=>runtime.query('SELECT * FROM ritc.apple_consent_notification'), error=>error.code==='42501');
+        await assert.rejects(()=>runtime.query('DELETE FROM ritc.apple_consent_notification'), error=>error.code==='42501');
+        await assert.rejects(()=>consent.notification({query:async()=>{throw Error('uncommitted receipt');}},'verified'),/uncommitted receipt/);
+      } finally {
+        await admin.query('DELETE FROM ritc.apple_consent_notification WHERE notification_id=$1',[id]);
+      }
     });
     await t.test('wrong purchaser / household cannot restore or enumerate receipts',async()=>{
       await assert.rejects(()=>run(second,ctx=>service.prepare(ctx)),error=>error.code==='purchase_context_not_purchaser');
@@ -132,7 +153,7 @@ test('PostgreSQL durable billing / RLS / named seats contract', {skip:!runtimeUR
             return { originalTransactionID: original, transactionID: original+'3', appAccountToken };
           },
           async verifyNotification(signed) {
-            return { notificationID: randomUUID(), transaction: await this.verifyTransaction(signed) };
+            return { kind:'subscription', notificationID: randomUUID(), transaction: await this.verifyTransaction(signed) };
           },
           async current(id) {
             assert.equal(id, original);

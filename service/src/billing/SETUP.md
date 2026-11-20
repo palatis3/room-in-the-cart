@@ -23,9 +23,19 @@ In App Store Connect, open the Release app's **App Information → App Store Ser
 | App Store Connect field | Path on the Release service |
 | --- | --- |
 | Production Server URL | `/v1/apple/notifications` |
-| Sandbox Server URL | `/v1/apple/notifications/sandbox` with at least one configured review household |
+| Sandbox Server URL | `/v1/apple/notifications/sandbox` for consent and TEST. Sandbox purchases also need a configured review household |
 
-Each endpoint verifies the outer Apple signature and the signed transaction against its configured environment. The transaction's signed account token must map to a purchaser in a household assigned to that endpoint. The service verifies Apple's current subscription status before committing an entitlement. Signed TEST notifications acknowledge endpoint connectivity and create no entitlement.
+For purchases, each endpoint verifies the outer Apple signature and the signed transaction against its configured environment. The transaction's signed account token must map to a purchaser in a household assigned to that endpoint. The service verifies Apple's current subscription status before committing an entitlement. Signed TEST notifications acknowledge endpoint connectivity and create no entitlement.
+
+## Consent revocation
+
+The same V2 URLs can receive consent revocations before enabling purchases. Configure `APPLE_BUNDLE_ID`, `APPLE_ROOT_CA_PATHS`, `APPLE_ENVIRONMENT` and, for Production, `APPLE_APP_ID`. Leave all four purchase settings and the review household list absent for a verification-only deployment. A Production deployment then accepts a signed production notification at the primary URL and a signed sandbox notification at the sandbox URL. A standalone Sandbox deployment accepts sandbox notifications at the primary URL.
+
+For `RESCIND_CONSENT`, the service verifies Apple’s signed envelope and checks its `appData` bundle and environment, plus the app Apple ID in production. When Apple supplies `appData.signedAppTransactionInfo`, the service also verifies that nested app transaction. Apply migration 072 before enabling delivery. A successful reply follows a durable insert of the environment, notification UUID and Apple’s signature timestamp. Repeated delivery has one receipt per environment. The service discards the signed payload and download identifier. [Apple’s appData schema](https://developer.apple.com/documentation/appstoreservernotifications/appdata)
+
+Apple blocks the revoked child’s app from launching. The optional app transaction identifies the Apple Account’s download for this app. Room in the Cart guardian enrollment uses a separate authenticated identity, and its subscription token belongs to the purchasing adult. This notification establishes no household, child login, or website session to revoke. Guardian consent withdrawal and account erasure continue to use their authenticated flows. A policy requiring cross-platform suspension would need a separately verified binding, a defined scope for shared devices, and a way to handle renewed consent before enabling it. [Apple’s age assurance Q&A](https://developer.apple.com/support/age-assurance/) · [App transaction identity](https://developer.apple.com/documentation/storekit/apptransaction/apptransactionid)
+
+On a signed sandbox device, use **Sandbox Apple Account → Manage → Revoke App Consent**, enter the bundle ID and confirm delivery to the configured sandbox URL. Compare the stored notification UUID and environment with Apple’s delivery record and verify the controlled household and purchase seats keep their prior state. This live delivery is a release-owner check. [Apple’s sandbox instructions](https://developer.apple.com/documentation/storekit/testing-age-assurance-in-sandbox)
 
 ## Candidate checks
 
