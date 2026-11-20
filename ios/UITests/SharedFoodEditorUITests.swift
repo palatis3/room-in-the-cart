@@ -265,7 +265,7 @@ import XCTest
             XCTAssertEqual(control.value as? String, on ? "0" : "1", id)
             let left = control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
             if on {
-                left.tap()
+                control.tap()
             } else {
                 // Move the on-position thumb directly inside the native control.
                 control.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
