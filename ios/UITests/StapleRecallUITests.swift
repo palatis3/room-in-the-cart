@@ -128,13 +128,128 @@ import XCTest
         waitForSubtotal("$0.00 for 0 of 0 picked items")
     }
 
+    func testMeasuredApplesAndLeavingBreadForNextTime() {
+        continueAfterFailure = false
+        launch(fresh: true, shelfBudget: true)
+        let store = app.buttons["ledgerInStore"]
+        show(store)
+        store.tap()
+
+        let checkApples = app.buttons["Check Apples"]
+        XCTAssertTrue(checkApples.waitForExistence(timeout: 8))
+        checkApples.tap()
+        app.buttons["inStoreLastPrice"].tap()
+        let basis = app.buttons["inStorePriceBasis"]
+        XCTAssertTrue(basis.waitForExistence(timeout: 8))
+        basis.tap()
+        app.buttons["By weight"].tap()
+        enter("2.75", in: app.textFields["inStoreAmount"])
+        app.buttons["inStoreAmountDone"].tap()
+        enter("1.5", in: app.textFields["inStoreMeasuredAmount"])
+        app.buttons["inStoreAmountDone"].tap()
+        show(app.buttons["Save price"])
+        app.buttons["Save price"].tap()
+        waitForBudgetSubtotal("$4.13 for 1 of 1")
+
+        app.buttons["Check Coffee"].tap()
+        waitForBudgetSubtotal("$4.13 for 1 of 2")
+        app.buttons["Check Bread"].tap()
+        waitForBudgetSubtotal("$4.13 for 1 of 3")
+        app.buttons["inStoreLastPrice"].tap()
+        enter("4.50", in: app.textFields["inStoreAmount"])
+        app.buttons["inStoreAmountDone"].tap()
+        show(app.buttons["Save price"])
+        app.buttons["Save price"].tap()
+        waitForBudgetSubtotal("$8.63 for 2 of 3")
+
+        let inspect = app.buttons["Inspect Bread"]
+        show(inspect)
+        inspect.tap()
+        let budget = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreBudget-")).firstMatch
+        show(budget)
+        budget.tap()
+        let flexible = app.switches["Flexible pick"]
+        XCTAssertTrue(flexible.waitForExistence(timeout: 8))
+        flexible.tap()
+        let preview = app.buttons["Preview putting it back"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 8))
+        show(preview)
+        preview.tap()
+        XCTAssertTrue(app.staticTexts["Known item subtotal · $8.63 → $4.13"].exists)
+        let leave = app.buttons["inStoreLeaveForNextTime"]
+        show(leave)
+        leave.tap()
+        XCTAssertTrue(app.navigationBars["Item details"].waitForExistence(timeout: 8))
+        app.navigationBars["Item details"].buttons["Done"].tap()
+        waitForBudgetSubtotal("$4.13 for 1 of 2")
+    }
+
+    func testPartialPickUnavailableHandoffAndSecondStoreUndoAfterRestart() throws {
+        continueAfterFailure = false
+        launch(fresh: true, shelfBudget: true)
+        tapTrip(app.buttons["ledgerInStore"])
+        let apple = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "tripDetails-", "Apples")).firstMatch
+        XCTAssertTrue(apple.waitForExistence(timeout: 8))
+        let id = String(apple.identifier.dropFirst("tripDetails-".count))
+        tapTrip(apple)
+        tapTrip(app.buttons["tripPickPart"])
+        let amount = app.textFields["tripPartialAmount"]
+        amount.tap(); amount.typeText("1")
+        if app.buttons["tripPartKeyboardDone"].isHittable { app.buttons["tripPartKeyboardDone"].tap() }
+        tapTrip(app.buttons["tripSavePart"])
+        tapTrip(apple)
+        tapTrip(app.buttons["tripUnavailable"])
+        XCTAssertTrue(app.staticTexts["Couldn’t find it at this stop"].waitForExistence(timeout: 10))
+        tapTrip(app.buttons["tripAddFind"])
+        let field = app.textFields["tripFindName"]
+        field.tap(); field.typeText("Lime")
+        if app.buttons["tripFindKeyboardDone"].isHittable { app.buttons["tripFindKeyboardDone"].tap() }
+        tapTrip(app.buttons["Add to picked items"])
+        tapTrip(app.buttons["inStoreTripOptions"])
+        tapTrip(app.buttons["Send selected items"])
+        tapTrip(app.switches.matching(NSPredicate(format: "label CONTAINS %@", "Apples")).firstMatch)
+        tapTrip(app.buttons["Preview message"])
+        let preview = app.staticTexts["tripShareBody"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 6))
+        XCTAssertTrue(preview.label.contains("Apples") && preview.label.contains("3"))
+        XCTAssertFalse(preview.label.contains("Coffee") || preview.label.contains("Lime"))
+        app.terminate()
+        launch(fresh: false, shelfBudget: true)
+        tapTrip(app.buttons["ledgerInStore"])
+        tapTrip(app.buttons["tripNextStore"])
+        let store = app.textFields["Store name"]
+        store.tap(); store.typeText("East market")
+        if app.buttons["tripStoreKeyboardDone"].isHittable { app.buttons["tripStoreKeyboardDone"].tap() }
+        tapTrip(app.buttons["Start this stop"])
+        tapTrip(app.buttons["inStoreCheck-" + id])
+        tapTrip(app.buttons["inStoreUndo"])
+        XCTAssertTrue(apple.waitForExistence(timeout: 8))
+        XCTAssertTrue(apple.label.contains("3"))
+    }
+
+    private func tapTrip(_ element: XCUIElement) {
+        _ = element.waitForExistence(timeout: 6)
+        if element.exists, !element.isHittable, element.frame.minY < app.frame.minY + 110 {
+            for _ in 0..<5 where !element.isHittable { app.swipeDown() }
+        }
+        show(element)
+        element.tap()
+    }
+
+    private func waitForBudgetSubtotal(_ text: String) {
+        let expected = NSPredicate(format: "label CONTAINS %@", text)
+        let result = XCTNSPredicateExpectation(predicate: expected, object: app.staticTexts["inStoreSubtotal"])
+        XCTAssertEqual(XCTWaiter.wait(for: [result], timeout: 8), .completed)
+    }
+
     private func enter(_ value: String, in field: XCUIElement) {
         field.tap(); field.typeText(value)
         enteredFields += 1
     }
 
-    private func launch(fresh: Bool) {
+    private func launch(fresh: Bool, shelfBudget: Bool = false) {
         app.launchArguments = ["--ui-testing", "--staple-recall-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        if shelfBudget { app.launchArguments.append("--shelf-budget-fixture") }
         if fresh { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
         XCTAssertTrue(app.buttons["ledgerListOptions"].waitForExistence(timeout: 25))
