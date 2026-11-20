@@ -8,7 +8,7 @@ is one checkpoint, not release authorization. Updated November 20, 2026.
 
 ## November 20 submission status
 
-Venture House Group LLC is the Apple Developer team (`SP7Z9RNC76`). Apple issued distribution profiles for the app (`dev.roominthecart.app`), widget (`.widget`) and Share extension (`.share`). The app has both App Groups, and each extension has its own. Verify the signed archive and exported IPA using the [distribution configuration](../config/README.md).
+Venture House Group LLC is the Apple Developer team (`SP7Z9RNC76`). Apple issued distribution profiles for the app (`dev.roominthecart.app`), widget (`.widget`) and Share extension (`.share`). The app has both App Groups, and each extension has its own. Build 0.1.0 (1) passed distribution verification in the signed archive and the exported IPA, including the signed App Groups and all three crash-symbol UUIDs. The production metadata gate still reports missing fields. [Signed IPA receipt](evidence/native/app-store-signing-20261120/verification.json) · [Distribution configuration](../config/README.md)
 
 The [whole-app review](APP-REVIEW-COVERAGE.md) records evidence and open items for all five Apple guideline families. The [US storefront plan](APP-STORE-PAGE-PLAN.md) covers the English and Spanish default listing and the proposed budget and pantry search pages. The bilingual website overview can run locally at `/about`. Publication and App Review submission require a separate owner decision.
 

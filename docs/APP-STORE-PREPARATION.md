@@ -193,7 +193,7 @@ The November 18 source inspection found no native Declared Age Range check or se
 
 ### SDK and deployment target
 
-For a November 2026 upload, Apple requires Xcode 26 or later, the iOS 26 SDK or later, and an iOS 13 or later deployment target. This checkout targets iOS 17.0. The local toolchain reports Xcode 27.1 and the iOS 27.1 SDK. Verify those values on the signed archive. Starting April 2027 Apple requires the iOS 27 SDK or later and a deployment target of iOS 15 or later. [Current upload requirements](https://developer.apple.com/news/upcoming-requirements/) · [Announced April 2027 requirements](https://developer.apple.com/app-store/submitting/)
+For a November 2026 upload, Apple requires Xcode 26 or later, the iOS 26 SDK or later, and an iOS 13 or later deployment target. This checkout targets iOS 17.0. The local toolchain reports Xcode 27.1 and the iOS 27.1 SDK. The November 20 distribution-signed archive verified Xcode build 27A9275, the iOS 27.1 SDK and the iOS 17.0 deployment target. [Archive and IPA verification](evidence/native/app-store-signing-20261120/verification.json) Starting April 2027 Apple requires the iOS 27 SDK or later and a deployment target of iOS 15 or later. [Current upload requirements](https://developer.apple.com/news/upcoming-requirements/) · [Announced April 2027 requirements](https://developer.apple.com/app-store/submitting/)
 
 ## Deferred Apple setup sequence
 
