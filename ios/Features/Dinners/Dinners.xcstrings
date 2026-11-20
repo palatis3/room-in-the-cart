@@ -239,23 +239,6 @@
         }
       }
     },
-    "Plan tonight in %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plan tonight in %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Planificar la cena de hoy en %@"
-          }
-        }
-      }
-    },
     "Select the ingredients you need to buy.": {
       "extractionState": "manual",
       "localizations": {
@@ -290,57 +273,6 @@
         }
       }
     },
-    "Back to dinner options": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back to dinner options"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Volver a las opciones de la cena"
-          }
-        }
-      }
-    },
-    "Plan the whole dinner for tonight": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plan the whole dinner for tonight"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Planificar toda la cena para esta noche"
-          }
-        }
-      }
-    },
-    "Review the dinner and all its ingredient needs.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Review the dinner and all its ingredient needs."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revisa la cena y todos los ingredientes que necesita."
-          }
-        }
-      }
-    },
     "Shop for ingredients only": {
       "extractionState": "manual",
       "localizations": {
@@ -354,23 +286,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comprar solo algunos ingredientes"
-          }
-        }
-      }
-    },
-    "Choose what to buy without scheduling the dinner.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose what to buy without scheduling the dinner."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elige qué comprar sin programar la cena."
           }
         }
       }
@@ -12549,6 +12464,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Detalles de las porciones"
+          }
+        }
+      }
+    },
+    "Groceries for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groceries for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes para %@"
+          }
+        }
+      }
+    },
+    "Plan for tonight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for tonight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planificar para esta noche"
+          }
+        }
+      }
+    },
+    "Review dinner again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review dinner again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a revisar la cena"
           }
         }
       }

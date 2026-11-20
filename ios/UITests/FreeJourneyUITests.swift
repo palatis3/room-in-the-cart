@@ -1765,7 +1765,7 @@ import XCTest
         XCTAssertTrue(app.buttons["receipt.cameraRecovery.photo"].isHittable)
         receiptTap(app.buttons["receipt.cameraRecovery.type"])
         XCTAssertTrue(app.textViews["scan.sourceEditor"].waitForExistence(timeout: 8))
-        receiptTap(app.buttons["Cancel"])
+        receiptTap(app.navigationBars["Review printed lines"].buttons["Cancel"])
         XCTAssertTrue(message.waitForExistence(timeout: 8))
         XCTAssertTrue(app.buttons["receipt.cameraRecovery.photo"].isHittable)
     }
