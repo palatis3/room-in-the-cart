@@ -88,6 +88,7 @@ import CoreDomain
             lines.append(shoppingText("Entered item totals before checkout charges."))
         }
 
+        let typedItemBatches = shop.typedItemBatchIDs
         let contributions = Dictionary(grouping: shop.contributions, by: \.lineID)
         let allocations = Dictionary(grouping: shop.allocations, by: \.demandContributionID)
         let active = workspace.listLayout.groups(shop: shop).flatMap(\.lines)
@@ -106,7 +107,7 @@ import CoreDomain
                 if let date = line.trashedAt { lines.append(joined([ledgerText("Trash"), stamp(date)])) }
                 if !line.notes.isEmpty { lines.append(line.notes) }
                 for entry in contributions[line.id] ?? [] {
-                    var details = [ledgerSourceLabel(entry, shop: shop), entry.productName, quantity(entry.quantity)]
+                    var details = [ledgerSourceLabel(entry, shop: shop, typedItemBatches: typedItemBatches), entry.productName, quantity(entry.quantity)]
                     if let removed = entry.removedAt { details.append(joined([ledgerText("Removed"), stamp(removed)])) }
                     lines.append("  " + joined(details))
                     if !entry.originalText.isEmpty && entry.originalText != entry.quantity?.originalLiteral && entry.originalText != entry.productName {
@@ -130,7 +131,7 @@ import CoreDomain
         }
         let names = Dictionary(uniqueKeysWithValues: shop.lines.map { ($0.id, $0.name) })
         for batch in shop.importBatches {
-            lines += ["", joined([ledgerText("Imported list"), stamp(batch.createdAt)])]
+            lines += ["", joined([ledgerBatchSourceLabel(batch.id, typedItemBatches: typedItemBatches), stamp(batch.createdAt)])]
             if let undone = batch.undoneAt { lines.append(joined([ledgerText("Import undone"), stamp(undone)])) }
             if let original = batch.originalSelection {
                 lines.append(field(ledgerText("Original wording"), original))
