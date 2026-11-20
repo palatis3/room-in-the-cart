@@ -262,7 +262,7 @@ struct PantryPackageDateSection: View {
                 Task {
                     defer { requestingCamera = false }
                     do {
-                        try await CameraCapturePermission.request(pantryOrigin: access.scope.origin, prompt: permissionPrompt)
+                        try await CameraCapturePermission.request(presenting: permissionPrompt?.presenter(for: access.scope.origin))
                         if authorized { camera = true }
                     } catch { reportPhotoError(pantryText("Camera unavailable. Choose a photo or type the printed wording.")) }
                 }

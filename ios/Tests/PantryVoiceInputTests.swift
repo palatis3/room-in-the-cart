@@ -45,7 +45,7 @@ import UIKit
         let window = PantryVoicePromptWindow()
         var active = true
         let answer = Task {
-            try await window.requestNotification(in: scope, phase: .active, currentScope: { scope }, appActive: { active }) {
+            try await window.request(in: scope, phase: .active, currentScope: { scope }, appActive: { active }) {
                 active = false
                 window.sceneChanged(.inactive)
                 return false
@@ -70,11 +70,11 @@ import UIKit
             retainsPresentation: { window.retains(scope, phase: .inactive) },
             authorized: { window.allowsPantryAction(appActive: active) })
         let prompt = PantryDigestPermissionPrompt(scope: digest) { request in
-            try await window.requestNotification(in: scope, phase: .active, currentScope: { scope },
+            try await window.request(in: scope, phase: .active, currentScope: { scope },
                 appActive: { active }, request: request)
         }
         let result = Task {
-            try await CameraCapturePermission.authorize(.notDetermined, pantryOrigin: scope.origin, prompt: prompt) {
+            try await CameraCapturePermission.authorize(.notDetermined, presenting: prompt.presenter(for: scope.origin)) {
                 active = false
                 window.sceneChanged(.inactive)
                 return false
@@ -103,11 +103,11 @@ import UIKit
             let window = PantryVoicePromptWindow()
             var current: PantryVoicePromptScope? = scope
             let prompt = PantryDigestPermissionPrompt(scope: .init(origin: scope.origin, identity: adult)) { request in
-                try await window.requestNotification(in: scope, phase: .active, currentScope: { current },
+                try await window.request(in: scope, phase: .active, currentScope: { current },
                     appActive: { true }, request: request)
             }
             do {
-                try await CameraCapturePermission.authorize(.notDetermined, pantryOrigin: scope.origin, prompt: prompt) {
+                try await CameraCapturePermission.authorize(.notDetermined, presenting: prompt.presenter(for: scope.origin)) {
                     window.sceneChanged(.inactive)
                     if background { window.sceneChanged(.background) }
                     else { current = nil }
@@ -130,23 +130,44 @@ import UIKit
             XCTFail("This request cannot retain the pantry")
             return false
         }
-        try await CameraCapturePermission.authorize(.authorized, pantryOrigin: origin, prompt: prompt) {
+        try await CameraCapturePermission.authorize(.authorized, presenting: prompt.presenter(for: origin)) {
             XCTFail("Known authorization must not request camera access again")
             return false
         }
         var didRequest = false
-        try await CameraCapturePermission.authorize(.notDetermined, pantryOrigin: UUID(), prompt: prompt) {
+        try await CameraCapturePermission.authorize(.notDetermined, presenting: prompt.presenter(for: UUID())) {
             didRequest = true
             return true
         }
         XCTAssertTrue(didRequest)
     }
 
+    func testRecipeCameraPresentationCannotCarryAcrossPickupRevisionOrWorkspaceLock() throws {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: "adult", householdID: "household",
+            memberID: "shopper", role: "shopper")
+        let scope = RecipeCameraPromptScope(adult: adult, workspaceID: UUID(), accessGeneration: UUID(),
+            shopID: UUID(), shopRevision: 1)
+        let changedPickup = RecipeCameraPromptScope(adult: adult, workspaceID: scope.workspaceID,
+            accessGeneration: scope.accessGeneration, shopID: scope.shopID, shopRevision: scope.shopRevision + 1)
+        let changedAccess = RecipeCameraPromptScope(adult: adult, workspaceID: scope.workspaceID,
+            accessGeneration: UUID(), shopID: scope.shopID, shopRevision: scope.shopRevision)
+        let window = SystemPermissionWindow<RecipeCameraPromptScope>()
+        _ = try XCTUnwrap(window.begin(scope, phase: .active))
+        window.sceneChanged(.inactive)
+        XCTAssertTrue(window.retains(scope, phase: .inactive))
+        XCTAssertFalse(window.retains(changedPickup, phase: .inactive))
+        XCTAssertFalse(window.retains(changedAccess, phase: .inactive))
+        XCTAssertFalse(window.retains(nil, phase: .inactive))
+        XCTAssertFalse(window.allowsPantryAction(appActive: false))
+        window.sceneChanged(.background)
+        XCTAssertFalse(window.holdsPresentation(scope))
+    }
+
     func testNotificationResponseBeforeSceneInterruptionRetainsOnlyTheReviewedScope() async throws {
         let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
         let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
         let window = PantryVoicePromptWindow()
-        let allowed = try await window.requestNotification(in: scope, phase: .active,
+        let allowed = try await window.request(in: scope, phase: .active,
             currentScope: { scope }, appActive: { true }) { false }
         XCTAssertFalse(allowed)
         window.sceneChanged(.inactive)
@@ -164,7 +185,7 @@ import UIKit
             let window = PantryVoicePromptWindow()
             var current = scope
             do {
-                _ = try await window.requestNotification(in: scope, phase: .active, currentScope: { current }, appActive: { true }) {
+                _ = try await window.request(in: scope, phase: .active, currentScope: { current }, appActive: { true }) {
                     window.sceneChanged(.inactive)
                     if background {
                         window.sceneChanged(.background)

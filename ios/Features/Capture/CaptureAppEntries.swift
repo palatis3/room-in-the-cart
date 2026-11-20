@@ -20,6 +20,41 @@ struct CapturePrivateIdentity: Equatable {
     }
 }
 
+struct RecipeCameraPromptScope: Equatable {
+    let adult: CapturePrivateIdentity
+    let workspaceID: UUID
+    let accessGeneration: UUID
+    let shopID: UUID
+    let shopRevision: Int
+
+    @MainActor static func current(ledger: LedgerModel, access: WorkspaceAccess, household: HouseholdModel,
+                                   childPresented: Bool) -> Self? {
+        guard UIApplication.shared.isProtectedDataAvailable, !childPresented, household.projection?.grantId == nil,
+              let adult = CapturePrivateIdentity.current(access: access, household: household),
+              ledger.ready, !ledger.hasPendingLedgerDeletion, let workspaceID = ledger.sourceWorkspaceID,
+              let shop = ledger.shop else { return nil }
+        return Self(adult: adult, workspaceID: workspaceID, accessGeneration: access.generation,
+                    shopID: shop.id, shopRevision: shop.revision)
+    }
+}
+
+struct RecipeCameraPermissionPrompt {
+    let scope: RecipeCameraPromptScope
+    let present: PantryNotificationPresenter
+    let holdsPresentation: @MainActor () -> Bool
+}
+
+private struct RecipeCameraPermissionPromptKey: EnvironmentKey {
+    static let defaultValue: RecipeCameraPermissionPrompt? = nil
+}
+
+extension EnvironmentValues {
+    var recipeCameraPermissionPrompt: RecipeCameraPermissionPrompt? {
+        get { self[RecipeCameraPermissionPromptKey.self] }
+        set { self[RecipeCameraPermissionPromptKey.self] = newValue }
+    }
+}
+
 @MainActor struct PrivateSourceReferenceEntry: View {
     let target: CaptureTarget
     let initialLabel: String
@@ -44,8 +79,7 @@ struct CapturePrivateIdentity: Equatable {
 @MainActor struct RecipeCaptureEntry: View {
     private struct CaptureSession: Identifiable {
         let target: CaptureTarget
-        let shopID: UUID
-        let identity: CapturePrivateIdentity
+        let scope: RecipeCameraPromptScope
         var id: UUID { target.objectID }
     }
 
@@ -60,6 +94,8 @@ struct CapturePrivateIdentity: Equatable {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var child
+    @Environment(\.recipeCameraPermissionPrompt) private var cameraPrompt
     @State private var presentedCapture: CaptureSession?
     @State private var review: RecipeReview?
     @State private var saving = false
@@ -104,6 +140,7 @@ struct CapturePrivateIdentity: Equatable {
                 ScanReviewView(kind: .recipe, target: target,
                     correctionScope: CaptureCorrectionScope(profileID: "local:" + target.workspaceID.uuidString,
                         localeIdentifier: CaptureCorrectionScope.appLanguage()),
+                    recipeCameraScope: capture.scope,
                     authorize: { authorized(capture) }) { result in
                     guard authorized(capture), case .recipe(let template, let record) = result, record.target == target else { return }
                     review = RecipeReview(session: capture, template: template, source: record)
@@ -115,31 +152,33 @@ struct CapturePrivateIdentity: Equatable {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(250))
                 guard !Task.isCancelled else { return }
-                if let session = presentedCapture ?? review?.session, !authorized(session) {
+                if let session = presentedCapture ?? review?.session, !authorized(session), !retainsCameraReview(session) {
                     presentedCapture = nil; review = nil; saved = false
                 }
             }
         }
         .onChange(of: scenePhase) { _, phase in if phase == .background { presentedCapture = nil } }
     }
+    private var sourceScope: RecipeCameraPromptScope? {
+        .current(ledger: ledger, access: access, household: household, childPresented: child?.presented == true)
+    }
     private var canBegin: Bool {
-        model.store === ledger && model.editable && model.accessAvailable && ledger.ready &&
-        !ledger.hasPendingLedgerDeletion && ledger.sourceWorkspaceID != nil && model.shop != nil &&
-        CapturePrivateIdentity.current(access: access, household: household) != nil
+        scenePhase == .active && model.store === ledger && model.editable && model.accessAvailable && sourceScope != nil
     }
     private func begin() {
-        guard canBegin, let workspaceID = ledger.sourceWorkspaceID, let shop = model.shop,
-              let identity = CapturePrivateIdentity.current(access: access, household: household) else { return }
-        let target = CaptureTarget(workspaceID: workspaceID, containerID: workspaceID,
-            objectID: UUID(), revision: Int64(shop.revision), kind: .recipeSource)
-        presentedCapture = CaptureSession(target: target, shopID: shop.id, identity: identity)
+        guard canBegin, let scope = sourceScope else { return }
+        let target = CaptureTarget(workspaceID: scope.workspaceID, containerID: scope.workspaceID,
+            objectID: UUID(), revision: Int64(scope.shopRevision), kind: .recipeSource)
+        presentedCapture = CaptureSession(target: target, scope: scope)
         failed = false
     }
     private func authorized(_ session: CaptureSession) -> Bool {
-        scenePhase == .active && model.store === ledger &&
-        session.identity == CapturePrivateIdentity.current(access: access, household: household) &&
-        ledger.ready && !ledger.hasPendingLedgerDeletion && ledger.sourceWorkspaceID == session.target.workspaceID &&
-        model.shop?.id == session.shopID && model.shop?.revision == Int(session.target.revision) && model.accessAvailable
+        scenePhase == .active && UIApplication.shared.applicationState == .active &&
+            model.store === ledger && session.scope == sourceScope && model.accessAvailable
+    }
+    private func retainsCameraReview(_ session: CaptureSession) -> Bool {
+        presentedCapture?.id == session.id && session.scope == sourceScope &&
+            cameraPrompt?.scope == session.scope && cameraPrompt?.holdsPresentation() == true
     }
     private func accept() async {
         guard !saving, let review, authorized(review.session), model.editable else { return }

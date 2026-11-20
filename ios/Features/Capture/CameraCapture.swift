@@ -4,23 +4,23 @@ import AVFoundation
 import UniformTypeIdentifiers
 
 @MainActor enum CameraCapturePermission {
-    static func request(bundle: Bundle = .main, pantryOrigin: UUID? = nil, prompt: PantryDigestPermissionPrompt? = nil) async throws {
+    static func request(bundle: Bundle = .main, presenting: PantryNotificationPresenter? = nil) async throws {
         guard let usage = bundle.object(forInfoDictionaryKey: "NSCameraUsageDescription") as? String,
               !usage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               UIImagePickerController.isSourceTypeAvailable(.camera) else { throw ScanFailure.unavailable }
-        try await authorize(AVCaptureDevice.authorizationStatus(for: .video), pantryOrigin: pantryOrigin, prompt: prompt) {
+        try await authorize(AVCaptureDevice.authorizationStatus(for: .video), presenting: presenting) {
             await AVCaptureDevice.requestAccess(for: .video)
         }
     }
 
-    static func authorize(_ status: AVAuthorizationStatus, pantryOrigin: UUID?, prompt: PantryDigestPermissionPrompt?,
+    static func authorize(_ status: AVAuthorizationStatus, presenting: PantryNotificationPresenter?,
                           request: PantryNotificationRequest) async throws {
         switch status {
         case .authorized: return
         case .notDetermined:
             let granted: Bool
-            if let pantryOrigin, let prompt, prompt.scope.origin == pantryOrigin {
-                granted = try await prompt.present(request)
+            if let presenting {
+                granted = try await presenting(request)
             } else {
                 granted = try await request()
             }

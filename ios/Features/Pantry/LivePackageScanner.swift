@@ -20,7 +20,7 @@ struct LivePackageButton: View {
                 requesting = true
                 defer { requesting = false }
                 do {
-                    try await CameraCapturePermission.request(pantryOrigin: workspaceID, prompt: permissionPrompt)
+                    try await CameraCapturePermission.request(presenting: permissionPrompt?.presenter(for: workspaceID))
                     guard scene == .active, authorized() else { return }
                     guard DataScannerViewController.isAvailable else { unavailable(); return }
                     status = nil; scanning = true

@@ -731,7 +731,7 @@ struct PantryProductPhotoInput: View {
             }.disabled(busy).accessibilityIdentifier("productBatch.photo")
             Button(pantryText("Photograph a package")) {
                 run {
-                    try await CameraCapturePermission.request(pantryOrigin: workspaceID, prompt: permissionPrompt)
+                    try await CameraCapturePermission.request(presenting: permissionPrompt?.presenter(for: workspaceID))
                     return nil
                 } then: { _ in camera = true }
             }.disabled(busy)

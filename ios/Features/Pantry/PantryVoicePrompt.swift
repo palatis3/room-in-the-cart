@@ -8,21 +8,23 @@ struct PantryVoicePromptScope: Equatable {
     let generation: UUID
 }
 
+typealias PantryVoicePromptWindow = SystemPermissionWindow<PantryVoicePromptScope>
+
 /// Retains only the mounted review during a system permission interruption.
-@MainActor final class PantryVoicePromptWindow: ObservableObject {
+@MainActor final class SystemPermissionWindow<Scope: Equatable>: ObservableObject {
     @Published private(set) var token: UUID?
-    private var scope: PantryVoicePromptScope?
+    private var scope: Scope?
     private var phase: ScenePhase = .active
     private var finished = false
     private var sawInactive = false
-    private var notificationReturn: CheckedContinuation<Void, Never>?
-    private var completedNotification: UUID?
+    private var permissionReturn: CheckedContinuation<Void, Never>?
+    private var completedRequest: UUID?
 
-    func begin(_ scope: PantryVoicePromptScope, phase: ScenePhase) -> UUID? {
+    func begin(_ scope: Scope, phase: ScenePhase) -> UUID? {
         guard phase == .active else { return nil }
-        // A completed notification request can hand off to the next explicit prompt
+        // A completed permission request can hand off to the next explicit prompt
         // when iOS did not interrupt the scene for its earlier request.
-        if let completedNotification, token == completedNotification, self.phase == .active { clear() }
+        if let completedRequest, token == completedRequest, self.phase == .active { clear() }
         guard token == nil else { return nil }
         self.phase = phase
         self.scope = scope
@@ -32,11 +34,11 @@ struct PantryVoicePromptScope: Equatable {
         return id
     }
 
-    func holdsPresentation(_ current: PantryVoicePromptScope?) -> Bool {
+    func holdsPresentation(_ current: Scope?) -> Bool {
         return token != nil && self.phase != .background && scope == current
     }
 
-    func retains(_ current: PantryVoicePromptScope?, phase: ScenePhase) -> Bool {
+    func retains(_ current: Scope?, phase: ScenePhase) -> Bool {
         phase == .inactive && holdsPresentation(current)
     }
 
@@ -51,10 +53,10 @@ struct PantryVoicePromptScope: Equatable {
         if sawInactive && phase == .active && appActive { clear() }
     }
 
-    /// Release the operating-system answer only on return to the same live pantry.
+    /// Release the answer only on return to the same live workspace.
     /// A real background transition cancels the token even if the adult later unlocks.
-    func requestNotification(in expected: PantryVoicePromptScope, phase: ScenePhase,
-                             currentScope: () -> PantryVoicePromptScope?, appActive: () -> Bool,
+    func request(in expected: Scope, phase: ScenePhase,
+                             currentScope: () -> Scope?, appActive: () -> Bool,
                              request: PantryNotificationRequest) async throws -> Bool {
         guard currentScope() == expected, appActive(), let id = begin(expected, phase: phase) else {
             throw PantryDigestFailure.changed
@@ -63,7 +65,7 @@ struct PantryVoicePromptScope: Equatable {
         do { result = .success(try await request()) }
         catch { result = .failure(error) }
         if token == id, self.phase != .active || !appActive() {
-            await withCheckedContinuation { notificationReturn = $0 }
+            await withCheckedContinuation { permissionReturn = $0 }
         }
         guard token == id, self.phase == .active, appActive(), currentScope() == expected else {
             cancel(id)
@@ -71,7 +73,7 @@ struct PantryVoicePromptScope: Equatable {
         }
         // On iOS the answer may be delivered before SwiftUI receives the inactive
         // transition. Cover that transition just as we do for the voice prompt.
-        completedNotification = id
+        completedRequest = id
         recognitionReady(id, appActive: true)
         return try result.get()
     }
@@ -88,22 +90,22 @@ struct PantryVoicePromptScope: Equatable {
         phase = next
         if next == .inactive && token != nil { sawInactive = true }
         if next == .background || (next == .active && finished && sawInactive) { clear() }
-        if next == .active { resumeNotificationReturn() }
+        if next == .active { resumePermissionReturn() }
     }
 
     private func clear() {
         guard token != nil else { return }
         scope = nil
-        completedNotification = nil
+        completedRequest = nil
         finished = false
         sawInactive = false
         token = nil
-        resumeNotificationReturn()
+        resumePermissionReturn()
     }
 
-    private func resumeNotificationReturn() {
-        let waiter = notificationReturn
-        notificationReturn = nil
+    private func resumePermissionReturn() {
+        let waiter = permissionReturn
+        permissionReturn = nil
         waiter?.resume()
     }
 }

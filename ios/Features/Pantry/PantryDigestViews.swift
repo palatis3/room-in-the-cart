@@ -32,6 +32,10 @@ struct PantryDigestAccess {
 struct PantryDigestPermissionPrompt {
     let scope: PantryDigestScope
     let present: PantryNotificationPresenter
+
+    func presenter(for origin: UUID?) -> PantryNotificationPresenter? {
+        scope.origin == origin ? present : nil
+    }
 }
 private struct PantryDigestPermissionPromptKey: EnvironmentKey {
     static let defaultValue: PantryDigestPermissionPrompt? = nil

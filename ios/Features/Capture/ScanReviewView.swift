@@ -2,18 +2,30 @@ import SwiftUI
 import PhotosUI
 import CoreDomain
 
-/// Keep a private receipt mounted beneath the existing privacy cover while iOS asks about the camera.
-@MainActor private struct ReceiptCameraPermission: DynamicProperty {
-    @Environment(\.pantryDigestPermissionPrompt) private var prompt
-    @Environment(\.pantryVoicePrompt) private var window
+/// Retain the scoped source editor beneath the privacy cover while iOS asks about the camera.
+@MainActor private struct SourceCameraPermission: DynamicProperty {
+    let recipeScope: RecipeCameraPromptScope?
+    @Environment(\.pantryDigestPermissionPrompt) private var pantryPrompt
+    @Environment(\.pantryVoicePrompt) private var pantryWindow
+    @Environment(\.recipeCameraPermissionPrompt) private var recipePrompt
+
+    init(recipeScope: RecipeCameraPromptScope? = nil) { self.recipeScope = recipeScope }
 
     func retains(_ target: CaptureTarget) -> Bool {
-        target.kind == .receiptEvidence && prompt?.scope.origin == target.workspaceID && window?.holdsPresentation() == true
+        if let recipeScope, let recipePrompt, recipePrompt.scope == recipeScope {
+            return recipePrompt.holdsPresentation()
+        }
+        return target.kind == .receiptEvidence && pantryPrompt?.scope.origin == target.workspaceID && pantryWindow?.holdsPresentation() == true
     }
 
     func request(for target: CaptureTarget) async throws {
+        if let recipeScope {
+            guard let recipePrompt, recipePrompt.scope == recipeScope else { throw ScanFailure.stale }
+            try await CameraCapturePermission.request(presenting: recipePrompt.present)
+            return
+        }
         let pantryOrigin = target.kind == .receiptEvidence ? target.workspaceID : nil
-        try await CameraCapturePermission.request(pantryOrigin: pantryOrigin, prompt: prompt)
+        try await CameraCapturePermission.request(presenting: pantryPrompt?.presenter(for: pantryOrigin))
     }
 }
 
@@ -29,7 +41,7 @@ import CoreDomain
     let authorize: () -> Bool
     let onReviewed: (ReviewedScan) -> Void
     let correctionScope: CaptureCorrectionScope?
-    private var cameraPermission = ReceiptCameraPermission()
+    private var cameraPermission: SourceCameraPermission
     @StateObject private var model = ScanModel()
     @StateObject private var corrections = CaptureCorrectionsModel()
     @State private var label: String
@@ -56,10 +68,12 @@ import CoreDomain
     @Environment(\.scenePhase) private var scenePhase
 
     init(kind: ScanKind, target: CaptureTarget, initialLabel: String = "",
-         correctionScope: CaptureCorrectionScope? = nil, authorize: @escaping () -> Bool,
+         correctionScope: CaptureCorrectionScope? = nil, recipeCameraScope: RecipeCameraPromptScope? = nil,
+         authorize: @escaping () -> Bool,
          onReviewed: @escaping (ReviewedScan) -> Void) {
         self.kind = kind; self.target = target; self.authorize = authorize; self.onReviewed = onReviewed
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
+        cameraPermission = SourceCameraPermission(recipeScope: recipeCameraScope)
     }
     var body: some View {
         ScrollViewReader { scroll in
@@ -511,7 +525,7 @@ private struct ReceiptSectionCapture: View {
     var reviewsPrivateReceipt = false
     var initialPhoto: PhotosPickerItem?
     let reviewed: (SourceMediaRecord) -> Void
-    var cameraPermission = ReceiptCameraPermission()
+    var cameraPermission = SourceCameraPermission()
     @State private var didStart = false
     @State private var draft = ReceiptSectionDraft()
     @State private var review: ExtractedReceiptDocument?

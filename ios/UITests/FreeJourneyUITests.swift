@@ -4181,6 +4181,46 @@ import XCTest
         }
     }
 
+    func testRecipeCameraRefusalKeepsTheOriginalTypedRecipe() {
+        app.resetAuthorizationStatus(for: .camera)
+        defer { app.resetAuthorizationStatus(for: .camera) }
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"])
+        tap(element("dinnerStartPickup"))
+        fill("Recipe review pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("dinner.scanRecipe"))
+        tap(element("dinner.beginRecipeReview"))
+
+        let consent = app.switches["scan.localConsent"]
+        revealScrollableContent(consent, entireRow: true)
+        enableSwitch("scan.localConsent")
+        XCTAssertEqual(consent.value as? String, "1")
+        let wording = "Bean salad\nServes 2\nIngredients\n2 cups beans"
+        fill(wording, into: "scan.sourceEditor", requireDone: true)
+        let camera = element("scan.camera")
+        revealScrollableContent(camera, initiallyUpward: false, entireRow: true)
+        XCTAssertTrue(camera.isEnabled)
+        camera.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let prompt = springboard.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'camera'")).firstMatch
+        if prompt.waitForExistence(timeout: 5) {
+            let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+            XCTAssertTrue(deny.isHittable)
+            deny.tap()
+        }
+
+        let typeItem = element("scan.typeItem")
+        XCTAssertTrue(typeItem.waitForExistence(timeout: 8))
+        tap(typeItem)
+        let editor = app.textViews["scan.sourceEditor"]
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        XCTAssertEqual(editor.value as? String, wording)
+        app.typeText(" and lime")
+        XCTAssertTrue((editor.value as? String)?.contains(" and lime") == true)
+    }
+
     func testTypedBarcodeNeedsACodeAndFreshMatchConfirmation() {
         launch(reset: true)
         openShoppingList()
