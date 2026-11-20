@@ -283,36 +283,35 @@ struct ReceiptDocumentReader: Sendable {
         catch CaptureFailure.inputTooLarge { throw ReceiptDocumentFailure.lineLimit }
     }
 
-    /// Older PDFKit versions can use one space between separately printed rows.
-    /// Recover a boundary only when both adjoining glyphs have valid, clearly
-    /// separated vertical geometry in PDFKit's own text order.
+    /// Some PDFKit versions emit spaces between printed rows. Use PDFKit's
+    /// line selections only if they account for all wording in the same order.
+    /// Keep the source's other spaces and existing line breaks.
     static func pdfPrintedWording(_ text: String, page: PDFPage) throws -> String {
-        let characters = text as NSString
-        guard characters.length == page.numberOfCharacters else { return text }
-        var spaces: Int?
-        var breaks: [NSRange] = []
-        for index in 0..<characters.length {
-            let code = characters.character(at: index)
-            if code == 32 || code == 9 {
-                if spaces == nil { spaces = index }
-                continue
-            }
-            guard let start = spaces else { continue }
-            spaces = nil
-            guard start > 0, code >= 32, characters.character(at: start - 1) >= 32 else { continue }
-            try Task.checkCancellation()
-            let first = page.characterBounds(at: start - 1)
-            let next = page.characterBounds(at: index)
-            guard first.isFiniteGlyph, next.isFiniteGlyph,
-                  first.minY >= next.maxY,
-                  first.midY - next.midY >= max(first.height, next.height) * 1.15
-            else { continue }
-            breaks.append(NSRange(location: start, length: index - start))
+        guard let selection = page.selection(for: NSRange(location: 0, length: page.numberOfCharacters)) else { return text }
+        let rows = selection.selectionsByLine().compactMap { row -> (words: [Substring], bounds: CGRect)? in
+            let words = row.string?.split(whereSeparator: \.isWhitespace) ?? []
+            guard !words.isEmpty else { return nil }
+            return (words, row.bounds(for: page))
         }
-        guard !breaks.isEmpty else { return text }
-        let wording = NSMutableString(string: text)
-        for space in breaks.reversed() { wording.replaceCharacters(in: space, with: "\n") }
-        return wording as String
+        let original = text.split(whereSeparator: \.isWhitespace)
+        guard rows.count > 1, rows.flatMap(\.words).elementsEqual(original) else { return text }
+        var result = ""
+        var copied = text.startIndex
+        var index = 0
+        for (row, following) in zip(rows, rows.dropFirst()) {
+            index += row.words.count
+            try Task.checkCancellation()
+            let space = original[index - 1].endIndex..<original[index].startIndex
+            guard row.bounds.isFiniteSelection, following.bounds.isFiniteSelection,
+                  row.bounds.minY >= following.bounds.maxY,
+                  !space.isEmpty, !text[space].contains(where: \.isNewline) else { continue }
+            result += text[copied..<space.lowerBound]
+            result.append("\n")
+            copied = space.upperBound
+        }
+        guard copied != text.startIndex else { return text }
+        result += text[copied...]
+        return result
     }
 
     private static func checkPixels(_ data: Data) throws {
@@ -408,7 +407,7 @@ struct ReceiptDocumentReader: Sendable {
 }
 
 private extension CGRect {
-    var isFiniteGlyph: Bool {
+    var isFiniteSelection: Bool {
         !isEmpty && !isNull && minX.isFinite && minY.isFinite && maxX.isFinite && maxY.isFinite
     }
 }

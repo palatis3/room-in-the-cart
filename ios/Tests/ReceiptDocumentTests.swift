@@ -329,10 +329,14 @@ import XCTest
         let document = try await ReceiptDocumentReader().extract(input)
         XCTAssertEqual(document.digest, Data(SHA256.hash(data: bytes)))
         let page = try XCTUnwrap(document.pages.first)
+        let printedRows = ["GARDEN MARKET", "ROLLED OATS USD 2.40", "SERVICE FEE USD 1.25", "TAX USD 0.42"]
         XCTAssertEqual(page.method, .pdfText)
-        XCTAssertEqual(page.lines.map(\.text), ["GARDEN MARKET", "ROLLED OATS USD 2.40", "SERVICE FEE USD 1.25", "TAX USD 0.42"])
+        XCTAssertEqual(page.lines.map(\.text), printedRows)
         XCTAssertEqual(page.lines.map(\.id), [1, 2, 3, 4])
         XCTAssertTrue(document.amountAssociations.isEmpty)
+        let originalPage = try XCTUnwrap(PDFDocument(data: bytes)?.page(at: 0))
+        let flattened = try XCTUnwrap(originalPage.string).split(whereSeparator: \.isNewline).joined(separator: " ")
+        XCTAssertEqual(try ReceiptDocumentReader.pdfPrintedWording(flattened, page: originalPage), printedRows.joined(separator: "\n"))
     }
 
     func testSelectedReceiptCropEncodesOnlyTheReviewedPixelsAndLocallyReadsThem() async throws {

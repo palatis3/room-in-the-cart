@@ -518,10 +518,10 @@ import XCTest
         let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Green lentils")).firstMatch
         tap(lot)
         tap(app.buttons["pantry.packageDate"])
-        XCTAssertTrue(app.buttons["Choose a label photo"].exists)
-        XCTAssertTrue(app.buttons["Photograph the printed date"].exists)
+        reveal(app.buttons["Choose a label photo"])
+        reveal(app.buttons["Photograph the printed date"])
         let wording = "BEST BEFORE 03/04"
-        fill(wording, into: "packageDate.wording")
+        fill(wording, into: "packageDate.wording", initiallyUpward: false)
         let fullDate = app.switches["packageDate.hasDay"]
         XCTAssertEqual(fullDate.value as? String, "0")
         tap(app.buttons["packageDate.save"])
