@@ -70,7 +70,7 @@ import XCTest
         app.revealRestoredGrocery(reopened)
         XCTAssertEqual(shopPicker.label, "Previous market")
         reopened.tap()
-        XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.navigationBars["Item details"].waitForExistence(timeout: 6))
     }
 
     func testInStoreCheckPriceCoverageAndOneHandedUndo() {

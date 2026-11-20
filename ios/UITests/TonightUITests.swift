@@ -20,6 +20,7 @@ import XCTest
         tap(app.buttons["dinner.saveFirstRecipe"])
         fill(app.textFields["tonight.recipe.title"], "Corn and beans")
         fill(app.textFields["tonight.recipe.servings"], "2")
+        fill(app.textFields["tonight.recipe.minutes"], "10")
         fill(app.textFields["tonight.recipe.ingredient"], "Corn")
         let amount = app.textFields["Amount (required)"]
         XCTAssertTrue(amount.exists)
@@ -36,7 +37,12 @@ import XCTest
         correctedAmount.lifetime = .keepAlways
         add(correctedAmount)
         tap(app.buttons["tonight.recipe.review"])
+        let time = app.descendants(matching: .any).matching(identifier: "tonight.recipe.reviewedMinutes").firstMatch
+        XCTAssertTrue(time.waitForExistence(timeout: 5))
+        XCTAssertTrue([time.label, time.value as? String ?? ""].joined(separator: " ").contains("10"))
         tap(app.buttons["tonight.recipe.save"])
+        XCTAssertTrue(app.descendants(matching: .any)["tonight.recipe.saved"].waitForExistence(timeout: 8))
+        tap(app.buttons["tonight.recipe.done"])
         let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.savedRecipe.")).firstMatch
         XCTAssertTrue(saved.waitForExistence(timeout: 8))
         XCTAssertEqual(saved.label, "Edit saved recipe, Corn and beans")
@@ -46,6 +52,94 @@ import XCTest
         XCTAssertEqual(app.buttons["dinner.saveFirstRecipe"].label, "Replace Free reusable dinner")
         XCTAssertTrue(saved.exists)
         XCTAssertTrue(app.buttons["dinnerStartPickup"].exists)
+    }
+
+    func testSpanishLargeTypeKeyboardAdvancesFromTitleThroughIngredientAmount() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(es)", "-AppleLocale", "es_MX",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL"]
+        app.launch()
+        tap(app.tabBars.buttons["Cenas"])
+        tap(app.buttons["dinner.saveFirstRecipe"])
+        tap(app.textFields["tonight.recipe.title"])
+        app.typeText("Sopa")
+        let next = app.buttons["tonight.recipe.keyboardNext"]
+        for value in ["2", "10", "Limon", "1"] {
+            tap(next)
+            app.typeText(value)
+        }
+        dismissRecipeKeyboard()
+        tap(app.buttons["tonight.recipe.review"])
+        let minutes = app.descendants(matching: .any).matching(identifier: "tonight.recipe.reviewedMinutes").firstMatch
+        XCTAssertTrue(minutes.waitForExistence(timeout: 5))
+        XCTAssertTrue([minutes.label, minutes.value as? String ?? ""].joined(separator: " ").contains("10"))
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Limon", "1")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "Spanish accessibility-sized recipe facts after keyboard entry"
+        shot.lifetime = .keepAlways
+        add(shot)
+    }
+
+    func testPlanSavedEggsForTwoInNamedPickupAndReopenDinner() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.saveFirstRecipe"])
+        fill(app.textFields["tonight.recipe.title"], "Scrambled eggs")
+        fill(app.textFields["tonight.recipe.servings"], "2")
+        fill(app.textFields["tonight.recipe.minutes"], "10")
+        fill(app.textFields["tonight.recipe.ingredient"], "Eggs")
+        fill(app.textFields["Amount (required)"], "4")
+        tap(app.buttons["tonight.recipe.review"])
+        XCTAssertTrue(app.descendants(matching: .any)["tonight.recipe.reviewedMinutes"].exists)
+        tap(app.buttons["tonight.recipe.save"])
+        tap(app.buttons["dinner.planSaved"].firstMatch)
+        tap(app.buttons["dinner.handoff.startPickup"])
+        tap(app.buttons["ledgerCreateShop"])
+        tap(app.buttons["dinner.handoff.plan"])
+        XCTAssertEqual(app.buttons["dinner.handoff.confirm"].label, "Plan tonight in Scrambled eggs")
+        tap(app.buttons["dinner.handoff.confirm"])
+        XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
+        tap(app.buttons["dinner.handoff.done"])
+        tap(app.buttons["tonight.recipe.done"])
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        XCTAssertTrue(app.staticTexts["Scrambled eggs"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(app.staticTexts["No dinner planned"].exists)
+    }
+
+    func testFirstSavedDinnerCarriesIntoNewPickupAndAddsOnlySelectedIngredient() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.saveFirstRecipe"])
+        fill(app.textFields["tonight.recipe.title"], "Lemon chickpeas")
+        fill(app.textFields["tonight.recipe.servings"], "2")
+        fill(app.textFields["tonight.recipe.ingredient"], "Lemon")
+        fill(app.textFields["Amount (required)"], "1")
+        tap(app.buttons["Add ingredient"])
+        fill(app.textFields.matching(identifier: "tonight.recipe.ingredient").element(boundBy: 1), "Chickpeas")
+        let manual = app.switches.matching(NSPredicate(format: "label CONTAINS %@", "Chickpeas")).firstMatch
+        tap(manual)
+        tap(app.buttons["tonight.recipe.review"])
+        tap(app.buttons["tonight.recipe.save"])
+        tap(app.buttons["dinner.planSaved"].firstMatch)
+        tap(app.buttons["dinner.handoff.startPickup"])
+        tap(app.buttons["ledgerCreateShop"])
+        tap(app.buttons["dinner.handoff.select"])
+        XCTAssertTrue(app.navigationBars["Shop for ingredients only"].waitForExistence(timeout: 5))
+        let select = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Lemon")).firstMatch
+        tap(select)
+        tap(app.buttons["dinner.handoff.review"])
+        let confirm = app.buttons["dinner.handoff.confirm"]
+        XCTAssertEqual(confirm.label, "Add 1 ingredient to Lemon chickpeas")
+        tap(confirm)
+        XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
+        tap(app.buttons["dinner.handoff.openList"])
+        XCTAssertTrue(app.buttons["Check Lemon"].waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertFalse(app.buttons["Check Chickpeas"].exists)
     }
 
     func testBothPrivateTonightEntriesWorkWithoutShopAndCancelCreatesNothing() throws {
@@ -71,6 +165,7 @@ import XCTest
         fill(app.textFields["Amount (required)"], "1")
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
+        tap(app.buttons["tonight.recipe.done"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 10))
         let recipe = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "No-shop rice dinner")).firstMatch
         tap(recipe)
@@ -152,6 +247,7 @@ import XCTest
             let reviewed = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", handStatus, handStatus)).firstMatch
             XCTAssertTrue(reviewed.waitForExistence(timeout: 5))
             tap(app.buttons["tonight.recipe.save"])
+            tap(app.buttons["tonight.recipe.done"])
             // iOS 17 exposes the label and disclosure chevron separately. Both are inside this row's frame.
             let row = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
                 "tonight.result.", "Sopa de lentejas")).firstMatch

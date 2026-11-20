@@ -36,9 +36,18 @@ struct MembershipFreeTools: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(mtr("Included with Free")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
-            Text(mtr("Use your shopping list and authorized family requests. Plan dinners by hand, keep one dinner ready to reuse and compare two store quotes you enter yourself."))
-            Text(mtr("Your authorized records and exports stay available."))
+            Text(mtr("Make a private shopping list, plan dinners by hand, save one dinner to use again and compare two store quotes you enter."))
+            Text(mtr("You can keep and export your own records."))
                 .foregroundStyle(Theme.secondary)
+        }
+    }
+}
+
+struct MembershipBenefits: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(mtr("What Household adds")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
+            Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
         }
     }
 }
@@ -49,10 +58,18 @@ struct MembershipLegalLinks: View {
         VStack(alignment: .leading, spacing: 0) {
             if let terms = configuration.termsURL {
                 Link(mtr("Terms of Use"), destination: terms).frame(minHeight: 44)
-            } else { Text(helpText("The terms link is unavailable.")).foregroundStyle(Theme.secondary) }
+            }
             if let privacy = configuration.privacyURL {
                 Link(mtr("Privacy Policy"), destination: privacy).frame(minHeight: 44)
-            } else { Text(helpText("The privacy policy link is unavailable.")).foregroundStyle(Theme.secondary) }
+            }
+            if configuration.termsURL == nil || configuration.privacyURL == nil {
+                NavigationLink {
+                    HelpPrivacyView()
+                } label: {
+                    Label(helpText("Privacy on this iPhone"), systemImage: "lock")
+                        .fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
+                }.accessibilityIdentifier("membership.offlinePrivacy")
+            }
         }
     }
 }
@@ -66,7 +83,7 @@ struct MembershipView: View {
     @State private var retryingDelivery = false
     @State private var review: SeatChange?
 
-    private var isPurchaserContext: Bool { model.context?.appAccountToken != nil }
+    private var isPurchaserContext: Bool { model.showsPurchaserControls }
 
     var body: some View {
         MembershipPage {
@@ -133,7 +150,7 @@ struct MembershipView: View {
     }
 
     @ViewBuilder private var annualOffer: some View {
-        let offer = model.configuration.isReady ? model.offer : nil
+        let offer = model.displayedAnnualOffer
         MembershipHeading(title: offer?.displayName ?? mtr("Household subscription"), symbol: "person.2")
         if let offer {
             VStack(alignment: .leading, spacing: 4) {

@@ -50,16 +50,23 @@ struct LedgerHomeView: View {
                                     .font(.headline).frame(minHeight: 44)
                             }.accessibilityIdentifier("ledgerInStore")
                         }
-                        if let last = shop.recentlyChecked.first(where: { !$0.isHandled }) {
-                            Section { checkedResult(last, shop: shop) }.listRowBackground(Theme.selection)
+                        let checked = shop.recentlyChecked.filter { !$0.isHandled }
+                        if let last = checked.first {
+                            Section {
+                                checkedResult(last, shop: shop)
+                                    .listRowBackground(Theme.selection)
+                                recentHistory(count: checked.count)
+                            }
                         }
                         let exclusions = shop.listExclusions
                         let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
                         let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
                         if groups.allSatisfy({ $0.lines.isEmpty }) {
                             Section(ledgerText("Shopping list")) {
-                                Text(ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
+                                Text(model.search.isEmpty && !checked.isEmpty ? quickGroceryText("No active items.") :
+                                    ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
                                     .foregroundStyle(Theme.secondary)
+                                if checked.isEmpty { recentHistory(count: 0) }
                             }
                         } else {
                             ForEach(groups) { group in
@@ -275,6 +282,19 @@ struct LedgerHomeView: View {
             .disabled(model.saving || model.hasPendingSave)
     }
 
+    private func recentHistory(count: Int) -> some View {
+        Button { sheet = .history } label: {
+            Label {
+                Text(ledgerText("Recently checked"))
+                Text(count.formatted()).foregroundStyle(Theme.secondary)
+            } icon: { Image(systemName: "clock.arrow.circlepath") }
+            .frame(minHeight: 44)
+        }
+        .accessibilityLabel(ledgerText("Recently checked"))
+        .accessibilityValue(count.formatted())
+        .accessibilityIdentifier("ledgerRecentlyChecked")
+    }
+
     private func checkedResult(_ line: ShoppingLine, shop: ShoppingLedger) -> some View {
         let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 12))
         return layout {
@@ -400,11 +420,14 @@ struct LedgerNewShopView: View {
     private let originalID: UUID?
     private let originalTitle: String
     private let onShopSelected: ((UUID) -> Void)?
+    private let authorize: (@MainActor () -> Bool)?
+    @FocusState private var editingName: Bool
     @State private var title: String
 
-    init(model: LedgerModel, shopID: UUID? = nil, title: String = "", onShopSelected: ((UUID) -> Void)? = nil) {
+    init(model: LedgerModel, shopID: UUID? = nil, title: String = "", authorize: (@MainActor () -> Bool)? = nil, onShopSelected: ((UUID) -> Void)? = nil) {
         self.model = model
         self.onShopSelected = onShopSelected
+        self.authorize = authorize
         originalID = shopID
         originalTitle = title
         _title = State(initialValue: title)
@@ -412,15 +435,22 @@ struct LedgerNewShopView: View {
 
     var body: some View {
         WorkingForm {
-            TextField(ledgerText("Pickup name"), text: $title, axis: .vertical).accessibilityIdentifier("ledgerShopName")
+            WorkingField(ledgerText("Pickup name (required)")) {
+                TextField(ledgerText("Pickup name"), text: $title, prompt: Text(verbatim: "—"), axis: .vertical)
+                    .focused($editingName).accessibilityIdentifier("ledgerShopName")
+            }.contentShape(Rectangle())
+                .simultaneousGesture(TapGesture().onEnded { editingName = true })
                 .disabled(model.saving || model.hasPendingSave)
-            LedgerSaveStatus(model: model, onRetried: { dismiss() })
+            if model.saving || model.hasPendingSave || model.error != nil {
+                LedgerSaveStatus(model: model, showsLastSave: false, onRetried: { dismiss() })
+            }
             Button(originalID == nil ? ledgerText("Start pickup") : ledgerText("Save name")) {
                 Task { await save() }
             }.buttonStyle(PrimaryAction())
                 .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving || model.hasPendingSave)
                 .accessibilityIdentifier(originalID == nil ? "ledgerCreateShop" : "ledgerSaveShopName")
-        }.scrollDismissesKeyboard(.interactively).workingSurface()
+        }.keyboardDoneAction(visible: editingName, title: ledgerText("Done"), identifier: "ledger.shopName.done") { editingName = false }
+            .scrollDismissesKeyboard(.interactively).workingSurface()
             .navigationTitle(originalID == nil ? ledgerText("Start pickup") : ledgerText("Rename pickup"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
@@ -428,18 +458,61 @@ struct LedgerNewShopView: View {
 
     private func save() async {
         let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, authorize?() != false else { return }
+        editingName = false
         if let id = originalID {
             if await model.editShop(key: "rename-\(id)", shopID: id, { shop in
                 guard model.workspace.selectedShopID == id, shop.title == originalTitle else { throw LedgerError.stalePreview }
                 shop.title = name
             }) { dismiss() }
-        } else if await model.startShop(title: name, onSelected: onShopSelected) { dismiss() }
+        } else if await model.startShop(title: name, authorize: authorize, onSelected: onShopSelected) { dismiss() }
+    }
+}
+
+struct CheckedGroceriesHistoryLink: View {
+    @ObservedObject var model: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.guardianChildCoordinator) private var child
+    @State private var opened: Target?
+
+    private struct Target: Identifiable, Equatable {
+        let id: UUID
+        let workspace: UUID
+        let owner: CapturePrivateIdentity
+    }
+    private var target: Target? {
+        guard model.firstListStore != nil, let workspace = model.sourceWorkspaceID,
+              let shop = model.shop, UIApplication.shared.isProtectedDataAvailable,
+              child?.presented != true, household.projection?.grantId == nil,
+              let owner = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
+        return Target(id: shop.id, workspace: workspace, owner: owner)
+    }
+
+    var body: some View {
+        Group {
+            if let current = target {
+                Button { opened = current } label: {
+                    Label(quickGroceryText("Recently checked groceries"), systemImage: "checklist")
+                }.accessibilityIdentifier("records.checkedGroceries")
+            }
+        }
+        .sheet(item: $opened) { original in
+            PrivateShoppingSheet(model: model) {
+                if target == original {
+                    LedgerHistoryView(model: model, shopID: original.id, authorize: { target == original })
+                } else {
+                    Text(captureText("Unlock your private workspace to review this source."))
+                }
+            }
+        }
     }
 }
 
 struct LedgerHistoryView: View {
     @ObservedObject var model: LedgerModel
     let shopID: UUID
+    var authorize: @MainActor () -> Bool = { true }
     @Environment(\.dismiss) private var dismiss
     private enum Focus: Hashable { case result }
     @AccessibilityFocusState private var focus: Focus?
@@ -448,9 +521,9 @@ struct LedgerHistoryView: View {
         List {
             LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .result)
             if let shop {
-                historySection("Recently checked", lines: shop.lines.filter { $0.checkedAt != nil && $0.handledAt == nil && $0.trashedAt == nil }, kind: 0)
-                historySection("Handled", lines: shop.lines.filter { $0.handledAt != nil && $0.trashedAt == nil }, kind: 1)
-                historySection("Trash", lines: shop.lines.filter { $0.trashedAt != nil }, kind: 2)
+                historySection("Recently checked", lines: shop.recentlyChecked.filter { !$0.isHandled }, kind: 0)
+                historySection("Handled", lines: shop.handled, kind: 1)
+                historySection("Trash", lines: shop.trash, kind: 2)
             }
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("List history"))
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
@@ -458,7 +531,7 @@ struct LedgerHistoryView: View {
     private func historySection(_ title: String, lines: [ShoppingLine], kind: Int) -> some View {
         Section(ledgerText(title)) {
             if lines.isEmpty { Text(ledgerText("Nothing here yet.")).foregroundStyle(Theme.secondary) }
-            ForEach(lines.sorted { $0.originalOrder < $1.originalOrder }, id: \.id) { line in
+            ForEach(lines, id: \.id) { line in
                 let canRestore = kind != 2 || !(shop?.contributions(forLineID: line.id).isEmpty ?? true)
                 NavigationLink {
                     LedgerIngredientView(model: model, shopID: shopID, lineID: line.id)
@@ -476,8 +549,10 @@ struct LedgerHistoryView: View {
                     }.padding(.vertical, 5)
                 }
                 Button(ledgerText(kind == 2 ? "Restore" : "Reopen")) {
+                    let revision = shop?.revisionID
                     Task {
-                        _ = await model.editShop(key: "restore-\(line.id)", shopID: shopID) { ledger in
+                        _ = await model.editShop(key: "restore-\(line.id)", shopID: shopID, authorize: authorize) { ledger in
+                            guard ledger.revisionID == revision else { throw LedgerError.stalePreview }
                             if kind == 2 { try ledger.restore(lineID: line.id) }
                             else if kind == 1 { try ledger.reopen(lineID: line.id) }
                             else { try ledger.setChecked(lineID: line.id, checked: false) }

@@ -1,6 +1,261 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Store or receipt name (required)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store or receipt name (required)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda o nombre del recibo (obligatorio)"
+          }
+        }
+      }
+    },
+    "Enter the store or receipt name to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the store or receipt name to continue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe la tienda o el nombre del recibo para continuar."
+          }
+        }
+      }
+    },
+    "Enter a shorter store or receipt name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a shorter store or receipt name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe un nombre más corto para la tienda o el recibo."
+          }
+        }
+      }
+    },
+    "Printed quantity (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed quantity (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad impresa (opcional)"
+          }
+        }
+      }
+    },
+    "Printed amount (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed amount (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe impreso (opcional)"
+          }
+        }
+      }
+    },
+    "Type receipt lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribir las líneas del recibo"
+          }
+        }
+      }
+    },
+    "Check that you reviewed the printed lines to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check that you reviewed the printed lines to continue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marca que revisaste las líneas impresas para continuar."
+          }
+        }
+      }
+    },
+    "Check the store name and the printed lines, then try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the store name and the printed lines, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el nombre de la tienda y las líneas impresas y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Select at least one printed line to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select at least one printed line to continue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona al menos una línea impresa para continuar."
+          }
+        }
+      }
+    },
+    "Confirm which printed lines you physically received to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm which printed lines you physically received to continue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma que recibiste los productos de las líneas seleccionadas para continuar."
+          }
+        }
+      }
+    },
+    "Linked as printed amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linked as printed amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vinculado como importe impreso"
+          }
+        }
+      }
+    },
+    "Possible line total linked to %@: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Possible line total linked to %@: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posible total vinculado a %@: %@"
+          }
+        }
+      }
+    },
+    "Possible line total for %@: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Possible line total for %@: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posible total de la línea de %@: %@"
+          }
+        }
+      }
+    },
+    "Undo amount link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo amount link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer el vínculo del importe"
+          }
+        }
+      }
+    },
+    "Link possible line total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link possible line total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular el posible total de la línea"
+          }
+        }
+      }
+    },
     "Enter the printed transaction reference for this multi-photo receipt. Use the same reference when retaking or extending it. If none is printed, add genuinely missing food separately in the household pantry.": {
       "localizations": {
         "en": {

@@ -45,16 +45,18 @@ struct HouseholdSettingsView: View {
         WorkingForm {
             if let scope = model.projection, !scope.enrolled {
                 Section { Text(ht("Access has ended. Choose an available workspace.")) }
-            } else if model.projection == nil {
+            } else if model.projection == nil, model.configured {
                 Section {
                     Text(ht("Your lists and meal plans stay on this iPhone when you join."))
                         .foregroundStyle(Theme.secondary)
                 }
             }
             if !model.configured {
-                Section(ht("Household access")) {
-                    Label(ht("Household sign-in is unavailable"), systemImage: "network.slash")
+                Section(tr("Household requests")) {
                     Text(ht("You can make a private shopping list, compare packs and plan dinners on this iPhone without an account."))
+                    Text(ht("Sending a request to someone else requires access to their household."))
+                    Label(ht("Household sign-in is unavailable"), systemImage: "network.slash")
+                        .foregroundStyle(Theme.secondary)
                 }
             } else if model.locked {
                 Section(ht("Protected account")) {

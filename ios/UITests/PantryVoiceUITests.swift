@@ -208,6 +208,46 @@ import XCTest
         assertLot(id, contains: observation)
     }
 
+    func testSpanishFirstFoodRecordsOneUnmeasuredUseAndKeepsMonthOnlyLabel() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(es)", "-AppleLocale", "es_MX"]
+        app.launch()
+        tap(app.tabBars.buttons["Despensa"])
+        tap(app.buttons["pantry.setup.firstFood"])
+        let name = app.textFields["pantry.foodName"]
+        tap(name)
+        name.typeText("Lentejas\n")
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let row = lot("Lentejas")
+        tap(row)
+        tap(app.buttons["pantry.voiceUsedSome"])
+        tap(app.buttons["pantry.recordOneUse"])
+        let history = app.buttons["pantry.usageHistory"]
+        XCTAssertTrue(history.waitForExistence(timeout: 10))
+        let latest = NSPredicate(format: "label CONTAINS %@", "Usé un poco")
+        expectation(for: latest, evaluatedWith: history)
+        waitForExpectations(timeout: 8)
+        XCTAssertTrue(element("pantry.lotSummary").label.localizedCaseInsensitiveContains("cantidad desconocida"))
+        tap(history)
+        XCTAssertTrue(element("pantry.usageCount").label.contains("1") || element("pantry.usageCount").value as? String == "1")
+        tap(app.navigationBars.buttons.firstMatch)
+        tap(app.buttons["pantry.packageDate"])
+        let wording = "Consumo preferente: noviembre de 2026"
+        fill(wording, into: "packageDate.wording")
+        if app.buttons["packageDate.done"].exists { tap(app.buttons["packageDate.done"]) }
+        XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
+        tap(app.buttons["packageDate.save"])
+        app.terminate()
+        openPantry(reset: false, spanish: true)
+        tap(lot("Lentejas"))
+        XCTAssertTrue(history.waitForExistence(timeout: 8))
+        expectation(for: latest, evaluatedWith: history)
+        waitForExpectations(timeout: 8)
+        tap(app.buttons["pantry.packageDate"])
+        XCTAssertEqual(element("packageDate.wording").value as? String, wording)
+        XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
+    }
+
     func testUsedSomeFromBatchAndTypedUseProduceTwoPrivateHistoryEntries() {
         openPantry(reset: true)
         let id = addLot("Ketchup", amount: "3")

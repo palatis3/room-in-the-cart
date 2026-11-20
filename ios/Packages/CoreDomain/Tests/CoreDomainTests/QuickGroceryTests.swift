@@ -27,12 +27,26 @@ final class QuickGroceryTests: XCTestCase {
     func testQuantitiesRequestsAndListsGoToReviewWithOriginalWording() throws {
         let shop = ShoppingLedger()
         for text in ["2 kg rice", "3½ cups flour", "six bananas", "seis plátanos", "puñado de nueces",
-                     "one or two boxes", "leche sin lactosa", "milk for Alex", "eggs, milk", "milk\neggs", "1–2 apples"] {
+                     "one or two boxes", "leche sin lactosa", "milk for Alex", "eggs, milk", "milk\neggs", "1–2 apples",
+                     "0 lemons", "-1 lemon", "1 kg lemons", "1 box lemons", "1 lemon or lime", "1 ½ lemons"] {
             XCTAssertNil(try QuickGrocery.stage(text, in: shop), text)
         }
-        for text in ["arroz integral", "Greek yogurt", "plátanos", "rigatoni"] {
+        for text in ["Oats", "Arroz blanco", "Bananas", "arroz integral", "Greek yogurt", "plátanos", "limo\u{301}n", "rigatoni"] {
             XCTAssertEqual(try QuickGrocery.stage(text, in: shop)?.lines.first?.name, text)
         }
+        var pickup = ShoppingLedger()
+        for (text, name, count) in [("1 lemon", "lemon", 1), ("2 limones", "limones", 2), ("3 plátanos", "plátanos", 3)] {
+            let row = try XCTUnwrap(QuickGrocery.stage(text, in: pickup))
+            let proposed = try XCTUnwrap(row.lines.first)
+            XCTAssertEqual(proposed.name, name)
+            XCTAssertEqual(proposed.quantity?.amount, try Rational(Int64(count)))
+            XCTAssertEqual(proposed.quantity?.unit, .count)
+            XCTAssertEqual(proposed.quantity?.originalLiteral, text)
+            try pickup.commitImport(row)
+            try pickup.commitImport(row)
+            XCTAssertNil(try QuickGrocery.stage(text, in: pickup))
+        }
+        XCTAssertEqual(pickup.lines.count, 3)
     }
 
     func testOnlyExactProductOrConfirmedAliasCanShowStockWithoutAChoice() {

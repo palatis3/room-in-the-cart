@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Pickup name (required)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup name (required)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la compra (obligatorio)"
+          }
+        }
+      }
+    },
     "Page %lld of %lld": {
       "localizations": {
         "en": {
@@ -4894,7 +4911,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las necesidades de ingredientes no cambian. Abre Revisar compra para aplicar la cantidad comprada y el costo del artículo. Una compra guardada anteriormente conserva sus condiciones hasta que la revises."
+            "value": "Las necesidades de ingredientes no cambian. Abre «Revisar antes de comprar» para aplicar la cantidad comprada y el costo del artículo. Una compra guardada anteriormente conserva sus condiciones hasta que la revises."
           }
         }
       }
@@ -6127,7 +6144,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las necesidades de ingredientes no han cambiado. Abre Revisar pago para guardar el plan de usar comida en casa. Esto no hace ningún pedido en la tienda."
+            "value": "Las necesidades de ingredientes no han cambiado. Abre «Revisar antes de comprar» para guardar el plan de usar comida en casa. Esto no hace ningún pedido en la tienda."
           }
         }
       }

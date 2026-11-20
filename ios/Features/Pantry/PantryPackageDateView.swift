@@ -11,7 +11,7 @@ struct PantryPackageDateSection: View {
 
     var body: some View {
         let saved = access.authorized() ? (try? store.load(access.scope, lot: lot.id)) : nil
-        Section(pantryText(saved?.selectedAI == nil ? "Printed package date" : "Encoded package date")) {
+        Section(pantryText("Package label")) {
             if let current = saved {
                 if let original = current.originalPrintedWording {
                     LabeledContent(pantryText("Original printed wording"), value: original)
@@ -21,7 +21,7 @@ struct PantryPackageDateSection: View {
                 if let day = current.verifiedDay { LabeledContent(current.sourceLabel, value: dinnerDay(day)) }
                 if current.yearNeedsReview { Text(pantryText("Confirm the year from the package before saving.")) }
             }
-            NavigationLink(pantryText("Review the date on this package")) {
+            NavigationLink(pantryText(saved == nil ? "Add the package date" : "Edit the package date")) {
                 PantryPackageDateEditor(model: model, lot: lot, access: access, store: store)
             }.accessibilityIdentifier("pantry.packageDate")
         }
@@ -105,15 +105,20 @@ struct PantryPackageDateSection: View {
             if authorized && loaded {
                 Section {
                     PantryBatchHeading(lot: lot)
-                    Text(pantryText("Record what the package says. The storage estimate and reminder are separate."))
+                    Text(pantryText("Copy the date as printed, even if it only gives a month and year. You can choose a check day separately."))
                 }
-                source
                 Section(pantryText("Review the label")) {
                     WorkingField(pantryText("Original printed wording")) {
                         workingTextField(pantryText("Printed wording"), text: Binding(get: { wording }, set: { text in
                             wording = text; pendingMonthDay = nil; printedYear = ""
                             if selectedAI == nil { hasDay = false; confirmingCalendar = false }
-                        }), axis: .vertical).focused($editing).accessibilityIdentifier("packageDate.wording")
+                        }), axis: .vertical)
+                        .focused($editing)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                        .onTapGesture { editing = true }
+                        .accessibilityLabel(pantryText("Original printed wording"))
+                        .accessibilityIdentifier("packageDate.wording")
                     }
                     if let value = proposal, value.selectedAI != nil, let day = value.day {
                         LabeledContent(value.meaningLabel, value: value.meaning.label)
@@ -127,6 +132,7 @@ struct PantryPackageDateSection: View {
                         LabeledContent(pantryText("Selected text from your photo"), value: photoText)
                     }
                 }
+                source
                 if let gs1 = encodedCode?.gs1 {
                     Section(pantryText("Compare package dates")) {
                         if let lot = gs1.lot { LabeledContent(pantryText("Package lot number"), value: lot) }
@@ -171,7 +177,8 @@ struct PantryPackageDateSection: View {
             if currentAccess, let status { Text(status).accessibilityIdentifier("packageDate.status") }
         }
         .privacySensitive()
-        .navigationTitle(proposal?.selectedAI == nil ? pantryText("Printed package date") : pantryText("Encoded package date"))
+        .navigationTitle(pantryText(proposal?.selectedAI == nil ? "Package date" : "Encoded package date"))
+        .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: editing, title: ledgerText("Done"), identifier: "packageDate.done") { editing = false }
         .onAppear { visible = true; if !loaded { load() } }

@@ -204,6 +204,13 @@ import SwiftUI
         }
     }
 
+    var showsPurchaserControls: Bool { !isStopped && context?.appAccountToken != nil }
+
+    var displayedAnnualOffer: MembershipOffer? {
+        guard configuration.isReady, presentsAnnualOffer else { return nil }
+        return offer
+    }
+
     var canPurchase: Bool {
         !isStopped && configuration.isReady && offer != nil && !isBusy && canStartNewPurchase
     }

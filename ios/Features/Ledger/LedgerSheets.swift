@@ -643,8 +643,8 @@ private struct LedgerImportRowView: View {
                         .focused(inputFocus, equals: .name(line.id))
                         .textFieldStyle(.roundedBorder)
                 }
-                WorkingField(ledgerText("Amount, unknown if blank")) {
-                    TextField(ledgerText("Amount, unknown if blank"), text: $amount, prompt: Text(""))
+                WorkingField(shoppingText("Quantity (optional)")) {
+                    TextField(shoppingText("Quantity (optional)"), text: $amount, prompt: Text(""))
                         .keyboardType(.numbersAndPunctuation)
                         .focused(inputFocus, equals: .amount(line.id))
                         .textFieldStyle(.roundedBorder)

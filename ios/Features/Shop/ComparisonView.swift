@@ -16,6 +16,9 @@ struct ComparisonView: View {
     }
     @EnvironmentObject private var app: AppModel
     @StateObject private var model: ComparisonModel
+    @Environment(\.locale) private var locale
+    @State private var stockExpanded: Bool
+    @State private var missingPrice: PriceTarget?
     @State private var reviewing: Bool
     private enum ResultFocus: Hashable { case summary, saved, error }
     @AccessibilityFocusState private var resultFocused: ResultFocus?
@@ -27,6 +30,7 @@ struct ComparisonView: View {
         model.savedAt = saved?.savedAt
         _model = StateObject(wrappedValue: model)
         _reviewing = State(initialValue: saved != nil)
+        _stockExpanded = State(initialValue: !draft.stock.isEmpty || !draft.protected.isEmpty)
     }
 
     var body: some View {
@@ -45,6 +49,17 @@ struct ComparisonView: View {
         .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
                             identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
+        .sheet(item: $missingPrice) { target in
+            MissingPackPriceEditor(target: target) { literal in
+                switch target {
+                case .a: model.draft.aPrice = literal
+                case .b: model.draft.bPrice = literal
+                }
+                model.compare()
+                reviewing = model.result != nil
+                resultFocused = reviewing ? .summary : .error
+            }
+        }
     }
 
     private var editRow: some View {
@@ -67,25 +82,34 @@ struct ComparisonView: View {
     private var editor: some View {
         WorkingForm {
             Section {
-                Text(quickGroceryText("Enough for what?")).font(.title.bold()).accessibilityAddTraits(.isHeader)
-                workingTextField(tr("Item name"), text: $model.draft.item, axis: .vertical)
-                    .focused($inputFocused, equals: "itemName").accessibilityIdentifier("itemName")
+                Text(tr("What are you buying?")).font(.title.bold()).accessibilityAddTraits(.isHeader)
+                WorkingField(tr("Item name")) {
+                    workingTextField(tr("Item name"), text: $model.draft.item, axis: .vertical)
+                        .focused($inputFocused, equals: "itemName").accessibilityIdentifier("itemName")
+                        .frame(minHeight: 44)
+                }
                 entry("Total amount needed", text: $model.draft.needed, id: "needed")
                 unitPicker("Needed unit", selection: $model.draft.unit, id: "neededUnit")
             } footer: {
                 Text(tr("Compare the cost of enough usable food for one item. No account or connection needed."))
-            }
-            Section {
-                entry("Confirmed usable amount at home", text: $model.draft.stock, id: "stock")
-                entry("Protected portions within the total", text: $model.draft.protected, id: "protected")
-            } header: { Text(tr("Already accounted for")) } footer: {
-                Text(tr("Use the needed unit. Count only stock matched to this item and available for this need. Protected lunch portions are already inside the total, not extra. Leave unconfirmed stock blank."))
             }
             offerSection("Pack A", label: $model.draft.aLabel, quantity: $model.draft.aQuantity, unit: $model.draft.aUnit, price: $model.draft.aPrice, conversion: $model.draft.aConversion, prefix: "a")
             offerSection("Pack B", label: $model.draft.bLabel, quantity: $model.draft.bQuantity, unit: $model.draft.bUnit, price: $model.draft.bPrice, conversion: $model.draft.bConversion, prefix: "b")
             Section {
                 entry("Item spending limit (USD, optional)", text: $model.draft.cap, id: "itemCap", keyboard: .decimalPad)
             } footer: { Text(tr("This limit covers this item only. Other groceries, fees and taxes are not included.")) }
+            Section {
+                DisclosureGroup(isExpanded: $stockExpanded) {
+                    entry("Available at home", text: $model.draft.stock, id: "stock")
+                    entry("Set aside within the total", text: $model.draft.protected, id: "protected")
+                    Text(tr("Use the same unit as your shopping need. Count only food available for this item. Include any set-aside portions in the total you need."))
+                        .font(.footnote).foregroundStyle(Theme.secondary)
+                } label: {
+                    Text(tr("Food at home and set-aside portions"))
+                }
+                .disclosureGroupStyle(LabeledFormDisclosureStyle(label: tr("Food at home and set-aside portions"),
+                                                                identifier: "comparisonStockDisclosure"))
+            }
             if let error = model.error { errorRow(error) }
             Section {
                 Button {
@@ -102,7 +126,7 @@ struct ComparisonView: View {
 
     private func entry(_ label: String, text: Binding<String>, id: String, keyboard: UIKeyboardType = .numbersAndPunctuation) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(tr(label)).font(.subheadline).foregroundStyle(Theme.secondary)
+            Text(tr(label)).font(.subheadline).foregroundStyle(Theme.secondary).accessibilityHidden(true)
             workingTextField(tr("Unknown if blank"), text: text)
                 .keyboardType(keyboard).focused($inputFocused, equals: id)
                 .accessibilityLabel(tr(label)).accessibilityIdentifier(id)
@@ -118,14 +142,17 @@ struct ComparisonView: View {
 
     private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
         Section {
-            workingTextField(tr("Pack name (optional)"), text: label, axis: .vertical)
-                .focused($inputFocused, equals: prefix + "Label").accessibilityIdentifier(prefix + "Label")
             entry("Usable amount in one pack", text: quantity, id: prefix + "Quantity")
             unitPicker("Pack unit", selection: unit, id: prefix + "Unit")
+            entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
+            WorkingField(tr("Pack name (optional)")) {
+                workingTextField(tr("Pack name (optional)"), text: label, axis: .vertical)
+                    .focused($inputFocused, equals: prefix + "Label").accessibilityIdentifier(prefix + "Label")
+                    .frame(minHeight: 44)
+            }
             PackConversionControl(packLabel: label.wrappedValue.isEmpty ? tr(title) : label.wrappedValue,
                                   sourceUnit: unit.wrappedValue, targetUnit: model.draft.unit,
                                   conversion: conversion, identifier: prefix + "Conversion")
-            entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
             if let identity = priceIdentity {
                 let scope = PantryDigestScope(origin: priceAccess?.scope.origin ?? identity.actorID, identity: identity)
                 PackPaidPriceEditor(product: model.draft.item, packLabel: label.wrappedValue, quantity: quantity,
@@ -173,12 +200,16 @@ struct ComparisonView: View {
                         Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.headline)
                     }
                     Divider()
-                    costLine(inputs.offerA, result: result.offerA, fallback: tr("Pack A"))
-                    costLine(inputs.offerB, result: result.offerB, fallback: tr("Pack B"))
+                    Text(tr("Cost in whole packs")).font(.subheadline.weight(.semibold))
+                    let rates = inputs.comparableUnitPrices
+                    costLine(inputs.offerA, result: result.offerA, fallback: tr("Pack A"), unitPrice: rates?.a, unit: result.unit)
+                    costLine(inputs.offerB, result: result.offerB, fallback: tr("Pack B"), unitPrice: rates?.b, unit: result.unit)
                 }
                 .fixedSize(horizontal: false, vertical: true).padding(.vertical, 6)
                 .foregroundStyle(result.offerA.isResolved && result.offerB.isResolved ? Theme.onSelection : Theme.ink)
                 .listRowBackground(result.offerA.isResolved && result.offerB.isResolved ? Theme.selection : Theme.warningSurface)
+                if result.offerA.issues.contains(.priceUnknown) { priceAction(.a) }
+                if result.offerB.issues.contains(.priceUnknown) { priceAction(.b) }
                 editRow
             }
             Section {
@@ -237,21 +268,38 @@ struct ComparisonView: View {
         .accessibilityIdentifier("comparisonResultsScroll")
     }
 
-    private func costLine(_ offer: PackOffer, result: OfferResult, fallback: String) -> some View {
-        let title = offer.label.isEmpty ? fallback : offer.label
-        let cost = result.totalCost.map(moneyText) ?? tr("Cost unresolved")
-        return ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text(verbatim: title).fixedSize()
-                Spacer(minLength: 4)
-                Text(verbatim: cost).fontWeight(.semibold).monospacedDigit().fixedSize()
+    private func priceAction(_ target: PriceTarget) -> some View {
+        Button { missingPrice = target } label: {
+            Label(target.title, systemImage: "plus.circle")
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .foregroundStyle(Theme.action).accessibilityIdentifier(target.rawValue + "AddPrice")
+    }
+
+    private func costLine(_ offer: PackOffer, result: OfferResult, fallback: String,
+                          unitPrice: Rational?, unit: UnitOfMeasure?) -> some View {
+        let title = offer.label.isEmpty ? fallback : fallback + " · " + offer.label
+        let cost = result.totalCost.map { moneyText($0, locale: locale) } ?? tr("Cost unresolved")
+        return VStack(alignment: .leading, spacing: 3) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(verbatim: title).fixedSize()
+                    Spacer(minLength: 4)
+                    Text(verbatim: cost).fontWeight(.semibold).monospacedDigit().fixedSize()
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: title)
+                    Text(verbatim: cost).fontWeight(.semibold).monospacedDigit()
+                }
             }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: title)
-                Text(verbatim: cost).fontWeight(.semibold).monospacedDigit()
+            if let unitPrice, let unit {
+                Text(verbatim: comparisonUnitPriceText(unitPrice, in: unit, locale: locale))
+                    .font(.subheadline).monospacedDigit()
             }
         }
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(offer.id + "CostSummary")
     }
 
     private func remainingQuantity(_ amount: Rational) -> String {
@@ -295,6 +343,53 @@ struct ComparisonView: View {
 
     private func errorRow(_ text: String) -> some View {
         Section { Label(text, systemImage: "exclamationmark.triangle").foregroundStyle(Color("error")).accessibilityFocused($resultFocused, equals: .error) }
+    }
+}
+
+private enum PriceTarget: String, Identifiable {
+    case a, b
+    var id: Self { self }
+    var title: String { tr(self == .a ? "Add Pack A price" : "Add Pack B price") }
+}
+
+private struct MissingPackPriceEditor: View {
+    let target: PriceTarget
+    let update: (String) -> Void
+    @State private var literal = ""
+    @State private var invalid = false
+    @FocusState private var focused: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            WorkingForm {
+                Section {
+                    WorkingField(tr("Price for one pack (USD)")) {
+                        workingTextField(tr("Price for one pack (USD)"), text: $literal)
+                            .keyboardType(.decimalPad).focused($focused)
+                            .accessibilityIdentifier(target.rawValue + "Price")
+                    }
+                    if invalid {
+                        Label(tr("Enter a price in USD with up to two decimal places."), systemImage: "exclamationmark.circle")
+                            .foregroundStyle(Theme.warning)
+                    }
+                    Button(tr("Update comparison")) {
+                        guard (try? ComparisonModel.money(literal)) != nil else { invalid = true; return }
+                        update(literal)
+                        dismiss()
+                    }
+                    .buttonStyle(PrimaryAction()).accessibilityIdentifier("comparison.updatePrice")
+                }
+            }
+            .navigationTitle(target.title).navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button(tr("Cancel")) { dismiss() } }
+            }
+            .keyboardDoneAction(visible: focused, title: tr("Done"), identifier: "comparison.done." + target.rawValue + "Price") {
+                focused = false
+            }
+            .onAppear { focused = true }
+        }
     }
 }
 

@@ -202,11 +202,11 @@ struct LedgerMealEditor: View {
                             if let source = ingredient.originalWording { Text(verbatim: source).font(.subheadline).foregroundStyle(Theme.secondary) }
                             TextField(ledgerText("Ingredient name"), text: fields.name, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).name")
-                            Toggle(tonightText("I checked this ingredient by hand"), isOn: fields.checkedWithoutAmount)
+                            Toggle(tonightText("Use without a measured amount"), isOn: fields.checkedWithoutAmount)
                             if !ingredient.checkedWithoutAmount {
                                 LedgerQuantityFields(amount: fields.amount, unit: fields.unit,
                                                  amountFocus: ($inputFocus, "ingredient.\(ingredient.id).amount"))
-                            } else { Text(tonightText("Use without a measured amount.")).font(.footnote) }
+                            }
                             TextField(ledgerText("Ingredient notes"), text: fields.notes, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).notes")
                             TextField(ledgerText("Ingredient exclusions, separated by commas"), text: fields.exclusions, axis: .vertical)

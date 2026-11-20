@@ -26,6 +26,10 @@ struct LedgerIngredientView: View {
     @State private var showProtectedNeeds = true
     private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
     private var line: ShoppingLine? { shop?.lines.first { $0.id == lineID } }
+    private var detailTitle: String {
+        shop?.contributions(forLineID: lineID).contains(where: { $0.source.isMeal }) == true
+            ? ledgerText("Inspect ingredient") : tripText("Item details")
+    }
     private enum Focus: Hashable { case status }
     @AccessibilityFocusState private var focus: Focus?
     var body: some View {
@@ -133,7 +137,7 @@ struct LedgerIngredientView: View {
                 }
             }
             LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .status)
-        }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Inspect ingredient"))
+        }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(detailTitle)
             .navigationBarTitleDisplayMode(.inline)
             .sheet(item: $sheet) { destination in
                 NavigationStack {
@@ -182,6 +186,8 @@ private struct LedgerLineEditor: View {
     @State private var remember = false
     @State private var baseRevision: Int64
     @State private var originalDepartment: String
+    @FocusState private var nameFocused: Bool
+    private var hasEdits: Bool { name != line.name || notes != line.notes || aisle != originalDepartment || remember }
     init(model: LedgerModel, shop: ShoppingLedger, line: ShoppingLine) {
         self.model = model; self.shop = shop; self.line = line
         let department = model.workspace.listLayout.department(for: line, in: shop)
@@ -192,7 +198,16 @@ private struct LedgerLineEditor: View {
     var body: some View {
         WorkingForm {
             Section {
-                TextField(ledgerText("Item name"), text: $name, axis: .vertical)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(ledgerText("Item name")).font(.subheadline)
+                        .foregroundStyle(Theme.secondary).accessibilityHidden(true)
+                    TextField(ledgerText("Item name"), text: $name)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($nameFocused)
+                        .submitLabel(.done).onSubmit { nameFocused = false }
+                        .accessibilityLabel(ledgerText("Item name"))
+                        .accessibilityIdentifier("ledgerEditItemName")
+                }
                 TextField(ledgerText("Visible notes"), text: $notes, axis: .vertical)
                 TextField(ledgerText("Aisle or group"), text: $aisle, axis: .vertical)
                 if !shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -222,8 +237,12 @@ private struct LedgerLineEditor: View {
                     }
                     if saved { dismiss() }
                 }
-            }.buttonStyle(PrimaryAction()).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving)
-            LedgerSaveStatus(model: model, onRetried: { dismiss() })
+            }.buttonStyle(PrimaryAction()).disabled(!hasEdits || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving || model.hasPendingSave)
+            if hasEdits, !model.saving, !model.hasPendingSave, model.error == nil {
+                Text(quickGroceryText("Unsaved edits")).foregroundStyle(Theme.secondary)
+                    .accessibilityIdentifier("ledgerUnsavedItem")
+            }
+            LedgerSaveStatus(model: model, showsLastSave: !hasEdits, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Edit item"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)

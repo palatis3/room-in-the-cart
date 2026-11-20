@@ -366,6 +366,14 @@ final class AppModelTests: XCTestCase {
         model.selectAll()
         await model.prepareExport(.ownerText)
         let owner = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
+        let unitRates = try [Rational(349, 60), Rational(300, 80)].map {
+            comparisonUnitPriceText($0, in: .gram, locale: .current)
+        }
+        let draftOnly = try SavedPayload(draft: draft).readableText()
+        for rate in unitRates {
+            XCTAssertTrue(owner.contains(rate))
+            XCTAssertFalse(draftOnly.contains(rate))
+        }
         for conversion in [try XCTUnwrap(draft.aConversion), try XCTUnwrap(draft.bConversion)] {
             XCTAssertTrue(owner.contains(conversion.readableText()))
             XCTAssertEqual(ComparisonConversion.readableText(for: try conversion.unitBasis()), conversion.readableText())
@@ -377,13 +385,23 @@ final class AppModelTests: XCTestCase {
         await model.prepareExport(.helperText)
         let helper = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
         XCTAssertTrue(helper.contains(draft.item))
-        for privateValue in ["1/3", "20.00", "0.5000", "40.000", "Measured flour A", "Package B equality", "confirmedConversion", "sourceLiteral"] {
+        for privateValue in unitRates + ["1/3", "20.00", "0.5000", "40.000", "Measured flour A", "Package B equality", "confirmedConversion", "sourceLiteral"] {
             XCTAssertFalse(helper.contains(privateValue), privateValue)
         }
     }
 
     @MainActor
     func testComparisonAmountLabelsKeepSingularUnitsAndDistinguishWeightFromVolume() throws {
+        for locale in [Locale(identifier: "en_US"), Locale(identifier: "es_MX")] {
+            let style = Decimal.FormatStyle.Currency(code: "USD", locale: locale).precision(.fractionLength(2...4))
+            let unit = UnitOfMeasure.count.comparisonLabel(for: .one)
+            let exact = comparisonUnitPriceText(try Rational(30), in: .count, locale: locale)
+            XCTAssertEqual(exact, message("%@ per 1 %@", (Decimal(30) / 100).formatted(style), unit))
+            let third = comparisonUnitPriceText(try Rational(100, 3), in: .count, locale: locale)
+            XCTAssertEqual(third, message("About %@ per 1 %@", (Decimal(3333) / 10_000).formatted(style), unit))
+            let tiny = comparisonUnitPriceText(try Rational(1, 200), in: .count, locale: locale)
+            XCTAssertEqual(tiny, message("Less than %@ per 1 %@", (Decimal(1) / 10_000).formatted(style), unit))
+        }
         let cases: [(UnitOfMeasure, String)] = [
             (.count, tr("item")), (.ounce, tr("ounce (weight)")),
             (.cup, tr("US cup")), (.fluidOunce, tr("US fluid ounce")),

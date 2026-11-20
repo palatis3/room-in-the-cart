@@ -847,15 +847,15 @@ private enum LedgerDeletionJournal {
         }
     }
 
-    func startShop(title: String, onSelected: ((UUID) -> Void)? = nil) async -> Bool {
-        await change(key: "start-shop", onShopSelected: onSelected) { workspace in
+    func startShop(title: String, authorize: (@MainActor () -> Bool)? = nil, onSelected: ((UUID) -> Void)? = nil) async -> Bool {
+        await change(key: "start-shop", onShopSelected: onSelected, authorize: authorize) { workspace in
             let shop = ShoppingLedger(title: title)
             workspace.shops.append(shop)
             workspace.selectedShopID = shop.id
         }
     }
 
-    func selectShop(_ id: UUID, onSelected: ((UUID) -> Void)? = nil) async {
-        _ = await change(key: "select-\(id)", onShopSelected: onSelected) { $0.selectedShopID = id }
+    func selectShop(_ id: UUID, authorize: (@MainActor () -> Bool)? = nil, onSelected: ((UUID) -> Void)? = nil) async {
+        _ = await change(key: "select-\(id)", onShopSelected: onSelected, authorize: authorize) { $0.selectedShopID = id }
     }
 }

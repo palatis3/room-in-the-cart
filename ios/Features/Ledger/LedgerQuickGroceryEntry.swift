@@ -5,8 +5,8 @@ func quickGroceryText(_ key: String) -> String {
     String(localized: String.LocalizationValue(key), table: "QuickGrocery")
 }
 
-func quickGroceryFormat(_ key: String, _ value: String) -> String {
-    String(format: quickGroceryText(key), locale: .current, value)
+func quickGroceryFormat(_ key: String, _ values: CVarArg...) -> String {
+    String(format: quickGroceryText(key), locale: .current, arguments: values)
 }
 
 /// This entry exists only on the adult's local Shop and private ledger surfaces.
@@ -25,7 +25,7 @@ struct LedgerQuickGroceryEntry: View {
            let identity = CapturePrivateIdentity.current(access: access, household: household) {
             if let owner = try? firstListOwner(identity), let workspaceID = model.sourceWorkspaceID {
                 let available = scene == .active && model.firstListStore != nil
-                QuickGroceryField(model: model, workspaceID: workspaceID, prominent: prominent, available: available, householdMember: household.projection != nil, authorize: {
+                QuickGroceryField(model: model, workspaceID: workspaceID, owner: owner, prominent: prominent, available: available, householdMember: household.projection != nil, authorize: {
                     UIApplication.shared.isProtectedDataAvailable && UIApplication.shared.applicationState == .active &&
                     child?.presented != true && household.projection?.grantId == nil &&
                     CapturePrivateIdentity.current(access: access, household: household) == identity &&
@@ -48,6 +48,7 @@ struct LedgerQuickGroceryEntry: View {
 private struct QuickGroceryField: View {
     @ObservedObject var model: LedgerModel
     let workspaceID: UUID
+    let owner: Data
     let prominent: Bool
     let available: Bool
     let householdMember: Bool
@@ -58,7 +59,12 @@ private struct QuickGroceryField: View {
     @State private var visible = false
     @State private var submitting = false
     @State private var submitted: StagedListImport?
-    @State private var undoBatch: UUID?
+    @State private var receipt: Receipt?
+    @State private var continueTyping = false
+    private struct Receipt {
+        let batchID: UUID
+        let revisionID: UUID
+    }
     @State private var review: Review?
     @FocusState private var editing: Bool
 
@@ -87,7 +93,7 @@ private struct QuickGroceryField: View {
                 let prefix = updated.commonPrefix(with: text).count
                 let suffix = updated.dropFirst(prefix)
                 if suffix.first == "\n", suffix.dropFirst() == text.dropFirst(prefix) {
-                    submit()
+                    submit(keepKeyboard: true)
                     return
                 }
             }
@@ -117,44 +123,47 @@ private struct QuickGroceryField: View {
                     .simultaneousGesture(TapGesture().onEnded { editing = true })
                     .accessibilityLabel(quickGroceryText("Grocery name"))
                     .accessibilityIdentifier("quickGrocery.name")
-                    .submitLabel(.next).onSubmit { submit() }
+                    .submitLabel(.done).onSubmit { submit(keepKeyboard: true) }
                 Button(quickGroceryText("Add")) { submit() }
                     .buttonStyle(PrimaryAction()).fixedSize(horizontal: true, vertical: false)
                     .accessibilityLabel(quickGroceryText("Add grocery"))
                     .accessibilityIdentifier("quickGrocery.add")
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
             }
-            if let batch = model.shop?.importBatches.last(where: { $0.id == undoBatch && $0.undoneAt == nil }) {
-                let result = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 12))
-                result {
-                    Label(quickGroceryFormat("Added %@", batch.originalText), systemImage: "checkmark.circle.fill")
+            if let receipt, let shop = model.shop, shop.revisionID == receipt.revisionID,
+               let batch = shop.importBatches.last(where: { $0.id == receipt.batchID && $0.undoneAt == nil }) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Label(quickGroceryFormat("Added %@ to %@ on this iPhone.", batch.originalText, shop.title), systemImage: "checkmark.circle.fill")
                         .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.onSelection)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("quickGrocery.added")
-                    Button {
-                        guard let shopID = model.shop?.id else { return }
-                        Task {
-                            if await model.editShop(key: "undo-quick-\(batch.id)", shopID: shopID,
-                                authorize: { authorize() && model.shop?.id == shopID }, { try $0.undoImport(batchID: batch.id) }) {
-                                undoBatch = nil
+                    let actions = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 16))
+                    actions {
+                        Button {
+                            Task {
+                                if await model.editShop(key: "undo-quick-\(batch.id)", shopID: shop.id,
+                                    authorize: { authorize() && model.shop?.id == shop.id && model.shop?.revisionID == receipt.revisionID }, { current in
+                                        guard current.revisionID == receipt.revisionID else { throw LedgerError.stalePreview }
+                                        try current.undoImport(batchID: batch.id)
+                                    }) { self.receipt = nil }
                             }
-                        }
-                    } label: {
-                        Text(quickGroceryText("Undo")).underline()
-                            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
-                    }
-                    .buttonStyle(.borderless)
-                    .foregroundStyle(Theme.onSelection)
-                    .accessibilityLabel(quickGroceryFormat("Undo adding %@", batch.originalText))
-                    .disabled(busy).accessibilityIdentifier("quickGrocery.undo")
-                    if prominent {
-                        RestorableShoppingListLink {
-                            Text(quickGroceryText("View list")).underline()
+                        } label: {
+                            Text(quickGroceryText("Undo")).underline()
                                 .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(Theme.onSelection)
-                        .accessibilityIdentifier("quickGrocery.viewList")
+                        .accessibilityLabel(quickGroceryFormat("Undo adding %@", batch.originalText))
+                        .disabled(busy).accessibilityIdentifier("quickGrocery.undo")
+                        if prominent {
+                            RestorableShoppingListLink {
+                                Text(quickGroceryText("View list")).underline()
+                                    .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                            }
+                            .buttonStyle(.borderless)
+                            .foregroundStyle(Theme.onSelection)
+                            .accessibilityIdentifier("quickGrocery.viewList")
+                        }
                     }
                 }
                 .padding(.horizontal, 12).padding(.vertical, 2)
@@ -179,7 +188,7 @@ private struct QuickGroceryField: View {
             }
             if let name = QuickGrocery.plainName(text) {
                 QuickGroceryAtHome(name: name, branch: model.shop?.basis.branch ?? "", ledgerWorkspaceID: workspaceID,
-                                   authorize: authorize, addingDisabled: busy, keepOnList: submit)
+                                   authorize: authorize, addingDisabled: busy, keepOnList: { submit() })
             }
         }
         .onAppear { visible = true }
@@ -193,8 +202,8 @@ private struct QuickGroceryField: View {
         }
         .onChange(of: model.workspace.selectedShopID) { old, next in
             guard old != nil || next != submitted?.shopID else { return }
-            if undoBatch.flatMap({ id in model.shop?.importBatches.contains(where: { $0.id == id }) }) == true { return }
-            text = ""; undoBatch = nil; submitted = nil; review = nil
+            if let receipt, model.shop?.importBatches.contains(where: { $0.id == receipt.batchID }) == true { return }
+            text = ""; receipt = nil; submitted = nil; review = nil
         }
         .sheet(item: $review) { original in
             NavigationStack {
@@ -212,7 +221,7 @@ private struct QuickGroceryField: View {
         }
     }
 
-    private func submit() {
+    private func submit(keepKeyboard: Bool = false) {
         guard authorize(), !busy, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         let selectedID = model.shop?.id
         let shop = model.shop ?? ShoppingLedger(title: ledgerText("Pickup"))
@@ -223,23 +232,42 @@ private struct QuickGroceryField: View {
             return
         }
         submitting = true
-        submitted = preview
+        continueTyping = keepKeyboard
+        let original = text
+        if !keepKeyboard { editing = false }
         Task {
             defer { submitting = false }
+            if selectedID == nil {
+                guard let store = model.firstListStore else { return }
+                do {
+                    let draft = try await store.firstListDraft(owner: owner)
+                    guard authorize(), model.shop == nil, model.firstListStore === store else { return }
+                    if draft != nil {
+                        // The existing draft can keep or append the incoming wording in review.
+                        editing = false
+                        review = Review(shopID: nil, text: original, preview: nil)
+                        return
+                    }
+                } catch {
+                    model.error = ledgerText("Could not save on this iPhone. Your entries are still here. Retry the same change.")
+                    return
+                }
+            }
+            submitted = preview
             if await model.addQuickGrocery(preview, selectedShopID: selectedID, workspaceID: workspaceID,
                 authorize: { authorize() && model.shop?.id == selectedID }) { finishCommittedEntry() }
         }
     }
 
     private func finishCommittedEntry(announce: Bool = true) {
-        guard authorize(), let preview = submitted, model.shop?.id == preview.shopID,
-              model.shop?.importBatches.contains(where: { $0.id == preview.id && $0.undoneAt == nil }) == true else { return }
+        guard authorize(), let preview = submitted, let shop = model.shop, shop.id == preview.shopID,
+              shop.importBatches.contains(where: { $0.id == preview.id && $0.undoneAt == nil }) else { return }
         if text.trimmingCharacters(in: .whitespacesAndNewlines) == preview.originalText { text = "" }
         submitted = nil
-        undoBatch = preview.id
+        receipt = Receipt(batchID: preview.id, revisionID: shop.revisionID)
         if announce && visible {
-            editing = true
-            UIAccessibility.post(notification: .announcement, argument: quickGroceryFormat("Added %@", preview.originalText))
+            editing = continueTyping
+            UIAccessibility.post(notification: .announcement, argument: quickGroceryFormat("Added %@ to %@ on this iPhone.", preview.originalText, shop.title))
         }
     }
 }

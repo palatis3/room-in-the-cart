@@ -1,6 +1,108 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus listas y cenas privadas funcionan sin cuenta. En este iPhone no se puede iniciar sesión en el hogar."
+          }
+        }
+      }
+    },
+    "You can use an adult account already saved on this iPhone. Email sign-in is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can use an adult account already saved on this iPhone. Email sign-in is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes usar una cuenta de adulto ya guardada en este iPhone. El inicio de sesión por correo no está disponible."
+          }
+        }
+      }
+    },
+    "Select your household to check your planning access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select your household to check your planning access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona tu hogar para ver qué herramientas de planificación puedes usar."
+          }
+        }
+      }
+    },
+    "Make a private shopping list, plan dinners by hand, save one dinner to use again and compare two store quotes you enter.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make a private shopping list, plan dinners by hand, save one dinner to use again and compare two store quotes you enter."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea una lista de compras privada, planifica tus cenas, guarda una para repetirla y compara dos cotizaciones que tú ingreses."
+          }
+        }
+      }
+    },
+    "You can keep and export your own records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can keep and export your own records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes conservar y exportar tus propios registros."
+          }
+        }
+      }
+    },
+    "What Household adds": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What Household adds"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué incluye la membresía Household"
+          }
+        }
+      }
+    },
     "%@ every %@": {
       "extractionState": "manual",
       "localizations": {

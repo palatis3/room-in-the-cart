@@ -129,9 +129,11 @@ import XCTest
                 XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
             }
             XCTAssertEqual(app.textFields["Amount (required)"].value as? String, "3")
+            tap(app.buttons["tonight.recipe.restrictions"])
             enableSwitch("I reviewed required appliances")
             tap(element("tonight.recipe.review"))
             tap(element("tonight.recipe.save"))
+            tap(app.buttons["tonight.recipe.done"])
             XCTAssertTrue(app.navigationBars["Review a recipe"].waitForNonExistence(timeout: 12), app.debugDescription)
             XCTAssertTrue(row(title).waitForExistence(timeout: 12), app.debugDescription)
         }
@@ -170,6 +172,7 @@ import XCTest
         fill("1", into: "ledgerDinnerServings", replacing: true)
         fill("Tortillas", into: "Ingredient name")
         fill("2", into: "Amount, optional")
+        tap(app.buttons["dinner.mealEvidence"])
         enableSwitch("Required appliances reviewed")
         // The floating tab bar can cover the center of a still-hittable Review row.
         tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "FINISH_PACKAGE_LIBRARY_REVIEW")
@@ -474,6 +477,7 @@ import XCTest
         tap(lot)
         let detail = app.navigationBars["Dry lentils"]
         XCTAssertTrue(detail.waitForExistence(timeout: 8), "The saved lot must open from the Shop pantry")
+        tap(app.buttons["pantry.unmeasuredCount"])
         tap(app.buttons["Some left"])
         let confirm = app.buttons["pantry.confirm"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 8), "Changing a lot requires an explicit review")
@@ -551,7 +555,7 @@ import XCTest
         reveal(spanishWording)
         reveal(spanishDate)
         tap(app.buttons["pantry.packageDate"])
-        XCTAssertTrue(app.navigationBars["Fecha impresa en el envase"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.navigationBars["Fecha del envase"].waitForExistence(timeout: 8))
         XCTAssertEqual(editableElement("packageDate.wording").value as? String, wording)
         reveal(fullDate)
         XCTAssertEqual(fullDate.value as? String, "1")
@@ -663,11 +667,13 @@ import XCTest
         fill("1", into: "tonight.recipe.servings")
         fill("Lentils", into: "tonight.recipe.ingredient")
         fill("1", into: "Amount (required)")
+        tap(app.buttons["tonight.recipe.restrictions"])
         enableSwitch("I reviewed required appliances") {
             self.reveal($0, requiredHit: CGVector(dx: 0.92, dy: 0.5))
         }
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
+        tap(app.buttons["tonight.recipe.done"])
         XCTAssertTrue(app.navigationBars["Review a recipe"].waitForNonExistence(timeout: 15), app.debugDescription)
         let result = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.result.")).firstMatch
         XCTAssertTrue(result.waitForExistence(timeout: 15), app.debugDescription)
@@ -1077,7 +1083,7 @@ import XCTest
         XCTAssertEqual(oats.value as? String, "0")
         XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
-        let name = app.textFields["Store or branch"]
+        let name = app.textFields["receipt.document.store"]
         tap(name); name.typeText("Room Market")
         if app.buttons["receipt.document.keyboardDone"].exists { app.buttons["receipt.document.keyboardDone"].tap() }
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
@@ -1347,7 +1353,7 @@ import XCTest
         XCTAssertTrue(fee.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(fee.label.uppercased().contains("SERVICE FEE"))
         enableSwitch("receipt.document.line.1.2")
-        fill("Room Market", into: "Store or branch", control: app.textFields["Store or branch"])
+        fill("Room Market", into: "receipt.document.store", control: app.textFields["receipt.document.store"])
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         let sourceReview = app.buttons["receipt.document.accept"]
         XCTAssertEqual(sourceReview.label, "Review selected lines")
@@ -1400,7 +1406,15 @@ import XCTest
         XCTAssertEqual(oats.value as? String, "0")
         XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
-        fill("Room Market", into: "Store or branch", control: app.textFields["Store or branch"])
+        let storeIssue = app.buttons["receipt.document.storeIssue"]
+        reveal(storeIssue)
+        XCTAssertTrue(storeIssue.isHittable)
+        XCTAssertFalse(app.buttons["receipt.document.accept"].isEnabled)
+        receiptTap(storeIssue)
+        let store = app.textFields["receipt.document.store"]
+        XCTAssertTrue(store.waitForExistence(timeout: 5))
+        XCTAssertEqual(store.label, "Store or receipt name (required)")
+        fill("Room Market", into: "receipt.document.store", control: store)
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         tap(app.buttons["receipt.document.accept"])
 
@@ -1548,7 +1562,7 @@ import XCTest
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 4))
         wording.typeText("Oats 3 count USD 4.20")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
-        let label = app.textFields["Source reference label"]
+        let label = app.textFields["scan.receipt.store"]
         receiptTap(label)
         label.typeText("Market")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
@@ -1591,7 +1605,7 @@ import XCTest
         receiptTap(wording)
         wording.typeText(lines)
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
-        let label = app.textFields["Source reference label"]
+        let label = app.textFields["scan.receipt.store"]
         receiptTap(label)
         label.typeText("Market")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
@@ -1745,10 +1759,12 @@ import XCTest
         let message = app.staticTexts["receipt.sections.error"]
         XCTAssertTrue(message.waitForExistence(timeout: 8))
         XCTAssertEqual(message.label, "The camera is unavailable. Choose a photo or type the lines instead.")
-        receiptTap(app.buttons["Cancel"])
-        XCTAssertTrue(app.buttons["receipt.chooseScreenshot"].isHittable)
-        receiptTap(app.buttons["receipt.scan"])
+        XCTAssertTrue(app.buttons["receipt.cameraRecovery.photo"].isHittable)
+        receiptTap(app.buttons["receipt.cameraRecovery.type"])
         XCTAssertTrue(app.textViews["scan.sourceEditor"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Cancel"])
+        XCTAssertTrue(message.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["receipt.cameraRecovery.photo"].isHittable)
     }
 
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
@@ -3038,6 +3054,7 @@ import XCTest
         tap(app.buttons["ledgerNewTemplate"])
         enter(title, "ledgerDinnerTitle")
         enter("3", "ledgerDinnerServings")
+        tap(app.buttons["dinner.recipeDetails"])
         enter(notes, "Notes")
         enter(source, "Source URL, optional")
         enter("Wraps", "Ingredient name")
@@ -3129,6 +3146,7 @@ import XCTest
         tap(app.buttons["Review as a new dinner version"])
         assertField("ledgerDinnerTitle", title)
         assertField("ledgerDinnerServings", "3")
+        tap(app.buttons["dinner.recipeDetails"])
         assertField("Notes", notes)
         assertField("Source URL, optional", source)
         assertField("Ingredient name", "Wraps")
@@ -3425,7 +3443,7 @@ import XCTest
         tap(app.buttons["Mark handled"])
         // Saving dismisses the handling sheet asynchronously. Wait for the
         // ingredient detail's own Back control before returning to the list.
-        let back = app.navigationBars["Inspect ingredient"].buttons.firstMatch
+        let back = app.navigationBars["Item details"].buttons.firstMatch
         let backReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: back)
         XCTAssertEqual(XCTWaiter.wait(for: [backReady], timeout: 10), .completed)
         back.tap()
@@ -3572,9 +3590,9 @@ import XCTest
         XCTAssertFalse(app.buttons["Inspect Wrap cancelled"].exists)
 
         tap(retainedRow)
-        XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.navigationBars["Item details"].waitForExistence(timeout: 8))
         XCTAssertEqual(element("ledgerIngredientTotal").label, "2 items")
-        tap(app.navigationBars["Inspect ingredient"].buttons.element(boundBy: 0))
+        tap(app.navigationBars["Item details"].buttons.element(boundBy: 0))
         XCTAssertTrue(search.waitForExistence(timeout: 8))
         XCTAssertEqual(search.value as? String, "Wrap")
         XCTAssertTrue(retainedRow.isHittable)

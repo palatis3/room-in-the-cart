@@ -217,22 +217,10 @@ struct PantryDigestList: View {
                     }
                 }
                 Section(pantryText("Daily notification")) {
-                    DatePicker(pantryText("Digest time"), selection: $time, displayedComponents: .hourAndMinute)
-                        .accessibilityIdentifier("pantry.digest.time")
-                    Text(pantryText("One private notification groups foods checked on the same day. Your food names stay in My Pantry."))
-                    LabeledContent(pantryText("Saved digest time zone"), value: doc.digestZone)
-                    Text(pantryFormat("Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time.", TimeZone.current.identifier))
-                    Button(pantryText(doc.enabled ? "Save digest time" : "Turn on daily notifications")) {
-                        update(enabled: true)
-                    }.accessibilityIdentifier("pantry.digest.enable")
-                    if doc.enabled {
-                        Button(pantryText("Turn off daily notifications")) { update(enabled: false) }
-                    }
-                    if let message {
-                        Text(message).accessibilityIdentifier("pantry.digest.status")
-                            .accessibilityAddTraits(.updatesFrequently)
-                    } else if store.notificationsUnavailable {
-                        Text(pantryText("Notifications are unavailable. Your check dates are still here."))
+                    if doc.rules.isEmpty && !doc.enabled {
+                        DisclosureGroup(pantryText("Notification settings")) { notificationSettings(doc) }
+                    } else {
+                        notificationSettings(doc)
                     }
                 }.disabled(busy)
                 AdultHomeSummaryPreference(kind: .useSoon, access: access)
@@ -253,6 +241,26 @@ struct PantryDigestList: View {
             }
         }
     }
+    @ViewBuilder private func notificationSettings(_ doc: PantryDigestDocument) -> some View {
+        DatePicker(pantryText("Digest time"), selection: $time, displayedComponents: .hourAndMinute)
+            .accessibilityIdentifier("pantry.digest.time")
+        Text(pantryText("One private notification groups foods checked on the same day. Your food names stay in My Pantry."))
+        LabeledContent(pantryText("Saved digest time zone"), value: doc.digestZone)
+        Text(pantryFormat("Saving the time uses %@. Check dates keep their calendar day when you travel. If the clock skips the chosen time, the digest arrives at the next valid time.", TimeZone.current.identifier))
+        Button(pantryText(doc.enabled ? "Save digest time" : "Turn on daily notifications")) {
+            update(enabled: true)
+        }.accessibilityIdentifier("pantry.digest.enable")
+        if doc.enabled {
+            Button(pantryText("Turn off daily notifications")) { update(enabled: false) }
+        }
+        if let message {
+            Text(message).accessibilityIdentifier("pantry.digest.status")
+                .accessibilityAddTraits(.updatesFrequently)
+        } else if store.notificationsUnavailable {
+            Text(pantryText("Notifications are unavailable. Your check dates are still here."))
+        }
+    }
+
     private func currentDocument(_ lots: [InventoryLot]) -> PantryDigestDocument? {
         guard var doc = try? store.document(access.scope) else { return nil }
         doc.reconcile(lots)
@@ -275,6 +283,28 @@ struct PantryDigestList: View {
                 message = pantryText("Notifications are unavailable. Your check dates are still here.")
             } catch { message = pantryText("Could not update the digest. Review and try again.") }
         }
+    }
+}
+
+struct PantryCheckDayLink: View {
+    @ObservedObject var model: PantryModel
+    let access: PantryDigestAccess
+    let lot: InventoryLot
+    @ObservedObject private var store = PantryDigestStore.shared
+
+    var body: some View {
+        NavigationLink {
+            PantryDigestDayEditor(model: model, access: access, lot: lot)
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(pantryText("My check day"))
+                if access.authorized(), let rule = try? store.document(access.scope).rules.first(where: { $0.lotID == lot.id }) {
+                    Text(dinnerDay(rule.day)).font(.subheadline).foregroundStyle(Theme.secondary)
+                } else {
+                    Text(pantryText("Choose when to check this food.")).font(.subheadline).foregroundStyle(Theme.secondary)
+                }
+            }
+        }.accessibilityIdentifier("pantry.digest.checkDate")
     }
 }
 

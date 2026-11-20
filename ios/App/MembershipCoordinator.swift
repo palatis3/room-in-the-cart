@@ -47,6 +47,14 @@ enum MembershipSessionEvent: Equatable { case projection, identity, lock }
     init(factory: Factory? = nil) { self.factory = factory ?? Self.makeModel }
     deinit { loadingTask?.cancel(); refreshTask?.cancel() }
 
+    /// Match the current signed-in member before showing their plan or purchase controls.
+    func model(for session: MembershipSession?) -> MembershipModel? {
+        guard let session, session == activeSession, let model, !model.isStopped,
+              session.householdID == model.context?.householdID,
+              session.memberID == model.context?.purchaserID else { return nil }
+        return model
+    }
+
     /// Call once from the app root. Repeated binding to the same source is harmless.
     func bind(to source: any MembershipSessionSource) {
         guard self.source !== source else { return }

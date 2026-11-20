@@ -283,7 +283,7 @@ import XCTest
         dismissTypingTipIfPresented()
         XCTAssertEqual(wording.value as? String, printedLines)
         // Enter both pieces of source evidence in one edit session, then use the scanner's Done.
-        let merchant = app.textFields["Source reference label"]
+        let merchant = app.textFields["scan.receipt.store"]
         reveal(merchant, fullyVisible: true)
         merchant.tap()
         merchant.typeText("Corner Market")
