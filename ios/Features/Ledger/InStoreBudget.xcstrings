@@ -609,6 +609,22 @@
         }
       }
     },
+    "Picked · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picked · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el carrito · %@"
+          }
+        }
+      }
+    },
     "Picked line total · %@": {
       "localizations": {
         "en": {

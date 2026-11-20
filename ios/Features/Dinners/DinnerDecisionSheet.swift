@@ -110,7 +110,7 @@ extension PickupJourney {
         for selection in selections {
             guard ledgerPackSelections.contains(selection),
                   let row = basket.current.lines.first(where: { $0.id == selection.lineID }),
-                  row.quantity == selection.purchasedQuantity else { return nil }
+                  selection.matchesAppliedPurchase(row, shop: shop) else { return nil }
         }
         return quote
     }

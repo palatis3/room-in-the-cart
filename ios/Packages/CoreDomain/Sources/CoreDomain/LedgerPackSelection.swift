@@ -139,7 +139,36 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
               request.confirmedAtHome == (try currentCanonicalEvidence.confirmedQuantity(for: requirement)) else { return false }
         if isNoPurchase { return !basket.current.lines.contains { $0.id == lineID } }
         guard let line = basket.current.lines.first(where: { $0.id == lineID }) else { return false }
-        return line.quantity == purchasedQuantity && line.expectedCost == selectedResult.totalCost.map(CostEvidence.exact)
+        return matchesAppliedPurchase(line, shop: shop) && line.expectedCost == selectedResult.totalCost.map(CostEvidence.exact)
+    }
+
+    /// A pack plan can price an observed pick only when it buys that amount
+    /// and agrees with any known physical package composition.
+    public func describes(_ pick: PhysicalGroceryPick, packages: [BasketPackage]) throws -> Bool {
+        guard let purchasedQuantity, try pick.amount.converted(to: purchasedQuantity.unit) == purchasedQuantity.amount else { return false }
+        guard !packages.isEmpty else { return true }
+        let offer = selectedOfferID == request.offerA.id ? request.offerA : request.offerB
+        guard let size = offer.usableQuantity else { return false }
+        var count: Int64 = 0
+        for pack in packages {
+            guard try size.converted(to: pack.unit) == pack.amountPerPack else { return false }
+            let next = count.addingReportingOverflow(pack.count)
+            guard !next.overflow else { return false }
+            count = next.partialValue
+        }
+        return count == selectedResult.packsToBuy
+    }
+
+    /// Older applied copies use the offer's literal. A physical copy may use
+    /// its original unit and wording, authenticated by the same shop revision.
+    public func matchesAppliedPurchase(_ line: BasketLine, shop: ShoppingLedger?) -> Bool {
+        guard line.id == lineID, let purchasedQuantity else { return false }
+        guard let shop, shop.id == shopID, shop.revisionID == shopRevisionID,
+              let pick = shop.lines.first(where: { $0.id == lineID })?.tripPick else {
+            return line.quantity == purchasedQuantity
+        }
+        guard (try? pick.amount.converted(to: purchasedQuantity.unit)) == purchasedQuantity.amount else { return false }
+        return line.quantity == pick.amount || line.quantity == purchasedQuantity
     }
 
     public var purchasedQuantity: Quantity? {
@@ -160,6 +189,7 @@ public struct LedgerPackRequirement: Equatable, Sendable {
         guard let quantity = try shop.quantity(forLineID: lineID), quantity.amount > .zero else { throw LedgerPackError.missingQuantity }
         var protected = Rational.zero
         for contribution in shop.contributions(forLineID: lineID) {
+            if contribution.isHandCheckedUnmeasuredIngredient { continue }
             guard let amount = try contribution.quantity?.converted(to: quantity.unit) else { throw LedgerPackError.missingQuantity }
             switch contribution.source {
             case .protectedNeed: protected = try protected.adding(amount)

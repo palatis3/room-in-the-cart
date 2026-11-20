@@ -3,6 +3,126 @@ import CoreDomain
 @testable import RoomInTheCart
 
 final class LedgerCheckoutAdapterTests: XCTestCase {
+    @MainActor func testChosenSeasoningSurvivesCheckoutApplyAndResumeWithoutNumericDemand() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let ledgerURL = directory.appendingPathComponent("ledger.sqlite")
+        let pickupURL = directory.appendingPathComponent("pickup.sqlite")
+        let ledger = LedgerModel(databaseURL: ledgerURL), pickup = PickupModel(databaseURL: pickupURL)
+        await ledger.open(); await pickup.load()
+
+        let lentils = MealIngredient(name: "Lentils", quantity: Quantity(amount: try Rational(3, 2), unit: .cup, originalLiteral: "1 ½ cups"))
+        let cilantro = MealIngredient(name: "Cilantro", quantity: nil, originalWording: "cilantro al gusto", checkedWithoutAmount: true)
+        let soup = MealTemplate(title: "Sopa de lentejas", servings: try Rational(4), ingredients: [lentils, cilantro])
+        let saved = await ledger.change(key: "save-reviewed-soup") { $0.mealTemplates.append(soup) }
+        XCTAssertTrue(saved)
+        let now = Date(), destination = ShoppingLedger(title: "Private pickup", basis: basis())
+        let owner = DinnerAccessContext(scope: .local(workspaceID: try XCTUnwrap(ledger.sourceWorkspaceID)), actorID: "adult",
+            shopID: destination.id, assignedShopperID: "adult", canPlan: true, canReadBudget: false, hasPaidTools: false,
+            roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let stock = ConfirmedStockLot(id: UUID(), foodID: UUID(), name: "Lentils", usable: try XCTUnwrap(lentils.quantity), confirmedAt: now)
+        let match = try PantryMealMatcher.review(recipe: soup, reviewedFoods: [lentils.id: stock.foodID], globallyFreeLots: [stock],
+            unresolvedFoods: [], profile: nil)
+        let choice = try TonightDinnerSelection.prepare(match: match, destination: destination, createsPickup: true,
+            workspace: ledger.workspace, access: owner, phase: .draft, now: now)
+        let chosen = await ledger.change(key: "choose-soup") { try choice.apply(to: &$0, access: owner, phase: .draft, now: now) }
+        XCTAssertTrue(chosen)
+        let shop = try XCTUnwrap(ledger.shop)
+        let seasoning = try XCTUnwrap(shop.contributions.first { $0.productName == cilantro.name })
+        XCTAssertEqual(seasoning.originalText, "cilantro al gusto")
+        XCTAssertEqual(seasoning.checkedWithoutAmount, true)
+        XCTAssertNil(seasoning.quantity)
+        let measured = try XCTUnwrap(shop.contributions.first { $0.productName == lentils.name })
+        let occurrence = try XCTUnwrap(shop.mealOccurrences.first)
+        XCTAssertEqual(occurrence.ingredientContributionIDs, [measured.id, seasoning.id])
+
+        let review = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: nil)
+        XCTAssertEqual(review.lines.map(\.id), [measured.lineID])
+        XCTAssertEqual(review.lines.first?.quantity.amount, try Rational(3, 2))
+        XCTAssertEqual(review.lines.first?.quantity.unit, .cup)
+        XCTAssertEqual(review.needs.map(\.id), [measured.id])
+        XCTAssertEqual(review.needs.first?.amount.amount, try Rational(3, 2))
+        XCTAssertEqual(review.details.map(\.sourceOccurrenceID), [occurrence.id])
+        let applied = try await LedgerCheckoutAdapter.apply(review, ledger: ledger, pickup: pickup)
+        XCTAssertTrue(applied)
+
+        let reopenedLedger = LedgerModel(databaseURL: ledgerURL), reopenedPickup = PickupModel(databaseURL: pickupURL)
+        await reopenedLedger.open(); await reopenedPickup.load()
+        let restoredShop = try XCTUnwrap(reopenedLedger.shop)
+        XCTAssertEqual(restoredShop, shop)
+        XCTAssertEqual(reopenedLedger.workspace.mealTemplates, [soup])
+        let trip = try XCTUnwrap(reopenedPickup.journey)
+        XCTAssertEqual(trip.basket?.current.lines, review.lines)
+        XCTAssertEqual(trip.plannedNeeds, review.needs)
+        XCTAssertTrue(trip.stockLots.isEmpty)
+        let source = try XCTUnwrap(trip.mealSource)
+        XCTAssertEqual(source.shop, shop)
+        XCTAssertEqual(source.needs, review.needs)
+        try source.validate()
+        let resumed = try LedgerCheckoutAdapter.review(shop: restoredShop, workspaceRevision: reopenedLedger.revision, previous: trip)
+        XCTAssertFalse(resumed.needsApplication)
+        let reused = try await LedgerCheckoutAdapter.apply(resumed, ledger: reopenedLedger, pickup: reopenedPickup)
+        XCTAssertTrue(reused)
+        XCTAssertEqual(reopenedPickup.journey, trip)
+    }
+
+    func testOneGroceryKeepsMeasuredDinnerNeedsAndRejectsAnUnreviewedSibling() throws {
+        var shop = ShoppingLedger(title: "Three dinners", basis: basis())
+        let now = Date(timeIntervalSince1970: 1_800_000_000), zone = shop.basis.timeZoneIdentifier
+        let owner = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "adult", shopID: shop.id,
+            assignedShopperID: "adult", canPlan: true, canReadBudget: true, hasPaidTools: true, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        var planning = DinnerPlanningState()
+        let cilantro = MealIngredient(name: "Cilantro", quantity: nil, originalWording: "cilantro al gusto", checkedWithoutAmount: true)
+        let meals = [
+            MealTemplate(title: "Soup", ingredients: [cilantro]),
+            MealTemplate(title: "Tacos", ingredients: [.init(name: "Cilantro", quantity: quantity(2))]),
+            MealTemplate(title: "Salsa", ingredients: [.init(name: "Cilantro", quantity: quantity(1))])
+        ]
+        var dinners: [PlannedDinner] = []
+        for (index, meal) in meals.enumerated() {
+            let accepted = AcceptedDinner(id: UUID(), template: meal, acceptedAt: now)
+            try planning.accept(accepted, access: owner, at: now)
+            let day = try MealDay(date: now.addingTimeInterval(Double(index) * 86400), timeZoneIdentifier: zone)
+            var dinner = PlannedDinner(acceptedDinnerID: accepted.id, template: meal, day: day)
+            if let shared = dinners.first { dinner.reviewedGroceryLines = [0: shared.lineIDs[0]] }
+            dinners.append(dinner)
+        }
+        let plan = try DinnerPlanningEngine.preview(changes: dinners.map(DinnerLedgerChange.choose), tool: .threeDinnerBasket,
+            ledger: shop, state: planning, access: owner, phase: .draft, at: now)
+        _ = try DinnerPlanningEngine.apply(plan.proposal, ledger: &shop, state: &planning, access: owner, phase: .draft, at: now)
+        let lineID = dinners[0].lineIDs[0]
+        XCTAssertEqual(shop.lines.map(\.id), [lineID])
+        let review = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)
+        XCTAssertEqual(review.lines.map(\.id), [lineID])
+        XCTAssertEqual(review.lines.first?.quantity.amount, try Rational(3))
+        XCTAssertEqual(review.needs.map(\.id), [dinners[1].contributionIDs[0], dinners[2].contributionIDs[0]])
+        XCTAssertEqual(review.needs.map(\.amount.amount), [try Rational(2), .one])
+        XCTAssertEqual(review.details.map(\.sourceOccurrenceID), [dinners[1].occurrenceID, dinners[2].occurrenceID])
+        XCTAssertEqual(shop.contributions(forLineID: lineID).first?.checkedWithoutAmount, true)
+
+        var unknown = shop
+        try unknown.updateContribution(contributionID: dinners[2].contributionIDs[0], quantity: nil, notes: "Amount unknown")
+        XCTAssertThrowsError(try LedgerCheckoutAdapter.review(shop: unknown, workspaceRevision: 2, previous: nil)) { error in
+            XCTAssertEqual(error as? LedgerCheckoutError, .missingQuantity)
+        }
+
+        // The shopper still has two items in hand after removing both measured dinners.
+        try shop.pickPart(lineID: lineID, amount: Rational(2), expectedRevision: shop.revisionID)
+        try shop.removeMeal(occurrenceID: dinners[1].occurrenceID)
+        try shop.removeMeal(occurrenceID: dinners[2].occurrenceID)
+        XCTAssertEqual(shop.lines.filter { !$0.isTrashed }.map(\.id), [lineID])
+        XCTAssertEqual(shop.contributions(forLineID: lineID).map(\.id), dinners[0].contributionIDs)
+        XCTAssertNil(try shop.quantity(forLineID: lineID))
+        XCTAssertEqual(try shop.pickedQuantity(forLineID: lineID)?.amount, try Rational(2))
+        let picked = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 3, previous: nil)
+        XCTAssertEqual(picked.lines.map(\.id), [lineID])
+        XCTAssertEqual(picked.lines.first?.quantity.amount, try Rational(2))
+        XCTAssertTrue(picked.sourceNeeds.isEmpty)
+        XCTAssertTrue(picked.needs.isEmpty)
+        XCTAssertTrue(picked.details.isEmpty)
+    }
+
     func testFrozenRetailerCopyPreservesReviewedItemExclusionsAndOmitsPrivateCapture() throws {
         var shop = ShoppingLedger(title: "Pickup", basis: basis())
         let beans = CaptureImportLine(originalText: "Private transcription", name: "beans", packCount: 2,
@@ -694,5 +814,145 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
+    }
+}
+
+extension LedgerCheckoutAdapterTests {
+    func testReducedRequestKeepsThreePickedPeppersAndTwoDinnerPeppersWithoutReusingTheTwoPackPrice() throws {
+        var shop = ShoppingLedger(title: "Dinner pickup", basis: basis())
+        let pack = CaptureImportLine(originalText: "2-pack peppers", name: "Peppers", packCount: 1, amountPerPack: quantity(2))
+        try shop.commitImport(shop.stageCaptureImport(id: UUID(), originalText: pack.originalText, source: .typed, lines: [pack]))
+        let supply = try XCTUnwrap(shop.contributions.first)
+        let dinner = try shop.chooseMeal(.init(title: "Stuffed peppers", ingredients: [.init(name: "Peppers", quantity: quantity(2))]))
+        let mealSource = try XCTUnwrap(shop.mealOccurrences.first { $0.id == dinner }?.ingredientContributionIDs.first)
+        try shop.linkContribution(contributionID: mealSource, within: supply.id, quantity: quantity(2))
+
+        let original = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)
+        let two = try XCTUnwrap(original.lines.first)
+        XCTAssertEqual(two.packages, [.init(count: 1, amountPerPack: try Rational(2), unit: .count)])
+        let priced = BasketLine(id: two.id, name: two.name, quantity: two.quantity, expectedCost: .exact(.init(minorUnits: 400)),
+                                packages: try XCTUnwrap(two.packages))
+        var prior = PickupJourney(id: shop.id, savedAt: Date())
+        prior.ledgerBasis = shop.basis
+        prior.basket = try BasketPlan(id: shop.id, revisionID: UUID(), lines: [priced], createdAt: Date())
+
+        try shop.updateContribution(contributionID: supply.id, quantity: quantity(3), notes: "")
+        try shop.setChecked(lineID: supply.lineID, checked: true)
+        try shop.updateContribution(contributionID: supply.id, quantity: quantity(2), notes: "")
+        XCTAssertTrue(try XCTUnwrap(shop.lines.first { $0.id == supply.lineID }).isChecked)
+        XCTAssertEqual(try shop.pickedQuantity(forLineID: supply.lineID)?.amount, try Rational(3))
+
+        let reviewed = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 4, previous: prior)
+        XCTAssertEqual(reviewed.lines.count, 1)
+        let purchased = try XCTUnwrap(reviewed.lines.first)
+        XCTAssertEqual(purchased.quantity.amount, try Rational(3))
+        XCTAssertNil(purchased.packages, "Three peppers cannot be described as whole two-packs")
+        guard case .unknown = purchased.expectedCost else { return XCTFail("The previous $4 price covered two peppers") }
+        XCTAssertEqual(reviewed.needs, original.needs)
+        XCTAssertEqual(reviewed.needs.map(\.amount.amount), [try Rational(2)])
+        XCTAssertEqual(reviewed.details.first?.sourceOccurrenceID, dinner)
+    }
+
+    func testCurrentPackPriceMustDescribeTheObservedPurchaseWhileAnUnpickedRequestCanRoundUp() throws {
+        var shop = ShoppingLedger(basis: basis())
+        let id = try shop.addManualLine(name: "Peppers", quantity: quantity(2))
+        let workspace = UUID()
+        func review(_ source: ShoppingLedger, choosing offerID: String) throws -> LedgerCheckoutReview {
+            let requirement = try LedgerPackRequirement.review(shop: source, lineID: id)
+            let request = ComparisonRequest(itemName: requirement.name, needed: requirement.quantity, protectedAmount: requirement.protectedQuantity,
+                offerA: PackOffer(id: "pair", label: "Two peppers", usableQuantity: quantity(2), price: .init(minorUnits: 400)),
+                offerB: PackOffer(id: "trio", label: "Three peppers", usableQuantity: quantity(3), price: .init(minorUnits: 550)))
+            let selection = try LedgerPackSelection(workspaceID: workspace, shop: source, lineID: id, request: request,
+                                                    selectedOfferID: offerID, at: Date(), source: "Shelf label")
+            return try LedgerCheckoutAdapter.review(shop: source, workspaceRevision: 1, previous: nil, packSelections: [selection], workspaceID: workspace)
+        }
+        let planned = try review(shop, choosing: "trio")
+        XCTAssertEqual(planned.lines.first?.quantity.amount, try Rational(3))
+        XCTAssertEqual(planned.lines.first?.expectedCost, .exact(.init(minorUnits: 550)))
+        let contribution = try XCTUnwrap(shop.contributions(forLineID: id).first)
+        try shop.updateContribution(contributionID: contribution.id, quantity: quantity(3), notes: "")
+        try shop.pickPart(lineID: id, amount: Rational(3), expectedRevision: shop.revisionID)
+        try shop.updateContribution(contributionID: contribution.id, quantity: quantity(2), notes: "")
+
+        let matched = try review(shop, choosing: "trio")
+        XCTAssertEqual(matched.lines.first?.quantity.amount, try Rational(3))
+        XCTAssertEqual(matched.lines.first?.packages, [.init(count: 1, amountPerPack: try Rational(3), unit: .count)])
+        XCTAssertEqual(matched.lines.first?.expectedCost, .exact(.init(minorUnits: 550)))
+        XCTAssertEqual(matched.packSelections.count, 1)
+        XCTAssertEqual(matched.needs.map(\.amount.amount), [try Rational(2)])
+
+        let mismatch = try review(shop, choosing: "pair")
+        XCTAssertEqual(mismatch.lines.first?.quantity.amount, try Rational(3))
+        XCTAssertNil(mismatch.lines.first?.packages)
+        XCTAssertTrue(mismatch.packSelections.isEmpty)
+        XCTAssertEqual(mismatch.unreviewedPackLineIDs, [id])
+        guard case .unknown = try XCTUnwrap(mismatch.lines.first).expectedCost else { return XCTFail("The two-pack price cannot cover three peppers") }
+    }
+
+    func testPartialMeasuredPickOmitsMixedPackagingWhileFullPickKeepsBothRecordedSizes() throws {
+        var shop = ShoppingLedger()
+        try shop.commitImport(shop.stageImport(text: "2 × 15 oz beans"))
+        let id = try XCTUnwrap(shop.lines.first?.id)
+        let second = try shop.stageImport(text: "1 × 8 oz beans")
+        try shop.commitImport(second, decisions: [try XCTUnwrap(second.lines.first?.id): .addToLine(id)])
+        let planned = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)
+        let packages = try XCTUnwrap(planned.lines.first?.packages)
+        XCTAssertEqual(packages.count, 2)
+        try shop.pickPart(lineID: id, amount: Rational(19), expectedRevision: shop.revisionID)
+        let partial = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 2, previous: nil)
+        XCTAssertEqual(partial.lines.first?.quantity.amount, try Rational(19))
+        XCTAssertEqual(partial.lines.first?.quantity.unit, .ounce)
+        XCTAssertNil(partial.lines.first?.packages)
+        try shop.pickPart(lineID: id, amount: Rational(19), expectedRevision: shop.revisionID)
+        let full = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 3, previous: nil)
+        XCTAssertEqual(full.lines.first?.quantity.amount, try Rational(38))
+        XCTAssertEqual(full.lines.first?.packages, packages)
+        XCTAssertEqual(full.needs, planned.needs)
+    }
+
+    func testReopenedPickKeepsHistoricalPacksAndLegacyPickNeverAcquiresTodaysPackSize() throws {
+        var shop = ShoppingLedger()
+        try shop.commitImport(shop.stageImport(text: "2 × 8 oz beans"))
+        let originalSource = try XCTUnwrap(shop.contributions.first)
+        let id = originalSource.lineID
+        let small = try shop.stageImport(text: "1 × 4 oz beans")
+        try shop.commitImport(small, decisions: [try XCTUnwrap(small.lines.first?.id): .addToLine(id)])
+        let pickedPacks = try XCTUnwrap(shop.itemPackages[id])
+        try shop.setChecked(lineID: id, checked: true)
+        try shop.removeContribution(contributionID: originalSource.id)
+        XCTAssertEqual(try shop.quantity(forLineID: id)?.amount, try Rational(4))
+
+        let encoded = try JSONEncoder().encode(shop)
+        let reopened = try JSONDecoder().decode(ShoppingLedger.self, from: encoded)
+        let saved = try LedgerCheckoutAdapter.review(shop: reopened, workspaceRevision: 4, previous: nil)
+        XCTAssertEqual(saved.lines.first?.quantity.amount, try Rational(20))
+        XCTAssertEqual(saved.lines.first?.packages, pickedPacks)
+        XCTAssertEqual(saved.needs.map(\.amount.amount), [try Rational(4)])
+
+        let workspace = UUID()
+        let demand = try LedgerPackRequirement.review(shop: reopened, lineID: id)
+        let offeredSize = Quantity(amount: try Rational(20), unit: .ounce, originalLiteral: "20 oz")
+        let request = ComparisonRequest(itemName: demand.name, needed: demand.quantity, protectedAmount: demand.protectedQuantity,
+            offerA: PackOffer(id: "large", label: "One 20 oz tin", usableQuantity: offeredSize, price: .init(minorUnits: 600)),
+            offerB: PackOffer(id: "small", label: "One 4 oz tin", usableQuantity: demand.quantity, price: .init(minorUnits: 150)))
+        let large = try LedgerPackSelection(workspaceID: workspace, shop: reopened, lineID: id, request: request,
+                                            selectedOfferID: "large", at: Date(), source: "Shelf label")
+        XCTAssertEqual(large.purchasedQuantity?.amount, saved.lines.first?.quantity.amount)
+        let competing = try LedgerCheckoutAdapter.review(shop: reopened, workspaceRevision: 4, previous: nil, packSelections: [large], workspaceID: workspace)
+        XCTAssertEqual(competing.lines, saved.lines, "A single 20 oz tin has the same weight but different packaging and price")
+        XCTAssertEqual(competing.unreviewedPackLineIDs, [id])
+
+        var document = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        var lines = try XCTUnwrap(document["lines"] as? [[String: Any]])
+        var pick = try XCTUnwrap(lines[0]["tripPick"] as? [String: Any])
+        XCTAssertNotNil(pick.removeValue(forKey: "packages"))
+        lines[0]["tripPick"] = pick
+        document["lines"] = lines
+        let legacyData = try JSONSerialization.data(withJSONObject: document)
+        let legacyShop = try JSONDecoder().decode(ShoppingLedger.self, from: legacyData)
+        let legacy = try LedgerCheckoutAdapter.review(shop: legacyShop, workspaceRevision: 4, previous: nil)
+        XCTAssertEqual(legacy.lines.first?.quantity.amount, try Rational(20))
+        XCTAssertEqual(legacy.needs, saved.needs)
+        XCTAssertNil(legacy.lines.first?.packages, "A remaining four-ounce request cannot prove which packages made up the twenty ounces already picked")
     }
 }

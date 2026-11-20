@@ -114,7 +114,8 @@ struct PickupCheckoutMealSource: Codable, Equatable {
             throw PickupMealRecoveryError.invalid
         }
         var expectedNeeds: [AllocationNeed] = [], expectedDetails: [PickupNeedDetail] = []
-        for line in shop.lines where !line.isTrashed && !line.isHandled {
+        let handChecked = shop.handCheckedOnlyLineIDs
+        for line in shop.lines where !line.isTrashed && !line.isHandled && !handChecked.contains(line.id) {
             guard let quantity = try shop.quantity(forLineID: line.id) else {
                 if !shop.belongsInCurrentBasket(line) { continue }
                 throw PickupMealRecoveryError.invalid

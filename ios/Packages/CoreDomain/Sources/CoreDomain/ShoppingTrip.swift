@@ -19,6 +19,33 @@ public struct ShoppingStopObservation: Codable, Equatable, Sendable {
 public struct PhysicalGroceryPick: Codable, Equatable, Sendable {
     public let amount: Quantity
     public let at: Date
+    /// Pack composition at the time of the pick, before a list edit can change
+    /// the labels that originally explained the purchase. Older picks omit it.
+    public internal(set) var packages: [BasketPackage]? = nil
+
+    public func checkoutPackages(requested: Quantity?, sourcePackages: [BasketPackage]) throws -> [BasketPackage] {
+        if let packages { return packages }
+        guard let requested, !sourcePackages.isEmpty,
+              let picked = try amount.converted(to: requested.unit),
+              try Self.total(sourcePackages, in: requested.unit) == requested.amount else { return [] }
+        if picked == requested.amount { return sourcePackages }
+        guard picked < requested.amount, let first = sourcePackages.first,
+              sourcePackages.allSatisfy({ $0.unit == first.unit && $0.amountPerPack == first.amountPerPack }),
+              let converted = try amount.converted(to: first.unit) else { return [] }
+        let count = try converted.divided(by: first.amountPerPack)
+        guard count.denominator == 1 else { return [] }
+        return [BasketPackage(count: count.numerator, amountPerPack: first.amountPerPack, unit: first.unit)]
+    }
+
+    fileprivate static func total(_ packages: [BasketPackage], in unit: UnitOfMeasure) throws -> Rational? {
+        var total = Rational.zero
+        for pack in packages {
+            let size = Quantity(amount: pack.amountPerPack, unit: pack.unit, originalLiteral: "")
+            guard pack.count > 0, pack.amountPerPack > .zero, let value = try size.converted(to: unit) else { return nil }
+            total = try total.adding(value.multiplied(by: Rational(pack.count)))
+        }
+        return total
+    }
 }
 
 public enum GroceryTripAction: String, Codable, Sendable {
@@ -57,6 +84,10 @@ extension ShoppingLine {
             try pick.amount.validate()
             try ledgerDate(pick.at)
             guard pick.amount.amount > .zero else { throw LedgerError.invalid("tripPick") }
+            if let packages = pick.packages, !packages.isEmpty,
+               try PhysicalGroceryPick.total(packages, in: pick.amount.unit) != pick.amount.amount {
+                throw LedgerError.invalid("tripPickPackages")
+            }
         }
         try ledgerDate(tripUndo?.at)
         try ledgerDate(tripUndo?.checkedAt)

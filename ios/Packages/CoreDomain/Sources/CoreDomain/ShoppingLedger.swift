@@ -258,6 +258,10 @@ public struct LedgerContribution: Codable, Equatable, Sendable, Identifiable {
     public var capture: CaptureImportMetadata? = nil
     public var originalPack: ListQuantityParser.PackLabel? = nil
     public var checkedWithoutAmount: Bool? = nil
+
+    public var isHandCheckedUnmeasuredIngredient: Bool {
+        source.isMeal && checkedWithoutAmount == true && quantity == nil
+    }
 }
 
 public enum AllocationKind: String, Codable, Sendable { case duplicate, withinExisting }
@@ -621,7 +625,18 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         return contributions(forLineID: lineID).filter { $0.source.isMeal || $0.source.isProtected }
     }
 
-    /// Nil is unresolved, including any missing or nonconvertible contribution.
+    public var handCheckedOnlyLineIDs: Set<UUID> {
+        var handChecked = Set<UUID>()
+        var required = Set<UUID>()
+        for member in contributions where member.removedAt == nil {
+            if member.isHandCheckedUnmeasuredIngredient { handChecked.insert(member.lineID) }
+            else { required.insert(member.lineID) }
+        }
+        return handChecked.subtracting(required)
+    }
+
+    /// A hand-checked unmeasured ingredient has no numeric demand. All other
+    /// active contributions must have compatible quantities for a known total.
     /// A trashed line retains its need for inspection and restoration.
     public func quantity(forLineID lineID: UUID) throws -> Quantity? {
         let line = lines[try lineIndex(lineID)]
@@ -629,12 +644,12 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     }
 
     private func quantity(for line: ShoppingLine, members: [LedgerContribution], edges: [AllocationEdge]) throws -> Quantity? {
-        guard !members.isEmpty else { return nil }
-        guard let unit = members.first?.quantity?.unit else { return nil }
-        let activeIDs = Set(members.map(\.id))
-        let roots = duplicateRoots(for: members, edges: edges)
+        let required = members.filter { !$0.isHandCheckedUnmeasuredIngredient }
+        guard let unit = required.first?.quantity?.unit else { return nil }
+        let activeIDs = Set(required.map(\.id))
+        let roots = duplicateRoots(for: required, edges: edges)
         var totals: [UUID: Rational] = [:]
-        for member in members {
+        for member in required {
             guard let quantity = member.quantity, let amount = try quantity.converted(to: unit) else { return nil }
             let root = roots[member.id] ?? member.id
             totals[root] = max(totals[root] ?? .zero, amount)
@@ -1318,9 +1333,15 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         for line in lines {
             let requested = try quantity(for: line, members: membersByLine[line.id] ?? [], edges: edgesByLine[line.id] ?? [])
             if let actual = line.tripPick {
-                guard let requested, let picked = try actual.amount.converted(to: requested.unit),
-                      line.isChecked == (picked >= requested.amount),
-                      !line.isChecked || line.checkedAt == actual.at else { throw LedgerError.invalid("tripPickAmount") }
+                if let requested {
+                    guard let picked = try actual.amount.converted(to: requested.unit),
+                          line.isChecked == (picked >= requested.amount) else { throw LedgerError.invalid("tripPickAmount") }
+                } else {
+                    let members = membersByLine[line.id] ?? []
+                    guard line.isChecked, !members.isEmpty, members.allSatisfy(\.isHandCheckedUnmeasuredIngredient)
+                    else { throw LedgerError.invalid("tripPickAmount") }
+                }
+                guard !line.isChecked || line.checkedAt == actual.at else { throw LedgerError.invalid("tripPickAmount") }
             }
             guard !line.isChecked || line.stopObservation == nil,
                   line.stopObservation?.outcome != .deferred || line.inStorePickedAt == nil else {
@@ -1501,6 +1522,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         let newMembers = changedSources ? Dictionary(grouping: contributions, by: \.lineID) : [:]
         let oldEdges = changedSources ? Dictionary(grouping: previous.allocations, by: \.demandContributionID) : [:]
         let newEdges = changedSources ? Dictionary(grouping: allocations, by: \.demandContributionID) : [:]
+        var priorPackages: [UUID: [BasketPackage]]?
+        var currentPackages: [UUID: [BasketPackage]]?
         for index in tracked {
             let line = lines[index]
             guard let prior = old[line.id] else { continue }
@@ -1513,14 +1536,32 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
             guard identityChanged || membersChanged || edgesChanged else { continue }
             lines[index].stopObservation = nil
-            guard let pick = line.tripPick else { continue }
-            guard !identityChanged, let need = try quantity(forLineID: line.id),
-                  let physical = try pick.amount.converted(to: need.unit) else {
+            guard var pick = line.tripPick else { continue }
+            let checked: Bool
+            let members = (newMembers[line.id] ?? []).filter { $0.removedAt == nil }
+            if !identityChanged, let need = try quantity(forLineID: line.id),
+               let physical = try pick.amount.converted(to: need.unit) {
+                checked = physical >= need.amount
+            } else if !identityChanged, !members.isEmpty, members.allSatisfy(\.isHandCheckedUnmeasuredIngredient) {
+                checked = true
+            } else {
                 lines[index].checkedAt = nil
                 lines[index].tripPick = nil
                 continue
             }
-            lines[index].checkedAt = physical >= need.amount ? pick.at : nil
+            if pick.packages == nil, prior.tripPick == pick {
+                if priorPackages == nil { priorPackages = previous.itemPackages }
+                if currentPackages == nil { currentPackages = itemPackages }
+                let oldPacks = priorPackages?[line.id] ?? [], newPacks = currentPackages?[line.id] ?? []
+                if !oldPacks.isEmpty || !newPacks.isEmpty {
+                    let original = try pick.checkoutPackages(requested: previous.quantity(forLineID: line.id), sourcePackages: oldPacks)
+                    if try original != pick.checkoutPackages(requested: quantity(forLineID: line.id), sourcePackages: newPacks) {
+                        pick.packages = original
+                        lines[index].tripPick = pick
+                    }
+                }
+            }
+            lines[index].checkedAt = checked ? pick.at : nil
         }
     }
 

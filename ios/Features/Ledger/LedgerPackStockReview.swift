@@ -47,7 +47,7 @@ enum LedgerPackStockReview {
             guard !basket.current.lines.contains(where: { $0.id == selection.lineID }) else { throw LedgerPackError.staleSource }
         } else {
             guard let line = basket.current.lines.first(where: { $0.id == selection.lineID }),
-                  line.quantity == selection.purchasedQuantity,
+                  selection.matchesAppliedPurchase(line, shop: shop),
                   line.expectedCost == selection.selectedResult.totalCost.map(CostEvidence.exact) else { throw LedgerPackError.staleSource }
         }
         return reviewed
@@ -79,7 +79,7 @@ enum LedgerPackStockReview {
                 guard !basket.current.lines.contains(where: { $0.id == selection.lineID }) else { return false }
             } else {
                 guard let line = basket.current.lines.first(where: { $0.id == selection.lineID }),
-                      line.quantity == selection.purchasedQuantity,
+                      selection.matchesAppliedPurchase(line, shop: journey.mealSource?.shop),
                       line.expectedCost == selection.selectedResult.totalCost.map(CostEvidence.exact) else { return false }
             }
         }
