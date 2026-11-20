@@ -533,6 +533,9 @@ struct PantryReceiptEntry: View {
 struct ReceiptPurchaseDateFields: View {
     @Binding var draft: ReceiptImportDraft
     @Environment(\.locale) private var locale
+    @Environment(\.calendar) private var calendar
+    @Environment(\.timeZone) private var timeZone
+    @State private var choosingDate = false
 
     static func displayLocale(regionLocale: Locale, appLanguage: String?) -> Locale {
         guard let appLanguage,
@@ -550,8 +553,21 @@ struct ReceiptPurchaseDateFields: View {
         } else {
             Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review."))
         }
-        DatePicker(pantryText("Purchase date"), selection: $draft.selectedPurchaseDate, in: ...Date(), displayedComponents: .date)
-            .environment(\.locale, Self.displayLocale(regionLocale: locale, appLanguage: Bundle.main.preferredLocalizations.first))
+        let dateLocale = Self.displayLocale(regionLocale: locale, appLanguage: Bundle.main.preferredLocalizations.first)
+        let dateTitle = pantryText("Purchase date")
+        let wording = draft.selectedPurchaseDate.formatted(Date.FormatStyle(
+            date: .long, time: .omitted, locale: dateLocale, calendar: calendar, timeZone: timeZone))
+        DisclosureGroup(isExpanded: $choosingDate) {
+            DatePicker(dateTitle, selection: $draft.selectedPurchaseDate, in: ...Date(), displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .environment(\.locale, dateLocale)
+                .onChange(of: draft.selectedPurchaseDate) { _, _ in choosingDate = false }
+        } label: {
+            LabeledContent(dateTitle, value: wording)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: dateTitle + ", " + wording,
+                                                         identifier: "receipt.purchaseDate"))
         Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
     }
 }

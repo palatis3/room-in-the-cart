@@ -1431,16 +1431,33 @@ import XCTest
         XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
         let storeIssue = app.buttons["receipt.document.storeIssue"]
+        let accept = app.buttons["receipt.document.accept"]
         reveal(storeIssue)
         XCTAssertTrue(storeIssue.isHittable)
-        XCTAssertFalse(app.buttons["receipt.document.accept"].isEnabled)
-        receiptTap(storeIssue)
+        // The issue row can become visible while the lazy Form still excludes
+        // the disabled button directly below it from the accessibility tree.
+        for _ in 0..<4 {
+            if accept.exists { break }
+            scrollContent(upward: true)
+        }
+        guard accept.waitForExistence(timeout: 5) else {
+            return XCTFail("Expected the blocked review action after scrolling to the end of the printed lines")
+        }
+        XCTAssertFalse(accept.isEnabled)
+        receiptTap(storeIssue, initiallyUpward: false)
         let store = app.textFields["receipt.document.store"]
         XCTAssertTrue(store.waitForExistence(timeout: 5))
         XCTAssertEqual(store.label, "Store or receipt name (required)")
-        fill("Room Market", into: "receipt.document.store", control: store)
+        guard app.keyboards.firstMatch.waitForExistence(timeout: 5) else {
+            return XCTFail("The store issue should open the keyboard without another field tap")
+        }
+        let typingTip = app.staticTexts["Speed up your typing by sliding your finger across the letters to compose a word."]
+        if typingTip.exists { app.buttons["Continue"].tap() }
+        app.typeText("Room Market")
+        XCTAssertEqual(store.value as? String, "Room Market")
+        receiptTap(app.buttons["receipt.document.keyboardDone"])
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
-        tap(app.buttons["receipt.document.accept"])
+        receiptTap(accept)
 
         let date = app.switches["I checked the purchase date."]
         XCTAssertTrue(date.waitForExistence(timeout: 10), "The selected image should hand its lines to the receipt editor.")
