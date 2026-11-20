@@ -211,7 +211,6 @@ final class ReleasePerformanceUITests: XCTestCase {
         let lines = fixture.split(separator: "\n")
         XCTAssertEqual(lines.count, fixtureCount)
         XCTAssertEqual(Set(lines).count, fixtureCount)
-        let firstLine = try XCTUnwrap(lines.first)
 
         app.launch()
         let startShop = element("openPickupList")
@@ -229,12 +228,13 @@ final class ReleasePerformanceUITests: XCTestCase {
         XCTAssertTrue(paste.isEnabled, "Native Paste must accept the runner’s plain-text fixture")
         // iOS 17 can expose the entire Form row for the leading Paste control.
         paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
-        let editor = element("ledgerImportText")
-        let pasted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value BEGINSWITH %@", String(firstLine)), object: editor)
-        XCTAssertEqual(XCTWaiter.wait(for: [pasted], timeout: 12), .completed)
-        XCTAssertTrue((editor.value as? String) == fixture, "Native Paste must preserve the complete 500-line fixture")
+        let review = app.buttons["ledgerReviewImport"]
+        // Review becomes enabled when the native Paste button supplies the text.
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == YES"), object: review)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 12), .completed)
+        XCTAssertTrue(app.textViews["ledgerImportText"].value as? String == fixture,
+                      "Native Paste must preserve the complete 500-line fixture")
 
-        let review = element("ledgerReviewImport")
         let form = app.collectionViews.firstMatch
         // Begin below the expanded editor so the drag scrolls the form.
         let formBottom = form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.91))
