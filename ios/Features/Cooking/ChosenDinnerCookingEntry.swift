@@ -10,10 +10,12 @@ struct DinnerCookingPage: Equatable, Encodable {
         let amount: Quantity?
         let group: String?
         let protected: Bool
+        var checkedWithoutAmount: Bool? = nil
 
         var label: String {
             var parts = [name]
-            if amount != nil || group != nil { parts.append(dinnerQuantity(amount)) }
+            if checkedWithoutAmount == true { parts.append(tonightText("Checked by hand · unmeasured")) }
+            else if amount != nil || group != nil { parts.append(dinnerQuantity(amount)) }
             if let group { parts.append(group) }
             if protected { parts.append(ledgerText("Protected")) }
             return parts.joined(separator: " · ")
@@ -60,6 +62,9 @@ struct DinnerCookingPage: Equatable, Encodable {
 
     private static func ingredients(for row: LedgerContribution, meal: MealOccurrence, shop: ShoppingLedger,
                                     bindings: [DinnerPortionBinding]?) -> [Ingredient] {
+        if row.checkedWithoutAmount == true && row.quantity == nil {
+            return [.init(name: row.productName, amount: nil, group: nil, protected: false, checkedWithoutAmount: true)]
+        }
         guard !meal.servingGroups.isEmpty else {
             return [.init(name: row.productName, amount: row.quantity, group: nil, protected: false)]
         }

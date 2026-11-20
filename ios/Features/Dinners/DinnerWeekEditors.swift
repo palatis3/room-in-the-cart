@@ -190,7 +190,7 @@ struct DinnerOccurrenceView: View {
                     DinnerDecisionButton(model: model, title: dinnerText("Review ingredient portions and guests"), identifier: "dinnerGuests") { DinnerGuestsView(model: model, meal: meal) }
                     ForEach(meal.ingredientContributionIDs, id: \.self) { id in
                         if let source = model.shop?.contributions.first(where: { $0.id == id && $0.removedAt == nil }) {
-                            VStack(alignment: .leading) { Text(source.productName); Text(dinnerQuantity(source.quantity)) }
+                            VStack(alignment: .leading) { Text(source.productName); Text(source.checkedWithoutAmount == true && source.quantity == nil ? tonightText("Checked by hand · unmeasured") : dinnerQuantity(source.quantity)) }
                                 .accessibilityElement(children: .combine)
                         }
                     }

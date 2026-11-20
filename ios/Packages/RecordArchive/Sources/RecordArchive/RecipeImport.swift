@@ -17,6 +17,44 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
         self.reviewedSteps = reviewedSteps?.contains(where: \.hasReviewedDetails) == true ? reviewedSteps : nil
         self.steps = steps; self.sourceURL = sourceURL; self.notes = notes
     }
+    public var suggestedServings: Rational? {
+        var tokens = yieldText.lowercased().split(whereSeparator: \.isWhitespace).map(String.init)[...]
+        guard !ListQuantityParser.takeRange(from: &tokens) else { return nil }
+        let prefix = tokens.first
+        let explicitlyServes = prefix == "serves"
+        if explicitlyServes || prefix == "para" { tokens = tokens.dropFirst() }
+        guard let amount = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true, allowingDecimalComma: true),
+              amount > .zero else { return nil }
+        let units = ["serving", "servings", "people", "person", "porción", "porciones", "ración", "raciones", "persona", "personas"]
+        return (explicitlyServes && tokens.isEmpty) || (tokens.count == 1 && units.contains(tokens.first ?? "")) ? amount : nil
+    }
+
+    /// Seed editable facts only where the source names a supported measure or an individual piece.
+    public static func ingredientDraft(_ original: String) -> MealIngredient {
+        var tokens = ListQuantityParser.itemTokens(original)
+        let unresolved = MealIngredient(name: original, quantity: nil, originalWording: original)
+        guard original.utf8.count <= StagedListImport.maximumOriginalLineBytes,
+              !ListQuantityParser.takeRange(from: &tokens),
+              let number = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true, allowingDecimalComma: true),
+              number > .zero else { return unresolved }
+        let quantity: Quantity
+        if let pack = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original, allowingDecimalComma: true) {
+            guard let total = pack.total else { return unresolved }
+            quantity = total
+        } else {
+            let measure = ListQuantityParser.takeMeasure(number, from: &tokens)
+            let pieces: Set<String> = ["egg", "eggs", "huevo", "huevos", "onion", "onions", "cebolla", "cebollas",
+                                       "carrot", "carrots", "zanahoria", "zanahorias", "tomato", "tomatoes", "tomate", "tomates",
+                                       "lemon", "lemons", "limón", "limones", "tortilla", "tortillas"]
+            guard let amount = measure.amount, let first = tokens.first,
+                  measure.unit != nil || pieces.contains(first.lowercased().trimmingCharacters(in: .punctuationCharacters))
+            else { return unresolved }
+            quantity = Quantity(amount: amount, unit: measure.unit ?? .count, originalLiteral: original)
+        }
+        guard !tokens.isEmpty, quantity.amount > .zero else { return unresolved }
+        return MealIngredient(name: tokens.joined(separator: " "), quantity: quantity, originalWording: original)
+    }
+
     public enum MissingField: Hashable, Sendable { case servings, ingredients, instructions }
     public var missingFields: [MissingField] {
         func blank(_ value: String) -> Bool { value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }

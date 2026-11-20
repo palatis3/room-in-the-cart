@@ -9,13 +9,14 @@ public struct TonightDinnerSelection: Equatable, Sendable {
     public var createsPickup: Bool { newPickup != nil }
     private let newPickup: ShoppingLedger?
     private let originalSelection: UUID?
-    private let day: MealDay
+    public let plannedDay: MealDay
+    private let previewedDay: MealDay
 
     public static func prepare(match: PantryMealMatcher.Review, destination: ShoppingLedger, createsPickup: Bool,
                                workspace: LedgerWorkspace, access: DinnerAccessContext,
-                               phase: BasketPhase, now: Date) throws -> Self {
+                               phase: BasketPhase, now: Date, plannedDate: Date? = nil) throws -> Self {
         guard case .local = access.scope else { throw DinnerPlanningError.forbidden }
-        guard match.eligibility.eligible, match.hasConfirmedPantryFood else { throw DinnerPlanningError.reviewRequired("tonightSupply") }
+        guard match.canChooseUsingPantry else { throw DinnerPlanningError.reviewRequired("tonightSupply") }
         try access.validate(shopID: destination.id, at: now, applying: true)
         guard phase == .draft else { throw DinnerPlanningError.lockedBasket }
         let stored = workspace.shops.first { $0.id == destination.id }
@@ -24,11 +25,12 @@ public struct TonightDinnerSelection: Equatable, Sendable {
         guard match.preferenceRevision == workspace.dinnerPlanning.privateMealPreferences?.revision,
               contains(match.recipe, in: workspace) else { throw DinnerPlanningError.stalePreview }
         let day = try MealDay(date: now, timeZoneIdentifier: destination.basis.timeZoneIdentifier)
-        let meal = PlannedDinner(template: match.recipe, day: day)
+        let plannedDay = try plannedDate.map { try MealDay(date: $0, timeZoneIdentifier: day.timeZoneIdentifier) } ?? day
+        let meal = PlannedDinner(template: match.recipe, day: plannedDay)
         let preview = try DinnerPlanningEngine.preview(changes: [.choose(meal)], tool: .manual, ledger: destination,
             state: workspace.dinnerPlanning, access: access, phase: phase, at: now)
         return Self(preview: preview, recipe: match.recipe, destinationTitle: destination.title,
-                    newPickup: createsPickup ? destination : nil, originalSelection: workspace.selectedShopID, day: day)
+                    newPickup: createsPickup ? destination : nil, originalSelection: workspace.selectedShopID, plannedDay: plannedDay, previewedDay: day)
     }
 
     private static func contains(_ recipe: MealTemplate, in workspace: LedgerWorkspace) -> Bool {
@@ -46,7 +48,7 @@ public struct TonightDinnerSelection: Equatable, Sendable {
             guard workspace.selectedShopID == originalSelection,
                   Self.contains(recipe, in: workspace),
                   (newPickup != nil ? index == nil : index != nil),
-                  day == (try MealDay(date: now, timeZoneIdentifier: day.timeZoneIdentifier))
+                  previewedDay == (try MealDay(date: now, timeZoneIdentifier: previewedDay.timeZoneIdentifier))
             else { throw DinnerPlanningError.stalePreview }
         }
         guard var destination = index.map({ workspace.shops[$0] }) ?? newPickup else { throw DinnerPlanningError.stalePreview }

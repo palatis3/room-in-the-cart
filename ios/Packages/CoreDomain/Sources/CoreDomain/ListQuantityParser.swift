@@ -480,6 +480,11 @@ public enum ListQuantityParser {
         public let count: Int?
         public let amountPerPack: Quantity?
 
+        public init(count: Int?, amountPerPack: Quantity?) {
+            self.count = count
+            self.amountPerPack = amountPerPack
+        }
+
         func validate() throws {
             guard count.map({ $0 >= 0 }) ?? true else { throw DomainError.negativeQuantity }
             try amountPerPack?.validate()

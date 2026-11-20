@@ -53,17 +53,21 @@ enum DinnerEntry {
 }
 struct DinnerIngredientDraft: Identifiable {
     var id: UUID; var name: String; var amount: String; var unit: UnitOfMeasure; var notes: String; var exclusions: String
+    let originalWording: String?
+    var checkedWithoutAmount: Bool
     private var originalQuantity: Quantity?
     init(_ value: MealIngredient? = nil) {
         id = value?.id ?? UUID(); name = value?.name ?? ""; amount = value?.quantity?.amount.description ?? ""
         unit = value?.quantity?.unit ?? .count; notes = value?.notes ?? ""; exclusions = value?.exclusions.joined(separator: "\n") ?? ""
+        originalWording = value?.originalWording; checkedWithoutAmount = value?.checkedWithoutAmount == true
         originalQuantity = value?.quantity
     }
     func reviewedQuantity() throws -> Quantity? {
-        try DinnerEntry.quantity(amount, unit: unit, preserving: originalQuantity)
+        checkedWithoutAmount ? nil : try DinnerEntry.quantity(amount, unit: unit, preserving: originalQuantity)
     }
     func ingredient() throws -> MealIngredient {
-        MealIngredient(id: id, name: name, quantity: try reviewedQuantity(), notes: notes, exclusions: DinnerEntry.list(exclusions))
+        MealIngredient(id: id, name: name, quantity: try reviewedQuantity(), notes: notes, exclusions: DinnerEntry.list(exclusions),
+                       originalWording: originalWording, checkedWithoutAmount: checkedWithoutAmount)
     }
 }
 struct DinnerGroupDraft: Identifiable {

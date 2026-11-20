@@ -3,6 +3,12 @@ import CoreDomain
 import RecordArchive
 import DeviceSurfaces
 
+extension MealIngredient {
+    var reviewedAmountLabel: String {
+        checkedWithoutAmount == true ? tonightText("Checked by hand · unmeasured") : ledgerQuantity(quantity)
+    }
+}
+
 func tonightText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Tonight") }
 
 /// Both tabs enter the same private workspace. No selected pickup is required.
@@ -29,9 +35,14 @@ struct TonightEntry: View {
     @State private var foodToReview: TonightMealModel.Food?
     @State private var destination: UUID?
     @State private var newTitle = ""
+    @State private var query = ""
+    @State private var pinnedOnly = false
+    @State private var plannedDate = Date()
     @State private var preview: TonightPlanChoice.Review?
     @State private var message: String?
     @State private var applying = false
+    @ObservedObject private var productMemoryStore = PantryDigestStore.shared.recipeProductMemory
+    @ObservedObject private var packMemory = PantryDigestStore.shared.packMemory
     @ObservedObject private var home = AdultHomeSummaryStore.shared
     private var homeAccess: PantryDigestAccess? {
         guard model.batch == nil, scope != nil, let child else { return nil }
@@ -93,13 +104,25 @@ struct TonightEntry: View {
         .privacySensitive()
         .task(id: scope) {
             model.invalidate(); preview = nil; choosing = nil; sourceToReview = nil; manual = false; foodToReview = nil; recipeToReview = nil
-            message = nil; newTitle = ""; destination = nil; suggestedSecond = nil; requestedSection = nil
+            query = ""; pinnedOnly = false; message = nil; newTitle = ""; destination = nil; suggestedSecond = nil; requestedSection = nil
             if scope != nil && pickup.pantryIsActive { await refresh() }
         }
         .onChange(of: model.reviews) { _, _ in refreshHome() }
         .onChange(of: home.generation) { _, _ in refreshHome() }
         .onChange(of: ledger.workspace.dinnerPlanning.privateMealPreferences?.revision) { _, _ in
             model.invalidate(); preview = nil; choosing = nil
+            Task { await refresh() }
+        }
+        .onChange(of: productMemoryStore.generation) { _, _ in
+            preview = nil
+            if !applying { model.invalidate(); Task { await refresh() } }
+        }
+        .onChange(of: packMemory.generation) { _, _ in
+            preview = nil
+            Task { await refresh() }
+        }
+        .onChange(of: ledger.workspace.cookSoonPins) { _, _ in
+            preview = nil
             Task { await refresh() }
         }
         .onChange(of: ledger.workspace.privateMealFeedback) { _, _ in
@@ -155,6 +178,12 @@ struct TonightEntry: View {
         List {
             Group {
                 if choosing == nil { plannedMeals }
+                if model.input != nil {
+                    Section {
+                        PrivateRecipeSearchField(query: $query)
+                        Toggle(tonightText("Show Cook soon only"), isOn: $pinnedOnly)
+                    }
+                }
                 if model.batch != nil, model.input != nil {
                     Section(tonightText("Selected batch")) {
                         if let lot = model.selectedLot {
@@ -179,11 +208,12 @@ struct TonightEntry: View {
                             .id(ChoiceSection.review)
                             .accessibilityFocused($focusedSection, equals: .review)
                         Text(preview.destinationTitle)
+                        Text(ledgerMealDay(preview.plannedDay))
                         Text(tonightText(preview.createsPickup ? "Apply creates a new pickup and one dinner. Cancel creates neither." : "Apply adds one dinner to this pickup."))
                         ForEach(preview.recipe.ingredients) { ingredient in
-                            LabeledContent(ingredient.name, value: ledgerQuantity(ingredient.quantity))
+                            LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel)
                         }
-                        TonightPricesView(estimate: preview.estimate)
+                        TonightPricesView(estimate: preview.estimate, hasHandCheckedIngredients: preview.recipe.ingredients.contains { $0.checkedWithoutAmount == true })
                         Text(tonightText("Choosing records the full recipe need. It does not consume pantry food or reserve the matched batches."))
                         Button(tonightText("Apply dinner choice")) { Task { await apply(preview) } }.buttonStyle(PrimaryAction())
                             .disabled(applying || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("tonight.apply")
@@ -198,6 +228,8 @@ struct TonightEntry: View {
                             Text(tonightText("Start a new pickup")).tag(UUID?.none)
                             ForEach(ledger.workspace.shops) { shop in Text(shop.title).tag(Optional(shop.id)) }
                         }
+                        DatePicker(tonightText("Plan for a day"), selection: $plannedDate, displayedComponents: .date)
+                            .environment(\.timeZone, destinationZone)
                         if destination == nil { TextField(tonightText("New pickup name"), text: $newTitle) }
                         Button(tonightText("Preview dinner choice")) { Task { await prepareChoice(choosing) } }
                             .disabled(model.busy || (destination == nil && newTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
@@ -210,10 +242,14 @@ struct TonightEntry: View {
                         Button(tonightText("Review a recipe by hand")) { manual = true }.buttonStyle(PrimaryAction())
                     }
                 }
-                if !model.conflictingRecipes.isEmpty {
+                if (!query.isEmpty || pinnedOnly), model.input != nil, visibleSuggestions.isEmpty, visibleReview.isEmpty,
+                   visibleSources.isEmpty, !model.conflictingRecipes.contains(where: { visible($0.template) }) {
+                    Text(tonightText("No matching recipes"))
+                }
+                if model.conflictingRecipes.contains(where: { visible($0.template) }) {
                     Section(tonightText("Choose the saved recipe version")) {
                         Text(tonightText("These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches."))
-                        ForEach(model.conflictingRecipes) { source in
+                        ForEach(model.conflictingRecipes.filter { visible($0.template) }) { source in
                             VStack(alignment: .leading) {
                                 Text(source.template.title).font(.headline)
                                 Text(source.acceptedAt.map { tonightText("Accepted dinner") + " · " + $0.formatted(date: .abbreviated, time: .shortened) } ?? tonightText("Free reusable dinner"))
@@ -227,9 +263,9 @@ struct TonightEntry: View {
                         }
                     }
                 }
-                if !model.suggestions.isEmpty {
+                if !visibleSuggestions.isEmpty {
                     Section(tonightText("Pantry matches to review")) {
-                        ForEach(model.suggestions) { review in recipeRow(review) }
+                        ForEach(visibleSuggestions) { review in recipeRow(review) }
                     }
                 }
                 if let original = scope, let ledgerID = ledger.sourceWorkspaceID {
@@ -243,9 +279,9 @@ struct TonightEntry: View {
                             beginChoice(recipe)
                         })
                 }
-                if !model.needsReview.isEmpty {
+                if !visibleReview.isEmpty {
                     Section(tonightText("Needs information or a pantry match")) {
-                        ForEach(model.needsReview) { review in recipeRow(review) }
+                        ForEach(visibleReview) { review in recipeRow(review) }
                     }
                 }
                 Section(tonightText("Recipe library")) {
@@ -253,13 +289,14 @@ struct TonightEntry: View {
                         Button(tonightText("Review a recipe by hand")) { manual = true }
                     }
                     RecordsRecoveryLink(accessibilityID: "tonight.records")
-                    ForEach(model.input?.sources ?? []) { source in
+                    ForEach(visibleSources) { source in
                         Button { sourceToReview = source } label: {
                             VStack(alignment: .leading) {
                                 Text(source.recipe.title)
                                 Text(tonightText("Saved source — review servings and ingredient amounts")).font(.caption)
                             }
                         }.accessibilityIdentifier("tonight.source.\(source.id)")
+                        pinButton(.imported(source.id))
                     }
                     Button(tonightText("Refresh recipes and pantry")) { Task { await refresh() } }.disabled(model.busy || applying)
                         .accessibilityIdentifier("tonight.refresh")
@@ -282,6 +319,7 @@ struct TonightEntry: View {
                                   title: review.recipe.title)
             }
             Button(tonightText("Review recipe facts")) { recipeToReview = review.recipe }
+            pinButton(.reviewed(review.id))
             ForEach(Array((review.eligibility.blocked + review.eligibility.unresolved + review.eligibility.softDifferences).enumerated()), id: \.offset) { _, issue in
                 Text(tonightIssue(issue))
             }
@@ -290,22 +328,29 @@ struct TonightEntry: View {
                 let foodID = model.matches[review.id]?[ingredient.id]
                 VStack(alignment: .leading, spacing: 5) {
                     Text(ingredient.name).font(.headline)
-                    Text(ledgerQuantity(ingredient.quantity))
-                    Picker(tonightText("Reviewed pantry match"), selection: Binding(get: {
-                        model.matches[review.id]?[ingredient.id]
-                    }, set: { food in
-                        do { try model.match(recipeID: review.id, ingredientID: ingredient.id, foodID: food); preview = nil }
-                        catch { message = tonightText("Refresh before reviewing this match.") }
-                    })) {
-                        Text(tonightText("Not matched")).tag(UUID?.none)
-                        ForEach(model.input?.foods ?? []) { food in Text(food.name).tag(Optional(food.id)) }
-                    }.accessibilityIdentifier("tonight.match." + ingredient.id.uuidString)
-                    if let foodID, let food = model.input?.foods.first(where: { $0.id == foodID }) {
-                        Text(food.detail).font(.caption)
-                        Button(tonightText("Review this food’s ingredient and brand details")) { foodToReview = food }
+                    Text(ingredient.reviewedAmountLabel)
+                    if ingredient.checkedWithoutAmount != true {
+                        Picker(tonightText("Reviewed pantry match"), selection: Binding(get: {
+                            model.matches[review.id]?[ingredient.id]
+                        }, set: { food in
+                            do { try model.match(recipeID: review.id, ingredientID: ingredient.id, foodID: food); preview = nil }
+                            catch { message = tonightText("Refresh before reviewing this match.") }
+                        })) {
+                            Text(tonightText("Not matched")).tag(UUID?.none)
+                            ForEach(model.input?.foods ?? []) { food in
+                                let label = food.packLabel ?? food.name
+                                let tied = model.input?.foods.contains { $0.id != food.id && ($0.packLabel ?? $0.name) == label } == true
+                                Text(verbatim: tied ? label + " · " + food.detail : label).tag(Optional(food.id))
+                            }
+                        }.accessibilityIdentifier("tonight.match." + ingredient.id.uuidString)
+                        if let foodID, let food = model.input?.foods.first(where: { $0.id == foodID }) {
+                            Text(food.detail).font(.caption)
+                            Button(tonightText("Review this food’s ingredient and brand details")) { foodToReview = food }
+                        }
+                        productMemory(review.recipe, ingredient: ingredient)
+                        Text(tonightText(row?.hasUnresolvedStock == true ? "Stock count or reservation needs review." :
+                            row?.covered == true ? "Covered by currently free pantry food." : "Missing or unresolved quantity — review before choosing."))
                     }
-                    Text(tonightText(row?.hasUnresolvedStock == true ? "Stock count or reservation needs review." :
-                        row?.covered == true ? "Covered by currently free pantry food." : "Missing or unresolved quantity — review before choosing."))
                 }
             }
             if let use = review.batchUse {
@@ -327,11 +372,11 @@ struct TonightEntry: View {
             }
             if review.eligibility.eligible {
                 Text(tonightText("Similar names are not a match until you review them. Unknown quantities do not count as available."))
-                ForEach(review.ingredients.filter { !$0.covered }) { row in
+                ForEach(review.ingredients.filter { !$0.covered && $0.ingredient.checkedWithoutAmount != true }) { row in
                     Text(tonightText("Missing or not credited") + ": " + row.ingredient.name + " · " +
                         ledgerQuantity(TonightMealModel.missingQuantity(row)))
                 }
-                Button(tonightText("Choose…")) {
+                Button(tonightText("Plan for a day")) {
                     beginChoice(review.recipe)
                 }.disabled(!canChoose(review) || model.busy || applying)
                     .accessibilityIdentifier("tonight.choose.\(review.id)")
@@ -340,18 +385,64 @@ struct TonightEntry: View {
             else { Text(tonightText("Preparation time has not been reviewed.")) }
             if review.eligibility.eligible, let input = model.input, let ledgerID = ledger.sourceWorkspaceID {
                 TonightPricesView(estimate: try? TonightPurchaseEstimate.estimate(review, workspace: input.workspace,
-                    workspaceID: ledgerID, shopID: input.workspace.selectedShopID, at: Date()))
+                    workspaceID: ledgerID, shopID: input.workspace.selectedShopID, at: Date()), hasHandCheckedIngredients: review.hasHandCheckedIngredients)
             }
         } label: {
             VStack(alignment: .leading, spacing: 5) {
                 Text(review.recipe.title).font(.system(.title3, design: .serif, weight: .semibold))
                 Text(tonightText(!review.eligibility.eligible ? "Review restrictions and missing information" :
-                    review.allIngredientsCovered ? "Ingredients covered — review to choose" : "Review ingredient matches and missing amounts"))
+                    review.allIngredientsCovered ? "Ingredients covered — review to choose" :
+                    review.measuredIngredientsCovered ? "Measured ingredients covered" : "Review ingredient matches and missing amounts"))
                     .font(.body).foregroundStyle(Theme.secondary)
             }.padding(.vertical, 4)
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("tonight.result." + review.id.uuidString)
         }
+    }
+    @ViewBuilder private func productMemory(_ recipe: MealTemplate, ingredient: MealIngredient) -> some View {
+        if let key = model.matchKey(recipe: recipe, ingredient: ingredient) {
+            let stored = model.storedProduct(key)
+            let next = model.rememberedCandidate(recipe: recipe, ingredient: ingredient)
+            if let next, next != stored {
+                Button(tonightText(stored == nil ? "Remember for this recipe" : "Change remembered product")) {
+                    Task { await updateProduct(recipe: recipe, ingredient: ingredient, key: key, previous: stored, next: next) }
+                }
+                .buttonStyle(.borderless).frame(minHeight: 44)
+                .accessibilityIdentifier("tonight.remember." + ingredient.id.uuidString)
+            }
+            if let stored {
+                Text(tonightText(next == stored ? "Remembered for this recipe" : "Review the remembered product against current stock."))
+                    .font(.subheadline)
+                Button(tonightText("Forget remembered product")) {
+                    Task { await updateProduct(recipe: recipe, ingredient: ingredient, key: key, previous: stored, next: nil) }
+                }.buttonStyle(.borderless).frame(minHeight: 44)
+                    .accessibilityIdentifier("tonight.forget." + ingredient.id.uuidString)
+            }
+        }
+    }
+    @MainActor private func updateProduct(recipe: MealTemplate, ingredient: MealIngredient, key: RecipeProductMatch.Key,
+                                          previous: RecipeProductMatch?, next: RecipeProductMatch?) async {
+        guard let original = scope, let input = model.input, !applying else { return }
+        preview = nil
+        applying = true
+        defer { applying = false }
+        let packGeneration = packMemory.generation
+        let authorized = { (next == nil || packMemory.generation == packGeneration) && scope == original && key.owner == original.adult.mealFeedbackOwner && key.pantryID == original.inventory }
+        do {
+            if next != nil {
+                await refresh()
+                guard model.input == input, model.rememberedCandidate(recipe: recipe, ingredient: ingredient) == next
+                else { throw TonightMealModel.Failure.stale }
+            }
+            guard ledger.workspace == input.workspace, ledger.ready, !ledger.saving, !ledger.hasPendingSave else {
+                throw TonightMealModel.Failure.stale
+            }
+            let memory = PantryDigestStore.shared.recipeProductMemory
+            try memory.replace(previous, with: next,
+                scope: .init(ledger: original.ledger, pantry: original.inventory, owner: key.owner), authorized: authorized)
+            if next == nil { model.clearSelectionAfterForgetting(key) }
+            await refresh()
+        } catch { message = tonightText("Refresh before reviewing this match.") }
     }
     @ViewBuilder private func followingMeals(after first: PantryMealMatcher.Review) -> some View {
         Text(tonightText("If you make the first meal")).font(.headline)
@@ -379,7 +470,7 @@ struct TonightEntry: View {
                 ForEach(Array(next.eligibility.softDifferences.enumerated()), id: \.offset) { _, issue in
                     Text(tonightIssue(issue))
                 }
-                ForEach(next.ingredients.filter { !$0.covered }) { row in
+                ForEach(next.ingredients.filter { !$0.covered && $0.ingredient.checkedWithoutAmount != true }) { row in
                     LabeledContent(row.ingredient.name, value: ledgerQuantity(TonightMealModel.missingQuantity(row)))
                 }
                 if let input = model.input, let workspaceID = ledger.sourceWorkspaceID {
@@ -422,12 +513,43 @@ struct TonightEntry: View {
             let workspace = ledger.workspace, revision = ledger.revision
             let sources = try await TonightRecipeLibrary.read(authorize: authorized)
             guard authorized(), workspace == ledger.workspace, revision == ledger.revision else { throw TonightMealModel.Failure.stale }
-            var input = try TonightMealModel.input(workspace: workspace, ledgerRevision: revision, context: context, sources: sources)
-            input.feedbackOwner = original.adult.mealFeedbackOwner
+            let packs = try? packMemory.recent(.init(origin: original.inventory, identity: original.adult))
+            var input = try TonightMealModel.input(workspace: workspace, ledgerRevision: revision, context: context, sources: sources,
+                                                   confirmedPacks: packs)
+            let owner = original.adult.mealFeedbackOwner
+            input.feedbackOwner = owner
+            input.rememberedProducts = (try? PantryDigestStore.shared.recipeProductMemory.records(
+                .init(ledger: original.ledger, pantry: original.inventory, owner: owner), in: workspace)) ?? []
             return input
         }
     }
+    private var destinationZone: TimeZone {
+        let zone = ledger.workspace.shops.first(where: { $0.id == destination })?.basis.timeZoneIdentifier
+        return zone.flatMap(TimeZone.init(identifier:)) ?? .current
+    }
+    private func visiblePin(_ id: CookSoonPin.Recipe) -> Bool {
+        guard pinnedOnly else { return true }
+        guard let owner = scope?.adult.mealFeedbackOwner else { return false }
+        return ledger.workspace.cookSoonPins.contains(.init(owner: owner, recipe: id))
+    }
+    private func visible(_ template: MealTemplate) -> Bool {
+        visiblePin(.reviewed(template.id)) && template.matchesRecipeSearch(query)
+    }
+    private var visibleSuggestions: [PantryMealMatcher.Review] { model.suggestions.filter { visible($0.recipe) } }
+    private var visibleReview: [PantryMealMatcher.Review] { model.needsReview.filter { visible($0.recipe) } }
+    private var visibleSources: [TonightMealModel.Source] {
+        (model.input?.sources ?? []).filter {
+            visiblePin(.imported($0.id)) && PrivateRecipeSearch.matches(query, title: $0.recipe.title, ingredients: $0.recipe.ingredients)
+        }
+    }
+    @ViewBuilder private func pinButton(_ recipe: CookSoonPin.Recipe) -> some View {
+        if let original = scope {
+            RecipePinButton(ledger: ledger, recipe: recipe, owner: original.adult.mealFeedbackOwner,
+                            authorize: { scope == original })
+        }
+    }
     private func beginChoice(_ recipe: MealTemplate) {
+        plannedDate = Date()
         choosing = recipe
         destination = ledger.workspace.selectedShopID
         preview = nil
@@ -446,7 +568,7 @@ struct TonightEntry: View {
             guard let review = model.reviews.first(where: { $0.recipe == recipe }), canChoose(review) else { throw TonightMealModel.Failure.stale }
             preview = try TonightPlanChoice.prepare(match: review, pantryBasis: original.basis,
                 destinationShopID: destination, newShopTitle: newTitle, ledger: ledger, pickup: pickup,
-                currentIdentity: currentIdentity)
+                plannedDate: plannedDate, currentIdentity: currentIdentity)
             requestedSection = .review
         } catch { preview = nil; message = tonightText("The recipe, preferences, pantry or destination changed. Review the current information again.") }
     }

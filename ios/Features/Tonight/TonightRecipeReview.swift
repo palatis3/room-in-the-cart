@@ -17,6 +17,7 @@ struct TonightRecipeReview: View {
     @State private var servings = ""
     @State private var minutes = ""
     @State private var ingredients: [Ingredient] = []
+    @State private var initialSourceRows: [MealIngredient] = []
     @State private var details = ""
     @State private var appliances = ""
     @State private var brands = ""
@@ -34,8 +35,18 @@ struct TonightRecipeReview: View {
         var name = ""
         var amount = ""
         var unit: UnitOfMeasure = .count
+        var originalWording: String?
+        var originalQuantity: Quantity?
+        var checkedWithoutAmount = false
+        init() {}
+        init(_ row: MealIngredient) {
+            id = row.id; name = row.name; unit = row.quantity?.unit ?? .count
+            amount = row.quantity?.amount.description ?? ""
+            originalQuantity = row.quantity
+            originalWording = row.originalWording; checkedWithoutAmount = row.checkedWithoutAmount == true
+        }
         @MainActor var positiveQuantity: Quantity? {
-            guard let quantity = try? LedgerEntry.quantity(amount, unit), quantity.amount > .zero else { return nil }
+            guard let quantity = try? DinnerEntry.quantity(amount, unit: unit, preserving: originalQuantity), quantity.amount > .zero else { return nil }
             return quantity
         }
     }
@@ -62,7 +73,7 @@ struct TonightRecipeReview: View {
                                 Text(tonightText("This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts."))
                             }
                             LabeledContent(ledgerText("Servings"), value: amountText(candidate.servings))
-                            ForEach(candidate.ingredients) { ingredient in LabeledContent(ingredient.name, value: ledgerQuantity(ingredient.quantity)) }
+                            ForEach(candidate.ingredients) { ingredient in LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel) }
                             if let template, original?.mealTemplates.contains(template) == true {
                                 Text(tonightText("Saving updates this recipe in your library."))
                             } else if let replacedRecipe {
@@ -80,7 +91,7 @@ struct TonightRecipeReview: View {
                                 Text(source.recipe.title)
                                 Text(source.recipe.yieldText)
                                 ForEach(Array(source.recipe.ingredients.enumerated()), id: \.offset) { _, line in Text(line) }
-                                Text(tonightText("Enter reviewed amounts below. Imported words do not establish a quantity or serving count."))
+                                Text(tonightText("Check the suggested amounts against the original recipe. Enter servings and review any unmeasured ingredients."))
                             }
                         }
                         Section(tonightText("Recipe")) {
@@ -103,6 +114,9 @@ struct TonightRecipeReview: View {
                         }
                         Section(ledgerText("Ingredients")) {
                             ForEach($ingredients) { $ingredient in
+                                if let wording = ingredient.originalWording {
+                                    Text(verbatim: wording).font(.subheadline).foregroundStyle(Theme.secondary)
+                                }
                                 WorkingField(tonightText("Ingredient")) {
                                     TextField(tonightText("Ingredient"), text: $ingredient.name, prompt: Text(verbatim: "—"))
                                         .focused($focusedInput, equals: "ingredient-\(ingredient.id)")
@@ -113,11 +127,21 @@ struct TonightRecipeReview: View {
                                         .foregroundStyle(Theme.warning)
                                         .accessibilityIdentifier("tonight.recipe.amountError")
                                 }
-                                LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit,
+                                Toggle(tonightText("I checked this ingredient by hand"), isOn: $ingredient.checkedWithoutAmount)
+                                    .accessibilityLabel(tonightText("I checked this ingredient by hand") + ", " + ingredient.name)
+                                    .accessibilityIdentifier("tonight.recipe.manual." + ingredient.id.uuidString)
+                                    .onChange(of: ingredient.checkedWithoutAmount) { _, checked in
+                                        if checked && invalidAmountID == ingredient.id { invalidAmountID = nil }
+                                    }
+                                if ingredient.checkedWithoutAmount {
+                                    Text(tonightText("Use without a measured amount.")).font(.footnote)
+                                } else {
+                                    LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit,
                                     amountFocus: ($focusedInput, ingredient.id.uuidString), amountLabel: tonightText("Amount (required)"))
                                     .onChange(of: ingredient.amount) { _, _ in
                                         if invalidAmountID == ingredient.id, ingredient.positiveQuantity != nil { invalidAmountID = nil }
                                     }
+                                }
                             }
                             .onDelete { ingredients.remove(atOffsets: $0) }
                             Button(tonightText("Add ingredient")) { ingredients.append(Ingredient()) }
@@ -168,7 +192,7 @@ struct TonightRecipeReview: View {
                 if let template {
                     servings = ledgerAmountInput(template.servings)
                     minutes = template.leadTimeMinutes.map(String.init) ?? ""
-                    ingredients = template.ingredients.map { Ingredient(id: $0.id, name: $0.name, amount: $0.quantity.map { ledgerAmountInput($0.amount) } ?? "", unit: $0.quantity?.unit ?? .count) }
+                    ingredients = template.ingredients.map(Ingredient.init)
                     let facts = template.eligibilityEvidence
                     detailsReviewed = facts?.reviewedIngredientDetails != nil; details = facts?.reviewedIngredientDetails?.joined(separator: "\n") ?? ""
                     appliancesReviewed = facts?.requiredAppliances != nil; appliances = facts?.requiredAppliances?.joined(separator: "\n") ?? ""
@@ -178,7 +202,11 @@ struct TonightRecipeReview: View {
                 }
                 if let source, source.recipe.ingredients.count > 200 {
                     ingredients = []; error = tonightText("This source exceeds the supported recipe size. Review a smaller recipe in Records before continuing.")
-                } else { ingredients = source?.recipe.ingredients.map { Ingredient(name: $0) } ?? [Ingredient()] }
+                } else if let source {
+                    servings = source.recipe.suggestedServings?.description ?? ""
+                    initialSourceRows = source.recipe.ingredients.map(ImportedRecipe.ingredientDraft)
+                    ingredients = initialSourceRows.map(Ingredient.init)
+                } else { ingredients = [Ingredient()] }
             }
     }
     private func lines(_ text: String) -> [String] { text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty } }
@@ -194,7 +222,8 @@ struct TonightRecipeReview: View {
             guard amount.isEmpty || Int(amount) != nil else { throw TonightMealModel.Failure.unavailable }
             var rows: [MealIngredient] = []
             for ingredient in ingredients {
-                guard let quantity = ingredient.positiveQuantity else {
+                let quantity = ingredient.checkedWithoutAmount ? nil : ingredient.positiveQuantity
+                guard ingredient.checkedWithoutAmount || quantity != nil else {
                     error = nil
                     invalidAmountID = ingredient.id
                     scroll.scrollTo(ingredient.id, anchor: .center)
@@ -204,7 +233,8 @@ struct TonightRecipeReview: View {
                 }
                 let prior = template?.ingredients.first { $0.id == ingredient.id }
                 rows.append(MealIngredient(id: ingredient.id, name: ingredient.name, quantity: quantity,
-                    notes: prior?.notes ?? "", exclusions: prior?.exclusions ?? []))
+                    notes: prior?.notes ?? "", exclusions: prior?.exclusions ?? [], originalWording: ingredient.originalWording,
+                    checkedWithoutAmount: ingredient.checkedWithoutAmount))
             }
             guard !rows.isEmpty else { throw TonightMealModel.Failure.unavailable }
             // Editing the current Free recipe preserves its identity. Reviewing
@@ -212,10 +242,17 @@ struct TonightRecipeReview: View {
             // the accepted library and previous ledger revisions.
             let editingFree = template.flatMap { selected in original?.mealTemplates.first(where: { $0 == selected }) }
             var result = MealTemplate(id: editingFree?.id ?? UUID(), title: title, servings: servings,
-                ingredients: rows, notes: template?.notes ?? source.map { $0.recipe.notes + "\n" + $0.recipe.steps.joined(separator: "\n") } ?? "",
+                ingredients: rows, notes: template?.notes ?? source.map { [$0.recipe.yieldText, $0.recipe.notes].filter { !$0.isEmpty }.joined(separator: "\n") } ?? "",
                 sourceURL: template?.sourceURL ?? source?.recipe.sourceURL, exclusions: template?.exclusions ?? [],
                 revision: (editingFree?.revision ?? -1) + 1, servingGroups: template?.servingGroups ?? [],
                 leadTimeMinutes: Int(amount), completedSteps: template?.completedSteps ?? [], sourceEvidence: template?.sourceEvidence)
+            if let template, let steps = template.recipeSteps {
+                result.recipeSteps = RecipeStep.rebinding(steps, from: template.ingredients, to: rows)
+            } else if let source, !source.recipe.steps.isEmpty {
+                // Each imported instruction initially targets an index in the source ingredient list.
+                let sourceRows = initialSourceRows
+                result.recipeSteps = RecipeStep.rebinding(source.recipe.cookingSteps, from: sourceRows, to: rows)
+            }
             var evidence = MealEligibilityEvidence()
             evidence.reviewedIngredientDetails = detailsReviewed ? lines(details) : nil
             evidence.requiredAppliances = appliancesReviewed ? lines(appliances) : nil
@@ -243,6 +280,13 @@ struct TonightRecipeReview: View {
                 authorize: { authorized }) { workspace in
                 guard workspace == original else { throw TonightMealModel.Failure.stale }
                 try TonightMealModel.saveReviewedTemplate(candidate, editing: template, in: &workspace)
+                if let source, let owner = identity?.mealFeedbackOwner {
+                    let sourcePin = CookSoonPin(owner: owner, recipe: .imported(source.id))
+                    if workspace.cookSoonPins.contains(sourcePin) {
+                        try workspace.setCookSoon(sourcePin, pinned: false)
+                        try workspace.setCookSoon(.init(owner: owner, recipe: .reviewed(candidate.id)), pinned: true)
+                    }
+                }
             }
             if ok && authorized { dismiss() }
             else { error = tonightText("Recipe was not confirmed. Review changed information or the pending save.") }

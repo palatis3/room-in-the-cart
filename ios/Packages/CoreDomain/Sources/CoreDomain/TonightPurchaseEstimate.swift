@@ -56,7 +56,7 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
             guard first.recipe.id != review.recipe.id, first.canProjectRemainder,
                   let batch = first.batchUse, batch.lotID == review.batchUse?.lotID else { return unknown }
         }
-        if review.ingredients.allSatisfy(\.covered) { return Self(packages: [], subtotal: .zero, complete: true) }
+        if !review.numericIngredients.isEmpty && review.numericIngredients.allSatisfy(\.covered) { return Self(packages: [], subtotal: .zero, complete: true) }
         guard let shopID, let shop = workspace.shops.first(where: { $0.id == shopID }) else { return unknown }
         let next = try needs(review, workspace: workspace, workspaceID: workspaceID, shop: shop, at: now)
         let prior = try first.map { try needs($0, workspace: workspace, workspaceID: workspaceID, shop: shop, at: now) } ?? Needs()
@@ -94,7 +94,7 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
         let profile = workspace.dinnerPlanning.privateMealPreferences
         var groups: [UUID: [PantryMealMatcher.IngredientReview]] = [:]
         var result = Needs()
-        for row in review.ingredients where !row.covered {
+        for row in review.numericIngredients where !row.covered {
             let savedFoodIDs = Set(evidence.filter {
                 $0.id == row.id && $0.ingredientName == row.ingredient.name && $0.pack != nil
             }.compactMap(\.foodID))

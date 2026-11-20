@@ -955,11 +955,11 @@ public enum DinnerIdeaEngine {
             try constrained.validate()
         } catch { issues.append("Correct invalid or excluded ingredients") }
         if draft.template.ingredients.isEmpty { issues.append("Review ingredients") }
-        if draft.template.ingredients.contains(where: { $0.quantity == nil }) { issues.append("Review unknown ingredient quantities") }
+        if draft.template.ingredients.contains(where: { $0.quantity == nil && $0.checkedWithoutAmount != true }) { issues.append("Review unknown ingredient quantities") }
         let acceptable = issues.isEmpty
         if !draft.yieldConfirmed { issues.append("Usable yield is unconfirmed") }
         if !draft.availabilityConfirmed { issues.append("Availability is unconfirmed") }
-        return DinnerIdeaReview(canAccept: acceptable, canClaimCoverage: acceptable && draft.yieldConfirmed && draft.availabilityConfirmed, issues: issues)
+        return DinnerIdeaReview(canAccept: acceptable, canClaimCoverage: acceptable && draft.yieldConfirmed && draft.availabilityConfirmed && draft.template.ingredients.allSatisfy { $0.quantity != nil }, issues: issues)
     }
 }
 

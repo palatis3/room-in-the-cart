@@ -37,7 +37,17 @@ public enum PantryMealMatcher {
         public fileprivate(set) var stockAfterMeal: [ConfirmedStockLot]?
         public var canProjectRemainder: Bool {
             guard let use = batchUse, use.remaining.amount > .zero else { return false }
-            return ingredients.allSatisfy { $0.ingredient.quantity != nil && !$0.hasUnresolvedStock && ($0.coverage?.issues.isEmpty ?? true) }
+            return numericIngredients.allSatisfy { $0.ingredient.quantity != nil && !$0.hasUnresolvedStock && ($0.coverage?.issues.isEmpty ?? true) }
+        }
+        public var numericIngredients: [IngredientReview] { ingredients.filter { $0.ingredient.checkedWithoutAmount != true } }
+        public var measuredIngredientsCovered: Bool {
+            eligibility.eligible && !numericIngredients.isEmpty && numericIngredients.allSatisfy(\.covered)
+        }
+        public var hasHandCheckedIngredients: Bool { recipe.ingredients.contains { $0.checkedWithoutAmount == true } }
+        public var canChooseUsingPantry: Bool {
+            eligibility.eligible && hasConfirmedPantryFood && !recipe.ingredients.isEmpty &&
+                recipe.ingredients.allSatisfy { ($0.quantity?.amount ?? .zero) > .zero || $0.checkedWithoutAmount == true } &&
+                numericIngredients.allSatisfy { !$0.hasUnresolvedStock && ($0.coverage?.issues.isEmpty ?? true) }
         }
         public var hasConfirmedPantryFood: Bool { ingredients.contains(where: \.hasConfirmedStock) }
         public var allIngredientsCovered: Bool {
@@ -64,12 +74,12 @@ public enum PantryMealMatcher {
             guard let foodID = reviewedFoods[ingredient.id], let amount = ingredient.quantity else { return nil }
             return StockNeed(id: ingredient.id, foodID: foodID, name: ingredient.name, amount: amount, priority: .required)
         }
-        let matchedFoods = Set(reviewedFoods.values)
+        let matchedFoods = Set(recipe.ingredients.filter { $0.checkedWithoutAmount != true }.compactMap { reviewedFoods[$0.id] })
         let lots = globallyFreeLots.filter { matchedFoods.contains($0.foodID) }
         // A reviewed identity still has to respect exclusions on the recipe and
         // ingredient. Use the same product-label check as the shopping ledger.
         let labelsByFood = Dictionary(grouping: lots, by: \.foodID)
-        for ingredient in recipe.ingredients {
+        for ingredient in recipe.ingredients where ingredient.checkedWithoutAmount != true {
             guard let foodID = reviewedFoods[ingredient.id] else { continue }
             let lotsForFood = labelsByFood[foodID] ?? []
             for lot in lotsForFood {
@@ -94,7 +104,7 @@ public enum PantryMealMatcher {
         let allocation = try ConfirmedStockAllocator.allocate(lots: lots, needs: needs, firstLotID: firstLotID)
         let demandByID = Dictionary(uniqueKeysWithValues: allocation.demands.map { ($0.id, $0) })
         let reviews = recipe.ingredients.map { ingredient in
-            let food = reviewedFoods[ingredient.id]
+            let food = ingredient.checkedWithoutAmount == true ? nil : reviewedFoods[ingredient.id]
             return IngredientReview(ingredient: ingredient, foodID: food, coverage: demandByID[ingredient.id],
                                     hasUnresolvedStock: food.map(unresolvedFoods.contains) ?? false)
         }
@@ -144,10 +154,10 @@ public enum PantryMealMatcher {
         let ordered = scored.sorted { lhs, rhs in
             let left = lhs.review, right = rhs.review
             if left.useFirstLotIDs.isEmpty != right.useFirstLotIDs.isEmpty { return !left.useFirstLotIDs.isEmpty }
-            if left.allIngredientsCovered != right.allIngredientsCovered { return left.allIngredientsCovered }
+            if left.measuredIngredientsCovered != right.measuredIngredientsCovered { return left.measuredIngredientsCovered }
             // Compare proportions without rounding or favoring recipes with more rows.
-            let leftCoverage = lhs.covered * max(1, right.ingredients.count)
-            let rightCoverage = rhs.covered * max(1, left.ingredients.count)
+            let leftCoverage = lhs.covered * max(1, right.numericIngredients.count)
+            let rightCoverage = rhs.covered * max(1, left.numericIngredients.count)
             if leftCoverage != rightCoverage { return leftCoverage > rightCoverage }
             if left.eligibility.softDifferences.count != right.eligibility.softDifferences.count {
                 return left.eligibility.softDifferences.count < right.eligibility.softDifferences.count
@@ -162,15 +172,15 @@ public enum PantryMealMatcher {
         // Only recipes with the same supply, preference and effort evidence can change order.
         func canTie(_ a: Review, _ b: Review) -> Bool {
             guard a.useFirstLotIDs.isEmpty == b.useFirstLotIDs.isEmpty,
-                  a.allIngredientsCovered == b.allIngredientsCovered else { return false }
-            let leftCoverage: Int = a.ingredients.filter(\.covered).count * max(1, b.ingredients.count)
-            let rightCoverage: Int = b.ingredients.filter(\.covered).count * max(1, a.ingredients.count)
+                  a.measuredIngredientsCovered == b.measuredIngredientsCovered else { return false }
+            let leftCoverage: Int = a.ingredients.filter(\.covered).count * max(1, b.numericIngredients.count)
+            let rightCoverage: Int = b.ingredients.filter(\.covered).count * max(1, a.numericIngredients.count)
             guard leftCoverage == rightCoverage,
                   a.eligibility.softDifferences.count == b.eligibility.softDifferences.count else { return false }
             return a.recipe.eligibilityEvidence?.effort == b.recipe.eligibilityEvidence?.effort
         }
         func feasible(_ review: Review) -> Bool {
-            review.ingredients.allSatisfy { !$0.hasUnresolvedStock && $0.ingredient.quantity != nil && ($0.coverage?.issues.isEmpty ?? true) }
+            review.numericIngredients.allSatisfy { !$0.hasUnresolvedStock && $0.ingredient.quantity != nil && ($0.coverage?.issues.isEmpty ?? true) }
         }
         var result: [Review] = []
         var start = 0

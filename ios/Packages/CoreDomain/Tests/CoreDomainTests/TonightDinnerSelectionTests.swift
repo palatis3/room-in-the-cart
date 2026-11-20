@@ -21,6 +21,55 @@ final class TonightDinnerSelectionTests: XCTestCase {
             access: access(shop.id, at: now), phase: .draft, now: now)
     }
 
+    func testPlannedDayAndHandCheckedSeasoningRemainDistinctFromNumericCoverage() throws {
+        var meal = recipe()
+        let seasoning = MealIngredient(name: "cilantro al gusto", quantity: nil, checkedWithoutAmount: true)
+        meal.ingredients.append(seasoning)
+        let lentils = meal.ingredients[0], lot = ConfirmedStockLot(id: UUID(), foodID: UUID(), name: "Rice",
+            usable: try XCTUnwrap(lentils.quantity), confirmedAt: now)
+        let stock = [lot], shop = ShoppingLedger(title: "Market")
+        var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [meal], selectedShopID: shop.id)
+        let match = try PantryMealMatcher.review(recipe: meal, reviewedFoods: [lentils.id: lot.foodID, seasoning.id: lot.foodID],
+            globallyFreeLots: stock, unresolvedFoods: [], profile: nil)
+        XCTAssertEqual(match.numericIngredients.map(\.id), [lentils.id])
+        XCTAssertNil(match.ingredients.last?.coverage)
+        XCTAssertNil(match.ingredients.last?.foodID)
+        XCTAssertTrue(match.canChooseUsingPantry)
+        XCTAssertFalse(match.allIngredientsCovered)
+        let friday = now.addingTimeInterval(3 * 86_400)
+        let choice = try TonightDinnerSelection.prepare(match: match, destination: shop, createsPickup: false, workspace: workspace,
+            access: access(shop.id, at: now), phase: .draft, now: now, plannedDate: friday)
+        try choice.apply(to: &workspace, access: access(shop.id, at: now), phase: .draft, now: now)
+        XCTAssertEqual(workspace.shops[0].mealOccurrences.first?.scheduledDay, try MealDay(date: friday, timeZoneIdentifier: shop.basis.timeZoneIdentifier))
+        let savedSeasoning = try XCTUnwrap(workspace.shops[0].contributions.first { $0.productName == seasoning.name })
+        XCTAssertEqual(savedSeasoning.checkedWithoutAmount, true)
+        XCTAssertNil(savedSeasoning.quantity)
+        meal.ingredients[1].checkedWithoutAmount = nil
+        let unresolved = try PantryMealMatcher.review(recipe: meal, reviewedFoods: [lentils.id: lot.foodID],
+            globallyFreeLots: stock, unresolvedFoods: [], profile: nil)
+        XCTAssertFalse(unresolved.canChooseUsingPantry)
+    }
+
+    func testCookSoonSearchAndLegacyWorkspaceRoundTrip() throws {
+        let recipes = (1...74).map { MealTemplate(title: "Dinner " + String($0)) } +
+            [MealTemplate(title: "Sopa de lentejas", ingredients: [.init(name: "Cilantro", quantity: nil, originalWording: "Cílandro al gusto")])]
+        XCTAssertEqual(recipes.filter { $0.matchesRecipeSearch("sopa CILANTRO") }.count, 1)
+        XCTAssertEqual(recipes.filter { $0.matchesRecipeSearch("cilandro") }.count, 1)
+        let meal = try XCTUnwrap(recipes.last)
+        var workspace = LedgerWorkspace(mealTemplates: recipes)
+        let original = try JSONEncoder().encode(workspace)
+        XCTAssertFalse(String(decoding: original, as: UTF8.self).contains("cookSoonPins"))
+        workspace = try JSONDecoder().decode(LedgerWorkspace.self, from: original)
+        let pin = CookSoonPin(owner: "adult", recipe: .reviewed(meal.id))
+        try workspace.setCookSoon(pin, pinned: true)
+        try workspace.setCookSoon(pin, pinned: true)
+        let reopened = try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(workspace))
+        XCTAssertEqual(reopened.cookSoonPins, [pin])
+        XCTAssertFalse(reopened.cookSoonPins.contains(.init(owner: "other", recipe: .reviewed(meal.id))))
+        try workspace.setCookSoon(pin, pinned: false)
+        XCTAssertTrue(workspace.cookSoonPins.isEmpty)
+    }
+
     func testZeroShopPreviewCreatesNothingAndConfirmedReplayPreservesLaterSelection() throws {
         let meal = recipe(), shop = ShoppingLedger(title: "Tuesday pickup")
         var workspace = LedgerWorkspace(mealTemplates: [meal])

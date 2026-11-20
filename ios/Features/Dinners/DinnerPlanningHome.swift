@@ -167,7 +167,7 @@ struct DinnerWeekView<SaveStatus: View>: View {
     @Binding var showWeekGrid: Bool
     @ViewBuilder let saveStatus: () -> SaveStatus
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    private enum Destination: Hashable { case meal(UUID), note(MealDay), reservation }
+    private enum Destination: Hashable { case meal(UUID), cooked(UUID), note(MealDay), reservation }
     @State private var destination: Destination?
 
     init(model: DinnerFeatureModel, shopID: UUID, weekStart: Binding<Date>,
@@ -200,6 +200,7 @@ struct DinnerWeekView<SaveStatus: View>: View {
                 if model.shop?.id == shopID {
                     switch selection {
                     case .meal(let id): DinnerOccurrenceView(model: model, occurrenceID: id)
+                    case .cooked(let id): DinnerCookedPortionsView(model: model, id: id)
                     case .note(let day): DinnerNoteView(model: model, day: day)
                     case .reservation: DinnerReservationView(model: model)
                     }
@@ -274,6 +275,10 @@ struct DinnerWeekView<SaveStatus: View>: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(dinnerDay(day.day)).font(.headline).accessibilityAddTraits(.isHeader)
             ForEach(current.on(day.day)) { meal in mealLink(meal, calendarZone: day.day.timeZoneIdentifier) }
+            ForEach(current.cooked(on: day.day)) { claim in
+                Button { destination = .cooked(claim.id) } label: { DinnerCookedPortionsLabel(claim: claim) }
+                    .buttonStyle(.borderless).accessibilityIdentifier("dinner.leftover.\(claim.id)")
+            }
             ForEach(day.notes) { note in
                 VStack(alignment: .leading) {
                     Text(dinnerNoteKind(note.kind)).font(.subheadline.bold())
@@ -466,6 +471,14 @@ struct DinnerAllMealsView: View {
                 }
                 switch currentMeals {
                 case .success(let current):
+                ForEach(current.cooked) { claim in
+                    NavigationLink { DinnerCookedPortionsView(model: model, id: claim.id) } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            DinnerCookedPortionsLabel(claim: claim)
+                            if let day = claim.cookedDinner?.day { Text(dinnerDay(day)) }
+                        }
+                    }
+                }
                 ForEach(current.all) { meal in
                     NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
                         VStack(alignment: .leading, spacing: 5) {
@@ -500,9 +513,15 @@ private struct DinnerTonightPlan: View {
                         if case .original(let original) = meal { return original.carryover == nil }
                         return true
                     }
+                    let cooked = current.cooked(on: day)
                     DinnerTonightHeading(title: away ? dinnerText("Night away") :
-                        meals.isEmpty ? dinnerText("No dinner planned") : nil, detail: shop.title) {
+                        meals.isEmpty && cooked.isEmpty ? dinnerText("No dinner planned") : nil, detail: shop.title) {
                         if !away {
+                            ForEach(cooked) { claim in
+                                NavigationLink { DinnerCookedPortionsView(model: model, id: claim.id) } label: {
+                                    DinnerCookedPortionsLabel(claim: claim)
+                                }.buttonStyle(.borderless)
+                            }
                             ForEach(meals) { meal in
                                 NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
                                     VStack(alignment: .leading, spacing: 4) {

@@ -90,6 +90,45 @@ import XCTest
         XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8), "Browse and canceled recipe review must leave the workspace without a pickup")
         XCTAssertFalse(app.buttons["tonight.apply"].exists)
     }
+    func testImportedSeasoningAndCookSoonInPrivateChooserEnglishAndSpanish() throws {
+        for spanish in [false, true] {
+            app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--shopper-recipe-sources",
+                                   "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
+            app.launch()
+            tap(app.shopToolButton("shop.myPantry"))
+            tap(app.buttons["pantry.setup.apply"])
+            tap(app.buttons["pantry.tonight"])
+            let search = app.textFields["dinner.recipeSearch"]
+            tap(search)
+            search.typeText("cilantro\n")
+            let source = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "tonight.source.", "Sopa de lentejas")).firstMatch
+            tap(source)
+            let servings = app.textFields["tonight.recipe.servings"]
+            XCTAssertTrue(servings.waitForExistence(timeout: 5))
+            XCTAssertEqual(servings.value as? String, "4")
+            let handCheck = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "tonight.recipe.manual.", "cilantro al gusto")).firstMatch
+            tap(handCheck)
+            let shot = XCTAttachment(screenshot: app.screenshot())
+            shot.name = spanish ? "Cilantro al gusto revisado" : "Hand-reviewed seasoning and imported measure"
+            shot.lifetime = .keepAlways; add(shot)
+            tap(app.buttons["tonight.recipe.review"])
+            let handStatus = spanish ? "Revisado sin medir" : "Checked by hand · unmeasured"
+            let reviewed = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", handStatus, handStatus)).firstMatch
+            XCTAssertTrue(reviewed.waitForExistence(timeout: 5))
+            tap(app.buttons["tonight.recipe.save"])
+            let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "tonight.result.", "Sopa de lentejas")).firstMatch
+            tap(row)
+            let pin = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.cookSoon.reviewed.")).firstMatch
+            tap(pin)
+            let pinned = NSPredicate(format: "label == %@", spanish ? "Quitar de Cocinar pronto" : "Remove from Cook soon")
+            XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: pinned, object: pin)], timeout: 8), .completed)
+            app.terminate()
+        }
+    }
+
     func testMealExplanationOfflineFallbackInEnglishAndSpanishDoesNotRequireAccount() throws {
         for spanish in [false, true] {
             app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]

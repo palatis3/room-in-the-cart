@@ -14,10 +14,75 @@ import RecordArchive
         if let profile { try! workspace.dinnerPlanning.updateMealPreferences(profile.settings, expectedRevision: nil) }
         return .init(workspace: workspace, ledgerRevision: 1,
             basis: .init(originID: UUID(uuidString: "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")!, inventoryRevision: revision, sourceHeads: []),
-            foods: [.init(id: food, name: "Wraps", detail: "Reviewed count")],
+            foods: [.init(id: food, name: "Wraps", detail: "Reviewed count", productUnit: .count)],
             freeLots: [.init(id: food, foodID: food, name: "Wraps", usable: q(3), confirmedAt: now, source: .pantry)],
             unresolvedFoods: [], sources: [])
     }
+    func testRememberedIdentityRechecksStockRestrictionsRecipeAndOwnerOnReopen() async throws {
+        let foodID = UUID(), ingredient = MealIngredient(name: "Wrap", quantity: q(2))
+        let recipe = MealTemplate(title: "Taco plate", ingredients: [ingredient])
+        let stock = input(recipe: recipe, food: foodID)
+        var workspace = stock.workspace
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let owner = String(repeating: "a", count: 64)
+        let scope = TonightProductMemory.Scope(ledger: UUID(), pantry: stock.basis.originID, owner: owner)
+        let store = TonightProductMemory(folder: root)
+        func read(owner override: String? = nil, foods: [TonightMealModel.Food]? = nil, lots: [ConfirmedStockLot]? = nil,
+                  unresolved: Set<UUID> = [], pantryID: UUID? = nil) -> TonightMealModel.Input {
+            .init(workspace: workspace, ledgerRevision: 2, basis: .init(originID: pantryID ?? stock.basis.originID,
+                inventoryRevision: 3, sourceHeads: []), foods: foods ?? stock.foods,
+                freeLots: lots ?? stock.freeLots, unresolvedFoods: unresolved, sources: [], feedbackOwner: override ?? owner,
+                rememberedProducts: (try? TonightProductMemory(folder: root).records(scope)) ?? [])
+        }
+        let model = TonightMealModel()
+        await model.refresh(authorize: { true }, load: { read() })
+        try model.match(recipeID: recipe.id, ingredientID: ingredient.id, foodID: foodID)
+        let memory = try XCTUnwrap(model.rememberedCandidate(recipe: recipe, ingredient: ingredient))
+        XCTAssertTrue(try store.records(scope).isEmpty)
+        XCTAssertThrowsError(try store.replace(nil, with: memory, scope: scope, authorized: { false }))
+        try store.replace(nil, with: memory, scope: scope, authorized: { true })
+        XCTAssertThrowsError(try store.replace(nil, with: memory, scope: scope, authorized: { true }))
+        XCTAssertEqual(try TonightProductMemory(folder: root).records(scope), [memory])
+        XCTAssertTrue(try store.records(.init(ledger: UUID(), pantry: scope.pantry, owner: owner)).isEmpty)
+        let reopened = TonightMealModel()
+        func restore(_ next: TonightMealModel.Input) async -> UUID? {
+            reopened.invalidate()
+            await reopened.refresh(authorize: { true }, load: { next })
+            return reopened.matches[recipe.id]?[ingredient.id]
+        }
+        let current = await restore(read())
+        XCTAssertEqual(current, foodID)
+        let smaller = ConfirmedStockLot(id: UUID(), foodID: foodID, name: "Wraps", usable: q(1), confirmedAt: now)
+        let lowerStock = await restore(read(lots: [smaller]))
+        XCTAssertEqual(lowerStock, foodID)
+        XCTAssertEqual(reopened.reviews.first?.ingredients.first?.coverage?.shortfall, .one)
+        for next in [read(owner: "another adult"), read(lots: []), read(unresolved: [foodID]), read(pantryID: UUID()),
+                     read(foods: [.init(id: foodID, name: "Larger wrap pack", detail: "")])] {
+            let stale = await restore(next)
+            XCTAssertNil(stale)
+        }
+        var profile = MealPreferenceSettings(); profile.exclusions = ["wraps"]
+        try workspace.dinnerPlanning.updateMealPreferences(profile, expectedRevision: nil)
+        let excluded = await restore(read())
+        XCTAssertNil(excluded)
+        workspace.dinnerPlanning = DinnerPlanningState()
+        workspace.mealTemplates[0].revision += 1
+        let revision = await restore(read())
+        XCTAssertNil(revision)
+        try store.replace(memory, with: nil, scope: scope, authorized: { true })
+        XCTAssertTrue(try TonightProductMemory(folder: root).records(scope).isEmpty)
+        try store.replace(nil, with: memory, scope: scope, authorized: { true })
+        try await store.erasePantry(scope.pantry, whole: false) { [] }
+        XCTAssertTrue(try store.records(scope).isEmpty)
+        try store.replace(nil, with: memory, scope: scope, authorized: { true })
+        try store.eraseLedger(scope.ledger)
+        XCTAssertTrue(try store.records(scope).isEmpty)
+        await reopened.refresh(authorize: { false }, load: { read() })
+        XCTAssertNil(reopened.input)
+        XCTAssertTrue(reopened.matches.isEmpty)
+    }
+
     func testSecondMealPriceViewUsesTheFirstMealsReviewedPack() async throws {
         let wrapID = UUID(), cheeseID = UUID()
         let shop = ShoppingLedger(title: "Market")
