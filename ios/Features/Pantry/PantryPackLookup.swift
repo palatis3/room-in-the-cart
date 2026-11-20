@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Read-only scan and name lookup. The caller owns the action on the selected pack or batch.
 private struct PackLookupInput: View {
-    let workspaceID: UUID
+    let workspaceID: UUID?
     let access: PantryDigestAccess?
     let authorized: () -> Bool
     @Binding var query: String
@@ -220,6 +220,11 @@ struct ShopPackLookupEntry: View {
         guard let access, access.authorized(), pickup.pantryReadIsCurrent, access.scope.origin == pickup.pantrySnapshot?.state.workspaceID else { return nil }
         return access
     }
+    private var presentationScope: PantryDigestScope? {
+        guard let access, access.canPresent(), pickup.pantryReadIsCurrent,
+              access.scope.origin == pickup.pantrySnapshot?.state.workspaceID else { return nil }
+        return access.scope
+    }
     private var name: String { selected?.name ?? query.trimmingCharacters(in: .whitespacesAndNewlines) }
     private func current() -> Bool {
         guard authorize(), ledger.shop?.id == shopID else { return false }
@@ -268,7 +273,8 @@ struct ShopPackLookupEntry: View {
                         Button(pantryText("Edit")) { self.preview = nil }
                     }
                 } else {
-                    PackLookupInput(access: scoped, authorized: { authorize() }, query: $query, selected: $selected)
+                    PackLookupInput(workspaceID: presentationScope?.origin, access: scoped, authorized: { authorize() },
+                        query: $query, selected: $selected)
                     if !name.isEmpty, current() {
                         Section(selected?.label ?? name) {
                             let lines = shop.lines.filter { !$0.isTrashed && !$0.isHandled && $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame && PackRebuyDraft.match($0, pack: selected, shop: shop) != .different }
@@ -297,7 +303,7 @@ struct ShopPackLookupEntry: View {
             }
         }.privacySensitive().navigationTitle(pantryText("Buy this pack again"))
         .onChange(of: target) { _, _ in confirmedUnlinked = false }
-        .onChange(of: scoped?.scope) { _, _ in selected = nil; query = ""; preview = nil; target = nil; status = nil }
+        .onChange(of: presentationScope) { _, _ in selected = nil; query = ""; preview = nil; target = nil; status = nil }
     }
     private func prepare(_ shop: ShoppingLedger) {
         guard current(), let number = Int64(count), (1...10_000).contains(number) else { return }

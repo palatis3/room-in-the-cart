@@ -3,7 +3,7 @@ import Vision
 import VisionKit
 
 struct LivePackageButton: View {
-    let workspaceID: UUID
+    let workspaceID: UUID?
     let authorized: () -> Bool
     let receive: (CapturedBarcode) -> Void
     @Environment(\.scenePhase) private var scene

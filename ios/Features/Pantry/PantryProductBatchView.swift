@@ -691,7 +691,7 @@ private struct ManualBarcodeCorrectionView: View {
 }
 
 struct PantryProductPhotoInput: View {
-    let workspaceID: UUID
+    let workspaceID: UUID?
     @Binding var consent: Bool
     let authorized: () -> Bool
     let add: (ScannedSource) throws -> Void
