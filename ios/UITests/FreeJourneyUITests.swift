@@ -654,9 +654,7 @@ import XCTest
         launchAndAddWidgetLentils()
         tap(app.buttons["pantry.tonight"])
         tap(app.buttons["tonight.preferences"])
-        let appliances = app.switches["Limit recipes to available appliances"]
-        reveal(appliances)
-        appliances.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        enableSwitch("Limit recipes to available appliances")
         tap(app.buttons["preferences.review"])
         tap(app.buttons["preferences.save"])
         tap(app.buttons["tonight.addRecipe"])
@@ -665,9 +663,9 @@ import XCTest
         fill("1", into: "tonight.recipe.servings")
         fill("Lentils", into: "tonight.recipe.ingredient")
         fill("1", into: "Amount (required)")
-        let requirements = app.switches["I reviewed required appliances"]
-        reveal(requirements)
-        requirements.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        enableSwitch("I reviewed required appliances") {
+            self.reveal($0, requiredHit: CGVector(dx: 0.92, dy: 0.5))
+        }
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
         XCTAssertTrue(app.navigationBars["Review a recipe"].waitForNonExistence(timeout: 15), app.debugDescription)
@@ -713,13 +711,28 @@ import XCTest
         let search = board.searchFields.firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 10), board.debugDescription)
         search.tap()
-        search.typeText("Room in the Cart")
-        let appResult = board.descendants(matching: .any).matching(NSPredicate(format: "label ==[c] %@", "Room in the Cart")).firstMatch
-        XCTAssertTrue(appResult.waitForExistence(timeout: 10), board.debugDescription)
+        let appName = "Room in the Cart"
+        search.typeText(appName)
+        // The Home Screen app icon stays exposed behind the gallery search results.
+        let results = board.collectionViews["add-sheet-collection-view"]
+        let rows = results.exists ? results.cells : board.cells
+        let namedRow = rows.matching(NSPredicate(format: "label == %@", appName)).firstMatch
+        let appResult = namedRow.waitForExistence(timeout: 5) ? namedRow : rows.containing(.staticText, identifier: appName).firstMatch
+        XCTAssertTrue(appResult.wait(for: \.isHittable, toEqual: true, timeout: 8), board.debugDescription)
         appResult.tap()
-        let card = board.staticTexts[widgetTitle].firstMatch
-        for _ in 0..<5 where !card.isHittable { board.swipeLeft() }
-        XCTAssertTrue(card.isHittable, board.debugDescription)
+
+        let appGallery = board.scrollViews.containing(NSPredicate(format: "label == %@", appName)).firstMatch
+        let card = board.buttons[appName + ", " + widgetTitle]
+        // Some gallery layouts expose the app heading and widget title as separate elements.
+        let titleInGallery = appGallery.staticTexts[widgetTitle]
+        func showsWidget() -> Bool {
+            (card.exists && card.isHittable) || (titleInGallery.exists && titleInGallery.isHittable)
+        }
+        for _ in 0..<5 {
+            if showsWidget() { break }
+            if appGallery.exists { appGallery.swipeLeft() } else { board.swipeLeft() }
+        }
+        XCTAssertTrue(showsWidget(), board.debugDescription)
         // SpringBoard keeps the Home Screen add button mounted behind the gallery.
         let galleryAdd = board.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Add Widget"))
             .allElementsBoundByIndex.first(where: \.isHittable)
