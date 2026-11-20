@@ -5,7 +5,7 @@ import DeviceSurfaces
 private struct PrivatePantryRetryKey: EnvironmentKey {
     static let defaultValue: (@MainActor () -> Void)? = nil
 }
-private extension EnvironmentValues {
+extension EnvironmentValues {
     var privatePantryRetry: (@MainActor () -> Void)? {
         get { self[PrivatePantryRetryKey.self] }
         set { self[PrivatePantryRetryKey.self] = newValue }
