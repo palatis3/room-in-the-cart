@@ -1038,10 +1038,23 @@ import XCTest
             XCTAssertTrue(save.waitForNonExistence(timeout: 8), app.debugDescription)
         }
 
-        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
-        app.launch()
-        saveSourcePhoto()
-        app.terminate()
+        func addSamplePhoto(toReplaceOriginal: Bool = false) {
+            app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+            if toReplaceOriginal { app.launchArguments.append("--checkout-crop-photo") }
+            app.launch()
+            saveSourcePhoto()
+            app.terminate()
+        }
+
+        func inspectPhoto(dated date: String, evidence: String) {
+            tap(app.buttons["shelfPhotos.inspect"])
+            let bar = app.navigationBars[date]
+            XCTAssertTrue(bar.waitForExistence(timeout: 8), app.debugDescription)
+            capture(evidence)
+            tap(bar.buttons["Done"])
+        }
+
+        addSamplePhoto()
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
@@ -1053,36 +1066,52 @@ import XCTest
         try chooseNewestSourcePhoto()
         saveSelectedPhoto()
         let stamp = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Taken ")).firstMatch
-        XCTAssertTrue(stamp.waitForExistence(timeout: 8))
+        reveal(stamp)
         let captured = stamp.label
-        tap(app.buttons["shelfPhotos.inspect"])
-        tap(app.buttons["Done"])
+        inspectPhoto(dated: captured, evidence: "Original dated shelf photo")
         tap(app.buttons["shelfPhotos.edit"])
         tap(element("shelfPhotos.choose"))
         let picker = try systemPhotoPicker()
-        let cancel = app.buttons.matching(identifier: "Cancel").allElementsBoundByIndex.last(where: \.isHittable)
-        try XCTUnwrap(cancel).tap()
+        // The remote Photos sheet and our editor both expose Cancel. XCTest can
+        // omit the remote button's hit point even while its frame is onscreen.
+        let photosBar = app.navigationBars["Photos"]
+        XCTAssertTrue(photosBar.waitForExistence(timeout: 10), app.debugDescription)
+        let bar = try photosBar.snapshot()
+        let cancel = try XCTUnwrap(bar.children.first { $0.elementType == .button && $0.label == "Cancel" })
+        let frame = cancel.frame
+        XCTAssertFalse(frame.isEmpty)
+        XCTAssertTrue(bar.frame.contains(frame) && app.frame.contains(frame), app.debugDescription)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX - app.frame.minX,
+                                                                        dy: frame.midY - app.frame.minY)).tap()
         XCTAssertTrue(picker.waitForNonExistence(timeout: 8))
         tap(app.buttons["Cancel"])
+        reveal(stamp)
         XCTAssertEqual(stamp.label, captured)
 
-        restart()
+        app.terminate()
+        addSamplePhoto(toReplaceOriginal: true)
+        launch(reset: false)
         tap(app.tabBars.buttons["Shop"])
         tap(app.buttons["openPickupList"])
         tap(app.buttons["ledgerInStore"])
         tap(app.buttons["inStoreTripOptions"])
         tap(app.buttons["shelfPhotos.open"])
         tap(app.buttons["shelfPhotos.location.fridge"])
-        XCTAssertTrue(stamp.waitForExistence(timeout: 8))
+        reveal(stamp)
         XCTAssertEqual(stamp.label, captured)
+        inspectPhoto(dated: captured, evidence: "Original shelf photo reopened from Shop after cancel")
         tap(app.buttons["shelfPhotos.edit"])
         tap(element("shelfPhotos.choose"))
         try chooseNewestSourcePhoto()
         saveSelectedPhoto()
-        XCTAssertTrue(app.buttons["shelfPhotos.inspect"].waitForExistence(timeout: 8))
+        reveal(stamp)
+        let replacementDate = stamp.label
+        inspectPhoto(dated: replacementDate, evidence: "Replacement dated shelf photo")
         tap(app.buttons["shelfPhotos.delete"])
-        let deletion = app.buttons.matching(identifier: "Delete photo").allElementsBoundByIndex.last
-        try XCTUnwrap(deletion).tap()
+        let deletion = app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@",
+                                                       "Delete photo", "shelfPhotos.delete")).firstMatch
+        XCTAssertTrue(deletion.waitForExistence(timeout: 8), app.debugDescription)
+        deletion.tap()
         XCTAssertTrue(app.staticTexts["No photo saved"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons["shelfPhotos.inspect"].exists)
     }
