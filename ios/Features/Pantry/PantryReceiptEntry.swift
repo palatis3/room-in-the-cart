@@ -39,6 +39,7 @@ struct PantryReceiptEntry: View {
     @State private var expandedLines = Set<UUID>()
     @State private var amountCorrection: ReceiptAmountCorrection?
     @State private var correctionRequest: UUID?
+    @State private var receiptViewport = CGRect.null
     @State private var savedLotIDs: [UUID]?
     @State private var savedHeader: ReviewedReceiptHeader?
     @State private var savedPickupID: UUID?
@@ -49,21 +50,11 @@ struct PantryReceiptEntry: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            form.task(id: correctionRequest) {
-                guard correctionRequest != nil, let issue = amountCorrection else { return }
-                await Task.yield()
-                guard !Task.isCancelled, model.permitsReceiptSource else { return }
-                proxy.scrollTo(issue.lineID, anchor: .top)
-                await Task.yield()
-                guard !Task.isCancelled, model.permitsReceiptSource else { return }
+            form.onChange(of: correctionRequest) { _, request in
+                guard request != nil, let issue = amountCorrection else { return }
                 proxy.scrollTo(issue.focusKey, anchor: .center)
-                await Task.yield()
-                guard !Task.isCancelled, model.permitsReceiptSource else { return }
-                field = issue.focusKey
-                if UIAccessibility.isVoiceOverRunning {
-                    UIAccessibility.post(notification: .announcement, argument: issue.text)
-                }
             }
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { receiptViewport = $0 }
         }
     }
 
@@ -230,6 +221,7 @@ struct PantryReceiptEntry: View {
                     if grouped, eligible.contains(where: { $0.id == line.id }) {
                         let detailsLabel = putawayText("Edit amount or action") + " · " + line.name
                         DisclosureGroup(isExpanded: Binding(get: { expandedLines.contains(line.id) }, set: { open in
+                            correctionRequest = nil
                             if open { expandedLines.insert(line.id) } else { expandedLines.remove(line.id) }
                         })) {
                             receiptEditor(line, value: value, displayed: displayed, grouped: true)
@@ -274,10 +266,15 @@ struct PantryReceiptEntry: View {
             if working { ProgressView() }
         }
         .onChange(of: draft?.lines) { _, rows in
+            correctionRequest = nil
             if let issue = amountCorrection, rows?.first(where: { $0.id == issue.lineID })?.amountCorrection != issue {
                 amountCorrection = nil
             }
         }
+        .onChange(of: field) { _, focused in
+            if focused != nil { correctionRequest = nil }
+        }
+        .onDisappear { correctionRequest = nil }
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: field != nil, title: pantryText("Done"), identifier: "receipt.keyboardDone") { field = nil }
         .navigationTitle(pantryText("Review a receipt"))
@@ -362,7 +359,17 @@ struct PantryReceiptEntry: View {
             if let state = model.snapshot?.state, model.permitsReceiptSource {
                 assistance = AssistanceReview(id: displayed.draftID, state: state, line: line)
             }
-        }, permitsPutaway: displayed.tracksPutaway, grouped: grouped, correction: amountCorrection?.lineID == line.id ? amountCorrection : nil, field: $field)
+        }, permitsPutaway: displayed.tracksPutaway, grouped: grouped,
+           correction: amountCorrection?.lineID == line.id ? amountCorrection : nil,
+           correctionRequest: correctionRequest, correctionViewport: receiptViewport, focusCorrection: { request in
+            guard correctionRequest == request, let issue = amountCorrection, issue.lineID == line.id,
+                  field == nil, draft?.draftID == displayed.draftID, model.permitsReceiptSource else { return }
+            correctionRequest = nil
+            field = issue.focusKey
+            if UIAccessibility.isVoiceOverRunning {
+                UIAccessibility.post(notification: .announcement, argument: issue.text)
+            }
+        }, field: $field)
     }
 
     private func stockOutcome(_ text: String, symbol: String) -> some View {
@@ -507,6 +514,9 @@ struct PantryReceiptLineEditor: View {
     var permitsPutaway = false
     var grouped = false
     var correction: ReceiptAmountCorrection? = nil
+    var correctionRequest: UUID? = nil
+    var correctionViewport: CGRect = .null
+    var focusCorrection: ((UUID) -> Void)? = nil
     @State private var expanded = false
     var field: FocusState<String?>.Binding
 
@@ -516,7 +526,9 @@ struct PantryReceiptLineEditor: View {
 
     private func labeledField(_ title: String, text: Binding<String>, focusKey: String,
                               identifier: String? = nil, keyboard: UIKeyboardType = .default) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        let request = correction?.focusKey == focusKey ? correctionRequest : nil
+        let viewport = correctionViewport
+        return VStack(alignment: .leading, spacing: 4) {
             if let correction, correction.focusKey == focusKey {
                 Text(correction.text)
                     .font(.subheadline.weight(.medium)).foregroundStyle(Theme.warning)
@@ -526,6 +538,15 @@ struct PantryReceiptLineEditor: View {
                 TextField(title, text: text, prompt: Text(""))
                     .keyboardType(keyboard).focused(field, equals: focusKey)
                     .accessibilityIdentifier(identifier ?? title)
+                    .onGeometryChange(for: UUID?.self) { geometry in
+                        // Form rows are lazy. Wait for the editable field to reach the receipt's visible frame.
+                        guard let request else { return nil }
+                        let frame = geometry.frame(in: .global)
+                        guard !frame.isEmpty, viewport.contains(CGPoint(x: frame.midX, y: frame.midY)) else { return nil }
+                        return request
+                    } action: { request in
+                        if let request { focusCorrection?(request) }
+                    }
             }
         }.id(focusKey)
     }

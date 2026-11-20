@@ -1573,7 +1573,7 @@ import XCTest
     }
 
     func testReviewReopensKeptPortionAndFocusesItsMissingAmount() {
-        openMixedTypedReceipt("Jars 2 ct USD 4.00\nWrap 1 ct USD 5.50")
+        openMixedTypedReceipt("Jars 2 ct USD 4.00\nWrap 1 ct USD 5.50\nDate: 2024-11-17")
         let details = app.buttons["receipt.details.1"]
         receiptTap(details)
         receiptTap(app.buttons["receipt.action.1"])
@@ -1585,13 +1585,25 @@ import XCTest
         XCTAssertTrue(error.waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertTrue(error.label.contains("Wrap"))
         let usable = app.textFields["receipt.usable.1"]
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        let done = app.buttons["receipt.keyboardDone"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(usable.isHittable)
-        app.typeText("1/2")
+        // Typing without tapping the field verifies the correction moved input focus to Wrap.
+        usable.typeText("1/2")
         XCTAssertEqual(usable.value as? String, "1/2")
-        receiptTap(app.buttons["receipt.keyboardDone"])
+        receiptTap(done)
         receiptTap(app.buttons["receipt.review"])
-        XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
+        let heading = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Market", "Nov 17, 2024")).firstMatch
+        XCTAssertTrue(heading.waitForExistence(timeout: 8), app.debugDescription)
+        let row = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Wrap", "Received 1 unit")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(row.label.contains("Add 1/2 units to Fridge"), row.label)
+        receiptTap(app.buttons["receipt.commit"])
+        let saved = app.staticTexts["receipt.status"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        XCTAssertEqual(saved.label, "Reviewed receipt lines saved.")
     }
 
     func testPutAwayOneGroceryFromLunchReceipt() {
