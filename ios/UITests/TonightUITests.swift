@@ -22,6 +22,14 @@ import XCTest
         fill(app.textFields["tonight.recipe.servings"], "2")
         fill(app.textFields["tonight.recipe.minutes"], "10")
         fill(app.textFields["tonight.recipe.ingredient"], "Corn")
+        let cornSwitches = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "tonight.recipe.manual.", "Corn"))
+        XCTAssertEqual(cornSwitches.count, 1)
+        let corn = cornSwitches.firstMatch
+        tap(corn, at: CGVector(dx: 0.15, dy: 0.5))
+        XCTAssertEqual(corn.value as? String, "1", "Tapping the words must select the unmeasured option.")
+        tap(corn, at: CGVector(dx: 0.92, dy: 0.5))
+        XCTAssertEqual(corn.value as? String, "0", "The native thumb must switch it off once.")
         let amount = app.textFields["Amount (required)"]
         XCTAssertTrue(amount.exists)
         tap(app.buttons["tonight.recipe.review"])
@@ -136,8 +144,15 @@ import XCTest
         tap(app.buttons["ledgerCreateShop"])
         XCTAssertTrue(app.navigationBars["Shop for ingredients only"].waitForExistence(timeout: 5))
         let select = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Lemon")).firstMatch
+        let chickpeas = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Chickpeas")).firstMatch
+        tap(select, at: CGVector(dx: 0.22, dy: 0.5))
+        XCTAssertEqual(select.value as? String, "1", "The visible ingredient label selects only this row.")
+        XCTAssertEqual(chickpeas.value as? String, "0")
         tap(select, at: CGVector(dx: 0.92, dy: 0.5))
-        XCTAssertEqual(select.value as? String, "1", "Verify the lemon before reviewing the list.")
+        XCTAssertEqual(select.value as? String, "0", "One thumb tap deselects once.")
+        tap(select, at: CGVector(dx: 0.22, dy: 0.5))
+        XCTAssertEqual(select.value as? String, "1")
+        XCTAssertEqual(chickpeas.value as? String, "0")
         tap(app.buttons["dinner.handoff.review"])
         let confirm = app.buttons["dinner.handoff.confirm"]
         XCTAssertEqual(confirm.label, "Add 1 ingredient to Groceries for Lemon chickpeas")
