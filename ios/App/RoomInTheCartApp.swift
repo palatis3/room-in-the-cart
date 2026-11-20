@@ -41,10 +41,20 @@ private extension EnvironmentValues {
                 HouseholdTripFixture(notificationDelegate: notificationDelegate)
             } else if Set(["--ui-testing", "--meal-language-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
                 MealLanguageFixture()
-            } else { GroceryWindow(notificationDelegate: notificationDelegate) }
+            } else { primaryWindow }
             #else
-            GroceryWindow(notificationDelegate: notificationDelegate)
+            primaryWindow
             #endif
+        }
+    }
+
+    @ViewBuilder private var primaryWindow: some View {
+        if #available(iOS 26.2, *), Bundle.main.object(forInfoDictionaryKey: "RITCRegionalAgeCheckEnabled") as? String == "YES" {
+            RegionalAgeCheckWindow { approvedURL in
+                GroceryWindow(notificationDelegate: notificationDelegate, approvedURL: approvedURL)
+            }
+        } else {
+            GroceryWindow(notificationDelegate: notificationDelegate)
         }
     }
 }
@@ -79,7 +89,9 @@ struct GroceryWindow: View {
     @StateObject private var pickup = PickupModel(mutationGate: PrivatePantryRuntime.mutationGate, usesLivePantry: true)
     @StateObject private var household: HouseholdModel
 
-    init(notificationDelegate: SurfaceNotificationDelegate, household: HouseholdModel? = nil) {
+    private let approvedURL: Binding<URL?>?
+    init(notificationDelegate: SurfaceNotificationDelegate, household: HouseholdModel? = nil, approvedURL: Binding<URL?>? = nil) {
+        self.approvedURL = approvedURL
         self.notificationDelegate = notificationDelegate
         _household = StateObject(wrappedValue: household ?? HouseholdModel())
     }
@@ -98,42 +110,6 @@ struct GroceryWindow: View {
     #endif
     @AppStorage("appearance") private var appearance = "system"
     var body: some View {
-        protectedWorkspace.onChange(of: scenePhase) { _, phase in
-            voicePrompt.sceneChanged(phase)
-            if phase == .background { suspendWorkspace() }
-        }
-    }
-
-    @ViewBuilder private var protectedWorkspace: some View {
-        if #available(iOS 26.2, *), Bundle.main.object(forInfoDictionaryKey: "RITCRegionalAgeCheckEnabled") as? String == "YES" {
-            RegionalAgeCheckWindow(onDeferredURL: receiveURL) {
-                workspace.onAppear {
-                    if scenePhase == .active && !guardianChild.presented {
-                        navigation.resume()
-                        membership.foreground()
-                    }
-                }
-            }
-        } else {
-            workspace
-        }
-    }
-
-    private func suspendWorkspace() {
-        guardianChild.suspend()
-        navigation.suspend()
-        surfaces.background()
-        access.background()
-        household.lock()
-    }
-
-    private func receiveURL(_ url: URL) {
-        guard !guardianChild.presented else { return }
-        navigation.preferIncomingLink()
-        surfaces.handle(url: url)
-    }
-
-    private var workspace: some View {
         Group {
             if scenePhase != .active && access.isProtected && !retainsVoicePrompt {
                 Theme.canvas.ignoresSafeArea()
@@ -183,7 +159,10 @@ struct GroceryWindow: View {
                 if guardianChild.presented { await guardianChild.resume() }
                 else { await openAdultWorkspace() }
             }
-            .onOpenURL(perform: receiveURL)
+            .modifier(GroceryURLDelivery(approvedURL: approvedURL) { url in
+                guard !guardianChild.presented else { return }
+                navigation.preferIncomingLink(); surfaces.handle(url: url)
+            })
             .sheet(item: Binding(get: { scenePhase == .active && !guardianChild.presented ? surfaces.destination : nil },
                                  set: { surfaces.destination = $0 })) { destination in
                 NavigationStack {
@@ -220,6 +199,11 @@ struct GroceryWindow: View {
                 if unlocked && !guardianChild.presented { Task { await openAdultWorkspace() } }
             }
             .onChange(of: scenePhase) { _, phase in
+                voicePrompt.sceneChanged(phase)
+                if phase == .background {
+                    guardianChild.suspend()
+                    navigation.suspend(); surfaces.background(); access.background(); household.lock()
+                }
                 if phase == .active {
                     if guardianChild.presented {
                         guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
