@@ -742,14 +742,14 @@ final class PantryRepository {
         }
         var facts = try source.facts(receiptID: receiptID, snapshot: before, at: now, lineDocumentID: plan.document)
         for value in prior.values {
-            guard value.merchant == facts.first?.merchant, value.purchaseDate == facts.first?.purchaseDate else { throw PantryReceiptError.changedEvidence }
+            guard value.merchant == source.merchant.trimmingCharacters(in: .whitespacesAndNewlines), value.purchaseDate == source.purchaseDate else { throw PantryReceiptError.changedEvidence }
             if let old = value.transactionReference, let new = facts.first?.transactionReference, old != new { throw PantryReceiptError.changedEvidence }
         }
         let priorByID = Dictionary(uniqueKeysWithValues: prior.values.map { ($0.id,$0) })
         var bindings: [InventoryReceiptBinding] = []
         var writes: [InventoryWrite] = [], rows: [InventoryAcquisitionRow] = []
         var existing = Set<UUID>(), acquisitionBytes = 0
-        for (index, line) in draft.selectedLines.enumerated() {
+        for (index, line) in draft.stockLines.enumerated() {
             let fact = facts[index]
             let mapped = plan.originals[line.ordinal]
             if let mapped, priorByID[mapped] == nil { throw PantryReceiptError.stale }
@@ -780,7 +780,7 @@ final class PantryRepository {
                     originID: originID, lotID: fact.lotID, eventID: ReceiptAcquisition.identity(["event", fact.lineID.uuidString]),
                     expectedRevision: nil, occurredAt: now, change: .create(.init(foodID: fact.foodID, name: fact.name,
                         source: .receipt(originID: originID, key: key), location: location, unit: fact.usable.unit,
-                        count: .exact(fact.usable), observedAt: now), observationID: ReceiptAcquisition.identity(["count", fact.lineID.uuidString])))
+                        count: .exact(fact.usable), observedAt: now, packageCode: line.packageCode), observationID: ReceiptAcquisition.identity(["count", fact.lineID.uuidString])))
                 writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: now))
             }
             let row = try PantryAcquisitionCodec.row(fact)
@@ -788,19 +788,24 @@ final class PantryRepository {
             rows.append(row)
             if let recognition { bindings.append(recognition.binding(fact, ordinal: line.ordinal, additionalDocument: plan.document != nil)) }
         }
+        let putaway = try await preparePutaway(source, receiptID: receiptID, documentID: plan.document, facts: facts)
         try validateCapacity(of: writes, replacing: before, additionalPayloadBytes: acquisitionBytes)
         try requireAccess()
         guard try await store.inventoryState() == before.state else { throw PantryReceiptError.stale }
         try requireAccess()
         let id = UUID()
-        let batch = rows.isEmpty && bindings.isEmpty ? nil : try InventoryBatch(workspaceID: originID, operationID: id,
-            expectedRevision: expected.revision, request: Data(SHA256.hash(data: PantryAcquisitionCodec.data(rows))),
-            writes: writes, acquisitions: rows, receiptBindings: bindings)
-        return .init(id: id, workspaceID: originID, revision: expected.revision, facts: facts, existing: existing, batch: batch)
+        let batch = rows.isEmpty && bindings.isEmpty && !putaway.changed ? nil : try InventoryBatch(workspaceID: originID, operationID: id,
+            expectedRevision: expected.revision, request: Data(SHA256.hash(data: PantryAcquisitionCodec.data(
+                ReceiptPutawayRequest(acquisitions: rows, bindings: bindings, review: putaway.value)))),
+            writes: writes, acquisitions: rows, receiptBindings: bindings, reviewedReceipt: putaway.changed ? putaway.value : nil)
+        return .init(id: id, workspaceID: originID, revision: expected.revision, facts: facts, existing: existing, batch: batch, putaway: putaway.value)
     }
 
     func applyReceipt(_ review: PantryReceiptReview, at now: Date) async throws {
         try requireAccess()
+        if let putaway = review.putaway, putaway.header.owner != (aliasPersonaID ?? originID) {
+            throw Failure.unauthorized
+        }
         try await commitReviewedBatch(review.batch, workspaceID: review.workspaceID, revision: review.revision, at: now)
     }
 

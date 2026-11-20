@@ -44,8 +44,8 @@ struct ReceiptRecognition {
         fileDigest = draft.imageDigest?.map { String(format: "%02x", $0) }.joined()
         document = ReceiptAcquisition.identity(["receipt-document", owner.uuidString, source])
         var keys: [Int: UUID] = [:]
-        var fields = [document.uuidString, merchantDay.uuidString, String(revision), draft.reference]
-        for row in draft.selectedLines {
+        var fields = [document.uuidString, merchantDay.uuidString, String(revision), draft.reference, draft.receiptTotal]
+        for row in draft.stockLines {
             let raw = Self.normalize(row.original)
             keys[row.ordinal] = Self.wordingKey(raw)
             fields += [String(row.ordinal), raw, row.name, row.received, row.usable, row.paid, row.unit.rawValue,
@@ -110,11 +110,11 @@ extension PantryRepository {
             // A linked document has its own page coordinates. This also applies on the next partial selection.
             if known.first?.additionalDocument == true || (known.isEmpty && !owned.isEmpty && draft.imageDigest != nil) {
                 result.document = recognition.document
-                if draft.selectedLines.contains(where: { result.originals[$0.ordinal] == nil }) { continuedReceipt = receipt }
+                if draft.stockLines.contains(where: { result.originals[$0.ordinal] == nil }) { continuedReceipt = receipt }
             }
             if continuedReceipt == nil { return result }
         }
-        guard !recognition.lookupKeys.isEmpty else { return result }
+        guard !draft.stockLines.isEmpty, !recognition.lookupKeys.isEmpty else { return result }
         let ids: [UUID]
         if let continuedReceipt { ids = [continuedReceipt] }
         else {
@@ -154,7 +154,7 @@ extension PantryRepository {
             guard draft.rescanDecision == nil else { throw PantryReceiptError.stale }
             return result
         }
-        let prompt = ReceiptRescanPrompt(basis: recognition.basis, candidates: candidates, rows: draft.selectedLines, truncated: ids.count > 8, linkedReceipt: continuedReceipt, fixed: result.originals)
+        let prompt = ReceiptRescanPrompt(basis: recognition.basis, candidates: candidates, rows: draft.stockLines, truncated: ids.count > 8, linkedReceipt: continuedReceipt, fixed: result.originals)
         guard let decision = draft.rescanDecision, decision.basis == recognition.basis else { throw prompt }
         guard let original = decision.receipt else { if continuedReceipt != nil { throw prompt }; return result }
         guard let choice = candidates.first(where: { $0.id == original }) else { throw prompt }

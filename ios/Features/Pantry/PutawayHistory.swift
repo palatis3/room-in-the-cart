@@ -1,0 +1,201 @@
+import CoreDomain
+import LocalStore
+import SwiftUI
+
+func putawayText(_ key: String) -> String {
+    String(localized: String.LocalizationValue(key), table: "ReceiptPutaway")
+}
+
+func putawayActionTitle(_ count: Int) -> String {
+    switch count {
+    case 0: return putawayText("Save receipt decisions")
+    case 1: return putawayText("Put away 1 item")
+    default: return String(format: putawayText("Put away %lld items"), locale: .current, Int64(count))
+    }
+}
+
+struct ReceiptIntactToggle: View {
+    @Binding var line: ReceiptImportDraft.Line
+    let lots: [InventoryLot]
+
+    var body: some View {
+        Button {
+            if line.treatment == .skip {
+                line.selectIntact(deliveries: lots)
+            } else if line.selectedIntact {
+                line.selectedIntact = false
+                line.treatment = .skip
+            }
+        } label: {
+            Label {
+                VStack(alignment: .leading) {
+                    Text(verbatim: line.name).font(.headline)
+                    Text(amountAndDestination)
+                }
+            } icon: {
+                Image(systemName: line.selectedIntact ? "checkmark.circle.fill" : "circle")
+            }.frame(minHeight: 44)
+        }
+        .disabled(line.treatment != .skip && !line.selectedIntact)
+        .accessibilityValue(line.selectedIntact ? putawayText("Selected intact") :
+                            line.treatment == .skip ? putawayText("Unselected") : putawayText("Reviewed individually"))
+        .accessibilityIdentifier("receipt.intact.\(line.ordinal)")
+    }
+
+    private var amountAndDestination: String {
+        let quantity = line.selectedIntact ? line.usable : line.printed?.quantity ?? ""
+        let unit = line.selectedIntact ? line.unit : line.printed?.unit ?? line.unit
+        return quantity + " " + pantryUnit(unit, singular: quantity == "1") + " · " + pantryLocationName(line.location)
+    }
+}
+
+struct ReviewedReceiptHeading: View {
+    let header: ReviewedReceiptHeader
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: header.merchant).font(.headline)
+            Text(header.date, format: .dateTime.year().month().day())
+            if let reference = header.reference { Text(verbatim: reference) }
+            if let cents = header.totalMinor {
+                LabeledContent(putawayText("Paid receipt total"), value: receiptMoney(Money(minorUnits: cents)))
+            } else {
+                Text(putawayText("Paid receipt total unknown"))
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+struct PutawayDecisionLabel: View {
+    let row: ReviewedReceiptDecision
+    private var label: String {
+        switch row.kind {
+        case .eaten: putawayText("Ate this")
+        case .missing: putawayText("Missing or unusable")
+        case .chargeOrReturn: putawayText("Fee, adjustment or return")
+        case .stored: putawayText("Put away")
+        case .keptSome: putawayText("Kept some")
+        case .linked: putawayText("Linked to prior delivery")
+        }
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: row.name).font(.headline)
+            Text(label)
+            if row.lotID == nil { Text(putawayText("No stock added")).foregroundStyle(Theme.secondary) }
+            if row.kind == .linked, let lotID = row.lotID {
+                Text(pantryFormat("Link delivery: %@ · %@", row.name, String(lotID.uuidString.suffix(8))))
+            }
+            Text(verbatim: row.original).font(.system(.subheadline, design: .monospaced))
+            if let paid = row.paidMinor { Text(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid)))) }
+            else { Text(pantryText("Paid price unknown")) }
+        }.accessibilityElement(children: .combine)
+    }
+}
+
+struct PutawayOverlapReview: View {
+    let prompt: PutawayOverlap
+    let choose: (PutawayOverlap.Choice) -> Void
+    let edit: () -> Void
+
+    var body: some View {
+        Section(putawayText("Check a repeated receipt line")) {
+            Text(putawayText("This wording appears in an earlier review of this purchase. Check the original lines before adding another."))
+            PutawayDecisionLabel(row: prompt.line)
+        }
+        Section(putawayText("Previously reviewed")) {
+            ForEach(prompt.earlier) { old in
+                PutawayDecisionLabel(row: old)
+                if prompt.canUse(old) {
+                    Button(putawayText("Use this saved decision")) { choose(.earlier(old.id)) }
+                }
+            }
+            Button(putawayText("This is an additional printed line")) { choose(.additional) }
+            Button(pantryText("Edit receipt lines"), action: edit)
+        }
+    }
+}
+
+struct PutawayHistory: View {
+    @ObservedObject var model: PantryModel
+    @State private var headers: [ReviewedReceiptHeader] = []
+    @State private var more = true
+    @State private var busy = false
+    @State private var failed = false
+
+    var body: some View {
+        List {
+            if model.canEdit {
+                ForEach(headers) { header in
+                    NavigationLink { PutawayHistoryDetail(model: model, header: header) } label: {
+                        ReviewedReceiptHeading(header: header)
+                    }
+                }
+                if failed { Text(putawayText("Could not load receipt decisions.")) }
+                if headers.isEmpty && !more { Text(putawayText("No reviewed purchases yet.")) }
+                if more {
+                    Button(pantryText("Load receipt lines")) { Task { await load() } }.disabled(busy)
+                }
+            }
+        }
+        .privacySensitive()
+        .navigationTitle(putawayText("Reviewed purchases"))
+        .task(id: model.snapshot?.state.workspaceID) { headers = []; more = true; await load() }
+    }
+
+    private func load() async {
+        guard !busy, more, model.canEdit else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            let next = try await model.reviewedReceiptHeaders(after: headers.last?.id)
+            headers += next
+            more = next.count == 30
+            failed = false
+        } catch { failed = true }
+    }
+}
+
+private struct PutawayHistoryDetail: View {
+    @ObservedObject var model: PantryModel
+    let header: ReviewedReceiptHeader
+    @State private var rows: [ReviewedReceiptDecision] = []
+    @State private var more = true
+    @State private var busy = false
+    @State private var failed = false
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        List {
+            if model.canEdit {
+                ReviewedReceiptHeading(header: header)
+                ForEach(rows.sorted { $0.ordinal < $1.ordinal }) { row in PutawayDecisionLabel(row: row) }
+                if rows.contains(where: { $0.lotID != nil }) {
+                    NavigationLink(putawayText("Pantry quantities and price revisions")) {
+                        PantryReceiptHistory(model: model, receiptID: header.id, showsDone: false)
+                    }
+                }
+                if failed { Text(putawayText("Could not load receipt decisions.")) }
+                if more {
+                    Button(pantryText("Load receipt lines")) { Task { await load() } }.disabled(busy)
+                }
+            }
+        }
+        .privacySensitive()
+        .navigationTitle(putawayText("Receipt decisions"))
+        .task { await load() }
+        .onChange(of: model.snapshot?.state.workspaceID) { _, _ in rows = []; dismiss() }
+    }
+
+    private func load() async {
+        guard !busy, more, model.canEdit else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            let page = try await model.reviewedReceiptDecisions(header.id, after: rows.last?.id)
+            rows += page
+            more = page.count == 50
+            failed = false
+        } catch { failed = true }
+    }
+}
