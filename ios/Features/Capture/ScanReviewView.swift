@@ -2,6 +2,33 @@ import SwiftUI
 import PhotosUI
 import CoreDomain
 
+/// Retain the scoped source editor beneath the privacy cover while iOS asks about the camera.
+@MainActor private struct SourceCameraPermission: DynamicProperty {
+    let recipeScope: RecipeCameraPromptScope?
+    @Environment(\.pantryDigestPermissionPrompt) private var pantryPrompt
+    @Environment(\.pantryVoicePrompt) private var pantryWindow
+    @Environment(\.recipeCameraPermissionPrompt) private var recipePrompt
+
+    init(recipeScope: RecipeCameraPromptScope? = nil) { self.recipeScope = recipeScope }
+
+    func retains(_ target: CaptureTarget) -> Bool {
+        if let recipeScope, let recipePrompt, recipePrompt.scope == recipeScope {
+            return recipePrompt.holdsPresentation()
+        }
+        return target.kind == .receiptEvidence && pantryPrompt?.scope.origin == target.workspaceID && pantryWindow?.holdsPresentation() == true
+    }
+
+    func request(for target: CaptureTarget) async throws {
+        if let recipeScope {
+            guard let recipePrompt, recipePrompt.scope == recipeScope else { throw ScanFailure.stale }
+            try await CameraCapturePermission.request(presenting: recipePrompt.present)
+            return
+        }
+        let pantryOrigin = target.kind == .receiptEvidence ? target.workspaceID : nil
+        try await CameraCapturePermission.request(presenting: pantryPrompt?.presenter(for: pantryOrigin))
+    }
+}
+
 @MainActor struct ScanReviewView: View {
     private enum InputField: Hashable {
         case sourceText, manualCode, sourceLabel
@@ -14,6 +41,7 @@ import CoreDomain
     let authorize: () -> Bool
     let onReviewed: (ReviewedScan) -> Void
     let correctionScope: CaptureCorrectionScope?
+    private var cameraPermission: SourceCameraPermission
     @StateObject private var model = ScanModel()
     @StateObject private var corrections = CaptureCorrectionsModel()
     @State private var label: String
@@ -40,10 +68,12 @@ import CoreDomain
     @Environment(\.scenePhase) private var scenePhase
 
     init(kind: ScanKind, target: CaptureTarget, initialLabel: String = "",
-         correctionScope: CaptureCorrectionScope? = nil, authorize: @escaping () -> Bool,
+         correctionScope: CaptureCorrectionScope? = nil, recipeCameraScope: RecipeCameraPromptScope? = nil,
+         authorize: @escaping () -> Bool,
          onReviewed: @escaping (ReviewedScan) -> Void) {
         self.kind = kind; self.target = target; self.authorize = authorize; self.onReviewed = onReviewed
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
+        cameraPermission = SourceCameraPermission(recipeScope: recipeCameraScope)
     }
     var body: some View {
         ScrollViewReader { scroll in
@@ -204,7 +234,7 @@ import CoreDomain
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(250))
                 guard !Task.isCancelled else { return }
-                if !authorize() { close(); dismiss(); return }
+                if !authorize() && !cameraPermission.retains(target) { close(); dismiss(); return }
             }
         }
         .onDisappear { if !showCamera { close() } }
@@ -387,7 +417,11 @@ import CoreDomain
         guard localPhotoConsent, canReview else { return }; requestingCamera = true; let attempt = UUID(); permissionGeneration = attempt
         Task { @MainActor in
             defer { if permissionGeneration == attempt { requestingCamera = false } }
-            do { try await CameraCapturePermission.request(); guard localPhotoConsent, permissionGeneration == attempt, authorize(), !model.closed else { return }; showCamera = true }
+            do {
+                try await cameraPermission.request(for: target)
+                guard localPhotoConsent, permissionGeneration == attempt, authorize(), !model.closed else { return }
+                showCamera = true
+            }
             catch { guard permissionGeneration == attempt, !model.closed else { return }; model.inputFailed(error as? ScanFailure ?? .unavailable) }
         }
     }
@@ -491,6 +525,7 @@ private struct ReceiptSectionCapture: View {
     var reviewsPrivateReceipt = false
     var initialPhoto: PhotosPickerItem?
     let reviewed: (SourceMediaRecord) -> Void
+    var cameraPermission = SourceCameraPermission()
     @State private var didStart = false
     @State private var draft = ReceiptSectionDraft()
     @State private var review: ExtractedReceiptDocument?
@@ -532,7 +567,7 @@ private struct ReceiptSectionCapture: View {
                     else if start == .screenshot, let initialPhoto { item = initialPhoto }
                 }
                 while !Task.isCancelled {
-                    guard authorize() else { clear(); dismiss(); return }
+                    guard authorize() || cameraPermission.retains(target) else { clear(); dismiss(); return }
                     try? await Task.sleep(for: .milliseconds(250))
                 }
             }
@@ -633,7 +668,7 @@ private struct ReceiptSectionCapture: View {
         job = Task { @MainActor in
             defer { if token == generation { job = nil } }
             do {
-                try await CameraCapturePermission.request()
+                try await cameraPermission.request(for: target)
                 guard !Task.isCancelled, token == generation, authorize() else { return }
                 camera = true
             } catch { if token == generation { self.error = captureText("The camera is unavailable. Choose a photo or type the lines instead.") } }

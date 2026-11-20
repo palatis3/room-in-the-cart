@@ -15,17 +15,27 @@ struct PantryDigestAccess {
     let authorized: @MainActor () -> Bool
     /// Permits a progress indicator only. All data reads and writes use authorized.
     let awaitingSnapshot: @MainActor () -> Bool
+    /// Keeps navigation mounted under the privacy cover during a matching system prompt.
+    let retainsPresentation: @MainActor () -> Bool
 
     init(scope: PantryDigestScope, snapshotIsCurrent: @escaping @MainActor () -> Bool = { true },
+         retainsPresentation: @escaping @MainActor () -> Bool = { false },
          authorized sameOwner: @escaping @MainActor () -> Bool) {
         self.scope = scope
         authorized = { sameOwner() && snapshotIsCurrent() }
         awaitingSnapshot = { sameOwner() && !snapshotIsCurrent() }
+        self.retainsPresentation = retainsPresentation
     }
+
+    @MainActor func canPresent() -> Bool { authorized() || retainsPresentation() }
 }
 struct PantryDigestPermissionPrompt {
     let scope: PantryDigestScope
     let present: PantryNotificationPresenter
+
+    func presenter(for origin: UUID?) -> PantryNotificationPresenter? {
+        scope.origin == origin ? present : nil
+    }
 }
 private struct PantryDigestPermissionPromptKey: EnvironmentKey {
     static let defaultValue: PantryDigestPermissionPrompt? = nil
@@ -46,14 +56,17 @@ extension EnvironmentValues {
 
 extension PantryDigestAccess {
     @MainActor static func current(pickup: PickupModel, access: WorkspaceAccess, household: HouseholdModel,
-                                   child: GuardianChildCoordinator) -> Self? {
-        guard UIApplication.shared.isProtectedDataAvailable, !child.presented, pickup.pantryRouteAvailable, pickup.pantryReadIsCurrent,
+                                   child: GuardianChildCoordinator,
+                                   retainedScope: @escaping @MainActor () -> PantryDigestScope? = { nil }) -> Self? {
+        guard UIApplication.shared.isProtectedDataAvailable, !child.presented, pickup.pantryReadIsCurrent,
               let snapshot = pickup.pantrySnapshot, let origin = pickup.sourceWorkspaceID, snapshot.state.workspaceID == origin,
               snapshot.state.active, household.projection?.grantId == nil,
               let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
         let scope = PantryDigestScope(origin: origin, identity: identity)
+        guard pickup.pantryRouteAvailable || retainedScope() == scope else { return nil }
         let generation = pickup.privatePantryGeneration
-        return PantryDigestAccess(scope: scope, snapshotIsCurrent: { pickup.pantryReadIsCurrent }) {
+        return PantryDigestAccess(scope: scope, snapshotIsCurrent: { pickup.pantryReadIsCurrent },
+            retainsPresentation: { retainedScope() == scope }) {
             UIApplication.shared.isProtectedDataAvailable && pickup.privatePantryGeneration == generation &&
                 !child.presented && pickup.pantryRouteAvailable && pickup.sourceWorkspaceID == origin &&
                 pickup.pantrySnapshot?.state.workspaceID == origin && pickup.pantrySnapshot?.state.active == true &&
@@ -68,6 +81,7 @@ extension PantryDigestAccess {
     @ObservedObject var access: WorkspaceAccess
     @ObservedObject var household: HouseholdModel
     @ObservedObject var child: GuardianChildCoordinator
+    let retainedScope: @MainActor () -> PantryDigestScope?
     @ObservedObject private var store = PantryDigestStore.shared
     @Environment(\.scenePhase) private var scene
     @State private var openScope: PantryDigestScope?
@@ -76,8 +90,8 @@ extension PantryDigestAccess {
 
     @ObservedObject private var home = AdultHomeSummaryStore.shared
     private var context: PantryDigestAccess? {
-        guard scene == .active else { return nil }
-        return .current(pickup: pickup, access: access, household: household, child: child)
+        guard scene == .active || retainedScope() != nil else { return nil }
+        return .current(pickup: pickup, access: access, household: household, child: child, retainedScope: retainedScope)
     }
     private func refreshHome(_ current: PantryDigestAccess?) {
         guard let current, current.authorized(), let snapshot = pickup.pantrySnapshot else { return }

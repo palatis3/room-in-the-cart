@@ -99,7 +99,8 @@ test('native and public privacy explain reviewed household and online actions in
     'You can search the USDA FoodKeeper', 'When online assistance is available',
     'When you save a recipe in Household Tonight', 'When you share a reaction to a meal', 'Looking up a barcode in Open Food Facts',
     'If product references are available', 'If last calls are available', 'When you choose Read recipe',
-    'The household service counts online', 'Deleting your account erases'];
+    'The household service counts online', 'Deleting your account erases', 'If Apple requires an age range',
+    'If Apple tells Room in the Cart', 'When Resend delivers'];
   for (const language of ['en', 'es']) {
     const text = setup('/privacy?lang=' + language).root.textContent;
     for (const scope of scopes) {

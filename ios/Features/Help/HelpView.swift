@@ -113,6 +113,7 @@ struct HelpPrivacyView: View {
     var body: some View {
         WorkingForm {
             Section(helpText("Your private workspace")) {
+                Text(helpText("If Apple requires an age range and the regional check is enabled, the app asks whether you’ll share it. The app uses the response on this iPhone to decide whether to open your workspace. It keeps the check result in memory and sends no age range to your household."))
                 Text(helpText("Private comparisons, lists, dinners, capture reviews and pickup records are stored on this iPhone. Joining a household does not upload that existing work. An owner export can include private content and recipient history."))
                 Text(helpText("You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names."))
                 Text(helpText("Optional pickup feedback stays in your local pickup record. It is not sent to an analytics service. You can turn the prompt off in Settings and remove a saved response from its pickup."))
@@ -130,6 +131,7 @@ struct HelpPrivacyView: View {
                 Text(helpText("When you share a reaction to a meal you shopped for, the household service saves it with your member ID. For up to 90 days, Household Tonight can use your latest reaction to that version of the recipe to break ties between dinner suggestions for you. To withdraw your reactions, open Household pantry and choose Review my shared meal feedback."))
                 Text(helpText("If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place."))
                 Text(helpText("A cook link exposes only its granted fields. A static message or exported file is a separate copy under the recipient’s control. Review the destination and private fields before sharing."))
+                Text(helpText("If Apple tells Room in the Cart that a guardian withdrew permission for an App Store download, the service saves a receipt to recognize repeated notices. The receipt contains the notice ID, the time Apple signed it and whether it came from the live or test App Store. It contains no age range, download ID or household account."))
                 Text(helpText("Apple handles subscription payment credentials. The app and household service use transaction evidence to deliver and restore membership; they do not receive your payment card or bank account number."))
             }
             Section(helpText("Photos and speech")) {
@@ -150,6 +152,7 @@ struct HelpPrivacyView: View {
                 if let name = configuration.operatorName {
                     LabeledContent(helpText("Operator"), value: name).accessibilityIdentifier("help.policy.operator")
                 }
+                Text(helpText("When Resend delivers a sign-in code, it processes the recipient’s email address and the message containing the code. If you email support, Cloudflare Email Routing forwards your address, message and any attachments to the operator’s Gmail inbox so the operator can respond."))
                 Text(helpText("This guide describes the app’s data controls. The operator’s privacy policy and terms are separate pages."))
                 if let url = configuration.privacyURL { Link(helpText("Privacy policy"), destination: url) }
                 else { Text(helpText("The privacy policy link is unavailable.")) }

@@ -13,9 +13,9 @@ class NativeBackendTests(unittest.TestCase):
                                "y": "T-NC4v4af5uO5-tKfA-eFivOM1drMV7Oy7ZAaDe_UfU"}]}
         self.session = {"available": False, "authenticated": False}
 
-    def probe(self):
+    def probe(self, name="Staging", **options):
         fetch = Mock(side_effect=[self.settings, self.keys, {"status": "running"}, self.session])
-        result = check(self.config, "Staging", fetch)
+        result = check(self.config, name, fetch, **options)
         self.assertEqual([call.args[1] for call in fetch.call_args_list],
                          [{"apikey": "public-fixture"}, {}, {}, {}])
         return result
@@ -45,6 +45,39 @@ class NativeBackendTests(unittest.TestCase):
         for config, expected in (({}, "missing"), (self.config, "disabled")):
             with self.assertRaisesRegex(ValueError, expected):
                 check(config, "Release", lambda *_: self.fail("Unexpected network request"))
+
+    def test_existing_accounts_only_requires_explicit_selection(self):
+        self.config["emailOTPEnabled"] = True
+        self.session["available"] = True
+        self.assertTrue(self.probe("Release"))
+        self.settings.update(disable_signup=True, saml_enabled=False, passkeys_enabled=False)
+        self.settings["external"].update(anonymous_users=False, phone=False, github=False)
+        self.assertTrue(self.probe("Release", existing_accounts_only=True))
+        with self.assertRaisesRegex(ValueError, "account creation"):
+            self.probe("Release")
+        self.session["available"] = False
+        with self.assertRaisesRegex(ValueError, "household service"):
+            self.probe("Release", existing_accounts_only=True)
+
+    def test_existing_accounts_only_rejects_ambiguous_or_open_provider_configuration(self):
+        with self.assertRaisesRegex(ValueError, "disabled"):
+            self.probe(existing_accounts_only=True)
+        self.config["emailOTPEnabled"] = True
+        self.session["available"] = True
+        self.settings.update(disable_signup=True, saml_enabled=False, passkeys_enabled=False)
+        providers = self.settings["external"]
+        providers.update(anonymous_users=False, phone=False)
+        for target, key, value in ((self.settings, "disable_signup", False), (self.settings, "disable_signup", 1),
+                                    (self.settings, "mailer_autoconfirm", True), (providers, "email", False),
+                                    (providers, "anonymous_users", True), (providers, "phone", None),
+                                    (providers, "github", True), (self.settings, "saml_enabled", True),
+                                    (self.settings, "passkeys_enabled", "false")):
+            with self.subTest(key=key, value=value), unittest.mock.patch.dict(target, {key: value}):
+                with self.assertRaises(ValueError):
+                    self.probe("Release", existing_accounts_only=True)
+        del providers["anonymous_users"]
+        with self.assertRaises(ValueError):
+            self.probe("Release", existing_accounts_only=True)
 
     def test_redirect_never_forwards_headers(self):
         self.assertIsNone(NoRedirect().redirect_request(None, None, 302, "", {}, "https://other.invalid"))

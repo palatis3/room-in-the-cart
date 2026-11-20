@@ -22,7 +22,7 @@ struct PackageDateChoices: View {
     }
     var body: some View {
         WorkingForm {
-            if access.authorized(), model.snapshot?.lots.first(where: { $0.id == lot.id }) == lot {
+            if access.canPresent(), model.snapshot?.lots.first(where: { $0.id == lot.id }) == lot {
                 PantryBatchHeading(lot: lot)
                 if !noLabel {
                     Section(pantryText("Is there a date on this package?")) {
@@ -49,6 +49,6 @@ struct PackageDateChoices: View {
                 }
                 Button(pantryText("Skip")) { dismiss() }
             }
-        }.privacySensitive().navigationTitle(pantryText("Add a date or reminder"))
+        }.disabled(!access.authorized()).privacySensitive().navigationTitle(pantryText("Add a date or reminder"))
     }
 }

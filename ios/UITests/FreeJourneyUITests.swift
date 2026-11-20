@@ -1727,6 +1727,30 @@ import XCTest
         XCTAssertTrue(markUnknown.exists)
     }
 
+    func testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry() {
+        app.resetAuthorizationStatus(for: .camera)
+        defer { app.resetAuthorizationStatus(for: .camera) }
+        launch(reset: true)
+        receiptTap(app.shopToolButton("shop.myPantry"))
+        openReceiptAfterPantrySetup()
+        receiptTap(app.buttons["receipt.takePhoto"])
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let prompt = springboard.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'camera'")).firstMatch
+        // Simulators without a camera go directly to the alternative input choices.
+        if prompt.waitForExistence(timeout: 5) {
+            let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+            XCTAssertTrue(deny.isHittable)
+            deny.tap()
+        }
+        let message = app.staticTexts["receipt.sections.error"]
+        XCTAssertTrue(message.waitForExistence(timeout: 8))
+        XCTAssertEqual(message.label, "The camera is unavailable. Choose a photo or type the lines instead.")
+        receiptTap(app.buttons["Cancel"])
+        XCTAssertTrue(app.buttons["receipt.chooseScreenshot"].isHittable)
+        receiptTap(app.buttons["receipt.scan"])
+        XCTAssertTrue(app.textViews["scan.sourceEditor"].waitForExistence(timeout: 8))
+    }
+
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         launch(reset: true)
         receiptTap(app.shopToolButton("shop.myPantry"))
@@ -2249,7 +2273,11 @@ import XCTest
         capture("B09-typed-amount-reopened-after-microphone-refusal")
     }
 
-    func testCameraRefusalReturnsToTypedDraft() throws {
+#endif
+
+    func testCameraRefusalReturnsToTypedDraft() {
+        app.resetAuthorizationStatus(for: .camera)
+        defer { app.resetAuthorizationStatus(for: .camera) }
         launch(reset: true)
         openShoppingList()
         tap(element("ledgerImport"))
@@ -2264,23 +2292,25 @@ import XCTest
         let consent = app.switches["scan.localConsent"]
         revealScrollableContent(consent, initiallyUpward: false, entireRow: true)
         enableSwitch("scan.localConsent")
-        tap(element("scan.camera"))
+        XCTAssertEqual(consent.value as? String, "1")
+        let camera = element("scan.camera")
+        revealScrollableContent(camera, initiallyUpward: false, entireRow: true)
+        XCTAssertTrue(camera.isEnabled)
+        camera.tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let prompt = springboard.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'camera'")).firstMatch
-        XCTAssertTrue(prompt.waitForExistence(timeout: 8))
-        let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
-        XCTAssertTrue(deny.exists && deny.isHittable)
-        deny.tap()
-        let failure = app.staticTexts["Camera permission was not granted. Type, paste or choose a photo instead."]
-        XCTAssertTrue(failure.waitForExistence(timeout: 8))
+        if prompt.waitForExistence(timeout: 5) {
+            let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+            XCTAssertTrue(deny.isHittable)
+            deny.tap()
+            reveal(app.staticTexts["Camera permission was not granted. Type, paste or choose a photo instead."])
+        }
         tap(element("scan.typeItem"))
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         XCTAssertEqual(app.textViews["scan.sourceEditor"].value as? String, "Wraps")
         app.typeText(" pack")
         XCTAssertEqual(app.textViews["scan.sourceEditor"].value as? String, "Wraps pack")
     }
-#endif
-
     func testFirstNaturalListRestoresPendingPreviewAndCommitsOnlyItsProvisionalPickup() {
         launch(reset: true)
         let firstList = element("shop.addFirstList")
@@ -4163,6 +4193,44 @@ import XCTest
             tap(app.buttons["Cancel"])
             XCTAssertTrue(review.waitForNonExistence(timeout: 8))
         }
+    }
+
+    func testRecipeCameraRefusalKeepsTheOriginalTypedRecipe() {
+        app.resetAuthorizationStatus(for: .camera)
+        defer { app.resetAuthorizationStatus(for: .camera) }
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"])
+        tap(element("dinnerStartPickup"))
+        fill("Recipe review pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("dinner.scanRecipe"))
+        tap(element("dinner.beginRecipeReview"))
+
+        let consent = app.switches["scan.localConsent"]
+        revealScrollableContent(consent, entireRow: true)
+        enableSwitch("scan.localConsent")
+        XCTAssertEqual(consent.value as? String, "1")
+        let wording = "Bean salad\nServes 2\nIngredients\n2 cups beans"
+        fill(wording, into: "scan.sourceEditor", requireDone: true)
+        let camera = element("scan.camera")
+        revealScrollableContent(camera, initiallyUpward: false, entireRow: true)
+        XCTAssertTrue(camera.isEnabled)
+        camera.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let prompt = springboard.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'camera'")).firstMatch
+        if prompt.waitForExistence(timeout: 5) {
+            let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+            XCTAssertTrue(deny.isHittable)
+            deny.tap()
+        }
+
+        tap(element("scan.typeItem"))
+        let editor = app.textViews["scan.sourceEditor"]
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        XCTAssertEqual(editor.value as? String, wording)
+        app.typeText(" and lime")
+        XCTAssertTrue((editor.value as? String)?.contains(" and lime") == true)
     }
 
     func testTypedBarcodeNeedsACodeAndFreshMatchConfirmation() {

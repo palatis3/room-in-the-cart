@@ -7,6 +7,7 @@ Xcode’s RoomInTheCart-Staging scheme runs, tests, profiles and archives the st
 | JSON key | Compiled app key | Owner-supplied value |
 | --- | --- | --- |
 | `environment` | — | `staging` or `production`, matching the file |
+| `regionalAgeCheckEnabled` | `RITCRegionalAgeCheckEnabled` | Optional boolean. Enables the native regional check and selects the app entitlement for this build. Defaults to false. |
 | `emailOTPEnabled` | `RITCEmailOTPEnabled` | Boolean; enable only after the provider's code delivery is verified |
 | `supabaseURL` | `SupabaseProjectURL` | That environment's identity project URL |
 | `publishableKey` | `SupabasePublishableKey` | Public publishable key, never a service-role key |
@@ -52,3 +53,13 @@ The export uses the version and build number in the archive. Both signing config
 To check the exported signature, extract the IPA with `ditto -x -k` and run the same checker against `Payload/RoomInTheCart.app`. The signed app and each extension must retain their App Groups and data-protection entitlements.
 
 With the Node version from `.node-version` on your path, run `python3 scripts/check_native_backend.py Staging` or `python3 scripts/check_native_backend.py Release` to check the selected build’s public configuration against the deployed Supabase Auth settings, advertised signing keys, service health and email-sign-in availability. This read-only probe sends no email and creates no records. Exercise code delivery, session refresh and a household save and reopen on the signed candidate as a separate check.
+
+For a private TestFlight or App Review environment restricted to pre-created accounts, add `--existing-accounts-only`. The check requires enabled email-code entry in the app and service, disabled public signup, required email confirmation, and email as the only advertised sign-in method. Verify separately that the existing accounts belong to the intended reviewers or testers. Give each reviewer access to the fictional account’s mailbox so they can retrieve fresh codes throughout review.
+
+## Regional age checks
+
+After the owner reviews applicability for the distribution territories, provision the Declared Age Range capability on the **app’s** App ID and refresh its profile. To test, set `regionalAgeCheckEnabled` to `true` in the staging configuration and regenerate the Xcode project. Debug uses the staging configuration. For Release, the same key must be set separately in the local release configuration. The distribution signature verifier checks the enabled app and its profile for the entitlement. Widget and Share extensions keep their existing entitlements.
+
+On iOS 26.4 and later the app checks whether Apple requires age sharing for the current account. On iOS 26.2–26.3 it uses the earlier regional eligibility signal. Earlier versions follow the existing shopping flow. A required check must return a shared range before the shopping window opens. A network failure or an unsuccessful required check offers a retry. The app retains the check outcome in memory until the session backgrounds or the iCloud identity changes. All shared bands reach the same shopping window. The app neither stores nor sends the age range and never uses it to grant a guardian or child role.
+
+Before enabling the feature for distribution, exercise an unaffected account, a covered adult, a covered child, declined sharing, network failure and retry, background/foreground, and an iCloud account change in Apple’s sandbox. Test widget links and the separate adult and child household routes. Verify app launch after a parent revokes consent and delivery of the signed server notification. The owner determines which features require different access by age and which future changes require additional consent before shipping them. [Apple’s age assurance Q&A](https://developer.apple.com/support/age-assurance/) · [Apple’s Declared Age Range framework](https://developer.apple.com/documentation/declaredagerange)

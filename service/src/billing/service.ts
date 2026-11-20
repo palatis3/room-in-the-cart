@@ -2,7 +2,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { z } from 'zod';
 import { digest, type Database, type Transaction } from '../database.js';
 import { ServiceError, accessEnded, invalid, refresh } from '../errors.js';
-import type { AppleBillingGateway, ReviewBilling, VerifiedAppleTransaction } from './apple.js';
+import type { AppleBillingGateway, NotificationDestinations, ReviewBilling, VerifiedAppleTransaction } from './apple.js';
 import {
   billingUnavailable, bindingConflict, effectiveStatus, hasPaidSeat, supersedes, validityEnd,
   type EntitlementSnapshot, type VerifiedSubscription,
@@ -23,7 +23,7 @@ export const billingNotificationSchema = z.object({ signedPayload: z.string().mi
  * This module never changes any shopper authority or household planning/data grant.
  */
 export class BillingService {
-  constructor(private readonly apple: AppleBillingGateway | null, private readonly review?: ReviewBilling) {}
+  constructor(private readonly apple: AppleBillingGateway | null, private readonly review?: ReviewBilling, private readonly notifications?: NotificationDestinations) {}
   private gateway(householdId: string): AppleBillingGateway {
     if (this.review?.householdIDs.has(householdId.toLowerCase())) return this.review.sandbox;
     if (!this.apple) throw billingUnavailable();
@@ -174,9 +174,16 @@ export class BillingService {
   }
   async notification(pool: Database, signedPayload: string, destination: 'primary' | 'reviewSandbox' = 'primary'): Promise<{ accepted: true }> {
     const gateway = destination === 'reviewSandbox' ? this.review?.sandbox : this.apple;
+    const verifier = (destination === 'reviewSandbox' ? this.notifications?.sandbox : this.notifications?.primary) ?? gateway;
+    if (!verifier) throw billingUnavailable();
+    const notification = await verifier.verifyNotification(signedPayload);
+    if (notification.kind === 'TEST') return { accepted: true };
+    if (notification.kind === 'RESCIND_CONSENT') {
+      await pool.query(`INSERT INTO ritc.apple_consent_notification(environment, notification_id, signed_at)
+        VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [notification.environment, notification.notificationID, new Date(notification.signedAt)]);
+      return { accepted: true };
+    }
     if (!gateway) throw billingUnavailable();
-    const notification = await gateway.verifyNotification(signedPayload);
-    if (!notification.transaction) return { accepted: true }; // Apple's signed TEST notification.
     const transaction = notification.transaction;
     const db = await pool.connect();
     try {

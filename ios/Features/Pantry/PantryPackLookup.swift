@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Read-only scan and name lookup. The caller owns the action on the selected pack or batch.
 private struct PackLookupInput: View {
+    let workspaceID: UUID?
     let access: PantryDigestAccess?
     let authorized: () -> Bool
     @Binding var query: String
@@ -35,8 +36,8 @@ private struct PackLookupInput: View {
             if let candidate = lastScan ?? typed {
                 Button(pantryText("Find barcode")) { resolve(candidate) }.accessibilityIdentifier("pack.find.resolve")
             }
-            LivePackageButton(authorized: authorized) { code in lastScan = code; resolve(code) }
-            PantryProductPhotoInput(consent: $consent, authorized: authorized, add: { source in
+            LivePackageButton(workspaceID: workspaceID, authorized: authorized) { code in lastScan = code; resolve(code) }
+            PantryProductPhotoInput(workspaceID: workspaceID, consent: $consent, authorized: authorized, add: { source in
                 guard source.barcodes.count == 1, let code = source.barcodes.first else {
                     status = pantryText("Choose a photo of one barcode or type the code."); return
                 }
@@ -71,14 +72,20 @@ struct PantryPackFind: View {
     @ObservedObject var model: PantryModel
     let origin: UUID
     @Environment(\.pantryDigestAccess) private var access
+    @Environment(\.scenePhase) private var scene
     @State private var query = ""
     @State private var selected: ConfirmedPantryPack?
     private var authorized: Bool { model.phase == .ready && model.snapshot?.state.workspaceID == origin }
     private var scoped: PantryDigestAccess? { access?.scope.origin == origin && access?.authorized() == true ? access : nil }
+    private var presentationScope: PantryDigestScope? {
+        guard let access, access.scope.origin == origin, access.canPresent() else { return nil }
+        return access.scope
+    }
     var body: some View {
         WorkingForm {
             if authorized {
-                PackLookupInput(access: scoped, authorized: { authorized }, query: $query, selected: $selected)
+                PackLookupInput(workspaceID: origin, access: scoped, authorized: { authorized && scene == .active },
+                    query: $query, selected: $selected)
                 let confirmed = selected.flatMap { item -> ConfirmedPantryPack? in
                     guard let scoped,
                           (try? PantryDigestStore.shared.packMemory.match(item.barcode, retailer: item.retailer, scope: scoped.scope)) == item else { return nil }
@@ -100,7 +107,7 @@ struct PantryPackFind: View {
                 }
             }
         }.privacySensitive().navigationTitle(pantryText("Find a package in Pantry"))
-        .onChange(of: scoped?.scope) { _, _ in selected = nil; query = "" }
+        .onChange(of: presentationScope) { _, _ in selected = nil; query = "" }
     }
 }
 
@@ -213,6 +220,11 @@ struct ShopPackLookupEntry: View {
         guard let access, access.authorized(), pickup.pantryReadIsCurrent, access.scope.origin == pickup.pantrySnapshot?.state.workspaceID else { return nil }
         return access
     }
+    private var presentationScope: PantryDigestScope? {
+        guard let access, access.canPresent(), pickup.pantryReadIsCurrent,
+              access.scope.origin == pickup.pantrySnapshot?.state.workspaceID else { return nil }
+        return access.scope
+    }
     private var name: String { selected?.name ?? query.trimmingCharacters(in: .whitespacesAndNewlines) }
     private func current() -> Bool {
         guard authorize(), ledger.shop?.id == shopID else { return false }
@@ -261,7 +273,8 @@ struct ShopPackLookupEntry: View {
                         Button(pantryText("Edit")) { self.preview = nil }
                     }
                 } else {
-                    PackLookupInput(access: scoped, authorized: { authorize() }, query: $query, selected: $selected)
+                    PackLookupInput(workspaceID: presentationScope?.origin, access: scoped, authorized: { authorize() },
+                        query: $query, selected: $selected)
                     if !name.isEmpty, current() {
                         Section(selected?.label ?? name) {
                             let lines = shop.lines.filter { !$0.isTrashed && !$0.isHandled && $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame && PackRebuyDraft.match($0, pack: selected, shop: shop) != .different }
@@ -290,7 +303,7 @@ struct ShopPackLookupEntry: View {
             }
         }.privacySensitive().navigationTitle(pantryText("Buy this pack again"))
         .onChange(of: target) { _, _ in confirmedUnlinked = false }
-        .onChange(of: scoped?.scope) { _, _ in selected = nil; query = ""; preview = nil; target = nil; status = nil }
+        .onChange(of: presentationScope) { _, _ in selected = nil; query = ""; preview = nil; target = nil; status = nil }
     }
     private func prepare(_ shop: ShoppingLedger) {
         guard current(), let number = Int64(count), (1...10_000).contains(number) else { return }

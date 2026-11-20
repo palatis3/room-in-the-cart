@@ -3,29 +3,39 @@ import Vision
 import VisionKit
 
 struct LivePackageButton: View {
+    let workspaceID: UUID?
     let authorized: () -> Bool
     let receive: (CapturedBarcode) -> Void
     @Environment(\.scenePhase) private var scene
+    @Environment(\.pantryDigestPermissionPrompt) private var permissionPrompt
     @State private var scanning = false
     @State private var status: String?
+    @State private var requesting = false
 
     var body: some View {
         Button {
             Task {
-                guard authorized(), DataScannerViewController.isSupported else { unavailable(); return }
+                guard scene == .active, authorized(), !requesting else { return }
+                guard DataScannerViewController.isSupported else { unavailable(); return }
+                requesting = true
+                defer { requesting = false }
                 do {
-                    try await CameraCapturePermission.request()
-                    guard authorized(), DataScannerViewController.isAvailable else { unavailable(); return }
+                    try await CameraCapturePermission.request(presenting: permissionPrompt?.presenter(for: workspaceID))
+                    guard scene == .active, authorized() else { return }
+                    guard DataScannerViewController.isAvailable else { unavailable(); return }
                     status = nil; scanning = true
-                } catch { unavailable() }
+                } catch {
+                    if scene == .active && authorized() { unavailable() }
+                }
             }
         } label: { Label(pantryText("Scan a live barcode"), systemImage: "barcode.viewfinder").frame(minHeight: 44) }
+        .disabled(requesting)
         .accessibilityIdentifier("productBatch.live")
         .fullScreenCover(isPresented: $scanning) {
             NavigationStack {
                 if authorized(), scene == .active {
                     PackageCamera { code in
-                        guard scanning, authorized() else { return }
+                        guard scanning, scene == .active, authorized() else { return }
                         scanning = false
                         if let code { receive(code) } else { unavailable() }
                     }

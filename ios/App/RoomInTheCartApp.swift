@@ -41,10 +41,20 @@ private extension EnvironmentValues {
                 HouseholdTripFixture(notificationDelegate: notificationDelegate)
             } else if Set(["--ui-testing", "--meal-language-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
                 MealLanguageFixture()
-            } else { GroceryWindow(notificationDelegate: notificationDelegate) }
+            } else { primaryWindow }
             #else
-            GroceryWindow(notificationDelegate: notificationDelegate)
+            primaryWindow
             #endif
+        }
+    }
+
+    @ViewBuilder private var primaryWindow: some View {
+        if #available(iOS 26.2, *), Bundle.main.object(forInfoDictionaryKey: "RITCRegionalAgeCheckEnabled") as? String == "YES" {
+            RegionalAgeCheckWindow { approvedURL in
+                GroceryWindow(notificationDelegate: notificationDelegate, approvedURL: approvedURL)
+            }
+        } else {
+            GroceryWindow(notificationDelegate: notificationDelegate)
         }
     }
 }
@@ -79,7 +89,9 @@ struct GroceryWindow: View {
     @StateObject private var pickup = PickupModel(mutationGate: PrivatePantryRuntime.mutationGate, usesLivePantry: true)
     @StateObject private var household: HouseholdModel
 
-    init(notificationDelegate: SurfaceNotificationDelegate, household: HouseholdModel? = nil) {
+    private let approvedURL: Binding<URL?>?
+    init(notificationDelegate: SurfaceNotificationDelegate, household: HouseholdModel? = nil, approvedURL: Binding<URL?>? = nil) {
+        self.approvedURL = approvedURL
         self.notificationDelegate = notificationDelegate
         _household = StateObject(wrappedValue: household ?? HouseholdModel())
     }
@@ -90,7 +102,11 @@ struct GroceryWindow: View {
     @StateObject private var guardianChild = GuardianChildCoordinator()
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var pantryRuntime = PrivatePantryRuntime()
-    @StateObject private var voicePrompt = PantryVoicePromptWindow()
+    private enum PermissionScope: Equatable {
+        case pantry(PantryVoicePromptScope)
+        case recipeCamera(RecipeCameraPromptScope)
+    }
+    @StateObject private var permissionWindow = SystemPermissionWindow<PermissionScope>()
     @State private var pantryOpenAttempt = UUID()
     @State private var failedPantryScope: PantryOpenScope?
     #if DEBUG && targetEnvironment(simulator)
@@ -99,25 +115,28 @@ struct GroceryWindow: View {
     @AppStorage("appearance") private var appearance = "system"
     var body: some View {
         Group {
-            if scenePhase != .active && access.isProtected && !retainsVoicePrompt {
+            if scenePhase != .active && access.isProtected && !retainsPermissionPrompt {
                 Theme.canvas.ignoresSafeArea()
             } else {
                 root
-                    .opacity(retainsVoicePrompt ? 0 : 1)
-                    .allowsHitTesting(!retainsVoicePrompt)
-                    .accessibilityHidden(retainsVoicePrompt)
-                    .background { if retainsVoicePrompt { PantryVoicePrivacyCover() } }
+                    .opacity(retainsPermissionPrompt ? 0 : 1)
+                    .allowsHitTesting(!retainsPermissionPrompt)
+                    .accessibilityHidden(retainsPermissionPrompt)
+                    .background { if retainsPermissionPrompt { PantryVoicePrivacyCover() } }
             }
         }.environment(\.pantryVoicePrompt, PantryVoicePromptAccess(holdsPresentation: {
-            UIApplication.shared.applicationState != .background && voicePrompt.holdsPresentation(voicePromptScope)
+            UIApplication.shared.applicationState != .background && permissionWindow.holdsPresentation(voicePromptScope.map(PermissionScope.pantry))
         }, begin: {
             guard let scope = voicePromptScope, pickup.pantryRouteAvailable else { return nil }
-            return voicePrompt.begin(scope, phase: scenePhase)
-        }, nextPermission: { voicePrompt.nextPermission($0) }, ready: { voicePrompt.recognitionReady($0, appActive: UIApplication.shared.applicationState == .active) },
-           cancel: { voicePrompt.cancel($0) }))
+            return permissionWindow.begin(.pantry(scope), phase: scenePhase)
+        }, nextPermission: { permissionWindow.nextPermission($0) },
+           ready: { permissionWindow.recognitionReady($0, appActive: UIApplication.shared.applicationState == .active) },
+           cancel: { permissionWindow.cancel($0) }))
         .modifier(DinnerPrepAlertRuntime(ledger: ledger, pickup: pickup, access: access, household: household, child: guardianChild))
-        .modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
+        .modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild,
+                                      retainedScope: { retainedPantryDigestScope }))
             .environment(\.pantryDigestPermissionPrompt, digestPermissionPrompt)
+            .environment(\.recipeCameraPermissionPrompt, recipeCameraPermissionPrompt)
             .environment(\.pickupLedger, ledger)
             .environment(\.offersDuplicateAssistance, true)
             .environment(\.privatePantryRetry, pantryRetry)
@@ -147,10 +166,10 @@ struct GroceryWindow: View {
                 if guardianChild.presented { await guardianChild.resume() }
                 else { await openAdultWorkspace() }
             }
-            .onOpenURL {
+            .modifier(GroceryURLDelivery(approvedURL: approvedURL) { url in
                 guard !guardianChild.presented else { return }
-                navigation.preferIncomingLink(); surfaces.handle(url: $0)
-            }
+                navigation.preferIncomingLink(); surfaces.handle(url: url)
+            })
             .sheet(item: Binding(get: { scenePhase == .active && !guardianChild.presented ? surfaces.destination : nil },
                                  set: { surfaces.destination = $0 })) { destination in
                 NavigationStack {
@@ -187,7 +206,7 @@ struct GroceryWindow: View {
                 if unlocked && !guardianChild.presented { Task { await openAdultWorkspace() } }
             }
             .onChange(of: scenePhase) { _, phase in
-                voicePrompt.sceneChanged(phase)
+                permissionWindow.sceneChanged(phase)
                 if phase == .background {
                     guardianChild.suspend()
                     navigation.suspend(); surfaces.background(); access.background(); household.lock()
@@ -227,19 +246,41 @@ struct GroceryWindow: View {
     private var digestPermissionPrompt: PantryDigestPermissionPrompt? {
         guard let original = voicePromptScope else { return nil }
         return PantryDigestPermissionPrompt(scope: .init(origin: original.origin, identity: original.adult)) { request in
-            try await voicePrompt.requestNotification(in: original, phase: scenePhase,
-                currentScope: { voicePromptScope }, appActive: { UIApplication.shared.applicationState == .active },
+            try await permissionWindow.request(in: .pantry(original), phase: scenePhase,
+                currentScope: { voicePromptScope.map(PermissionScope.pantry) }, appActive: { UIApplication.shared.applicationState == .active },
                 request: request)
         }
     }
 
-    private var retainsVoicePrompt: Bool {
-        guard voicePrompt.token != nil, scenePhase == .inactive else { return false }
-        return voicePrompt.retains(voicePromptScope, phase: scenePhase)
+    private var recipeCameraScope: RecipeCameraPromptScope? {
+        .current(ledger: ledger, access: access, household: household, childPresented: guardianChild.presented)
+    }
+
+    private var recipeCameraPermissionPrompt: RecipeCameraPermissionPrompt? {
+        guard let original = recipeCameraScope else { return nil }
+        return RecipeCameraPermissionPrompt(scope: original, present: { request in
+            try await permissionWindow.request(in: .recipeCamera(original), phase: scenePhase,
+                currentScope: { recipeCameraScope.map(PermissionScope.recipeCamera) },
+                appActive: { UIApplication.shared.applicationState == .active }, request: request)
+        }, holdsPresentation: {
+            UIApplication.shared.applicationState != .background && recipeCameraScope == original &&
+                permissionWindow.holdsPresentation(.recipeCamera(original))
+        })
+    }
+
+    private var retainsPermissionPrompt: Bool {
+        guard permissionWindow.token != nil, scenePhase == .inactive else { return false }
+        return permissionWindow.retains(voicePromptScope.map(PermissionScope.pantry), phase: scenePhase) ||
+            permissionWindow.retains(recipeCameraScope.map(PermissionScope.recipeCamera), phase: scenePhase)
+    }
+
+    private var retainedPantryDigestScope: PantryDigestScope? {
+        guard let scope = voicePromptScope, permissionWindow.retains(.pantry(scope), phase: scenePhase) else { return nil }
+        return .init(origin: scope.origin, identity: scope.adult)
     }
 
     private var privatePantryIdentity: CapturePrivateIdentity? {
-        guard scenePhase == .active || retainsVoicePrompt, !guardianChild.presented, household.projection?.grantId == nil else { return nil }
+        guard scenePhase == .active || retainsPermissionPrompt, !guardianChild.presented, household.projection?.grantId == nil else { return nil }
         return CapturePrivateIdentity.current(access: access, household: household)
     }
 
@@ -281,7 +322,7 @@ struct GroceryWindow: View {
             return  // Publishing ready starts a new task bound to the opened ledger.
         }
         let current = pantryRuntime.authorization(for: identity, access: access, household: household, child: guardianChild)
-        let prompt = voicePrompt
+        let prompt = permissionWindow
         let authorize = { @MainActor in
             current() && prompt.allowsPantryAction(appActive: UIApplication.shared.applicationState == .active)
         }

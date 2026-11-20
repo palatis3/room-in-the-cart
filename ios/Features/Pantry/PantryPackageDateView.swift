@@ -10,7 +10,7 @@ struct PantryPackageDateSection: View {
     @ObservedObject var store: PantryPackageDateStore
 
     var body: some View {
-        let saved = try? store.load(access.scope, lot: lot.id)
+        let saved = access.authorized() ? (try? store.load(access.scope, lot: lot.id)) : nil
         Section(pantryText(saved?.selectedAI == nil ? "Printed package date" : "Encoded package date")) {
             if let current = saved {
                 if let original = current.originalPrintedWording {
@@ -36,6 +36,7 @@ struct PantryPackageDateSection: View {
     var scannedCode: CapturedBarcode? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
+    @Environment(\.pantryDigestPermissionPrompt) private var permissionPrompt
     @FocusState private var editing: Bool
     @State private var visible = false
     @State private var reviewedLot: InventoryLot?
@@ -79,6 +80,7 @@ struct PantryPackageDateSection: View {
     @State private var saving = false
     @State private var status: String?
     @State private var photoStatus: String?
+    @State private var requestingCamera = false
 
     private var currentAccess: Bool {
         visible && scene == .active && access.authorized() && model.phase == .ready &&
@@ -255,13 +257,16 @@ struct PantryPackageDateSection: View {
                 }
             }
             Button(pantryText("Photograph the printed date")) {
+                guard authorized, !requestingCamera else { return }
+                requestingCamera = true
                 Task {
+                    defer { requestingCamera = false }
                     do {
-                        try await CameraCapturePermission.request()
+                        try await CameraCapturePermission.request(presenting: permissionPrompt?.presenter(for: access.scope.origin))
                         if authorized { camera = true }
                     } catch { reportPhotoError(pantryText("Camera unavailable. Choose a photo or type the printed wording.")) }
                 }
-            }
+            }.disabled(requestingCamera)
             if let preview {
                 Image(uiImage: preview).resizable().scaledToFit()
                     .accessibilityLabel(pantryText("Selected package label photo"))

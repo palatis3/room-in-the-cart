@@ -70,7 +70,10 @@ def config_list(key, base, is_project=False):
             settings["ASSETCATALOG_COMPILER_APPICON_NAME"] = "AppIcon"
             if name == "Debug":
                 settings["INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription[sdk=iphonesimulator*]"] = "Add a synthetic receipt to this test simulator for the Photos picker check."
-            settings.update(build_settings(load_configuration(ROOT, name), name))
+            configuration = load_configuration(ROOT, name)
+            settings.update(build_settings(configuration, name))
+            if configuration.get("regionalAgeCheckEnabled") is True:
+                settings["CODE_SIGN_ENTITLEMENTS"] = "Configuration/AppRegionalAge.entitlements"
         configs.append(obj(f"config:{key}:{name}", "XCBuildConfiguration", buildSettings=settings, name=name))
     return obj("configs:" + key, "XCConfigurationList", buildConfigurations=configs, defaultConfigurationIsVisible="0", defaultConfigurationName="Release")
 
@@ -198,13 +201,17 @@ def outputs():
     product_group = obj("products", "PBXGroup", children=[ident(key + ":output") for key in ("app", "unit", "ui", *extension_keys) if ident(key + ":output") in OBJECTS], name="Products", sourceTree="<group>")
     refs = sorted(identifier for identifier, value in OBJECTS.items() if value["isa"] == "PBXFileReference" and value.get("sourceTree") == "<group>")
     group = obj("main", "PBXGroup", children=refs + [product_group], sourceTree="<group>")
-    settings = dict(ALWAYS_SEARCH_USER_PATHS="NO", CLANG_ENABLE_MODULES="YES", CLANG_ENABLE_OBJC_ARC="YES", IPHONEOS_DEPLOYMENT_TARGET="17.0", SDKROOT="iphoneos", SUPPORTED_PLATFORMS="iphoneos iphonesimulator", SUPPORTS_MACCATALYST="NO", SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD="NO", SWIFT_VERSION="5.0", TARGETED_DEVICE_FAMILY="1", MARKETING_VERSION="0.1.0", CURRENT_PROJECT_VERSION="1")
+    settings = dict(ALWAYS_SEARCH_USER_PATHS="NO", CLANG_ENABLE_MODULES="YES", CLANG_ENABLE_OBJC_ARC="YES", IPHONEOS_DEPLOYMENT_TARGET="17.0", SDKROOT="iphoneos", SUPPORTED_PLATFORMS="iphoneos iphonesimulator", SUPPORTS_MACCATALYST="NO", SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD="NO", SWIFT_VERSION="5.0", TARGETED_DEVICE_FAMILY="1", MARKETING_VERSION="1.0", CURRENT_PROJECT_VERSION="1")
     obj("project", "PBXProject", attributes={"BuildIndependentTargetsInParallel": "YES", "LastUpgradeCheck": "1600"}, buildConfigurationList=config_list("project", settings, True), compatibilityVersion="Xcode 14.0", developmentRegion="en", hasScannedForEncodings="0", knownRegions=["en", "es", "Base"], mainGroup=group, packageReferences=packages, productRefGroup=product_group, projectDirPath="", projectRoot="", targets=targets)
     project = {"archiveVersion": "1", "classes": {}, "objectVersion": "56", "objects": dict(sorted(OBJECTS.items())), "rootObject": ident("project")}
     result = {PROJECT / "project.pbxproj": "// !$*UTF8*$!\n" + serialize(project) + "\n"}
     if extension_keys:
         for name, groups in (("App", ["$(RITC_WIDGET_APP_GROUP)", "$(RITC_SHARE_INBOX_APP_GROUP)"]), ("Widget", ["$(RITC_WIDGET_APP_GROUP)"]), ("Share", ["$(RITC_SHARE_INBOX_APP_GROUP)"])):
-            result[IOS / "Configuration" / (name + ".entitlements")] = plistlib.dumps({"com.apple.security.application-groups": groups, "com.apple.developer.default-data-protection": "NSFileProtectionComplete"}).decode()
+            entitlements = {"com.apple.security.application-groups": groups, "com.apple.developer.default-data-protection": "NSFileProtectionComplete"}
+            result[IOS / "Configuration" / (name + ".entitlements")] = plistlib.dumps(entitlements).decode()
+            if name == "App":
+                result[IOS / "Configuration/AppRegionalAge.entitlements"] = plistlib.dumps(
+                    {**entitlements, "com.apple.developer.declared-age-range": True}).decode()
     for name, config in (("RoomInTheCart", "Debug"), ("RoomInTheCart-Staging", "Staging"), ("RoomInTheCart-Release", "Release")):
         result[PROJECT / "xcshareddata" / "xcschemes" / (name + ".xcscheme")] = scheme(name, config, test_ids)
     if (IOS / "Tests/LocalStoreKit.xctestplan").exists():

@@ -87,7 +87,7 @@ test('optional measurement PostgreSQL identities, RLS, consent and verified bill
   });
   await t.test('only server-verified production billing counts one canonical willing household; refund removes it',async()=>{
    const now=Date.now(),original=BigInt('0x'+randomUUID().replaceAll('-','')).toString();let current={environment:'Production',originalTransactionID:original,transactionID:original+'1',appAccountToken:'',productID:'test-only',purchasedAt:now-1000,signedAt:now,expiresAt:now+3600000,graceExpiresAt:null,status:'active'};
-   const gateway={async verifyTransaction(){return current;},async current(){return current;},async verifyNotification(){return {notificationID:randomUUID(),transaction:current};}};
+   const gateway={async verifyTransaction(){return current;},async current(){return current;},async verifyNotification(){return {kind:'subscription',notificationID:randomUUID(),transaction:current};}};
    const billing=new BillingService(gateway);current.appAccountToken=(await run(adult,ctx=>billing.prepare(ctx))).appAccountToken;
    const count=async()=>(await run(adult,ctx=>ctx.db.query('SELECT count(*)::int n FROM ritc.measurement_willing_household'))).rows[0].n;
    assert.equal(await count(),0);

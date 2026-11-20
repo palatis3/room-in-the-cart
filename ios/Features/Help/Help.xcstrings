@@ -49,6 +49,38 @@
         }
       }
     },
+    "If Apple requires an age range and the regional check is enabled, the app asks whether you’ll share it. The app uses the response on this iPhone to decide whether to open your workspace. It keeps the check result in memory and sends no age range to your household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Apple requires an age range and the regional check is enabled, the app asks whether you’ll share it. The app uses the response on this iPhone to decide whether to open your workspace. It keeps the check result in memory and sends no age range to your household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si Apple requiere un rango de edad y la comprobación regional está activada, la app te pregunta si quieres compartirlo. La app usa la respuesta en este iPhone para decidir si abre tu espacio de trabajo. Mantiene el resultado de la comprobación en memoria y no envía el rango de edad a tu hogar."
+          }
+        }
+      }
+    },
+    "If Apple tells Room in the Cart that a guardian withdrew permission for an App Store download, the service saves a receipt to recognize repeated notices. The receipt contains the notice ID, the time Apple signed it and whether it came from the live or test App Store. It contains no age range, download ID or household account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Apple tells Room in the Cart that a guardian withdrew permission for an App Store download, the service saves a receipt to recognize repeated notices. The receipt contains the notice ID, the time Apple signed it and whether it came from the live or test App Store. It contains no age range, download ID or household account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si Apple avisa a Room in the Cart de que un tutor retiró el permiso para descargar la app del App Store, el servicio guarda un comprobante para reconocer los avisos repetidos. El comprobante contiene el identificador del aviso, la hora en que Apple lo firmó y si procede del App Store o de su entorno de pruebas. No contiene el rango de edad ni identifica la descarga o la cuenta del hogar."
+          }
+        }
+      }
+    },
     "In Shop, choose Add a grocery to start your private list. Pantry, Dinners and Records are also available without an account.": {
       "localizations": {
         "en": {
@@ -1381,6 +1413,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restaura con la cuenta compradora y el hogar originales. Una compra pendiente o sin verificar no agrega acceso de pago. Si no se confirma la entrega, reintenta la entrega o restaura la compra en vez de comprar otra vez. Al terminar la membresía se conserva el trabajo gratuito permitido."
+          }
+        }
+      }
+    },
+    "When Resend delivers a sign-in code, it processes the recipient’s email address and the message containing the code. If you email support, Cloudflare Email Routing forwards your address, message and any attachments to the operator’s Gmail inbox so the operator can respond.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When Resend delivers a sign-in code, it processes the recipient’s email address and the message containing the code. If you email support, Cloudflare Email Routing forwards your address, message and any attachments to the operator’s Gmail inbox so the operator can respond."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando Resend entrega un código de inicio de sesión, procesa la dirección de correo del destinatario y el mensaje que contiene el código. Si escribes a soporte, Cloudflare Email Routing reenvía tu dirección, el mensaje y los archivos que adjuntes al buzón de Gmail del operador para que pueda responderte."
           }
         }
       }

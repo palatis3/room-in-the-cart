@@ -25,6 +25,8 @@
 	<string>$(RITC_OPERATOR_NAME)</string>
 	<key>HelpURL</key>
 	<string>$(RITC_HELP_URL)</string>
+	<key>RITCRegionalAgeCheckEnabled</key>
+	<string>$(RITC_REGIONAL_AGE_CHECK_ENABLED)</string>
 	<key>RITCEmailOTPEnabled</key>
 	<string>$(RITC_EMAIL_OTP_ENABLED)</string>
 	<key>RITCWidgetAppGroup</key>

@@ -100,8 +100,8 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
     const privacy = new PrivacyService(repository,privacyRuntime.options);
     const receiptAssistance = ReceiptAssistance.configured(environment);
     const voiceAssistance = VoiceAssistance.configured(environment, receiptAssistance?.budget);
-    const { primary, review } = appleGatewaysFromEnvironment(environment);
-    const server = createHTTPServer({ ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(primary, review),
+    const { primary, review, notifications } = appleGatewaysFromEnvironment(environment);
+    const server = createHTTPServer({ ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(primary, review, notifications),
       privacy,guardian:guardian.service, ...(receiptAssistance ? { receiptAssistance } : {}),
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;
