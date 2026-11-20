@@ -756,7 +756,7 @@ struct RecordsView: View {
                     NavigationLink {
                         PantrySetupView(pickup: pickup, ledger: ledger, destination: .receipts)
                     } label: {
-                        Label(pantryText("Receipt history"), systemImage: "receipt")
+                        Label(pantryText("Receipt history"), systemImage: pantryReceiptSymbol)
                     }.accessibilityIdentifier("records.privateReceipts")
                     NavigationLink {
                         PantrySetupView(pickup: pickup, ledger: ledger, destination: .prices)

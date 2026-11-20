@@ -82,7 +82,7 @@ struct PantryHomeView: View {
                                 Label(pantryText("Find a package in Pantry"), systemImage: "barcode.viewfinder")
                             }.accessibilityIdentifier("pantry.findPack")
                             Button { sheet = .receipt } label: {
-                                Label(pantryText("Review a receipt"), systemImage: "receipt")
+                                Label(pantryText("Review a receipt"), systemImage: pantryReceiptSymbol)
                             }
                             .disabled(!model.canEdit).accessibilityIdentifier("pantry.receipt")
                             if let household {

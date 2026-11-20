@@ -1,5 +1,8 @@
+import UIKit
 import Foundation
 import CoreDomain
+
+@MainActor let pantryReceiptSymbol = UIImage(systemName: "receipt") == nil ? "doc.text" : "receipt"
 
 func pantryText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Pantry") }
 func pantryFormat(_ key: String, _ arguments: CVarArg...) -> String {

@@ -177,12 +177,24 @@ struct TonightEntry: View {
     private var content: some View {
         List {
             Group {
-                if choosing == nil { plannedMeals }
+                if choosing == nil, !filtering { plannedMeals }
                 if model.input != nil {
                     Section {
                         PrivateRecipeSearchField(query: $query)
                         Toggle(tonightText("Show Cook soon only"), isOn: $pinnedOnly)
                     }
+                }
+                if filtering, model.input != nil {
+                    matchedRecipes
+                    recipesNeedingReview
+                    if !visibleSources.isEmpty {
+                        Section(tonightText("Saved sources to review")) { importedRecipes }
+                    }
+                    if !model.busy, !model.failed, visibleSuggestions.isEmpty, visibleReview.isEmpty, visibleSources.isEmpty,
+                       !model.conflictingRecipes.contains(where: { visible($0.template) }) {
+                        Text(tonightText("No matching recipes")).accessibilityIdentifier("tonight.recipeNoMatch")
+                    }
+                    if choosing == nil { plannedMeals }
                 }
                 if model.batch != nil, model.input != nil {
                     Section(tonightText("Selected batch")) {
@@ -236,38 +248,13 @@ struct TonightEntry: View {
                         Button(tonightText("Cancel")) { self.choosing = nil }
                     }
                 }
-                if model.input != nil && model.savedRecipes.isEmpty && !model.busy {
+                if !filtering, model.input != nil, model.savedRecipes.isEmpty, !model.busy {
                     Section(tonightText("Save a reviewed recipe")) {
                         Text(tonightText("No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup."))
                         Button(tonightText("Review a recipe by hand")) { manual = true }.buttonStyle(PrimaryAction())
                     }
                 }
-                if (!query.isEmpty || pinnedOnly), model.input != nil, visibleSuggestions.isEmpty, visibleReview.isEmpty,
-                   visibleSources.isEmpty, !model.conflictingRecipes.contains(where: { visible($0.template) }) {
-                    Text(tonightText("No matching recipes"))
-                }
-                if model.conflictingRecipes.contains(where: { visible($0.template) }) {
-                    Section(tonightText("Choose the saved recipe version")) {
-                        Text(tonightText("These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches."))
-                        ForEach(model.conflictingRecipes.filter { visible($0.template) }) { source in
-                            VStack(alignment: .leading) {
-                                Text(source.template.title).font(.headline)
-                                Text(source.acceptedAt.map { tonightText("Accepted dinner") + " · " + $0.formatted(date: .abbreviated, time: .shortened) } ?? tonightText("Free reusable dinner"))
-                                Text(tonightText("Recipe revision") + ": " + source.template.revision.formatted())
-                                Button(tonightText("Use this saved version")) {
-                                    do { try model.selectVersion(source); preview = nil; choosing = nil }
-                                    catch { message = tonightText("Refresh before reviewing this match.") }
-                                }
-                                Button(tonightText("Review recipe facts")) { recipeToReview = source.template }
-                            }
-                        }
-                    }
-                }
-                if !visibleSuggestions.isEmpty {
-                    Section(tonightText("Pantry matches to review")) {
-                        ForEach(visibleSuggestions) { review in recipeRow(review) }
-                    }
-                }
+                if !filtering { matchedRecipes }
                 if let original = scope, let ledgerID = ledger.sourceWorkspaceID {
                     if model.suggestions.contains(where: canChoose) {
                         wordingLink(following: false)
@@ -279,25 +266,13 @@ struct TonightEntry: View {
                             beginChoice(recipe)
                         })
                 }
-                if !visibleReview.isEmpty {
-                    Section(tonightText("Needs information or a pantry match")) {
-                        ForEach(visibleReview) { review in recipeRow(review) }
-                    }
-                }
+                if !filtering { recipesNeedingReview }
                 Section(tonightText("Recipe library")) {
-                    if model.input == nil || !model.savedRecipes.isEmpty || model.busy {
+                    if filtering || model.input == nil || !model.savedRecipes.isEmpty || model.busy {
                         Button(tonightText("Review a recipe by hand")) { manual = true }
                     }
                     RecordsRecoveryLink(accessibilityID: "tonight.records")
-                    ForEach(visibleSources) { source in
-                        Button { sourceToReview = source } label: {
-                            VStack(alignment: .leading) {
-                                Text(source.recipe.title)
-                                Text(tonightText("Saved source — review servings and ingredient amounts")).font(.caption)
-                            }
-                        }.accessibilityIdentifier("tonight.source.\(source.id)")
-                        pinButton(.imported(source.id))
-                    }
+                    if !filtering { importedRecipes }
                     Button(tonightText("Refresh recipes and pantry")) { Task { await refresh() } }.disabled(model.busy || applying)
                         .accessibilityIdentifier("tonight.refresh")
                 }
@@ -312,6 +287,53 @@ struct TonightEntry: View {
             }.listRowBackground(Theme.surface)
         }.listStyle(.insetGrouped).workingSurface()
     }
+    private var filtering: Bool { pinnedOnly || !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    @ViewBuilder private var matchedRecipes: some View {
+        if model.conflictingRecipes.contains(where: { visible($0.template) }) {
+            Section(tonightText("Choose the saved recipe version")) {
+                Text(tonightText("These saved copies share a recipe identity but have different facts. Select the exact source before reviewing pantry matches."))
+                ForEach(model.conflictingRecipes.filter { visible($0.template) }) { source in
+                    VStack(alignment: .leading) {
+                        Text(source.template.title).font(.headline)
+                        Text(source.acceptedAt.map { tonightText("Accepted dinner") + " · " + $0.formatted(date: .abbreviated, time: .shortened) } ?? tonightText("Free reusable dinner"))
+                        Text(tonightText("Recipe revision") + ": " + source.template.revision.formatted())
+                        Button(tonightText("Use this saved version")) {
+                            do { try model.selectVersion(source); preview = nil; choosing = nil }
+                            catch { message = tonightText("Refresh before reviewing this match.") }
+                        }
+                        Button(tonightText("Review recipe facts")) { recipeToReview = source.template }
+                    }
+                }
+            }
+        }
+        if !visibleSuggestions.isEmpty {
+            Section(tonightText("Pantry matches to review")) {
+                ForEach(visibleSuggestions) { review in recipeRow(review) }
+            }
+        }
+    }
+
+    @ViewBuilder private var recipesNeedingReview: some View {
+        if !visibleReview.isEmpty {
+            Section(tonightText("Needs information or a pantry match")) {
+                ForEach(visibleReview) { review in recipeRow(review) }
+            }
+        }
+    }
+
+    @ViewBuilder private var importedRecipes: some View {
+        ForEach(visibleSources) { source in
+            Button { sourceToReview = source } label: {
+                VStack(alignment: .leading) {
+                    Text(source.recipe.title)
+                    Text(tonightText("Saved source — review servings and ingredient amounts")).font(.caption)
+                }
+            }.accessibilityIdentifier("tonight.source.\(source.id)")
+            pinButton(.imported(source.id))
+        }
+    }
+
     @ViewBuilder private func recipeRow(_ review: PantryMealMatcher.Review) -> some View {
         DisclosureGroup {
             NavigationLink(dinnerText("Private meal feedback")) {

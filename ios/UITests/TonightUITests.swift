@@ -100,13 +100,20 @@ import XCTest
             tap(app.buttons["pantry.tonight"])
             let search = app.textFields["dinner.recipeSearch"]
             tap(search)
-            search.typeText("cilantro\n")
+            search.typeText("cilantrox")
+            let noMatch = app.staticTexts["tonight.recipeNoMatch"]
+            XCTAssertTrue(noMatch.waitForExistence(timeout: 5))
+            XCTAssertEqual(app.staticTexts.matching(identifier: "tonight.recipeNoMatch").count, 1)
+            search.typeText(XCUIKeyboardKey.delete.rawValue + "\n")
             let source = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
                 "tonight.source.", "Sopa de lentejas")).firstMatch
+            XCTAssertTrue(source.waitForExistence(timeout: 5))
+            XCTAssertTrue(source.isHittable, "An ingredient search should put its matching import directly below the search field.")
+            XCTAssertFalse(noMatch.exists)
             tap(source)
             let servings = app.textFields["tonight.recipe.servings"]
             XCTAssertTrue(servings.waitForExistence(timeout: 5))
-            XCTAssertEqual(servings.value as? String, "4")
+            XCTAssertEqual(servings.value as? String, "4", "The imported wording ‘4 porciones’ supplies the serving count in either language.")
             let handCheck = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
                 "tonight.recipe.manual.", "cilantro al gusto")).firstMatch
             tap(handCheck)

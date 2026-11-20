@@ -6,6 +6,9 @@ import SwiftUI
 struct SavedCouponReceipt {
     let header: ReviewedReceiptHeader
     let rows: [ReviewedReceiptDecision]
+    let pickupIDs: Set<UUID>
+
+    func permits(shopID: UUID) -> Bool { pickupIDs.isEmpty || pickupIDs.contains(shopID) }
 
     var products: [ReviewedReceiptDecision] {
         rows.filter { row in
@@ -43,7 +46,21 @@ struct SavedCouponReceipt {
             cursor = page.count == 50 ? page.last?.id : nil
         } while cursor != nil
         guard !rows.isEmpty else { throw PantryReceiptError.stale }
-        return Self(header: header, rows: rows.sorted { $0.ordinal < $1.ordinal })
+        // Stock evidence can carry the originating shopping list across a later visit from history.
+        let acquired = Set(rows.filter { $0.lotID != nil }.map(\.id))
+        var pickups = Set<UUID>()
+        if !acquired.isEmpty {
+            repeat {
+                guard !Task.isCancelled, authorize() else { throw PantryReceiptError.stale }
+                let page = try await pantry.receiptHistory(after: cursor, receiptID: header.id)
+                guard authorize() else { throw PantryReceiptError.stale }
+                for fact in page where acquired.contains(fact.lineID) {
+                    if let pickup = fact.savedPickup { pickups.insert(pickup.id) }
+                }
+                cursor = page.count == 30 ? page.last?.id : nil
+            } while cursor != nil
+        }
+        return Self(header: header, rows: rows.sorted { $0.ordinal < $1.ordinal }, pickupIDs: pickups)
     }
 }
 
@@ -129,7 +146,7 @@ private struct ReceiptCouponList: View {
                 }
                 ForEach(model.workspace.shops) { shop in
                     let lines = couponLines(in: shop, pickupID: pickupID)
-                    if !lines.isEmpty {
+                    if !lines.isEmpty, saved?.permits(shopID: shop.id) != false {
                         Section([shop.title, shop.currentStop.name].filter { !$0.isEmpty }.joined(separator: " · ")) {
                             ForEach(lines) { line in
                                 if let pin = line.pinnedCoupon {
@@ -218,7 +235,7 @@ private struct ReceiptCouponEditor: View {
     }
 
     private func evidence(from source: SavedCouponReceipt) -> CouponReceiptEvidence? {
-        guard authorize(), let day, let check = CouponCheckFields.check(count: count, size: size) else { return nil }
+        guard authorize(), source.permits(shopID: shop.id), let day, let check = CouponCheckFields.check(count: count, size: size) else { return nil }
         let result: CouponReceiptEvidence.Discount
         switch discount {
         case .unknown: result = .unverified

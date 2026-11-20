@@ -205,11 +205,14 @@ struct PantryReceiptEntry: View {
                 }
                 ForEach(displayed.lines) { line in
                     if grouped, eligible.contains(where: { $0.id == line.id }) {
+                        let detailsLabel = putawayText("Edit amount or action") + " · " + line.name
                         DisclosureGroup {
                             receiptEditor(line, value: value, displayed: displayed, grouped: true)
                         } label: {
-                            Text(putawayText("Edit amount or action") + " · " + line.name)
-                        }.accessibilityIdentifier("receipt.details.\(line.ordinal)")
+                            Text(verbatim: detailsLabel)
+                        }
+                        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: detailsLabel,
+                            identifier: "receipt.details.\(line.ordinal)"))
                     } else {
                         receiptEditor(line, value: value, displayed: displayed, grouped: false)
                     }
@@ -691,7 +694,7 @@ struct PantryReceiptHistory: View {
                 Section {
                     Text(pantryText("No confirmed receipt lines yet.")).font(.headline)
                     if receiptID == nil, model.canEdit {
-                        Button { newReceipt = true } label: { Label(pantryText("Review a receipt"), systemImage: "receipt") }
+                        Button { newReceipt = true } label: { Label(pantryText("Review a receipt"), systemImage: pantryReceiptSymbol) }
                             .accessibilityIdentifier("receipt.history.start")
                     }
                 }
