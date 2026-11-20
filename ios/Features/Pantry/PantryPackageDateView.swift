@@ -10,10 +10,12 @@ struct PantryPackageDateSection: View {
     @ObservedObject var store: PantryPackageDateStore
 
     var body: some View {
-        Section(pantryText("Printed package date")) {
-            if let current = try? store.load(access.scope, lot: lot.id) {
+        let saved = try? store.load(access.scope, lot: lot.id)
+        Section(pantryText(saved?.selectedAI == nil ? "Printed package date" : "Encoded package date")) {
+            if let current = saved {
                 Text(verbatim: current.wording)
                 Text(current.meaning.label)
+                if let lot = current.encodedSource?.gs1?.lot { LabeledContent(pantryText("Package lot number"), value: lot) }
                 if let day = current.day { Text(dinnerDay(day)) }
             }
             NavigationLink(pantryText("Review the date on this package")) {
@@ -23,11 +25,12 @@ struct PantryPackageDateSection: View {
     }
 }
 
-@MainActor private struct PantryPackageDateEditor: View {
+@MainActor struct PantryPackageDateEditor: View {
     @ObservedObject var model: PantryModel
     let lot: InventoryLot
     let access: PantryDigestAccess
     let store: PantryPackageDateStore
+    var scannedCode: CapturedBarcode? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
     @FocusState private var editing: Bool
@@ -40,6 +43,19 @@ struct PantryPackageDateSection: View {
     @State private var meaning = PrintedDateMeaning.other
     @State private var hasDay = false
     @State private var date = Date()
+    @State private var selectedAI: String?
+    @State private var photographedCode: CapturedBarcode?
+    @State private var rejectedPhoto = false
+    private var physicalSources: [CapturedBarcode] {
+        let links = (try? PantryDigestStore.shared.packMemory.receiptLinks(lotID: lot.id, scope: access.scope)) ?? []
+        return [lot.packageCode, scannedCode, previous?.encodedSource].compactMap { $0 } + links.map(\.code)
+    }
+    private var encodedCode: CapturedBarcode? {
+        guard !rejectedPhoto else { return nil }
+        return ([photographedCode] + physicalSources.map(Optional.some)).compactMap { $0 }
+            .first { $0.gs1 != nil && PackageDateBinding.accepts($0, for: physicalSources) }
+    }
+
     @State private var zone = TimeZone.current.identifier
     @State private var photoText: String?
     @State private var photoDigest: String?
@@ -65,7 +81,11 @@ struct PantryPackageDateSection: View {
     private var proposal: PrintedPackageDate? {
         let day = hasDay ? try? MealDay(date: date, timeZoneIdentifier: zone) : nil
         guard !hasDay || day != nil else { return nil }
-        let value = PrintedPackageDate(wording: wording, meaning: meaning, day: day, selectedPhotoText: photoText, photoDigest: photoDigest)
+        let encoded = selectedAI.flatMap { ai in encodedCode?.gs1?.dates.first { $0.ai == ai } }
+        let useEncoded = encoded != nil && day != nil && encoded?.day(zone: zone) == day && meaning == (encoded?.ai == "15" ? .bestBefore : .expires)
+        let text = wording.isEmpty && useEncoded ? "GS1 (" + (encoded?.ai ?? "") + ") " + (encoded?.literal ?? "") : wording
+        let value = PrintedPackageDate(wording: text, meaning: meaning, day: day, selectedPhotoText: photoText, photoDigest: photoDigest,
+                                       encodedSource: encodedCode ?? previous?.encodedSource, selectedAI: useEncoded ? selectedAI : nil)
         do { try value.validate(); return value } catch { return nil }
     }
     var body: some View {
@@ -79,6 +99,14 @@ struct PantryPackageDateSection: View {
                 Section(pantryText("Review the label")) {
                     workingTextField(pantryText("Printed wording"), text: $wording, axis: .vertical)
                         .focused($editing).accessibilityIdentifier("packageDate.wording")
+                    ForEach(PrintedPackageDate.monthDayChoices(in: wording, year: Calendar.current.component(.year, from: date), zone: zone), id: \.self) { day in
+                        if let alternative = day.date {
+                            Button(alternative.formatted(.dateTime.month(.wide).day())) {
+                                selectedAI = nil; date = alternative; hasDay = true
+                                status = pantryText("Confirm the year from the package before saving.")
+                            }
+                        }
+                    }
                     Picker(pantryText("Meaning printed on the package"), selection: $meaning) {
                         ForEach(PrintedDateMeaning.allCases, id: \.self) { Text($0.label).tag($0) }
                     }
@@ -88,13 +116,38 @@ struct PantryPackageDateSection: View {
                         DatePicker(pantryText("Printed calendar date"), selection: $date, displayedComponents: .date)
                             .environment(\.timeZone, TimeZone(identifier: zone) ?? .current)
                     }
-                    LabeledContent(pantryText("Label source"), value: photoText == nil ? pantryText("Entered by hand") : pantryText("Selected label photo"))
+                    LabeledContent(pantryText("Label source"), value: proposal?.selectedAI != nil ? pantryText("Encoded package date") : (photoText == nil ? pantryText("Entered by hand") : pantryText("Selected label photo")))
                     if let photoText {
                         LabeledContent(pantryText("Selected text from your photo"), value: photoText)
                     }
                 }
+                if let gs1 = encodedCode?.gs1 {
+                    Section(pantryText("Compare package dates")) {
+                        if let lot = gs1.lot { LabeledContent(pantryText("Package lot number"), value: lot) }
+                        if !wording.isEmpty {
+                            LabeledContent(pantryText("Printed wording"), value: wording)
+                            if let printedDay = PrintedPackageDate.proposedDay(in: wording, zone: zone) {
+                                Button(pantryText("Choose printed date") + " · " + dinnerDay(printedDay)) {
+                                    if let printed = printedDay.date {
+                                        selectedAI = nil; date = printed; hasDay = true; meaning = .suggested(for: wording)
+                                    }
+                                }
+                            }
+                        }
+                        ForEach(gs1.dates, id: \.ai) { field in
+                            if let day = field.day(zone: zone), let calendarDate = day.date {
+                                let title = (field.ai == "15" ? PrintedDateMeaning.bestBefore : .expires).label
+                                LabeledContent("GS1 (" + field.ai + ") · " + title, value: dinnerDay(day))
+                                Button(pantryText("Choose encoded date") + " · " + title) {
+                                    date = calendarDate; meaning = field.ai == "15" ? .bestBefore : .expires
+                                    hasDay = true; selectedAI = field.ai
+                                }
+                            }
+                        }
+                    }
+                }
                 Section {
-                    Button(pantryText("Save printed label")) { Task { await save(proposal) } }
+                    Button(pantryText(proposal?.selectedAI == nil ? "Save printed label" : "Save encoded package date")) { Task { await save(proposal) } }
                         .buttonStyle(PrimaryAction())
                         .disabled(proposal == nil || saving || busy)
                         .accessibilityIdentifier("packageDate.save")
@@ -175,6 +228,7 @@ struct PantryPackageDateSection: View {
                     guard let digest = readingDigest, let draft = try? PrintedPackageDate.reviewingPhoto(text, digest: digest, zone: zone) else {
                         status = pantryText("Choose fewer lines or type the printed wording."); return
                     }
+                    selectedAI = nil
                     wording = draft.wording
                     photoText = draft.selectedPhotoText
                     photoDigest = draft.photoDigest
@@ -191,7 +245,7 @@ struct PantryPackageDateSection: View {
         reviewedLot = lot; reviewedScope = access.scope
         do {
             let value = try store.load(access.scope, lot: lot.id)
-            previous = value; wording = value?.wording ?? ""; meaning = value?.meaning ?? .other
+            previous = value; selectedAI = value?.selectedAI; wording = value?.wording ?? ""; meaning = value?.meaning ?? .other
             hasDay = value?.day != nil; date = value?.day?.date ?? Date()
             zone = value?.day?.timeZoneIdentifier ?? TimeZone.current.identifier
             photoText = value?.selectedPhotoText; photoDigest = value?.photoDigest; loaded = true
@@ -209,11 +263,31 @@ struct PantryPackageDateSection: View {
             do {
                 let data = try await bytes()
                 guard !Task.isCancelled, operation == token, authorized else { return }
-                let recognized = try await OnDeviceTextCapture().recognize(data)
+                let recognized = try await OnDeviceScanService().scan(data)
                 guard !Task.isCancelled, operation == token, authorized else { return }
-                rows = recognized.text.components(separatedBy: .newlines).filter { !$0.isEmpty }
+                let observed = recognized.barcodes.filter { $0.canonicalGTIN != nil }
+                if !observed.isEmpty {
+                    let physical = physicalSources
+                    let foreign = observed.contains { code in
+                        physical.contains { source in
+                            source.canonicalGTIN != code.canonicalGTIN ||
+                                (source.gs1?.lot != nil && code.gs1?.lot != nil && source.gs1?.lot != code.gs1?.lot)
+                        }
+                    }
+                    let encoded = observed.filter { $0.gs1 != nil }
+                    if foreign || encoded.count > 1 || encoded.first.map({ !PackageDateBinding.accepts($0, for: physical) }) == true {
+                        photographedCode = nil; rejectedPhoto = true
+                        if selectedAI != nil { selectedAI = nil; hasDay = false; meaning = .other }
+                        if wording.hasPrefix("GS1 (") { wording = "" }
+                        status = pantryText("The barcode belongs to a different pack. Check this batch.")
+                        return
+                    } else if let code = encoded.first {
+                        rejectedPhoto = false; photographedCode = code; selectedAI = nil
+                    }
+                }
+                rows = recognized.originalText.components(separatedBy: .newlines).filter { !$0.isEmpty }
                 uncertain = Set(recognized.uncertainLines)
-                preview = recognized.previewImageData.flatMap { UIImage(data: $0) }
+                preview = UIImage(data: recognized.referenceJPEG)
                 readingDigest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
             } catch {
                 if !Task.isCancelled && operation == token && authorized {

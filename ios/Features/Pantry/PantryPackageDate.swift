@@ -37,6 +37,9 @@ struct PrintedPackageDate: Equatable, Codable {
     /// Only the selected OCR wording is retained. The image and other text stay in the editor.
     let selectedPhotoText: String?
     let photoDigest: String?
+    /// Original encoded fields on this physical package survive later edits of its printed wording.
+    var encodedSource: CapturedBarcode? = nil
+    var selectedAI: String? = nil
 
     func validate() throws {
         guard !wording.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -46,6 +49,12 @@ struct PrintedPackageDate: Equatable, Codable {
               selectedPhotoText.map({ !$0.isEmpty && $0.utf8.count <= 1024 && !$0.contains("\0") }) ?? true else {
             throw PantryDigestFailure.invalid
         }
+        if let encodedSource { try encodedSource.validate(); guard encodedSource.gs1 != nil else { throw PantryDigestFailure.invalid } }
+        if let selectedAI {
+            guard let field = encodedSource?.gs1?.dates.first(where: { $0.ai == selectedAI }),
+                  let day, let encoded = field.day(zone: day.timeZoneIdentifier, now: day.date ?? Date()),
+                  day == encoded, meaning == (selectedAI == "15" ? .bestBefore : .expires) else { throw PantryDigestFailure.invalid }
+        }
         try day?.validate()
     }
 
@@ -54,6 +63,16 @@ struct PrintedPackageDate: Equatable, Codable {
                          selectedPhotoText: text, photoDigest: digest)
         try draft.validate()
         return draft
+    }
+
+    /// A two-number stamp supplies a month/day choice only. The editor asks for the year separately.
+    static func monthDayChoices(in line: String, year: Int, zone: String) -> [MealDay] {
+        let pattern = #"(?<![0-9/-])([0-9]{1,2})/([0-9]{1,2})(?![0-9/-])"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              case let matches = regex.matches(in: line, range: NSRange(line.startIndex..., in: line)), matches.count == 1,
+              let match = matches.first, let ar = Range(match.range(at: 1), in: line), let br = Range(match.range(at: 2), in: line),
+              let a = Int(line[ar]), let b = Int(line[br]), a != b, (1...12).contains(a), (1...12).contains(b) else { return [] }
+        return [(a,b),(b,a)].compactMap { try? MealDay(year: year, month: $0.0, day: $0.1, timeZoneIdentifier: zone) }
     }
 
     /// Numeric day/month labels and incomplete years stay as printed wording.
