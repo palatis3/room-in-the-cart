@@ -528,6 +528,17 @@ struct PantryReceiptEntry: View {
 
 struct ReceiptPurchaseDateFields: View {
     @Binding var draft: ReceiptImportDraft
+    @Environment(\.locale) private var locale
+
+    static func displayLocale(regionLocale: Locale, appLanguage: String?) -> Locale {
+        guard let appLanguage,
+              let language = Locale(identifier: appLanguage).language.languageCode,
+              language != regionLocale.language.languageCode else { return regionLocale }
+        var components = Locale.Components(locale: regionLocale)
+        components.languageComponents.languageCode = language
+        components.languageComponents.script = Locale(identifier: appLanguage).language.script
+        return Locale(components: components)
+    }
 
     var body: some View {
         if let printed = draft.printedDate {
@@ -536,6 +547,7 @@ struct ReceiptPurchaseDateFields: View {
             Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review."))
         }
         DatePicker(pantryText("Purchase date"), selection: $draft.selectedPurchaseDate, in: ...Date(), displayedComponents: .date)
+            .environment(\.locale, Self.displayLocale(regionLocale: locale, appLanguage: Bundle.main.preferredLocalizations.first))
         Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
     }
 }

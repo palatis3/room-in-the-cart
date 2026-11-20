@@ -555,7 +555,7 @@ import XCTest
         reveal(spanishWording)
         reveal(spanishDate)
         tap(app.buttons["pantry.packageDate"])
-        XCTAssertTrue(app.navigationBars["Fecha impresa en el envase"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.navigationBars["Fecha del envase"].waitForExistence(timeout: 8))
         XCTAssertEqual(editableElement("packageDate.wording").value as? String, wording)
         reveal(fullDate)
         XCTAssertEqual(fullDate.value as? String, "1")

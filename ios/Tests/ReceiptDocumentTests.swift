@@ -204,6 +204,16 @@ import XCTest
         XCTAssertNil(missingPage)
     }
 
+    func testPurchaseDateUsesAppLanguageAndKeepsTheChosenRegion() {
+        let usEnglish = Locale(identifier: "en_US@calendar=gregorian")
+        let spanish = ReceiptPurchaseDateFields.displayLocale(regionLocale: usEnglish, appLanguage: "es")
+        XCTAssertEqual(spanish.language.languageCode?.identifier, "es")
+        XCTAssertEqual(spanish.region?.identifier, "US")
+        XCTAssertEqual(spanish.calendar.identifier, usEnglish.calendar.identifier)
+        let mexico = Locale(identifier: "es_MX")
+        XCTAssertEqual(ReceiptPurchaseDateFields.displayLocale(regionLocale: mexico, appLanguage: "es"), mexico)
+    }
+
     func testSpanishWeightedReceiptKeepsDateAndPaidAmbiguitiesOutOfStock() throws {
         func proposal(_ text: String) -> ReceiptPrintedEvidence {
             .init(.init(originalText: text), knownStorage: ["peras":[.fridge]])
