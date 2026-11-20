@@ -209,6 +209,22 @@
         }
       }
     },
+    "Display options": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display options"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opciones de pantalla"
+          }
+        }
+      }
+    },
     "Edit %@": {
       "localizations": {
         "en": {
@@ -445,6 +461,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nombre del artículo"
+          }
+        }
+      }
+    },
+    "Keep screen awake for 15 minutes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep screen awake for 15 minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener la pantalla encendida durante 15 minutos"
           }
         }
       }

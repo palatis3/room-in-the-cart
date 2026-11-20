@@ -175,6 +175,7 @@ struct InStoreShoppingView: View {
             }
         }.navigationTitle(shoppingText("Shop in store"))
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
+        .modifier(InStoreDisplayPreference(trip: shopID, available: model.shop?.id == shopID && authorize()))
     }
 
     private func pickedRow(_ line: ShoppingLine, in shop: ShoppingLedger) -> some View {
