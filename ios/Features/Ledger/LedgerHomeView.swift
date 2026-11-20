@@ -491,7 +491,7 @@ struct CheckedGroceriesHistoryLink: View {
 
     var body: some View {
         Group {
-            if let current = target, model.shop?.lines.contains(where: { $0.isChecked && !$0.isHandled && !$0.isTrashed }) == true {
+            if let current = target {
                 Button { opened = current } label: {
                     Label(quickGroceryText("Recently checked groceries"), systemImage: "checklist")
                 }.accessibilityIdentifier("records.checkedGroceries")
