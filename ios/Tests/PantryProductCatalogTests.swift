@@ -280,8 +280,8 @@ extension PantryProductCatalogTests {
         XCTAssertNil(batch.candidates[2].barcode?.gs1, "A new, unscanned physical batch must never inherit the first stamp.")
         XCTAssertEqual(batch.candidates[2].barcode?.canonicalGTIN, first.canonicalGTIN)
         XCTAssertThrowsError(try CapturedBarcode(symbology: "GS1", value: "01bad\u{1D}17270403").validate())
-        XCTAssertEqual(PrintedPackageDate.monthDayChoices(in: "03/04", year: 2027, zone: "UTC").map(\.iso8601), ["2027-03-04", "2027-04-03"])
-        XCTAssertTrue(PrintedPackageDate.monthDayChoices(in: "03/04/2027", year: 2027, zone: "UTC").isEmpty)
+        XCTAssertEqual(PrintedPackageDate.monthDayChoices(in: "03/04").compactMap { $0.confirmed(year: "2027", zone: "UTC")?.iso8601 }, ["2027-03-04", "2027-04-03"])
+        XCTAssertTrue(PrintedPackageDate.monthDayChoices(in: "03/04/2027").isEmpty)
     }
 
     @MainActor func testRememberedPackReopensPerOwnerAndCorrectsAndForgetsOnlyThatSize() throws {
@@ -324,6 +324,62 @@ extension PantryProductCatalogTests {
 }
 
 extension PantryProductCatalogTests {
+    @MainActor func testPackageDateReopenKeepsAnUndatedStampAndDistinguishesAnEncodedChoice() throws {
+        let zone = "UTC"
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: owner), lot = UUID()
+        let store = PantryPackageDateStore(folder: folder)
+        let raw = "Best before 03/04"
+        let actual = try PrintedPackageDate.reviewingPhoto(raw, digest: String(repeating: "b", count: 64), zone: zone)
+        let april = try XCTUnwrap(PrintedPackageDate.monthDayChoices(in: raw).last)
+        XCTAssertNil(april.confirmed(year: "", zone: zone))
+        XCTAssertNil(april.confirmed(year: "26", zone: zone))
+        XCTAssertEqual(april.confirmed(year: "2028", zone: zone)?.iso8601, "2028-04-03")
+        XCTAssertNil(PrintedPackageDate.proposedDay(in: "Best before 03/04/26", zone: zone))
+        XCTAssertNil(PrintedPackageDate.proposedDay(in: "Best before 7 June", zone: zone))
+        try store.replace(nil, with: actual, scope: scope, lot: lot, authorized: { true })
+        let undated = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
+        XCTAssertNil(undated.day)
+        XCTAssertEqual(undated.originalPrintedWording, raw)
+
+        let code = CapturedBarcode(symbology: "GS1", value: "(01)00012345000058(10)LOT-A(17)270531")
+        let encoded = try XCTUnwrap(code.gs1?.dates.first?.day(zone: zone))
+        let printed = "Best before 7 June 2027"
+        let choice = PrintedPackageDate(wording: printed, meaning: .expires, day: encoded,
+            selectedPhotoText: printed, photoDigest: actual.photoDigest, encodedSource: code, selectedAI: "17", wordingIsPrinted: true)
+        try store.replace(undated, with: choice, scope: scope, lot: lot, authorized: { true })
+        let reopened = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
+        XCTAssertEqual(reopened.originalPrintedWording, printed)
+        XCTAssertEqual(reopened.selectedPhotoText, printed)
+        XCTAssertEqual(reopened.day?.iso8601, "2027-05-31")
+        XCTAssertEqual(reopened.meaningLabel, pantryText("Meaning encoded in the barcode"))
+        XCTAssertEqual(reopened.sourceLabel, pantryText("Encoded package date"))
+        let legacyOnly = PrintedPackageDate(wording: "GS1 (17) 270531", meaning: .expires, day: encoded,
+            selectedPhotoText: nil, photoDigest: nil, encodedSource: code, selectedAI: "17")
+        XCTAssertNil(legacyOnly.originalPrintedWording)
+    }
+
+    @MainActor func testPackSaveRefreshAllowsOnlyProgressWhileSameAdultStillHasAccess() {
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: owner)
+        var sameOwner = true
+        var current = true
+        let access = PantryDigestAccess(scope: scope, snapshotIsCurrent: { current }, authorized: { sameOwner })
+        XCTAssertTrue(access.authorized())
+        XCTAssertFalse(access.awaitingSnapshot())
+        current = false
+        XCTAssertFalse(access.authorized())
+        XCTAssertTrue(access.awaitingSnapshot())
+        sameOwner = false
+        XCTAssertFalse(access.authorized())
+        XCTAssertFalse(access.awaitingSnapshot())
+        current = true
+        XCTAssertFalse(access.authorized())
+        XCTAssertFalse(access.awaitingSnapshot())
+    }
+
     func testDatePhotoMustAgreeWithOrdinaryUPCAndEveryKnownPhysicalLot() throws {
         let target = CapturedBarcode(symbology: "UPC-A", value: "012345000058")
         func stamp(_ gtin: String, lot: String) -> CapturedBarcode {

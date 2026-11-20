@@ -684,14 +684,16 @@ private struct VoicePantryRow {
             if evidence.isCurrent(lot: lot, model: model, access: access, now: context.date) {
                 VStack(alignment: .leading, spacing: 8) {
                     if let printed = evidence.printed {
-                        Text(pantryText(printed.selectedAI == nil ? "Printed package date" : "Encoded package date")).font(.headline)
-                        Text(printed.meaning.label)
-                        Text(printed.wording)
+                        Text(printed.sourceLabel).font(.headline)
+                        LabeledContent(printed.meaningLabel, value: printed.meaning.label)
+                        if let original = printed.originalPrintedWording {
+                            LabeledContent(pantryText("Original printed wording"), value: original)
+                        }
                         if let day = printed.day {
                             Text(PantryVoiceDateEvidence.formatted(day, locale: locale))
                             if let today = try? MealDay(date: context.date, timeZoneIdentifier: day.timeZoneIdentifier) {
-                                if day.iso8601 == today.iso8601 { Text(pantryText("The printed date is today.")) }
-                                else if day.iso8601 < today.iso8601 { Text(pantryText("The printed date has passed.")) }
+                                if day.iso8601 == today.iso8601 { Text(pantryText(printed.selectedAI == nil ? "The printed date is today." : "The encoded date is today.")) }
+                                else if day.iso8601 < today.iso8601 { Text(pantryText(printed.selectedAI == nil ? "The printed date has passed." : "The encoded date has passed.")) }
                             }
                         }
                     } else { Text(pantryText("No verified printed package date available.")) }

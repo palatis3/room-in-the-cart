@@ -131,7 +131,12 @@ struct PackLotLabel: View {
             Text(lot.packageBatchLabel).font(.caption)
             if let access, access.authorized(), access.scope.origin == lot.source.originID {
                 if let label = try? printed.load(access.scope, lot: lot.id) {
-                    Text(pantryText(label.selectedAI == nil ? "Printed package date" : "Encoded package date") + " · " + label.meaning.label + " · " + (label.day.map(day) ?? label.wording))
+                    if let chosen = label.day {
+                        Text(label.sourceLabel + " · " + label.meaning.label + " · " + day(chosen))
+                    }
+                    if let original = label.originalPrintedWording {
+                        LabeledContent(pantryText("Original printed wording"), value: original)
+                    }
                 }
                 if let doc = try? store.document(access.scope) {
                     if let range = doc.currentGuideRange(for: lot) {

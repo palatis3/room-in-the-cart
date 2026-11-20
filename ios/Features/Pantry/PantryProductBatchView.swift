@@ -25,7 +25,8 @@ struct PantryProductBatchView: View {
     @State private var inputMessage: String?
     private let didFinishWithLot: (UUID) -> Void
     @State private var savedLotID: UUID?
-    @State private var initialScope: PantryDigestScope?
+    @State private var initialAccess: PantryDigestAccess?
+    @Environment(\.scenePhase) private var scene
     @State private var restoredRows: [ReviewedPackSave.Row] = []
     @State private var recovery: ReviewedPackSave?
     @State private var recoveryReadFailed = false
@@ -43,13 +44,19 @@ struct PantryProductBatchView: View {
     }
     private var authorized: Bool {
         model.phase == .ready && model.snapshot?.state.workspaceID == batch.workspaceID &&
-            (initialScope == nil || (access?.scope == initialScope && access?.authorized() == true))
+            (initialAccess == nil || (access?.scope == initialAccess?.scope && access?.authorized() == true))
     }
 
     var body: some View {
         WorkingForm {
             if !authorized {
-                Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                if working, model.busy, model.phase == .ready, scene == .active, let initialAccess,
+                   initialAccess.scope.origin == batch.workspaceID, model.snapshot?.state.workspaceID == batch.workspaceID,
+                   initialAccess.awaitingSnapshot() {
+                    ProgressView(pantryText("Working…")).accessibilityIdentifier("productBatch.refreshing")
+                } else {
+                    Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                }
             } else if recoveryReadFailed {
                 Text(pantryText("The pending pack save could not be opened."))
                 Button(pantryText("Retry")) { inspectPending() }
@@ -372,8 +379,8 @@ struct PantryProductBatchView: View {
     private func inspectPending() {
         recoveryReadFailed = false
         guard let access, access.scope.origin == batch.workspaceID, access.authorized(), !working else { return }
-        if initialScope == nil { initialScope = access.scope }
-        guard initialScope == access.scope else { return }
+        if initialAccess == nil { initialAccess = access }
+        guard initialAccess?.scope == access.scope else { return }
         do { recovery = try memory.pending(access.scope) }
         catch { recoveryReadFailed = true }
     }
@@ -404,6 +411,7 @@ struct PantryProductBatchView: View {
                 recovery = nil; saved = true; result = nil
                 UIAccessibility.post(notification: .announcement, argument: pantryText("Product batch saved."))
             } catch {
+                guard authorized, access.authorized() else { return }
                 result = pantryText("The batch could not be saved. Review the current pantry and try again.")
                 UIAccessibility.post(notification: .announcement, argument: result)
             }
