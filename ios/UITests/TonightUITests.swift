@@ -60,7 +60,10 @@ import XCTest
         app.launch()
         tap(app.tabBars.buttons["Cenas"])
         tap(app.buttons["dinner.saveFirstRecipe"])
-        tap(app.textFields["tonight.recipe.title"])
+        // The caption occupies the upper portion of the field’s advertised
+        // accessibility frame on the small device at this text size.
+        tap(app.textFields["tonight.recipe.title"], at: CGVector(dx: 0.22, dy: 0.22))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
         app.typeText("Sopa")
         let next = app.buttons["tonight.recipe.keyboardNext"]
         for value in ["2", "10", "Limon", "1"] {

@@ -76,12 +76,16 @@ struct TonightRecipeReview: View {
                                 .foregroundStyle(Theme.action)
                                 .accessibilityFocused($savedHeadingFocused)
                                 .accessibilityIdentifier("tonight.recipe.saved")
+                                .id("savedHeading")
                             Text(verbatim: savedRecipe.title).font(.system(.title2, design: .serif, weight: .semibold))
                             fact(ledgerText("Servings"), amountText(savedRecipe.servings))
                             SavedDinnerHandoffLink(recipe: savedRecipe)
                             Button(ledgerText("Done")) { dismiss() }.accessibilityIdentifier("tonight.recipe.done")
                         }
-                        .onAppear { savedHeadingFocused = true }
+                        .onAppear {
+                            scroll.scrollTo("savedHeading", anchor: .top)
+                            savedHeadingFocused = true
+                        }
                     } else if let candidate {
                         Section(tonightText("Review recipe facts")) {
                             Text(candidate.title).font(.system(.title2, design: .serif, weight: .semibold))
@@ -122,6 +126,7 @@ struct TonightRecipeReview: View {
                                     .onSubmit { advance(to: "servings", using: scroll) }
                                     .accessibilityIdentifier("tonight.recipe.title")
                             }
+                            .dinnerInputRow($focusedInput, field: "title")
                             WorkingField(ledgerText("Servings")) {
                                 TextField(ledgerText("Servings"), text: $servings, prompt: Text(verbatim: "—"))
                                     .keyboardType(.numbersAndPunctuation)
@@ -130,6 +135,7 @@ struct TonightRecipeReview: View {
                                     .onSubmit { advance(to: "minutes", using: scroll) }
                                     .accessibilityIdentifier("tonight.recipe.servings")
                             }
+                            .dinnerInputRow($focusedInput, field: "servings")
                             .id("servings")
                             WorkingField(tonightText("Prep time in minutes (optional)")) {
                                 TextField(tonightText("Prep time in minutes (optional)"), text: $minutes, prompt: Text(verbatim: "—"))
@@ -137,6 +143,7 @@ struct TonightRecipeReview: View {
                                     .focused($focusedInput, equals: "minutes")
                                     .accessibilityIdentifier("tonight.recipe.minutes")
                             }
+                            .dinnerInputRow($focusedInput, field: "minutes")
                             .id("minutes")
                         }
                         Section(ledgerText("Ingredients")) {
@@ -155,8 +162,7 @@ struct TonightRecipeReview: View {
                                         }
                                         .accessibilityIdentifier("tonight.recipe.ingredient")
                                 }
-                                .contentShape(Rectangle())
-                                .simultaneousGesture(TapGesture().onEnded { focusedInput = "ingredient-\(ingredient.id)" })
+                                .dinnerInputRow($focusedInput, field: "ingredient-\(ingredient.id)")
                                 .id("ingredient-\(ingredient.id)")
                                 if invalidAmountID == ingredient.id {
                                     Label(amountError(for: ingredient), systemImage: "exclamationmark.circle")
