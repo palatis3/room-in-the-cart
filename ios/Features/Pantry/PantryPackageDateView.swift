@@ -103,6 +103,8 @@ struct PantryPackageDateSection: View {
     var body: some View {
         WorkingForm {
             if authorized && loaded {
+                let gs1 = encodedCode?.gs1
+                let reviewingSource = gs1 != nil || preview != nil || busy
                 Section {
                     PantryBatchHeading(lot: lot)
                     Text(pantryText("Copy the date as printed, even if it only gives a month and year. You can choose a check day separately."))
@@ -132,8 +134,11 @@ struct PantryPackageDateSection: View {
                         LabeledContent(pantryText("Selected text from your photo"), value: photoText)
                     }
                 }
+                if !reviewingSource {
+                    Section { saveButton }
+                }
                 source
-                if let gs1 = encodedCode?.gs1 {
+                if let gs1 {
                     Section(pantryText("Compare package dates")) {
                         if let lot = gs1.lot { LabeledContent(pantryText("Package lot number"), value: lot) }
                         if !wording.isEmpty {
@@ -161,10 +166,7 @@ struct PantryPackageDateSection: View {
                     }
                 }
                 Section {
-                    Button(pantryText(proposal?.selectedAI != nil ? "Save encoded package date" : (pendingMonthDay != nil || confirmingCalendar ? "Save wording only" : "Save printed label"))) { Task { await save(proposal) } }
-                        .buttonStyle(PrimaryAction())
-                        .disabled(proposal == nil || saving || busy)
-                        .accessibilityIdentifier("packageDate.save")
+                    if reviewingSource { saveButton }
                     if previous != nil {
                         Button(pantryText("Remove saved label"), role: .destructive) { Task { await save(nil) } }
                             .disabled(saving || busy).accessibilityIdentifier("packageDate.remove")
@@ -241,6 +243,15 @@ struct PantryPackageDateSection: View {
                 }
             }
         }
+    }
+
+    private var saveButton: some View {
+        Button(pantryText(proposal?.selectedAI != nil ? "Save encoded package date" : (pendingMonthDay != nil || confirmingCalendar ? "Save wording only" : "Save printed label"))) {
+            Task { await save(proposal) }
+        }
+        .buttonStyle(PrimaryAction())
+        .disabled(proposal == nil || saving || busy)
+        .accessibilityIdentifier("packageDate.save")
     }
 
     private var source: some View {

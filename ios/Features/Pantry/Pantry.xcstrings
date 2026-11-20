@@ -14896,6 +14896,23 @@
           }
         }
       }
+    },
+    "Saving your change…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving your change…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando el cambio…"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

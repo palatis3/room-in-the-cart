@@ -136,9 +136,16 @@ private struct VoicePantryRow {
         WorkingForm {
             if !boundScope {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
-            } else if model.pending != nil {
-                Text(pantryText("The save result is uncertain. Retry the same reviewed change before starting another."))
-                Button(pantryText("Review pending save")) { dismiss() }
+            } else if let pending = model.pending {
+                if working || model.busy {
+                    ProgressView(pantryText("Saving your change…"))
+                        .accessibilityIdentifier("pantry.saveProgress")
+                } else {
+                    Text(pantryText(model.pendingWasCommitted || pending.acknowledgment != nil
+                        ? "Your change is saved. Retry to finish recovery."
+                        : "The save result is uncertain. Retry the same reviewed change before starting another."))
+                    Button(pantryText("Review pending save")) { dismiss() }
+                }
             } else if let saved {
                 savedSection(saved)
             } else {
