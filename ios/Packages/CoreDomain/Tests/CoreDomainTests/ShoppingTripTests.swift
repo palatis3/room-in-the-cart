@@ -31,7 +31,11 @@ final class ShoppingTripTests: XCTestCase {
         XCTAssertEqual(try shop.outstandingQuantity(forLineID: line)?.amount, .zero)
         XCTAssertNil(shop.priceForCurrentPick(lineID: line))
         shop = try reopen(shop)
-        try shop.undoTripChange(lineID: line, expectedRevision: shop.revisionID)
+        try shop.undoInStore(lineID: line, expectedRevision: shop.revisionID)
+        let restored = shop
+        XCTAssertFalse(shop.lines[0].canUndoInStore)
+        XCTAssertThrowsError(try shop.undoInStore(lineID: line, expectedRevision: shop.revisionID))
+        XCTAssertEqual(shop, restored)
         XCTAssertEqual(try shop.pickedQuantity(forLineID: line)?.amount, .one)
         XCTAssertEqual(shop.pickedCartSubtotal.total.minorUnits, 225)
         XCTAssertEqual(shop.contributions(forLineID: line).first?.source, .meal(occurrenceID: mealID))

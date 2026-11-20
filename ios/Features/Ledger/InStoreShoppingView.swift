@@ -375,8 +375,8 @@ struct InStoreShoppingView: View {
             }
             .accessibilityHint(shoppingText("Edit the price for the entire picked amount."))
             .accessibilityIdentifier("inStorePrice-\(line.id)")
-            .accessibilityAction(named: Text(undoLabel)) {
-                undo(line, in: shop)
+            .accessibilityActions {
+                if line.canUndoInStore { Button(undoLabel) { undo(line, in: shop) } }
             }
             Button { destination = .details(line.id) } label: {
                 Image(systemName: "info.circle").frame(width: 44, height: 44)
@@ -409,9 +409,11 @@ struct InStoreShoppingView: View {
             .frame(minHeight: 44)
             .accessibilityLabel(shoppingFormat("Enter price for %@", last.name))
             .accessibilityIdentifier("inStoreLastPrice")
-        Button(last.tripUndo?.action == .pick || last.tripUndo == nil ? shoppingFormat("Undo pick of %@", last.name) : tripFormat("Undo for %@", last.name)) {
-            undo(last, in: shop)
-        }.frame(minHeight: 44).accessibilityIdentifier("inStoreUndo")
+        if last.canUndoInStore {
+            Button(last.tripUndo?.action == .pick || last.tripUndo == nil ? shoppingFormat("Undo pick of %@", last.name) : tripFormat("Undo for %@", last.name)) {
+                undo(last, in: shop)
+            }.frame(minHeight: 44).accessibilityIdentifier("inStoreUndo")
+        }
     }
 
     private func priceLabel(_ price: PickedLinePrice?) -> String {
@@ -428,8 +430,7 @@ struct InStoreShoppingView: View {
             guard !model.hasPendingSave,
                   await model.editShop(key: "undo-trip-\(line.id)", shopID: shop.id, authorize: authorize, { current in
                     guard model.workspace.selectedShopID == shopID, current.revisionID == shop.revisionID else { throw LedgerError.stalePreview }
-                    if line.tripUndo != nil { try current.undoTripChange(lineID: line.id, expectedRevision: shop.revisionID) }
-                    else { try current.setChecked(lineID: line.id, checked: false) }
+                    try current.undoInStore(lineID: line.id, expectedRevision: shop.revisionID)
                   }) else { return }
             cue = nil
             returnToRow(line.id)

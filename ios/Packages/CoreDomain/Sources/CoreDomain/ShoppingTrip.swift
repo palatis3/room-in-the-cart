@@ -45,6 +45,7 @@ public struct GroceryTripUndo: Codable, Equatable, Sendable {
 
 extension ShoppingLine {
     public var inStorePickedAt: Date? { tripPick?.at ?? checkedAt }
+    public var canUndoInStore: Bool { !isHandled && !isTrashed && (tripUndo != nil || isChecked) }
 
     public func eligibleForStop(named store: String) -> Bool {
         guard !store.isEmpty, let stores = preferredStores, !stores.isEmpty else { return true }
@@ -151,6 +152,13 @@ extension ShoppingLedger {
             line.pickedPrice = nil
             line.stopObservation = .init(stopID: stop.id, outcome: .deferred)
         }
+    }
+
+    public mutating func undoInStore(lineID: UUID, expectedRevision: UUID, at: Date = Date()) throws {
+        guard revisionID == expectedRevision, let line = lines.first(where: { $0.id == lineID }), line.canUndoInStore
+        else { throw LedgerError.stalePreview }
+        if line.tripUndo != nil { try undoTripChange(lineID: lineID, expectedRevision: expectedRevision, at: at) }
+        else { try setChecked(lineID: lineID, checked: false, at: at) }
     }
 
     public mutating func undoTripChange(lineID: UUID, expectedRevision: UUID, at: Date = Date()) throws {

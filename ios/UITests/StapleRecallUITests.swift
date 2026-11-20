@@ -225,6 +225,8 @@ import XCTest
         tapTrip(app.buttons["inStoreUndo"])
         XCTAssertTrue(apple.waitForExistence(timeout: 8))
         XCTAssertTrue(apple.label.contains("3"))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+            "inStoreUndo", "Apples")).firstMatch.exists)
     }
 
     private func tapTrip(_ element: XCUIElement) {
