@@ -45,7 +45,11 @@ struct PantryReservationSection: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(claim.name).font(.headline)
                             LabeledContent(pantryText("Reserved need"), value: pantryQuantity(row.coverage.requested))
-                            if let day = claim.personal?.day { LabeledContent(pantryText("For date"), value: day.iso8601) }
+                            if let dinner = claim.cookedDinner {
+                                LabeledContent(cookCompletionText("Dinner day"), value: dinnerDay(dinner.day))
+                            } else if let day = claim.personal?.day {
+                                LabeledContent(pantryText("For date"), value: day.iso8601)
+                            }
                             if !availabilityNeedsReview {
                                 if let edge = row.allocation {
                                     let portion = Quantity(amount: edge.amount, unit: edge.unit, originalLiteral: edge.amount.description)

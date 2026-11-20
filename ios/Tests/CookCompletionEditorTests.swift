@@ -74,6 +74,50 @@ import LocalStore
         model.leftoverChoice = .none
     }
 
+    func testCookEditorSchedulesOnlyCountedPortionsInThePrivateDinnerCalendar() async throws {
+        let f = try await fixture(), editor = f.editor
+        let ledgerID = try XCTUnwrap(f.ledger.sourceWorkspaceID)
+        let shop = try XCTUnwrap(f.ledger.shop)
+        let day = try MealDay(year: 2026, month: 11, day: 19, timeZoneIdentifier: shop.basis.timeZoneIdentifier)
+        let calendar = DinnerFeatureModel(store: f.ledger, access: { id in
+            DinnerAccessContext(scope: .local(workspaceID: ledgerID), actorID: "cook", shopID: id,
+                assignedShopperID: "cook", canPlan: true, canReadBudget: true, hasPaidTools: false,
+                roleRevision: 0, verifiedAt: f.now, validUntil: f.now.addingTimeInterval(300))
+        }, phase: { _ in .draft }, clock: { f.now }, basketPrepAccess: { f.access.allowed })
+        explicitNoUse(editor)
+        editor.leftoverChoice = .recorded
+        editor.addLeftover()
+        editor.leftovers[0].portions = "3"
+        editor.leftovers[0].lunch = "1"
+        editor.leftovers[0].scheduleDinner = true
+        editor.leftovers[0].dinnerDate = try XCTUnwrap(day.date)
+        editor.leftovers[0].dinnerPortions = "3"
+        await editor.prepareReview()
+        XCTAssertEqual(editor.notice, .invalidPortionHolds)
+        editor.leftovers[0].dinnerPortions = "2"
+        await editor.prepareReview()
+        XCTAssertEqual(editor.review?.outputReservations.count, 2)
+        XCTAssertTrue(try calendar.currentMeals(pickup: f.pickup).cooked.isEmpty)
+        await editor.confirm()
+        let entry = try XCTUnwrap(calendar.currentMeals(pickup: f.pickup).cooked(on: day).first)
+        XCTAssertEqual(entry.amount?.amount, try Rational(2))
+        f.access.allowed = false
+        XCTAssertTrue(try calendar.currentMeals(pickup: f.pickup).cooked.isEmpty)
+        f.access.allowed = true
+        let cancel = try XCTUnwrap(CookedDinnerChange(entry, action: .cancel))
+        let port = try f.pickup.cookCompletionPort(ledger: f.ledger, authorize: { f.access.allowed })
+        try await port.changeDinner(cancel)
+        try await port.changeDinner(cancel)
+        let refreshed = await f.pickup.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        XCTAssertTrue(try calendar.currentMeals(pickup: f.pickup).cooked.isEmpty)
+        let batch = try XCTUnwrap(f.pickup.pantrySnapshot?.availability.lots.first { $0.id == entry.lotID })
+        XCTAssertEqual(batch.remaining?.amount, try Rational(3))
+        XCTAssertEqual(batch.free?.amount, try Rational(2))
+        XCTAssertEqual(batch.held?.amount, .one)
+        XCTAssertEqual(f.ledger.shop, shop)
+    }
+
     func testOnlyUnsubmittedCookingChangesAreEligibleForAnInterruptionNotice() async throws {
         let f = try await fixture(), editor = f.editor
         XCTAssertFalse(editor.hasUnsavedDraft)

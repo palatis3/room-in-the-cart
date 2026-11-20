@@ -156,6 +156,20 @@ private struct CookCompletionForm: View {
                                 Picker(cookCompletionText("Storage"), selection: $row.location) {
                                     ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
                                 }
+                                WorkingField(cookCompletionText("Hold portions for lunch (optional)")) {
+                                    TextField(cookCompletionText("Lunch portions"), text: $row.lunch)
+                                        .keyboardType(.numbersAndPunctuation).accessibilityIdentifier("cook.lunchPortions.\(row.id)")
+                                }
+                                Toggle(cookCompletionText("Plan these leftovers for dinner"), isOn: $row.scheduleDinner)
+                                    .accessibilityIdentifier("cook.planLeftovers.\(row.id)")
+                                if row.scheduleDinner {
+                                    WorkingField(cookCompletionText("Portions for dinner")) {
+                                        TextField(cookCompletionText("Portions for dinner"), text: $row.dinnerPortions)
+                                            .keyboardType(.numbersAndPunctuation).accessibilityIdentifier("cook.dinnerPortions.\(row.id)")
+                                    }
+                                    DatePicker(cookCompletionText("Dinner day"), selection: $row.dinnerDate, displayedComponents: .date)
+                                        .environment(\.timeZone, TimeZone(identifier: context.shop.basis.timeZoneIdentifier) ?? .current)
+                                }
                                 Button(cookCompletionText("Remove leftover row"), role: .destructive) { model.leftovers.removeAll { $0.id == row.id } }
                             }
                         }
@@ -317,6 +331,13 @@ private struct CookCompletionReviewView: View {
             }
             Section(cookCompletionText("Held portions")) {
                 Text(cookCompletionText("Only supported holds for known amounts used by this meal are fulfilled. Other holds are retained."))
+                ForEach(review.outputReservations) { claim in
+                    if let dinner = claim.cookedDinner {
+                        LabeledContent(dinnerDay(dinner.day), value: claim.name + " · " + pantryQuantity(claim.amount))
+                    } else {
+                        LabeledContent(claim.name, value: pantryQuantity(claim.amount))
+                    }
+                }
                 ForEach(review.affectedHolds) { impact in
                     VStack(alignment: .leading) {
                         Text(model.context?.inventory.reservations.first(where: { $0.id == impact.id })?.name ?? cookCompletionText("Held portion"))
@@ -490,6 +511,7 @@ private func cookNoticeText(_ notice: CookCompletionEditorModel.Notice) -> Strin
     switch notice {
     case .unavailable: cookCompletionText("Current details could not be verified. Reopen or reload this dinner.")
     case .invalidEntry: cookCompletionText("Review every ingredient, enter positive known amounts and servings, and confirm whether leftovers remain.")
+    case .invalidPortionHolds: cookCompletionText("Lunch and dinner portions together exceed the counted leftovers.")
     case .reviewChanged: cookCompletionText("Counts, preferences or the dinner changed, or a unit could not be converted. Reload and review. A newer count may already include this cooking.")
     case .insufficientStock: cookCompletionText("The measured use exceeds available stock. Review the actual count and held portions, or record the use as unmeasured or untracked.")
     case .uncertain: cookCompletionText("This confirmation may have saved. Retry the same confirmation or check the saved completion before making another change.")

@@ -10,10 +10,10 @@ import CoreDomain
     enum Relation: String, CaseIterable { case undecided, ingredient, substitution }
     enum LeftoverChoice: String, CaseIterable { case undecided, none, recorded }
     enum Notice: Equatable {
-        case unavailable, invalidEntry, reviewChanged, insufficientStock, uncertain, saved, undoChanged, undoUncertain, undone
+        case unavailable, invalidEntry, invalidPortionHolds, reviewChanged, insufficientStock, uncertain, saved, undoChanged, undoUncertain, undone
         case undoIndependentCount(String?), undoAmendedInputChanged(String?)
     }
-    enum Failure: Error { case incomplete, stale, denied }
+    enum Failure: Error { case incomplete, invalidPortionHolds, stale, denied }
     struct Part: Identifiable, Equatable {
         let id: UUID
         var use: PartUse = .undecided
@@ -62,6 +62,10 @@ import CoreDomain
         var name: String
         var portions = ""
         var location: InventoryLocation = .fridge
+        var lunch = ""
+        var scheduleDinner = false
+        var dinnerPortions = ""
+        var dinnerDate = Date()
     }
     struct Suggestion: Identifiable {
         let lot: InventoryLot
@@ -168,7 +172,8 @@ import CoreDomain
     }
     func addLeftover() {
         guard canEdit, leftovers.count < 20, let context else { return }
-        leftovers.append(Leftover(name: context.title))
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: context.asOf) ?? context.asOf
+        leftovers.append(Leftover(name: context.title, dinnerDate: tomorrow))
     }
     func keepEditing() {
         guard !attemptedApply, !busy, authorize() else { return }
@@ -249,7 +254,18 @@ import CoreDomain
             for row in leftovers {
                 guard let portions = try LedgerEntry.rational(row.portions), portions > .zero,
                       !row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw Failure.incomplete }
-                outputs.append(.init(id: row.id, foodID: row.foodID, name: row.name, portions: portions, location: row.location))
+                let lunchAmount = try LedgerEntry.rational(row.lunch)
+                guard lunchAmount.map({ $0 > .zero }) ?? true else { throw Failure.incomplete }
+                let lunch = lunchAmount.map { CookCompletionDraft.Leftovers.Hold(portions: $0, purpose: pantryText("Lunch")) }
+                var dinner: CookCompletionDraft.Leftovers.Dinner?
+                if row.scheduleDinner {
+                    guard let amount = try LedgerEntry.rational(row.dinnerPortions), amount > .zero else { throw Failure.incomplete }
+                    let day = try MealDay(date: row.dinnerDate, timeZoneIdentifier: context.shop.basis.timeZoneIdentifier)
+                    dinner = .init(portions: amount, day: day)
+                }
+                guard try (lunchAmount ?? .zero).adding(dinner?.portions ?? .zero) <= portions else { throw Failure.invalidPortionHolds }
+                outputs.append(.init(id: row.id, foodID: row.foodID, name: row.name, portions: portions,
+                                     location: row.location, lunch: lunch, dinner: dinner))
             }
         }
         return CookCompletionDraft(id: operationID, inventoryID: context.inventory.state.workspaceID,
@@ -260,7 +276,9 @@ import CoreDomain
     func prepareReview() async {
         guard let session, canEdit else { return }
         let draft: CookCompletionDraft
-        do { draft = try makeDraft() } catch { notice = .invalidEntry; return }
+        do { draft = try makeDraft() }
+        catch Failure.invalidPortionHolds { notice = .invalidPortionHolds; return }
+        catch { notice = .invalidEntry; return }
         let token = generation; busy = true
         defer { if token == generation { busy = false } }
         do {

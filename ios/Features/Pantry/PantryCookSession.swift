@@ -57,6 +57,7 @@ struct PantryCookRecord: Codable, Equatable {
                   Set(undo.observations.values).isDisjoint(with: (resolutions ?? []).compactMap(\.resultObservationID))
             else { throw PantryCookPort.Failure.changed }
         }
+        for output in draft.leftovers { _ = try draft.outputReservations(for: output) }
         for row in priorCounts { try row.count.validate() }
         for row in priorClaims { try row.validate() }
     }
@@ -272,7 +273,7 @@ private extension PickupCheckoutMealSource {
         var next = read.journey
         next.cookedMeals = (next.cookedMeals ?? []) + [saved]
         var writes = try actual.changes.flatMap(PantryPersistenceCodec.writes)
-        writes += try actual.reservations.map { try PantryPersistenceCodec.write($0, expectedRevision: $0.revision - 1) }
+        writes += try (actual.reservations + actual.outputReservations).map { try PantryPersistenceCodec.write($0, expectedRevision: $0.revision - 1) }
         try await persist(next, read: read, writes: writes, request: request, operationID: draft.id)
     }
 

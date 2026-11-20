@@ -4,6 +4,74 @@ import LocalStore
 @testable import RoomInTheCart
 
 @MainActor final class PantryCookPortTests: XCTestCase {
+    func testScheduledLeftoversProtectLunchAndReplayServingWithoutBuyingIngredientsAgain() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let storeURL = directory.appendingPathComponent("pantry.sqlite")
+        let store = try ComparisonStore(url: storeURL, inventoryEnabled: true)
+        let ledger = try LedgerStore(url: directory.appendingPathComponent("ledger.sqlite"), inventoryProjectionsEnabled: true)
+        cleanup.track(store, ledger)
+        let now = Date(timeIntervalSince1970: 1_795_000_000)
+        let thursday = try MealDay(year: 2026, month: 11, day: 19, timeZoneIdentifier: "America/New_York")
+        let friday = try MealDay(year: 2026, month: 11, day: 20, timeZoneIdentifier: thursday.timeZoneIdentifier)
+        let recipe = MealTemplate(title: "Sopa de lentejas", servings: try Rational(3),
+            ingredients: [.init(name: "Lentejas", quantity: Quantity(amount: .one, unit: .cup, originalLiteral: "1 taza"))])
+        var shop = ShoppingLedger(title: "This week")
+        let mealID = try shop.chooseMeal(recipe, at: now)
+        let meal = try XCTUnwrap(shop.mealOccurrences.first)
+        struct Document: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
+        let bytes = try JSONEncoder().encode(Document(workspace: .init(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)))
+        _ = try await ledger.save(payload: bytes, expectedRevision: 0, operationID: UUID(), savedAt: now)
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: store.inventorySourceToken()), at: now)
+        var allows = true
+        let gate = PantryMutationGate()
+        let port = PantryCookPort(store: store, ledger: ledger, gate: gate, authorize: { allows }, clock: { now })
+        let output = CookCompletionDraft.Leftovers(name: recipe.title, portions: try Rational(3), location: .fridge,
+            lunch: .init(portions: .one, purpose: "Almuerzo"), dinner: .init(portions: try Rational(2), day: thursday))
+        let draft = CookCompletionDraft(inventoryID: store.workspaceID, inventoryRevision: 1, ledgerID: ledger.workspaceID,
+            shop: shop, meal: meal, cookedAt: now, servingsMade: try Rational(3),
+            parts: meal.ingredientContributionIDs.map { .init(contributionID: $0, use: .untracked) }, leftovers: [output])
+        let review = try await port.review(draft)
+        try await port.apply(review)
+        try await port.apply(review)
+        let afterCook = try await port.load(shopID: shop.id, mealID: mealID)
+        let thursdayHold = try XCTUnwrap(afterCook.inventory.reservations.first { $0.cookedDinner?.day == thursday })
+        let move = try XCTUnwrap(CookedDinnerChange(thursdayHold, action: .move(friday)))
+        try await port.changeDinner(move)
+        try await port.changeDinner(move)
+        let moved = try await port.load(shopID: shop.id, mealID: mealID)
+        let fridayHold = try XCTUnwrap(moved.inventory.reservations.first { $0.cookedDinner?.day == friday })
+        XCTAssertEqual(fridayHold.id, thursdayHold.id)
+        XCTAssertEqual(moved.inventory.availability.lots.first?.free?.amount, .zero)
+        let serve = try XCTUnwrap(CookedDinnerChange(fridayHold, action: .serve))
+        allows = false
+        do { try await port.changeDinner(serve); XCTFail("Serving requires current private access") }
+        catch PantryCookPort.Failure.unavailable {}
+        allows = true
+        try await port.changeDinner(serve)
+        let reopened = try ComparisonStore(url: storeURL, inventoryEnabled: true)
+        cleanup.track(reopened)
+        let restored = PantryCookPort(store: reopened, ledger: ledger, gate: gate, authorize: { true }, clock: { now })
+        try await restored.changeDinner(serve)
+        let final = try await restored.load(shopID: shop.id, mealID: mealID)
+        XCTAssertEqual(final.inventory.state.revision, moved.inventory.state.revision + 1)
+        XCTAssertEqual(final.inventory.reservations.first { $0.id == fridayHold.id }?.cookedDinner?.servedAt, now)
+        let lunch = try XCTUnwrap(final.inventory.reservations.first { $0.personal != nil })
+        XCTAssertEqual(lunch.state, .active)
+        XCTAssertEqual(lunch.amount?.amount, .one)
+        XCTAssertEqual(final.inventory.availability.lots.first?.remaining?.amount, .one)
+        XCTAssertEqual(final.inventory.availability.lots.first?.held?.amount, .one)
+        XCTAssertEqual(final.inventory.availability.lots.first?.free?.amount, .zero)
+        let actions = try await reopened.inventoryRecords(kind: .event, lotID: output.id).flatMap {
+            try PantryUsageHistoryRow.entries(from: JSONDecoder().decode(InventoryEvent.self, from: $0.payload))
+        }
+        XCTAssertEqual(actions.map(\.id), [serve.id])
+        let ledgerAfter = try await ledger.load()
+        XCTAssertEqual(ledgerAfter?.payload, bytes)
+    }
+
     func testCookingCommitsMealAndPantryOnceAcrossReopenAndRejectsASecondCompletion() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
