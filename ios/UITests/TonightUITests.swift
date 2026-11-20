@@ -127,7 +127,8 @@ import XCTest
         tap(app.buttons["Add ingredient"])
         fill(app.textFields.matching(identifier: "tonight.recipe.ingredient").element(boundBy: 1), "Chickpeas")
         let manual = app.switches.matching(NSPredicate(format: "label CONTAINS %@", "Chickpeas")).firstMatch
-        tap(manual)
+        tap(manual, at: CGVector(dx: 0.92, dy: 0.5))
+        XCTAssertEqual(manual.value as? String, "1", "The chickpeas must be explicitly marked unmeasured.")
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
         tap(app.buttons["dinner.shopSaved"].firstMatch)
@@ -135,7 +136,8 @@ import XCTest
         tap(app.buttons["ledgerCreateShop"])
         XCTAssertTrue(app.navigationBars["Shop for ingredients only"].waitForExistence(timeout: 5))
         let select = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Lemon")).firstMatch
-        tap(select)
+        tap(select, at: CGVector(dx: 0.92, dy: 0.5))
+        XCTAssertEqual(select.value as? String, "1", "Verify the lemon before reviewing the list.")
         tap(app.buttons["dinner.handoff.review"])
         let confirm = app.buttons["dinner.handoff.confirm"]
         XCTAssertEqual(confirm.label, "Add 1 ingredient to Groceries for Lemon chickpeas")
