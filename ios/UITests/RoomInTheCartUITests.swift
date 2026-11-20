@@ -337,13 +337,7 @@ final class RoomInTheCartUITests: XCTestCase {
         assertSavedStatus("Saved on this iPhone")
         XCTAssertFalse(element("saveComparison").exists)
         screenshot("English-reopened-same-result")
-        let edit = app.buttons["editComparison"]
-        let results = element("comparisonResultsScroll")
-        // The entire visible Edit row, including the space beside the word, must activate.
-        for _ in 0..<8 where !edit.exists { results.swipeDown(velocity: .slow) }
-        revealFullyInComparison(edit)
-        edit.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        XCTAssertTrue(results.waitForNonExistence(timeout: 5), "Edit must open the saved comparison's input form")
+        editComparisonResult()
         let savedYield = app.textFields["aQuantity"]
         reveal(savedYield)
         XCTAssertEqual(savedYield.value as? String, "7 1/2")
@@ -393,13 +387,17 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["aConversion"])
         let source = app.textFields["conversion.source"]
         tap(source); source.typeText("120")
-        tap(app.buttons["conversion.cancel"])
+        dismissComparisonKeyboard("conversion.done")
+        let cancel = app.buttons["conversion.cancel"]
+        tap(cancel)
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
         compare()
         let unresolved = app.staticTexts["aIssue_usableConversionUnknown"].firstMatch
         reveal(unresolved)
         XCTAssertFalse(app.staticTexts["aTotal"].exists)
 
-        tap(app.buttons["editComparison"]); tap(app.buttons["aConversion"])
+        editComparisonResult()
+        tap(app.buttons["aConversion"])
         tap(source); source.typeText("120.0")
         let target = app.textFields["conversion.target"]
         tap(target); target.typeText("1")
@@ -905,6 +903,16 @@ final class RoomInTheCartUITests: XCTestCase {
         let status = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
         reveal(status)
         XCTAssertTrue(status.waitForExistence(timeout: 10), "Save must publish success only after durable storage")
+    }
+
+    private func editComparisonResult() {
+        let edit = app.buttons["editComparison"]
+        let results = element("comparisonResultsScroll")
+        // The entire visible Edit row, including the space beside the word, must activate.
+        for _ in 0..<8 where !edit.exists { results.swipeDown(velocity: .slow) }
+        revealFullyInComparison(edit)
+        edit.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(results.waitForNonExistence(timeout: 5), "Edit must open the comparison input form")
     }
 
     private func reopenSavedRecord(recordsLabel: String, item: String) {
