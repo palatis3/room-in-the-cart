@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "I checked the printed lines.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the printed lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé las líneas impresas."
+          }
+        }
+      }
+    },
+    "Mark the printed lines as reviewed to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark the printed lines as reviewed to continue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marca las líneas impresas como revisadas para continuar."
+          }
+        }
+      }
+    },
+    "Review receipt details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review receipt details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los datos del recibo"
+          }
+        }
+      }
+    },
     "Store or receipt name (required)": {
       "extractionState": "manual",
       "localizations": {
@@ -99,23 +150,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escribir las líneas del recibo"
-          }
-        }
-      }
-    },
-    "Check that you reviewed the printed lines to continue.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check that you reviewed the printed lines to continue."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marca que revisaste las líneas impresas para continuar."
           }
         }
       }
@@ -3893,22 +3927,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisé la fuente y quiero conservar esta referencia."
-          }
-        }
-      }
-    },
-    "I reviewed these lines as source evidence only.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I reviewed these lines as source evidence only."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Revisé estas líneas solo como evidencia de la fuente."
           }
         }
       }

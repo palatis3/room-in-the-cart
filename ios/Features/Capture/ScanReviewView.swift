@@ -370,7 +370,7 @@ import CoreDomain
                         }
                     }
                 }
-                Toggle(captureText("I reviewed these lines as source evidence only."), isOn: $model.confirmed)
+                Toggle(captureText("I checked the printed lines."), isOn: $model.confirmed)
                 if let storeIssue {
                     Button {
                         storeFocusRequest = UUID()
@@ -382,10 +382,10 @@ import CoreDomain
                     .accessibilityIdentifier("scan.receipt.storeIssue")
                     .disabled(!canReview)
                 } else if !model.confirmed {
-                    Text(captureText("Check that you reviewed the printed lines to continue."))
+                    Text(captureText("Mark the printed lines as reviewed to continue."))
                         .foregroundStyle(Theme.secondary)
                 }
-                Button(captureText("Continue with reviewed reference")) { finishEvidence() }
+                Button(captureText("Review receipt details")) { finishEvidence() }
                     .buttonStyle(PrimaryAction())
                     .disabled(!canReview || !model.confirmed || receiptLines?.isEmpty != false || storeIssue != nil)
                     .accessibilityIdentifier("scan.receipt.review")

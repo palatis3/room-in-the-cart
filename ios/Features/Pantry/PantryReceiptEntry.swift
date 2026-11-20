@@ -206,16 +206,30 @@ struct PantryReceiptEntry: View {
                             value.wrappedValue.language = $0
                         }))
                     }
-                    TextField(pantryText("Confirmed transaction reference, if printed"), text: value.reference).focused($field, equals: "reference")
-                        .autocorrectionDisabled().textInputAutocapitalization(.never)
+                    let referenceTitle = putawayText("Transaction reference (optional)")
+                    WorkingField(referenceTitle) {
+                        TextField(referenceTitle, text: value.reference, prompt: Text(""))
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .receiptInputChrome()
+                            .focused($field, equals: "reference")
+                            .accessibilityIdentifier("receipt.transactionReference")
+                    }
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { field = "reference" })
                     ReceiptPurchaseDateFields(draft: value)
                         .id("receipt.purchaseDate")
                     if displayed.tracksPutaway {
-                        WorkingField(putawayText("Paid receipt total in USD, if known")) {
-                            TextField(putawayText("Paid receipt total in USD, if known"), text: value.receiptTotal)
-                                .keyboardType(.decimalPad).focused($field, equals: "receiptTotal")
+                        let totalTitle = putawayText("Paid receipt total in USD, if known")
+                        WorkingField(totalTitle) {
+                            TextField(totalTitle, text: value.receiptTotal, prompt: Text(""))
+                                .keyboardType(.decimalPad)
+                                .receiptInputChrome()
+                                .focused($field, equals: "receiptTotal")
                                 .accessibilityIdentifier("receipt.total")
                         }
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(TapGesture().onEnded { field = "receiptTotal" })
                     }
                 }
                 if !model.receiptTrips.isEmpty {
@@ -607,7 +621,9 @@ struct PantryReceiptLineEditor: View {
             }
             WorkingField(title) {
                 TextField(title, text: text, prompt: Text(""))
-                    .keyboardType(keyboard).focused(field, equals: focusKey)
+                    .keyboardType(keyboard)
+                    .receiptInputChrome()
+                    .focused(field, equals: focusKey)
                     .accessibilityIdentifier(identifier ?? title)
                     .onGeometryChange(for: UUID?.self) { geometry in
                         // Form rows are lazy. Wait for the editable field to reach the receipt's visible frame.
@@ -619,6 +635,8 @@ struct PantryReceiptLineEditor: View {
                         if let request { focusCorrection?(request) }
                     }
             }
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { field.wrappedValue = focusKey })
         }.id(focusKey)
     }
 
@@ -684,7 +702,7 @@ struct PantryReceiptLineEditor: View {
         Picker(pantryText("Receipt line action"), selection: $line.treatment) {
             Text(pantryText("Skip this line")).tag(ReceiptImportDraft.Treatment.skip)
             if !permitsPutaway || line.printed?.kind != .adjustment && line.printed?.kind != .date {
-                Text(pantryText("Add a separate physical batch")).tag(ReceiptImportDraft.Treatment.add)
+                Text(putawayText("Put this food away")).tag(ReceiptImportDraft.Treatment.add)
                 if permitsPutaway {
                     Text(putawayText("Ate this")).tag(ReceiptImportDraft.Treatment.eaten)
                     Text(putawayText("Kept some")).tag(ReceiptImportDraft.Treatment.keptSome)
