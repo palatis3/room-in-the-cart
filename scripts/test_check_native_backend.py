@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
-from check_native_backend import NoRedirect, check, signing_key
+from check_native_backend import NoRedirect, check, has_signing_key
 
 
 class NativeBackendTests(unittest.TestCase):
@@ -9,7 +9,8 @@ class NativeBackendTests(unittest.TestCase):
         self.config = {"supabaseURL": "https://identity.invalid", "publishableKey": "public-fixture",
                        "serviceURL": "https://household.invalid", "emailOTPEnabled": False}
         self.settings = {"external": {"email": True}, "disable_signup": False, "mailer_autoconfirm": False}
-        self.keys = {"keys": [{"kty": "EC", "crv": "P-256", "alg": "ES256", "kid": "fixture", "x": "x", "y": "y"}]}
+        self.keys = {"keys": [{"kty": "EC", "crv": "P-256", "alg": "ES256", "kid": "fixture", "x": "axfR8uEsQkf4vOblY6RA8ncDfYEt6zOg9KE5RdiYwpY",
+                               "y": "T-NC4v4af5uO5-tKfA-eFivOM1drMV7Oy7ZAaDe_UfU"}]}
         self.session = {"available": False, "authenticated": False}
 
     def probe(self):
@@ -36,8 +37,9 @@ class NativeBackendTests(unittest.TestCase):
         self.keys["keys"][0].pop("x")
         with self.assertRaisesRegex(ValueError, "signing key"):
             self.probe()
-        self.assertFalse(signing_key({"alg": "RS256", "kty": "RSA", "kid": "x"}))
-        self.assertTrue(signing_key({"alg": "RS256", "kty": "RSA", "kid": "x", "n": "n", "e": "e"}))
+        self.assertFalse(has_signing_key([{"alg": "RS256", "kty": "RSA", "kid": "x"}]))
+        self.assertFalse(has_signing_key([{"alg": "ES256", "kty": "EC", "crv": "P-256",
+                                           "kid": "bad-point", "x": "x", "y": "y"}]))
 
     def test_empty_release_and_disabled_release_fail_before_network(self):
         for config, expected in (({}, "missing"), (self.config, "disabled")):

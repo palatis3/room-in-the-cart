@@ -1,0 +1,111 @@
+{
+  "verifiedAt": "2026-11-20T14:21:50.868350+00:00",
+  "environment": "Room in the Cart Staging",
+  "serviceRevision": "fb907d828c51a897e2ba4d991aedc89665d09cd4",
+  "supabaseProject": "uwjxrotnocxxomqdetzk",
+  "stagingAlias": "room-in-the-cart-staging.vercel.app",
+  "deploymentId": "dpl_5LnXwEYwXffCTbjaWcUD6MEPLhbQ",
+  "previousDeploymentId": "dpl_6T5ymYr8wPCLBoMTQqvDXyaQ4rTU",
+  "protectedMaintenanceDeploymentId": "dpl_DfCmJ9GYF9ukwFsp1LNWhkyRpg3Z",
+  "uploadManifestSHA256": "81ce68cab2088d1ec989203cc7571f6cc892505fddc04279bd3ebfaa8c823cbe",
+  "migrations": {
+    "before": 62,
+    "after": 70,
+    "applied": {
+      "063_guardian_child_deletion_review.sql": "ac08705902c0576eefb88e91dbc9a855cc44e8e05589a599c85fc6851fc24d61",
+      "064_guardian_child_account_erasure.sql": "4a1ae5a60d8c03149ab4b50dca7b95fa8b94acace67b487edce93c5d21d4868e",
+      "065_shared_content_moderation.sql": "0f74e22569a1c3a04e127cf61012c4dddd86d512d7f615986b4b4517b8448721",
+      "066_moderated_shared_projections.sql": "a10c79942a1cc54dd721a6b13d1408fb70b7b2a81e5c55704d034e57778b8ccd",
+      "067_moderation_field_continuity.sql": "752b26a20fef0772b3afd094a967156c4211af1a441e1fb80fa246fb4f862c1f",
+      "068_household_receipt_layout.sql": "43ac81635da8b2718cf25044b5b774a2d2ce80e311856d40d8fdc8d30018498a",
+      "069_adult_pickup_requests.sql": "d13ca0b5e8723d6560eb25577bff21628ac4c0e14c38aeb523b2f284f51a6ac0",
+      "070_trip_coordination.sql": "34ecfff8252812fecbd947eb6d87f22bbb678a3adf63eed700f098bf5fa821ab"
+    },
+    "all70ChecksumsMatchedLive": true,
+    "historicalRegistryRowsAndTimestampsPreserved": 62
+  },
+  "recovery": {
+    "fullDatabaseDumpSucceeded": true,
+    "captureManifestSHA256": "c4df318accd7c64b983ddd15cdd84327b90714694fb0d40d1d2b582be2f0a080",
+    "captureReopenedAndHashesVerified": true,
+    "independentVerifiedLocalRestores": 2,
+    "restoredSchemas": [
+      "auth",
+      "public",
+      "ritc"
+    ],
+    "restoredTables": 170,
+    "restoredRows": 146,
+    "managedObjectCounts": {
+      "storage.objects": 0,
+      "storage.buckets": 0,
+      "vault.secrets": 0
+    },
+    "bothEncryptedImagesDetached": true,
+    "qualificationOnFreshAdditionalActualDataRestore": true,
+    "catalogComparison": "The first live transaction rolled back before commit. Fourteen tables represented identical owner-only grants explicitly on Supabase and as PostgreSQL default ACLs after restore. Both rehearsed and live comparisons used PostgreSQL acldefault for unset table grants, preserving every effective grant.",
+    "restoredAndHostedCatalogsAndTableDataMatchedAfterMigration": true,
+    "unchangedOriginalNonRegistryTableContents": 169,
+    "newTables": 16,
+    "authTables": 27,
+    "authMetadataComparedWithoutWriteExcludingLock": [
+      "schema_migrations"
+    ],
+    "limits": "Application, public and Auth schemas were restored on private Postgres. Recovery of provider services, global role secrets and external systems uses separate custody."
+  },
+  "hostedChecks": {
+    "protected": {
+      "api": 14,
+      "webRoutesAndAssets": 22,
+      "databaseBackedAccess": 4
+    },
+    "public": {
+      "api": 14,
+      "webRoutesAndAssets": 22,
+      "databaseBackedAccess": 4
+    },
+    "supabaseAuthHealth": 200,
+    "publicAuthSettings": 200,
+    "signingAlgorithms": [
+      "ES256"
+    ],
+    "emailCodeEnabledOnHouseholdService": false,
+    "formerDatabaseCredentialsFenced": true,
+    "unscopedRuntimeFeatureReadsEmpty": true,
+    "workerDirectFeatureAccessDenied": true,
+    "readOnlyWorkerAttentionRequired": false,
+    "workerHealth": {
+      "authDue": 0,
+      "authRetryPending": 0,
+      "authExpiredUnconfirmed": 0,
+      "privacyPending": 0,
+      "privacyDue": 0
+    },
+    "dailyCron": [
+      {
+        "path": "/internal/maintenance",
+        "schedule": "0 8 * * *"
+      }
+    ],
+    "cronDeploymentId": "dpl_5LnXwEYwXffCTbjaWcUD6MEPLhbQ"
+  },
+  "localChecks": {
+    "serviceUnit": {
+      "passed": 1079,
+      "failed": 0,
+      "skipped": 1,
+      "skippedCase": "The durable billing case ran in the PostgreSQL suite."
+    },
+    "postgresIntegration": {
+      "passed": 537,
+      "failed": 0,
+      "skipped": 0
+    },
+    "workerMaintenance": {
+      "passed": 17,
+      "failed": 0
+    },
+    "actualLocalSupabaseAuth": "v2.197.0, synthetic loopback SMTP, OTP verification, household creation and reopen, session refresh, confirmed provider logout and denied access after logout."
+  },
+  "scope": "Staging service, worker and web at the named revision. Hosted email code delivery, authenticated hosted user journeys, physical-device validation and production are separate."
+}

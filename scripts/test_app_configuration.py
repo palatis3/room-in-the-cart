@@ -74,6 +74,25 @@ class AppConfigurationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "serviceURL.*separate from staging"):
                 load_configuration(root, "Release")
 
+    def test_release_pages_reject_staging_deployments_even_without_other_release_settings(self):
+        with tempfile.TemporaryDirectory() as folder:
+            config_dir = Path(folder) / "config"
+            config_dir.mkdir()
+            staging = {"serviceURL": "https://staging.grocery-app.com", "supabaseURL": "https://8.8.8.8",
+                       "supportURL": "https://support.grocery-app.com/contact"}
+            (config_dir / "staging.json").write_text(json.dumps(staging))
+            release_path = config_dir / "release.json"
+            for key in ("privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL"):
+                for url in ("https://STAGING.GROCERY-APP.com.:443/privacy?lang=es#contact",
+                            "https://[::ffff:8.8.8.8]/help"):
+                    with self.subTest(key=key, url=url):
+                        release_path.write_text(json.dumps({key: url}))
+                        with self.assertRaisesRegex(ValueError, key + ".*separate from staging"):
+                            load_configuration(config_dir.parent, "Release")
+            release = {"supportURL": staging["supportURL"], "privacyPolicyURL": "https://ayúda.grocery-app.com/privacy?lang=es"}
+            release_path.write_text(json.dumps(release))
+            self.assertEqual(load_configuration(config_dir.parent, "Release"), release)
+
     def test_nonempty_backend_values_must_be_safe_for_the_native_client(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

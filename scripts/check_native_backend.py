@@ -2,6 +2,7 @@
 """Check the public endpoints used by a configured native build."""
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 from urllib.error import URLError
@@ -29,16 +30,41 @@ def fetch_json(url, headers):
         return payload
 
 
-def signing_key(key):
-    if not isinstance(key, dict) or key.get("use", "sig") != "sig":
+# Use the household service's Node WebCrypto implementation to reject malformed
+# EC points, incompatible key usages and undersized RSA verification keys.
+IMPORT_SIGNING_KEYS = """
+const { readFileSync } = require('node:fs');
+const { subtle } = require('node:crypto').webcrypto;
+const keys = JSON.parse(readFileSync(0, 'utf8'));
+(async () => {
+    for (const jwk of keys) {
+        if (!jwk || typeof jwk.kid !== 'string' || !jwk.kid.trim() || jwk.d ||
+            (jwk.use !== undefined && jwk.use !== 'sig')) continue;
+        let algorithm;
+        if (jwk.alg === 'ES256') algorithm = { name: 'ECDSA', namedCurve: 'P-256' };
+        else if (jwk.alg === 'RS256') algorithm = { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' };
+        else continue;
+        try {
+            const key = await subtle.importKey('jwk', jwk, algorithm, false, ['verify']);
+            if (key.type === 'public' && (jwk.alg !== 'RS256' || key.algorithm.modulusLength >= 2048)) return;
+        } catch { /* A key rotation may also advertise an unsupported key. */ }
+    }
+    process.exitCode = 1;
+})();
+"""
+
+
+def has_signing_key(keys):
+    if not isinstance(keys, list) or not keys:
         return False
-    if key.get("alg") == "ES256" and key.get("kty") == "EC" and key.get("crv") == "P-256":
-        fields = ("kid", "x", "y")
-    elif key.get("alg") == "RS256" and key.get("kty") == "RSA":
-        fields = ("kid", "n", "e")
-    else:
-        return False
-    return all(isinstance(key.get(field), str) and key[field].strip() for field in fields)
+    try:
+        result = subprocess.run(["node", "-e", IMPORT_SIGNING_KEYS], input=json.dumps(keys),
+                                text=True, capture_output=True, timeout=10)
+    except FileNotFoundError:
+        raise ValueError("Add the repository's Node runtime to PATH to check public signing keys") from None
+    except subprocess.TimeoutExpired:
+        raise ValueError("Public signing key validation timed out") from None
+    return result.returncode == 0
 
 
 def check(config, name, fetch=fetch_json):
@@ -56,7 +82,7 @@ def check(config, name, fetch=fetch_json):
             or settings.get("disable_signup") is not False or settings.get("mailer_autoconfirm") is not False):
         raise ValueError("Supabase email account creation and verification settings do not match the app")
     keys = fetch(auth + "/.well-known/jwks.json", {}).get("keys")
-    if not isinstance(keys, list) or not any(signing_key(key) for key in keys):
+    if not has_signing_key(keys):
         raise ValueError("Supabase did not advertise a supported public signing key")
     if fetch(service + "/health", {}).get("status") != "running":
         raise ValueError("The household service did not report running")

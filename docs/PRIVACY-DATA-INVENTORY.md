@@ -2,6 +2,9 @@
 
 Implementation inventory, updated 2026-11-20. Use this matrix to prepare the App Store privacy questionnaire. Reconcile the final signed build, enabled services and provider settings before publishing the answers. [Apple’s App Privacy definitions](https://developer.apple.com/app-store/app-privacy-details/)
 
+Before publishing the final privacy policy, verify the contract and practices of every third party receiving user data. Apple's policy calls for a confirmation that those parties provide the same or equal protection as the app's policy. Obtain operator approval for the wording in English and Spanish. [App Review Guideline 5.1.1(i)](https://developer.apple.com/app-store/review/guidelines/#privacy)
+
+
 The ordinary local Free workflow keeps its workspace on the iPhone. Signing into a household does not upload that existing workspace. Optional authenticated features transmit the specific account, household, request, shared-shop or billing data needed for those features. The manifest describes those optional collection paths even while email setup and real App Store product configuration remain deferred.
 
 | Apple category | Implemented collection path | Purpose |
