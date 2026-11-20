@@ -57,7 +57,10 @@ struct ReviewedReceiptHeading: View {
             Text(header.date, format: .dateTime.year().month().day())
             if let reference = header.reference { Text(verbatim: reference) }
             if let cents = header.totalMinor {
-                LabeledContent(putawayText("Paid receipt total"), value: receiptMoney(Money(minorUnits: cents)))
+                LabeledContent(putawayText("Paid receipt total")) {
+                    Text(verbatim: receiptMoney(Money(minorUnits: cents)))
+                        .fontWeight(.semibold).monospacedDigit().foregroundStyle(Theme.ink)
+                }
             } else {
                 Text(putawayText("Paid receipt total unknown"))
             }
@@ -138,7 +141,7 @@ struct PutawayHistory: View {
                 }
             }
         }
-        .privacySensitive()
+        .workingSurface().privacySensitive()
         .navigationTitle(putawayText("Reviewed purchases"))
         .task(id: model.snapshot?.state.workspaceID) { headers = []; more = true; await load() }
     }
@@ -185,7 +188,7 @@ private struct PutawayHistoryDetail: View {
                 }
             }
         }
-        .privacySensitive()
+        .workingSurface().privacySensitive()
         .navigationTitle(putawayText("Receipt decisions"))
         .task { await load() }
         .onChange(of: model.snapshot?.state.workspaceID) { _, _ in rows = []; dismiss() }

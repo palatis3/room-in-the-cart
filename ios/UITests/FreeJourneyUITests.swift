@@ -1414,13 +1414,7 @@ import XCTest
     }
     private func checkReceiptSwitch(_ title: String) {
         enableSwitch(title, position: { [self] toggle in
-            let form = app.collectionViews.firstMatch
-            for _ in 0..<6 {
-                if toggle.exists, toggle.isHittable, scrollableArea().contains(CGPoint(x: toggle.frame.midX, y: toggle.frame.midY)) { return }
-                if toggle.exists, toggle.frame.midY < scrollableArea().minY { form.swipeDown() }
-                else { form.swipeUp() }
-            }
-            XCTAssertTrue(toggle.isHittable, app.debugDescription)
+            reveal(toggle, requiredHit: CGVector(dx: 0.92, dy: 0.5))
         })
     }
 
