@@ -16806,6 +16806,23 @@
         }
       }
     },
+    "Usable amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad útil"
+          }
+        }
+      }
+    },
     "Usable amount in one pack, blank if unknown": {
       "localizations": {
         "en": {

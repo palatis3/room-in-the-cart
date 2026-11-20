@@ -18,7 +18,7 @@ private enum DeliveryForm: Identifiable {
         switch self {
         case .register: return ht("Add a delivery")
         case .arrival: return ht("Record arrival")
-        case .usable: return ht("Record usable quantity")
+        case .usable: return ht("Usable amount")
         }
     }
 }
