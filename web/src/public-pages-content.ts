@@ -25,8 +25,8 @@ export const publicPages = {
         },
         "paragraphs": [
           {
-            "en": "This website is for invited contributors and cooks. Open the invitation or current-view link your household gave you. Sign-in, household membership and the selected view are checked separately. If email sign-in or guardian consent is unavailable, the page says so; it does not create access.",
-            "es": "Este sitio web es para colaboradores y personas que cocinan con invitación. Abre el enlace de invitación o de vista actual que te dio tu hogar. El inicio de sesión, la pertenencia al hogar y la vista seleccionada se verifican por separado. Si el inicio de sesión por correo o el consentimiento del tutor no está disponible, la página lo indica; no crea acceso."
+            "en": "The browser’s household features are for invited contributors and cooks. Open the invitation or current-view link your household gave you. Sign-in, household membership and the selected view are checked separately. If email sign-in or guardian consent is unavailable, the page says so; it does not create access.",
+            "es": "Las funciones del hogar en el navegador son para colaboradores y personas que cocinan con invitación. Abre el enlace de invitación o de vista actual que te dio tu hogar. El inicio de sesión, la pertenencia al hogar y la vista seleccionada se verifican por separado. Si el inicio de sesión por correo o el consentimiento del tutor no está disponible, la página lo indica; no crea acceso."
           },
           {
             "en": "Review a request before sending. Received means the household service has your request. The shopper decides whether to add it to the pickup. Waiting to send means the browser still has it in its local queue. Retry an uncertain submission with the original retry action rather than sending a duplicate. A cook with permission can suggest a correction; only the shopper can approve a basket change.",

@@ -14,11 +14,11 @@ const setup = (path, language = 'en-US', configuration) => {
 };
 
 test('public routes are exact and do not claim invited or private routes', () => {
-  for (const route of ['help', 'privacy', 'terms', 'support']) {
+  for (const route of ['about', 'help', 'privacy', 'terms', 'support']) {
     assert.equal(publicPageKey('/' + route), route);
     assert.equal(publicPageKey('/' + route + '/'), route);
   }
-  for (const path of ['/', '/requests', '/invite', '/view', '/v1/help', '/help/private', '/HELP']) {
+  for (const path of ['/', '/requests', '/invite', '/view', '/v1/help', '/about/private', '/help/private', '/HELP']) {
     const { root, mounted } = setup(path);
     assert.equal(mounted, false); assert.equal(root.children.length, 0);
   }
@@ -48,8 +48,8 @@ test('every public page renders both languages, one main, named navigation and a
   }
 });
 
-test('public help never calls account APIs, reads credentials or opens browser storage', t => {
-  const dom = new JSDOM('<div id="app"></div>', { url: 'https://review.grocery-app.com/help?token=query-secret#token=fragment-secret' });
+for (const route of ['help','about']) test('public ' + route + ' never calls account APIs, reads credentials or opens browser storage', t => {
+  const dom = new JSDOM('<div id="app"></div>', { url: 'https://review.grocery-app.com/' + route + '?token=query-secret#token=fragment-secret' });
   dom.window.fetch = () => { throw new Error('Public pages must not fetch'); };
   const previousFetch = globalThis.fetch;
   globalThis.fetch = () => { throw new Error('Public pages must not fetch'); };
@@ -58,7 +58,7 @@ test('public help never calls account APIs, reads credentials or opens browser s
   Object.defineProperty(dom.window.document, 'cookie', { get() { throw new Error('Public pages must not read cookies'); } });
   const root = dom.window.document.getElementById('app');
   assert.equal(mountPublicPage(root), true);
-  assert.equal(dom.window.location.href, 'https://review.grocery-app.com/help?lang=en');
+  assert.equal(dom.window.location.href, 'https://review.grocery-app.com/' + route + '?lang=en');
   assert.doesNotMatch(root.textContent, /query-secret|fragment-secret/);
   assert.equal(root.querySelectorAll('script,iframe,form,input,textarea').length, 0);
   assert.equal(root.querySelectorAll('a[href*="token"]').length, 0);
@@ -151,5 +151,33 @@ test('supplied operator identity appears on both policy pages in both languages 
   for (const raw of [null, '', ' Venture House Group LLC', 'Venture House Group LLC ', 'Venture\nHouse Group LLC', 'Venture\tHouse Group LLC', 'Venture\0House Group LLC', 'Venture\u202eHouse Group LLC', 'Venture\u2028House Group LLC', '$(OPERATOR_NAME)', 'a'.repeat(301)]) {
     assert.equal(operatorDisplayName(raw), null);
     assert.equal(setup('/privacy', 'en-US', { operatorSupportURL: null, operatorName: raw }).root.querySelector('.public-operator'), null);
+  }
+});
+
+test('the overview uses the chosen language for its real app screen, guide and public links', () => {
+  const { dom, root } = setup('/about/?lang=en&token=private#invitation');
+  for (const [language, locale] of [['en','en-US'], ['es','es-MX']]) {
+    const select = root.querySelector('#public-language');
+    select.value = language;
+    select.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(dom.window.location.pathname + dom.window.location.search, '/about?lang=' + language);
+    assert.equal(dom.window.location.hash, '');
+    assert.equal(dom.window.document.activeElement.id, 'public-language');
+    assert.equal(root.querySelectorAll('h1').length, 1);
+    const photo = root.querySelector('figure img');
+    assert.equal(photo.getAttribute('src'), '/overview/compare-packs-' + locale + '.jpg');
+    assert.match(photo.alt, /\$6\.40.*\$5\.40/);
+    assert.ok(readFileSync(new URL('../public' + photo.getAttribute('src'), import.meta.url)).length > 0);
+    const guide = root.querySelector('main a');
+    assert.equal(guide.getAttribute('href'), '/help?lang=' + language + '#public-section-1');
+    const help = setup(guide.pathname + guide.search + guide.hash);
+    assert.equal(help.root.querySelector(guide.hash + ' h2').textContent, language === 'en' ? 'Compare two packs' : 'Comparar dos paquetes');
+    const footer = root.querySelector('.overview-footer');
+    assert.match(footer.textContent, /Venture House Group LLC/);
+    assert.deepEqual([...footer.querySelectorAll('nav a')].map(a=>a.getAttribute('href')),
+      ['help','support','privacy','terms'].map(path => '/' + path + '?lang=' + language));
+    assert.match(root.querySelector('h1').textContent, language === 'en' ? /tomorrow’s lunch/ : /almuerzo de mañana/);
+    assert.equal(root.querySelector('.public-skip').hash, '#' + root.querySelector('main').id);
+    assert.equal(root.querySelectorAll('form,iframe,a[href*="apps.apple.com"],a[href*="token"]').length, 0);
   }
 });
