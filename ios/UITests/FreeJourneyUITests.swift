@@ -1062,6 +1062,14 @@ import XCTest
         tap(app.buttons["shelfPhotos.location.fridge"])
         XCTAssertTrue(stamp.waitForExistence(timeout: 8))
         XCTAssertEqual(stamp.label, captured)
+        tap(app.buttons["shelfPhotos.edit"])
+        tap(element("shelfPhotos.choose"))
+        try chooseNewestSourcePhoto()
+        XCTAssertTrue(save.waitForExistence(timeout: 15))
+        if !save.isEnabled { tap(app.buttons["Set date taken"]) }
+        tap(save)
+        XCTAssertTrue(save.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["shelfPhotos.inspect"].waitForExistence(timeout: 8))
         tap(app.buttons["shelfPhotos.delete"])
         let deletion = app.buttons.matching(identifier: "Delete photo").allElementsBoundByIndex.last
         try XCTUnwrap(deletion).tap()

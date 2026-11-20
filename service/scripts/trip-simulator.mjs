@@ -54,7 +54,7 @@ try {
   const runtime=new pg.Pool({connectionString:'postgresql://trip_runtime:'+runtimePassword+'@'+target});pools.push(runtime);
   await assertRuntimeRole(runtime);
   const {privateKey,publicKey}=await generateKeyPair('ES256'),jwk=await exportJWK(publicKey);jwk.kid='simulator';
-  const repository=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'local',tripSubstitutions:true,sharedPicking:true,
+  const repository=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'local',trackingV2:true,tripSubstitutions:true,sharedPicking:true,
     sharedContentSafety:true,moderationRetentionDays:7,sessionStatus:new SupabaseSessionVerifier(issuer)});
   const verifier=new JWTIdentityVerifier({issuer,audience:'authenticated',jwksUrl:issuer+'/jwks'},createLocalJWKSet({keys:[jwk]}));
   await listen(createHTTPServer({repository,verifier,maxRequestsPerMinute:2000}),48762);
@@ -72,21 +72,39 @@ try {
     const device=await repository.enroll(householdId,await verifier.verify(accessToken));
     roles[role]={baseURL,householdId,shopId,memberId,deviceId:device.deviceId,deviceToken:device.deviceToken,accessToken,issuer,subject,sessionId,expiresAt,lineId};
   }
-  async function post(role,path,body){
+  async function requestJSON(role,path,body){
     const actor=roles[role];
-    const response=await fetch(baseURL+'/v1/households/'+householdId+path,{method:'POST',
+    const response=await fetch(baseURL+'/v1/households/'+householdId+path,{method:body===undefined?'GET':'POST',
       headers:{Authorization:'Bearer '+actor.accessToken,'X-Device-Token':actor.deviceToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!response.ok)throw Error('Could not seed '+path+' ('+response.status+')');
+    if(!response.ok){const detail=await response.json();throw Error('Could not seed '+path+' ('+response.status+', '+detail.error?.code+')');}
     return response.json();
   }
-  async function command(role,kind,body){
-    const window=await post(role,'/replay-windows',{});
-    return post(role,'/commands',{v:1,replayWindow:window.id,clientKey:randomUUID(),shopId,kind,base:{shopRevision:0,authorityEpoch:0},body});
+  async function command(role,kind,body,base={shopRevision:0,authorityEpoch:0}){
+    const window=await requestJSON(role,'/replay-windows',{});
+    return requestJSON(role,'/commands',{v:1,replayWindow:window.id,clientKey:randomUUID(),shopId,kind,base,body});
   }
-  await command('shopper','shop.create',{quote:{currency:'USD',scope:'wholeCheckout',complete:true,capMinor:4000,capScope:'wholeCheckout',
+  const basket={quote:{currency:'USD',scope:'wholeCheckout',complete:true,capMinor:4000,capScope:'wholeCheckout',
     fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:new Date().toISOString(),expiresAt},
     lines:[{lineId,originalItem:'Brown rice 1 lb',packs:1,feeEligible:true,unitPriceMinor:225},
-      {lineId:randomUUID(),originalItem:'Canned black beans',packs:3,feeEligible:true,unitPriceMinor:125}]});
+      {lineId:randomUUID(),originalItem:'Canned black beans',packs:3,feeEligible:true,unitPriceMinor:125}]};
+  await command('shopper','shop.create',basket);
+  // Save a normal candidate, disclosure and shopper acknowledgment for the native freeze review.
+  const path='/shops/'+shopId+'/demand/tracking',page=await requestJSON('shopper',path);
+  const base={shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch};
+  const quantity=n=>({amount:{numerator:String(n),denominator:'1'},unit:'count',originalLiteral:n+' packs',confirmedConversion:null});
+  const candidate=await requestJSON('shopper',path+'/candidates',{
+    mode:'adopt',base:{...base,graphRevision:page.state.graph.revision,stateDigest:page.basisDigest},
+    change:{lines:basket.lines.map((row,index)=>({id:row.lineId,name:row.originalItem,unit:'count',originalOrder:index,trashedAt:null})),
+      contributions:basket.lines.map(row=>({id:randomUUID(),lineId:row.lineId,source:{kind:'manual'},productKey:null,
+        productName:row.originalItem,originalText:row.originalItem,quantity:quantity(row.packs),exclusions:[],contains:[],removedAt:null})),
+      edges:[],removeSourceIds:[],removeEdgeIds:[]},
+    action:{kind:'shop.patch',body:basket},packs:basket.lines.map(row=>({lineId:row.lineId,usablePerPack:quantity(1),acceptUnresolved:false}))
+  });
+  const review=await requestJSON('shopper',path+'/previews',{candidateId:candidate.candidateId,candidateDigest:candidate.candidateDigest,
+    acknowledgedDisclosure:candidate.disclosure,acceptOverage:false,acceptUnknown:false});
+  await command('shopper',review.action.kind,{...review.action.body,demandReview:{
+    trackingVersion:2,previewId:review.previewId,previewDigest:review.previewDigest}},base);
+  if(!(await requestJSON('shopper',path)).freezeReview)throw Error('Fixture lacks a reviewed checkout');
   const {request}=await command('requester','request.send',{clientRequestId:randomUUID(),originalItem:'Oat milk 1 L',ownQuantity:'one carton',authoredAt:new Date().toISOString()});
   for(const actor of Object.values(roles))actor.requestId=request.requestId;
 

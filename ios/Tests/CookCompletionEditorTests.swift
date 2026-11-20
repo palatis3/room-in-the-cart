@@ -74,6 +74,84 @@ import LocalStore
         model.leftoverChoice = .none
     }
 
+    private func cookWithLunchAndDinner(_ f: Fixture) async throws -> CookCompletion.Review {
+        let editor = f.editor
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        editor.ingredients[0].parts[0].use = .measured
+        editor.ingredients[0].parts[0].relation = .ingredient
+        editor.ingredients[0].parts[0].lotID = f.lots[0]
+        editor.ingredients[0].parts[0].amount = "1"
+        editor.leftoverChoice = .recorded
+        editor.addLeftover()
+        editor.leftovers[0].portions = "3"
+        editor.leftovers[0].lunch = "1"
+        editor.leftovers[0].scheduleDinner = true
+        editor.leftovers[0].dinnerPortions = "2"
+        await editor.prepareReview()
+        let cooked = try XCTUnwrap(editor.review)
+        await editor.confirm()
+        return cooked
+    }
+
+    func testImmediateUndoAtomicallyReleasesTheCooksLunchAndDinnerAndReplaysOnce() async throws {
+        let f = try await fixture()
+        let cooked = try await cookWithLunchAndDinner(f)
+        let first = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        let undo = try await f.session.reviewUndo(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(undo.releasedOutputHolds, cooked.outputReservations)
+        XCTAssertEqual(undo.restoredHoldCount, 0)
+        try await f.session.applyUndo(undo)
+        try await f.session.applyUndo(undo)
+        try await f.session.apply(cooked)
+        let after = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertNil(after.completed)
+        XCTAssertEqual(after.inventory.state.revision, first.inventory.state.revision + 1)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(4))
+        let outputID = try XCTUnwrap(cooked.draft.leftovers.first?.id)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == outputID }?.count.quantity?.amount, .zero)
+        let holds = after.inventory.reservations.filter { $0.lotID == outputID }
+        XCTAssertEqual(Set(holds.map(\.id)), Set(cooked.outputReservations.map(\.id)))
+        XCTAssertTrue(holds.allSatisfy { $0.state == .released && $0.revision == 2 && $0.cookedDinner?.servedAt == nil })
+        XCTAssertTrue(after.inventory.availability.reservations.isEmpty)
+    }
+
+    func testCookUndoRequiresBackedUnchangedOutputHoldsAndPreservesNewDemand() async throws {
+        let f = try await fixture(), cook = try await cookWithLunchAndDinner(f)
+        let output = try XCTUnwrap(cook.draft.leftovers.first)
+        let repo = PantryRepository(store: f.store, authorize: { f.access.allowed })
+        let otherID = UUID()
+        func saveOtherHold(_ state: InventoryReservationState, revision: Int64) async throws {
+            let hold = InventoryReservation(id: otherID, originID: f.store.workspaceID, revision: revision,
+                foodID: output.foodID, lotID: nil, name: "Another meal", amount: try quantity(1), state: state)
+            let basis = try await f.store.inventoryState()
+            _ = try await f.store.commitInventory(.init(workspaceID: f.store.workspaceID, operationID: UUID(),
+                expectedRevision: basis.revision, request: Data([UInt8(revision)]),
+                writes: [PantryPersistenceCodec.write(hold, expectedRevision: revision - 1)]), at: f.now)
+        }
+        try await saveOtherHold(.active, revision: 1)
+        let short = try await repo.load(at: f.now)
+        XCTAssertEqual(short.availability.reservations.first { $0.id == otherID }?.shortfall?.amount, .one)
+        do { _ = try await f.session.reviewUndo(shopID: f.shop, mealID: f.meal); XCTFail("An unfunded new hold must survive") }
+        catch PantryCookPort.Failure.changed {}
+        try await saveOtherHold(.released, revision: 2)
+        let clean = try await f.session.reviewUndo(shopID: f.shop, mealID: f.meal)
+        let stock = try await repo.load(at: f.now)
+        let lunch = try XCTUnwrap(stock.reservations.first { $0.personal != nil })
+        let lot = try XCTUnwrap(stock.lots.first { $0.id == output.id })
+        let release = InventoryCommand(id: UUID(), originID: f.store.workspaceID, lotID: lot.id,
+            eventID: UUID(), expectedRevision: lot.revision, occurredAt: f.now,
+            change: .reservation(.release(id: lunch.id, expectedRevision: lunch.revision, amount: nil)))
+        _ = try await repo.apply(release, reviewedInventoryRevision: stock.state.revision, at: f.now)
+        do { try await f.session.applyUndo(clean); XCTFail("Changing the lunch hold invalidates the review") }
+        catch PantryCookPort.Failure.changed {}
+        do { _ = try await f.session.reviewUndo(shopID: f.shop, mealID: f.meal); XCTFail("The released lunch is a separate decision") }
+        catch PantryCookPort.Failure.changed {}
+        let after = try await repo.load(at: f.now)
+        XCTAssertEqual(after.lots.first { $0.id == output.id }?.count.quantity?.amount, try Rational(3))
+        XCTAssertEqual(after.availability.lots.first { $0.id == output.id }?.held?.amount, try Rational(2))
+    }
+
     func testCookEditorSchedulesOnlyCountedPortionsInThePrivateDinnerCalendar() async throws {
         let f = try await fixture(), editor = f.editor
         let ledgerID = try XCTUnwrap(f.ledger.sourceWorkspaceID)

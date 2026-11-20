@@ -8,7 +8,12 @@ struct SavedCouponReceipt {
     let rows: [ReviewedReceiptDecision]
 
     var products: [ReviewedReceiptDecision] {
-        rows.filter { [.stored, .keptSome, .linked, .eaten].contains($0.kind) && !CouponReceiptEvidence.isDiscountLine($0.original) }
+        rows.filter { row in
+            guard [.stored, .keptSome, .linked, .eaten].contains(row.kind),
+                  !CouponReceiptEvidence.isDiscountLine(row.original) else { return false }
+            let kind = ReceiptPrintedEvidence(.init(originalText: row.original), knownStorage: [:]).kind
+            return kind != .adjustment && kind != .date
+        }
     }
 
     var discounts: [ReviewedReceiptDecision] {
@@ -56,6 +61,10 @@ struct ReceiptCouponReviewLink: View {
     let pickupID: UUID?
     let authorize: @MainActor () -> Bool
     @EnvironmentObject private var ledger: LedgerModel
+    @EnvironmentObject private var household: HouseholdModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @Environment(\.scenePhase) private var scene
+    @Environment(\.guardianChildCoordinator) private var child
     @State private var reviewing = false
 
     private var readOnly: Bool {
@@ -64,13 +73,23 @@ struct ReceiptCouponReviewLink: View {
     }
 
     var body: some View {
-        if authorize(), ledger.ready, !ledger.hasPendingLedgerDeletion,
+        if authorize(), scene == .active, UIApplication.shared.isProtectedDataAvailable,
+           child?.presented != true, household.projection?.grantId == nil,
+           CapturePrivateIdentity.current(access: access, household: household) != nil,
+           ledger.ready, !ledger.hasPendingLedgerDeletion,
            ledger.workspace.shops.contains(where: { !couponLines(in: $0, pickupID: pickupID).isEmpty }) {
             Button {
                 reviewing = true
             } label: {
-                Label(shelfText(readOnly ? "Pinned coupon terms" : "Review pinned coupons"), systemImage: "tag")
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                VStack(alignment: .leading, spacing: 5) {
+                    Label(shelfText(readOnly ? "Pinned coupon terms" : "Review pinned coupons"), systemImage: "tag")
+                    if readOnly, let first = ledger.workspace.shops.lazy.compactMap({ couponLines(in: $0, pickupID: pickupID).first }).first,
+                       let pin = first.pinnedCoupon {
+                        Text(verbatim: first.name).font(.headline)
+                        Text(couponTermsLabel(pin.terms) + " · " + shelfFormat("Valid through %@", ledgerMealDay(pin.terms.validThrough)))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                    }
+                }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
             }
             .accessibilityIdentifier(readOnly ? "receipt.couponTerms" : "receipt.reviewCoupons")
             .sheet(isPresented: $reviewing) {

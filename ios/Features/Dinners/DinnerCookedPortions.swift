@@ -44,9 +44,31 @@ struct DinnerCookedPortionsView: View {
         let generation: UUID
     }
     @State private var pending: Pending?
-    @State private var saving = false
-    @State private var failed = false
-    @State private var cancelled = false
+    private enum Feedback {
+        case moved(MealDay), served, cancelled, shortfall, changed, unconfirmed, needsRefresh
+
+        var text: String {
+            switch self {
+            case .moved(let day): return String(format: cookCompletionText("Dinner moved to %@."), locale: .current, dinnerDay(day))
+            case .served: return cookCompletionText("Dinner served. The pantry count has been updated.")
+            case .cancelled: return cookCompletionText("Dinner cancelled. Its reservation has been released.")
+            case .shortfall: return cookCompletionText("There are too few confirmed portions. Check the batch and its other reservations.")
+            case .changed: return cookCompletionText("The reservation changed. Refresh it before choosing another action.")
+            case .unconfirmed: return cookCompletionText("The dinner change could not be confirmed. Refresh the reservation or retry the same confirmation.")
+            case .needsRefresh: return cookCompletionText("The dinner change was saved. Refresh the pantry to see it.")
+            }
+        }
+        var needsRecovery: Bool {
+            switch self { case .shortfall, .changed, .unconfirmed, .needsRefresh: true; default: false }
+        }
+    }
+    @State private var workingID: UUID?
+    @State private var result: (attempt: Pending, feedback: Feedback)?
+    private var saving: Bool { workingID != nil }
+    private var feedback: Feedback? {
+        guard let result, inScope(result.attempt) else { return nil }
+        return result.feedback
+    }
 
     private var actor: CapturePrivateIdentity? {
         guard scene == .active, UIApplication.shared.applicationState == .active,
@@ -56,6 +78,10 @@ struct DinnerCookedPortionsView: View {
     private var claim: InventoryReservation? { try? model.cookedDinners(pickup: pickup).first { $0.id == id } }
     var body: some View {
         WorkingForm {
+            if let feedback {
+                Text(feedback.text).foregroundStyle(feedback.needsRecovery ? Theme.error : Theme.ink)
+                    .accessibilityIdentifier("leftover.result")
+            }
             if actor != nil, let claim, let dinner = claim.cookedDinner {
                 Section {
                     Text(verbatim: claim.name).font(.system(.title2, design: .serif, weight: .semibold))
@@ -83,22 +109,15 @@ struct DinnerCookedPortionsView: View {
                             .accessibilityIdentifier("leftover.cancel")
                     }.disabled(saving || pending != nil)
                 }
-            } else if cancelled {
-                Text(cookCompletionText("Dinner cancelled. Its portions are available again."))
-            } else {
+            } else if feedback == nil {
                 Text(cookCompletionText("Current cooked portions are unavailable. Reopen this dinner or refresh the pantry."))
             }
-            if failed {
+            if feedback?.needsRecovery == true, let pending {
                 Section {
-                    Text(cookCompletionText("Check the current reservation and pantry count before trying again."))
-                    if let pending {
+                    if case .unconfirmed = feedback {
                         Button(cookCompletionText("Retry the same confirmation")) { Task { await save(pending) } }
                     }
-                    Button(cookCompletionText("Refresh cooked portions")) {
-                        Task {
-                            if await pickup.refreshPantryStock() { pending = nil; failed = false }
-                        }
-                    }
+                    Button(cookCompletionText("Refresh cooked portions")) { Task { await refresh(pending) } }
                 }.disabled(saving)
             }
         }.privacySensitive()
@@ -106,35 +125,82 @@ struct DinnerCookedPortionsView: View {
         .onChange(of: claim?.cookedDinner?.day, initial: true) { _, day in
             if let day, let saved = day.date { date = saved }
         }
-        .onChange(of: actor) { _, _ in pending = nil; failed = false; cancelled = false }
-        .onChange(of: pickup.privatePantryGeneration) { _, _ in pending = nil; failed = false; cancelled = false }
         .dinnerAccess(model)
+        .onChange(of: actor) { _, _ in clearResult() }
+        .onChange(of: pickup.privatePantryGeneration) { _, _ in clearResult() }
+        .onChange(of: model.shop?.id) { _, _ in clearResult() }
+        .onDisappear { clearResult() }
     }
 
     private func begin(_ action: CookedDinnerReservation.Action, claim: InventoryReservation) {
         guard !saving, pending == nil, let actor, let change = CookedDinnerChange(claim, action: action) else { return }
         let attempt = Pending(change: change, actor: actor, generation: pickup.privatePantryGeneration)
+        result = nil
         pending = attempt
         Task { await save(attempt) }
     }
 
-    @MainActor private func save(_ attempt: Pending) async {
-        let change = attempt.change
-        guard !saving, let ledger = model.store as? LedgerModel else { return }
-        saving = true
-        defer { saving = false }
-        let allowed = {
-            actor == attempt.actor && pickup.privatePantryGeneration == attempt.generation &&
-                model.localIdeaWorkspaceID == change.ledgerID && model.shop?.id == change.shopID
+    private func clearResult() {
+        pending = nil
+        result = nil
+        workingID = nil
+    }
+
+    private func inScope(_ attempt: Pending) -> Bool {
+        actor == attempt.actor && pickup.privatePantryGeneration == attempt.generation &&
+            model.store.sourceWorkspaceID == attempt.change.ledgerID && model.shop?.id == attempt.change.shopID
+    }
+
+    private func permits(_ attempt: Pending) -> Bool {
+        pending?.change.id == attempt.change.id && inScope(attempt) && model.localIdeaWorkspaceID == attempt.change.ledgerID
+    }
+
+    private func report(_ feedback: Feedback, for attempt: Pending) {
+        guard permits(attempt) else { return }
+        result = (attempt, feedback)
+        if !feedback.needsRecovery { pending = nil }
+        UIAccessibility.post(notification: .announcement, argument: feedback.text)
+    }
+
+    private func reportSaved(_ attempt: Pending) {
+        switch attempt.change.action {
+        case .move(let day): report(.moved(day), for: attempt)
+        case .serve: report(.served, for: attempt)
+        case .cancel: report(.cancelled, for: attempt)
         }
+    }
+
+    @MainActor private func refresh(_ attempt: Pending) async {
+        guard !saving, permits(attempt) else { return }
+        workingID = attempt.change.id
+        defer { if workingID == attempt.change.id { workingID = nil } }
+        let refreshed = await pickup.refreshPantryStock()
+        guard permits(attempt) else { return }
+        if case .needsRefresh = feedback {
+            if refreshed { reportSaved(attempt) } else { report(.needsRefresh, for: attempt) }
+        } else if refreshed {
+            clearResult()
+        } else {
+            report(.unconfirmed, for: attempt)
+        }
+    }
+
+    @MainActor private func save(_ attempt: Pending) async {
+        guard !saving, permits(attempt), let ledger = model.store as? LedgerModel else { return }
+        workingID = attempt.change.id
+        defer { if workingID == attempt.change.id { workingID = nil } }
         do {
-            try await pickup.cookCompletionPort(ledger: ledger, authorize: allowed).changeDinner(change)
-            guard allowed() else { return }
+            try await pickup.cookCompletionPort(ledger: ledger, authorize: { permits(attempt) }).changeDinner(attempt.change)
+            guard permits(attempt) else { return }
             let refreshed = await pickup.refreshPantryStock()
-            guard refreshed else { failed = true; return }
-            cancelled = change.action == .cancel
-            pending = nil
-            failed = false
-        } catch { failed = true }
+            guard permits(attempt) else { return }
+            if refreshed { reportSaved(attempt) } else { report(.needsRefresh, for: attempt) }
+        } catch InventoryError.invalid("cookedPortionHolds") {
+            report(.shortfall, for: attempt)
+        } catch PantryCookPort.Failure.changed {
+            report(.changed, for: attempt)
+        } catch {
+            report(.unconfirmed, for: attempt)
+        }
     }
 }

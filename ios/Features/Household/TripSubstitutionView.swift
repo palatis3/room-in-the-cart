@@ -21,7 +21,7 @@ struct TripSubstitutionLink: View {
            household.adultRequestScope(shop: shop, capability: "trip_substitutions") != nil {
             NavigationLink {
                 PrivateAdultRequestSurface(household: household, shopID: shop, capability: "trip_substitutions") { scope in
-                    TripSubstitutionView(household: household, scope: scope, requestID: id)
+                    TripSubstitutionView(household: household, scope: scope, requestID: id, request: request)
                 }
             } label: {
                 Label(householdTripText("If this pack is unavailable"), systemImage: "arrow.triangle.2.circlepath")
@@ -35,6 +35,7 @@ private struct TripSubstitutionView: View {
     @ObservedObject var household: HouseholdModel
     let scope: AdultRequestViewScope
     let requestID: UUID
+    let request: OwnRequest
     @State private var page: TripSubstitution?
     @State private var selection = TripSubstitutionChoice.undecided
     @State private var name = ""
@@ -50,6 +51,9 @@ private struct TripSubstitutionView: View {
             if let page {
                 Section(ht("Request")) {
                     Text(verbatim: page.originalItem).font(.headline)
+                    let amount = request.revision == page.requestRevision && request.originalItem == page.originalItem
+                        ? request.ownQuantity : nil
+                    if let amount { LabeledContent(ht("Quantity"), value: amount) }
                     LabeledContent(ht("Pickup"), value: String(scope.shop.uuidString.prefix(8)))
                     LabeledContent(householdTripText("Requester’s choice"), value: page.choice.title)
                     if let approved = page.alternative { Text(verbatim: approved) }
@@ -60,6 +64,7 @@ private struct TripSubstitutionView: View {
                             await household.refresh()
                         }), fields: [
                             SharedMessageField(.request, requestID.uuidString, page.requestRevision, .item, page.originalItem),
+                            SharedMessageField(.request, requestID.uuidString, page.requestRevision, .amount, amount),
                             SharedMessageField(.substitution, requestID.uuidString, page.revision, .alternative, page.alternative)
                         ].compactMap { $0 })
                     }
@@ -87,7 +92,7 @@ private struct TripSubstitutionView: View {
             Button(ht("Refresh requests")) { Task { await load() } }
             if busy { ProgressView() }
         }
-        .navigationTitle(householdTripText("If this pack is unavailable"))
+        .navigationTitle(householdTripText("Requester’s choice"))
         .disabled(busy)
         .onChange(of: selection) { _, _ in retryKey = UUID() }
         .onChange(of: name) { _, _ in retryKey = UUID() }

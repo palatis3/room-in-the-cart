@@ -38,9 +38,14 @@ import LocalStore
         try await port.apply(review)
         let afterCook = try await port.load(shopID: shop.id, mealID: mealID)
         let thursdayHold = try XCTUnwrap(afterCook.inventory.reservations.first { $0.cookedDinner?.day == thursday })
+        let undoBeforeMove = try await port.reviewUndo(shopID: shop.id, mealID: mealID)
         let move = try XCTUnwrap(CookedDinnerChange(thursdayHold, action: .move(friday)))
         try await port.changeDinner(move)
         try await port.changeDinner(move)
+        do { try await port.applyUndo(undoBeforeMove); XCTFail("A moved reservation must survive an old Undo") }
+        catch PantryCookPort.Failure.changed {}
+        do { _ = try await port.reviewUndo(shopID: shop.id, mealID: mealID); XCTFail("A fresh Undo cannot release a moved hold") }
+        catch PantryCookPort.Failure.changed {}
         let moved = try await port.load(shopID: shop.id, mealID: mealID)
         let fridayHold = try XCTUnwrap(moved.inventory.reservations.first { $0.cookedDinner?.day == friday })
         XCTAssertEqual(fridayHold.id, thursdayHold.id)
@@ -55,6 +60,8 @@ import LocalStore
         cleanup.track(reopened)
         let restored = PantryCookPort(store: reopened, ledger: ledger, gate: gate, authorize: { true }, clock: { now })
         try await restored.changeDinner(serve)
+        do { _ = try await restored.reviewUndo(shopID: shop.id, mealID: mealID); XCTFail("Serving must survive Undo after reopen") }
+        catch PantryCookPort.Failure.changed {}
         let final = try await restored.load(shopID: shop.id, mealID: mealID)
         XCTAssertEqual(final.inventory.state.revision, moved.inventory.state.revision + 1)
         XCTAssertEqual(final.inventory.reservations.first { $0.id == fridayHold.id }?.cookedDinner?.servedAt, now)

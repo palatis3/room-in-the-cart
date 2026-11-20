@@ -98,6 +98,56 @@ import XCTest
         catch PantryReceiptError.changedEvidence {}
     }
 
+    func testCouponReviewReadsOnlyCommittedPurchasedAndPrintedDiscountRows() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let owner = UUID()
+        let repo = PantryRepository(store: store, aliasPersonaID: owner, authorize: { true })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo, clock: { self.now })
+        await model.load()
+        var draft = try receipt(store: store, lines: [
+            "Beans USD 2.00", "Tax USD 1.00", "Coupon -1.00", "Coffee USD 1.00", "Discount -0.50"
+        ])
+        draft.lines[0].treatment = .eaten
+        for index in [1, 2, 3] { draft.lines[index].treatment = .chargeOrReturn }
+        let review = try await model.reviewReceipt(draft)
+        let header = try XCTUnwrap(review.putaway?.header)
+        do {
+            _ = try await SavedCouponReceipt.load(header: header, from: model, authorize: { true })
+            XCTFail("A draft receipt must never supply evidence")
+        } catch PantryReceiptError.stale { }
+        try await model.saveReceipt(review)
+        let saved = try await SavedCouponReceipt.load(header: header, from: model, authorize: { true })
+        XCTAssertEqual(saved.products.map(\.original), ["Beans USD 2.00"])
+        XCTAssertEqual(saved.discounts.map(\.original), ["Coupon -1.00"])
+        let item = try XCTUnwrap(saved.products.first)
+        let print = try XCTUnwrap(saved.discounts.first)
+        let day = try MealDay(date: header.date, timeZoneIdentifier: "UTC")
+        let check = CouponPackCheck(packCount: 2, size: .matches)
+        let proof = try XCTUnwrap(saved.evidence(itemID: item.id, day: day, check: check,
+            discount: .printed(lineID: print.id, wording: print.original, amount: Money(minorUnits: 100))))
+        XCTAssertEqual(proof.receiptID, header.id)
+        XCTAssertEqual(proof.itemLineID, item.id)
+        XCTAssertEqual(proof.savings, Money(minorUnits: 100))
+        XCTAssertNil(saved.evidence(itemID: item.id, day: day, check: check,
+            discount: .printed(lineID: item.id, wording: print.original, amount: Money(minorUnits: 100))))
+        let other = PantryRepository(store: store, aliasPersonaID: UUID(), authorize: { true })
+        cleanup.track(other)
+        let outsider = PantryModel(repository: other, clock: { self.now })
+        await outsider.load()
+        do {
+            _ = try await SavedCouponReceipt.load(header: header, from: outsider, authorize: { true })
+            XCTFail("Another receipt owner must not supply coupon evidence")
+        } catch ComparisonStoreError.operationConflict { }
+    }
+
     func testNoStockReceiptKeepsUnknownTotalAndPackRequiresIndividualReview() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

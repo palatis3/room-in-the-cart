@@ -145,6 +145,38 @@
         }
       }
     },
+    "Clear receipt link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear receipt link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar vínculo con el recibo"
+          }
+        }
+      }
+    },
+    "Clear this coupon’s receipt link?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear this coupon’s receipt link?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitar el vínculo de este cupón con el recibo?"
+          }
+        }
+      }
+    },
     "Clipped": {
       "localizations": {
         "en": {
@@ -349,6 +381,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encontré el descuento impreso"
+          }
+        }
+      }
+    },
+    "Include printed coupon line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include printed coupon line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir la línea impresa del cupón"
           }
         }
       }
@@ -593,6 +641,22 @@
         }
       }
     },
+    "Pinned coupon terms": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned coupon terms"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condiciones de los cupones fijados"
+          }
+        }
+      }
+    },
     "Preview putting it back": {
       "localizations": {
         "en": {
@@ -673,6 +737,22 @@
         }
       }
     },
+    "Printed coupon line included": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed coupon line included"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea impresa del cupón incluida"
+          }
+        }
+      }
+    },
     "Printed discount line": {
       "localizations": {
         "en": {
@@ -749,6 +829,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cupón en el recibo"
+          }
+        }
+      }
+    },
+    "Receipt dated %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt dated %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibo del %@"
           }
         }
       }
@@ -897,6 +993,22 @@
         }
       }
     },
+    "Select the purchased item and include its printed coupon line. Save the receipt, then review the discount.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the purchased item and include its printed coupon line. Save the receipt, then review the discount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona el artículo comprado e incluye la línea impresa del cupón. Guarda el recibo y luego revisa el descuento."
+          }
+        }
+      }
+    },
     "Set aside for a protected need": {
       "localizations": {
         "en": {
@@ -929,6 +1041,22 @@
         }
       }
     },
+    "The coupon stays pinned. You can link it to another saved purchase.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The coupon stays pinned. You can link it to another saved purchase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cupón seguirá fijado. Puedes vincularlo a otra compra guardada."
+          }
+        }
+      }
+    },
     "The item stays on your list for another trip.": {
       "localizations": {
         "en": {
@@ -945,6 +1073,38 @@
         }
       }
     },
+    "The saved receipt changed. Reopen the purchase to review its lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved receipt changed. Reopen the purchase to review its lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El recibo guardado cambió. Vuelve a abrir la compra para revisar sus líneas."
+          }
+        }
+      }
+    },
+    "This coupon is linked to another purchase. Clear its receipt link to review this purchase.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This coupon is linked to another purchase. Clear its receipt link to review this purchase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este cupón está vinculado a otra compra. Quita el vínculo con su recibo para revisar esta compra."
+          }
+        }
+      }
+    },
     "This pick stays unpriced until you enter the measured amount.": {
       "localizations": {
         "en": {
@@ -957,6 +1117,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "El producto seguirá sin precio hasta que ingreses la cantidad medida."
+          }
+        }
+      }
+    },
+    "This purchase has no saved item line to check against a coupon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This purchase has no saved item line to check against a coupon."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra no tiene una línea de artículo guardada para cotejar con un cupón."
+          }
+        }
+      }
+    },
+    "To add a printed coupon line, review the receipt again and include that line in this purchase.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To add a printed coupon line, review the receipt again and include that line in this purchase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para agregar una línea impresa de cupón, vuelve a revisar el recibo e incluye esa línea en esta compra."
           }
         }
       }

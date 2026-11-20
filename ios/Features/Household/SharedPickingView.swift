@@ -32,6 +32,9 @@ private struct SharedPickingView: View {
     }
     var body: some View {
         WorkingForm {
+            #if DEBUG && targetEnvironment(simulator)
+            HouseholdTripOfflineControl()
+            #endif
             if let page = model.page, page.expiry.map({ $0 > Date() }) ?? true {
                 if page.managed {
                     Section(householdTripText("Share household rows")) {
@@ -123,7 +126,8 @@ private struct SharedPickingRowView: View {
         Section {
             Text(verbatim: row.label).font(.headline)
                 .accessibilityIdentifier("household.picking.row." + row.id.uuidString.lowercased())
-            LabeledContent(householdTripText("Picked"), value: row.picked.formatted() + " / " + row.packs.formatted())
+            LabeledContent(householdTripText("Packs picked"), value: String(format: householdTripText("%lld of %lld"),
+                locale: .current, Int64(row.picked), Int64(row.packs)))
             if let actor = row.claimedByLabel { LabeledContent(householdTripText("Claimed by"), value: actor) }
             else if row.remaining > 0 { Text(householdTripText("Unclaimed")) }
             if let actor = row.lastActorLabel { LabeledContent(householdTripText("Last changed by"), value: actor) }

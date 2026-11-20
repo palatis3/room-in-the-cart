@@ -39,6 +39,7 @@ private final class HouseholdTripFixtureProtocol: URLProtocol, @unchecked Sendab
     private static var actor: HouseholdTripFixtureActor?
     private static var offline = false
     static func bind(_ value: HouseholdTripFixtureActor) { lock.withLock { actor = value; offline = false } }
+    static var isOffline: Bool { lock.withLock { offline } }
     static func setOffline(_ value: Bool) { lock.withLock { offline = value } }
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -103,24 +104,27 @@ private final class HouseholdTripFixtureProtocol: URLProtocol, @unchecked Sendab
     }
 }
 
+struct HouseholdTripOfflineControl: View {
+    @State private var offline = HouseholdTripFixtureProtocol.isOffline
+
+    var body: some View {
+        if ProcessInfo.processInfo.arguments.contains("--trip-offline-controls") {
+            Toggle("Fixture offline", isOn: $offline)
+                .accessibilityIdentifier("fixture.trip.offline")
+                .onChange(of: offline) { _, value in HouseholdTripFixtureProtocol.setOffline(value) }
+        }
+    }
+}
+
 struct HouseholdTripFixture: View {
     let notificationDelegate: SurfaceNotificationDelegate
     @State private var household: HouseholdModel?
     @State private var failed = false
-    @State private var offline = false
 
     var body: some View {
         Group {
             if let household {
                 GroceryWindow(notificationDelegate: notificationDelegate, household: household)
-                    .safeAreaInset(edge: .top, spacing: 0) {
-                        if ProcessInfo.processInfo.arguments.contains("--trip-offline-controls") {
-                            Toggle("Fixture offline", isOn: $offline)
-                                .accessibilityIdentifier("fixture.trip.offline")
-                                .onChange(of: offline) { _, value in HouseholdTripFixtureProtocol.setOffline(value) }
-                                .padding(.horizontal).background(.bar)
-                        }
-                    }
             } else if failed {
                 ContentUnavailableView {
                     Label("Local trip fixture unavailable", systemImage: "network.slash")

@@ -123,8 +123,11 @@ private struct PantryShelfLocationDetail: View {
     @State private var photo: PantryShelfPhoto?
     @State private var loaded = false
     @State private var failed = false
-    @State private var editing = false
-    @State private var expected: UUID?
+    private struct PhotoEdit: Identifiable {
+        let id = UUID()
+        let previousPhotoID: UUID?
+    }
+    @State private var editing: PhotoEdit?
     @State private var deleting: UUID?
     @State private var inspecting: UUID?
     @State private var status: String?
@@ -147,8 +150,7 @@ private struct PantryShelfLocationDetail: View {
             }
             if loaded && !failed {
                 Button {
-                    expected = photo?.id
-                    editing = true
+                    editing = PhotoEdit(previousPhotoID: photo?.id)
                 } label: {
                     Label(shelfPhotoText(photo == nil ? "Add shelf photo" : "Replace photo"), systemImage: "photo.badge.plus")
                         .frame(minHeight: 44)
@@ -163,10 +165,10 @@ private struct PantryShelfLocationDetail: View {
         }
         .workingSurface()
         .task(id: store.generation) { refresh() }
-        .sheet(isPresented: $editing) {
+        .sheet(item: $editing) { edit in
             NavigationStack {
-                PantryShelfPhotoEditor(access: access, location: location, expected: expected) {
-                    editing = false
+                PantryShelfPhotoEditor(access: access, location: location, expected: edit.previousPhotoID) {
+                    editing = nil
                     report("Shelf photo saved.")
                 }
             }
