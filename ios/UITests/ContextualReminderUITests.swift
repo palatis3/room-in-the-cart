@@ -102,7 +102,11 @@ import XCTest
         enterCheckoutFields()
         enableSwitch("Retailer total already includes all charges")
         let total = app.textFields["Inclusive total"]
-        fill("3.00", into: total)
+        tap(total)
+        app.typeText("3.00")
+        // Typing temporarily hides the decimal keypad and moves Done towards the tab bar.
+        XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: "Done"))
+        app.buttons["Done"].tap()
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         XCTAssertEqual(try total.snapshot().value as? String, "3.00")
         tap(app.buttons["Save and evaluate checkout"])

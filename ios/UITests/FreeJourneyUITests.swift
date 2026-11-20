@@ -2330,7 +2330,7 @@ import XCTest
                 let done = app.buttons.matching(identifier: doneIdentifier).firstMatch
                 XCTAssertTrue((done.exists || done.waitForExistence(timeout: 5)) && done.isHittable, "Done must be reachable from \(name)")
                 if doneIdentifier == "ledger.pack.keyboardDone" {
-                    guard waitForDoneAboveKeyboard(identifier: doneIdentifier) else {
+                    guard app.waitForDoneAboveKeyboard(identifier: doneIdentifier) else {
                         XCTFail("The pack editor's Done button did not settle above the keyboard for \(name)")
                         return
                     }
@@ -2638,7 +2638,7 @@ import XCTest
             if done.exists && done.isHittable {
                 // Synthesized typing briefly hides the keyboard. Its Return key can
                 // occupy the former position of Done as the keyboard slides back.
-                guard waitForDoneAboveKeyboard(identifier: "Done") else {
+                guard app.waitForDoneAboveKeyboard(identifier: "Done") else {
                     XCTFail("The dinner editor’s Done button did not settle above the visible keyboard.")
                     return
                 }
@@ -4208,29 +4208,6 @@ import XCTest
         }
         close.tap()
     }
-    private func waitForDoneAboveKeyboard(identifier: String) -> Bool {
-        var lastButton: CGRect?
-        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard let screen = try? self.app.snapshot() else { return false }
-            var elements = screen.children
-            var keyboard = CGRect.null
-            var button = CGRect.null
-            while let element = elements.popLast() {
-                if element.elementType == .keyboard { keyboard = element.frame }
-                if element.elementType == .button && element.identifier == identifier { button = element.frame }
-                elements.append(contentsOf: element.children)
-            }
-            guard !keyboard.isEmpty, screen.frame.intersects(keyboard), !button.isEmpty,
-                  button.maxY <= keyboard.minY + 1 else {
-                lastButton = nil
-                return false
-            }
-            defer { lastButton = button }
-            return lastButton == button
-        }, object: nil)
-        return XCTWaiter.wait(for: [settled], timeout: 8) == .completed
-    }
-
     private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
     private func enableSwitch(_ label: String, diagnosticName: String? = nil, position: ((XCUIElement) -> Void)? = nil) {
         let control = app.switches[label]

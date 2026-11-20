@@ -225,6 +225,29 @@ extension XCUIApplication {
         return tool
     }
 
+    func waitForDoneAboveKeyboard(identifier: String) -> Bool {
+        var lastButton: CGRect?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let screen = try? self.snapshot() else { return false }
+            var elements = screen.children
+            var keyboard = CGRect.null
+            var button = CGRect.null
+            while let element = elements.popLast() {
+                if element.elementType == .keyboard { keyboard = element.frame }
+                if element.elementType == .button && element.identifier == identifier { button = element.frame }
+                elements.append(contentsOf: element.children)
+            }
+            guard !keyboard.isEmpty, screen.frame.intersects(keyboard), !button.isEmpty,
+                  button.maxY <= keyboard.minY + 1 else {
+                lastButton = nil
+                return false
+            }
+            defer { lastButton = button }
+            return lastButton == button
+        }, object: nil)
+        return XCTWaiter.wait(for: [settled], timeout: 8) == .completed
+    }
+
     /// UIKit may retain a dismissed keyboard below the viewport. Measure one
     /// snapshot instead of waiting for that offscreen accessibility node to vanish.
     func waitForKeyboardDismissal(doneIdentifier: String, timeout: TimeInterval = 5,
