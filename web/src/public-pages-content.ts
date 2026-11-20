@@ -253,6 +253,10 @@ export const publicPages = {
             "es": "Los registros locales permanecen hasta que cambies o elimines su alcance. Los archivos de recuperación y mensajes que guardas o compartes son copias separadas. Este inventario del código no establece la retención de copias de seguridad de proveedores ni un plazo de retención en producción."
           },
           {
+            "en": "If Apple requires an age range and the regional check is enabled, the app asks whether you’ll share it. The app uses the response on this iPhone to decide whether to open your workspace. It keeps the check result in memory and sends no age range to your household.",
+            "es": "Si Apple requiere un rango de edad y la comprobación regional está activada, la app te pregunta si quieres compartirlo. La app usa la respuesta en este iPhone para decidir si abre tu espacio de trabajo. Mantiene el resultado de la comprobación en memoria y no envía el rango de edad a tu hogar."
+          },
+          {
             "en": "You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names.",
             "es": "Puedes consultar la guía FoodKeeper del USDA sin conexión. En Mi despensa puedes guardar una fecha para revisar la calidad de un alimento y activar un recordatorio diario. El recordatorio puede aparecer en la pantalla bloqueada. Te pide que abras Mi despensa y omite los nombres de los alimentos."
           }
@@ -307,6 +311,10 @@ export const publicPages = {
           {
             "en": "The implemented service uses Supabase for identity and PostgreSQL storage, Vercel for staging hosting, and Apple for subscription payment and verification. The app does not receive payment card or bank account numbers. Final provider settings and production retention require operator review.",
             "es": "El servicio implementado usa Supabase para identidad y almacenamiento PostgreSQL, Vercel para alojamiento de pruebas y Apple para pagos y verificación de suscripciones. La app no recibe números de tarjetas de pago ni de cuentas bancarias. La configuración final de proveedores y la retención en producción requieren revisión del operador."
+          },
+          {
+            "en": "If Apple tells Room in the Cart that a guardian withdrew permission for an App Store download, the service saves a receipt to recognize repeated notices. The receipt contains the notice ID, the time Apple signed it and whether it came from the live or test App Store. It contains no age range, download ID or household account.",
+            "es": "Si Apple avisa a Room in the Cart de que un tutor retiró el permiso para descargar la app del App Store, el servicio guarda un comprobante para reconocer los avisos repetidos. El comprobante contiene el identificador del aviso, la hora en que Apple lo firmó y si procede del App Store o de su entorno de pruebas. No contiene el rango de edad ni identifica la descarga o la cuenta del hogar."
           },
           {
             "en": "A cook link exposes only its granted fields. A static message or exported file is a separate copy under the recipient’s control. Review the destination and private fields before sharing.",
@@ -408,6 +416,10 @@ export const publicPages = {
           "es": "Información de soporte"
         },
         "paragraphs": [
+          {
+            "en": "When Resend delivers a sign-in code, it processes the recipient’s email address and the message containing the code. If you email support, Cloudflare Email Routing forwards your address, message and any attachments to the operator’s Gmail inbox so the operator can respond.",
+            "es": "Cuando Resend entrega un código de inicio de sesión, procesa la dirección de correo del destinatario y el mensaje que contiene el código. Si escribes a soporte, Cloudflare Email Routing reenvía tu dirección, el mensaje y los archivos que adjuntes al buzón de Gmail del operador para que pueda responderte."
+          },
           {
             "en": "The native Support screen previews a summary containing only app version/build, iOS version, interface language, build environment and configuration-presence booleans. Nothing is sent automatically. Support does not need a private recovery file by default.",
             "es": "La pantalla de Soporte nativa muestra un resumen que contiene solo la versión y compilación de la app, la versión de iOS, el idioma de la interfaz, el entorno de compilación y valores que indican si existe configuración. No se envía nada automáticamente. Soporte no necesita un archivo privado de recuperación de forma predeterminada."
