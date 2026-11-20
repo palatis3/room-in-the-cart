@@ -331,7 +331,13 @@ import XCTest
         let x = besideFields ? area.minX : area.midX
         let start = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? low : high) - bounds.minY))
         let end = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? high : low) - bounds.minY))
-        start.press(forDuration: 0.05, thenDragTo: end)
+        if besideFields {
+            // With the keyboard up, a flick can carry the next price field
+            // past the navigation bar. Stop the drag before lifting the finger.
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        } else {
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
     }
     private func assertText(_ text: String) {
         let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
