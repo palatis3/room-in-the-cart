@@ -27,4 +27,28 @@ The source now includes bilingual public information pages for those four paths 
 
 Run `python3 scripts/test_app_configuration.py` for environment-isolation and metadata checks. After building, run `python3 scripts/check_built_app.py /absolute/path/RoomInTheCart.app --configuration Release`. To verify an iPhone device archive, pass its `.xcarchive` path and the matching configuration to the same command. It checks the app and embedded extensions against their archived crash symbols. For a production distribution candidate, add `--require-release-metadata`. It requires the production identity URL, publishable client key, household service URL, enabled email-code sign-in, subscription product ID, and public Support, Privacy and Terms URLs. The same check runs before GitHub allocates native runners for release qualification. Verify sign-in, household access, policy publication and StoreKit purchases against their live services before distribution.
 
+## Signed App Store archive and local IPA
+
+Venture House Group LLC uses team `SP7Z9RNC76`. The registered host bundle ID is `dev.roominthecart.app`. The widget and share extensions append `.widget` and `.share`. The host uses both App Groups. Each extension has access to its own group. The distribution profiles grant complete data protection.
+
+On the signing Mac, install the organization's Apple Distribution identity and the three App Store profiles named in [AppStoreExport.plist](AppStoreExport.plist). Download existing profiles in Xcode Settings under Apple Accounts, then select the organization and choose Download Manual Profiles. From the repository root, create the archive and check the production configuration before exporting the IPA locally.
+
+```sh
+set -e
+archive=".build/app-store/RoomInTheCart.xcarchive"
+mkdir -p .build/app-store
+xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release \
+  -configuration Release -destination 'generic/platform=iOS' \
+  -xcconfig config/AppStoreDistribution.xcconfig \
+  -archivePath "$archive" archive
+python3 scripts/check_built_app.py "$archive" --configuration Release \
+  --require-distribution-signing --require-release-metadata
+xcodebuild -exportArchive -archivePath "$archive" \
+  -exportOptionsPlist config/AppStoreExport.plist -exportPath .build/app-store/export
+```
+
+The export uses the version and build number in the archive. Both signing configuration files contain public identifiers and profile names. The private signing key stays in the signing Mac's keychain.
+
+To check the exported signature, extract the IPA with `ditto -x -k` and run the same checker against `Payload/RoomInTheCart.app`. The signed app and each extension must retain their App Groups and data-protection entitlements.
+
 With the Node version from `.node-version` on your path, run `python3 scripts/check_native_backend.py Staging` or `python3 scripts/check_native_backend.py Release` to check the selected build’s public configuration against the deployed Supabase Auth settings, advertised signing keys, service health and email-sign-in availability. This read-only probe sends no email and creates no records. Exercise code delivery, session refresh and a household save and reopen on the signed candidate as a separate check.

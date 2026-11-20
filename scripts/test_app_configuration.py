@@ -10,10 +10,26 @@ import xml.etree.ElementTree as ET
 
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
                                load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
-from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app
+from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app, verify_distribution_entitlements
 
 
 class AppConfigurationTests(unittest.TestCase):
+
+    def test_app_store_archive_and_export_use_the_same_manual_profiles(self):
+        folder = Path(__file__).resolve().parents[1] / "config"
+        options = plistlib.loads((folder / "AppStoreExport.plist").read_bytes())
+        settings = dict(line.split(" = ", 1) for line in (folder / "AppStoreDistribution.xcconfig").read_text().splitlines())
+        self.assertEqual(options["destination"], "export")
+        self.assertEqual(options["method"], "app-store-connect")
+        self.assertIs(options["manageAppVersionAndBuildNumber"], False)
+        self.assertEqual(options["signingStyle"], settings["CODE_SIGN_STYLE"].lower())
+        self.assertEqual(options["signingCertificate"], settings["CODE_SIGN_IDENTITY"])
+        self.assertEqual(options["teamID"], settings["DEVELOPMENT_TEAM"])
+        self.assertEqual(settings["PROVISIONING_PROFILE_SPECIFIER"], "$(RITC_PROFILE_$(TARGET_NAME))")
+        self.assertEqual(options["provisioningProfiles"], {
+            "dev.roominthecart.app" + suffix: settings["RITC_PROFILE_RoomInTheCart" + target]
+            for suffix, target in (("", ""), (".share", "Share"), (".widget", "Widget"))
+        })
 
     def test_staging_scheme_keeps_tests_profiles_and_archives_in_the_staging_environment(self):
         schemes = Path(__file__).resolve().parents[1] / "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes"
@@ -389,6 +405,24 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, f"Missing {language} permission purpose: {key}"):
                     verify_built_app(self.app, "Release")
                 catalog.write_bytes(original)
+
+    def test_distribution_entitlements_must_carry_only_the_products_own_groups(self):
+        team, bundle_id = "SP7Z9RNC76", "dev.roominthecart.app.widget"
+        widget, share = "group.dev.roominthecart.app.widget", "group.dev.roominthecart.app.share-inbox"
+        values = {"application-identifier": f"{team}.{bundle_id}", "com.apple.developer.team-identifier": team,
+                  "com.apple.developer.default-data-protection": "NSFileProtectionComplete",
+                  "com.apple.security.application-groups": [widget], "get-task-allow": False}
+        verify_distribution_entitlements(values, bundle_id, team, [widget])
+        for key, replacement, message in (
+            ("com.apple.security.application-groups", None, "Wrong signed App Groups"),
+            ("com.apple.security.application-groups", [widget, share], "Wrong signed App Groups"),
+            ("com.apple.developer.default-data-protection", None, "Missing complete data protection"),
+            ("com.apple.developer.team-identifier", "OTHER", "Wrong signing team"),
+            ("application-identifier", f"{team}.dev.roominthecart.app", "Wrong signed app identifier"),
+            ("get-task-allow", True, "Debugging enabled"),
+        ):
+            with self.subTest(key=key, replacement=replacement), self.assertRaisesRegex(ValueError, message):
+                verify_distribution_entitlements({**values, key: replacement}, bundle_id, team, [widget])
 
     def test_rejects_missing_executables_and_assets_even_with_python_optimization(self):
         for executable in (self.app / "RoomInTheCart", self.widget / "RoomInTheCartWidget",
