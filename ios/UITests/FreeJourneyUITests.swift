@@ -483,11 +483,18 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
-    func testPrivateLotPrintedWordingCanBeReviewedReopenedInSpanishAndRemoved() {
+    func testPrivateLotPrintedWordingCanBeReviewedReopenedInSpanishAndRemoved() throws {
+        func detailRow(_ title: String, showing value: String) -> XCUIElement {
+            app.staticTexts.matching(NSPredicate(format: "(label BEGINSWITH %@ AND label CONTAINS %@) OR (label == %@ AND value CONTAINS %@)",
+                                                  title + ", ", value, title, value)).firstMatch
+        }
+
         launch(reset: true)
-        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
-        tap(app.buttons["pantry.add"])
+        let addFood = app.buttons["pantry.add"]
+        XCTAssertTrue(addFood.waitForExistence(timeout: 10))
+        tapVisibleFormRow(addFood, marker: "ADD_LOT_FOR_PRINTED_DATE")
         fill("Green lentils", into: "pantry.foodName")
         fill("2", into: "pantry.amount")
         tap(app.buttons["pantry.review"])
@@ -499,21 +506,55 @@ import XCTest
         XCTAssertTrue(app.buttons["Photograph the printed date"].exists)
         let wording = "BEST BEFORE 03/04"
         fill(wording, into: "packageDate.wording")
-        XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
+        let fullDate = app.switches["packageDate.hasDay"]
+        XCTAssertEqual(fullDate.value as? String, "0")
         tap(app.buttons["packageDate.save"])
-        XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
+        let detail = app.navigationBars["Green lentils"]
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        reveal(detailRow("Original printed wording", showing: wording))
+
+        tap(app.buttons["pantry.packageDate"])
+        XCTAssertEqual(editableElement("packageDate.wording").value as? String, wording)
+        reveal(fullDate)
+        XCTAssertEqual(fullDate.value as? String, "0", "Saving the wording alone must leave the calendar date unset")
+        tap(app.buttons["March 4"])
+        let confirmYear = app.buttons["packageDate.confirmYear"]
+        XCTAssertFalse(confirmYear.exists)
+        fill("2028", into: "packageDate.year")
+        tap(confirmYear)
+        XCTAssertEqual(fullDate.value as? String, "1")
+        tap(app.buttons["packageDate.save"])
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        reveal(detailRow("Printed package date", showing: "March 4, 2028"))
+
         app.terminate()
         launch(reset: false, spanish: true)
-        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.tabBars.buttons["Despensa"])
         tap(lot)
-        reveal(app.staticTexts[wording])
+        let spanishWording = detailRow("Texto impreso original", showing: wording)
+        let day = try XCTUnwrap(DateComponents(calendar: Calendar(identifier: .gregorian), timeZone: .gmt,
+                                               year: 2028, month: 3, day: 4).date)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "es_US")
+        formatter.timeZone = .gmt
+        formatter.dateStyle = .full
+        let spanishDate = detailRow("Fecha impresa en el envase", showing: formatter.string(from: day))
+        reveal(spanishWording)
+        reveal(spanishDate)
         tap(app.buttons["pantry.packageDate"])
         XCTAssertTrue(app.navigationBars["Fecha impresa en el envase"].waitForExistence(timeout: 8))
         XCTAssertEqual(editableElement("packageDate.wording").value as? String, wording)
+        reveal(fullDate)
+        XCTAssertEqual(fullDate.value as? String, "1")
         tap(app.buttons["packageDate.remove"])
-        XCTAssertTrue(app.navigationBars["Green lentils"].waitForExistence(timeout: 8))
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
         reveal(app.buttons["pantry.packageDate"])
-        XCTAssertFalse(app.staticTexts[wording].exists)
+        XCTAssertFalse(spanishWording.exists)
+        XCTAssertFalse(spanishDate.exists)
+        tap(app.buttons["pantry.packageDate"])
+        XCTAssertFalse(app.buttons["packageDate.remove"].exists)
+        reveal(fullDate)
+        XCTAssertEqual(fullDate.value as? String, "0")
     }
 
     func testPantryManualCheckDateRemainsAvailableWhenDigestPermissionIsDenied() {
