@@ -3692,8 +3692,12 @@ import XCTest
         tap(app.tabBars.buttons["Dinners"])
         tap(element("dinnerStartPickup"))
         fill("Weekly groceries", into: "ledgerShopName")
-        tap(element("ledgerCreateShop"))
-        tap(element("dinnerManual"))
+        let createPickup = app.buttons["ledgerCreateShop"]
+        tap(createPickup)
+        XCTAssertTrue(createPickup.waitForNonExistence(timeout: 10), "Saving the pickup must dismiss its sheet.")
+        let manualDinner = app.buttons["dinnerManual"]
+        reveal(manualDinner, initiallyUpward: false)
+        manualDinner.tap()
         fill("Rice supper", into: "ledgerDinnerTitle")
         fill("2", into: "ledgerDinnerServings", replacing: true)
         fill("Rice", into: "Ingredient name")
