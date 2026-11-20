@@ -38,7 +38,11 @@ struct PickupSettlementView: View {
     @State private var nextShopRequested = false
     @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
-        Form {
+        ScrollViewReader { proxy in settlementForm(proxy) }
+    }
+
+    private func settlementForm(_ proxy: ScrollViewProxy) -> some View {
+        WorkingForm {
             PickupSaveStatus(model: model)
             if let summary = try? model.journey?.settlement.summary(asOf: model.stockReviewDate) {
                 Section(pTr("Actual money · separate from food")) {
@@ -78,7 +82,7 @@ struct PickupSettlementView: View {
                     }
                     if let selectedHold { settlementFact(pTr("Amount"), value: pMoney(selectedHold.amount)) }
                 } else {
-                    PickupEvidenceField(title: pTr("Amount"), amount: $amount).focused($field, equals: .amount)
+                    PickupEvidenceField(title: pTr("Amount"), amount: $amount, focus: $field, field: .amount)
                 }
                 TextField(pTr("Unique receipt or transaction evidence ID"), text: $evidence)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .evidence)
@@ -142,7 +146,11 @@ struct PickupSettlementView: View {
                 if let closed = model.journey?.closedAt { Text("\(pTr("Closed")): \(closed.formatted())") }
                 Button(pTr("Review next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused)
             }
-            if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
+            if let journey = model.journey {
+                PickupFeedbackSection(model: model, journey: journey) {
+                    proxy.scrollTo(PickupFeedbackSection.stopOfferingRow, anchor: .bottom)
+                }
+            }
         }.navigationTitle(pTr("Close the pickup"))
         .keyboardDoneAction(visible: field != nil, title: pTr("Done"), identifier: "pickup.settlement.doneTyping") { field = nil }
         .alert(pTr("Evidence not saved"), isPresented: Binding(
@@ -246,7 +254,7 @@ private struct PickupNextShopSelection: View {
 
     var body: some View {
         let remaining = try? source.nextShopMealNeeds(closing: choices, at: model.stockReviewDate)
-        return Form {
+        return WorkingForm {
             PickupSaveStatus(model: model)
             Text(pTr("Review each carryover. The new draft clears old prices, quotes, offers and checkout status. Prior history stays intact."))
             ForEach(source.deferred.filter { $0.status == "review" }) { need in
@@ -306,7 +314,7 @@ private struct PickupNextShopDraft: View {
     @Environment(\.pickupLedger) private var ledger
 
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             Text(pTr("Fresh draft saved. Review its store, slot and prices before checkout."))
             if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }

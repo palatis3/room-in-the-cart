@@ -154,6 +154,28 @@ import HouseholdClient
         XCTAssertEqual(incoming.selection, .shop); XCTAssertTrue(incoming.recordsPath.isEmpty)
         XCTAssertEqual(f.routes.load(), .empty)
     }
+    func testThreeTabCheckpointMigratesAndPantrySelectionPreservesIndependentHistory() async throws {
+        let fixture = try await fixture()
+        let record = try await saveComparison(fixture)
+        let route = try comparisonRoute(fixture, record)
+        let previous = NavigationSnapshot(version: 1, selection: .records, shop: [], dinners: [], records: [route])
+        let data = try JSONEncoder().encode(previous)
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        legacy.removeValue(forKey: "pantry")
+        try JSONSerialization.data(withJSONObject: legacy).write(to: fixture.directory.appendingPathComponent("navigation.json"))
+        let navigation = router(fixture)
+        XCTAssertEqual(AdultTab.allCases, [.shop, .pantry, .dinners, .records])
+        XCTAssertEqual(navigation.selection, .records)
+        XCTAssertEqual(navigation.recordsPath, [route])
+        XCTAssertEqual(navigation.pantryPath, [])
+        navigation.select(.pantry)
+        let relaunched = router(fixture)
+        XCTAssertEqual(relaunched.selection, .pantry)
+        XCTAssertEqual(relaunched.recordsPath, [route])
+        relaunched.preferIncomingLink()
+        XCTAssertEqual(fixture.routes.load(), .empty)
+    }
+
     func testMissingMalformedAndFutureNavigationFilesUseOrdinaryShopRoot() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

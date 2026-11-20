@@ -28,7 +28,7 @@ struct DinnerOccurrenceView: View {
                     DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)
                 } else { occurrenceForm }
             case .failure where draftSwapUndo != nil:
-                Form {
+                WorkingForm {
                     if let receipt = draftSwapUndo {
                         DinnerSwapUndoSection(model: model, receipt: receipt)
                     }
@@ -404,7 +404,7 @@ struct DinnerGuestsView: View {
         } catch { model.report(error) }
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if groups.isEmpty {
                 Section { Text(dinnerText("This dinner has no named serving groups. Use manual quantity editing or choose a dinner with reviewed groups.")) }
             } else {
@@ -505,7 +505,7 @@ struct DinnerNoteView: View {
     }
 
     private func editor(for identity: DinnerFeatureModel.EditorIdentity) -> some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(dinnerDay(editingDay))
                 Picker(dinnerText("Note type"), selection: $kind) {
@@ -580,7 +580,7 @@ struct DinnerReservationView: View {
     }
 
     private var form: some View {
-        Form {
+        WorkingForm {
             Section {
                 TextField(dinnerText("Food name"), text: $name).focused($field, equals: .food)
                 TextField(dinnerText("Protected amount"), text: $amount).focused($field, equals: .amount)

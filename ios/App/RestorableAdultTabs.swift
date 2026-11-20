@@ -10,6 +10,10 @@ struct RestorableAdultTabs: View {
             NavigationStack(path: path(.shop)) {
                 ShopView().navigationDestination(for: RestorableDestination.self) { RestoredDestinationView(destination: $0) }
             }.tabItem { Label(tr("Shop"), systemImage: "cart") }.tag(AdultTab.shop)
+            NavigationStack(path: path(.pantry)) {
+                AdultPantryTab().settingsButton()
+                    .navigationDestination(for: RestorableDestination.self) { RestoredDestinationView(destination: $0) }
+            }.tabItem { Label(quickGroceryText("Pantry"), systemImage: "cabinet") }.tag(AdultTab.pantry)
             NavigationStack(path: path(.dinners)) {
                 DinnerPlanningEntry().settingsButton()
                     .navigationDestination(for: RestorableDestination.self) { RestoredDestinationView(destination: $0) }
@@ -32,8 +36,7 @@ struct RestoredDestinationView: View {
     let destination: RestorableDestination
     var body: some View {
         Group {
-            if access.unlocked,
-               household.projection.map({ ["shopper", "organizer"].contains($0.role) }) ?? true {
+            if access.unlocked, !household.usesScopedHouseholdRoot {
                 switch destination {
                 case .shoppingList(let actor, let workspace, let shop):
                     if actor == access.localActorID, ledger.ready, !ledger.hasPendingLedgerDeletion,

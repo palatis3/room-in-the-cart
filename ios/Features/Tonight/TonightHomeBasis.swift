@@ -35,9 +35,24 @@ struct TonightPlannedDinners: Equatable {
 
     static func current(workspace: LedgerWorkspace, ledgerID: UUID, journeys: [PickupJourney],
                         now: Date, zone: TimeZone) throws -> Self {
+        let titles = try meals(workspace: workspace, ledgerID: ledgerID, journeys: journeys, now: now, zone: zone).map(\.title)
+        guard titles.count == 1 else { return Self(count: titles.count, title: nil) }
+        let title = String(titles[0].prefix(64))
+        let displayable = !title.isEmpty && title.utf8.count <= 256 && title.rangeOfCharacter(from: .controlCharacters) == nil
+        return Self(count: 1, title: displayable ? title : nil)
+    }
+
+    struct PlanRow: Identifiable {
+        let id: UUID
+        let title: String
+        let pickup: String
+    }
+
+    static func meals(workspace: LedgerWorkspace, ledgerID: UUID, journeys: [PickupJourney],
+                      now: Date, zone: TimeZone) throws -> [PlanRow] {
         let day = try MealDay(date: now, timeZoneIdentifier: zone.identifier)
         let away = Set(workspace.dinnerPlanning.weekNotes.filter { $0.kind == .away && $0.day.hasSameCivilDate(as: day) }.map(\.shopID))
-        var titles: [String] = []
+        var rows: [PlanRow] = []
         for shop in workspace.shops where !away.contains(shop.id) {
             let journey = journeys.first { $0.id == shop.id }
             var recovered = Set<UUID>()
@@ -50,13 +65,10 @@ struct TonightPlannedDinners: Equatable {
             let current = try DinnerCurrentMeals.project(shop: shop, definitions: definitions, recovered: recovered)
             for meal in current.on(day) where !meal.isHidden {
                 if case let .original(original) = meal, original.carryover != nil { continue }
-                titles.append(meal.title)
+                rows.append(PlanRow(id: meal.id, title: meal.title, pickup: shop.title))
             }
         }
-        guard titles.count == 1 else { return Self(count: titles.count, title: nil) }
-        let title = String(titles[0].prefix(64))
-        let displayable = !title.isEmpty && title.utf8.count <= 256 && title.rangeOfCharacter(from: .controlCharacters) == nil
-        return Self(count: 1, title: displayable ? title : nil)
+        return rows
     }
 }
 

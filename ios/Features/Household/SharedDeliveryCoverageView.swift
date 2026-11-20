@@ -172,7 +172,7 @@ struct SharedDeliveryCookView: View {
     private var canReview: Bool { allowed && model.pending == nil && !model.busy && !stale && !checking && scenePhase == .active && original != nil }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if allowed && !stale {
                 Picker(pTr("Recipient language"), selection: $language) {
                     Text(pTr("English (US)")).tag("en-US")

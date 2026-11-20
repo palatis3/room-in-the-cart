@@ -32,7 +32,7 @@ struct RequestPurchasesView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(match.request.originalItem).font(.headline)
                                 if let author = match.request.authorAlias { Text(author) }
-                                Text(purchaseStatus(match.request.purchaseOutcome)).foregroundStyle(.secondary)
+                                Text(purchaseStatus(match.request.purchaseOutcome)).foregroundStyle(Theme.secondary)
                                 if inbox.supportsPurchaseAttribution {
                                     PurchaseAttributionLabels(request: match.request)
                                 }
@@ -121,7 +121,7 @@ struct DuplicatePurchasedRequestSection: View {
                                 if let packs = match.line.packs {
                                     LabeledContent(ht("Packs in the placed order"), value: packs.formatted())
                                 }
-                                Text(purchaseStatus(source.purchaseOutcome)).foregroundStyle(.secondary)
+                                Text(purchaseStatus(source.purchaseOutcome)).foregroundStyle(Theme.secondary)
                                 Button(ht("Review as the same item")) {
                                     let target = ReviewedSameItemTarget.purchase(sourceRequestId: sourceID,
                                         sourceRequestRevision: source.revision, lineId: match.line.id,
@@ -185,7 +185,7 @@ private struct RequestPurchaseEditor: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section(ht("Received request")) {
                 Text(match.request.originalItem).font(.headline).accessibilityIdentifier("purchase.review.original")
                 LabeledContent(ht("Requested by"), value: match.request.authorAlias ?? ht("Unknown"))

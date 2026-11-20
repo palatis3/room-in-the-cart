@@ -64,7 +64,7 @@ struct DinnerScenarioEditor: View {
         let canonical = canonicalSupply
         let lots = canonical.map { DinnerLibraryPairings.unreservedLots(canonical: $0) }
             ?? (pickup.pantryIsActive ? [] : currentPickup.flatMap { try? DinnerLibraryPairings.unreservedLots($0, at: Date()) } ?? [])
-        Form {
+        WorkingForm {
             Section {
                 if dynamicTypeSize.isAccessibilitySize {
                     Text(dinnerText("Scenario evidence"))
@@ -248,8 +248,12 @@ private struct DinnerScenarioMealFields: View {
             ForEach(draft.meals) { meal in
                 let fields = dinnerDraftBinding(meal, in: $draft.meals)
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Commitment name"), text: fields.name)
-                    TextField(dinnerText("Required portions"), text: fields.portions)
+                    WorkingField(dinnerText("Commitment name")) {
+                        TextField(dinnerText("Commitment name"), text: fields.name, prompt: Text(verbatim: "—"))
+                    }
+                    WorkingField(dinnerText("Required portions")) {
+                        TextField(dinnerText("Required portions"), text: fields.portions, prompt: Text(verbatim: "—"))
+                    }
                     recipePicker(dinnerText("Current accepted recipe"), selection: fields.currentDinnerID)
                     recipePicker(dinnerText("Candidate accepted recipe"), selection: fields.candidateDinnerID)
                     Toggle(dinnerText("Protected commitment"), isOn: fields.protected)
@@ -327,7 +331,7 @@ private struct DinnerFoodEvidenceEditor: View {
     @Binding var food: DinnerFoodEvidenceDraft
     let usesFreePantryStock: Bool
     var body: some View {
-        Form {
+        WorkingForm {
             Section(dinnerText("Reviewed food identity")) {
                 TextField(dinnerText("Food name"), text: $food.name)
                 Text(dinnerText("Use this identity only for ingredients and packs you explicitly reviewed as the same food."))

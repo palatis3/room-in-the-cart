@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Replace recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar receta"
+          }
+        }
+      }
+    },
+    "Amount (required)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount (required)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad (obligatoria)"
+          }
+        }
+      }
+    },
+    "Enter an ingredient amount greater than zero.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an ingredient amount greater than zero."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce una cantidad mayor que cero para el ingrediente."
+          }
+        }
+      }
+    },
+    "Enter an amount greater than zero for %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an amount greater than zero for %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce una cantidad mayor que cero para %@."
+          }
+        }
+      }
+    },
     "Tonight": {
       "extractionState": "manual",
       "localizations": {
@@ -1225,19 +1293,36 @@
         }
       }
     },
-    "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged.": {
+    "Saving updates this recipe in your library.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saving replaces your Free reusable dinner. Previously chosen dinners and the original Records import stay unchanged."
+            "value": "Saving updates this recipe in your library."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Guardar reemplaza tu cena reutilizable del plan Free. No cambia las cenas ya elegidas ni la importación original de Registros."
+            "value": "Al guardar, se actualiza esta receta en tu biblioteca."
+          }
+        }
+      }
+    },
+    "Saving replaces “%@” as your Free reusable dinner. Previously chosen dinners and imported recipes keep their saved details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving replaces “%@” as your Free reusable dinner. Previously chosen dinners and imported recipes keep their saved details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si guardas la receta, reemplazará a «%@» como cena reutilizable del plan gratuito. Las cenas elegidas anteriormente y las recetas importadas conservarán sus datos guardados."
           }
         }
       }

@@ -2,6 +2,13 @@ import SwiftUI
 import Combine
 import CoreDomain
 
+extension HouseholdModel {
+    var usesScopedHouseholdRoot: Bool {
+        guard let scope = projection else { return false }
+        return scope.grantId != nil || !scope.enrolled || !["shopper", "organizer"].contains(scope.role)
+    }
+}
+
 @MainActor func contextualScope(_ household: HouseholdModel) -> ContextualHouseholdScope? {
     guard !household.locked, let identity = household.identity, let scope = household.projection,
           scope.enrolled, scope.grantId == nil, ["shopper", "organizer"].contains(scope.role) else { return nil }
@@ -83,7 +90,7 @@ private struct CookLiveViewEntry: View {
     @EnvironmentObject private var household: HouseholdModel
     @State private var approvedScope: ContextualHouseholdScope?
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(pTr("Your private cook note is not copied here. Choose the shared shop, then enter and review only the instructions this recipient should see."))
                 Text(pTr("Recipients can open the current view in a browser. Previously sent dated copies cannot be recalled."))
@@ -118,9 +125,10 @@ struct ContextualDinnerFeature: View {
     let destination: ContextualDinnerDestination
     init(ledger: LedgerModel, destination: ContextualDinnerDestination,
          access: @escaping DinnerFeatureModel.AccessProvider, phase: @escaping (UUID) -> BasketPhase,
-         runtimeChanges: AnyPublisher<Void, Never>) {
+         runtimeChanges: AnyPublisher<Void, Never>, milestoneAccess: @escaping () -> Bool) {
         self.destination = destination
-        let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns)
+        let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
+            milestoneAccess: milestoneAccess)
         model.observe(ledger.objectWillChange); model.observeRuntime(runtimeChanges)
         _model = StateObject(wrappedValue: model)
     }
@@ -161,7 +169,7 @@ struct NextShopDinnerContextEntry: View {
             if opened {
                 DinnerPlanningEntry(destination: .library, expectedShopID: journeyID)
             } else {
-                Form {
+                WorkingForm {
                     LedgerSaveStatus(model: ledger)
                     Text(pTr("Open this saved next-shop draft to choose a familiar dinner. Choosing a dinner still requires its own review and Apply."))
                     Button(pTr("Open saved next-shop dinner choices")) { Task { await open() } }

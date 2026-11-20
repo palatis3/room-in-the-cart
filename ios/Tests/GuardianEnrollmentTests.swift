@@ -128,6 +128,7 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
         for route in BrowserInvitationRoute.allCases {
             let share = try XCTUnwrap(route.shareText(serviceURL: origin, code: code))
             let lines = share.components(separatedBy: "\n")
+            XCTAssertTrue(lines.first?.contains("Room in the Cart") == true)
             XCTAssertEqual(lines.count, 5)
             let expected = route == .child ? "child-invite" : route.rawValue + "?enterCode=1"
             XCTAssertEqual(lines[1], "https://family.grocery.example:8443/" + expected)

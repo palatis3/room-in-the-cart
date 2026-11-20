@@ -26,7 +26,8 @@ func pantryQuantity(_ quantity: Quantity?) -> String {
     // The exact fraction and original unit stay intact; no floating-point stock math.
     return "\(quantity.amount.description) \(pantryUnit(quantity.unit, singular: quantity.amount == .one))"
 }
-func pantryCount(_ count: InventoryCount) -> String {
+func pantryCount(_ count: InventoryCount, estimate: String? = nil) -> String {
+    if count == .someLeft, let estimate { return pantryFormat("%@ (estimate)", estimate) }
     switch count {
     case .exact(let quantity): return pantryQuantity(quantity)
     case .unknown: return pantryText("Amount unknown")

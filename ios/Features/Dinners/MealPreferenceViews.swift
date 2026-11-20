@@ -174,7 +174,7 @@ struct MealPreferenceEditor: View {
     }
     @State private var base: UUID?
     var body: some View {
-        Form {
+        WorkingForm {
             Section(dinnerText("Hard constraints")) {
                 PreferenceTermsField(dinnerText("Excluded ingredients, one per line"), terms: $draft.exclusions, focus: $textFocus)
                     .accessibilityIdentifier("preferences.exclusions")

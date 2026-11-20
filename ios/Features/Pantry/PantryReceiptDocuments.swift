@@ -28,6 +28,7 @@ struct PantryReceiptDocuments: View {
     let authorize: @MainActor () -> Bool
     var initialInput: ReceiptDocumentBytes? = nil
     var initialDocument: ExtractedReceiptDocument? = nil
+    var sectionPreviews: [Data?] = []
     var omittedLines: Set<ExtractedReceiptDocument.Selection> = []
     var backToSections: (() -> Void)? = nil
     let onReview: (SourceMediaRecord, SharedReceiptItem?) -> Void
@@ -42,6 +43,8 @@ struct PantryReceiptDocuments: View {
     @State private var job: Task<Void, Never>?
     @State private var generation = UUID()
     @State private var document: ExtractedReceiptDocument?
+    @State private var inspectedLine: ExtractedReceiptDocument.Selection?
+    @State private var fileBytes: ReceiptDocumentBytes?
     @State private var selection = Set<ExtractedReceiptDocument.Selection>()
     @State private var stage: ReceiptAcquisition.DocumentLine.Stage = .receipt
     @State private var merchant = ""
@@ -50,14 +53,14 @@ struct PantryReceiptDocuments: View {
     @AccessibilityFocusState private var statusFocused: Bool
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let error { Text(error).accessibilityFocused($statusFocused).accessibilityIdentifier("receipt.document.status") }
             if job != nil {
                 ProgressView(pantryText("Reading receipt on this device"))
                 Button(pantryText("Cancel reading")) { cancel() }
             } else if let document {
                 Section(pantryText("Receipt source")) {
-                    TextField(pantryText("Store or branch"), text: $merchant).focused($merchantFocused)
+                    workingTextField(pantryText("Store or branch"), text: $merchant).focused($merchantFocused)
                     Picker(pantryText("Document type"), selection: $stage) {
                         ForEach(ReceiptAcquisition.DocumentLine.Stage.allCases, id: \.self) { Text(receiptStage($0)).tag($0) }
                     }
@@ -70,12 +73,26 @@ struct PantryReceiptDocuments: View {
                         else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
                         ForEach(page.lines.filter { !omittedLines.contains(.init(page: page.id, line: $0.id)) }) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
-                            Toggle(isOn: Binding(get: { selection.contains(position) }, set: { include in
-                                if include { selection.insert(position) } else { selection.remove(position) }
-                                confirmed = false
-                            })) { Text(line.text) }
-                            .disabled(!selection.contains(position) && selection.count >= 200)
-                            .accessibilityIdentifier("receipt.document.line.\(page.id).\(line.id)")
+                            HStack(spacing: 12) {
+                                Toggle(isOn: Binding(get: { selection.contains(position) }, set: { include in
+                                    if include { selection.insert(position) } else { selection.remove(position) }
+                                    confirmed = false
+                                })) {
+                                    Text(line.text).font(.system(.body, design: .monospaced))
+                                }
+                                .disabled(!selection.contains(position) && selection.count >= 200)
+                                .accessibilityIdentifier("receipt.document.line.\(page.id).\(line.id)")
+                                Button {
+                                    merchantFocused = false
+                                    inspectedLine = position
+                                } label: {
+                                    Image(systemName: "text.magnifyingglass")
+                                        .frame(minWidth: 44, minHeight: 44)
+                                }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel(pantryFormat("Inspect printed line %@", line.id.formatted()))
+                                .accessibilityIdentifier("receipt.document.inspect.\(page.id).\(line.id)")
+                            }
                         }
                     }
                 }
@@ -92,7 +109,7 @@ struct PantryReceiptDocuments: View {
                             onReview(source, openedShare)
                             dismiss()
                         } catch { show(error) }
-                    }.disabled(!authorize() || !confirmed || selection.isEmpty || merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }.buttonStyle(PrimaryAction()).disabled(!authorize() || !confirmed || selection.isEmpty || merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("receipt.document.accept")
                     if let backToSections { Button(captureText("Back to receipt sections"), action: backToSections) }
                     if initialDocument == nil { Button(pantryText("Choose another document")) { cancel() } }
@@ -121,7 +138,7 @@ struct PantryReceiptDocuments: View {
             }
         }
         .privacySensitive()
-        .navigationTitle(pantryText("Read a receipt file"))
+        .navigationTitle(document == nil ? pantryText("Read a receipt file") : pantryText("Select receipt lines"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(pantryText("Close")) { cancel(); dismiss() }
@@ -129,6 +146,21 @@ struct PantryReceiptDocuments: View {
             }
         }
         .keyboardDoneAction(visible: merchantFocused, title: pantryText("Done"), identifier: "receipt.document.keyboardDone") { merchantFocused = false }
+        .sheet(item: $inspectedLine) { position in
+            if authorize(), scenePhase != .background,
+               let page = document?.pages.first(where: { $0.id == position.page }),
+               let index = page.lines.firstIndex(where: { $0.id == position.line }) {
+                NavigationStack {
+                    ReceiptPrintedLineInspector(lines: page.lines, pageNumber: page.id, index: index, originalPage: {
+                        guard authorize(), inspectedLine == position else { return nil }
+                        if sectionPreviews.indices.contains(page.id - 1) { return sectionPreviews[page.id - 1] }
+                        guard let fileBytes else { return nil }
+                        let image = await ReceiptDocumentReader.originalPage(fileBytes, pageNumber: page.id)
+                        return authorize() && inspectedLine == position ? image : nil
+                    })
+                }
+            }
+        }
         .fileImporter(isPresented: $picking, allowedContentTypes: [.pdf, .jpeg, .png, .heic, .heif, .plainText]) { result in
             switch result {
             case .success(let url): start { try await ReceiptDocumentBytes.picked(url) }
@@ -185,6 +217,7 @@ struct PantryReceiptDocuments: View {
                 guard token == generation, authorize() else { return }
                 let extracted = try await ReceiptDocumentReader().extract(bytes)
                 guard !Task.isCancelled, token == generation, authorize() else { return }
+                fileBytes = bytes
                 document = extracted
             } catch { if !Task.isCancelled, token == generation, authorize() { show(error) } }
         }
@@ -193,6 +226,7 @@ struct PantryReceiptDocuments: View {
     private func cancel() {
         generation = UUID()
         job?.cancel(); job = nil
+        inspectedLine = nil; fileBytes = nil
         openedShare = nil; selection = []; document = nil; photo = nil; merchant = ""; confirmed = false; error = nil; stage = .receipt
     }
 
@@ -209,5 +243,186 @@ struct PantryReceiptDocuments: View {
         default: error = pantryText("This document could not be read. Try another file or type the lines in the receipt scanner.")
         }
         statusFocused = true
+    }
+}
+
+
+/// The inspector is read-only. Including a line in the receipt is a separate choice.
+struct ReceiptPrintedLineInspector: View {
+    let lines: [ReceiptDocumentPage.Line]
+    let pageNumber: Int?
+    let index: Int
+    let originalPage: () async -> Data?
+    @Environment(\.dismiss) private var dismiss
+    @State private var pageImage: UIImage?
+    @State private var showSource = false
+
+    private var selected: ReceiptDocumentPage.Line { lines[index] }
+    private var neighbors: ArraySlice<ReceiptDocumentPage.Line> {
+        lines[max(0, index - 1)...min(lines.count - 1, index + 1)]
+    }
+
+    var body: some View {
+        Group {
+            if showSource, let pageImage {
+                ReceiptPageViewer(image: pageImage)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                lineDetails
+            }
+        }
+        .navigationTitle(showSource ? pantryText("Original page") : pantryText("Printed line"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(pantryText("Done")) {
+                    if showSource { showSource = false } else { dismiss() }
+                }
+            }
+        }
+        .privacySensitive()
+        .task {
+            let bytes = await originalPage()
+            if !Task.isCancelled { pageImage = bytes.flatMap { UIImage(data: $0) } }
+        }
+    }
+
+    private var lineDetails: some View {
+        WorkingForm {
+            Section {
+                if let pageNumber {
+                    BrandScopeLabel(pantryFormat("Page %@", pageNumber.formatted()), systemImage: "doc.text")
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(pantryText("Selected printed line")).font(.subheadline).foregroundStyle(Theme.secondary)
+                    Text(selected.text).font(.system(.title2, design: .monospaced, weight: .semibold))
+                        .textSelection(.enabled)
+                }
+                if selected.uncertain {
+                    Label(pantryText("Unclear printed line. Check the original wording before using it."), systemImage: "exclamationmark.circle")
+                        .foregroundStyle(Theme.warning)
+                }
+            }
+            Section(pantryText("Original lines")) {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(neighbors) { line in
+                        let isSelected = line.id == selected.id
+                        Text(line.text)
+                            .font(.system(.body, design: .monospaced, weight: isSelected ? .bold : .regular))
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(8)
+                            .overlay {
+                                if isSelected { RoundedRectangle(cornerRadius: 5).strokeBorder(Theme.action, lineWidth: 2) }
+                            }
+                            .accessibilityAddTraits(isSelected ? .isSelected : [])
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            if pageImage != nil {
+                Button { showSource = true } label: {
+                    Label(pantryText("Original page"), systemImage: "photo")
+                }
+                .accessibilityIdentifier("receipt.original.open")
+            }
+        }
+    }
+}
+
+private struct ReceiptPageViewer: UIViewRepresentable {
+    let image: UIImage
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func makeUIView(context: Context) -> UIStackView {
+        let canvas = ReceiptPageCanvas(image: image)
+        let zoomIn = UIButton(configuration: .tinted(), primaryAction: UIAction(title: pantryText("Zoom in"),
+            image: UIImage(systemName: "plus.magnifyingglass")) { [weak canvas] _ in
+            guard let canvas else { return }
+            canvas.setZoomScale(min(canvas.zoomScale * 2, canvas.maximumZoomScale), animated: !UIAccessibility.isReduceMotionEnabled)
+        })
+        let fit = UIButton(configuration: .tinted(), primaryAction: UIAction(title: pantryText("Fit page"),
+            image: UIImage(systemName: "arrow.down.right.and.arrow.up.left")) { [weak canvas] _ in
+            guard let canvas else { return }
+            canvas.setZoomScale(canvas.minimumZoomScale, animated: !UIAccessibility.isReduceMotionEnabled)
+        })
+        zoomIn.accessibilityIdentifier = "receipt.original.zoomIn"
+        fit.accessibilityIdentifier = "receipt.original.fit"
+        for button in [zoomIn, fit] {
+            button.configuration?.imagePadding = 6
+            button.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+        }
+        canvas.zoomChanged = { [weak zoomIn, weak fit] scale, maximum in
+            zoomIn?.isEnabled = scale < maximum - 0.01
+            fit?.isEnabled = scale > 1.01
+        }
+        let controls = UIStackView(arrangedSubviews: [zoomIn, fit])
+        controls.distribution = .fillEqually
+        controls.spacing = 8
+        controls.isLayoutMarginsRelativeArrangement = true
+        controls.directionalLayoutMargins = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
+        controls.setContentHuggingPriority(.required, for: .vertical)
+
+        let stack = UIStackView(arrangedSubviews: [canvas, controls])
+        stack.axis = .vertical
+        return stack
+    }
+
+    func updateUIView(_ stack: UIStackView, context: Context) {
+        (stack.arrangedSubviews.last as? UIStackView)?.axis = typeSize.isAccessibilitySize ? .vertical : .horizontal
+    }
+}
+
+private final class ReceiptPageCanvas: UIScrollView, UIScrollViewDelegate {
+    private let page: UIImageView
+    private var viewport = CGSize.zero
+    var zoomChanged: ((CGFloat, CGFloat) -> Void)?
+
+    init(image: UIImage) {
+        page = UIImageView(image: image)
+        super.init(frame: .zero)
+        delegate = self
+        backgroundColor = .secondarySystemBackground
+        contentInsetAdjustmentBehavior = .never
+        contentSize = image.size
+        addSubview(page)
+        isAccessibilityElement = true
+        accessibilityTraits = .image
+        accessibilityLabel = pantryText("Original page")
+        accessibilityIdentifier = "receipt.original.canvas"
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let size = page.image?.size, size.width > 0, size.height > 0,
+              bounds.width > 0, bounds.height > 0 else { return }
+        if viewport != bounds.size {
+            let magnification = viewport == .zero ? 1 : zoomScale / minimumZoomScale
+            viewport = bounds.size
+            let fit = min(viewport.width / size.width, viewport.height / size.height)
+            maximumZoomScale = fit * 8
+            minimumZoomScale = fit
+            setZoomScale(min(maximumZoomScale, fit * magnification), animated: false)
+        }
+        centerPage()
+        reportZoom()
+    }
+
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { page }
+
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        centerPage()
+        reportZoom()
+    }
+
+    private func centerPage() {
+        page.center = CGPoint(x: max(bounds.width, contentSize.width) / 2,
+                              y: max(bounds.height, contentSize.height) / 2)
+    }
+
+    private func reportZoom() {
+        let magnification = zoomScale / minimumZoomScale
+        accessibilityValue = Double(magnification).formatted(.percent.precision(.fractionLength(0)))
+        zoomChanged?(magnification, maximumZoomScale / minimumZoomScale)
     }
 }

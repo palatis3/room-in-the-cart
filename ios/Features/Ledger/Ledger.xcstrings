@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Page %lld of %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %lld of %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página %lld de %lld"
+          }
+        }
+      }
+    },
     "Give this store its own short name.": {
       "localizations": {
         "en": {
@@ -5155,18 +5171,18 @@
         }
       }
     },
-    "Print active items and quantities in the current list order.": {
+    "Prints active items in list order, with quantities and checkboxes.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Print active items and quantities in the current list order."
+            "value": "Prints active items in list order, with quantities and checkboxes."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Imprime los artículos activos y sus cantidades en el orden actual de la lista."
+            "value": "Los artículos activos se imprimen en el orden de la lista, con sus cantidades y casillas para marcar."
           }
         }
       }

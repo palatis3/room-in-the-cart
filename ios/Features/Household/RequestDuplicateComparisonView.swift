@@ -11,7 +11,7 @@ struct RequestDuplicateGroupHeading: View {
                 Label(requestDuplicateText("Compare these requests"), systemImage: "square.on.square")
                     .font(.headline)
                 Text(requestDuplicateText("The names match. Check each person's amount and use before deciding."))
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
             }
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("household.duplicates.group.\(group.requests.first?.id ?? group.id)")
@@ -115,13 +115,13 @@ struct RequestDuplicateComparisonSection: View {
         Section {
             if group.hasPossibleDuplicates {
                 Text(requestDuplicateText("Does one pack cover these uses, or is another needed? Compare the original requests, then decide each one separately."))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.secondary)
             } else {
                 Text(requestDuplicateText("No matching name among the loaded requests yet. Other requests have not been checked."))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.secondary)
             }
             Text(requestDuplicateText("Comparing changes nothing. Quantities are not added together. Each requester keeps a separate outcome."))
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(Theme.secondary)
                 .accessibilityIdentifier("household.duplicates.separateOutcomes")
             ForEach(group.requests) { request in
                 RequestDuplicateComparisonRow(request: request, isSelected: request.id == requestID)
@@ -131,7 +131,7 @@ struct RequestDuplicateComparisonSection: View {
             }
             if model.nextCursor != nil {
                 Text(requestDuplicateText("Only the loaded requests are shown. Check more requests to inspect the remaining pages."))
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(Theme.secondary)
                 Button(requestDuplicateText("Check more requests")) {
                     Task { await model.load(more: true) }
                 }
@@ -208,12 +208,12 @@ private struct RequestDuplicateComparisonRow: View {
             LabeledContent(requestDuplicateText("Requested by"), value: request.authorAlias ?? requestDuplicateText("Alias unavailable"))
                 .accessibilityIdentifier("household.duplicates.author.\(request.id)")
             VStack(alignment: .leading, spacing: 4) {
-                Text(requestDuplicateText("Original request")).font(.caption).foregroundStyle(.secondary)
+                Text(requestDuplicateText("Original request")).font(.caption).foregroundStyle(Theme.secondary)
                 Text(request.originalItem).fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("household.duplicates.original.\(request.id)")
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text(requestDuplicateText("Amount and use, as written")).font(.caption).foregroundStyle(.secondary)
+                Text(requestDuplicateText("Amount and use, as written")).font(.caption).foregroundStyle(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("household.duplicates.amountLabel.\(request.id)")
                 Text(request.ownQuantity ?? requestDuplicateText("No amount or use supplied"))
@@ -231,7 +231,7 @@ private struct RequestDuplicateComparisonRow: View {
             }
             if let clarification = request.clarification {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(requestDuplicateText("Clarification for this requester")).font(.caption).foregroundStyle(.secondary)
+                    Text(requestDuplicateText("Clarification for this requester")).font(.caption).foregroundStyle(Theme.secondary)
                     Text(clarification).fixedSize(horizontal: false, vertical: true)
                 }
             }

@@ -57,7 +57,7 @@ struct SharedFallbackRecipeEditor: View {
     let review: (SharedFallbackRecipe) -> Void
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 TextField(ht("Meal name"), text: $draft.title)
                     .focused($input, equals: .title).accessibilityIdentifier("fallback.recipe.title")

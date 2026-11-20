@@ -106,7 +106,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     }
 
     private func captureForm(_ scroll: ScrollViewProxy) -> some View {
-        Form {
+        WorkingForm {
             if reviewingFields {
                 if !requestMode, naturalBatch != nil, currentPickup != nil {
                     NaturalListLanguageEntry(lines: $structuredLines, locale: model.localeIdentifier, authorize: authorize)
@@ -125,7 +125,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 Text(captureText(requestMode ? "Capture is optional. You can always type your request." : "Capture is optional. You can always type your list."))
                 Text(captureText(requestMode ? "Speech and photo text recognition run on this iPhone. Review the request before sending." :
                     "Speech and photo text recognition run on this iPhone. Nothing is added until you review the list."))
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(Theme.secondary)
                 Text(captureText("Actual destination") + ": " + destination)
             }
             if let candidate = model.candidate {

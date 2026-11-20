@@ -1,4 +1,4 @@
-"""Check Foundation 2.1's opaque color pairs for the iPhone and web themes."""
+"""Check Plum & Pear's opaque color pairs for the iPhone and web themes."""
 import json
 from pathlib import Path
 import unittest
@@ -34,7 +34,8 @@ class ThemeContrastTests(unittest.TestCase):
                     self.check_pair(mode, colors, text, background, 4.5)
                 for edge in ("focus", "control_edge"):
                     self.check_pair(mode, colors, edge, background, 3)
-            for text, background in (("on_accent", "accent"), ("warning", "warning_surface"),
+            for text, background in (("on_accent", "accent"), ("on_selection", "selection"),
+                                     ("warning", "warning_surface"),
                                      ("error", "error_surface")):
                 self.check_pair(mode, colors, text, background, 4.5)
 

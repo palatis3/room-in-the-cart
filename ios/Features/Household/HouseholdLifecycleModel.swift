@@ -226,6 +226,10 @@ import HouseholdClient
         do {
             let value = try await service.currentHelperView(grantID: grantID)
             guard start == scopeGeneration else { return }
+            guard let expiry = serviceDate(value.expiresAt), expiry > Date() else {
+                await handle(ClientError.accessEnded)
+                return
+            }
             helperView = value
             let saved = try await store.read(); guard start == scopeGeneration else { return }
             pendingProposal = saved.proposals.first { $0.householdID == scope?.household.id && $0.memberID == scope?.memberId && $0.grantID == grantID }
@@ -348,7 +352,9 @@ import HouseholdClient
             if status == 404, isHelper { clearScope(); await onAccessEnded(); return }
             if code == "consent_unavailable" { notice = ht("Child enrollment is unavailable until verified guardian consent is connected.") }
             else if code == "shopper_transfer_required" { notice = ht("Transfer this person's active pickups before removing household access.") }
-            else if status == 404 { notice = ht("This invitation or record is unavailable, expired, or outside your access.") }
+            else if status == 404, !scoped, pendingMembership?.kind == .redeem {
+                notice = ht("This invitation is unavailable. Ask the person who invited you for a current code.")
+            } else if status == 404 { notice = ht("This invitation or record is unavailable, expired, or outside your access.") }
             else if status == 409 { notice = ht("Current information has changed. Refresh and review before starting a new action.") }
             else { notice = ht("The service could not confirm this action. Keep the existing retry until you review its status.") }
         case .cancelled: break

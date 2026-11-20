@@ -62,7 +62,15 @@ import XCTest
         }
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
-        tap(app.buttons["Save and evaluate checkout"])
+        XCTAssertEqual(app.textFields["Inclusive total"].value as? String, "3.00")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        let save = app.buttons["Save and evaluate checkout"]
+        reveal(save, requireVisibleCenter: true, reserveKeyboardSpace: false)
+        XCTAssertTrue(save.isEnabled)
+        save.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        // Saving the local quote is asynchronous. Keep this screen open until
+        // the same saved-result section a shopper reviews is visible.
+        assertText("Saved checkout result")
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"])
@@ -368,7 +376,18 @@ import XCTest
         reveal(savedStatus)
         XCTAssertEqual(savedStatus.label, "Await pickup · fill still unknown")
         assertText("Large wrap pack")
-        assertText("Cutoff:", hasPrefix: true)
+        let cutoff = app.staticTexts["shop.resumeOfferCutoff"]
+        reveal(cutoff)
+        let fields = cutoff.label.components(separatedBy: " · ")
+        XCTAssertEqual(fields.count, 3, cutoff.label)
+        XCTAssertEqual(fields.first, "Cutoff")
+        XCTAssertEqual(fields.last, TimeZone.current.identifier)
+        let deadline = try XCTUnwrap(fields.dropFirst().dropLast().first)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        XCTAssertNotNil(formatter.date(from: deadline), "Show both the cutoff date and time.")
         capture("Offer-expired-resume-card-after-restart")
         tap(app.buttons["shop.resumeOffer"])
         XCTAssertTrue(app.navigationBars["What came home"].waitForExistence(timeout: 8))

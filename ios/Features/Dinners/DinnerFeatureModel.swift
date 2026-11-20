@@ -40,6 +40,9 @@ extension DinnerWorkspaceStore {
     let phaseProvider: (UUID) -> BasketPhase
     let ideaCatalog: [MealTemplate]
     let basketPrepAccess: () -> Bool
+    // View-based navigation destinations do not inherit the entry view’s local environment.
+    // Only the live private planning composition supplies this live privacy check.
+    let milestoneAccess: () -> Bool
     let clock: () -> Date
     private(set) weak var repeatWeekPickup: PickupModel?
     private weak var swapPickup: PickupModel?
@@ -53,9 +56,11 @@ extension DinnerWorkspaceStore {
 
     init(store: any DinnerWorkspaceStore, access: @escaping AccessProvider,
          phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [],
-         clock: @escaping () -> Date = Date.init, basketPrepAccess: @escaping () -> Bool = { false }) {
+         clock: @escaping () -> Date = Date.init, basketPrepAccess: @escaping () -> Bool = { false },
+         milestoneAccess: @escaping () -> Bool = { false }) {
         self.store = store; accessProvider = access; phaseProvider = phase
         self.ideaCatalog = ideaCatalog; self.clock = clock; self.basketPrepAccess = basketPrepAccess
+        self.milestoneAccess = milestoneAccess
     }
     func observe(_ publisher: ObservableObjectPublisher) {
         observation = publisher.sink { [weak self] _ in self?.objectWillChange.send() }
@@ -274,15 +279,44 @@ extension DinnerWorkspaceStore {
         if ok { notice = dinnerText("Proposal saved on this device. It has not been sent or applied.") }
         return ok
     }
-    @discardableResult func accept(_ template: MealTemplate, id: UUID, fallback: Bool) async -> Bool {
-        guard let shop else { return false }
-        return await mutate(key: "dinner-accept-\(id)", shopID: shop.id) { workspace, _, access, now in
-            if let existing = workspace.dinnerPlanning.acceptedDinners.first(where: { $0.id == id }) {
+    struct FirstDinnerSave: Equatable {
+        let editor: EditorIdentity
+        let acceptedID: UUID
+        let planningRevision: UUID
+    }
+
+    @discardableResult func accept(_ template: MealTemplate, id: UUID, fallback: Bool,
+                                   onFirstSave: ((FirstDinnerSave) -> Void)? = nil) async -> Bool {
+        await saveAcceptance(id: id, key: "dinner-accept-\(id)", onFirstSave: onFirstSave) { state, access, now in
+            if let existing = state.acceptedDinners.first(where: { $0.id == id }) {
                 guard existing.template == template, existing.acceptedFallback == fallback else { throw DinnerPlanningError.operationConflict }
                 return
             }
-            try workspace.dinnerPlanning.accept(AcceptedDinner(id: id, template: template, acceptedAt: now, acceptedFallback: fallback), access: access, at: now)
+            try state.accept(AcceptedDinner(id: id, template: template, acceptedAt: now, acceptedFallback: fallback), access: access, at: now)
         }
+    }
+
+    private func saveAcceptance(id: UUID, key: String, onFirstSave: ((FirstDinnerSave) -> Void)?,
+                                edit: (inout DinnerPlanningState, DinnerAccessContext, Date) throws -> Void) async -> Bool {
+        guard let editor = editorIdentity else { return false }
+        var firstSave: FirstDinnerSave?
+        let saved = await mutate(key: key, shopID: editor.shopID) { workspace, _, access, now in
+            guard editor.scope == access.scope, editor.actorID == access.actorID,
+                  workspace.selectedShopID == editor.shopID else { throw DinnerPlanningError.forbidden }
+            let wasEmpty = workspace.dinnerPlanning.acceptedDinners.isEmpty && workspace.mealTemplates.isEmpty
+            try edit(&workspace.dinnerPlanning, access, now)
+            if case .local(let origin) = access.scope, workspace.firstDinnerFeedbackOrigin == origin {
+                if wasEmpty, workspace.dinnerPlanning.acceptedDinners.first?.id == id {
+                    firstSave = FirstDinnerSave(editor: editor, acceptedID: id, planningRevision: workspace.dinnerPlanning.revisionID)
+                }
+                workspace.firstDinnerFeedbackOrigin = nil
+            }
+        }
+        if saved, let firstSave, editorIdentity == editor,
+           state.revisionID == firstSave.planningRevision, state.acceptedDinners.contains(where: { $0.id == id }) {
+            onFirstSave?(firstSave)
+        }
+        return saved
     }
     @discardableResult func choose(_ dinner: AcceptedDinner, day: MealDay?) -> Bool {
         prepare([.choose(PlannedDinner(acceptedDinnerID: dinner.id, template: dinner.template, day: day))], tool: .reusableDinner)
@@ -402,13 +436,11 @@ extension DinnerWorkspaceStore {
             try workspace.dinnerPlanning.saveIdea(draft, access: access, at: now)
         }
     }
-    @discardableResult func acceptIdea(_ draft: DinnerIdeaDraft, acceptedID: UUID) async -> Bool {
-        guard let shop else { return false }
-        let ok = await mutate(key: "dinner-idea-accept-\(draft.id)", shopID: shop.id) { workspace, _, access, now in
-            _ = try workspace.dinnerPlanning.acceptIdea(draft, acceptedID: acceptedID, access: access, at: now)
+    @discardableResult func acceptIdea(_ draft: DinnerIdeaDraft, acceptedID: UUID,
+                                       onFirstSave: ((FirstDinnerSave) -> Void)? = nil) async -> Bool {
+        await saveAcceptance(id: acceptedID, key: "dinner-idea-accept-\(draft.id)", onFirstSave: onFirstSave) { state, access, now in
+            _ = try state.acceptIdea(draft, acceptedID: acceptedID, access: access, at: now)
         }
-        if ok { notice = dinnerText("Idea accepted. Choose it separately to add grocery needs.") }
-        return ok
     }
     /// Scenario inputs must come from an explicit ingredient/stock/pack review.
     /// No product-name inference or automatic current-basket replacement occurs here.

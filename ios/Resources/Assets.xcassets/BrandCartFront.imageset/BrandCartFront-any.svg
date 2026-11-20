@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="136 146 564 564">
+  <title>Room in the Cart</title>
+  <desc>A cream cart with a raised handle, two wheels and one pale pear behind the sloping rim.</desc>
+  <g id="front" fill="#FCF6F0">
+    <path id="cart" d="M203.8 266.3       L251.7 266.3       C275.8 266.2 287.2 283.9 294.8 313.2       C299.6 330.2 303.9 348.4 308.2 362.2       C369.0 372.1 421.3 381.7 463.8 388.1       L608.5 410.8       C624.9 413.2 631.4 423.9 626.9 440.2       L601.4 510.0       C594.5 529.3 578.3 539.9 554.3 540.0       L337.3 539.7       C312.1 539.7 295.5 522.7 293.7 497.1       C281.0 428.4 267.8 363.3 259.3 328.2       C256.4 316.3 254.5 307.0 251.0 306.9       L203.7 306.9       C191.4 306.9 183.5 298.6 183.5 287.0       C183.5 275.3 191.8 266.3 203.8 266.3 Z" />
+    <ellipse id="rear-wheel" cx="346.4" cy="589.0" rx="38.3" ry="38.0" />
+    <ellipse id="front-wheel" cx="525.9" cy="589.0" rx="38.3" ry="38.0" />
+  </g>
+</svg>

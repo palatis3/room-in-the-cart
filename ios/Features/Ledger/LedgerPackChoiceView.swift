@@ -30,7 +30,7 @@ struct LedgerPackChoiceView: View {
     var body: some View {
         let requirement = currentRequirement
         let ingredient = requirement.map { Ingredient(shopID: shopID, lineID: lineID, name: $0.name, unit: $0.quantity.unit) }
-        Form {
+        WorkingForm {
             if saved {
                 Section {
                     Text(ledgerText(review?.result.offerA.packsToBuy == 0 ? "Use-at-home choice saved for review." : "Pack choice saved for checkout review."))
@@ -130,7 +130,7 @@ struct LedgerPackChoiceView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
             }
-            .keyboardDoneAction(visible: field != nil, title: ledgerText("Done")) { field = nil }
+            .keyboardDoneAction(visible: field != nil, title: ledgerText("Done"), identifier: "ledger.pack.keyboardDone") { field = nil }
             .task {
                 await pickup.load()
                 if pickup.pantryIsActive { _ = await pickup.refreshPantryStock() }
@@ -252,7 +252,7 @@ struct LedgerAtHomePlanView: View {
                     }
                 }
                 NavigationLink(pTr("Confirm pantry or freezer food")) {
-                    Form { PickupSavedStockSection(model: model, journey: journey) }
+                    WorkingForm { PickupSavedStockSection(model: model, journey: journey) }
                         .navigationTitle(pTr("Confirm pantry or freezer food"))
                 }
             }

@@ -59,6 +59,9 @@ import Combine
             XCTAssertEqual(service.submissions, 1); XCTAssertTrue(store.finished.isEmpty)
             XCTAssertEqual(model.canPurchase, issue != .deliveryPending,
                            "Structured deliveryPending blocks Subscribe even after notice becomes pending")
+            XCTAssertFalse(model.presentsAnnualOffer)
+            await model.purchase(fromPresentedOffer: true)
+            XCTAssertEqual(store.purchaseCount, 1, "The screen cannot send a second purchase while Apple or delivery is pending")
             assertNeutralProjection(model)
         }
     }
@@ -341,7 +344,7 @@ import Combine
         XCTAssertTrue(model.statusMessages.contains(.deliverySaved))
         XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.deliveryPending)))
         XCTAssertEqual(membershipStatusMessageText(.deliverySaved),
-            mtr("An App Store transaction was saved by your household service. Current membership access is shown above."))
+            mtr("Your household service received the verified Apple transaction."))
         XCTAssertFalse(membershipStatusMessageText(.deliverySaved).contains(mtr("Household access is active")))
         XCTAssertEqual(service.submissions, 2); XCTAssertEqual(store.finished, ["current-ack-A"])
     }
@@ -364,7 +367,7 @@ import Combine
         XCTAssertEqual(model.deliveryOutcomes["historic-ack"], .delivered)
         XCTAssertTrue(model.statusMessages.contains(.deliverySaved))
         XCTAssertEqual(membershipStatusMessageText(.deliverySaved),
-            mtr("An App Store transaction was saved by your household service. Current membership access is shown above."))
+            mtr("Your household service received the verified Apple transaction."))
         XCTAssertEqual(service.submissions, 1); XCTAssertEqual(store.finished, ["historic-ack"])
     }
 
@@ -635,7 +638,7 @@ import Combine
     }
     private func assertNeutralProjection(_ model: MembershipModel, file: StaticString = #filePath, line: UInt = #line) {
         let rendered = model.statusMessages.map(membershipStatusMessageText).joined(separator: "\n")
-        XCTAssertTrue(rendered.contains(mtr("Apple reported a pending purchase status. Use Restore Purchases to check current membership access.")), file: file, line: line)
+        XCTAssertTrue(rendered.contains(mtr("Purchase pending. You can keep planning while Apple reviews it.")), file: file, line: line)
         XCTAssertFalse(rendered.contains(mtr("Purchase pending Apple approval. Paid access has not been added.")), file: file, line: line)
         XCTAssertFalse(rendered.contains(mtr("The purchase could not be verified. Paid access has not been added. Try Restore Purchases or contact support.")), file: file, line: line)
         for privateValue in ["test-only-jws", "approved-B", "verified-A", "older-A", "wrong-product", "wrong-account", context.purchaserID, context.householdID, context.appAccountToken!.uuidString] {
@@ -1019,6 +1022,7 @@ import Combine
             XCTAssertEqual(model.notice, .restored)
             XCTAssertTrue(model.canManageSeats)
             XCTAssertFalse(model.hasPaidAccess)
+            XCTAssertFalse(model.presentsAnnualOffer, "A purchasing adult can manage a term without occupying a seat")
             XCTAssertEqual(model.state.snapshot?.seats, seats)
             XCTAssertTrue(service.requestedSeatRevisions.isEmpty)
             XCTAssertEqual(store.syncCount, 1)
@@ -1031,6 +1035,7 @@ import Combine
             let model = makeModel(service, FakeMembershipStorefront())
             await model.restore()
             XCTAssertEqual(model.statusMessages, [.otherNotice(.restoredFree)])
+            XCTAssertEqual(model.presentsAnnualOffer, status != .billingRetry)
             XCTAssertFalse(model.hasPaidAccess)
             XCTAssertFalse(model.canManageSeats)
         }
@@ -1043,6 +1048,7 @@ import Combine
         let model = makeModel(service, store)
         await model.restore()
         XCTAssertEqual(model.notice, .failed(.unavailable))
+        XCTAssertFalse(model.presentsAnnualOffer, "An unavailable service has not confirmed this household can subscribe")
         var resume: CheckedContinuation<Void, Never>?
         var calls = 0
         store.waitDuringLoad = {
@@ -1163,6 +1169,8 @@ import Combine
         await model.restore()
         XCTAssertTrue(model.hasPaidAccess)
         XCTAssertEqual(model.notice, .restored)
+        XCTAssertFalse(model.presentsAnnualOffer, "A named second seat checks its own planning access")
+        XCTAssertNil(model.offer, "The second adult does not load a storefront offer")
         XCTAssertFalse(model.canPurchase)
         XCTAssertFalse(model.canManageSeats)
         XCTAssertEqual(store.syncCount, 0)

@@ -102,11 +102,15 @@ struct PickupFeedbackSection: View {
     @ObservedObject private var consent = LocalPickupFeedbackConsent.shared
     @ObservedObject var model: PickupModel
     let journey: PickupJourney
+    static let stopOfferingRow = "pickup.feedback.stopOffering"
+    let didRemoveResponse: () -> Void
+    @State private var removedResponseRevision: Int64?
+    @AccessibilityFocusState private var feedbackOfferFocused: Bool
 
     var body: some View {
-        if journey.eligibleForFeedback {
-            if let answer = journey.feedback {
-                Section(pTr("Your pickup feedback")) {
+        if journey.eligibleForFeedback, journey.feedback != nil || consent.enabled(for: model.sourceWorkspaceID) {
+            Section {
+                if let answer = journey.feedback {
                     Text(answer.decision.label)
                     LabeledContent(pTr("Usual workflow"), value: answer.baseline.label)
                     LabeledContent(pTr("Compared with your usual workflow"), value: answer.comparison.label)
@@ -115,15 +119,35 @@ struct PickupFeedbackSection: View {
                             .font(.footnote)
                     }
                     Button(pTr("Remove this response"), role: .destructive) {
-                        Task { _ = await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: consent) }
+                        let workspace = model.sourceWorkspaceID
+                        Task {
+                            guard await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: consent),
+                                  model.sourceWorkspaceID == workspace, model.journey?.id == journey.id,
+                                  consent.enabled(for: workspace) else { return }
+                            removedResponseRevision = model.journey?.revision
+                        }
                     }
-                }
-            } else if consent.enabled(for: model.sourceWorkspaceID) {
-                Section(pTr("Optional pickup feedback")) {
+                } else {
                     NavigationLink(pTr("Record how this pickup turned out")) {
                         PickupFeedbackEditor(model: model, shopID: journey.id, revision: journey.revision)
                     }
+                    .accessibilityFocused($feedbackOfferFocused)
                     Button(pTr("Stop offering feedback")) { consent.setEnabled(false, for: model.sourceWorkspaceID) }
+                        .id(Self.stopOfferingRow)
+                }
+            } header: {
+                Text(pTr(journey.feedback == nil ? "Optional pickup feedback" : "Your pickup feedback"))
+            }
+            .onChange(of: removedResponseRevision) { _, revision in
+                let workspace = model.sourceWorkspaceID
+                guard let revision else { return }
+                Task { @MainActor in
+                    await Task.yield()
+                    guard model.sourceWorkspaceID == workspace, model.journey?.id == journey.id,
+                          model.journey?.revision == revision, model.journey?.feedback == nil,
+                          consent.enabled(for: workspace) else { return }
+                    didRemoveResponse()
+                    feedbackOfferFocused = true
                 }
             }
         }
@@ -148,7 +172,7 @@ private struct PickupFeedbackEditor: View {
     @State private var failed = false
 
     var body: some View {
-        Form {
+        WorkingForm {
             Text(pTr("This response stays with this pickup on your device. It contains only your choices."))
             Picker(pTr("What happened?"), selection: $decision) {
                 Text(pTr("Choose a response")).tag(nil as PickupDecision?)
@@ -204,7 +228,7 @@ struct MeasurementSettingsView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-        Form {
+        WorkingForm {
             if scope != nil {
                 if let result = statusMessage {
                     Text(result)
@@ -288,7 +312,7 @@ struct SharedMeasurementFeedbackView: View {
     }
     var body: some View {
         ScrollViewReader { proxy in
-        Form {
+        WorkingForm {
             if let scope, scope == draftScope {
                 Text(actionResult?.text ?? (page?.feedback != nil ? pTr("Household response recorded") : pTr("Only the choices entered here are sent to the household service. Your local pickup feedback stays on this device.")))
                     .id("measurement-feedback-result")

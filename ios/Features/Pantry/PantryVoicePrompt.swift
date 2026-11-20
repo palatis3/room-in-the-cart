@@ -15,9 +15,15 @@ struct PantryVoicePromptScope: Equatable {
     private var phase: ScenePhase = .active
     private var finished = false
     private var sawInactive = false
+    private var notificationReturn: CheckedContinuation<Void, Never>?
+    private var completedNotification: UUID?
 
     func begin(_ scope: PantryVoicePromptScope, phase: ScenePhase) -> UUID? {
-        guard phase == .active, token == nil else { return nil }
+        guard phase == .active else { return nil }
+        // A completed notification request can hand off to the next explicit prompt
+        // when iOS did not interrupt the scene for its earlier request.
+        if let completedNotification, token == completedNotification, self.phase == .active { clear() }
+        guard token == nil else { return nil }
         self.phase = phase
         self.scope = scope
         finished = false
@@ -45,6 +51,31 @@ struct PantryVoicePromptScope: Equatable {
         if sawInactive && phase == .active && appActive { clear() }
     }
 
+    /// Release the operating-system answer only on return to the same live pantry.
+    /// A real background transition cancels the token even if the adult later unlocks.
+    func requestNotification(in expected: PantryVoicePromptScope, phase: ScenePhase,
+                             currentScope: () -> PantryVoicePromptScope?, appActive: () -> Bool,
+                             request: PantryNotificationRequest) async throws -> Bool {
+        guard currentScope() == expected, appActive(), let id = begin(expected, phase: phase) else {
+            throw PantryDigestFailure.changed
+        }
+        let result: Result<Bool, Error>
+        do { result = .success(try await request()) }
+        catch { result = .failure(error) }
+        if token == id, self.phase != .active || !appActive() {
+            await withCheckedContinuation { notificationReturn = $0 }
+        }
+        guard token == id, self.phase == .active, appActive(), currentScope() == expected else {
+            cancel(id)
+            throw PantryDigestFailure.changed
+        }
+        // On iOS the answer may be delivered before SwiftUI receives the inactive
+        // transition. Cover that transition just as we do for the voice prompt.
+        completedNotification = id
+        recognitionReady(id, appActive: true)
+        return try result.get()
+    }
+
     func nextPermission(_ id: UUID) {
         guard token == id else { return }
         sawInactive = phase == .inactive
@@ -57,14 +88,23 @@ struct PantryVoicePromptScope: Equatable {
         phase = next
         if next == .inactive && token != nil { sawInactive = true }
         if next == .background || (next == .active && finished && sawInactive) { clear() }
+        if next == .active { resumeNotificationReturn() }
     }
 
     private func clear() {
         guard token != nil else { return }
         scope = nil
+        completedNotification = nil
         finished = false
         sawInactive = false
         token = nil
+        resumeNotificationReturn()
+    }
+
+    private func resumeNotificationReturn() {
+        let waiter = notificationReturn
+        notificationReturn = nil
+        waiter?.resume()
     }
 }
 

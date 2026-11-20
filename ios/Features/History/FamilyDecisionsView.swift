@@ -35,7 +35,7 @@ struct FamilyDecisionsEntry: View {
     }
 }
 
-private struct PickupDecisionsLink: View {
+struct PickupDecisionsLink: View {
     @EnvironmentObject private var pickup: PickupModel
     let shopID: UUID?
     var reviewForHousehold: ((FamilyDecisionInput) -> Void)? = nil

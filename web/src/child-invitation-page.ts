@@ -1,3 +1,4 @@
+import { brandName } from './brand.js';
 import type { ChildBrowserEnrollmentReceipt, ChildInvitationAuthStart } from '../../shared/contracts/guardian-enrollment-v1.js';
 import { consumeInvitation, ApiError, type BrowserAuthState } from './api.js';
 import { ChildClaimController, ChildInvitationAPI, type ChildClaimAccess, type ChildInvitationBrowserPort, type ChildInvitationSession } from './child-invitation.js';
@@ -62,7 +63,11 @@ export class ChildInvitationPage {
   private check(generation:number):void {if(generation!==this.generation)throw new ApiError('access_ended',403);}
   clear():void {this.generation++;this.controller?.clear(true);this.controller=null;this.scope=null;this.child=null;this.token=null;this.email='';this.code='';this.intent=null;this.requested=false;this.verificationUncertain=false;this.expected=null;}
   private async run(action:(generation:number)=>Promise<void>,retryingSignOut=false):Promise<void> {
-    if(this.busy||(this.logoutPending&&!retryingSignOut))return;this.busy=true;this.render();
+    if(this.busy||(this.logoutPending&&!retryingSignOut))return;
+    const previousPhase=this.phase;
+    const previousStage=this.controller?.state.stage;
+    const restoreFocus=this.visibility==='ready' && this.phase!=='loading';
+    this.busy=true;this.render();
     try {
       await action(this.generation);
     } catch(error) {
@@ -72,8 +77,24 @@ export class ChildInvitationPage {
       const refresh=this.refreshAfterAction&&this.visibility==='checking'&&!this.logoutPending;
       this.refreshAfterAction=false;
       if(refresh)void this.start();
-      else this.render();
+      else {
+        this.render();
+        if(restoreFocus && this.visibility==='ready' &&
+          (previousPhase!==this.phase || previousStage!==this.controller?.state.stage || this.notice==='ended')) {
+          this.focusNextStep();
+        }
+      }
     }
+  }
+  private focusNextStep():void {
+    const selectors:Partial<Record<Phase,string>>={
+      signin:'#child-invitation, #child-email', code:'#child-code',
+      claim:'#child-invitation, button[type=submit]', pending:'#child-pairing',
+      active:'a[href^="/requests"]'
+    };
+    const selector=this.notice==='ended' ? '[role=status]' : selectors[this.phase] ?? 'h1';
+    const finish=this.phase==='pending' ? this.root.querySelector<HTMLElement>('#child-finish') : null;
+    (finish ?? this.root.querySelector<HTMLElement>(selector))?.focus();
   }
   async start():Promise<void>{
     if(this.logoutPending||this.visibility==='hidden')return;
@@ -216,7 +237,10 @@ export class ChildInvitationPage {
     await this.load(this.generation);
   }
   checkExpiry():void {
-    if(this.controller?.checkExpiry()||this.child&&this.child.status!=='active'&&this.child.expiresAt&&Date.parse(this.child.expiresAt)<=Date.now()) {this.clear();this.phase='blocked';this.notice='ended';this.render();}
+    if(this.controller?.checkExpiry()||this.child&&this.child.status!=='active'&&this.child.expiresAt&&Date.parse(this.child.expiresAt)<=Date.now()) {
+      this.clear();this.phase='blocked';this.notice='ended';this.render();
+      if(this.visibility==='ready')this.focusNextStep();
+    }
     else if(this.phase==='code'&&this.nextSendAt&&Date.now()>=this.nextSendAt){
       this.nextSendAt=0;
       const resend=this.root.querySelector<HTMLButtonElement>('#child-resend');
@@ -238,7 +262,9 @@ export class ChildInvitationPage {
   render():void {
     const document=this.root.ownerDocument,t=(key:CopyKey)=>childInvitationCopy[key][this.language];
     const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string):HTMLElementTagNameMap[K]=>{const item=document.createElement(tag);if(text!==undefined)item.textContent=text;return item;};
-    const button=(key:CopyKey,action:()=>void)=>{const b=el('button',t(key));b.type='button';b.disabled=this.busy;b.addEventListener('click',action);return b;};
+    const button=(key:CopyKey,action:()=>void)=>{const b=el('button',t(key));b.type='button';
+      if(key==='finish'||key==='retryFinish'||key==='signoutRetry')b.className='primary';
+      b.disabled=this.busy;b.addEventListener('click',action);return b;};
     const field=(form:HTMLElement,key:CopyKey,id:string,value:string,type:string,change:(value:string)=>void)=>{const label=el('label',t(key));label.htmlFor=id;const input=el('input');input.id=id;input.type=type;input.value=value;input.required=true;input.disabled=this.busy;input.autocomplete='off';input.addEventListener('input',()=>change(input.value));form.append(label,input);return input;};
     const invitationField=(form:HTMLFormElement)=>{
       if(this.token?.trim()){
@@ -253,7 +279,7 @@ export class ChildInvitationPage {
         input.maxLength=4096;
       }
     };
-    document.documentElement.lang=this.language;this.root.replaceChildren();const header=el('header');header.append(el('p','Room in the Cart'));
+    document.documentElement.lang=this.language;this.root.replaceChildren();const header=el('header');header.append(brandName(document));
     const select=el('select');select.id='language';select.setAttribute('aria-label',t('language'));
     for(const value of ['en','es'] as const){const option=el('option',t(value==='en'?'english':'spanish'));option.value=value;option.selected=value===this.language;select.append(option);}
     select.addEventListener('change', () => {
@@ -264,7 +290,7 @@ export class ChildInvitationPage {
       this.root.querySelector<HTMLSelectElement>('#language')?.focus();
     });
     header.append(select);
-    const main=el('main');main.setAttribute('aria-busy',String(this.busy));main.append(el('h1',t('title')));
+    const main=el('main');main.className='child-invitation';main.setAttribute('aria-busy',String(this.busy));const heading=el('h1',t('title'));heading.tabIndex=-1;main.append(heading);
     // The original page retains an OTP or pairing intent when switching apps.
     // Its DOM stays free of private fields until the current session is verified.
     if(this.visibility==='hidden'||(this.visibility==='checking'&&!this.logoutPending)){
@@ -273,7 +299,8 @@ export class ChildInvitationPage {
       if(this.visibility==='checking'&&!this.busy)main.append(button('refresh',()=>void this.start()));
       this.root.append(header,main);return;
     }
-    const status=el('p',this.busy?t('loading'):this.notice?t(this.notice):'');status.setAttribute('role','status');main.append(status);
+    const status=el('p',this.busy?t('loading'):this.notice?t(this.notice):'');
+    status.setAttribute('role','status');status.tabIndex=-1;main.append(status);
     const message=(key:CopyKey)=>{if(status.textContent!==t(key))main.append(el('p',t(key)));};
     if(this.logoutPending)main.append(button('signoutRetry',()=>void this.run(()=>this.signout(),true)));
     else if(this.phase==='unavailable'){status.textContent=t('unavailable');main.append(el('p',t('explanation')),el('p',t('account')),el('p',t('secret')));}
@@ -291,9 +318,12 @@ export class ChildInvitationPage {
       if(!this.controller?.state.pairingCode)invitationField(form);
       const claim=button(this.controller?.state.pairingCode?'retryClaim':'claim',()=>{});claim.type='submit';form.append(claim);form.addEventListener('submit',event=>{event.preventDefault();void this.run(generation=>this.claim(generation));});main.append(form);
     }else if(this.phase==='pending'){
-      const state=this.controller?.state;if(state?.pairingCode){main.append(el('h2',t('pairing')));const code=el('p',state.pairingCode);code.id='pairing-code';main.append(code);}
+      const state=this.controller?.state;if(state?.pairingCode){const heading=el('h2',t('pairing'));heading.id='child-pairing';heading.tabIndex=-1;main.append(heading);const code=el('p',state.pairingCode);code.id='pairing-code';main.append(code);}
       message(state?.stage==='approved'?'approved':state?.stage==='finish_retry'?'finishUncertain':'waiting');
-      if(state?.stage==='approved'||state?.stage==='finish_retry')main.append(button(state.stage==='finish_retry'?'retryFinish':'finish',()=>void this.run(generation=>this.finish(generation))));
+      if(state?.stage==='approved'||state?.stage==='finish_retry'){
+        const finish=button(state.stage==='finish_retry'?'retryFinish':'finish',()=>void this.run(generation=>this.finish(generation)));
+        finish.id='child-finish';main.append(finish);
+      }
     }else if(this.phase==='recovered')main.append(el('p',t('recoveryExplanation')));
     else if(this.phase==='active_missing')message('activeMissing');
     else if(this.phase==='active'){const link=el('a',t('open'));link.href='/requests?lang='+this.language;main.append(link);}

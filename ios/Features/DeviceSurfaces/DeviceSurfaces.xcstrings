@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Items deferred to your next shop and store offers awaiting a decision appear here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items deferred to your next shop and store offers awaiting a decision appear here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí aparecen los artículos aplazados para tu próxima compra y las ofertas de la tienda que esperan tu decisión."
+          }
+        }
+      }
+    },
     "Choose one HTTPS recipe page, or share a plain-text shopping list.": {
       "extractionState": "manual",
       "localizations": {
@@ -404,6 +421,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vence"
+          }
+        }
+      }
+    },
+    "Updated at %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated at %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizado a las %@"
           }
         }
       }

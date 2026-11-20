@@ -36,26 +36,43 @@ import SwiftUI
     var body: some View {
         Group {
             if model.ready && model.context.authorize() {
-                Form {
+                WorkingForm {
                     Section {
-                        Text(verbatim: title).font(.title2.bold())
-                        if !yieldText.isEmpty { Text(verbatim: yieldText) }
-                        if let step {
-                            Text(String(format: recordsText("Step %lld of %lld"), Int64(index + 1), Int64(steps.count))).font(.headline)
-                            Text(verbatim: step.instruction).font(.title3).textSelection(.enabled)
-                                .accessibilityFocused($instructionFocused)
-                        } else if !legacyNotes.isEmpty {
-                            Text(recordsText("Original recipe notes")).font(.headline)
-                            Text(verbatim: legacyNotes).font(.title3).textSelection(.enabled)
-                        } else {
-                            Text(recordsText("This recipe has no written instructions."))
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(verbatim: title).font(.system(.title2, design: .serif, weight: .semibold))
+                            if !yieldText.isEmpty { Text(verbatim: yieldText).foregroundStyle(Theme.secondary) }
+                            if let step {
+                                Text(String(format: recordsText("Step %lld of %lld"), Int64(index + 1), Int64(steps.count)))
+                                    .font(.headline).foregroundStyle(Theme.action).monospacedDigit()
+                                    .accessibilityAddTraits(.isHeader)
+                                ProgressView(value: Double(index + 1), total: Double(steps.count))
+                                    .tint(Theme.action).accessibilityHidden(true)
+                                Text(verbatim: step.instruction).font(.title3).textSelection(.enabled)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityFocused($instructionFocused)
+                            } else if !legacyNotes.isEmpty {
+                                Text(recordsText("Original recipe notes")).font(.headline)
+                                Text(verbatim: legacyNotes).font(.title3).textSelection(.enabled)
+                            } else {
+                                Text(recordsText("This recipe has no written instructions."))
+                            }
+                        }.padding(.vertical, 6)
+                        if index + 1 < steps.count {
+                            Button { select(index + 1) } label: {
+                                Label(recordsText("Next step"), systemImage: "arrow.forward")
+                            }.buttonStyle(PrimaryAction())
                         }
-                        if index > 0 { Button(recordsText("Previous step")) { select(index - 1) } }
-                        if index + 1 < steps.count { Button(recordsText("Next step")) { select(index + 1) } }
+                        if index > 0 {
+                            Button { select(index - 1) } label: {
+                                Label(recordsText("Previous step"), systemImage: "arrow.backward")
+                                    .frame(minHeight: 44)
+                            }
+                        }
                     }
                     Section(linked.isEmpty ? recordsText("All recipe ingredients") : recordsText("Ingredients for this step")) {
                         if linked.isEmpty {
-                            Text(recordsText("This step has no reviewed ingredient links. Use the original wording below.")).font(.footnote)
+                            Text(recordsText("This step has no reviewed ingredient links. Use the original wording below."))
+                                .font(.body).foregroundStyle(Theme.secondary)
                         }
                         ForEach(linked.isEmpty ? Array(ingredients.indices) : linked, id: \.self) { position in
                             if ingredients.indices.contains(position) { Text(verbatim: ingredients[position]) }
@@ -123,9 +140,11 @@ import SwiftUI
         }
         .onDisappear { readback = nil; noteExcerpt = nil }
         .confirmationDialog(recordsText("End this cooking session?"), isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button(recordsText("End session and remove its timers"), role: .destructive) { if model.end() { dismiss() } }
+            Button(recordsText("End session"), role: .destructive) { if model.end() { dismiss() } }
                 .accessibilityIdentifier("cooking.confirmEnd")
             Button(recordsText("Cancel"), role: .cancel) {}
+        } message: {
+            Text(recordsText("Ending this session removes its timers."))
         }
     }
 
@@ -144,16 +163,37 @@ import SwiftUI
                         let seconds = timer.remaining(at: time.date)
                         if seconds == 0 { Text(recordsText("Timer finished")).font(.headline) }
                         else {
-                            let duration = Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .abbreviated))
-                            Text(verbatim: duration).monospacedDigit()
-                            if timer.pausedSeconds != nil {
-                                Text(recordsText("Paused")).accessibilityIdentifier("cooking.paused.\(position)")
-                                Button(recordsText("Resume timer")) { Task { await model.resume(timer) } }
-                            } else { Button(recordsText("Pause timer")) { model.pause(timer) }.accessibilityIdentifier("cooking.pause.\(position)") }
+                            VStack(alignment: .leading, spacing: 6) {
+                                let duration = Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .abbreviated))
+                                Text(verbatim: duration).font(.title2.weight(.medium)).monospacedDigit()
+                                if timer.pausedSeconds != nil {
+                                    Text(recordsText("Paused")).accessibilityIdentifier("cooking.paused.\(position)")
+                                    Button(recordsText("Resume timer")) { Task { await model.resume(timer) } }
+                                        .buttonStyle(PrimaryAction())
+                                        .accessibilityLabel(label + ", " + recordsText("Resume timer"))
+                                        .accessibilityIdentifier("cooking.resume.\(position)")
+                                } else {
+                                    Button(recordsText("Pause timer")) { model.pause(timer) }
+                                        .buttonStyle(PrimaryAction())
+                                        .accessibilityLabel(label + ", " + recordsText("Pause timer"))
+                                        .accessibilityIdentifier("cooking.pause.\(position)")
+                                }
+                            }
                         }
                     }
-                    Button(recordsText("Remove timer"), role: .destructive) { model.cancel(timer) }
-                }.buttonStyle(.borderless).accessibilityElement(children: .contain)
+                    Divider().accessibilityHidden(true)
+                    Button(role: .destructive) { model.cancel(timer) } label: {
+                        Text(recordsText("Remove timer"))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    }
+                    .accessibilityLabel(label + ", " + recordsText("Remove timer"))
+                    .accessibilityIdentifier("cooking.remove.\(position)")
+                }
+                .lineLimit(nil)
+                .multilineTextAlignment(.leading)
+                .buttonStyle(.borderless)
+                .accessibilityElement(children: .contain)
             }
             TextField(recordsText("Timer minutes"), text: $minutes)
                 .keyboardType(.numberPad).focused($focusedInput, equals: .minutes)

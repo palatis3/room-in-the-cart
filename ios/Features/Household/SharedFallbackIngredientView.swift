@@ -12,7 +12,7 @@ struct SharedFallbackIngredientView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             let recipe = draft.candidate.recipe
             Section(recipe.title) {
                 LabeledContent(ht("Portions"), value: recipe.portions.formatted())

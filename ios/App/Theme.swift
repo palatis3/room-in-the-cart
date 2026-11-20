@@ -7,10 +7,73 @@ enum Theme {
     static let secondary = Color("secondary")
     static let action = Color("accent")
     static let onAction = Color("on_accent")
+    static let selection = Color("selection")
+    static let onSelection = Color("on_selection")
+    static let divider = Color("divider")
+    static let focus = Color("focus")
     static let controlEdge = Color("control_edge")
     static let error = Color("error")
+    static let errorSurface = Color("error_surface")
     static let warning = Color("warning")
     static let warningSurface = Color("warning_surface")
+}
+
+/// A compact scope or selected-choice label. The supplied words carry the meaning in every appearance.
+struct BrandScopeLabel: View {
+    let title: String
+    let systemImage: String
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    init(_ title: String, systemImage: String) {
+        self.title = title
+        self.systemImage = systemImage
+    }
+
+    var body: some View {
+        Label {
+            Text(verbatim: title).fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: systemImage).accessibilityHidden(true)
+        }
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(Theme.onSelection)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            if contrast == .increased {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Theme.controlEdge, lineWidth: 1)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+}
+
+/// The cart is decorative beside a named result or About caption. Offset is in display points.
+/// Only the pear moves. Its pivot is registered to the lower body, just behind the cart rim.
+struct BrandCartMark: View {
+    var pearOffset: CGSize = .zero
+    var pearAngle: Double = 0
+
+    var body: some View {
+        GeometryReader { geometry in
+            let side = min(geometry.size.width, geometry.size.height)
+            ZStack {
+                Image(decorative: "BrandCartField").resizable()
+                Image(decorative: "BrandCartPear").resizable()
+                    .rotationEffect(.degrees(pearAngle), anchor: UnitPoint(x: 0.68, y: 0.47))
+                    .offset(pearOffset)
+                Image(decorative: "BrandCartFront").resizable()
+            }
+            .frame(width: side, height: side)
+            .clipShape(RoundedRectangle(cornerRadius: side * 0.23, style: .continuous))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
+    }
 }
 
 /// Native form chrome uses the app's semantic colors in either appearance.
@@ -27,6 +90,60 @@ struct WorkingForm<Content: View>: View {
             Group { content }
                 .listRowBackground(Theme.surface)
         }.workingSurface()
+    }
+}
+
+/// One input with a name that remains visible after a value has been entered.
+struct WorkingField<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title).font(.subheadline.weight(.medium)).foregroundStyle(Theme.secondary)
+                .accessibilityHidden(true)
+            content.accessibilityLabel(title)
+        }
+        .padding(.vertical, 3)
+    }
+}
+
+/// The item stays prominent while the detail identifies its location, source or count.
+struct WorkingRecordHeading: View {
+    let title: String
+    let detail: String
+    let systemImage: String
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    init(_ title: String, detail: String, systemImage: String) {
+        self.title = title
+        self.detail = detail
+        self.systemImage = systemImage
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            if !typeSize.isAccessibilitySize {
+                Image(systemName: systemImage)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Theme.onSelection)
+                    .frame(width: 40, height: 40)
+                    .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
+                    .accessibilityHidden(true)
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.title2.weight(.semibold)).foregroundStyle(Theme.ink)
+                Text(detail).font(.subheadline).foregroundStyle(Theme.secondary)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 4)
     }
 }
 
@@ -73,6 +190,7 @@ struct PrimaryActionLabel<Label: View>: View {
     let label: Label
     var isPressed = false
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.isFocused) private var isFocused
 
     var body: some View {
         label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
@@ -86,9 +204,21 @@ struct PrimaryActionLabel<Label: View>: View {
                     RoundedRectangle(cornerRadius: 14)
                         .strokeBorder(Theme.controlEdge, lineWidth: 1)
                         .accessibilityHidden(true)
+                } else if isPressed {
+                    RoundedRectangle(cornerRadius: 14)
+                        .inset(by: 3)
+                        .strokeBorder(Theme.onAction, lineWidth: 1)
+                        .accessibilityHidden(true)
+                }
+                if isFocused {
+                    RoundedRectangle(cornerRadius: 14)
+                        .inset(by: -3)
+                        .strokeBorder(Theme.surface, lineWidth: 3)
+                    RoundedRectangle(cornerRadius: 14)
+                        .inset(by: -6)
+                        .strokeBorder(Theme.focus, lineWidth: 3)
                 }
             }
-            .opacity(isEnabled && isPressed ? 0.8 : 1)
     }
 }
 

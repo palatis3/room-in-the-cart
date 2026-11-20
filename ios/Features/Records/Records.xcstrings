@@ -1,6 +1,70 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "On this iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En este iPhone"
+          }
+        }
+      }
+    },
+    "Saved comparisons": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved comparisons"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparaciones guardadas"
+          }
+        }
+      }
+    },
+    "Files and recovery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files and recovery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos y recuperación"
+          }
+        }
+      }
+    },
+    "Loading saved comparisons…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading saved comparisons…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando las comparaciones guardadas…"
+          }
+        }
+      }
+    },
     "Another version or a recipe with matching content is already in this review or your library. Skip this version or save it separately.": {
       "extractionState": "manual",
       "localizations": {
@@ -1187,6 +1251,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eliminar esta copia recuperada"
+          }
+        }
+      }
+    },
+    "Delete local shopping data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete local shopping data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar datos de compras de este iPhone"
           }
         }
       }
@@ -5361,6 +5442,23 @@
         }
       }
     },
+    "End session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizar sesión"
+          }
+        }
+      }
+    },
     "End session and remove its timers": {
       "extractionState": "manual",
       "localizations": {
@@ -5391,6 +5489,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Finalizar esta sesión de cocina?"
+          }
+        }
+      }
+    },
+    "Ending this session removes its timers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ending this session removes its timers."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al finalizar esta sesión, se eliminarán sus temporizadores."
           }
         }
       }

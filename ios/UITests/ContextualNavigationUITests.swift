@@ -35,7 +35,7 @@ import UIKit
         review(english)
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect arroz"]
-        reveal(food)
+        XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let lineID = food.identifier
         XCTAssertTrue(lineID.hasPrefix("ledgerInspect-"))
         tap(element("ledgerImport"))
@@ -46,7 +46,7 @@ import UIKit
         tap(decision)
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Merge same need")).firstMatch)
         tap(apply)
-        reveal(element(lineID))
+        XCTAssertTrue(element(lineID).wait(for: \.isHittable, toEqual: true, timeout: 8))
         restart()
         let saved = element(lineID)
         if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(app.buttons["openPickupList"]) }
@@ -58,7 +58,7 @@ import UIKit
 
     func testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence() {
         launch(reset: true)
-        let shortcut = element("shop.checkOneChange")
+        let shortcut = app.shopToolButton("shop.checkOneChange")
         tap(shortcut)
         XCTAssertTrue(app.navigationBars["Check one change"].waitForExistence(timeout: 5))
         tap(app.buttons["Leave without saving"])
@@ -150,7 +150,7 @@ import UIKit
         commit.tap()
         XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
         let food = app.buttons["Inspect wraps"]
-        reveal(food)
+        XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8))
         let id = food.identifier
         restart()
         if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
@@ -175,7 +175,7 @@ import UIKit
         fill("28", into: "ledgerImportAmount-1", replacing: true)
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect pinto beans"]
-        reveal(food)
+        XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let id = food.identifier
         restart()
         if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
@@ -197,7 +197,7 @@ import UIKit
         XCTAssertEqual(element("ledgerImportAmount-1").value as? String, "24")
         tap(element("ledgerCommitImport"))
         let item = app.buttons["Inspect seltzer"]
-        reveal(item)
+        XCTAssertTrue(item.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let id = item.identifier
         restart()
         if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
@@ -250,7 +250,8 @@ import UIKit
     func testLargeTextKeepsLongNativePasteEditableAndReviewReachable() throws {
         let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "ReleaseLedger500", withExtension: "txt"))
         let fixture = try String(contentsOf: url, encoding: .utf8)
-        XCTAssertEqual(fixture.split(separator: "\n").count, 500)
+        let sourceLines = fixture.split(separator: "\n")
+        XCTAssertEqual(sourceLines.count, 500)
         UIPasteboard.general.string = fixture
 
         launch(reset: true, largestText: true)
@@ -344,8 +345,19 @@ import UIKit
         capture("S02-review-action-reachable-at-largest-text")
         let origin = app.coordinate(withNormalizedOffset: .zero)
         origin.withOffset(CGVector(dx: point.x - app.frame.minX, dy: point.y - app.frame.minY)).tap()
-        let previewAmount = app.textFields.matching(NSPredicate(format: "placeholderValue == %@", "Amount, unknown if blank")).firstMatch
-        XCTAssertTrue(previewAmount.waitForExistence(timeout: 8), "Tapping Review list must show an editable staged row")
+        let amountPrefix = "ledgerImportAmount-"
+        let importForm = app.collectionViews["ledgerImportForm"]
+        let mountedAmount = importForm.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", amountPrefix)).firstMatch
+        XCTAssertTrue(mountedAmount.waitForExistence(timeout: 8), "Tapping Review list must show an editable staged row")
+        // The Form mounts different rows depending on the Dynamic Type layout and scroll position.
+        let amountID = mountedAmount.identifier
+        let rowNumber = try XCTUnwrap(Int(amountID.dropFirst(amountPrefix.count)))
+        XCTAssertTrue((1...sourceLines.count).contains(rowNumber))
+        let originalLine = sourceLines[rowNumber - 1]
+        let originalAmount = String(try XCTUnwrap(originalLine.split(separator: " ").first))
+        let amount = importForm.textFields[amountID]
+        XCTAssertEqual(amount.value as? String, originalAmount)
+        XCTAssertTrue(importForm.staticTexts[String(originalLine)].exists)
         XCTAssertFalse(editor.exists)
         let commitActions = app.buttons.matching(identifier: "ledgerCommitImport")
         let commit = commitActions.firstMatch
@@ -356,6 +368,17 @@ import UIKit
         XCTAssertLessThanOrEqual(commit.frame.maxY, app.windows.firstMatch.frame.maxY)
         XCTAssertGreaterThanOrEqual(commit.frame.height, 44)
         capture("S02-editable-staged-preview-at-largest-text")
+        revealContent(amount, above: commit)
+        amount.tap()
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        app.typeText(originalAmount)
+        XCTAssertEqual(amount.value as? String, originalAmount + originalAmount)
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 5))
+        XCTAssertTrue(commit.isEnabled && commit.isHittable)
+        commit.tap()
+        XCTAssertTrue(navigation.waitForNonExistence(timeout: 20), "Adding the edited list must finish the review")
+        XCTAssertTrue(app.textFields["ledgerSearch"].waitForExistence(timeout: 8))
     }
 
     func testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch() {
@@ -429,7 +452,7 @@ import UIKit
         saveFacts()
 
         openFacts()
-        replaceRetailerField("ledgerBranch", with: "East Market")
+        replaceRetailerField(element("ledgerBranch"), with: "East Market")
         tap(element("ledgerReviewFacts"))
         assertText("West Market"); assertText("Retailer preview: $37.20")
         assertText("East Market"); assertText("Fees: Unknown")
@@ -521,7 +544,7 @@ import UIKit
         let done = app.buttons["Done"]
         enterCheckoutTerms([("Store", "Market"), ("Branch", "West branch"),
                             ("Pickup or delivery slot", "Tuesday 5 PM")], above: done)
-        replaceRetailerField("Source of these prices", with: "West checkout", above: done)
+        replaceRetailerField(app.textFields["Source of these prices"], with: "West checkout", above: done)
         let save = app.buttons["Save and evaluate checkout"]
         func saveInclusiveTotal(_ total: String) {
             enableSwitch("Retailer total already includes all charges")
@@ -537,15 +560,16 @@ import UIKit
         }
         saveInclusiveTotal("37.20")
         assertText("Saved checkout result")
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
 
-        for _ in 0..<4 where !app.textFields["Branch"].isHittable { scrollContent(upward: false) }
-        replaceRetailerField("Branch", with: "East")
+        for _ in 0..<4 where !app.textFields["Branch"].isHittable { app.scrollForm(in: scrollableArea(), upward: false) }
+        replaceRetailerField(app.textFields["Branch"], with: "East")
         revealContent(save)
         XCTAssertFalse(save.isEnabled)
         tap(app.buttons["Replace pricing after review"])
         tap(app.buttons["Start replacement pricing"])
         let source = app.textFields["Source of these prices"]
-        for _ in 0..<4 where !source.isHittable { scrollContent(upward: false) }
+        for _ in 0..<4 where !source.isHittable { app.scrollForm(in: scrollableArea(), upward: false) }
         revealContent(source)
         XCTAssertEqual(source.value as? String, source.placeholderValue)
         fill("East checkout", into: "Source of these prices")
@@ -556,6 +580,7 @@ import UIKit
         tap(app.buttons["Save reviewed checkout"])
         XCTAssertTrue(app.navigationBars["Review checkout changes"].waitForNonExistence(timeout: 8))
         assertText("Saved checkout result"); assertText("$39.05")
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         openHistoryDisclosure("checkout.earlierQuotes", label: "Earlier checkout quotes")
         assertText("Market · West branch"); assertText("West checkout"); assertText("$37.20")
         capture("S05-original-and-reviewed-replacement-checkout")
@@ -671,7 +696,7 @@ import UIKit
         // The basket's price fields are above the weight-review link we just left.
         for _ in 0..<8 {
             if price.exists && price.isHittable { break }
-            scrollContent(upward: false)
+            app.scrollForm(in: scrollableArea(), upward: false)
         }
         XCTAssertTrue(price.exists && price.isHittable)
         XCTAssertTrue(price.value as? String == price.placeholderValue || price.value as? String == "", price.debugDescription)
@@ -745,7 +770,7 @@ import UIKit
                 } else {
                     upward = false
                 }
-                scrollContent(upward: upward)
+                app.scrollForm(in: scrollableArea(), upward: upward)
             }
             XCTAssertTrue(branch.exists && branch.isHittable, "The adopted pickup branch must be visible")
             XCTAssertEqual(branch.label, "Current pickup branch: East branch")
@@ -1012,8 +1037,7 @@ import UIKit
         XCTAssertEqual(header.value as? String, "Expanded")
     }
 
-    private func replaceRetailerField(_ id: String, with text: String, above inputBar: XCUIElement? = nil) {
-        let field = element(id)
+    private func replaceRetailerField(_ field: XCUIElement, with text: String, above inputBar: XCUIElement? = nil) {
         revealContent(field, above: inputBar)
         field.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
@@ -1025,7 +1049,7 @@ import UIKit
         app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
         // A focused empty field can expose its shortened placeholder as its AX value.
         let emptyPresentation = field.value as? String ?? ""
-        XCTContext.runActivity(named: "Replace \(id) after deletion displayed \(String(reflecting: emptyPresentation))") { _ in
+        XCTContext.runActivity(named: "Replace \(field.label) after deletion displayed \(String(reflecting: emptyPresentation))") { _ in
             app.typeText(text)
             XCTAssertEqual(field.value as? String, text)
         }
@@ -1068,10 +1092,10 @@ import UIKit
                 let clearContent = viewport.insetBy(dx: 0, dy: 4)
                 let tapArea = tapOffset == nil ? clearContent : clearContent.intersection(area)
                 if tapArea.contains(point) && target.isHittable { return }
-                scrollContent(upward: point.y > area.midY, besideFields: inputBar != nil)
+                app.scrollForm(in: scrollableArea(), upward: point.y > area.midY, besideFields: inputBar != nil)
             } else {
-                scrollContent(upward: attempt < 16 ? initiallyUpward : !initiallyUpward,
-                              besideFields: inputBar != nil)
+                app.scrollForm(in: scrollableArea(), upward: attempt < 16 ? initiallyUpward : !initiallyUpward,
+                               besideFields: inputBar != nil)
             }
         }
         XCTFail("Content tap point is obscured: \(target.debugDescription)")
@@ -1084,7 +1108,7 @@ import UIKit
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 16 }
-            scrollContent(upward: upward)
+            app.scrollForm(in: scrollableArea(), upward: upward)
         }
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
@@ -1095,19 +1119,6 @@ import UIKit
         let top = max(bounds.minY + 88, min(bounds.minY + 140, keyboardTop - 140))
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
-    }
-    private func scrollContent(upward: Bool, besideFields: Bool = false) {
-        // Whole-app swipes can start on the software keyboard. Drag only in
-        // the observed unobscured content, and still require real hittability.
-        let area = scrollableArea(), bounds = app.frame
-        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
-        let origin = app.coordinate(withNormalizedOffset: .zero)
-        // During grouped text entry, drag in the Form margin. A central drag on
-        // the active field can select its text and leave the scroll position intact.
-        let x = besideFields ? area.minX : area.midX
-        let start = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? high : low) - bounds.minY))
-        start.press(forDuration: 0.05, thenDragTo: end)
     }
     private func assertText(_ text: String) {
         let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
@@ -1144,11 +1155,11 @@ import UIKit
                 // Scroll only to reveal it, and return only if it is actionable.
                 for _ in 0..<2 {
                     if target.isHittable { return }
-                    scrollContent(upward: true)
+                    app.scrollForm(in: scrollableArea(), upward: true)
                 }
                 for _ in 0..<4 {
                     if target.isHittable { return }
-                    scrollContent(upward: false)
+                    app.scrollForm(in: scrollableArea(), upward: false)
                 }
                 if target.isHittable { return }
             }

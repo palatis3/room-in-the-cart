@@ -26,6 +26,20 @@ func ledgerQuantity(_ quantity: Quantity?) -> String {
 }
 
 extension ShoppingLedger {
+    /// A single plain grocery can stand on its name. Reviewed quantities, source
+    /// conflicts, and demand from meals or portions still need a visible amount.
+    func shoppingRowQuantity(for line: ShoppingLine) -> String? {
+        do {
+            if let quantity = try quantity(forLineID: line.id) { return ledgerQuantity(quantity) }
+        } catch { return ledgerQuantity(nil) }
+        let sources = contributions(forLineID: line.id)
+        guard sources.count == 1, let only = sources.first, only.source.canSupplyExistingQuantity,
+              only.quantity == nil, only.originalPack == nil, only.capture == nil, only.exclusions.isEmpty,
+              only.notes.isEmpty, line.notes.isEmpty, only.productName == line.name,
+              QuickGrocery.plainName(only.originalText) == line.name else { return ledgerQuantity(nil) }
+        return nil
+    }
+
     var listExclusions: [UUID: String] {
         itemExclusions.mapValues { ledgerFormat("Exclusions: %@", $0.joined(separator: ", ")) }
     }

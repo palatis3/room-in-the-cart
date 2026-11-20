@@ -12,7 +12,7 @@ struct HouseholdExitView: View {
         return account.identity?.subject
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(ht("Leaving ends your access to one household and its shared views. You keep your account, other memberships and private Records. Your App Store subscription is managed separately."))
             }

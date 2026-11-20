@@ -39,7 +39,7 @@ struct LedgerImportView: View {
     private enum Focus: Hashable { case preview, status, inputLimit }
     @AccessibilityFocusState private var focus: Focus?
     let firstDraft: FirstListEditor?
-    let onFirstSave: ((UUID) -> Void)?
+    let onSaved: ((UUID) -> Void)?
     let authorizeEntry: @MainActor () -> Bool
     private let prefill: String
     private let pantryFoodPrefill: Bool
@@ -47,8 +47,8 @@ struct LedgerImportView: View {
     private let pantryProductLink: UUID?
     @State private var incomingWording: String?
     @State private var appendError: String?
-    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onFirstSave: ((UUID) -> Void)? = nil) {
-        self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onFirstSave = onFirstSave
+    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onSaved: ((UUID) -> Void)? = nil) {
+        self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onSaved = onSaved
         self.authorizeEntry = authorizeEntry
         self.prefill = prefill
         self.pantryFoodPrefill = pantryFoodPrefill
@@ -95,7 +95,7 @@ struct LedgerImportView: View {
     var body: some View {
         let review = preview.map { LedgerImportReview(shop: shop, preview: $0, choices: choices) }
         return ScrollViewReader { scroll in
-            Form {
+            WorkingForm {
                 if let incomingWording {
                     Section(SurfaceCopy.text("Shortcut item")) {
                         Text(verbatim: incomingWording)
@@ -163,18 +163,8 @@ struct LedgerImportView: View {
                             original = values.joined(separator: "\n")
                             source = .paste
                         }.accessibilityLabel(ledgerText("Paste list"))
-                        if !pantryFoodPrefill, let binding = reminderCopyBinding {
-                            Button(applePlanningText("Copy from Reminders")) {
-                                inputFocus = nil
-                                reminderPicker = LedgerReminderPresentation(binding: binding)
-                            }.accessibilityIdentifier("ledger.remindersCopy")
-                        }
                     }.disabled(model.saving || model.hasPendingSave)
                     Section {
-                        Button(firstDraft == nil ? captureText("Capture and review fields") : ledgerText("Add by photo or voice")) { beginCapture() }
-                            .disabled(model.saving || model.hasPendingSave || liveCaptureBinding == nil)
-                            .accessibilityIdentifier("ledger.capture")
-                        Text(captureText("Capture is for this private list. Guest changes use the dinner preview.")).font(.footnote)
                         Button(ledgerText("Review list")) {
                             guard let shop else { return }
                             inputFocus = nil
@@ -203,6 +193,19 @@ struct LedgerImportView: View {
                                 .accessibilityIdentifier("ledgerImportSizeError")
                         }
                     }
+                    Section {
+                        if !pantryFoodPrefill, let binding = reminderCopyBinding {
+                            Button(applePlanningText("Copy from Reminders")) {
+                                inputFocus = nil
+                                reminderPicker = LedgerReminderPresentation(binding: binding)
+                            }.accessibilityIdentifier("ledger.remindersCopy")
+                        }
+                        Button(firstDraft == nil ? captureText("Capture and review fields") : ledgerText("Add by photo or voice")) { beginCapture() }
+                            .disabled(model.saving || model.hasPendingSave || liveCaptureBinding == nil)
+                            .accessibilityIdentifier("ledger.capture")
+                    } footer: {
+                        Text(captureText("Capture is for this private list. Guest changes use the dinner preview."))
+                    }.disabled(model.saving || model.hasPendingSave)
                 }
                 if firstDraft == nil && !showingImportStatus {
                     Section { importSaveStatus }
@@ -296,8 +299,14 @@ struct LedgerImportView: View {
     }
 
     private var importSaveStatus: some View {
-        LedgerSaveStatus(model: model, onRetried: { onFirstSave?(shopID); dismiss() })
-            .accessibilityFocused($focus, equals: .status)
+        LedgerSaveStatus(model: model, onRetried: {
+            if let preview,
+               model.workspace.shops.first(where: { $0.id == preview.shopID })?.importBatches
+                .contains(where: { $0.id == preview.id && $0.undoneAt == nil }) == true {
+                onSaved?(preview.shopID)
+            }
+            dismiss()
+        }).accessibilityFocused($focus, equals: .status)
     }
 
     private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview) -> some View {
@@ -318,7 +327,7 @@ struct LedgerImportView: View {
                 if let firstDraft {
                     guard preview.shopID == shopID, firstDraft.authorize(), let draft = await firstDraft.flush(firstContents) else { return }
                     if await model.commitFirstList(preview, decisions: decisions, draft: draft, title: ledgerText("Pickup"), authorize: firstDraft.authorize) {
-                        onFirstSave?(shopID); dismiss()
+                        onSaved?(shopID); dismiss()
                     } else {
                         if !model.hasPendingSave, model.error == nil {
                             model.error = ledgerText("Could not save on this iPhone. Your entries are still here. Retry the same change.")
@@ -326,6 +335,7 @@ struct LedgerImportView: View {
                         focus = .status
                     }
                 } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, authorize: authorizeSave, { try $0.commitImport(preview, decisions: decisions) }) {
+                    onSaved?(preview.shopID)
                     dismiss()
                 } else { focus = .status }
             }
@@ -628,11 +638,18 @@ private struct LedgerImportRowView: View {
                 Text(captureText("Destination") + ": " + capture.destination)
                 if !line.exclusions.isEmpty { Text(captureText("Exclusions") + ": " + line.exclusions.joined(separator: "; ")) }
             } else {
-                TextField(ledgerText("Item name"), text: $line.name, axis: .vertical)
-                    .focused(inputFocus, equals: .name(line.id))
-                TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
-                    .focused(inputFocus, equals: .amount(line.id))
-                    .accessibilityIdentifier("ledgerImportAmount-\(number)")
+                WorkingField(ledgerText("Item name")) {
+                    TextField(ledgerText("Item name"), text: $line.name, prompt: Text(""), axis: .vertical)
+                        .focused(inputFocus, equals: .name(line.id))
+                        .textFieldStyle(.roundedBorder)
+                }
+                WorkingField(ledgerText("Amount, unknown if blank")) {
+                    TextField(ledgerText("Amount, unknown if blank"), text: $amount, prompt: Text(""))
+                        .keyboardType(.numbersAndPunctuation)
+                        .focused(inputFocus, equals: .amount(line.id))
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityIdentifier("ledgerImportAmount-\(number)")
+                }
                 Picker(ledgerText("Unit"), selection: $unit) {
                     ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
@@ -728,7 +745,7 @@ struct LedgerFactsView: View {
             || !retailerTotal.isEmpty || !includedCharges.isEmpty)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if !isCurrent {
                 Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
                 Button(ledgerText("Close")) { dismiss() }

@@ -7,6 +7,74 @@ import XCTest
     override func setUpWithError() throws { continueAfterFailure = false }
     override func tearDownWithError() throws { app.terminate() }
 
+    func testFourAdultDestinationsAndPantryRestoreWithoutEnablingInventory() {
+        launch(reset: true)
+        let tabs = app.tabBars.buttons
+        XCTAssertEqual(tabs.allElementsBoundByIndex.map(\.label), ["Shop", "Pantry", "Dinners", "Records"])
+        XCTAssertTrue(tabs["Shop"].isSelected)
+        tap(tabs["Pantry"])
+        XCTAssertTrue(app.buttons["pantry.setup.apply"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.buttons["pantry.setup.apply"].label, "Start my pantry")
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(tabs["Pantry"].isSelected)
+        XCTAssertTrue(app.buttons["pantry.setup.apply"].waitForExistence(timeout: 10))
+        tap(tabs["Shop"])
+        XCTAssertTrue(element("quickGrocery.name").waitForExistence(timeout: 10))
+        tap(tabs["Records"])
+        XCTAssertTrue(app.buttons["records.startComparison"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["records.sharedPlacementReports"].exists)
+        XCTAssertFalse(app.buttons["records.priceBudgetHistory"].exists)
+        XCTAssertFalse(app.buttons["Family decision history"].exists)
+    }
+
+    func testNamedCheckUndoSurvivesRelaunchAndRestoresOnlyTheCheckedRow() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        tap(entry)
+        entry.typeText("milk\n")
+        XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 10))
+        entry.typeText("eggs\n")
+        let eggsAdded = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@", "quickGrocery.undo", "eggs")).firstMatch
+        XCTAssertTrue(eggsAdded.waitForExistence(timeout: 10))
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        let viewList = app.buttons["quickGrocery.viewList"]
+        XCTAssertTrue(viewList.isHittable)
+        XCTAssertEqual(viewList.label, "View list")
+        XCTAssertLessThanOrEqual(viewList.frame.maxY, keyboard.frame.minY)
+        capture("Quick entry with View list and Undo")
+        viewList.tap()
+        let milk = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "milk")).firstMatch
+        let eggs = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "eggs")).firstMatch
+        XCTAssertTrue(milk.waitForExistence(timeout: 10))
+        let milkID = milk.identifier, eggsID = eggs.identifier
+        let inspect = app.buttons["Inspect milk"]
+        XCTAssertTrue(inspect.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        XCTAssertGreaterThanOrEqual(inspect.frame.height, 44)
+        inspect.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        let detail = app.navigationBars["Inspect ingredient"]
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["milk"].exists)
+        tap(detail.buttons.firstMatch)
+        let department = app.buttons["Department for milk"]
+        tap(department)
+        tap(app.buttons["Bakery"])
+        let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Bakery"), object: department)
+        XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
+        tap(milk)
+        let undo = app.buttons["ledgerUndoCheck"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        XCTAssertTrue(undo.label.contains("milk"))
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        tap(undo)
+        XCTAssertTrue(app.buttons[milkID].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons[eggsID].exists)
+        XCTAssertFalse(undo.exists)
+    }
+
     func testInListPickupCreationAndSwitchRestoreTheChosenList() {
         launch(reset: true)
         tap(app.buttons["openPickupList"])
@@ -127,6 +195,75 @@ import XCTest
 
 @MainActor
 extension XCUIApplication {
+    /// The history footer retains its scroll position while a restored grocery returns to the active section above.
+    func revealRestoredGrocery(_ grocery: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(navigationBars["List history"].waitForNonExistence(timeout: 8), file: file, line: line)
+        let list = collectionViews.firstMatch
+        for _ in 0..<8 {
+            if grocery.exists && grocery.isHittable { return }
+            list.swipeDown()
+        }
+        XCTAssertTrue(grocery.exists && grocery.isHittable, "The restored grocery must return to the active list.", file: file, line: line)
+    }
+
+    /// The fresh Shop exposes infrequent shortcuts through its disclosure.
+    /// Existing pickups already show those actions with the named trip.
+    func shopToolButton(_ identifier: String, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
+        let tool = buttons[identifier]
+        let collapsed = buttons.matching(NSPredicate(format: "identifier == %@ AND value IN %@",
+            "shop.moreTools", ["Collapsed", "Contraído"])).firstMatch
+        if collapsed.exists {
+            let scroll = scrollViews["shopContentScroll"]
+            for _ in 0..<12 {
+                if collapsed.isHittable && scroll.frame.contains(collapsed.frame) { break }
+                if collapsed.frame.midY < scroll.frame.minY { scroll.swipeDown() }
+                else { scroll.swipeUp() }
+            }
+            XCTAssertTrue(collapsed.isHittable, "More shopping tools should open from Shop.", file: file, line: line)
+            collapsed.tap()
+        }
+        return tool
+    }
+
+    func scrollForm(in area: CGRect, upward: Bool, besideFields: Bool = false) {
+        let bounds = frame
+        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+        let origin = coordinate(withNormalizedOffset: .zero)
+        let x = besideFields ? area.minX : area.midX
+        let start = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? low : high) - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? high : low) - bounds.minY))
+        if besideFields {
+            // Drag beside the inputs to avoid selecting text. Stop before lifting
+            // the finger so the next field cannot coast behind the navigation bar.
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        } else {
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+    }
+
+    func waitForDoneAboveKeyboard(identifier: String) -> Bool {
+        var lastButton: CGRect?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let screen = try? self.snapshot() else { return false }
+            var elements = screen.children
+            var keyboard = CGRect.null
+            var button = CGRect.null
+            while let element = elements.popLast() {
+                if element.elementType == .keyboard { keyboard = element.frame }
+                if element.elementType == .button && element.identifier == identifier { button = element.frame }
+                elements.append(contentsOf: element.children)
+            }
+            guard !keyboard.isEmpty, screen.frame.intersects(keyboard), !button.isEmpty,
+                  button.maxY <= keyboard.minY + 1 else {
+                lastButton = nil
+                return false
+            }
+            defer { lastButton = button }
+            return lastButton == button
+        }, object: nil)
+        return XCTWaiter.wait(for: [settled], timeout: 8) == .completed
+    }
+
     /// UIKit may retain a dismissed keyboard below the viewport. Measure one
     /// snapshot instead of waiting for that offscreen accessibility node to vanish.
     func waitForKeyboardDismissal(doneIdentifier: String, timeout: TimeInterval = 5,

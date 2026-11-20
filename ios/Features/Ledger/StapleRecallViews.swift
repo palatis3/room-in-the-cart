@@ -14,7 +14,7 @@ struct StapleApprovalView: View {
         _revision = State(initialValue: shop.revisionID)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if let shop = ledger.shop, shop.id == shopID, let line = shop.lines.first(where: { $0.id == lineID }) {
                 Text(line.name).font(.headline)
                 LabeledContent(ledgerText("Store"), value: shop.basis.branch)
@@ -52,6 +52,7 @@ struct StapleRecallView: View {
     @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var membership: MembershipCoordinator
     @EnvironmentObject private var access: WorkspaceAccess
+    @Environment(\.guardianChildCoordinator) private var child
     @State private var store = ""
     @State private var purpose = ""
     @State private var review: ReviewedStaple?
@@ -70,7 +71,9 @@ struct StapleRecallView: View {
     }
     var body: some View {
         List {
-            if !permitted {
+            if !access.unlocked || !household.canOpenMembership || child?.presented == true {
+                Text(mtr("This view is unavailable."))
+            } else if !permitted {
                 Text(ledgerText("Assisted staple recall requires an active adult planning seat. You can still review open deferrals and enter items manually."))
                 Button(ledgerText("Household membership")) { showsMembership = true }
                     .accessibilityFocused($membershipFocused)
@@ -142,7 +145,7 @@ private struct StapleReviewSheet: View {
         _unit = State(initialValue:quantity?.unit ?? .count)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Text(item.line.name).font(.headline)
             LabeledContent(ledgerText("Purpose"), value:item.approval.purpose)
             LabeledContent(ledgerText("Remembered store"), value:item.approval.branch)

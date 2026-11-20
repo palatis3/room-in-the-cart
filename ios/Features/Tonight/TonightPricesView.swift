@@ -88,7 +88,7 @@ private struct SecondMealCashReview: View {
         }
         .sheet(isPresented: $editing) {
             NavigationStack {
-                Form {
+                WorkingForm {
                     Text(tonightText("Enter only fees, tax and deposits added by buying groceries for this second meal. Exclude charges already due for your shop."))
                     TextField(tonightText("Known added charges in USD"), text: $draft)
                         .keyboardType(.decimalPad)

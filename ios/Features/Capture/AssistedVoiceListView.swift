@@ -35,7 +35,7 @@ import SwiftUI
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 if !checked { ProgressView() }
                 else if !available || !current {
                     Text(captureText("Online transcription is unavailable. Return to your list to dictate on this iPhone or type."))

@@ -138,7 +138,7 @@ private struct IdeaSupplyEditor: View {
     }
 
     private var supplyForm: some View {
-        Form {
+        WorkingForm {
             Section(dinnerText("Reviewed food details")) {
                 MealEvidenceFields(draft: $foodDetails, foodOnly: true)
             }

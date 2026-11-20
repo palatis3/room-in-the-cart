@@ -52,7 +52,7 @@ struct FoodKeeperMatchLot {
     private var wording: String { selected.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if !lot.current() || scene != .active {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if basis == nil {

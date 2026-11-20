@@ -43,7 +43,7 @@ private struct PantryIngredientView: View {
     private var target: SharedDeliveryPage.IngredientMatch { .init(occurrence: occurrence, ingredient: ingredient) }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let record = PantryLotReview(model: model, shopID: shopID, lotID: lotID), record.lot.selected,
                record.delivery.meals?.contains(occurrence) == true, let planning = occurrence.meal.planning {
                 let matched = record.lot.matches.contains(target)
@@ -127,7 +127,7 @@ private struct PantryReservationEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 Section(review.record.lot.foodName) {
                     LabeledContent(ht("Serving group"), value: review.group.name)
                     LabeledContent(ht("Required for group"), value: deliveryQuantityText(review.required))

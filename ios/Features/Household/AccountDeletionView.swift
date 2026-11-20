@@ -17,7 +17,7 @@ struct AccountDeletionView: View {
         return deletion.receipts.filter { account.identity == nil || $0.subject == subject }
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if account.guardianRuntimeScope != nil {
                 Section { GuardianChildDeletionLink(household: account) }
             } else {

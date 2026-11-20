@@ -90,7 +90,11 @@ struct ExtractedReceiptDocument: Sendable {
     let pages: [ReceiptDocumentPage]
     var firstSectionDigest: Data? = nil
 
-    struct Selection: Hashable { let page: Int; let line: Int }
+    struct Selection: Hashable, Identifiable {
+        let page: Int
+        let line: Int
+        var id: Self { self }
+    }
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
                 selection: Set<Selection>, at date: Date) throws -> SourceMediaRecord {
         guard (1...200).contains(selection.count) else { throw ReceiptDocumentFailure.selection }
@@ -150,6 +154,19 @@ struct ReceiptDocumentReader: Sendable {
             defer { group.cancelAll() }
             guard let first = try await group.next() else { throw ReceiptDocumentFailure.unavailable }
             return first
+        }
+    }
+
+    /// Only called for an already-reviewed file, while its source inspector is visible.
+    static func originalPage(_ input: ReceiptDocumentBytes, pageNumber: Int) async -> Data? {
+        guard !Task.isCancelled, (1...20).contains(pageNumber), input.data.count <= ReceiptDocumentBytes.maximumBytes else { return nil }
+        switch input.kind {
+        case .text: return nil
+        case .image: return pageNumber == 1 ? ReceiptSectionDraft.preview(input.data) : nil
+        case .pdf:
+            guard let pdf = PDFDocument(data: input.data), !pdf.isLocked, (1...20).contains(pdf.pageCount),
+                  pageNumber <= pdf.pageCount, let page = pdf.page(at: pageNumber - 1) else { return nil }
+            return try? raster(page)
         }
     }
 
@@ -379,11 +396,11 @@ struct ReceiptSectionDraft {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
                 kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: 520] as CFDictionary) else { return nil }
+                kCGImageSourceThumbnailMaxPixelSize: 1100] as CFDictionary) else { return nil }
         let output = NSMutableData()
         guard let writer = CGImageDestinationCreateWithData(output, UTType.jpeg.identifier as CFString, 1, nil) else { return nil }
         CGImageDestinationAddImage(writer, image, [kCGImageDestinationLossyCompressionQuality: 0.6] as CFDictionary)
-        guard CGImageDestinationFinalize(writer), output.length <= 250_000 else { return nil }
+        guard CGImageDestinationFinalize(writer), output.length <= 550_000 else { return nil }
         return output as Data
     }
 }

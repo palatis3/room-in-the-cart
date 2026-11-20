@@ -1157,6 +1157,40 @@
         }
       }
     },
+    "Cooking draft cleared": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooking draft cleared"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borró el borrador de la comida"
+          }
+        }
+      }
+    },
+    "Nothing was saved when you left. Check the servings, ingredient use and leftovers again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was saved when you left. Check the servings, ingredient use and leftovers again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al salir no se guardó ningún cambio. Vuelve a revisar las porciones, los ingredientes que usaste y las sobras."
+          }
+        }
+      }
+    },
     "Servings made": {
       "extractionState": "manual",
       "localizations": {

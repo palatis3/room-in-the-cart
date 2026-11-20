@@ -32,7 +32,7 @@ private struct GuardianChildDeletionView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if model.live && scenePhase == .active {
                 Section {
                     Text(GuardianCopy.text("Withdrawing permission ends access to this household. Deleting the child’s account permanently removes their sign-in and private account data across all households."))
@@ -208,7 +208,7 @@ private struct GuardianManualReviewView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if model.live && scenePhase == .active {
                 Section {
                     Text(GuardianCopy.text("Request a private review when the service needs more evidence of your authority to delete a child’s account. Opening a case lets the review team verify your request. Deletion requires a separate decision."))

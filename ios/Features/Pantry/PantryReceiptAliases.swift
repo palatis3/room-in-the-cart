@@ -24,7 +24,7 @@ struct PantryReceiptAliasEntry: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let message { Text(message) }
             Section(pantryText("Confirmed receipt line")) {
                 Text(source.originalLine)

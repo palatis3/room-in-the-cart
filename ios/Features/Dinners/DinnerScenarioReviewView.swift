@@ -8,6 +8,8 @@ struct DinnerScenarioReviewView: View {
     @ObservedObject var model: DinnerFeatureModel
     @EnvironmentObject private var pickup: PickupModel
     @Environment(\.closeDinnerDecision) private var closeDecision
+    @Environment(\.dinnerHousehold) private var household
+    @Environment(\.guardianChildCoordinator) private var child
     let current: DinnerScenario
     let alternatives: [DinnerScenario]
     let selectedAcceptedDinnerIDs: Set<UUID>
@@ -51,6 +53,11 @@ struct DinnerScenarioReviewView: View {
                     Text(pairingStatus(pairing.status))
                     if !excludedByRules.isEmpty { Text(dinnerFormat("Excluded by the reviewed food rules: %@",excludedByRules.joined(separator: ", "))) }
                     if pairing.untestedCount > 0 { Text(dinnerFormat("Untested alternatives: %d", pairing.untestedCount)) }
+                    if !model.paid, let household, household.canOpenMembership, child?.presented != true {
+                        NavigationLink(mtr("Review Household for dinner comparisons")) {
+                            MembershipEntryView(household: household)
+                        }.accessibilityIdentifier("dinner.pairings.membership")
+                    }
                     scenario(pairing.baseline)
                     if model.paid, model.localIdeaWorkspaceID != nil, let library,
                        pairing.alternatives.contains(where: { $0.feasible && $0.checkout.total.exact != nil }) {

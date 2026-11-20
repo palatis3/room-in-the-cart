@@ -13,11 +13,46 @@ import XCTest
         }
         app.terminate()
     }
+    func testDinnersCanSaveAndReopenRecipeBeforeStartingPickupOrPantry() throws {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.saveFirstRecipe"])
+        fill(app.textFields["tonight.recipe.title"], "Corn and beans")
+        fill(app.textFields["tonight.recipe.servings"], "2")
+        fill(app.textFields["tonight.recipe.ingredient"], "Corn")
+        let amount = app.textFields["Amount (required)"]
+        XCTAssertTrue(amount.exists)
+        tap(app.buttons["tonight.recipe.review"])
+        let error = app.staticTexts["tonight.recipe.amountError"]
+        XCTAssertTrue(error.waitForExistence(timeout: 5))
+        XCTAssertEqual(error.label, "Enter an amount greater than zero for Corn.")
+        XCTAssertTrue(amount.isHittable)
+        amount.typeText("1")  // Validation focuses the ingredient needing correction.
+        dismissRecipeKeyboard()
+        XCTAssertTrue(error.waitForNonExistence(timeout: 5))
+        let correctedAmount = XCTAttachment(screenshot: app.screenshot())
+        correctedAmount.name = "Corrected recipe ingredient with a persistent amount label"
+        correctedAmount.lifetime = .keepAlways
+        add(correctedAmount)
+        tap(app.buttons["tonight.recipe.review"])
+        tap(app.buttons["tonight.recipe.save"])
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.savedRecipe.")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        XCTAssertEqual(saved.label, "Edit saved recipe, Corn and beans")
+        tap(saved)
+        XCTAssertEqual(app.textFields["tonight.recipe.title"].value as? String, "Corn and beans")
+        tap(app.buttons["Cancel"])
+        XCTAssertEqual(app.buttons["dinner.saveFirstRecipe"].label, "Replace Free reusable dinner")
+        XCTAssertTrue(saved.exists)
+        XCTAssertTrue(app.buttons["dinnerStartPickup"].exists)
+    }
+
     func testBothPrivateTonightEntriesWorkWithoutShopAndCancelCreatesNothing() throws {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launch()
-        tap(app.buttons["shop.myPantry"])
+        tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.tonight"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 12))
@@ -33,7 +68,7 @@ import XCTest
         fill(app.textFields["tonight.recipe.title"], "No-shop rice dinner")
         fill(app.textFields["tonight.recipe.servings"], "1")
         fill(app.textFields["tonight.recipe.ingredient"], "Rice")
-        fill(app.textFields["Amount, unknown if blank"], "1")
+        fill(app.textFields["Amount (required)"], "1")
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 10))
@@ -59,7 +94,7 @@ import XCTest
         for spanish in [false, true] {
             app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
             app.launch()
-            tap(app.buttons["shop.myPantry"])
+            tap(app.shopToolButton("shop.myPantry"))
             tap(app.buttons["pantry.setup.apply"])
             tap(app.buttons["pantry.tonight"])
             let text = spanish ? "La ayuda en línea requiere una cuenta de adulto autorizada. Puedes seguir revisando coincidencias locales sin iniciar sesión." : "Online help requires an authorized adult account. Keep reviewing local matches without signing in."
@@ -82,14 +117,24 @@ import XCTest
         XCTFail("Expected the requested row in the visible list: " + app.debugDescription)
     }
     private func fill(_ element: XCUIElement, _ value: String) {
-        tap(element); element.typeText(value)
-        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(element)
+        element.typeText(value)
+        dismissRecipeKeyboard()
+    }
+    private func dismissRecipeKeyboard() {
+        let done = app.buttons["tonight.recipe.keyboardDone"]
+        XCTAssertTrue(done.waitForExistence(timeout: 3))
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "tonight.recipe.keyboardDone"))
     }
     private func tap(_ element: XCUIElement) {
         _ = element.waitForExistence(timeout: 3)
-        for _ in 0..<14 {
+        for index in 0..<16 {
             if element.exists && element.isHittable { break }
-            app.swipeUp()
+            let moveDown = element.exists ? element.frame.midY > app.frame.midY : index < 8
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.94, dy: moveDown ? 0.65 : 0.36))
+            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.94, dy: moveDown ? 0.38 : 0.63))
+            start.press(forDuration: 0.05, thenDragTo: end)
         }
         XCTAssertTrue(element.isHittable, element.debugDescription)
         element.tap()

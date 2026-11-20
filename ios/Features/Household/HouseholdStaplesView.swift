@@ -82,7 +82,7 @@ struct HouseholdStaplesView: View {
                 ForEach(group.purchases, id: \.lotId) { purchase in
                     VStack(alignment: .leading) {
                         Text(verbatim: purchase.foodName ?? group.name)
-                        Text(verbatim: purchase.day).foregroundStyle(.secondary)
+                        Text(verbatim: purchase.day).foregroundStyle(Theme.secondary)
                         Button(householdPantryText("Remove from this staple"), role: .destructive) {
                             removing = (group.id, purchase.lotId)
                         }
@@ -124,7 +124,7 @@ private struct HouseholdStaplePurchaseView: View {
         let lot = lots.first { $0.id == lotID }
         let group = state.groups.first { $0.id == groupID }
         let title = group?.name ?? name.trimmingCharacters(in: .whitespacesAndNewlines)
-        Form {
+        WorkingForm {
             if reviewing, let lot, let count = lot.purchaseObservation {
                 LabeledContent(householdPantryText("Staple"), value: title)
                 LabeledContent(ht("Food name"), value: lot.foodName)

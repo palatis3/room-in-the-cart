@@ -19,7 +19,9 @@ struct DinnerPlanningEntry: View {
 
     var body: some View {
         Group {
-            if let expectedShopID, ledger.shop?.id != expectedShopID {
+            if !access.unlocked || household.locked || child?.presented == true {
+                Text(dinnerText("Planning access changed or expired. Reconnect and review again."))
+            } else if let expectedShopID, ledger.shop?.id != expectedShopID {
                 ContentUnavailableView(dinnerText("Pickup selection changed"), systemImage: "arrow.triangle.2.circlepath",
                     description: Text(dinnerText("Return to the original pickup before reviewing these dinner choices or store quotes.")))
             } else if destination == nil, household.canOpenSharedDinnerPlanning,
@@ -27,18 +29,17 @@ struct DinnerPlanningEntry: View {
                 DinnerSharedPlanningEntry(household: household)
             } else if let destination {
                 ContextualDinnerFeature(ledger: ledger, destination: destination, access: localAccess, phase: phase,
-                    runtimeChanges: runtimeChanges)
+                    runtimeChanges: runtimeChanges, milestoneAccess: permitsPrivatePlanning)
             } else {
                 DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
-                    runtimeChanges: runtimeChanges, basketPrepAccess: {
-                        child?.presented != true && household.projection?.grantId == nil &&
-                            CapturePrivateIdentity.current(access: access, household: household) != nil
-                    })
+                    runtimeChanges: runtimeChanges, basketPrepAccess: permitsPrivatePlanning, milestoneAccess: permitsPrivatePlanning)
             }
         }
+        .privacySensitive()
         .environment(\.dinnerHousehold, household)
         .toolbar {
-            if let shopID = ledger.shop?.id, pickup.selectedID == shopID,
+            if access.unlocked, !household.locked, child?.presented != true,
+               let shopID = ledger.shop?.id, pickup.selectedID == shopID,
                pickup.journey?.basket?.phase == .reportedPlaced {
                 ToolbarItem(placement: .secondaryAction) {
                     NavigationLink(recoveryText("Current dinners after arrival")) {
@@ -46,7 +47,7 @@ struct DinnerPlanningEntry: View {
                     }.accessibilityIdentifier("dinner.mealRecovery")
                 }
             }
-            if household.canOpenSharedDinnerPlanning {
+            if access.unlocked, !household.locked, child?.presented != true, household.canOpenSharedDinnerPlanning {
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink(ht("Shared meal plan")) { DinnerSharedPlanningEntry(household: household) }
                         .accessibilityIdentifier("dinner.sharedPlan")
@@ -55,6 +56,11 @@ struct DinnerPlanningEntry: View {
         }
         .task { await pickup.load() }
     }
+    private func permitsPrivatePlanning() -> Bool {
+        child?.presented != true && household.projection?.grantId == nil &&
+            CapturePrivateIdentity.current(access: access, household: household) != nil
+    }
+
     private var runtimeChanges: AnyPublisher<Void, Never> {
         Publishers.Merge4(access.objectWillChange, pickup.objectWillChange,
             household.objectWillChange, membership.objectWillChange).eraseToAnyPublisher()
@@ -62,7 +68,7 @@ struct DinnerPlanningEntry: View {
 
     private func localAccess(for shopID: UUID) -> DinnerAccessContext? {
         guard expectedShopID == nil || expectedShopID == shopID,
-              access.unlocked, !household.locked, ledger.ready, pickup.ready,
+              access.unlocked, !household.locked, child?.presented != true, ledger.ready, pickup.ready,
               !pickup.saving, !pickup.hasPendingSave,
               let workspaceID = ledger.sourceWorkspaceID,
               ledger.workspace.shops.contains(where: { $0.id == shopID }) else { return nil }

@@ -588,7 +588,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio del artículo en el carrito"
+            "value": "Precio del artículo"
           }
         }
       }
@@ -765,6 +765,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guardar lista reutilizable"
+          }
+        }
+      }
+    },
+    "Saved price · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved price · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio guardado · %@"
+          }
+        }
+      }
+    },
+    "Saving price…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving price…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando el precio…"
           }
         }
       }
@@ -1085,6 +1117,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trasladar a la recogida"
+          }
+        }
+      }
+    },
+    "Uncheck %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uncheck %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desmarcar %@"
           }
         }
       }

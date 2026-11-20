@@ -59,7 +59,7 @@ struct SurfaceReminderSetup: View {
                     currentAuthorization: { composition.reminderAuthorization(target) },
                     authorizeSave: { composition.authorizeReminderSave(target, reviewedGeneration: $0) })
             } else {
-                Form {
+                WorkingForm {
                     Text(target.title).font(.headline).accessibilityIdentifier("reminder.subject")
                     if let sourceSavedAt {
                         LabeledContent(SurfaceCopy.text("Pickup last saved"), value: sourceSavedAt.formatted(date: .complete, time: .shortened))

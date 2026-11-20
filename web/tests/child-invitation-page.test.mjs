@@ -299,3 +299,24 @@ test('resend becoming available preserves the focused code field and partial ent
   assert.equal(resend().disabled, false);
   assert.equal(f.fixture.counts.starts, 1);
 });
+
+test('the next setup step receives focus and expiry replaces the private pairing with a focused notice', async t => {
+  const f = await setup(t);
+  const focused = () => f.dom.window.document.activeElement;
+  input(f.dom, 'child-email', fixtureInput.email);
+  await submit(f.dom, f.root);
+  assert.equal(focused().id, 'child-code');
+  input(f.dom, 'child-code', fixtureInput.code);
+  await submit(f.dom, f.root);
+  assert.equal(focused().textContent, 'Claim this child invitation');
+  await click(f.root, 'Claim this child invitation');
+  assert.equal(focused().id, 'child-pairing');
+  f.fixture.control('approve');
+  await click(f.root, 'Check current status');
+  assert.equal(focused().id, 'child-finish');
+  t.mock.method(Date, 'now', () => Date.parse('2030-01-02T00:00:00Z'));
+  f.page.checkExpiry();
+  assert.equal(f.root.querySelector('#pairing-code'), null);
+  assert.equal(focused().getAttribute('role'), 'status');
+  assert.match(focused().textContent, /setup ended/);
+});

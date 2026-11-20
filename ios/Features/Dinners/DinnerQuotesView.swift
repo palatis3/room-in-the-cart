@@ -9,7 +9,7 @@ struct DinnerQuotesView: View {
     @State private var showPreview = false
     @FocusState private var inputFocus: String?
     var body: some View {
-        Form {
+        WorkingForm {
             if model.budgetVisible, let basis = model.shop?.basis {
                 Section(dinnerText("Available budget")) {
                     if !basis.branch.isEmpty { Text(dinnerFormat("Current pickup branch: %@",basis.branch)).accessibilityIdentifier("quoteCurrentBranch") }
@@ -312,7 +312,7 @@ struct EnteredQuoteValueField: View {
     let focus: FocusState<String?>.Binding
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(Theme.secondary)
             TextField(title, text: $value).focused(focus, equals: identifier).accessibilityIdentifier(identifier)
         }
     }

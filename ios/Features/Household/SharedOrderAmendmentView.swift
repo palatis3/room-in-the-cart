@@ -22,7 +22,7 @@ struct SharedOrderAmendmentView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if canRead {
                 if model.pending != nil {
                     Section(OrderAmendmentCopy.text("Pending confirmation")) {
@@ -203,13 +203,25 @@ private struct SharedAmendmentLineEditor: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
-                if choice.line == nil { TextField(OrderAmendmentCopy.text("Item name"), text: $name).focused($focus, equals: .name) }
-                else { Text(name) }
-                TextField(OrderAmendmentCopy.text("Confirmed packs"), text: $packs).keyboardType(.numberPad)
-                    .focused($focus, equals: .packs).accessibilityIdentifier("sharedOrder.packs")
-                TextField(OrderAmendmentCopy.text("Confirmed price per pack (USD), if provided"), text: $price)
-                    .keyboardType(.decimalPad).focused($focus, equals: .price)
+            WorkingForm {
+                if choice.line == nil {
+                    WorkingField(OrderAmendmentCopy.text("Item name")) {
+                        TextField("", text: $name)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($focus, equals: .name)
+                    }
+                } else { Text(name) }
+                WorkingField(OrderAmendmentCopy.text("Confirmed packs")) {
+                    TextField("", text: $packs)
+                        .textFieldStyle(.roundedBorder)
+                        .keyboardType(.numberPad)
+                        .focused($focus, equals: .packs).accessibilityIdentifier("sharedOrder.packs")
+                }
+                WorkingField(OrderAmendmentCopy.text("Confirmed price per pack (USD), if provided")) {
+                    TextField("", text: $price)
+                        .textFieldStyle(.roundedBorder)
+                        .keyboardType(.decimalPad).focused($focus, equals: .price)
+                }
                 Button(OrderAmendmentCopy.text("Keep line for review")) {
                     do {
                         guard let count = Int(packs), (1...10_000).contains(count), !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,

@@ -69,7 +69,7 @@ struct DinnerAwayCarryoverView: View {
     }
     private var supply: AwayCarryoverSupply? { supplies.first { $0.id == supplyID } }
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: pickup)
             if let ledger = dinner.store as? LedgerModel { LedgerSaveStatus(model: ledger) }
             if pickup.journey?.id != dinner.shop?.id {
@@ -254,7 +254,7 @@ struct DinnerCarryoverDetailsView: View {
         return try? journey.carryoverAllocation(at: pickup.stockReviewDate).demands.first { $0.id == reservationID }
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if let meal, let link = meal.carryover {
                 Section(pTr("Confirmed-food carryover, not a new recipe")) {
                     Text(meal.title).font(.headline)

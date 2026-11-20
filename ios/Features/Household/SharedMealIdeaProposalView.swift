@@ -32,7 +32,7 @@ private struct SharedMealIdeaProposalContent: View {
     @State private var openSharedShop = false
     @State private var sharedReviewReady = false
     var body: some View {
-        Form {
+        WorkingForm {
             Text(verbatim: idea.draft.title)
             SharedMealIdeaPreviewView(idea: idea)
             Text(ht("Choose an optional night and review this proposal. Only the current shopper can apply shared packs."))

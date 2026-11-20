@@ -34,7 +34,7 @@ struct DinnerRepeatWeekView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let start, owner == model.editorIdentity, model.accessAvailable {
                 Section {
                     DatePicker(dinnerText("Week starting"), selection: Binding(get: { start }, set: load),

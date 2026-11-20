@@ -1,3 +1,4 @@
+import { brandName } from './brand.js';
 import { publicPages, type PublicLanguage, type PublicPageKey } from './public-pages-content.js';
 import { publicSiteConfiguration, type PublicSiteConfiguration } from './public-site-configuration.js';
 
@@ -81,7 +82,7 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     document.title = page.title[language] + ' · Room in the Cart';
     const skip = element('a', labels.skip[language]); skip.href = '#public-main'; skip.className = 'public-skip'; root.append(skip);
     const header = element('header');
-    const brand = element('a', 'Room in the Cart'); brand.href = '/help?lang=' + language; brand.className = 'public-brand';
+    const brand = element('a'); brand.append(brandName(document)); brand.href = '/help?lang=' + language; brand.className = 'public-brand';
     const languageGroup = element('div'); languageGroup.className = 'public-language';
     const languageLabel = element('label', labels.language[language]); languageLabel.htmlFor = 'public-language';
     const languageSelect = element('select'); languageSelect.id = 'public-language';
@@ -97,22 +98,30 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     const navigation = element('nav'); navigation.className = 'public-navigation'; navigation.setAttribute('aria-label', labels.navigation[language]);
     for (const route of pageKeys) {
       const link = element('a', publicPages[route].title[language]); link.href = '/' + route + '?lang=' + language;
-      if (route === key) link.setAttribute('aria-current', 'page'); navigation.append(link);
+      if (route === key) {
+        link.setAttribute('aria-current', 'page');
+        const check = element('span', '✓');
+        check.setAttribute('aria-hidden', 'true');
+        link.prepend(check);
+      }
+      navigation.append(link);
     }
     root.append(navigation);
     const main = element('main'); main.id = 'public-main'; main.tabIndex = -1;
-    main.append(element('h1', page.title[language]), element('p', page.lead[language]));
+    const introduction = element('div'); introduction.className = 'public-introduction';
+    introduction.append(element('h1', page.title[language]), element('p', page.lead[language]));
+    main.append(introduction);
     if (operatorName && (key === 'privacy' || key === 'terms')) {
       const operator = element('p', labels.operator[language] + ': ' + operatorName);
-      operator.className = 'public-operator'; main.append(operator);
+      operator.className = 'public-operator'; introduction.append(operator);
     }
     if (key === 'support' && supportURL) {
       const contact = element('a', supportURL.protocol === 'mailto:' ? labels.emailSupport[language] + ' · ' + supportURL.pathname : labels.support[language]);
       contact.href = supportURL.href; contact.rel = 'noreferrer';
-      contact.className = 'public-contact'; main.append(contact);
+      contact.className = 'public-contact'; introduction.append(contact);
     } else if (page.notice) {
       const notice = element('aside', page.notice[language]);
-      notice.className = 'notice'; notice.setAttribute('role', 'note'); main.append(notice);
+      notice.className = 'notice'; notice.setAttribute('role', 'note'); introduction.append(notice);
     }
     const contents = element('nav'); contents.className = 'public-contents'; contents.setAttribute('aria-label', labels.contents[language]);
     const contentsTitle = element('h2', labels.contents[language]); const contentsList = element('ul');
@@ -120,12 +129,15 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
       const row = element('li'); const link = element('a', section.title[language]); link.href = '#public-section-' + index;
       row.append(link); contentsList.append(row);
     });
-    contents.append(contentsTitle, contentsList); main.append(contents);
+    contents.append(contentsTitle, contentsList);
+    const reading = element('div'); reading.className = 'public-reading';
+    const sections = element('div'); sections.className = 'public-sections';
+    reading.append(contents, sections); main.append(reading);
     page.sections.forEach((section, index) => {
       const article = element('section'); article.className = 'public-article'; article.id = 'public-section-' + index;
       const title = element('h2', section.title[language]); title.id = article.id + '-title'; article.setAttribute('aria-labelledby', title.id);
       article.append(title); for (const paragraph of section.paragraphs) article.append(element('p', paragraph[language]));
-      main.append(article);
+      sections.append(article);
     });
     root.append(main);
     const footer = element('footer'); footer.className = 'public-footer';

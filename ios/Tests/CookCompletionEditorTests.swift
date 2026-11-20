@@ -74,6 +74,26 @@ import LocalStore
         model.leftoverChoice = .none
     }
 
+    func testOnlyUnsubmittedCookingChangesAreEligibleForAnInterruptionNotice() async throws {
+        let f = try await fixture(), editor = f.editor
+        XCTAssertFalse(editor.hasUnsavedDraft)
+        let planned = editor.servings
+        editor.servings = "9"
+        XCTAssertTrue(editor.hasUnsavedDraft)
+        editor.servings = planned
+        XCTAssertFalse(editor.hasUnsavedDraft)
+        explicitNoUse(editor)
+        XCTAssertTrue(editor.hasUnsavedDraft)
+        await editor.prepareReview()
+        _ = try XCTUnwrap(editor.review)
+        XCTAssertTrue(editor.hasUnsavedDraft)
+        await editor.confirm()
+        _ = try XCTUnwrap(editor.completed)
+        XCTAssertFalse(editor.hasUnsavedDraft)
+        editor.invalidate()
+        XCTAssertFalse(editor.hasUnsavedDraft)
+    }
+
     func testRemovedShoppingContributionKeepsRemainingIngredientCookableThroughRetryAndUndo() async throws {
         let f = try await fixture(), editor = f.editor
         let meal = try XCTUnwrap(editor.context?.meal)

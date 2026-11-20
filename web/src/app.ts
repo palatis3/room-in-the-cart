@@ -1,3 +1,4 @@
+import { brandName } from './brand.js';
 import { API, ApiError, isContributorSession, type BrowserAuthState,type RequestPickup,type Session, type OwnRequest, type ReadRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal, type ReportField, type ReportReason, type SafetyAction } from './api.js';
 import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
@@ -459,7 +460,7 @@ export class WebApp {
   }
   render():void {
     this.root.replaceChildren();this.root.ownerDocument.documentElement.lang=this.language;
-    const header=this.el('header');header.append(this.el('p','Room in the Cart'));
+    const header=this.el('header');header.append(brandName(this.root.ownerDocument));
     const lang=this.el('select');lang.id='language';lang.setAttribute('aria-label',this.t('Language'));
     for(const [v,k] of [['en','English'],['es','Spanish']]) {const o=this.el('option',this.t(k!));o.value=v!;o.selected=v===this.language;lang.append(o);}
     lang.addEventListener('change', () => {
@@ -605,8 +606,13 @@ export class WebApp {
     if(this.review) {
       const pickup=this.pickups.find(p=>p.shopId===target);
       if(target)form.append(this.el('p',this.t('Pickup for this request')+' · '+(pickup?this.pickupLabel(pickup):target.slice(0,8))));
-      form.append(this.el('h2',this.t('Review before sending')),this.el('p',this.draft.item),this.el('p',this.draft.amount||this.t('Unknown amount')),this.el('p',this.t(routeForReview==='next'?'Next shop':'This pickup')));
-      const back=this.button('Back to edit',()=>{this.review=false;this.render();});back.disabled=this.busy||this.uncertainSend;form.append(back);
+      const heading = this.el('h2', this.t('Review before sending'));
+      heading.id = 'request-review-heading';
+      heading.tabIndex = -1;
+      form.append(heading,this.el('p',this.draft.item),this.el('p',this.draft.amount||this.t('Unknown amount')),this.el('p',this.t(routeForReview==='next'?'Next shop':'This pickup')));
+      const back = this.button('Back to edit', () => this.showRequestReview(false));
+      back.disabled = this.busy || this.uncertainSend;
+      form.append(back);
       const submit=this.button(this.draft.editing?'Save changes':this.draft.followup?'Send follow-up':'Send request',()=>{},true);submit.type='submit';form.append(submit);
       form.addEventListener('submit',e=>{e.preventDefault();void this.run(()=>this.send());});
     } else {
@@ -617,7 +623,12 @@ export class WebApp {
       for(const [v,k] of [['current','This pickup'],['next','Next shop']]){const option=this.el('option',this.t(k!));option.value=v!;option.selected=v===routeForReview;route.append(option);}
       route.addEventListener('change',()=>{this.draft.route=route.value as 'current'|'next';this.retryCommand=null;});form.append(label,route);
       const review=this.button('Review request',()=>{},true);review.type='submit';form.append(review);
-      form.addEventListener('submit',e=>{e.preventDefault();if(!this.draft.item.trim())return;if(protectedPickup)this.draft.route='next';this.review=true;this.render();});
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        if (!this.draft.item.trim()) return;
+        if (protectedPickup) this.draft.route = 'next';
+        this.showRequestReview(true);
+      });
     }
     if(this.session!.enrolled&&this.session!.canSetRequestQueue) {
       const enabled=this.session!.queueConsent;
@@ -709,6 +720,11 @@ export class WebApp {
         await this.refreshAfterReceipt(received);
       })),this.button('Cancel',()=>{this.withdrawn=null;this.render();}));}own.append(card);
     }main.append(own);
+  }
+  private showRequestReview(review: boolean): void {
+    this.review = review;
+    this.render();
+    this.root.querySelector<HTMLElement>(review ? '#request-review-heading' : '#item')?.focus();
   }
   private openRequestDraft(row:OwnRequest):void {
     if(this.uncertainSend)return;

@@ -221,14 +221,14 @@ private struct FirstListForm: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         if editor.stale {
-            Form {
+            WorkingForm {
                 Text(ledgerText("The shopping workspace changed. Review your draft wording again before creating a pickup."))
                 Text(verbatim: editor.content.original)
                 Button(ledgerText("Review as a new pickup")) { Task { await editor.reviewAgain() } }
                 Button(ledgerText("Discard draft"), role: .destructive) { Task { if await editor.discard() { dismiss() } } }
             }.toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
         } else {
-            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, authorizeEntry: editor.authorize, onFirstSave: onSaved)
+            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, authorizeEntry: editor.authorize, onSaved: onSaved)
         }
     }
 }

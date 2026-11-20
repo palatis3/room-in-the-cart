@@ -24,6 +24,10 @@ struct ShopperInboxContent: View {
         ScrollViewReader { scroll in
             List {
                 if model.authorized {
+                    if let scope = household?.projection, scope.household.id == model.householdID,
+                       scope.memberId == model.memberID, scope.shopId == model.shopID {
+                        Section { HouseholdScopeHeading(scope: scope) }
+                    }
                     ShopperDeliverySection(model: model)
                     if model.trackingAllowed, model.pending == nil {
                         NavigationLink(ru("Accepted request changes")) { SharedRequestUndoInboxView(owner: model) }
@@ -36,7 +40,7 @@ struct ShopperInboxContent: View {
                     Section {
                         Button(ht("Refresh requests")) { Task { await model.load() } }.disabled(model.busy)
                         Text(ht("Each request keeps its own outcome. Linking a line does not add another pack."))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.secondary)
                     }
                     Section(ht("Requests for this shop")) {
                         ForEach(model.duplicateRequestGroups) { group in
@@ -63,7 +67,7 @@ struct ShopperInboxContent: View {
                                         SharedSafetyButton(channel: model.sharedSafetyChannel, fields: SharedMessageField.request(request))
                                     }
                                     if let household { AdultProductReferenceLink(household: household, request: request) }
-                                    Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
+                                    Text(shopperRequestStatus(request)).foregroundStyle(Theme.secondary)
                                         .accessibilityIdentifier("household.request.outcome.\(request.id)")
                                         .accessibilityFocused($focusedOutcome, equals: request.id)
                                 }.accessibilityElement(children: .contain)
@@ -167,7 +171,11 @@ struct HouseholdRequestDecisionView: View {
                 ShopperDeliverySection(model: model)
                 if let selected = model.selected, selected.id == request.id {
                     Section(ht("Request")) {
-                        Text(selected.originalItem).font(.headline)
+                        Text(selected.originalItem).font(.title2.weight(.semibold))
+                        if let scope = sharedShop?.scope, scope.shopId == selected.shopId {
+                            Text(verbatim: scope.household.label)
+                        }
+                        LabeledContent(ht("Pickup"), value: String(selected.shopId.prefix(8)))
                         RequestReadTimeLabel(asOf: model.requestReadTimes.rows[selected.id])
                         if let alias = selected.authorAlias { LabeledContent(ht("Requested by"), value: alias) }
                         if let quantity = selected.ownQuantity { Text(quantity) }
@@ -447,7 +455,7 @@ struct RequestReadTimeLabel: View {
     var body: some View {
         if let asOf, let date = serviceDate(asOf) {
             LabeledContent(ht("Checked on server"), value: date.formatted(date: .abbreviated, time: .standard))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Theme.secondary)
         }
     }
 }

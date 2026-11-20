@@ -135,9 +135,9 @@ import XCTest
         XCTAssertTrue(element("history.newObservation").waitForExistence(timeout:15))
         XCTAssertFalse(element("history.newObservation").isEnabled)
         tap(app.buttons["Choose shared shop"])
-        let granted = app.buttons.containing(NSPredicate(format:"label CONTAINS %@","00000003")).firstMatch
+        let granted = app.buttons["household.shopChoice.90000000-0000-4000-8000-000000000003"]
         XCTAssertTrue(granted.waitForExistence(timeout:15))
-        XCTAssertFalse(app.buttons.containing(NSPredicate(format:"label CONTAINS %@","00000004")).firstMatch.exists)
+        XCTAssertFalse(app.buttons["household.shopChoice.90000000-0000-4000-8000-000000000004"].exists)
         tap(granted)
         if app.buttons["Check access again"].waitForExistence(timeout:3) { tap(app.buttons["Check access again"]) }
         XCTAssertTrue(element("history.newObservation").waitForExistence(timeout:15))

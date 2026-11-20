@@ -63,7 +63,7 @@ struct PickupArrivalView: View {
     private var orderLines: [PickupOrderLine] { model.journey?.pickup?.orderLines ?? [] }
     private var selectedLine: PickupOrderLine? { orderLines.first { $0.id == entry.lineID } }
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             Section(pTr("Review discrepancies")) {
                 Text(pTr("Unchecked lines remain unverified. Received food and confirmed usable food are separate."))
@@ -213,7 +213,7 @@ struct PickupOfferView: View {
         let original: PickupOffer?
     }
     var body: some View {
-        Form {
+        WorkingForm {
             PickupSaveStatus(model: model)
             if let journey = model.journey {
                 Section(pTr("Store offer")) {

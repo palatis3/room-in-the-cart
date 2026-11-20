@@ -124,8 +124,15 @@ private struct VoicePantryRow {
             rows.indices.contains(reply.rowIndex) && rows[reply.rowIndex].lotID == reply.lotID
     }
 
+    private enum Stage { case entry, choices, review, saved }
+    private var stage: Stage {
+        if saved != nil { return .saved }
+        if review != nil { return .review }
+        return basis == nil ? .entry : .choices
+    }
+
     var body: some View {
-        Form {
+        WorkingForm {
             if !boundScope {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if model.pending != nil {
@@ -134,13 +141,21 @@ private struct VoicePantryRow {
             } else if let saved {
                 savedSection(saved)
             } else {
-                if startingLot == nil {
-                    Section(pantryText("Your words")) {
+                if startingLot == nil && stage == .entry {
+                    Section {
+                        Text(pantryText("What changed in your pantry?"))
+                            .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
                         TextField(pantryText("What did you use, or what would you like to check?"),
                                   text: Binding(get: { draft }, set: { draft = $0; resetReview() }), axis: .vertical)
-                            .lineLimit(2...6).focused($editing)
+                            .lineLimit(2...6)
+                            .padding(12)
+                            .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10))
+                            .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.controlEdge) }
+                            .focused($editing)
                             .accessibilityIdentifier("pantry.voiceText")
                             .disabled(working || !model.canEdit)
+                    } footer: {
+                        Label(pantryText("Private · On this iPhone"), systemImage: "lock")
                     }
                 }
                 if basis == nil, startingLot != nil {
@@ -151,7 +166,7 @@ private struct VoicePantryRow {
                         draft = draft.isEmpty ? spoken : draft + " " + spoken
                         resetReview()
                     }
-                    Button(pantryText("Review my words")) { parse() }
+                    Button(pantryText("Review my words")) { parse() }.buttonStyle(PrimaryAction())
                         .disabled(!model.canEdit || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("pantry.voiceReview")
                 } else if let review {
@@ -168,17 +183,45 @@ private struct VoicePantryRow {
                     }
                     if dateOnly {
                         dateSection
+                    } else if remainingReply == nil && !rows.isEmpty && rows.allSatisfy({ $0.mode == .skip }) {
+                        Text(pantryText("No pantry changes selected."))
+                            .accessibilityIdentifier("pantry.voiceStatus")
                     } else {
-                        Button(pantryText("Preview pantry changes")) { Task { await prepare() } }
+                        Button(pantryText("Preview pantry changes")) { Task { await prepare() } }.buttonStyle(PrimaryAction())
                             .disabled(!readyToReview)
                             .accessibilityIdentifier("pantry.voicePreview")
                     }
+                }
+                if startingLot == nil && (stage == .choices || stage == .review) {
+                    Button {
+                        resetReview()
+                        editing = true
+                    } label: {
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Image(systemName: "text.quote").foregroundStyle(Theme.secondary)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(pantryText("Edit your words")).font(.subheadline.weight(.semibold))
+                                Text(draft).font(.subheadline).foregroundStyle(Theme.secondary).lineLimit(2)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "pencil").foregroundStyle(Theme.secondary)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(working || !model.canEdit)
+                    .accessibilityLabel(pantryText("Edit your words"))
+                    .accessibilityValue(draft)
+                    .accessibilityIdentifier("pantry.voiceTranscript")
                 }
                 if let message { Text(message).accessibilityIdentifier("pantry.voiceStatus") }
                 if working { ProgressView(pantryText("Working…")) }
             }
         }
-        .navigationTitle(pantryText("Talk or type about pantry food"))
+        .id(stage)
+        .navigationTitle(pantryText(stage == .review ? "Review pantry changes" : (startingLot == nil ? "Talk or type" : "Record use")))
+        .toolbar(.hidden, for: .tabBar)
         .privacySensitive()
         .keyboardDoneAction(visible: editing, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { editing = false }
         .toolbar {
@@ -265,8 +308,26 @@ private struct VoicePantryRow {
     private var lots: [InventoryLot] { model.snapshot?.lots ?? [] }
 
     private func lotLabel(_ lot: InventoryLot) -> String {
-        [lot.name, pantryLocationName(lot.location), pantryCount(lot.count),
+        [lot.name, pantryLocationName(lot.location), pantryCount(lot.count, estimate: lot.countWording),
          pantryFormat("Batch %@", String(lot.id.uuidString.suffix(8)))].joined(separator: " · ")
+    }
+
+    private func batchDetail(_ lot: InventoryLot, includeCount: Bool = true) -> String {
+        var details = [pantryLocationName(lot.location)]
+        if includeCount { details.append(pantryCount(lot.count, estimate: lot.countWording)) }
+        if lots.contains(where: { $0.id != lot.id && $0.location == lot.location && $0.name.localizedCaseInsensitiveCompare(lot.name) == .orderedSame }) {
+            details.append(pantryFormat("Batch %@", String(lot.id.uuidString.suffix(8))))
+        }
+        return details.joined(separator: " · ")
+    }
+
+    private func batchHeading(_ lot: InventoryLot, includeCount: Bool = true) -> some View {
+        let symbol = switch lot.location {
+        case .cupboard: "shippingbox"
+        case .fridge: "refrigerator"
+        case .freezer: "snowflake"
+        }
+        return WorkingRecordHeading(lot.name, detail: batchDetail(lot, includeCount: includeCount), systemImage: symbol)
     }
 
     private func change(_ index: Int, _ update: (inout VoicePantryRow) -> Void) {
@@ -283,9 +344,8 @@ private struct VoicePantryRow {
         let unmatched = !unnamed && suggestions.isEmpty && !lots.isEmpty
         let candidates = row.showsAllLots || unnamed ? lots : suggestions
         return Section {
-            Text(row.original).accessibilityIdentifier("pantry.voiceOriginal.\(index)")
             if let startingLot {
-                Text(lotLabel(startingLot))
+                batchHeading(startingLot)
             } else if unmatched && !row.showsAllLots {
                 Text(pantryFormat("No pantry batch matches %@.", row.food))
                 Button(pantryText("Show all pantry batches")) { change(index) { $0.showsAllLots = true } }
@@ -299,9 +359,25 @@ private struct VoicePantryRow {
                         Button(pantryText("Show all pantry batches")) { change(index) { $0.showsAllLots = true } }
                     }
                 } label: {
-                    LabeledContent(pantryText("Pantry batch"), value: selected.map(lotLabel) ?? pantryText("Choose a batch"))
+                    HStack(spacing: 8) {
+                        if let selected {
+                            batchHeading(selected)
+                        } else {
+                            WorkingRecordHeading(row.food.isEmpty ? pantryText("Which pantry batch?") : pantryFormat("Which %@?", row.food),
+                                                 detail: pantryText("Choose a batch"), systemImage: "shippingbox")
+                        }
+                        Image(systemName: "chevron.up.chevron.down").font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.secondary)
+                    }
+                    .contentShape(Rectangle())
                 }
+                .accessibilityLabel(selected.map(lotLabel) ?? pantryText("Choose a batch"))
                 .accessibilityIdentifier("pantry.voiceLot.\(index)")
+            }
+            if startingLot == nil && rows.count > 1 {
+                Label { Text(row.original) } icon: { Image(systemName: "text.quote") }
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                    .accessibilityIdentifier("pantry.voiceOriginal.\(index)")
             }
             if unmatched && !dateOnly && row.mode != .skip {
                 Button(pantryText("Leave this item unchanged")) { change(index) { $0.mode = .skip } }
@@ -309,17 +385,16 @@ private struct VoicePantryRow {
             }
             if lots.isEmpty { Text(pantryText("Add a pantry batch before reviewing these words.")) }
             if !dateOnly { amountChoices(index, row: row, lot: selected) }
-        } header: {
-            if let selected { Text(selected.name) }
-            else { Text(unnamed ? pantryText("Which pantry batch?") : pantryFormat("Which %@?", row.food)) }
         }
         .disabled(working || !model.canEdit)
     }
 
     @ViewBuilder private func amountChoices(_ index: Int, row: VoicePantryRow, lot: InventoryLot?) -> some View {
         if row.mode == .amount {
-            TextField(pantryText("Amount used"), text: Binding(get: { row.amount }, set: { text in change(index) { $0.amount = text } }))
-                .focused($editing).accessibilityIdentifier("pantry.voiceAmount.\(index)")
+            WorkingField(pantryText("Amount used")) {
+                TextField(pantryText("Amount used"), text: Binding(get: { row.amount }, set: { text in change(index) { $0.amount = text } }))
+                    .focused($editing).accessibilityIdentifier("pantry.voiceAmount.\(index)")
+            }
             Menu {
                 ForEach(UnitOfMeasure.allCases.filter { $0.dimension == lot?.unit.dimension }, id: \.self) { unit in
                     Button(pantryUnit(unit)) { change(index) { $0.unit = unit } }
@@ -328,29 +403,40 @@ private struct VoicePantryRow {
                 LabeledContent(pantryText("Unit"), value: row.unit.map { pantryUnit($0) } ?? pantryText("Choose a unit"))
             }
             .disabled(lot == nil).accessibilityIdentifier("pantry.voiceUnit.\(index)")
-        } else if row.mode == .remaining {
-            Text(pantryText("How much is left?"))
-            if !row.estimate.isEmpty {
-                LabeledContent(pantryText("Remaining estimate"), value: row.estimate)
-                    .accessibilityIdentifier("pantry.voiceEstimate.\(index)")
-            }
-        } else if row.mode == .all {
-            Text(row.reportsUse ? pantryText("Used all of the selected batch") : pantryText("The selected batch is empty"))
-        } else if row.mode == .usedSome {
-            Text(pantryText("How much is left?"))
-            Text(pantryText("Record one use. The amount remaining will be unknown."))
+        } else if row.mode == .remaining && row.estimate.isEmpty {
+            Text(pantryText("How much is left?")).font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
         } else {
-            Text(pantryText("Not sure — leave this batch unchanged"))
+            let currentChoice = switch row.mode {
+            case .remaining: row.estimate
+            case .all: pantryText(row.reportsUse ? "Used all of the selected batch" : "The selected batch is empty")
+            case .usedSome: pantryText("Used some")
+            case .skip: pantryText("Leave unchanged")
+            case .amount: ""
+            }
+            VStack(alignment: .leading, spacing: 7) {
+                BrandScopeLabel(currentChoice, systemImage: "checkmark")
+                    .accessibilityIdentifier("pantry.voiceEstimate.\(index)")
+                if row.mode == .usedSome {
+                    Text(pantryText("Record one use. The amount remaining will be unknown."))
+                        .font(.subheadline).foregroundStyle(Theme.secondary)
+                }
+            }.padding(.vertical, 3)
+        }
+        if (row.mode == .remaining && row.estimate.isEmpty) || row.mode == .usedSome {
+            Button {
+                chooseEstimate("About half left", for: index)
+            } label: {
+                Label(pantryText("About half left"), systemImage: "circle.lefthalf.filled")
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .disabled(lot == nil)
+            .accessibilityIdentifier("pantry.voiceHalf.\(index)")
         }
         Menu {
             ForEach(["Mostly full", "More than half left", "About half left", "Less than half left", "Nearly empty"], id: \.self) { key in
                 Button(pantryText(key)) {
-                    change(index) {
-                        $0.mode = .remaining
-                        $0.estimate = pantryText(key)
-                        $0.estimateLotID = $0.lotID
-                        $0.isLowEstimate = key == "Less than half left" || key == "Nearly empty"
-                    }
+                    chooseEstimate(key, for: index)
                 }
             }
             if let lot {
@@ -364,8 +450,8 @@ private struct VoicePantryRow {
             Button(pantryText("Not sure")) { change(index) { $0.mode = .skip } }
                 .accessibilityIdentifier("pantry.voiceNotSure.\(index)")
         } label: {
-            Text(pantryText("Choose how much is left"))
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Label(pantryText("Choose how much is left"), systemImage: "slider.horizontal.3")
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .contentShape(Rectangle())
         }
         .accessibilityIdentifier("pantry.voiceRemaining.\(index)")
@@ -380,12 +466,31 @@ private struct VoicePantryRow {
                 .accessibilityIdentifier("pantry.voiceApplyRemaining.\(index)")
         }
         if row.mode != .usedSome {
-            Button(pantryText("Used some")) { change(index) { $0.mode = .usedSome; $0.reportsUse = true } }
+            Button {
+                change(index) { $0.mode = .usedSome; $0.reportsUse = true }
+            } label: {
+                Label(pantryText("Record a use without measuring"), systemImage: "checklist")
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+            }
                 .accessibilityIdentifier("pantry.voiceSome.\(index)")
         }
         if row.mode != .amount {
-            Button(pantryText("Enter amount used")) { change(index) { $0.mode = .amount; $0.reportsUse = true } }
+            Button {
+                change(index) { $0.mode = .amount; $0.reportsUse = true }
+            } label: {
+                Label(pantryText("Enter amount used"), systemImage: "number")
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+            }
                 .accessibilityIdentifier("pantry.voiceUseAmount.\(index)")
+        }
+    }
+
+    private func chooseEstimate(_ key: String, for index: Int) {
+        change(index) {
+            $0.mode = .remaining
+            $0.estimate = pantryText(key)
+            $0.estimateLotID = $0.lotID
+            $0.isLowEstimate = key == "Less than half left" || key == "Nearly empty"
         }
     }
 
@@ -444,25 +549,34 @@ private struct VoicePantryRow {
     }
 
     private func previewSection(_ review: PantryConsumptionReview) -> some View {
-        Section(pantryText("Review pantry changes")) {
+        Section {
             ForEach(Array(review.lines.enumerated()), id: \.offset) { index, line in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(lotLabel(line.lot)).font(.headline)
-                    LabeledContent(pantryText("Previously recorded"), value: pantryCount(line.before))
-                    if let used = line.used { LabeledContent(pantryText("Amount used"), value: pantryQuantity(used)) }
-                    LabeledContent(pantryText("After this change"), value: pantryCount(line.after))
-                    if let selection = review.entry.consumption?.selections[index] {
-                        switch selection.use {
-                        case .low(let wording): Text(pantryFormat("Remaining estimate: %@", wording))
-                        case .usedSome(let wording):
-                            Text(pantryText("Used some"))
-                            if let wording { Text(pantryFormat("Remaining estimate: %@", wording)) }
+                let use = review.entry.consumption?.selections[index].use
+                VStack(alignment: .leading, spacing: 12) {
+                    batchHeading(line.lot, includeCount: false)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label(pantryText("After this change"), systemImage: "arrow.right")
+                            .font(.subheadline.weight(.medium))
+                        Text(pantryCount(line.after, estimate: use?.remainingWording)).font(.title3.weight(.semibold))
+                    }
+                    .foregroundStyle(Theme.onSelection)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(12).background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
+                    LabeledContent(pantryText("Previously recorded"), value: pantryCount(line.before, estimate: line.lot.countWording))
+                        .font(.subheadline).foregroundStyle(Theme.secondary)
+                    if let used = line.used {
+                        LabeledContent(pantryText("Amount used"), value: pantryQuantity(used)).font(.subheadline)
+                    }
+                    if let use {
+                        switch use {
+                        case .usedSome: Text(pantryText("Used some"))
                         case .all: Text(pantryText("Used all of the selected batch"))
                         case .empty: Text(pantryText("The selected batch is empty"))
-                        case .amount, .unknown: EmptyView()
+                        case .amount, .low, .unknown: EmptyView()
                         }
                     }
-                }.accessibilityElement(children: .combine)
+                }.padding(.vertical, 4)
+                .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("pantry.voiceSummary.\(index)")
             }
             ForEach(rows.indices.filter { rows[$0].mode == .skip }, id: \.self) { index in
@@ -471,7 +585,7 @@ private struct VoicePantryRow {
             Button(pantryText("Edit choices")) { self.review = nil; message = nil }
                 .accessibilityIdentifier("pantry.voiceEdit")
             Button(pantryText("Confirm pantry changes")) { Task { await save(review) } }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(PrimaryAction())
                 .accessibilityIdentifier("pantry.voiceConfirm")
         }.disabled(working || !model.canEdit)
     }
@@ -630,9 +744,10 @@ extension PantryUsageHistoryRow {
     }
 
     var body: some View {
-        List {
+        WorkingForm {
             if revision == nil { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
-            else if loadedRevision == revision, let entries {
+            else if loadedRevision == revision, let entries, let lot = model.snapshot?.lots.first(where: { $0.id == lotID }) {
+                Section { PantryBatchHeading(lot: lot) }
                 Section {
                     LabeledContent(pantryText("Recorded uses"), value: entries.count.formatted())
                         .accessibilityIdentifier("pantry.usageCount")
@@ -647,13 +762,16 @@ extension PantryUsageHistoryRow {
                 }
                 ForEach(Array(entries.enumerated()), id: \.element.id) { index, row in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(row.occurredAt.formatted(date: .abbreviated, time: .shortened))
                         switch row.kind {
                         case .measured(let quantity): LabeledContent(pantryText("Amount used"), value: pantryQuantity(quantity))
                         case .some: Text(pantryText("Used some"))
                         case .all: Text(pantryText("Used all of the selected batch"))
                         }
-                        if let wording = row.remainingWording { Text(pantryFormat("Remaining estimate: %@", wording)) }
+                        if let wording = row.remainingWording {
+                            Text(pantryFormat("Remaining estimate: %@", wording)).font(.headline)
+                        }
+                        Text(row.occurredAt.formatted(date: .abbreviated, time: .shortened))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
                     }.accessibilityElement(children: .combine)
                         .accessibilityIdentifier("pantry.usageEvent.\(index)")
                 }

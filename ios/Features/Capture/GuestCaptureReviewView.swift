@@ -34,7 +34,7 @@ import CoreDomain
         return try? proposal.proposedTotal(current: group.currentServings)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section(captureText("Guest wording to review")) {
                 TextEditor(text: $capture.text).frame(minHeight: 120).accessibilityLabel(captureText("Guest wording to review"))
                     .focused($focusedField, equals: .wording)

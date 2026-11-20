@@ -85,11 +85,11 @@ struct CheckOneChangeView: View {
                         LabeledContent(pTr("Retailer preview total"), value: shop.basis.retailerPreview?.total.map(pMoney) ?? pTr("Unresolved"))
                     }
                     Button(pTr("Done")) { dismiss() }.accessibilityIdentifier("oneChange.finish")
-                }.navigationTitle(Self.title).navigationBarTitleDisplayMode(.inline)
+                }.workingSurface().navigationTitle(Self.title).navigationBarTitleDisplayMode(.inline)
             } else if ledger.shop != nil {
                 LedgerCheckoutEntry(ledger: ledger, pickup: pickup)
             } else {
-                Form {
+                WorkingForm {
                     contextFields
                     pricingFields
                     Section {
@@ -97,7 +97,7 @@ struct CheckOneChangeView: View {
                             field = nil
                             do { review = try draft.review(in: ledger); self.error = nil }
                             catch { self.error = changeText("Check the change, store, source and USD amounts, and confirm the previews cover the same pickup.") }
-                        }.disabled(!ledger.ready || ledger.hasPendingSave)
+                        }.buttonStyle(PrimaryAction()).disabled(!ledger.ready || ledger.hasPendingSave)
                             .accessibilityIdentifier("oneChange.review")
                         if let error { Text(error).foregroundStyle(Theme.warning) }
                         Button(changeText("Leave without saving")) { dismiss() }
@@ -132,13 +132,13 @@ struct CheckOneChangeView: View {
                         Button(changeText("Save changed preview as a new pickup")) {
                             savedChoiceID = frozen.id
                             Task { if await frozen.save(in: ledger, acceptedOverageFor: acceptedOverageID) { review = nil } }
-                        }.disabled(ledger.saving || ledger.hasPendingSave
+                        }.buttonStyle(PrimaryAction()).disabled(ledger.saving || ledger.hasPendingSave
                                    || (frozen.requiresOverageAgreement && acceptedOverageID != frozen.id)
                                    || ledger.revision != frozen.revision || ledger.sourceWorkspaceID != frozen.workspaceID)
                         .accessibilityIdentifier("oneChange.save")
                         if ledger.hasPendingSave || ledger.error != nil { LedgerSaveStatus(model: ledger) { review = nil } }
                     }
-                }.navigationTitle(changeText("Review this change")).navigationBarTitleDisplayMode(.inline)
+                }.workingSurface().navigationTitle(changeText("Review this change")).navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .cancellationAction) {
                         Button(pTr("Cancel preview")) { review = nil }
                     } }
@@ -182,7 +182,7 @@ struct CheckOneChangeView: View {
 
     private func changeField(_ title: String, _ value: Binding<String>, id: String, money: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(Theme.secondary)
             TextField(title, text: value)
                 .keyboardType(money ? .decimalPad : .default)
                 .focused($field, equals: id)
@@ -200,7 +200,7 @@ struct SavedCheckoutChangeView: View {
             if let comparison = try? proof.comparison(for: shopID) {
                 OneChangeEvidence(proof: proof, comparison: comparison)
             } else { Text(changeText("The saved comparison could not be verified.")) }
-        }.navigationTitle(Self.title).navigationBarTitleDisplayMode(.inline)
+        }.workingSurface().navigationTitle(Self.title).navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -222,7 +222,7 @@ private struct OneChangeEvidence: View {
         observation(changeText("After this change"), proof.after, result: comparison.after)
         if let delta = comparison.change {
             LabeledContent(changeText("Change in checkout total"), value: pMoney(delta))
-                .accessibilityIdentifier("oneChange.difference")
+                .font(.headline).monospacedDigit().accessibilityIdentifier("oneChange.difference")
         } else { Text(changeText("The difference is unresolved.")) }
     }
 

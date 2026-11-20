@@ -54,7 +54,7 @@ struct DinnerCalendarCopyView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(applePlanningText("Dinner"))
                 Text(dinnerDay(day))

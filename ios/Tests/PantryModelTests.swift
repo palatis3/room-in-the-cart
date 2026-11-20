@@ -35,6 +35,40 @@ final class PantryModelTests: XCTestCase {
         return try XCTUnwrap(model.snapshot?.lots.first { $0.id == model.savedLotID })
     }
 
+    func testCoveredDigestRemountRetainsOnlyThePreviouslyLoadedPantry() async throws {
+        let (directory, store) = try await database()
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        cleanup.track(store)
+        var allowed = true
+        let model = PantryModel(repository: PantryRepository(store: store, authorize: { allowed }))
+        await model.load()
+        let lot = try await add(model)
+        allowed = false
+
+        await model.loadOnAppearance(accessAllowed: true, holdsLoadedReview: true)
+        XCTAssertEqual(model.snapshot?.lots.first?.id, lot.id)
+        do {
+            try await model.verifyDigestLot(lot, origin: store.workspaceID)
+            XCTFail("A covered review cannot authorize a batch action.")
+        } catch {}
+
+        allowed = true
+        await model.loadOnAppearance(accessAllowed: true)
+        try await model.verifyDigestLot(lot, origin: store.workspaceID)
+
+        allowed = false
+        await model.loadOnAppearance(accessAllowed: false, holdsLoadedReview: true)
+        XCTAssertNil(model.snapshot)
+        XCTAssertEqual(model.phase, .accessDenied)
+        await model.loadOnAppearance(accessAllowed: true, holdsLoadedReview: true)
+        XCTAssertNil(model.snapshot)
+        await model.loadDigestReview { false }
+        XCTAssertNil(model.snapshot)
+        allowed = true
+        await model.loadDigestReview { true }
+        XCTAssertEqual(model.snapshot?.lots.first?.id, lot.id)
+    }
+
     private func reserve(_ lot: InventoryLot, store: ComparisonStore) async throws -> InventoryReservation {
         let state = try await store.inventoryState()
         let claim = InventoryReservation(id: UUID(), originID: store.workspaceID, revision: 1,
@@ -388,7 +422,7 @@ final class PantryModelTests: XCTestCase {
     var onRequest: (() -> Void)?
     var deliveries: [PantryDigestDelivery] = []
     var removed = Set<UUID>()
-    func permission(request: Bool) async throws -> Bool {
+    func permission(request: Bool, presenting: PantryNotificationPresenter?) async throws -> Bool {
         if request { requests += 1; onRequest?() }
         return granted
     }
@@ -563,6 +597,41 @@ extension PantryModelTests {
         try await digest.erase(origin: origin, whole: true, inventory: db)
         XCTAssertNil(try store.load(adult, lot: lot.id))
         XCTAssertEqual(try store.load(otherWorkspace, lot: removedLot), printed)
+        try await db.close()
+    }
+
+    func testColdPantryOpensWithManualDateWhileSystemNotificationCleanupIsBlocked() async throws {
+        let (directory, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let original = model(db)
+        await original.load()
+        let lot = try await add(original, name: "Cranberry beans")
+        let scope = PantryDigestScope(origin: db.workspaceID, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let folder = directory.appendingPathComponent("digest")
+        let saved = PantryDigestStore(folder: folder, scheduler: DigestSchedulerSpy())
+        let day = try MealDay(year: 2027, month: 3, day: 14, timeZoneIdentifier: "America/New_York")
+        try await saved.saveDay(scope, lot: lot, day: day, authorized: { true })
+        let handle = try XCTUnwrap(saved.document(scope).rules.first?.handle)
+        let identifier = PantryDigestNotifications.prefix + handle.uuidString
+        let started = expectation(description: "Notification cleanup started")
+        let release = DispatchSemaphore(value: 0)
+        let system = PantryDigestNotifications(isolated: false) { pending, delivered in
+            XCTAssertFalse(Thread.isMainThread)
+            XCTAssertEqual(pending, [identifier])
+            XCTAssertEqual(delivered, [identifier])
+            started.fulfill()
+            XCTAssertEqual(release.wait(timeout: .now() + 10), .success)
+        }
+        let reopened = PantryDigestStore(folder: folder, scheduler: system)
+        let cleanup = Task { try await reopened.reconcile(scope, lots: [lot]) }
+        await fulfillment(of: [started], timeout: 5)
+
+        let coldPantry = model(db)
+        await coldPantry.loadOnAppearance(accessAllowed: true)
+        XCTAssertEqual(coldPantry.snapshot?.lots.map(\.id), [lot.id])
+        XCTAssertEqual(try reopened.document(scope).rules.map(\.day), [day])
+        release.signal()
+        try await cleanup.value
         try await db.close()
     }
 

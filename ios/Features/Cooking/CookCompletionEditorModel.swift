@@ -94,6 +94,15 @@ import CoreDomain
     private var foodDetails: [UUID: MealEligibilityEvidence] = [:]
 
     var canEdit: Bool { context != nil && completed == nil && review == nil && !busy && !attemptedApply && authorize() }
+    var hasUnsavedDraft: Bool {
+        guard let context, completed == nil, !hasAttemptedMutation else { return false }
+        return review != nil || servings != context.servings.description || cookedAt != context.asOf ||
+            leftoverChoice != .undecided || !leftovers.isEmpty || !foodDetails.isEmpty ||
+            ingredients.contains { ingredient in
+                ingredient.use != .undecided || ingredient.parts.count != 1 ||
+                    ingredient.parts.contains { $0 != Part(id: $0.id) }
+            }
+    }
     var canConfirm: Bool { review != nil && completed == nil && !busy && authorize() }
     var hasAccess: Bool { authorize() }
     var remainingUnresolvedUseIDs: [UUID] {

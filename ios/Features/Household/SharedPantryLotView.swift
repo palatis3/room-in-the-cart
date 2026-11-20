@@ -29,7 +29,7 @@ struct SharedPantryLotView: View {
     private var record: PantryLotReview? { PantryLotReview(model: model, shopID: shopID, lotID: lotID) }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let record {
                 let lot = record.lot
                 Section {
@@ -117,7 +117,7 @@ private struct SharedPantryObservationView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 Section(record.lot.foodName) {
                     LabeledContent(ht("Storage location"), value: pantryLocation(record.lot.location))
                     LabeledContent(ht("Previously confirmed"), value: deliveryQuantityText(record.lot.observation?.quantity))

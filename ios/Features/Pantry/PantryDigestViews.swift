@@ -14,6 +14,19 @@ struct PantryDigestAccess {
     let scope: PantryDigestScope
     let authorized: @MainActor () -> Bool
 }
+struct PantryDigestPermissionPrompt {
+    let scope: PantryDigestScope
+    let present: PantryNotificationPresenter
+}
+private struct PantryDigestPermissionPromptKey: EnvironmentKey {
+    static let defaultValue: PantryDigestPermissionPrompt? = nil
+}
+extension EnvironmentValues {
+    var pantryDigestPermissionPrompt: PantryDigestPermissionPrompt? {
+        get { self[PantryDigestPermissionPromptKey.self] }
+        set { self[PantryDigestPermissionPromptKey.self] = newValue }
+    }
+}
 private struct PantryDigestAccessKey: EnvironmentKey { static let defaultValue: PantryDigestAccess? = nil }
 extension EnvironmentValues {
     var pantryDigestAccess: PantryDigestAccess? {
@@ -148,16 +161,25 @@ extension PantryDigestAccess {
 }
 
 struct PantryDigestList: View {
+    @Environment(\.scenePhase) private var scene
+    @Environment(\.pantryDigestPermissionPrompt) private var notificationPrompt
     @ObservedObject var model: PantryModel
     let access: PantryDigestAccess
     @ObservedObject private var store = PantryDigestStore.shared
     @State private var message: String?
     @State private var busy = false
+    @State private var loadedTime = false
     @State private var time = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
 
+    private var originalAccessReady: Bool { scene == .active && access.authorized() }
+    private struct ReviewRead: Equatable {
+        let authorized: Bool
+        let generation: UUID
+    }
+
     var body: some View {
-        Form {
-            if access.authorized(), let snapshot = model.snapshot, snapshot.state.workspaceID == access.scope.origin,
+        WorkingForm {
+            if originalAccessReady, let snapshot = model.snapshot, snapshot.state.workspaceID == access.scope.origin,
                let doc = currentDocument(snapshot.lots) {
                 Section(pantryText("Foods to check")) {
                     if doc.rules.isEmpty { Text(pantryText("Choose a batch in My Pantry and set a check date.")) }
@@ -168,11 +190,6 @@ struct PantryDigestList: View {
                             }
                         }
                     }
-                }
-                AdultHomeSummaryPreference(kind: .useSoon, access: access)
-                Section {
-                    NavigationLink(tonightText("Tonight")) { TonightEntry() }
-                        .accessibilityIdentifier("pantry.digest.tonight")
                 }
                 Section(pantryText("Daily notification")) {
                     DatePicker(pantryText("Digest time"), selection: $time, displayedComponents: .hourAndMinute)
@@ -186,19 +203,28 @@ struct PantryDigestList: View {
                     if doc.enabled {
                         Button(pantryText("Turn off daily notifications")) { update(enabled: false) }
                     }
-                    if store.notificationsUnavailable {
+                    if let message {
+                        Text(message).accessibilityIdentifier("pantry.digest.status")
+                            .accessibilityAddTraits(.updatesFrequently)
+                    } else if store.notificationsUnavailable {
                         Text(pantryText("Notifications are unavailable. Your check dates are still here."))
                     }
                 }.disabled(busy)
+                AdultHomeSummaryPreference(kind: .useSoon, access: access)
+                Section {
+                    NavigationLink(tonightText("Tonight")) { TonightEntry() }
+                        .accessibilityIdentifier("pantry.digest.tonight")
+                }
             } else if model.busy { ProgressView() }
             else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
-            if let message { Text(message).accessibilityIdentifier("pantry.digest.status") }
         }
         .privacySensitive().navigationTitle(pantryText("Use soon"))
-        .task {
-            if model.snapshot == nil { await model.load() }
-            if access.authorized(), let doc = try? store.document(access.scope) {
+        .task(id: ReviewRead(authorized: originalAccessReady, generation: model.generation)) {
+            guard originalAccessReady else { return }
+            await model.loadDigestReview { originalAccessReady }
+            if !loadedTime, !Task.isCancelled, originalAccessReady, let doc = try? store.document(access.scope) {
                 time = Calendar.current.date(bySettingHour: doc.minute / 60, minute: doc.minute % 60, second: 0, of: Date()) ?? time
+                loadedTime = true
             }
         }
     }
@@ -214,7 +240,9 @@ struct PantryDigestList: View {
             defer { busy = false }
             do {
                 let parts = Calendar.current.dateComponents([.hour,.minute], from: time)
-                try await store.setAlerts(access.scope, enabled: enabled, minute: (parts.hour ?? 9) * 60 + (parts.minute ?? 0)) {
+                if enabled && notificationPrompt?.scope != access.scope { throw PantryDigestFailure.changed }
+                try await store.setAlerts(access.scope, enabled: enabled, minute: (parts.hour ?? 9) * 60 + (parts.minute ?? 0),
+                                          presenting: notificationPrompt?.present) {
                     access.authorized() && model.snapshot?.state.workspaceID == access.scope.origin
                 }
                 if access.authorized() { message = pantryText(enabled ? "Daily notifications are on." : "Daily notifications are off.") }
@@ -237,17 +265,20 @@ struct PantryDigestDayEditor: View {
     @ObservedObject private var store = PantryDigestStore.shared
 
     var body: some View {
-        Form {
+        WorkingForm {
             if access.authorized(), model.snapshot?.state.workspaceID == access.scope.origin,
                model.snapshot?.lots.first(where: { $0.id == lot.id }) == lot {
-                Text(verbatim: lot.name)
+                PantryBatchHeading(lot: lot)
                 DatePicker(pantryText("Check this food on"), selection: $date, displayedComponents: .date)
                     .environment(\.timeZone, zone)
-                Text(verbatim: zone.identifier)
+                Text(verbatim: zone.identifier).font(.subheadline).foregroundStyle(Theme.secondary)
                 Text(pantryText("Choose a day to check the batch. A check date does not indicate food safety."))
-                Button(pantryText("Save check date")) { save(remove: false) }.accessibilityIdentifier("pantry.digest.saveDate")
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                Button(pantryText("Save check date")) { save(remove: false) }
+                    .buttonStyle(PrimaryAction())
+                    .accessibilityIdentifier("pantry.digest.saveDate")
                 if (try? store.document(access.scope).rules.contains { $0.lotID == lot.id }) == true {
-                    Button(pantryText("Remove check date")) { save(remove: true) }
+                    Button(pantryText("Remove check date"), role: .destructive) { save(remove: true) }
                 }
                 if offersMealIdeas {
                     NavigationLink(tonightText("Find meals that use this batch")) {

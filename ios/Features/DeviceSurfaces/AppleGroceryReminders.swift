@@ -100,7 +100,7 @@ struct AppleGroceryReminders: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 Section {
                     Text(applePlanningText("Apple requires full Reminders access to read a list. Choose one list to view its incomplete titles."))
                     Button(applePlanningText("Choose a Reminders list")) {

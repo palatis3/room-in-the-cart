@@ -10,7 +10,7 @@ struct HouseholdSetupSections: View {
             if model.activation != nil {
                 Section(ht("Confirmed membership")) {
                     Text(ht("Membership was confirmed. Connect again to finish opening this household."))
-                    Button(ht("Connect confirmed household")) { Task { await model.connectConfirmedMembership() } }
+                    Button(ht("Open confirmed household")) { Task { await model.connectConfirmedMembership() } }
                 }
             } else if model.pendingMembership != nil {
                 Section(ht("Pending household action")) {
@@ -31,9 +31,11 @@ struct HouseholdSetupSections: View {
                 }
                 Section(ht("Use an invitation")) {
                     Text(ht("Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.")).font(.caption)
-                    SecureField(ht("Invitation code"), text: $model.invitationCode).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    SecureField(ht("Household invitation code"), text: $model.invitationCode).privacySensitive().textInputAutocapitalization(.never).autocorrectionDisabled()
                     Text(ht("Paste the code shared by the organizer or shopper. The invitation determines your access."))
-                    Button(ht("Join with invitation")) { Task { await model.redeemInvitation() } }.disabled(!canContinue)
+                    Button(ht("Join with invitation")) { Task { await model.redeemInvitation() } }
+                        .buttonStyle(PrimaryAction())
+                        .disabled(!canContinue || model.invitationCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
             lifecycleNotice(model)
@@ -50,8 +52,16 @@ struct HouseholdPeopleView: View {
     @ObservedObject var model: HouseholdLifecycleModel
     @State private var selectedMember: HouseholdMember?
     var body: some View {
-        Form {
+        WorkingForm {
             if model.canAdminister {
+                if let scope = model.scope { Section { HouseholdScopeHeading(scope: scope) } }
+                Section(ht("Invite an adult contributor")) {
+                    Text(ht("Invite an adult to request groceries. You’ll assign a shopper separately. Paid planning seats are managed separately."))
+                    expiryPicker(model)
+                    if model.issuanceUncertain { uncertainCreation(model) }
+                    else { Button(ht("Create adult invitation")) { Task { await model.createAdultInvitation() } }.buttonStyle(PrimaryAction()) }
+                }
+                IssuedInvitationSection(model: model, helperOnly: false)
                 if model.canReviewDevices {
                     Section {
                         NavigationLink(DeviceManagementCopy.text("Household devices")) {
@@ -74,19 +84,13 @@ struct HouseholdPeopleView: View {
                         }
                     }
                 }
-                Section(ht("Invite an adult contributor")) {
-                    Text(ht("An adult contributor can send requests. This invitation does not assign a paid seat or shopper authority."))
-                    expiryPicker(model)
-                    if model.issuanceUncertain { uncertainCreation(model) }
-                    else { Button(ht("Create adult invitation")) { Task { await model.createAdultInvitation() } } }
-                }
                 Section(ht("Managed invitations")) {
                     ForEach(model.invitations) { invitation in
                         VStack(alignment: .leading, spacing: 6) {
                             Text(invitation.kind == "adult_contributor" ? ht("Adult contributor") : ht("Scoped helper invitation"))
                             LabeledContent(ht("Reference"), value: String(invitation.id.suffix(8)))
                             Text(accessStatus(invitation.status))
-                            LabeledContent(ht("Access expires"), value: householdTime(invitation.expiresAt))
+                            LabeledContent(ht("Access expires"), value: householdExpiry(invitation.expiresAt))
                             if ["pending", "redeemed"].contains(invitation.status) {
                                 Button(ht("Revoke invitation"), role: .destructive) { Task { await model.revoke(.invite, targetID: invitation.id) } }
                             }
@@ -94,7 +98,6 @@ struct HouseholdPeopleView: View {
                     }
                     Text(ht("Revoking an invitation stops further redemption. Remove membership or revoke its scoped view to end existing access."))
                 }
-                IssuedInvitationSection(model: model, helperOnly: false)
                 lifecycleNotice(model)
             } else { Text(ht("Only the organizer can manage household members and invitations.")) }
         }.disabled(model.busy).navigationTitle(ht("People and invitations"))
@@ -119,7 +122,7 @@ struct HouseholdHelperComposer: View {
     @State private var approved = false
     @State private var inputNotice: String?
     var body: some View {
-        Form {
+        WorkingForm {
             if model.canShare {
                 Section(ht("Share instructions for this shop")) {
                     Text(ht("Only the fields reviewed here will be shared. Existing budgets, receipts and private notes are not included."))
@@ -131,7 +134,7 @@ struct HouseholdHelperComposer: View {
                         Text(ht("Read instructions")).tag("read")
                         Text(ht("Read and suggest corrections")).tag("edit")
                     }
-                    Text(ht("Suggestions wait for shopper review. They do not change the basket or instructions automatically."))
+                    Text(ht("The shopper reviews suggestions before changing the instructions."))
                     expiryPicker(model)
                 }
                 ForEach(items) { item in
@@ -151,7 +154,10 @@ struct HouseholdHelperComposer: View {
                 }
                 if let reviewed {
                     Section(ht("Recipient preview")) {
-                        Text(reviewed.shopLabel).font(.headline)
+                        Text(verbatim: reviewed.shopLabel).font(.title2.weight(.semibold))
+                        LabeledContent(ht("Instruction language"), value: reviewed.language == "es" ? ht("Spanish") : ht("English"))
+                        Text(mode == "edit" ? ht("Read and suggest corrections") : ht("Read instructions"))
+                        LabeledContent(ht("Expires after hours"), value: model.expiryHours.formatted())
                         ForEach(Array(reviewed.items.enumerated()), id: \.offset) { _, item in helperInstruction(item) }
                         Toggle(ht("I reviewed these instructions for this recipient"), isOn: $approved)
                         if model.issuanceUncertain { uncertainCreation(model) }
@@ -166,6 +172,9 @@ struct HouseholdHelperComposer: View {
         .onChange(of: items) { _, _ in invalidate() }.onChange(of: shopLabel) { _, _ in invalidate() }
         .onChange(of: language) { _, _ in invalidate() }.onChange(of: mode) { _, _ in invalidate() }
         .onChange(of: model.expiryHours) { _, _ in invalidate() }
+        .onChange(of: model.scope) { _, _ in
+            invalidate(); shopLabel = ""; items = [HelperDraftItem()]
+        }
     }
     private func invalidate() { reviewed = nil; approved = false; inputNotice = nil }
     private func review() {
@@ -183,19 +192,20 @@ private enum HouseholdCookingReportField: Hashable { case servings, ingredients,
 
 struct HouseholdHelperView: View {
     @ObservedObject var model: HouseholdLifecycleModel
+    var expectedScope: HouseholdBootstrap? = nil
     @State private var clearProposal = false
     @FocusState private var reportEditing: HouseholdCookingReportField?
     var body: some View {
-        Form {
-            if model.isHelper {
-                Button(ht("Refresh instructions")) { Task { await model.loadHelper() } }
+        WorkingForm {
+            if model.isHelper, expectedScope == nil || model.scope == expectedScope {
                 if let view = model.helperView {
                     Section {
-                        Text(view.shopLabel).font(.headline)
+                        Text(verbatim: view.shopLabel).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                        Text(view.canPropose ? ht("You can read and suggest changes for this pickup.") : ht("You can read the instructions for this pickup."))
                         LabeledContent(ht("Current instruction revision"), value: view.revision.formatted())
                         LabeledContent(ht("Last updated"), value: householdTime(view.asOf))
                             .accessibilityIdentifier("helper.instructions.asOf")
-                        LabeledContent(ht("Access expires"), value: householdTime(view.expiresAt))
+                        LabeledContent(ht("Access expires"), value: householdExpiry(view.expiresAt))
                         ForEach(Array(view.items.enumerated()), id: \.offset) { _, item in helperInstruction(item) }
                         if view.canReportContent == true {
                             SharedSafetyButton(channel: model.sharedSafetyChannel(for: view.grantId), fields: SharedMessageField.instruction(view))
@@ -231,9 +241,22 @@ struct HouseholdHelperView: View {
                         }
                     }
                 }
+                Button(ht("Refresh instructions")) { Task { await model.loadHelper() } }
                 lifecycleNotice(model)
+            } else if model.scope == nil && model.busy {
+                ProgressView(ht("Checking service…"))
             } else { Text(ht("This scoped view is no longer available. Ask the shopper for a fresh invitation.")) }
-        }.disabled(model.busy).navigationTitle(ht("Cook instructions")).task { await model.loadHelper() }
+        }.disabled(model.busy).navigationTitle(ht("Cook instructions"))
+        .task(id: model.scope?.grantId) {
+            guard model.isHelper, expectedScope == nil || model.scope == expectedScope else { return }
+            // Redemption can finish opening this destination before its own operation unwinds.
+            if model.busy {
+                for await busy in model.$busy.values {
+                    if !busy || Task.isCancelled { break }
+                }
+            }
+            if !Task.isCancelled { await model.loadHelper() }
+        }
         .keyboardDoneAction(visible: reportEditing != nil, title: ht("Done"),
                             identifier: "helper.cookingReport.done") { reportEditing = nil }
         .onChange(of: model.helperView?.canPropose) { _, allowed in
@@ -305,7 +328,7 @@ struct HouseholdManagedViewsView: View {
     @ObservedObject var model: HouseholdLifecycleModel
     @State private var revoking: ManagedHelperView?
     var body: some View {
-        Form {
+        WorkingForm {
             if model.canAdminister || model.canShare {
                 Section {
                     Button(ht("Refresh managed views")) { Task { await model.loadManagedViews() } }
@@ -317,7 +340,7 @@ struct HouseholdManagedViewsView: View {
                         Text(view.mode == "edit" ? ht("Read and suggest corrections") : ht("Read instructions"))
                         Text(accessStatus(view.status))
                         if let alias = view.recipientAlias { LabeledContent(ht("Recipient"), value: alias) }
-                        LabeledContent(ht("Access expires"), value: householdTime(view.expiresAt))
+                        LabeledContent(ht("Access expires"), value: householdExpiry(view.expiresAt))
                         if ["available", "active"].contains(view.status) {
                             if model.canShare, view.shopId == model.scope?.shopId {
                                 NavigationLink(ht("Review suggestions")) { HouseholdHelperProposalsView(model: model, grantID: view.id) }
@@ -341,7 +364,7 @@ private struct HouseholdHelperProposalsView: View {
     @ObservedObject var model: HouseholdLifecycleModel
     let grantID: String
     var body: some View {
-        Form {
+        WorkingForm {
             if model.canShare {
                 Button(ht("Refresh suggestions")) { Task { await model.loadProposals(grantID: grantID) } }
                 Text(ht("Suggestions are pending review. Review any basket change separately using the current shop."))
@@ -380,7 +403,7 @@ struct HouseholdGuardianView: View {
     @ObservedObject var model: HouseholdLifecycleModel
     @State private var selected: GuardianConsent?
     var body: some View {
-        Form {
+        WorkingForm {
             if model.scope != nil, !model.isHelper {
                 Section {
                     Text(ht("Only consents covered by your verified guardian relationships appear here."))
@@ -418,7 +441,7 @@ enum BrowserInvitationRoute: String, CaseIterable {
         address.path = "/" + rawValue
         if self != .child { address.queryItems = [URLQueryItem(name: "enterCode", value: "1")] }
         guard let page = address.url else { return nil }
-        return [ht("Open this page on the invited device:"), page.absoluteString,
+        return ["Room in the Cart · " + ht("Open this page on the invited device:"), page.absoluteString,
                 "", ht("Invitation code"), code].joined(separator: "\n")
     }
 }
@@ -430,7 +453,7 @@ struct BrowserInvitationShare: View {
     var body: some View {
         if let text = route.shareText(serviceURL: serviceURL, code: code) {
             ShareLink(item: text) {
-                Label(ht("Share browser invitation"), systemImage: "square.and.arrow.up")
+                Label(ht("Share invitation"), systemImage: "square.and.arrow.up")
             }.accessibilityIdentifier("household.shareBrowserInvitation")
         }
     }
@@ -442,7 +465,7 @@ private struct IssuedInvitationSection: View {
     var body: some View {
         if let issued = model.issued, (issued.grantId != nil) == helperOnly {
             Section(ht("Invitation ready")) {
-                LabeledContent(ht("Access expires"), value: householdTime(issued.expiresAt))
+                LabeledContent(ht("Access expires"), value: householdExpiry(issued.expiresAt))
                 Text(issued.token).font(.caption.monospaced()).textSelection(.enabled).privacySensitive()
                 BrowserInvitationShare(route: helperOnly ? .cook : .contributor, serviceURL: model.serviceURL, code: issued.token)
                 ShareLink(item: issued.token) { Label(ht("Share invitation code"), systemImage: "square.and.arrow.up") }
@@ -464,6 +487,11 @@ private struct IssuedInvitationSection: View {
         Text(item.action)
     }.accessibilityElement(children: .combine)
 }
+private func householdExpiry(_ value: String) -> String {
+    guard let date = serviceDate(value) else { return ht("Time unavailable") }
+    return date.formatted(.dateTime.year().month(.abbreviated).day().hour().minute().timeZone())
+}
+
 @MainActor @ViewBuilder private func expiryPicker(_ model: HouseholdLifecycleModel) -> some View {
     Stepper(value: Binding(get: { model.expiryHours }, set: { model.expiryHours = $0 }), in: 1...168) {
         LabeledContent(ht("Expires after hours"), value: model.expiryHours.formatted())
@@ -508,7 +536,7 @@ private struct HouseholdHelperReviewView: View {
         _model = StateObject(wrappedValue: lifecycle.helperReviewModel(grantID: grantID, proposalID: proposalID))
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if lifecycle.canShare {
                 Section {
                     Text(ht("Review helper instructions"))

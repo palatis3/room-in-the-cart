@@ -38,6 +38,67 @@ import UIKit
         XCTAssertTrue(window.allowsPantryAction(appActive: true))
     }
 
+    func testNotificationDenialWaitsForSameAdultToReturnFromSystemAlert() async throws {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
+        let window = PantryVoicePromptWindow()
+        var active = true
+        let answer = Task {
+            try await window.requestNotification(in: scope, phase: .active, currentScope: { scope }, appActive: { active }) {
+                active = false
+                window.sceneChanged(.inactive)
+                return false
+            }
+        }
+        await settle { window.retains(scope, phase: .inactive) }
+        XCTAssertFalse(window.allowsPantryAction(appActive: false))
+        active = true
+        window.sceneChanged(.active)
+        let allowed = try await answer.value
+        XCTAssertFalse(allowed)
+        XCTAssertNil(window.token)
+    }
+
+    func testNotificationResponseBeforeSceneInterruptionRetainsOnlyTheReviewedScope() async throws {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
+        let window = PantryVoicePromptWindow()
+        let allowed = try await window.requestNotification(in: scope, phase: .active,
+            currentScope: { scope }, appActive: { true }) { false }
+        XCTAssertFalse(allowed)
+        window.sceneChanged(.inactive)
+        XCTAssertTrue(window.retains(scope, phase: .inactive))
+        XCTAssertFalse(window.allowsPantryAction(appActive: false))
+        window.sceneChanged(.active)
+        XCTAssertNil(window.token)
+    }
+
+    func testNotificationPermissionCannotCarryAcrossBackgroundOrAnotherAdult() async throws {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
+        let other = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        for background in [true, false] {
+            let window = PantryVoicePromptWindow()
+            var current = scope
+            do {
+                _ = try await window.requestNotification(in: scope, phase: .active, currentScope: { current }, appActive: { true }) {
+                    window.sceneChanged(.inactive)
+                    if background {
+                        window.sceneChanged(.background)
+                        XCTAssertFalse(window.holdsPresentation(scope))
+                    } else {
+                        current = .init(adult: other, origin: scope.origin, ledger: scope.ledger, generation: scope.generation)
+                        XCTAssertFalse(window.holdsPresentation(current))
+                    }
+                    window.sceneChanged(.active)
+                    return true
+                }
+                XCTFail("An old notification request survived a privacy boundary")
+            } catch PantryDigestFailure.changed {}
+            XCTAssertNil(window.token)
+        }
+    }
+
     func testPermissionResultBeforeSceneInterruptionRetainsOnlyUntilReturn() throws {
         let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
         let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())

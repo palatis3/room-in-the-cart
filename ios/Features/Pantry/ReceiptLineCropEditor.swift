@@ -58,7 +58,7 @@ struct ReceiptLineCropEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            WorkingForm {
                 Section {
                     Image(decorative: image, scale: 1).resizable().scaledToFit().overlay {
                         GeometryReader { geometry in

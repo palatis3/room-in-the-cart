@@ -58,6 +58,103 @@ import CoreDomain
         }, phase: { _ in .draft }, ideaCatalog: catalog, clock: { self.now })
         return (store, model)
     }
+    func testMilestonePresentationRequiresLivePrivateAccess() {
+        let (store, restricted) = fixture()
+        XCTAssertFalse(restricted.milestoneAccess())
+        var privateAccess = true
+        let live = DinnerFeatureModel(store: store, access: restricted.accessProvider,
+            phase: restricted.phaseProvider, milestoneAccess: { privateAccess })
+        XCTAssertTrue(live.milestoneAccess())
+        privateAccess = false
+        XCTAssertFalse(live.milestoneAccess())
+    }
+
+    func testFirstAcceptedDinnerFeedbackRequiresMatchingFreshOriginAndDurableCommit() async throws {
+        let template = try recipe()
+        for enrollment in [0, 1, 2] {
+            let (store, model) = fixture()
+            // Legacy, recovered from a different origin, and newly enrolled.
+            store.workspace.firstDinnerFeedbackOrigin = [nil, UUID(), store.sourceWorkspaceID][enrollment]
+            let firstID = UUID()
+            var events: [DinnerFeatureModel.FirstDinnerSave] = []
+            store.failSave = true
+            let failed = await model.accept(template, id: firstID, fallback: false) { events.append($0) }
+            XCTAssertFalse(failed)
+            XCTAssertTrue(events.isEmpty)
+            store.failSave = false
+            let saved = await model.accept(template, id: firstID, fallback: false) { events.append($0) }
+            XCTAssertTrue(saved)
+            XCTAssertEqual(events.map(\.acceptedID), enrollment == 2 ? [firstID] : [])
+            if let first = events.first {
+                XCTAssertEqual(first.planningRevision, model.state.revisionID)
+                XCTAssertEqual(first.editor, model.editorIdentity)
+            }
+            let repeated = await model.accept(template, id: firstID, fallback: false) { events.append($0) }
+            let second = await model.accept(try recipe(), id: UUID(), fallback: false) { events.append($0) }
+            XCTAssertTrue(repeated && second)
+            XCTAssertEqual(events.count, enrollment == 2 ? 1 : 0)
+            XCTAssertEqual(store.commits, 2)
+        }
+    }
+
+    func testEditableIdeaDoesNotConsumeFirstAcceptance() async throws {
+        let (store, model) = fixture(catalog: DinnerPatternCatalog.patterns)
+        store.workspace.firstDinnerFeedbackOrigin = store.sourceWorkspaceID
+        var idea = try model.newIdea(seed: 0, exclusions: [])
+        idea.availabilityConfirmed = true
+        idea.yieldConfirmed = true
+        let draftSaved = await model.saveIdea(idea)
+        XCTAssertTrue(draftSaved)
+        XCTAssertEqual(store.workspace.firstDinnerFeedbackOrigin, store.sourceWorkspaceID)
+        let id = UUID()
+        var events: [DinnerFeatureModel.FirstDinnerSave] = []
+        let saved = await model.acceptIdea(idea, acceptedID: id) { events.append($0) }
+        let repeated = await model.acceptIdea(idea, acceptedID: id) { events.append($0) }
+        XCTAssertTrue(saved && repeated)
+        XCTAssertEqual(events.map(\.acceptedID), [id])
+        XCTAssertNil(store.workspace.firstDinnerFeedbackOrigin)
+    }
+
+    func testTwoEditorsCompeteForOneDurableDinnerMilestone() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("ledger.sqlite")
+        let ledger = LedgerModel(databaseURL: url)
+        await ledger.open()
+        let shop = ShoppingLedger(title: "Dinner pickup")
+        let started = await ledger.change(key: "start") { workspace in
+            workspace.shops = [shop]
+            workspace.selectedShopID = shop.id
+        }
+        XCTAssertTrue(started)
+        let origin = try XCTUnwrap(ledger.sourceWorkspaceID)
+        XCTAssertEqual(ledger.workspace.firstDinnerFeedbackOrigin, origin)
+        let other = LedgerModel(databaseURL: url)
+        await other.open()
+        func editor(_ ledger: LedgerModel) -> DinnerFeatureModel {
+            DinnerFeatureModel(store: ledger, access: { id in
+                DinnerAccessContext(scope: .local(workspaceID: origin), actorID: "adult", shopID: id,
+                    assignedShopperID: "adult", canPlan: true, canReadBudget: true, hasPaidTools: false,
+                    roleRevision: 0, verifiedAt: self.now, validUntil: self.now.addingTimeInterval(300))
+            }, phase: { _ in .draft }, clock: { self.now })
+        }
+        let firstEditor = editor(ledger), otherEditor = editor(other), recipe = try recipe()
+        var events: [DinnerFeatureModel.FirstDinnerSave] = []
+        let first = Task { await firstEditor.accept(recipe, id: UUID(), fallback: false) { events.append($0) } }
+        let second = Task { await otherEditor.accept(recipe, id: UUID(), fallback: false) { events.append($0) } }
+        let firstWon = await first.value
+        let secondWon = await second.value
+        XCTAssertNotEqual(firstWon, secondWon)
+        let reopened = LedgerModel(databaseURL: url)
+        await reopened.open()
+        XCTAssertEqual(reopened.workspace.dinnerPlanning.acceptedDinners.map(\.id), events.map(\.acceptedID))
+        XCTAssertEqual(events.count, 1)
+        XCTAssertNil(reopened.workspace.firstDinnerFeedbackOrigin)
+        let later = await editor(reopened).accept(try self.recipe(), id: UUID(), fallback: false) { events.append($0) }
+        XCTAssertTrue(later)
+        XCTAssertEqual(events.count, 1)
+    }
+
     func testTotalServingsValidationNamesTheFieldAndRetainsDraftAndStore() throws {
         let (store, model) = fixture()
         var original = try recipe()

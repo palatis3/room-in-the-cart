@@ -37,7 +37,7 @@ private struct PrivatePricePublicationForm: View {
     @State private var notice: String?
 
     var body: some View {
-        Form {
+        WorkingForm {
             if history.authorized {
                 if let notice { Text(verbatim: notice) }
                 if let notice = history.notice { Text(verbatim: notice) }

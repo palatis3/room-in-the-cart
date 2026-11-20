@@ -180,8 +180,11 @@ struct PantryDigestDocument: Codable, Equatable {
 enum PantryDigestFailure: Error { case invalid, changed, denied, capacity }
 struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let zone: TimeZone }
 
+typealias PantryNotificationRequest = @MainActor () async throws -> Bool
+typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) async throws -> Bool
+
 @MainActor protocol PantryDigestScheduling {
-    func permission(request: Bool) async throws -> Bool
+    func permission(request: Bool, presenting: PantryNotificationPresenter?) async throws -> Bool
     func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws
     func remove(_ handles: Set<UUID>) async
     func prune(keepingPending: Set<UUID>, keepingDelivered: Set<UUID>) async
@@ -189,22 +192,49 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
 
 @MainActor struct PantryDigestNotifications: PantryDigestScheduling {
     static let prefix = "pantry.digest."
-    let isolated: Bool
-    func permission(request: Bool) async throws -> Bool {
+    typealias SystemRemoval = @Sendable (_ pending: [String], _ delivered: [String]) -> Void
+    private static let removalQueue = DispatchQueue(label: "dev.roominthecart.pantry.notification-cleanup", qos: .utility)
+    private let isolated: Bool
+    private let removeFromSystem: SystemRemoval
+
+    init(isolated: Bool, removeFromSystem: @escaping SystemRemoval = { pending, delivered in
+        let center = UNUserNotificationCenter.current()
+        if !pending.isEmpty { center.removePendingNotificationRequests(withIdentifiers: pending) }
+        if !delivered.isEmpty { center.removeDeliveredNotifications(withIdentifiers: delivered) }
+    }) {
+        self.isolated = isolated
+        self.removeFromSystem = removeFromSystem
+    }
+
+    // UserNotifications can synchronously wait for its service. Keep the store's
+    // ordering and privacy fence without making a slow service freeze the interface.
+    private func retire(pending: [String] = [], delivered: [String] = []) async {
+        guard !pending.isEmpty || !delivered.isEmpty else { return }
+        let remove = removeFromSystem
+        await withCheckedContinuation { continuation in
+            Self.removalQueue.async {
+                remove(pending, delivered)
+                continuation.resume()
+            }
+        }
+    }
+
+    func permission(request: Bool, presenting: PantryNotificationPresenter?) async throws -> Bool {
         guard !isolated else { return false }
         let scheduler = IOSNotificationScheduler()
         switch await scheduler.permission() {
         case .authorized: return true
         case .denied: return false
-        case .unknown: return request ? try await scheduler.requestPermission() : false
+        case .unknown:
+            guard request else { return false }
+            if let presenting { return try await presenting { try await scheduler.requestPermission() } }
+            return try await scheduler.requestPermission()
         }
     }
     func remove(_ handles: Set<UUID>) async {
         guard !isolated, !handles.isEmpty else { return }
         let identifiers = handles.map { Self.prefix + $0.uuidString }
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: identifiers)
-        center.removeDeliveredNotifications(withIdentifiers: identifiers)
+        await retire(pending: identifiers, delivered: identifiers)
     }
     private func identifier(_ handle: UUID) -> String { Self.prefix + handle.uuidString }
 
@@ -214,9 +244,9 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         let pending = Set(keepingPending.map(identifier))
         let delivered = Set(keepingDelivered.map(identifier))
         let requests = await center.pendingNotificationRequests().map(\.identifier)
-        center.removePendingNotificationRequests(withIdentifiers: requests.filter { $0.hasPrefix(Self.prefix) && !pending.contains($0) })
+        await retire(pending: requests.filter { $0.hasPrefix(Self.prefix) && !pending.contains($0) })
         let notifications = await center.deliveredNotifications().map(\.request.identifier)
-        center.removeDeliveredNotifications(withIdentifiers: notifications.filter { $0.hasPrefix(Self.prefix) && !delivered.contains($0) })
+        await retire(delivered: notifications.filter { $0.hasPrefix(Self.prefix) && !delivered.contains($0) })
     }
 
     func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws {
@@ -242,7 +272,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
                 try await center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: trigger))
             }
         } catch {
-            center.removePendingNotificationRequests(withIdentifiers: desired.map(identifier))
+            await retire(pending: desired.map(identifier))
             throw error
         }
     }
@@ -312,7 +342,7 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     }
     private func schedule(_ doc: PantryDigestDocument?) async throws {
         try await serialized { [self] in
-            let granted = doc?.enabled == true ? try await scheduler.permission(request: false) : false
+            let granted = doc?.enabled == true ? try await scheduler.permission(request: false, presenting: nil) : false
             try await scheduler.replace(granted ? doc?.deliveries(now: now()) ?? [] : [],
                                         keepingDelivered: granted ? Set(doc?.rules.map(\.handle) ?? []) : [])
             notificationsUnavailable = doc?.enabled == true && !granted
@@ -368,11 +398,12 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         let today = try range.map { try MealDay(date: now(), timeZoneIdentifier: $0.start.timeZoneIdentifier) }
         try await change(scope) { try $0.setRange(range, for: lot, today: today) }
     }
-    func setAlerts(_ scope: PantryDigestScope, enabled: Bool, minute: Int, timeZone: TimeZone = .current, authorized: () -> Bool) async throws {
+    func setAlerts(_ scope: PantryDigestScope, enabled: Bool, minute: Int, timeZone: TimeZone = .current,
+                   presenting: PantryNotificationPresenter? = nil, authorized: () -> Bool) async throws {
         guard authorized(), (0..<1440).contains(minute) else { throw PantryDigestFailure.changed }
         if enabled {
             let request = try !document(scope).enabled
-            guard try await scheduler.permission(request: request) else { throw PantryDigestFailure.denied }
+            guard try await scheduler.permission(request: request, presenting: presenting) else { throw PantryDigestFailure.denied }
         }
         if !enabled {
             try await pruneOrphanedNotifications()

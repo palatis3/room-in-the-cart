@@ -2,10 +2,11 @@ import Foundation
 
 enum GuardianCopy {
     static func text(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Guardian") }
-    static func date(_ value: String) -> String {
+    static func date(_ value: String, includingTimeZone: Bool = false, dateStyle: Date.FormatStyle.DateStyle = .abbreviated) -> String {
         let parser = ISO8601DateFormatter(); parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         guard let date = parser.date(from: value) ?? ISO8601DateFormatter().date(from: value) else { return value }
-        return date.formatted(date: .abbreviated, time: .shortened)
+        if includingTimeZone { return date.formatted(.dateTime.year().month(.abbreviated).day().hour().minute().timeZone()) }
+        return date.formatted(date: dateStyle, time: .shortened)
     }
     static func state(_ state: String) -> String {
         switch state {

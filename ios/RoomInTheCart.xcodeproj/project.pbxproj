@@ -415,7 +415,6 @@
 				"SWIFT_EMIT_LOC_STRINGS" = "YES";
 				"INFOPLIST_FILE" = "App/Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
-				"INFOPLIST_KEY_UILaunchScreen_Generation" = "YES";
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait";
 				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks",);
 				"CODE_SIGN_ENTITLEMENTS" = "Configuration/App.entitlements";
@@ -2104,7 +2103,7 @@
 		"48604E17CAA3084142A83692" = {
 			"isa" = "PBXResourcesBuildPhase";
 			"buildActionMask" = "2147483647";
-			"files" = ("FA8EDA124402B351E4D58580", "35E53B54CEFF249624EEEF15",);
+			"files" = ("0561B6B779527A2FA058B6AB", "FA8EDA124402B351E4D58580", "35E53B54CEFF249624EEEF15",);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
 		"48ADF8A61F7752CC13FA7B80" = {
@@ -5479,7 +5478,6 @@
 				"SWIFT_EMIT_LOC_STRINGS" = "YES";
 				"INFOPLIST_FILE" = "App/Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
-				"INFOPLIST_KEY_UILaunchScreen_Generation" = "YES";
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait";
 				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks",);
 				"CODE_SIGN_ENTITLEMENTS" = "Configuration/App.entitlements";
@@ -6560,7 +6558,6 @@
 				"SWIFT_EMIT_LOC_STRINGS" = "YES";
 				"INFOPLIST_FILE" = "App/Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
-				"INFOPLIST_KEY_UILaunchScreen_Generation" = "YES";
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait";
 				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks",);
 				"CODE_SIGN_ENTITLEMENTS" = "Configuration/App.entitlements";
@@ -6709,7 +6706,7 @@
 		"E99FE1275B5274F752DC6583" = {
 			"isa" = "PBXResourcesBuildPhase";
 			"buildActionMask" = "2147483647";
-			"files" = ("FA8EDA124402B351E4D58580", "90CD9372E7A3772F02EB63AC",);
+			"files" = ("0561B6B779527A2FA058B6AB", "FA8EDA124402B351E4D58580", "90CD9372E7A3772F02EB63AC",);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
 		"E9B58E95EEEE1E5E1B83258E" = {

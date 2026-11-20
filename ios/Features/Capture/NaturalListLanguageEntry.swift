@@ -98,7 +98,7 @@ extension CaptureLineDraft {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if scene == .active, isCurrent() {
                 if available == nil { ProgressView() }
                 else if available == false { Text(captureText("Online help is unavailable. You can review every item on this device.")) }

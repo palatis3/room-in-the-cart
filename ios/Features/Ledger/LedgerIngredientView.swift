@@ -190,7 +190,7 @@ private struct LedgerLineEditor: View {
         _baseRevision = State(initialValue: model.revision)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 TextField(ledgerText("Item name"), text: $name, axis: .vertical)
                 TextField(ledgerText("Visible notes"), text: $notes, axis: .vertical)
@@ -247,7 +247,7 @@ private struct LedgerContributionEditor: View {
         _notes = State(initialValue: contribution.notes)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section(ledgerText("Original wording")) { Text(contribution.originalText) }
             Section {
                 LedgerQuantityFields(amount: $amount, unit: $unit)
@@ -278,10 +278,22 @@ struct LedgerQuantityFields: View {
     @Binding var amount: String
     @Binding var unit: UnitOfMeasure
     var amountFocus: (binding: FocusState<String?>.Binding, id: String)? = nil
-    var body: some View {
-        let field = TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
+    var amountLabel: String? = nil
+
+    @ViewBuilder private var amountField: some View {
+        let title = amountLabel ?? ledgerText("Amount, unknown if blank")
+        let field = TextField(title, text: $amount, prompt: amountLabel == nil ? nil : Text(verbatim: "—"))
+            .keyboardType(.numbersAndPunctuation)
         if let amountFocus { field.focused(amountFocus.binding, equals: amountFocus.id) }
         else { field }
+    }
+
+    var body: some View {
+        if let amountLabel {
+            WorkingField(amountLabel) {
+                amountField
+            }
+        } else { amountField }
         Picker(ledgerText("Unit"), selection: $unit) {
             ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
         }
@@ -298,7 +310,7 @@ private struct LedgerLinkView: View {
     @State private var unit: UnitOfMeasure = .count
     @State private var validation: String?
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(ledgerText("Use part of an amount already listed. For example, linking six taco wraps within twelve listed wraps keeps twelve on the list."))
                 Picker(ledgerText("Existing contribution"), selection: $supplyID) {
@@ -336,7 +348,7 @@ private struct LedgerProtectedNeedView: View {
     @State private var supplyID: UUID?
     @State private var validation: String?
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 TextField(ledgerText("Who or what this is for"), text: $purpose, axis: .vertical)
                 LedgerQuantityFields(amount: $amount, unit: $unit)
@@ -370,7 +382,7 @@ private struct LedgerHandleView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var who = ""
     var body: some View {
-        Form {
+        WorkingForm {
             Text(ledgerText("Handling records who took care of this need. Checking only records list progress."))
             TextField(ledgerText("Handled by"), text: $who).disabled(model.saving || model.hasPendingSave)
                 .accessibilityIdentifier("ledgerHandledBy")

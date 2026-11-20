@@ -24,7 +24,7 @@ struct PrivateDeliveryReceiptsView: View {
         model.canEdit && model.supportsReceiptAliases && model.permitsReceiptSource && model.snapshot?.state.workspaceID == target.workspaceID
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if let status { Text(status).accessibilityIdentifier("deliveryReceipt.status") }
             if authorized {
                 if busy { ProgressView() }

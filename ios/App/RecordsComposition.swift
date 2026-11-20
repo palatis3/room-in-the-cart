@@ -282,7 +282,7 @@ struct RecordsToolsEntryView: View {
     var body: some View {
         Group {
             if let tools = composition.tools { RecordsToolsView(model: tools, recipeLibraryOnly: dinnerModel != nil, pantry: composition.pantryTools, pantryErasure: composition.pantryErasure, didDismissPantryErasure: composition.didDismissPantryErasure) }
-            else if composition.cleanupOnly, let erasure = composition.pantryErasure { Form { RecordsPantryErasureSection(model: erasure, didDismiss: composition.didDismissPantryErasure) } }
+            else if composition.cleanupOnly, let erasure = composition.pantryErasure { WorkingForm { RecordsPantryErasureSection(model: erasure, didDismiss: composition.didDismissPantryErasure) } }
             else if composition.error != nil {
                 ContentUnavailableView {
                     Label(recordsText("Records could not open"), systemImage: "exclamationmark.triangle")
@@ -1149,7 +1149,7 @@ private struct RecordsLedgerDeletionView: View {
     @State private var failure: String?
     private var effectiveReview: WholeLedgerDeletionReview { ledger.pendingLedgerDeletionReview ?? review }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(recordsText("Delete the entire local ledger")).font(.title2.bold())
                 Text(recordsText("This permanently deletes every shopping list, dinner plan, reusable dinner and saved revision in this ledger."))
@@ -1214,7 +1214,7 @@ private struct RecordsRecipeAdoptionView: View {
             recipeSteps: recipe.steps.isEmpty ? nil : recipe.cookingSteps)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Text(recipe.title).font(.title2.bold())
             if let cooking {
                 NavigationLink(recordsText("Cook this recipe")) {

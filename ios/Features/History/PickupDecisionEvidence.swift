@@ -9,6 +9,14 @@ struct PickupDecisionEvidence: Identifiable {
     let retailerResponse: String?
     let arrivals: [ReceiptFragment]
 
+    static func hasRecords(in journey: PickupJourney) -> Bool {
+        !journey.repairs.isEmpty || journey.offers.contains(where: hasPreference)
+    }
+
+    private static func hasPreference(_ offer: PickupOffer) -> Bool {
+        !offer.householdPreference.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     static func records(in journey: PickupJourney) -> [Self] {
         let order = journey.pickup?.orderLines ?? []
         let receipts = journey.pickup?.receipts ?? []
@@ -18,7 +26,7 @@ struct PickupDecisionEvidence: Identifiable {
             return journey.needDetails.filter { ids.contains($0.id) }
         }
         var list: [Self] = []
-        for offer in journey.offers where !offer.householdPreference.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        for offer in journey.offers where hasPreference(offer) {
             let details = details(for: offer.lineID)
             let dishes = details.map(\.mealName).filter { !$0.isEmpty }.joined(separator: ", ")
             let product = offer.replacement.isEmpty ? order.first { $0.id == offer.lineID }?.name : offer.replacement

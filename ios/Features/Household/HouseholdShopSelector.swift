@@ -10,29 +10,41 @@ struct HouseholdShopSelector: View {
     @State private var busy = false
     @State private var failed = false
     @State private var loadID = UUID()
+    @State private var loadedQuery: ShopQuery?
+    private struct ShopQuery: Equatable {
+        let scope: HouseholdBootstrap?
+        let owned: Bool
+    }
+    private var query: ShopQuery { .init(scope: household.locked ? nil : household.projection, owned: owned) }
 
     init(household: HouseholdModel, includingClosed: Bool = false) {
         self.household = household
         _owned = State(initialValue: includingClosed)
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if !household.locked, let scope = household.projection, scope.grantId == nil {
+                Section { HouseholdScopeHeading(scope: scope) }
                 Picker(ht("Show shops"), selection: $owned) {
                     Text(ht("Active shops")).tag(false)
                     Text(ht("Shops assigned to me")).tag(true)
                 }
-                ForEach(shops) { shop in
+                ForEach(loadedQuery == query ? shops : []) { shop in
                     Button {
-                        Task { await household.selectShop(shop.id); dismiss() }
+                        Task {
+                            guard loadedQuery == query else { return }
+                            await household.selectShop(shop.id)
+                            dismiss()
+                        }
                     } label: {
                         VStack(alignment: .leading) {
                             if let date = serviceDate(shop.createdAt) { Text(date.formatted(date: .abbreviated, time: .shortened)) }
                             Text(shop.role == "shopper" ? ht("Assigned shopper") : ht("Contributor"))
                             Text(phaseName(shop.phase))
-                            Text(verbatim: String(shop.id.uuidString.suffix(8))).font(.caption.monospaced())
+                            Text(verbatim: reference(for: shop.id)).font(.caption.monospaced())
                         }
                     }
+                    .accessibilityIdentifier("household.shopChoice." + shop.id.uuidString.lowercased())
                 }
                 if failed { Button(ht("Retry loading shops")) { Task { await load(more: false) } } }
                 else if !busy && shops.isEmpty { Text(ht("No shops in this view.")) }
@@ -42,8 +54,13 @@ struct HouseholdShopSelector: View {
             }
         }.navigationTitle(ht("Choose shared shop"))
         .disabled(busy || household.busy)
-        .task(id: owned) { await load(more: false) }
+        .task(id: query) { await load(more: false) }
         .onDisappear { loadID = UUID() }
+    }
+    private func reference(for id: UUID) -> String {
+        let full = id.uuidString.lowercased()
+        let prefix = String(full.prefix(8))
+        return shops.contains { $0.id != id && $0.id.uuidString.lowercased().hasPrefix(prefix) } ? full : prefix
     }
     private func phaseName(_ phase: String) -> String {
         switch phase { case "draft": return ht("Draft shared shop"); case "frozen": return ht("Frozen shared shop")
@@ -51,13 +68,16 @@ struct HouseholdShopSelector: View {
     }
     @MainActor private func load(more: Bool) async {
         guard let service = household.service, let scope = household.projection, scope.grantId == nil, !household.locked else { return }
-        let id = UUID(); loadID = id
-        if !more { shops = []; cursor = nil }
+        let id = UUID()
+        let requested = query
+        loadID = id
+        if !more { shops = []; cursor = nil; loadedQuery = nil }
         busy = true; failed = false
         defer { if loadID == id { busy = false } }
         do {
             let page = try await service.selectableShops(closedAndOwned: owned, cursor: cursor)
-            guard loadID == id, !Task.isCancelled, household.projection == scope, !household.locked else { return }
+            guard loadID == id, !Task.isCancelled, query == requested else { return }
+            loadedQuery = requested
             let prior = Set(shops.map(\.id))
             shops.append(contentsOf: page.shops.filter { !prior.contains($0.id) }); cursor = page.nextCursor
         } catch { if loadID == id { shops = []; cursor = nil; failed = true } }
@@ -77,8 +97,9 @@ struct SharedShopAssignmentView: View {
         return model.scope.shopId.flatMap(UUID.init(uuidString:))
     }
     var body: some View {
-        Form {
+        WorkingForm {
             if let assignment, shopID == assignment.shopId {
+                Section { HouseholdScopeHeading(scope: model.scope) }
                 if let current = assignment.adults.first(where: { $0.id == assignment.shopperId }) {
                     LabeledContent(ht("Current shopper"), value: current.label)
                         .accessibilityIdentifier("household.currentShopper")

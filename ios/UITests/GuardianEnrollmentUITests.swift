@@ -247,8 +247,18 @@ import XCTest
 
         XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"enabled == true"),object:leave)],timeout:10),.completed)
         leave.tap()
-        let confirm=app.buttons["Remove child session and return to locked adult access"]
-        XCTAssertTrue(confirm.waitForExistence(timeout:5)); confirm.tap()
+        let signOut = NSPredicate(format: "identifier == %@ AND label == %@", "guardian.confirmChildSignOut", "Sign out child")
+        let matches = app.buttons.matching(signOut)
+        XCTAssertTrue(matches.element(boundBy: 0).waitForExistence(timeout: 5))
+        // iOS 27 exposes the confirmation action as a button nested inside a matching button.
+        let actions = matches.allElementsBoundByIndex.filter { button in
+            button.isHittable && !button.buttons.matching(signOut).allElementsBoundByIndex.contains(where: \.isHittable)
+        }
+        guard actions.count == 1, let confirm = actions.first else {
+            XCTFail("Expected one tappable Sign out child action. \(matches.debugDescription)")
+            return
+        }
+        confirm.tap()
         // No explicit fixture refresh: production RootView must observe presented=false.
         XCTAssertTrue(app.buttons["Unlock private workspace"].waitForExistence(timeout:10))
         XCTAssertFalse(element("guardian.leaveChildSpace").exists)

@@ -453,6 +453,20 @@ test('authorized Refresh clears an old mutation access denial without discarding
  }
 });
 
+test('request review focuses its heading and returns the keyboard to the saved draft', async t => {
+ const {root,dom} = await setup(fakeAPI());
+ t.after(() => dom.window.close());
+ type(dom,'item','Rolled oats');
+ type(dom,'amount','1 bag');
+ submit(root,dom);
+ assert.equal(root.ownerDocument.activeElement,root.querySelector('form h2'));
+ click(root,'Back to edit');
+ const item = root.querySelector('#item');
+ assert.equal(root.ownerDocument.activeElement,item);
+ assert.equal(item.value,'Rolled oats');
+ assert.equal(root.querySelector('#amount').value,'1 bag');
+});
+
 test('pending edit carries request revision; withdrawal requires confirmation',async()=>{
  let rows=[own()];const sent=[];const {root,dom}=await setup(fakeAPI({requests:async()=>rows,command:async(s,c)=>{sent.push(c);}}));
  click(root,'Edit');type(dom,'amount','three cans');submit(root,dom);submit(root,dom);await waitForIdle(root);

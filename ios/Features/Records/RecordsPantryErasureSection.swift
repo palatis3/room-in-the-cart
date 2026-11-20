@@ -28,7 +28,7 @@ private struct PantryErasureReviewView: View {
     @AccessibilityFocusState private var resultFocused: Bool
 
     var body: some View {
-        Form {
+        WorkingForm {
             if let review = model.review {
                 PantryErasureImpactView(model: model, review: review).id(review.id)
             } else if model.listed {

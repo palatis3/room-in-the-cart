@@ -89,7 +89,7 @@ import SwiftUI
   private var active: Bool { scene == .active && authorized() }
   var body: some View {
     NavigationStack {
-      Form {
+      WorkingForm {
         if active {
           if !source.isCurrent() {
             if busy {

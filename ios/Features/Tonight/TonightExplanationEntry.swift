@@ -81,7 +81,7 @@ func mealExplanationText(_ key: String) -> String {
     @State private var task: Task<Void, Never>?
     private var language: String { Locale.current.language.languageCode?.identifier ?? "" }
     var body: some View {
-        Form {
+        WorkingForm {
             if scene != .active || !isCurrent() {
                 Text(mealExplanationText("Meals, pantry or access changed. Close this review and refresh Tonight."))
             } else if available == nil { ProgressView() }

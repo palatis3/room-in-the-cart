@@ -102,7 +102,11 @@ import XCTest
         enterCheckoutFields()
         enableSwitch("Retailer total already includes all charges")
         let total = app.textFields["Inclusive total"]
-        fill("3.00", into: total)
+        tap(total)
+        app.typeText("3.00")
+        // Typing temporarily hides the decimal keypad and moves Done towards the tab bar.
+        XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: "Done"))
+        app.buttons["Done"].tap()
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         XCTAssertEqual(try total.snapshot().value as? String, "3.00")
         tap(app.buttons["Save and evaluate checkout"])
@@ -283,7 +287,7 @@ import XCTest
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 32 }
-            scrollContent(upward: upward, besideFields: inputBar != nil)
+            app.scrollForm(in: scrollableArea(), upward: upward, besideFields: inputBar != nil)
         }
         let area = touchableArea(above: inputBar)
         XCTAssertTrue(target.exists && (!requiresHitTarget || target.isHittable) && area.contains(CGPoint(x: target.frame.midX, y: target.frame.midY)),
@@ -322,17 +326,6 @@ import XCTest
         }
         return (bounds, navigationBottom, keyboardTop, tabTop)
     }
-    private func scrollContent(upward: Bool, besideFields: Bool = false) {
-        // Whole-app swipes can start on the software keyboard. Drag only in
-        // the observed unobscured content, and still require real hittability.
-        let area = scrollableArea(), bounds = app.frame
-        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
-        let origin = app.coordinate(withNormalizedOffset: .zero)
-        let x = besideFields ? area.minX : area.midX
-        let start = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? high : low) - bounds.minY))
-        start.press(forDuration: 0.05, thenDragTo: end)
-    }
     private func assertText(_ text: String) {
         let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
         // Passive labels need to be rendered inside the visible viewport. They
@@ -361,11 +354,11 @@ import XCTest
                 // Scroll only to reveal it, and return only if it is actionable.
                 for _ in 0..<2 {
                     if target.isHittable { return }
-                    scrollContent(upward: true)
+                    app.scrollForm(in: scrollableArea(), upward: true)
                 }
                 for _ in 0..<4 {
                     if target.isHittable { return }
-                    scrollContent(upward: false)
+                    app.scrollForm(in: scrollableArea(), upward: false)
                 }
                 if target.isHittable { return }
             }

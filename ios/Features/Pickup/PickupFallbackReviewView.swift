@@ -73,7 +73,7 @@ private struct PickupFallbackReviewView: View {
     var body: some View {
         let draft = review.draft
         let best = review.isReviewed ? rankedBest(at: now) : nil
-        Form {
+        WorkingForm {
             Section {
                 if canonical != nil {
                     Text(dinnerText("Only current confirmed pantry food can feed a fallback. Other needs stay reserved; these instructions do not release or replace them."))
@@ -172,7 +172,7 @@ private struct FallbackRecipeEditor: View {
     var body: some View {
         Group {
         if scenePhase == .active && authorized() {
-        Form {
+        WorkingForm {
             Text(dinnerFormat("Servings: %@",dinner.template.servings.description))
             ForEach(dinner.template.ingredients) { ingredient in
                 let binding = Binding(get: { review.ingredients[ingredient.id] ?? FallbackIngredientReview() }, set: { review.ingredients[ingredient.id] = $0 })

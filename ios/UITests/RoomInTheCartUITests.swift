@@ -38,6 +38,50 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(undo.waitForExistence(timeout: 10))
         XCTAssertTrue(undo.label.contains(name))
         XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
+        let viewList = app.buttons["quickGrocery.viewList"]
+        XCTAssertTrue(viewList.waitForExistence(timeout: 5))
+        XCTAssertEqual(viewList.label, "Ver lista")
+        XCTAssertLessThanOrEqual(undo.frame.maxY, viewList.frame.minY, "Accessibility text sizes should stack the receipt actions.")
+        XCTAssertGreaterThanOrEqual(viewList.frame.height, 44)
+    }
+
+    func testPrivateQuickEntrySurvivesAnOrdinaryBackgroundInterruption() {
+        launch()
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText("fresh milk")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        XCTAssertEqual(field.value as? String, "fresh milk")
+        tap(app.buttons["quickGrocery.add"])
+        let added = app.buttons["quickGrocery.undo"]
+        XCTAssertTrue(added.waitForExistence(timeout: 10))
+        XCTAssertTrue(added.label.contains("fresh milk"))
+    }
+
+    func testReviewedQuickGroceryClearsOnlyAfterSavingToExistingPickup() {
+        launch()
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText("Oats\n")
+        XCTAssertTrue(element("quickGrocery.undo").waitForExistence(timeout: 10))
+        let name = "Peppers / pimientos"
+        field.typeText(name + "\n")
+        let commit = element("ledgerCommitImport")
+        XCTAssertTrue(commit.waitForExistence(timeout: 10))
+        tap(app.buttons["Cancel"])
+        XCTAssertEqual(field.value as? String, name)
+        tap(element("quickGrocery.add"))
+        let amount = element("ledgerImportAmount-1")
+        tap(amount)
+        amount.typeText("2")
+        tap(app.buttons.matching(identifier: "Done").firstMatch)
+        tap(commit)
+        XCTAssertTrue(commit.waitForNonExistence(timeout: 10))
+        tap(field)
+        field.typeText("Milk")
+        XCTAssertEqual(field.value as? String, "Milk")
     }
 
     func testQuickGroceryReturnUndoAndDuplicateReviewInSpanish() {
@@ -52,7 +96,9 @@ final class RoomInTheCartUITests: XCTestCase {
         let milkUndo = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
                                                         "quickGrocery.undo", "leche")).firstMatch
         XCTAssertTrue(milkUndo.waitForExistence(timeout: 10))
-        tap(milkUndo)
+        XCTAssertGreaterThanOrEqual(milkUndo.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(milkUndo.frame.height, 44)
+        milkUndo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
         XCTAssertTrue(milkUndo.waitForNonExistence(timeout: 10))
         tap(field)
         field.typeText("huevos\n")
@@ -203,9 +249,15 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(acknowledgement.value as? String, "1")
         XCTAssertTrue(ownerExport.isEnabled)
         tap(ownerExport)
-        assertContains("Private owner file ready")
-        let previewRow = app.cells.containing(.staticText, identifier: "Preview readable copy").firstMatch
-        tap(previewRow)
+        let previewRow = app.buttons["records.readablePreview"]
+        let saveFile = app.buttons["records.saveFile"]
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: previewRow)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed, "Preparing a readable file must reveal its preview without scrolling")
+        XCTAssertTrue(app.staticTexts["Private owner file ready"].exists)
+        XCTAssertFalse(app.staticTexts["Redacted copy ready"].exists)
+        XCTAssertTrue(saveFile.exists)
+        XCTAssertLessThanOrEqual(previewRow.frame.maxY, saveFile.frame.minY + 1)
+        previewRow.tap()
         let preview = app.staticTexts.containing(NSPredicate(format:
             "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", title, "Source:", "Revision:")).firstMatch
         XCTAssertTrue(preview.waitForExistence(timeout: 5), "The reviewed file must contain the selected source and revision")
@@ -218,6 +270,7 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Private-owner-export-reviewed-with-fictional-data")
         tap(app.buttons["Discard prepared file"])
         XCTAssertFalse(app.buttons["Save file…"].exists, "Discard must remove the prepared export")
+        XCTAssertFalse(app.staticTexts["Your file is ready to review and save."].exists)
         app.terminate()
         launch(reset: false)
         reopenSavedRecord(recordsLabel: "Records", item: title)
@@ -257,6 +310,9 @@ final class RoomInTheCartUITests: XCTestCase {
         openEmptyComparison()
         enterComparison(item: "Family wraps", firstQuantity: "7 1/2", cap: "30")
         compare()
+        let decision = app.descendants(matching: .any).matching(identifier: "comparisonDecision").firstMatch
+        XCTAssertTrue(decision.waitForExistence(timeout: 5) && decision.isHittable)
+        XCTAssertTrue(decision.label.contains("Pack B"))
         assertScope("Item-only comparison")
         assertContains("whole pickup fits your budget")
         assertContains("Confirmed at home for this need: Not entered")
@@ -280,10 +336,10 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("English-reopened-same-result")
         let edit = app.buttons["editComparison"]
         let results = element("comparisonResultsScroll")
-        // Edit is the first results row. Reveal it fully below the navigation bar.
+        // The entire visible Edit row, including the space beside the word, must activate.
         for _ in 0..<8 where !edit.exists { results.swipeDown(velocity: .slow) }
         revealFullyInComparison(edit)
-        edit.tap()
+        edit.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         XCTAssertTrue(results.waitForNonExistence(timeout: 5), "Edit must open the saved comparison's input form")
         let savedYield = app.textFields["aQuantity"]
         reveal(savedYield)
@@ -473,12 +529,15 @@ final class RoomInTheCartUITests: XCTestCase {
 
     func testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop() {
         launch()
-        let shortcuts = app.buttons["deviceShortcuts"]
-        XCTAssertTrue(shortcuts.waitForExistence(timeout: 5))
+        let disclosure = app.buttons["shop.moreTools"]
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["deviceShortcuts"].exists)
         let compare = app.buttons["newComparison"]
         let startPickup = app.buttons["openPickupList"]
         XCTAssertTrue(shopViewport.contains(compare.frame))
         XCTAssertTrue(shopViewport.contains(startPickup.frame))
+        let shortcuts = app.shopToolButton("deviceShortcuts")
+        revealFullyInShop(shortcuts)
         XCTAssertLessThan(compare.frame.midY, shortcuts.frame.minY)
         XCTAssertLessThan(startPickup.frame.midY, shortcuts.frame.minY)
         // Accessibility can report the 44-point frame as 43.99999999999994.
@@ -502,7 +561,7 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func verifyShopRepairShortcut(largeDark: Bool) {
         launch(largeDark: largeDark)
-        let shortcut = element("urgentRepairShortcut")
+        let shortcut = app.shopToolButton("urgentRepairShortcut")
         revealFullyInShop(shortcut)
         let scroll = app.scrollViews["shopContentScroll"]
         let tabs = app.tabBars.firstMatch
@@ -547,21 +606,22 @@ final class RoomInTheCartUITests: XCTestCase {
         continueAfterFailure = true
         launch()
         let grocery = element("quickGrocery.name")
-        let repair = element("urgentRepairShortcut")
+        let disclosure = app.buttons["shop.moreTools"]
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
         XCTAssertTrue(grocery.waitForExistence(timeout: 5))
         let groceryBefore = grocery.frame
-        let repairBefore = repair.frame
+        let disclosureBefore = disclosure.frame
         captureShopFrames("Initial-Shop-before-audit")
         screenshot("Initial-Shop-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Initial Shop"))
         let groceryAfter = grocery.frame
         XCTAssertEqual(groceryAfter.height, groceryBefore.height, accuracy: 1,
                        "The empty field should return to one line at the original text size.")
-        XCTAssertEqual(repair.frame.minY - groceryAfter.minY, repairBefore.minY - groceryBefore.minY, accuracy: 1,
-                       "The restored text size should preserve the distance between the field and repair shortcut.")
+        XCTAssertEqual(disclosure.frame.minY - groceryAfter.minY, disclosureBefore.minY - groceryBefore.minY, accuracy: 1,
+                       "The restored text size should preserve the distance between the field and tools disclosure.")
         // Retain the initial audit; add full-category coverage after the
         // complete repair shortcut is visible above bottom navigation.
-        revealFullyInShop(element("urgentRepairShortcut"))
+        revealFullyInShop(app.shopToolButton("urgentRepairShortcut"))
         captureShopFrames("Complete-repair-shortcut-before-audit")
         screenshot("Complete-repair-shortcut-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Complete repair shortcut"))
@@ -798,7 +858,8 @@ final class RoomInTheCartUITests: XCTestCase {
         // The shipping action is a button. A broad Any query traverses text-field
         // placeholder snapshots while this large-text Form is scrolling.
         tap(app.buttons["compare"])
-        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 5))
+        // At accessibility sizes the first result can fill the screen before List creates its Edit row.
+        XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
     }
 
     private func assertKnownTotals() {
@@ -862,7 +923,7 @@ final class RoomInTheCartUITests: XCTestCase {
         reveal(row)
         XCTAssertTrue(row.label.contains(item), "Original item name should survive restart: \(row.label)")
         row.tap()
-        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
     }
 
     private func comparisonInput(_ id: String) -> XCUIElement {
