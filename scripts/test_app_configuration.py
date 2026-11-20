@@ -238,7 +238,7 @@ class BuiltAppVerificationTests(unittest.TestCase):
         widget_group = f"group.{bundle_id}.widget"
         share_group = f"group.{bundle_id}.share-inbox"
         purpose = {key: "Permission purpose" for key in (
-            "NSFaceIDUsageDescription", "NSCameraUsageDescription",
+            "NSFaceIDUsageDescription", "NSCameraUsageDescription", "NSRemindersFullAccessUsageDescription",
             "NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription",
         )}
         common = {"CFBundleShortVersionString": "0.1.0", "CFBundleVersion": "1",
@@ -309,7 +309,7 @@ class BuiltAppVerificationTests(unittest.TestCase):
         with (self.app / "PrivacyInfo.xcprivacy").open("rb") as handle:
             manifest = plistlib.load(handle)
         declared = {row["NSPrivacyCollectedDataType"]: row for row in manifest["NSPrivacyCollectedDataTypes"]}
-        for kind in ("EmailsOrTextMessages", "CustomerSupport"):
+        for kind in ("EmailsOrTextMessages", "CustomerSupport", "ProductInteraction"):
             with self.subTest(kind=kind):
                 row = declared["NSPrivacyCollectedDataType" + kind]
                 self.assertTrue(row["NSPrivacyCollectedDataTypeLinked"])
@@ -356,6 +356,20 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 self.expect_plist_rejected(bundle, {"MinimumOSVersion": "18.0"}, "must support iOS 17.0")
                 self.expect_plist_rejected(bundle, {"CFBundleSupportedPlatforms": ["MacOSX"]}, "must be built for iPhone")
         self.expect_plist_rejected(self.share, {"CFBundleSupportedPlatforms": ["iPhoneSimulator"]}, "platform mismatch")
+
+    def test_reminders_prompt_requires_compiled_and_localized_purpose(self):
+        key = "NSRemindersFullAccessUsageDescription"
+        self.expect_plist_rejected(self.app, {key: ""}, "Missing compiled permission purpose: " + key)
+        for language in ("en", "es"):
+            with self.subTest(language=language):
+                catalog = self.app / f"{language}.lproj/InfoPlist.strings"
+                original = catalog.read_bytes()
+                values = plistlib.loads(original)
+                del values[key]
+                catalog.write_bytes(plistlib.dumps(values))
+                with self.assertRaisesRegex(ValueError, f"Missing {language} permission purpose: {key}"):
+                    verify_built_app(self.app, "Release")
+                catalog.write_bytes(original)
 
     def test_rejects_missing_executables_and_assets_even_with_python_optimization(self):
         for executable in (self.app / "RoomInTheCart", self.widget / "RoomInTheCartWidget",
@@ -408,6 +422,14 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Unexpected test bundle"):
                     verify_built_app(self.app, "Release")
                 bundle.rmdir()
+
+    def test_rejects_unreviewed_extensions_including_nested_copies(self):
+        for path in (self.app / "PlugIns/Extra.appex", self.widget / self.share.name):
+            with self.subTest(bundle=path):
+                shutil.copytree(self.share, path)
+                with self.assertRaisesRegex(ValueError, "Unexpected embedded extension"):
+                    verify_built_app(self.app, "Release")
+                shutil.rmtree(path)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,15 @@ This checklist orders the remaining work; it does not replace Foundation 2.1's
 52 requirements, 27 screen contracts or B11 acceptance. The authoritative scope
 is [the build contract](product/foundation-gen2.1/08-build.md) and the requirement
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
-is one checkpoint, not release authorization. Updated November 18, 2026.
+is one checkpoint, not release authorization. Updated November 20, 2026.
+
+## November 20 submission status
+
+The organization **Venture House Group LLC** appears in Xcode with the Admin role. The Mac’s signing check found zero valid local signing identities. Before upload, record the registered bundle identifiers for the app, widget and Share extension, their two App Groups, the signing team and a signed distribution archive.
+
+The connected Supabase organization currently lists one project, **Room in the Cart Staging**. The Release build has no public Production configuration yet. Verify the production service, email-code delivery to a controlled mailbox, household creation and reopening after relaunch, role access and account deletion before submitting the connected product. Run `python3 scripts/check_native_backend.py Release` after entering the production public values. [Configuration](../config/README.md)
+
+Use the [App Store preparation checklist](APP-STORE-PREPARATION.md) for the listing, current screenshots, privacy and age-rating answers, and the [reviewer walkthrough](APP-REVIEW-WALKTHROUGH.md) for fictional accounts and demonstration steps. Configure the subscription, test purchase and restore on the signed build, and verify Apple notification delivery in both environments. [Billing setup](../service/src/billing/SETUP.md)
 
 The user has added a 28-feature expansion before signing/distribution. Its
 [audited implementation plan](FEATURE-EXPANSION-PLAN.md) and

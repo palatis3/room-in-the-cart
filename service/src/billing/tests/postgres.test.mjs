@@ -120,5 +120,53 @@ test('PostgreSQL durable billing / RLS / named seats contract', {skip:!runtimeUR
       assert.equal((await admin.query('SELECT * FROM ritc.billing_delivery WHERE household_id=$1',[hh])).rowCount,1);
       await assert.rejects(()=>run(purchaser,ctx=>new BillingService(null).snapshot(ctx)),error=>error.code==='billing_unavailable');
     });
+    await t.test('review and ordinary households reconcile only in their assigned Apple environments', async () => {
+      const productionToken = (await run(foreignAdult, ctx => service.prepare(ctx), foreignHH)).appAccountToken;
+      const reviewToken = current.appAccountToken;
+      const statusReads = [];
+      function gateway(environment, token) {
+        return {
+          async verifyTransaction(signed) {
+            const [signedEnvironment, appAccountToken] = signed.split('/');
+            if (signedEnvironment !== environment) throw Error('wrong signing environment');
+            return { originalTransactionID: original, transactionID: original+'3', appAccountToken };
+          },
+          async verifyNotification(signed) {
+            return { notificationID: randomUUID(), transaction: await this.verifyTransaction(signed) };
+          },
+          async current(id) {
+            assert.equal(id, original);
+            statusReads.push(environment);
+            return { ...current, environment, appAccountToken: token, transactionID: original+'3',
+              purchasedAt: timestamp+20000, signedAt: timestamp+20001, expiresAt: timestamp+1e8, status: 'active' };
+          },
+        };
+      }
+      const production = gateway('Production', productionToken);
+      const dual = new BillingService(production, { sandbox: gateway('Sandbox', reviewToken), householdIDs: new Set([hh]) });
+      const reviewReceipt = 'Sandbox/'+reviewToken;
+      const ordinaryReceipt = 'Production/'+productionToken;
+      await assert.rejects(() => run(foreignAdult, ctx => dual.verify(ctx, 'Sandbox/'+productionToken), foreignHH), /wrong signing environment/);
+      await assert.rejects(() => run(purchaser, ctx => dual.verify(ctx, 'Production/'+reviewToken)), /wrong signing environment/);
+      await assert.rejects(() => dual.notification(runtime, reviewReceipt), /wrong signing environment/);
+      await assert.rejects(() => dual.notification(runtime, ordinaryReceipt, 'reviewSandbox'), /wrong signing environment/);
+      // Both notifications authenticate to the endpoint, but name an account in the other environment.
+      await assert.rejects(() => dual.notification(runtime, 'Sandbox/'+productionToken, 'reviewSandbox'), error=>error.code==='purchase_already_bound');
+      await assert.rejects(() => dual.notification(runtime, 'Production/'+reviewToken), error=>error.code==='purchase_already_bound');
+      assert.deepEqual(statusReads, []);
+      assert.equal((await admin.query('SELECT 1 FROM ritc.billing_state WHERE household_id=$1', [foreignHH])).rowCount, 0);
+      const ordinary = await run(foreignAdult, ctx => dual.verify(ctx, ordinaryReceipt), foreignHH);
+      const review = await run(purchaser, ctx => dual.verify(ctx, reviewReceipt));
+      assert.deepEqual([ordinary.snapshot.householdID, review.snapshot.householdID], [foreignHH, hh]);
+      await dual.notification(runtime, ordinaryReceipt);
+      await dual.notification(runtime, reviewReceipt, 'reviewSandbox');
+      await run(purchaser, ctx => dual.snapshot(ctx));
+      await run(foreignAdult, ctx => dual.replaceSeats(ctx, { revision: ordinary.snapshot.revision, userIDs: [foreignAdult] }), foreignHH);
+      assert.deepEqual(statusReads, ['Production','Sandbox','Production','Sandbox','Sandbox','Production']);
+      const receipts = await admin.query('SELECT environment, household_id FROM ritc.billing_delivery WHERE transaction_id=$1 ORDER BY environment', [original+'3']);
+      assert.deepEqual(receipts.rows, [{ environment:'Production', household_id:foreignHH }, { environment:'Sandbox', household_id:hh }]);
+      await assert.rejects(() => new BillingService(production).notification(runtime, reviewReceipt, 'reviewSandbox'), error=>error.code==='billing_unavailable');
+      await assert.rejects(() => run(purchaser, ctx => new BillingService(production).snapshot(ctx)), error=>error.code==='purchase_already_bound');
+    });
   }finally{await runtime.end();await admin.end();}
 });

@@ -117,7 +117,12 @@ export function createHTTPServer(options:HTTPOptions) {
       if(limits.size>=10_000&&!old){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Retry later.');}
       const bucket=old&&old.until>now?old:{count:0,until:now+60_000};bucket.count++;limits.set(ip,bucket);
       if(bucket.count>(options.maxRequestsPerMinute??120)){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Keep the operation key and retry later.');}
-      if(url.pathname==='/v1/apple/notifications'&&method==='POST'&&options.billing){const input=billingNotificationSchema.parse(await body(req,262_144));send(200,await options.billing.notification(repository.pool,input.signedPayload));return;}
+      if(method==='POST' && options.billing && ['/v1/apple/notifications','/v1/apple/notifications/sandbox'].includes(url.pathname)){
+        const input = billingNotificationSchema.parse(await body(req,262_144));
+        const destination = url.pathname.endsWith('/sandbox') ? 'reviewSandbox' : 'primary';
+        send(200,await options.billing.notification(repository.pool,input.signedPayload,destination));
+        return;
+      }
       if(url.pathname==='/v1/guardian/availability'&&method==='GET'){const {notice:_,...availability}=guardian.notice(z.enum(['en','es']).parse(url.searchParams.get('language')??'en'));send(200,availability);return;}
       if(url.pathname==='/v1/guardian/providers/kws/webhook'&&method==='POST'){const header=req.headers['x-kws-signature'];send(200,await guardian.webhook(await rawBody(req,16_384),typeof header==='string'?header:undefined));return;}
       const privacyStatus=/^\/v1\/privacy\/jobs\/([^/]+)$/.exec(url.pathname);

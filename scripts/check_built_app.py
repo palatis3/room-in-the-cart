@@ -94,6 +94,9 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
     for test_bundle in app.rglob("*.xctest"):
         require(configuration == "Debug" and test_bundle == debug_test_bundle,
                 f"Unexpected test bundle: {test_bundle.relative_to(app)}")
+    expected_extensions = {app / "PlugIns" / f"RoomInTheCart{name}.appex" for name in ("Widget", "Share")}
+    for extension in app.rglob("*.appex"):
+        require(extension in expected_extensions, f"Unexpected embedded extension: {extension.relative_to(app)}")
 
     if configuration in ("Release", "Staging"):
         fixture_names = {path.name for path in (ROOT / "ios/UITests/Fixtures").rglob("*") if path.is_file()}
@@ -105,7 +108,7 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
     require(icon == "AppIcon", "Missing app icon")
     require(nonempty_file(app / "Assets.car"), "Missing compiled asset catalog")
     verify_privacy_manifest(app, ROOT / "ios/Resources")
-    permission_keys = ["NSFaceIDUsageDescription"]
+    permission_keys = ["NSFaceIDUsageDescription", "NSRemindersFullAccessUsageDescription"]
     if (ROOT / "ios/Features/Capture/OnDeviceSpeechCapture.swift").is_file():
         permission_keys += ["NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription"]
     if (ROOT / "ios/Features/Capture/CameraCapture.swift").is_file():

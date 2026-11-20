@@ -93,20 +93,26 @@ struct GuardianChildPresentationMarker {
         }
     }
     func open(adult: HouseholdModel, access: WorkspaceAccess, surfaces: DeviceSurfacesComposition) {
+        guard canOpenInvitation else { return }
         enforcePrivacyBoundary(adult: adult, access: access, surfaces: surfaces)
         do { try marker.activate(); boundaryValid = true; active = true; presented = true; destination = .starting; message = nil }
         catch { presented = true; boundaryValid = false; destination = .blocked; message = GuardianCopy.text("This device could not save the child privacy boundary. Adult work remains locked."); return }
         Task { await resume() }
     }
-    private func configure() throws {
-        if identity != nil { return }
+    var canOpenInvitation: Bool { identity != nil || endpoints != nil }
+    private var endpoints: (service: ServiceConfiguration, auth: AdultAuthConfiguration)? {
         guard let serviceString = bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String,
               let providerString = bundle.object(forInfoDictionaryKey: "SupabaseProjectURL") as? String,
               let key = bundle.object(forInfoDictionaryKey: "SupabasePublishableKey") as? String,
-              let serviceURL = URL(string: serviceString), let providerURL = URL(string: providerString) else { throw ClientError.configuration }
-        let configuration = try ServiceConfiguration(baseURL: serviceURL)
-        let authConfiguration = try AdultAuthConfiguration(projectURL: providerURL, publishableKey: key)
-        let namespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + ".child." + serviceURL.absoluteString + "." + providerURL.absoluteString
+              let serviceURL = URL(string: serviceString), let providerURL = URL(string: providerString),
+              let service = try? ServiceConfiguration(baseURL: serviceURL),
+              let auth = try? AdultAuthConfiguration(projectURL: providerURL, publishableKey: key) else { return nil }
+        return (service, auth)
+    }
+    private func configure() throws {
+        if identity != nil { return }
+        guard let (configuration, authConfiguration) = endpoints else { throw ClientError.configuration }
+        let namespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + ".child." + configuration.baseURL.absoluteString + "." + authConfiguration.projectURL.absoluteString
         let identityVault = KeychainRefreshTokenVault(service: namespace, account: "covered-child-refresh")
         let deviceVault = KeychainRefreshTokenVault(service: namespace, account: "covered-child-device")
         let identity = AdultAuth(configuration: authConfiguration, vault: identityVault)

@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { effectiveStatus, validityEnd, supersedes, hasPaidSeat, BILLING_CACHE_MS } from '../../../dist/billing/domain.js';
-import { appleGatewayFromEnvironment, OfficialAppleBillingGateway } from '../../../dist/billing/apple.js';
+import { appleGatewaysFromEnvironment, OfficialAppleBillingGateway } from '../../../dist/billing/apple.js';
 import { billingSeatsSchema, billingVerifySchema, BillingService } from '../../../dist/billing/service.js';
+import { createHTTPServer } from '../../../dist/http.js';
 
 const now = Date.parse('2026-11-03T10:00:00Z');
 const base = { environment: 'Sandbox', originalTransactionID: '100', transactionID: '101',
@@ -34,8 +35,11 @@ test('offline cache never exceeds subscription end or five-minute verified lease
   assert.equal(hasPaidSeat({...snapshot,status:'billingRetry'},'adult',new Date(now)),false);
 });
 test('server configuration is absent by default and incomplete / local-Xcode configuration fails closed', async () => {
-  assert.equal(appleGatewayFromEnvironment({}),null);
-  assert.throws(()=>appleGatewayFromEnvironment({APPLE_PRODUCT_ID:'test-only.household'}));
+  assert.deepEqual(appleGatewaysFromEnvironment({}),{primary:null});
+  assert.throws(()=>appleGatewaysFromEnvironment({APPLE_PRODUCT_ID:'test-only.household'}));
+  for(const [environment,ids] of [['Sandbox',base.appAccountToken], ['Production','*'], ['Production',base.appAccountToken+',']]) {
+    assert.throws(()=>appleGatewaysFromEnvironment({APPLE_ENVIRONMENT:environment,APPLE_REVIEW_HOUSEHOLD_IDS:ids}),/APPLE_REVIEW_HOUSEHOLD_IDS/);
+  }
   assert.throws(()=>new OfficialAppleBillingGateway({bundleID:'test',productID:'test',environment:'Xcode',rootCertificates:[],signingKey:'test',keyID:'test',issuerID:base.appAccountToken}));
   const service = new BillingService(null);
   await assert.rejects(()=>service.prepare({member:{kind:'adult'}}),error=>error.code==='billing_unavailable');
@@ -45,4 +49,26 @@ test('seat command rejects more than two, duplicates, extras and invalid revisio
   assert.equal(billingSeatsSchema.safeParse({revision:1,userIDs:[one,two]}).success,true);
   for (const data of [{revision:1,userIDs:[one,one]},{revision:1,userIDs:[one,two,three]},{revision:0,userIDs:[]},{revision:1,userIDs:[],isAdult:true}]) assert.equal(billingSeatsSchema.safeParse(data).success,false);
   assert.equal(billingVerifySchema.safeParse({householdId:one,signedTransactionInfo:'test-fixture-jws-body',purchaserID:two}).success,false);
+});
+
+test('the two Apple notification URLs pin signed TEST delivery to the designated verifier', async t => {
+  const calls = [];
+  const gateway = environment => ({
+    async verifyNotification(payload) {
+      calls.push([environment, payload]);
+      return { notificationID:base.appAccountToken, transaction:null };
+    },
+  });
+  const billing = new BillingService(gateway('Production'), { householdIDs:new Set([base.appAccountToken]), sandbox:gateway('Sandbox') });
+  const server = createHTTPServer({ repository:{}, billing });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const origin = 'http://127.0.0.1:'+server.address().port;
+  const signedPayload = 'fixture-test-notification';
+  for (const path of ['/v1/apple/notifications', '/v1/apple/notifications/sandbox']) {
+    const result = await fetch(origin+path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({signedPayload}) });
+    assert.equal(result.status, 200);
+    assert.deepEqual(await result.json(), {accepted:true});
+  }
+  assert.deepEqual(calls, [['Production',signedPayload],['Sandbox',signedPayload]]);
 });
