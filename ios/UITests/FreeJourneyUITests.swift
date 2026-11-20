@@ -460,6 +460,27 @@ import XCTest
     }
 #endif
 
+    func testFirstPantryReceiptCanCloseWithoutSavingFood() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Pantry"])
+        XCTAssertTrue(app.buttons["pantry.setup.firstFood"].waitForExistence(timeout: 8))
+        tap(app.buttons["pantry.setup.receipt"])
+        let receipt = app.navigationBars["Review a receipt"]
+        XCTAssertTrue(receipt.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.textFields["pantry.foodName"].exists)
+        tap(receipt.buttons["Close"])
+        XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 8))
+        reveal(app.staticTexts["No food recorded here."])
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot.")).count, 0)
+
+        app.terminate()
+        launch(reset: false)
+        tap(app.tabBars.buttons["Pantry"])
+        reveal(app.staticTexts["No food recorded here."])
+        XCTAssertFalse(receipt.exists)
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot.")).count, 0)
+    }
+
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
         launch(reset: true)
         var pantry: XCUIElement { app.shopToolButton("shop.myPantry") }

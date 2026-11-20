@@ -18,7 +18,7 @@ struct PantryHomeView: View {
     var household: HouseholdModel?
     var holdsLoadedReview: () -> Bool = { false }
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
-    var firstFoodRequested: Binding<Bool>? = nil
+    var initialSheet: Binding<PantrySheet?>? = nil
     @State private var sheet: PantrySheet?
     @State private var selectedLocation: InventoryLocation?
     @State private var selectedDigest: DigestSelection?
@@ -44,9 +44,9 @@ struct PantryHomeView: View {
         }
         .navigationTitle(pantryText("My Pantry"))
         .onChange(of: model.canEdit, initial: true) { _, ready in
-            if ready, accessAllowed, firstFoodRequested?.wrappedValue == true {
-                firstFoodRequested?.wrappedValue = false
-                sheet = .add
+            if ready, accessAllowed, let initialSheet, let requested = initialSheet.wrappedValue {
+                initialSheet.wrappedValue = nil
+                sheet = requested
             }
         }
         .navigationDestination(isPresented: Binding(get: { selectedDigest != nil }, set: { if !$0 { selectedDigest = nil } })) {
