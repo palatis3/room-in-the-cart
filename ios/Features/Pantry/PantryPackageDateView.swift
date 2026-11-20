@@ -37,7 +37,8 @@ struct PantryPackageDateSection: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
     @Environment(\.pantryDigestPermissionPrompt) private var permissionPrompt
-    @FocusState private var editing: Bool
+    private enum Field: Hashable { case wording, year }
+    @FocusState private var editing: Field?
     @State private var visible = false
     @State private var reviewedLot: InventoryLot?
     @State private var reviewedScope: PantryDigestScope?
@@ -115,13 +116,13 @@ struct PantryPackageDateSection: View {
                             wording = text; pendingMonthDay = nil; printedYear = ""
                             if selectedAI == nil { hasDay = false; confirmingCalendar = false }
                         }), axis: .vertical)
-                        .focused($editing)
+                        .focused($editing, equals: .wording)
                         .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                        .onTapGesture { editing = true }
                         .accessibilityLabel(pantryText("Original printed wording"))
                         .accessibilityIdentifier("packageDate.wording")
                     }
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { editing = .wording })
                     if let value = proposal, value.selectedAI != nil, let day = value.day {
                         LabeledContent(value.meaningLabel, value: value.meaning.label)
                         LabeledContent(value.sourceLabel, value: dinnerDay(day))
@@ -182,7 +183,7 @@ struct PantryPackageDateSection: View {
         .navigationTitle(pantryText(proposal?.selectedAI == nil ? "Package date" : "Encoded package date"))
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: editing, title: ledgerText("Done"), identifier: "packageDate.done") { editing = false }
+        .keyboardDoneAction(visible: editing != nil, title: ledgerText("Done"), identifier: "packageDate.done") { editing = nil }
         .onAppear { visible = true; if !loaded { load() } }
         .onChange(of: currentAccess) { _, allowed in if allowed && !loaded { load() } }
         .onDisappear { if !camera { visible = false; cancelRead() } }
@@ -219,11 +220,16 @@ struct PantryPackageDateSection: View {
         if let choice = pendingMonthDay {
             WorkingField(pantryText("Year printed on the package")) {
                 TextField(pantryText("Four-digit year"), text: $printedYear)
-                    .keyboardType(.numberPad).focused($editing).accessibilityIdentifier("packageDate.year")
+                    .keyboardType(.numberPad)
+                    .focused($editing, equals: .year)
+                    .frame(minHeight: 44)
+                    .accessibilityIdentifier("packageDate.year")
             }
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { editing = .year })
             if let full = choice.confirmed(year: printedYear, zone: zone), let chosen = full.date {
                 Button(pantryText("Confirm printed date") + " · " + dinnerDay(full)) {
-                    date = chosen; hasDay = true; pendingMonthDay = nil; printedYear = ""; editing = false
+                    date = chosen; hasDay = true; pendingMonthDay = nil; printedYear = ""; editing = nil
                 }.accessibilityIdentifier("packageDate.confirmYear")
             }
         } else {
