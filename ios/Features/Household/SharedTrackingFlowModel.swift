@@ -221,7 +221,7 @@ extension SharedTrackingServiceOwner {
         } catch { fail(error, token: token) }
     }
     private func finish() {
-        page = nil; shop = nil; candidate = nil; history = nil; actionSources = nil; draft = .init(); gate.reset(); acceptOverage = false; acceptUnknown = false; submitted = true
+        page = nil; shop = nil; candidate = nil; history = nil; actionSources = nil; mealSources = nil; draft = .init(); gate.reset(); acceptOverage = false; acceptUnknown = false; submitted = true
         notice = st("Confirmed. Return to the shared shop for the updated revision.")
     }
     private func fail(_ error: Error, token: UUID) {
