@@ -53,6 +53,7 @@ struct SharedTrackingFlowView: View {
                         .buttonStyle(PrimaryAction()).accessibilityIdentifier("sharedTracking.continueFreeze")
                 case .refreshing:
                     Text(st("Confirmed. Refresh the shop to see its current revision."))
+                        .accessibilityFocused($resultFocused)
                     Button(st("Refresh current facts")) { Task { await refreshCheckout?() } }
                         .accessibilityIdentifier("sharedTracking.refreshConfirmed")
                 }
