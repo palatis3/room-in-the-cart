@@ -67,20 +67,26 @@ def has_signing_key(keys):
     return result.returncode == 0
 
 
-def check(config, name, fetch=fetch_json):
+def check(config, name, fetch=fetch_json, *, existing_accounts_only=False):
     missing = [key for key in ("supabaseURL", "publishableKey", "serviceURL") if not config.get(key)]
     if missing:
         raise ValueError(f"{name} configuration is missing " + ", ".join(missing))
     enabled = config.get("emailOTPEnabled") is True
-    if name == "Release" and not enabled:
-        raise ValueError("Release email-code sign-in is disabled")
+    if (name == "Release" or existing_accounts_only) and not enabled:
+        raise ValueError(f"{name} email-code sign-in is disabled")
     auth = config["supabaseURL"].rstrip("/") + "/auth/v1"
     service = config["serviceURL"].rstrip("/")
     settings = fetch(auth + "/settings", {"apikey": config["publishableKey"]})
     providers = settings.get("external")
     if (not isinstance(providers, dict) or providers.get("email") is not True
-            or settings.get("disable_signup") is not False or settings.get("mailer_autoconfirm") is not False):
+            or settings.get("disable_signup") is not existing_accounts_only or settings.get("mailer_autoconfirm") is not False):
         raise ValueError("Supabase email account creation and verification settings do not match the app")
+    if existing_accounts_only and (
+        providers.get("anonymous_users") is not False or providers.get("phone") is not False
+        or any(value is not False for key, value in providers.items() if key != "email")
+        or settings.get("saml_enabled") is not False or settings.get("passkeys_enabled") is not False
+    ):
+        raise ValueError("The private review environment must advertise email as its only sign-in method")
     keys = fetch(auth + "/.well-known/jwks.json", {}).get("keys")
     if not has_signing_key(keys):
         raise ValueError("Supabase did not advertise a supported public signing key")
@@ -95,13 +101,19 @@ def check(config, name, fetch=fetch_json):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("configuration", choices=("Staging", "Release"))
-    name = parser.parse_args().configuration
+    parser.add_argument("--existing-accounts-only", action="store_true",
+                        help="Check a private review environment with email sign-in enabled and public signup disabled")
+    args = parser.parse_args()
+    name = args.configuration
     try:
-        enabled = check(load_configuration(Path(__file__).resolve().parents[1], name), name)
+        enabled = check(load_configuration(Path(__file__).resolve().parents[1], name), name,
+                        existing_accounts_only=args.existing_accounts_only)
     except (ValueError, OSError, URLError) as error:
         print(f"{name} backend check failed: {error}", file=sys.stderr)
         return 1
     print(f"{name} public endpoints passed. Email-code entry is {'enabled' if enabled else 'disabled'}.")
+    if args.existing_accounts_only:
+        print("The provider advertises email sign-in for existing accounts with public signup disabled.")
     print("Code delivery, signed sessions and household writes require a separate account walkthrough.")
     return 0
 

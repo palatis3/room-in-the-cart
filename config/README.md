@@ -54,6 +54,8 @@ To check the exported signature, extract the IPA with `ditto -x -k` and run the 
 
 With the Node version from `.node-version` on your path, run `python3 scripts/check_native_backend.py Staging` or `python3 scripts/check_native_backend.py Release` to check the selected build’s public configuration against the deployed Supabase Auth settings, advertised signing keys, service health and email-sign-in availability. This read-only probe sends no email and creates no records. Exercise code delivery, session refresh and a household save and reopen on the signed candidate as a separate check.
 
+For a private TestFlight or App Review environment restricted to pre-created accounts, add `--existing-accounts-only`. The check requires enabled email-code entry in the app and service, disabled public signup, required email confirmation, and email as the only advertised sign-in method. Verify separately that the existing accounts belong to the intended reviewers or testers. Give each reviewer access to the fictional account’s mailbox so they can retrieve fresh codes throughout review.
+
 ## Regional age checks
 
 After the owner reviews applicability for the distribution territories, provision the Declared Age Range capability on the **app’s** App ID and refresh its profile. To test, set `regionalAgeCheckEnabled` to `true` in the staging configuration and regenerate the Xcode project. Debug uses the staging configuration. For Release, the same key must be set separately in the local release configuration. The distribution signature verifier checks the enabled app and its profile for the entitlement. Widget and Share extensions keep their existing entitlements.
