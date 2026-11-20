@@ -8,9 +8,13 @@ is one checkpoint, not release authorization. Updated November 20, 2026.
 
 ## November 20 submission status
 
-The organization **Venture House Group LLC** appears in Xcode with the Admin role. The Mac’s signing check found zero valid local signing identities. Before upload, record the registered bundle identifiers for the app, widget and Share extension, their two App Groups, the signing team and a signed distribution archive.
+The organization **Venture House Group LLC** appears in Xcode with the Admin role and team ID `SP7Z9RNC76`. The initial signing check found zero valid local signing identities. Before upload, record the registered bundle identifiers for the app, widget and Share extension, their two App Groups, the signing team and a signed distribution archive.
 
-The connected Free-plan Supabase organization lists **Room in the Cart Staging**. Staging runs revision `fb907d82` with all 70 migration checksums verified, and its email-code entry remains disabled. [Backup, restore and deployment record](evidence/b11/staging-070-20261120/deployment.json) The Release build has no public Production configuration yet. Verify the production service, email-code delivery to a controlled mailbox, household creation and reopening after relaunch, role access and account deletion before submitting the connected product. Run `python3 scripts/check_native_backend.py Release` after entering the production public values. [Configuration](../config/README.md)
+The Free-plan Supabase organization contains two healthy projects in Oregon. **Room in the Cart Production** (`byaajkgvqvlelgsrwcqw`) was provisioned at a quote of $0/month. It is empty and the Release app has no service connection to it yet. **Room in the Cart Staging** runs revision `fb907d82` with all 70 migration checksums verified, and its email-code entry remains disabled. [Backup, restore and deployment record](evidence/b11/staging-070-20261120/deployment.json)
+
+Candidate migration 071 fixes the lookup path of two existing database functions. Its PostgreSQL upgrade and permission checks passed locally. Roll it out through Staging before deploying the candidate to Production. [Supabase advisory](https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable)
+
+Before enabling the connected Release build, deploy its production schema and service, configure its separate public endpoints and verify email-code delivery to a controlled mailbox, household creation and reopening after relaunch, role access and account deletion before submitting the connected product. Run `python3 scripts/check_native_backend.py Release` after entering the production public values. [Configuration](../config/README.md)
 
 Use the [App Store preparation checklist](APP-STORE-PREPARATION.md) for the listing, current screenshots, privacy and age-rating answers, and the [reviewer walkthrough](APP-REVIEW-WALKTHROUGH.md) for fictional accounts and demonstration steps. Configure the subscription, test purchase and restore on the signed build, and verify Apple notification delivery in both environments. [Billing setup](../service/src/billing/SETUP.md)
 
