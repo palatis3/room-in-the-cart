@@ -105,9 +105,11 @@ private struct HelpArticleView: View {
                 paragraph(helpText("Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access."))
                 paragraph(helpText("A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process."))
             case .records:
-                Section(helpText("Moving to a new iPhone")) {
-                    paragraph(helpText("On the old iPhone, open Records and choose Recovery, exports and saved records. Select the records to take with you and prepare an encrypted recovery file. Keep the key somewhere separate."))
-                    paragraph(helpText("On the new iPhone, open recovery in Records. Select the file, enter its key and check the records and dates before importing. Recovered records open as separate copies."))
+                Section(helpText("On your old iPhone")) {
+                    paragraph(helpText("In Records, open Recovery, exports and saved records. Choose your records and save the encrypted file. Keep the key separately."))
+                }
+                Section(helpText("On your new iPhone")) {
+                    paragraph(helpText("Open recovery in Records. Choose the file, enter the key and review the dates before importing. Your records open as separate copies."))
                 }
                 Section(helpText("Sharing or deleting copies")) {
                     paragraph(helpText("For a readable copy, preview the records and any private details before you choose who gets it."))
