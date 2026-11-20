@@ -225,6 +225,22 @@ extension XCUIApplication {
         return tool
     }
 
+    func scrollForm(in area: CGRect, upward: Bool, besideFields: Bool = false) {
+        let bounds = frame
+        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+        let origin = coordinate(withNormalizedOffset: .zero)
+        let x = besideFields ? area.minX : area.midX
+        let start = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? low : high) - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? high : low) - bounds.minY))
+        if besideFields {
+            // Drag beside the inputs to avoid selecting text. Stop before lifting
+            // the finger so the next field cannot coast behind the navigation bar.
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        } else {
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+    }
+
     func waitForDoneAboveKeyboard(identifier: String) -> Bool {
         var lastButton: CGRect?
         let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in

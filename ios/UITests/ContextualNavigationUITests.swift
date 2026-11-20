@@ -562,14 +562,14 @@ import UIKit
         assertText("Saved checkout result")
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
 
-        for _ in 0..<4 where !app.textFields["Branch"].isHittable { scrollContent(upward: false) }
+        for _ in 0..<4 where !app.textFields["Branch"].isHittable { app.scrollForm(in: scrollableArea(), upward: false) }
         replaceRetailerField(app.textFields["Branch"], with: "East")
         revealContent(save)
         XCTAssertFalse(save.isEnabled)
         tap(app.buttons["Replace pricing after review"])
         tap(app.buttons["Start replacement pricing"])
         let source = app.textFields["Source of these prices"]
-        for _ in 0..<4 where !source.isHittable { scrollContent(upward: false) }
+        for _ in 0..<4 where !source.isHittable { app.scrollForm(in: scrollableArea(), upward: false) }
         revealContent(source)
         XCTAssertEqual(source.value as? String, source.placeholderValue)
         fill("East checkout", into: "Source of these prices")
@@ -696,7 +696,7 @@ import UIKit
         // The basket's price fields are above the weight-review link we just left.
         for _ in 0..<8 {
             if price.exists && price.isHittable { break }
-            scrollContent(upward: false)
+            app.scrollForm(in: scrollableArea(), upward: false)
         }
         XCTAssertTrue(price.exists && price.isHittable)
         XCTAssertTrue(price.value as? String == price.placeholderValue || price.value as? String == "", price.debugDescription)
@@ -770,7 +770,7 @@ import UIKit
                 } else {
                     upward = false
                 }
-                scrollContent(upward: upward)
+                app.scrollForm(in: scrollableArea(), upward: upward)
             }
             XCTAssertTrue(branch.exists && branch.isHittable, "The adopted pickup branch must be visible")
             XCTAssertEqual(branch.label, "Current pickup branch: East branch")
@@ -1092,10 +1092,10 @@ import UIKit
                 let clearContent = viewport.insetBy(dx: 0, dy: 4)
                 let tapArea = tapOffset == nil ? clearContent : clearContent.intersection(area)
                 if tapArea.contains(point) && target.isHittable { return }
-                scrollContent(upward: point.y > area.midY, besideFields: inputBar != nil)
+                app.scrollForm(in: scrollableArea(), upward: point.y > area.midY, besideFields: inputBar != nil)
             } else {
-                scrollContent(upward: attempt < 16 ? initiallyUpward : !initiallyUpward,
-                              besideFields: inputBar != nil)
+                app.scrollForm(in: scrollableArea(), upward: attempt < 16 ? initiallyUpward : !initiallyUpward,
+                               besideFields: inputBar != nil)
             }
         }
         XCTFail("Content tap point is obscured: \(target.debugDescription)")
@@ -1108,7 +1108,7 @@ import UIKit
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 16 }
-            scrollContent(upward: upward)
+            app.scrollForm(in: scrollableArea(), upward: upward)
         }
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
@@ -1119,19 +1119,6 @@ import UIKit
         let top = max(bounds.minY + 88, min(bounds.minY + 140, keyboardTop - 140))
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
-    }
-    private func scrollContent(upward: Bool, besideFields: Bool = false) {
-        // Whole-app swipes can start on the software keyboard. Drag only in
-        // the observed unobscured content, and still require real hittability.
-        let area = scrollableArea(), bounds = app.frame
-        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
-        let origin = app.coordinate(withNormalizedOffset: .zero)
-        // During grouped text entry, drag in the Form margin. A central drag on
-        // the active field can select its text and leave the scroll position intact.
-        let x = besideFields ? area.minX : area.midX
-        let start = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? high : low) - bounds.minY))
-        start.press(forDuration: 0.05, thenDragTo: end)
     }
     private func assertText(_ text: String) {
         let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
@@ -1168,11 +1155,11 @@ import UIKit
                 // Scroll only to reveal it, and return only if it is actionable.
                 for _ in 0..<2 {
                     if target.isHittable { return }
-                    scrollContent(upward: true)
+                    app.scrollForm(in: scrollableArea(), upward: true)
                 }
                 for _ in 0..<4 {
                     if target.isHittable { return }
-                    scrollContent(upward: false)
+                    app.scrollForm(in: scrollableArea(), upward: false)
                 }
                 if target.isHittable { return }
             }
