@@ -129,6 +129,7 @@ import XCTest
         tap(app.buttons["dinner.handoff.startPickup"])
         tap(app.buttons["ledgerCreateShop"])
         tap(app.buttons["dinner.handoff.select"])
+        XCTAssertTrue(app.navigationBars["Shop for ingredients only"].waitForExistence(timeout: 5))
         let select = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Lemon")).firstMatch
         tap(select)
         tap(app.buttons["dinner.handoff.review"])

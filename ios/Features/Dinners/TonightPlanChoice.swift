@@ -221,7 +221,7 @@ struct SavedDinnerHandoffView: View {
                     LedgerSaveStatus(model: ledger, showsLastSave: false)
                 }
             }
-        }.workingSurface().navigationTitle(dinnerText("Plan this dinner")).navigationBarTitleDisplayMode(.inline)
+        }.workingSurface().navigationTitle(dinnerText(selectingGroceries ? "Shop for ingredients only" : "Plan this dinner")).navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) {
                 Button(ledgerText("Done")) { dismiss() }.disabled(busy || ledger.saving).accessibilityIdentifier("dinner.handoff.done")
             } }

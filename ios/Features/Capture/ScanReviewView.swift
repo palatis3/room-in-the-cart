@@ -319,7 +319,7 @@ import CoreDomain
     private func receiptFields(_ scroll: ScrollViewProxy) -> some View {
         let storeIssue = receiptStoreIssue(label)
         let storeLabel = captureText("Store or receipt name (required)")
-        Section(captureText("Receipt lines are evidence only")) {
+        return Section(captureText("Receipt lines are evidence only")) {
             Text(captureText("Keep unreadable quantities or printed amounts unknown. These lines do not mark anything paid, received or usable."))
             WorkingField(storeLabel) {
                 TextField(storeLabel, text: $label, prompt: Text(""))
