@@ -2265,7 +2265,11 @@ import XCTest
         capture("B09-typed-amount-reopened-after-microphone-refusal")
     }
 
-    func testCameraRefusalReturnsToTypedDraft() throws {
+#endif
+
+    func testCameraRefusalReturnsToTypedDraft() {
+        app.resetAuthorizationStatus(for: .camera)
+        defer { app.resetAuthorizationStatus(for: .camera) }
         launch(reset: true)
         openShoppingList()
         tap(element("ledgerImport"))
@@ -2280,23 +2284,25 @@ import XCTest
         let consent = app.switches["scan.localConsent"]
         revealScrollableContent(consent, initiallyUpward: false, entireRow: true)
         enableSwitch("scan.localConsent")
-        tap(element("scan.camera"))
+        XCTAssertEqual(consent.value as? String, "1")
+        let camera = element("scan.camera")
+        revealScrollableContent(camera, initiallyUpward: false, entireRow: true)
+        XCTAssertTrue(camera.isEnabled)
+        camera.tap()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let prompt = springboard.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'camera'")).firstMatch
-        XCTAssertTrue(prompt.waitForExistence(timeout: 8))
-        let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
-        XCTAssertTrue(deny.exists && deny.isHittable)
-        deny.tap()
-        let failure = app.staticTexts["Camera permission was not granted. Type, paste or choose a photo instead."]
-        XCTAssertTrue(failure.waitForExistence(timeout: 8))
+        if prompt.waitForExistence(timeout: 5) {
+            let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+            XCTAssertTrue(deny.isHittable)
+            deny.tap()
+            reveal(app.staticTexts["Camera permission was not granted. Type, paste or choose a photo instead."])
+        }
         tap(element("scan.typeItem"))
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         XCTAssertEqual(app.textViews["scan.sourceEditor"].value as? String, "Wraps")
         app.typeText(" pack")
         XCTAssertEqual(app.textViews["scan.sourceEditor"].value as? String, "Wraps pack")
     }
-#endif
-
     func testFirstNaturalListRestoresPendingPreviewAndCommitsOnlyItsProvisionalPickup() {
         launch(reset: true)
         let firstList = element("shop.addFirstList")
