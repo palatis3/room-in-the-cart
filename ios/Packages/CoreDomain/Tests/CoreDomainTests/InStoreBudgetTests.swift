@@ -49,6 +49,9 @@ final class InStoreBudgetTests: XCTestCase {
         XCTAssertEqual(try shop.outstandingQuantity(forLineID: bread)?.amount, .one)
         let left = try XCTUnwrap(shop.lines.first { $0.id == bread })
         XCTAssertEqual(shop.outcomeAtCurrentStop(left), .deferred)
+        try shop.startShoppingStop(named: "Second store", expectedRevision: shop.revisionID)
+        XCTAssertEqual(shop.outcomeAtCurrentStop(left), .deferred)
+        XCTAssertFalse(shop.belongsInCurrentBasket(left))
         try shop.undoTripChange(lineID: bread, expectedRevision: shop.revisionID)
         XCTAssertEqual(shop.pickedCartSubtotal, preview.before)
     }
@@ -121,4 +124,34 @@ final class InStoreBudgetTests: XCTestCase {
         XCTAssertFalse(CouponReceiptEvidence.shows(amount: Money(minorUnits: 125), in: "Coupon CAD 1.25"))
         XCTAssertEqual(try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop)), shop)
     }
+    func testCouponNeedsADistinctPrintedDiscountAndMistakenReceiptCanBeUnlinked() throws {
+        let amount = Money(minorUnits: 125)
+        for wording in ["Tax USD 1.25", "Beans USD 1.25", "Total savings 1.25", "Coupon valid next trip $1.25",
+                        "Coupon $5.00 now $1.25", "Devolución cupón $1,25", "Coupon 1.25%"] {
+            XCTAssertFalse(CouponReceiptEvidence.isDiscountLine(wording), wording)
+        }
+        XCTAssertTrue(CouponReceiptEvidence.shows(amount: amount, in: "MFR CPN -1.25"))
+        XCTAssertTrue(CouponReceiptEvidence.shows(amount: amount, in: "Descuento $1,25-"))
+        let day = try MealDay(year: 2026, month: 11, day: 19, timeZoneIdentifier: zone)
+        var shop = ShoppingLedger()
+        let line = try shop.addManualLine(name: "Beans", quantity: one)
+        let terms = ShopCouponTerms(qualifyingSize: "", minimumPacks: 1, validThrough: day)
+        try shop.pinCoupon(lineID: line, expectedRevision: shop.revisionID, terms: terms, clipped: true)
+        let item = UUID()
+        func evidence(_ receipt: UUID, adjustment: UUID) -> CouponReceiptEvidence {
+            CouponReceiptEvidence(receiptID: receipt, itemLineID: item, itemWording: "Beans 1 pk $4.50", day: day,
+                                  check: .init(packCount: 1, size: .matches),
+                                  discount: .printed(lineID: adjustment, wording: "Coupon -$1.25", amount: amount))
+        }
+        XCTAssertThrowsError(try shop.reviewCouponReceipt(lineID: line, expectedRevision: shop.revisionID,
+                                                          evidence: evidence(UUID(), adjustment: item)))
+        try shop.reviewCouponReceipt(lineID: line, expectedRevision: shop.revisionID, evidence: evidence(UUID(), adjustment: UUID()))
+        try shop.clearCouponReceipt(lineID: line, expectedRevision: shop.revisionID)
+        XCTAssertNil(shop.lines.first?.pinnedCoupon?.receipt)
+        XCTAssertEqual(shop.lines.first?.pinnedCoupon?.clipped, true)
+        let corrected = evidence(UUID(), adjustment: UUID())
+        try shop.reviewCouponReceipt(lineID: line, expectedRevision: shop.revisionID, evidence: corrected)
+        XCTAssertEqual(shop.lines.first?.pinnedCoupon?.receipt, corrected)
+    }
+
 }

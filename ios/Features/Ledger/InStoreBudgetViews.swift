@@ -80,7 +80,11 @@ private struct InStoreBudgetItem: View {
                 Section(shelfText("Item coupon")) {
                     if let pin = line.pinnedCoupon {
                         CouponTermsSummary(coupon: pin)
-                        if pin.receipt != nil { CouponReceiptResult(coupon: pin) }
+                        if pin.receipt != nil {
+                            CouponReceiptResult(coupon: pin)
+                            ClearCouponReceiptButton(model: model, shopID: shop.id, lineID: line.id,
+                                                     revision: shop.revisionID, authorize: authorize)
+                        }
                     }
                     if line.pinnedCoupon?.receipt == nil {
                         NavigationLink(line.pinnedCoupon == nil ? shelfText("Pin a coupon") : shelfText("Review coupon conditions")) {
@@ -163,16 +167,51 @@ struct CouponReceiptResult: View {
     let coupon: PinnedShopCoupon
     var body: some View {
         if let receipt = coupon.receipt {
-            Text(receipt.itemWording).font(.footnote)
+            Text(shelfFormat("Receipt dated %@", ledgerMealDay(receipt.day))).font(.footnote)
+            Text(verbatim: receipt.itemWording).font(.footnote)
             Text(couponStatusLabel(coupon.terms.qualification(on: receipt.day, check: receipt.check)))
             switch receipt.discount {
             case .unverified: Text(shelfText("Receipt discount unverified"))
             case .absent:
                 Text(coupon.missingQualifyingDiscount ? shelfText("Qualifying discount missing from receipt") : shelfText("No discount found on receipt"))
-            case .printed(_, let wording, let amount):
-                Text(shelfFormat("Discount on receipt · %@", moneyText(amount)))
-                Text(wording).font(.footnote)
+            case .printed(_, let wording, _):
+                if let amount = receipt.savings {
+                    Text(shelfFormat("Discount on receipt · %@", moneyText(amount)))
+                    Text(verbatim: wording).font(.footnote)
+                } else { Text(shelfText("Receipt discount unverified")) }
             }
+        }
+    }
+}
+
+struct ClearCouponReceiptButton: View {
+    @ObservedObject var model: LedgerModel
+    let shopID: UUID
+    let lineID: UUID
+    let revision: UUID
+    let authorize: @MainActor () -> Bool
+    var didClear: () -> Void = {}
+    @State private var confirming = false
+
+    var body: some View {
+        Button(role: .destructive) {
+            confirming = true
+        } label: {
+            Text(shelfText("Clear receipt link")).frame(minHeight: 44).contentShape(Rectangle())
+        }
+        .disabled(model.saving || model.hasPendingSave || !authorize())
+        .accessibilityIdentifier("receipt.couponClear")
+        .confirmationDialog(shelfText("Clear this coupon’s receipt link?"), isPresented: $confirming, titleVisibility: .visible) {
+            Button(shelfText("Clear receipt link"), role: .destructive) {
+                Task {
+                    if await model.editShop(key: "clear-coupon-receipt-\(lineID)", shopID: shopID, authorize: authorize, { ledger in
+                        try ledger.clearCouponReceipt(lineID: lineID, expectedRevision: revision)
+                    }) { didClear() }
+                }
+            }
+            Button(ledgerText("Cancel"), role: .cancel) { }
+        } message: {
+            Text(shelfText("The coupon stays pinned. You can link it to another saved purchase."))
         }
     }
 }

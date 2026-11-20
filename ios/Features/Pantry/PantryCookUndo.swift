@@ -37,6 +37,7 @@ struct PantryCookUndoReview: Codable, Equatable {
         let preservedCountNames: [String]
     }
     let restoredHoldCount: Int
+    var releasedOutputHolds: [InventoryReservation]? = nil
     var amendments: Amendments? = nil
     var resolvedUseCount: Int { amendments?.eventIDs.count ?? 0 }
     var preservedCountNames: [String] { amendments?.preservedCountNames ?? [] }
@@ -167,11 +168,25 @@ extension PantryCookPort {
         }
         let outputs = Set(record.draft.leftovers.map(\.id))
         let outputFoods = Set(record.draft.leftovers.map(\.foodID))
-        let allocatedOutputs = inventory.availability.allocations.contains { outputs.contains($0.lotID) }
+        // Reconstruct exactly what this cook created, including revision one and the original date.
+        // Even moving the dinner back to that date is an independently recorded change.
+        let originalHolds = try record.draft.leftovers.flatMap { try record.draft.outputReservations(for: $0) }
+        let ownIDs = Set(originalHolds.map(\.id))
+        let currentCoverage = Dictionary(uniqueKeysWithValues: inventory.availability.reservations.map { ($0.id, $0) })
+        let released = try originalHolds.map { original -> InventoryReservation in
+            guard claims[original.id] == original, let coverage = currentCoverage[original.id], let amount = original.amount,
+                  !coverage.unresolved, coverage.shortfall?.amount == .zero, coverage.backed?.amount == amount.amount
+            else { throw Failure.changed }
+            return .init(id: original.id, originID: original.originID, revision: original.revision + 1,
+                foodID: original.foodID, lotID: original.lotID, name: original.name, amount: amount, priority: original.priority,
+                state: .released, personal: original.personal, cookedDinner: original.cookedDinner)
+        }
+        let allocatedOutputs = inventory.availability.allocations.contains { outputs.contains($0.lotID) && !ownIDs.contains($0.needID) }
         let outputClaims = inventory.reservations.contains { claim in
-            guard claim.state != .released else { return false }
+            guard claim.state != .released, !ownIDs.contains(claim.id) else { return false }
             if let lotID = claim.lotID { return outputs.contains(lotID) }
-            return claim.state == .unresolved && outputFoods.contains(claim.foodID)
+            guard outputFoods.contains(claim.foodID), let coverage = currentCoverage[claim.id] else { return false }
+            return coverage.unresolved || (coverage.shortfall?.amount ?? .zero) > .zero
         }
         guard !allocatedOutputs, !outputClaims else { throw Failure.changed }
         let removedLeftovers = try record.draft.leftovers.map { output -> String in
@@ -188,10 +203,11 @@ extension PantryCookPort {
                 foodID: prior.foodID, lotID: prior.lotID, name: prior.name, amount: prior.amount,
                 priority: prior.priority, state: prior.state, personal: prior.personal)
         }
-        let touched = Set(changes.map(\.lot.id)), owned = Set(restoredClaims.map(\.id))
+        let updatedClaims = restoredClaims + released
+        let touched = Set(changes.map(\.lot.id)), owned = Set(updatedClaims.map(\.id))
         let after = try InventoryProjection.build(originID: inventory.state.workspaceID,
             lots: inventory.lots.filter { !touched.contains($0.id) } + changes.map(\.lot),
-            reservations: inventory.reservations.filter { !owned.contains($0.id) } + restoredClaims, at: context.asOf)
+            reservations: inventory.reservations.filter { !owned.contains($0.id) } + updatedClaims, at: context.asOf)
         let coverage = Dictionary(uniqueKeysWithValues: after.reservations.map { ($0.id, $0) })
         for before in inventory.availability.reservations where !owned.contains(before.id) {
             guard let updated = coverage[before.id],
@@ -201,8 +217,9 @@ extension PantryCookPort {
         let review = PantryCookUndoReview(id: operationID, cookID: record.draft.id,
             inventoryID: inventory.state.workspaceID, inventoryRevision: inventory.state.revision, ledgerID: context.ledgerID,
             shopID: context.shop.id, mealID: context.meal.id, journeyRevision: read.journey.revision,
-            restoredInputs: restoredInputs, removedLeftovers: removedLeftovers, restoredHoldCount: restoredClaims.count, amendments: lineage.amendments)
-        return .init(review: review, index: index, changes: changes, claims: restoredClaims)
+            restoredInputs: restoredInputs, removedLeftovers: removedLeftovers, restoredHoldCount: restoredClaims.count,
+            releasedOutputHolds: originalHolds.isEmpty ? nil : originalHolds, amendments: lineage.amendments)
+        return .init(review: review, index: index, changes: changes, claims: updatedClaims)
     }
 
     func applyUndo(_ review: PantryCookUndoReview) async throws {

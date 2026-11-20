@@ -76,6 +76,11 @@ struct PantryHomeView: View {
                                 .accessibilityIdentifier("pantry.add")
                             }
                             .padding(.vertical, 4)
+                            NavigationLink {
+                                PantryPackFind(model: model, origin: snapshot.state.workspaceID)
+                            } label: {
+                                Label(pantryText("Find a package in Pantry"), systemImage: "barcode.viewfinder")
+                            }.accessibilityIdentifier("pantry.findPack")
                             Button { sheet = .receipt } label: {
                                 Label(pantryText("Review a receipt"), systemImage: "receipt")
                             }
@@ -141,6 +146,9 @@ struct PantryHomeView: View {
                             }
                         }
                         Section(pantryText("Pantry tools")) {
+                            if recoveredHistoryAccess == nil {
+                                PantryShelfPhotoLink(expectedOrigin: snapshot.state.workspaceID)
+                            }
                             if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID, digestAccess.authorized() {
                                 NavigationLink {
                                     PantryShelfView(model: model, scope: digestAccess.scope)
@@ -382,8 +390,7 @@ struct PantryBatchHeading: View {
     let lot: InventoryLot
 
     var body: some View {
-        let batch = pantryFormat("Batch %@", String(lot.id.uuidString.suffix(8)))
-        WorkingRecordHeading(lot.name, detail: pantryLocationName(lot.location) + " · " + batch, systemImage: "shippingbox")
+        WorkingRecordHeading(lot.name, detail: [pantryLocationName(lot.location), lot.packageBatchLabel].joined(separator: " · "), systemImage: "shippingbox")
     }
 }
 
@@ -487,6 +494,7 @@ private struct PantryLotView: View {
                     Text(pantryText("Have enough and Some left replace the old count with an unknown amount. Reservations stay protected and may need review."))
                 }.disabled(!model.canEdit)
                 if let access = digestAccess, access.scope.origin == model.snapshot?.state.workspaceID, access.authorized() {
+                    NavigationLink(pantryText("Add a date or reminder")) { PackageDateChoices(model: model, lot: lot, access: access) }
                     PantryPackageDateSection(model: model, lot: lot, access: access, store: PantryDigestStore.shared.packageDates)
                 }
                 if let access = digestAccess, access.authorized(), access.scope.origin == lot.source.originID,
@@ -569,6 +577,11 @@ private struct PantryFoodEditor: View {
         WorkingForm {
             if accessAllowed && model.phase == .ready {
                 if lotID == nil {
+                    if reviewedFood == nil, let origin = model.snapshot?.state.workspaceID {
+                        NavigationLink {
+                            PantryProductBatchView(model: model, workspaceID: origin)
+                        } label: { Label(pantryText("Scan products"), systemImage: "barcode.viewfinder") }
+                    }
                     Section {
                         if let reviewedFood {
                             LabeledContent(pantryText("Food identity"), value: reviewedFood.name)

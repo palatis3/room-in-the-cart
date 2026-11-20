@@ -780,7 +780,7 @@ final class PantryRepository {
                     originID: originID, lotID: fact.lotID, eventID: ReceiptAcquisition.identity(["event", fact.lineID.uuidString]),
                     expectedRevision: nil, occurredAt: now, change: .create(.init(foodID: fact.foodID, name: fact.name,
                         source: .receipt(originID: originID, key: key), location: location, unit: fact.usable.unit,
-                        count: .exact(fact.usable), observedAt: now, packageCode: line.packageCode), observationID: ReceiptAcquisition.identity(["count", fact.lineID.uuidString])))
+                        count: .exact(fact.usable), observedAt: now, packageCode: line.packageCode, intakeOrdinal: line.packageCode == nil ? nil : line.ordinal), observationID: ReceiptAcquisition.identity(["count", fact.lineID.uuidString])))
                 writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: now))
             }
             let row = try PantryAcquisitionCodec.row(fact)

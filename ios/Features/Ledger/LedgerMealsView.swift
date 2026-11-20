@@ -109,8 +109,13 @@ private struct IngredientDraft: Identifiable {
     var unit: UnitOfMeasure = .count
     var notes = ""
     var exclusions = ""
+    var originalWording: String?
+    var originalQuantity: Quantity?
+    var checkedWithoutAmount = false
     init() {}
     init(_ ingredient: MealIngredient) {
+        originalQuantity = ingredient.quantity
+        originalWording = ingredient.originalWording; checkedWithoutAmount = ingredient.checkedWithoutAmount == true
         id = ingredient.id; name = ingredient.name; amount = ingredient.quantity.map { ledgerAmountInput($0.amount) } ?? ""
         unit = ingredient.quantity?.unit ?? .count; notes = ingredient.notes
         exclusions = ingredient.exclusions.joined(separator: ", ")
@@ -168,7 +173,7 @@ struct LedgerMealEditor: View {
                     ForEach(reviewed.ingredients) { ingredient in
                         VStack(alignment: .leading, spacing: 5) {
                             Text(ingredient.name)
-                            Text(ledgerQuantity(ingredient.quantity))
+                            Text(ingredient.reviewedAmountLabel)
                         }
                     }
                     Text(ledgerText(chooseNow ? "Choosing creates one undated dinner and its grocery needs. You can link them within existing list quantities afterward." : "Saving a usual dinner does not add groceries. Choosing it for a pickup creates a separate copy."))
@@ -194,10 +199,14 @@ struct LedgerMealEditor: View {
                     ForEach(ingredients) { ingredient in
                         let fields = dinnerDraftBinding(ingredient, in: $ingredients)
                         VStack(alignment: .leading, spacing: 10) {
+                            if let source = ingredient.originalWording { Text(verbatim: source).font(.subheadline).foregroundStyle(Theme.secondary) }
                             TextField(ledgerText("Ingredient name"), text: fields.name, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).name")
-                            LedgerQuantityFields(amount: fields.amount, unit: fields.unit,
+                            Toggle(tonightText("I checked this ingredient by hand"), isOn: fields.checkedWithoutAmount)
+                            if !ingredient.checkedWithoutAmount {
+                                LedgerQuantityFields(amount: fields.amount, unit: fields.unit,
                                                  amountFocus: ($inputFocus, "ingredient.\(ingredient.id).amount"))
+                            } else { Text(tonightText("Use without a measured amount.")).font(.footnote) }
                             TextField(ledgerText("Ingredient notes"), text: fields.notes, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).notes")
                             TextField(ledgerText("Ingredient exclusions, separated by commas"), text: fields.exclusions, axis: .vertical)
@@ -248,7 +257,8 @@ struct LedgerMealEditor: View {
             }
             let enteredIngredients = ingredients.filter { !$0.name.isEmpty || !$0.amount.isEmpty || !$0.notes.isEmpty || !$0.exclusions.isEmpty }
             let needs = try enteredIngredients.map { draft in
-                MealIngredient(id: draft.id, name: draft.name, quantity: try LedgerEntry.quantity(draft.amount, draft.unit), notes: draft.notes, exclusions: separated(draft.exclusions))
+                MealIngredient(id: draft.id, name: draft.name, quantity: draft.checkedWithoutAmount ? nil : try DinnerEntry.quantity(draft.amount, unit: draft.unit, preserving: draft.originalQuantity),
+                    notes: draft.notes, exclusions: separated(draft.exclusions), originalWording: draft.originalWording, checkedWithoutAmount: draft.checkedWithoutAmount)
             }
             let groups = try portions.map { portion -> ServingGroup in
                 guard let number = try LedgerEntry.rational(portion.amount), number > .zero else { throw EntryError.invalidNumber }

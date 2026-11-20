@@ -68,16 +68,32 @@ public struct CouponReceiptEvidence: Codable, Equatable, Sendable {
         self.discount = discount
     }
 
-    /// A confirmed saving must be traceable to an amount on the selected printed line.
-    public static func shows(amount: Money, in wording: String) -> Bool {
-        guard (1...1_000_000_000).contains(amount.minorUnits), wording.utf8.count <= 2048 else { return false }
-        guard wording.range(of: #"(?i)[€£]|\b(?:CAD|EUR|GBP|MXN|AUD)\b"#, options: .regularExpression) == nil else { return false }
-        let numbers = wording.split { !$0.isNumber && $0 != "." && $0 != "," }
-        return numbers.contains { literal in
-            let number = literal.replacingOccurrences(of: ",", with: ".")
-            let parts = number.split(separator: ".", omittingEmptySubsequences: false)
-            return parts.count == 2 && parts[1].count == 2 && (try? Money(decimal: number)) == amount
+    /// Accept one printed USD adjustment. An item price, tax, promotion for a future trip,
+    /// or a combined "total savings" line cannot substantiate this individual coupon.
+    private static func adjustmentAmount(in wording: String) -> Money? {
+        guard wording.utf8.count <= 2048 else { return nil }
+        let text = wording.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+        guard text.contains(#/\b(?:coupon|cupon|cpn|mfrcpn|discount|descuento|descto|ahorro|savings|markdown)\b/#),
+              !text.contains(#/[€£¥%]|\b(?:cad|eur|gbp|mxn|aud|tax|impuesto|iva|total|subtotal|refund|return|devolucion|cambio|eligible|eligibility|valid|expires|next|proxima|proximo|valido|vence|minimum|minimo)\b/#)
+        else { return nil }
+        let numbers = text.split { !$0.isNumber && $0 != "." && $0 != "," }
+        let amounts = numbers.compactMap { number -> Money? in
+            let decimal = number.replacingOccurrences(of: ",", with: ".")
+            let parts = decimal.split(separator: ".", omittingEmptySubsequences: false)
+            guard parts.count == 2, !parts[0].isEmpty, parts[1].count == 2 else { return nil }
+            return try? Money(decimal: decimal)
         }
+        guard amounts.count == 1, let amount = amounts.first,
+              (1...1_000_000_000).contains(amount.minorUnits) else { return nil }
+        return amount
+    }
+
+    public static func isDiscountLine(_ wording: String) -> Bool {
+        adjustmentAmount(in: wording) != nil
+    }
+
+    public static func shows(amount: Money, in wording: String) -> Bool {
+        adjustmentAmount(in: wording) == amount
     }
 
     /// Every printed adjustment can fund a reviewed saving only once across the private workspace.
@@ -87,7 +103,8 @@ public struct CouponReceiptEvidence: Codable, Equatable, Sendable {
     }
 
     public var savings: Money? {
-        if case .printed(_, _, let amount) = discount { return amount }
+        if case .printed(let id, let wording, let amount) = discount,
+           id != itemLineID, Self.shows(amount: amount, in: wording) { return amount }
         return nil
     }
 
@@ -97,7 +114,7 @@ public struct CouponReceiptEvidence: Codable, Equatable, Sendable {
         try ledgerText(itemWording, nonempty: true, maximum: 2048)
         if case .printed(_, let wording, let amount) = discount {
             try ledgerText(wording, nonempty: true, maximum: 2048)
-            guard Self.shows(amount: amount, in: wording) else { throw LedgerError.invalid("couponDiscount") }
+            guard (1...1_000_000_000).contains(amount.minorUnits) else { throw LedgerError.invalid("couponDiscount") }
         }
     }
 }
@@ -135,9 +152,18 @@ extension ShoppingLedger {
         }
     }
 
+    public mutating func clearCouponReceipt(lineID: UUID, expectedRevision: UUID) throws {
+        try updateBudgetLine(lineID, revision: expectedRevision, operation: "clearCouponReceipt") { line in
+            guard var coupon = line.pinnedCoupon, coupon.receipt != nil else { throw LedgerError.stalePreview }
+            coupon.receipt = nil
+            line.pinnedCoupon = coupon
+        }
+    }
+
     public mutating func reviewCouponReceipt(lineID: UUID, expectedRevision: UUID, evidence: CouponReceiptEvidence) throws {
         try evidence.validate()
         if case .printed(let printedID, _, _) = evidence.discount {
+            guard evidence.savings != nil else { throw LedgerError.invalid("couponDiscount") }
             guard !lines.contains(where: { line in
                 guard line.id != lineID, let other = line.pinnedCoupon?.receipt, other.receiptID == evidence.receiptID,
                       case .printed(let used, _, _) = other.discount else { return false }

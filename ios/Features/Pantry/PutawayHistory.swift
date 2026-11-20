@@ -169,6 +169,10 @@ private struct PutawayHistoryDetail: View {
         List {
             if model.canEdit {
                 ReviewedReceiptHeading(header: header)
+                let token = model.generation
+                ReceiptCouponReviewLink(source: .purchase(model, header), pickupID: nil, authorize: {
+                    model.permitsReceiptSource && model.generation == token
+                })
                 ForEach(rows.sorted { $0.ordinal < $1.ordinal }) { row in PutawayDecisionLabel(row: row) }
                 if rows.contains(where: { $0.lotID != nil }) {
                     NavigationLink(putawayText("Pantry quantities and price revisions")) {

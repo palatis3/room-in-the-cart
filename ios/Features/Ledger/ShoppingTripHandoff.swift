@@ -121,7 +121,8 @@ struct TripNextStoreEntry: View {
                 }
                 ForEach(0..<3) { group in
                     let choices = rows.filter { row in
-                        guard let line = byID[row.id], line.eligibleForStop(named: store) else { return false }
+                        guard let line = byID[row.id], !shop.isLeftForNextTrip(line),
+                              line.eligibleForStop(named: store) else { return false }
                         switch line.preferredStores?.count ?? 0 {
                         case 0: return group == 2
                         case 1: return group == 0

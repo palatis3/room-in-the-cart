@@ -684,7 +684,7 @@ private struct VoicePantryRow {
             if evidence.isCurrent(lot: lot, model: model, access: access, now: context.date) {
                 VStack(alignment: .leading, spacing: 8) {
                     if let printed = evidence.printed {
-                        Text(pantryText("Printed package date")).font(.headline)
+                        Text(pantryText(printed.selectedAI == nil ? "Printed package date" : "Encoded package date")).font(.headline)
                         Text(printed.meaning.label)
                         Text(printed.wording)
                         if let day = printed.day {

@@ -37,6 +37,8 @@ struct PantryReceiptEntry: View {
     @State private var working = false
     @State private var message: String?
     @State private var savedLotIDs: [UUID]?
+    @State private var savedHeader: ReviewedReceiptHeader?
+    @State private var savedPickupID: UUID?
     @FocusState private var field: String?
     @State private var targetID = UUID()
     @AccessibilityFocusState private var resultFocused: Bool
@@ -50,6 +52,12 @@ struct PantryReceiptEntry: View {
             if let savedLotIDs {
                 let byID = Dictionary(uniqueKeysWithValues: (model.snapshot?.lots ?? []).map { ($0.id, $0) })
                 let lots = savedLotIDs.compactMap { byID[$0] }
+                if let savedHeader {
+                    let token = model.generation
+                    ReceiptCouponReviewLink(source: .purchase(model, savedHeader), pickupID: savedPickupID, authorize: {
+                        model.permitsReceiptSource && model.generation == token && self.savedHeader?.id == savedHeader.id
+                    })
+                }
                 Button(pantryText("Done")) {
                     if model.permitsReceiptSource, let lot = lots.first { didFinishWithLot(lot.id) }
                     dismiss()
@@ -148,6 +156,12 @@ struct PantryReceiptEntry: View {
                     guard draft?.draftID == displayed.draftID else { return }
                     draft = updated
                 })
+                if displayed.tracksPutaway {
+                    ReceiptCouponReviewLink(source: .draftTerms, pickupID: displayed.savedPickup?.id, authorize: {
+                        model.permitsReceiptSource && model.snapshot?.state.workspaceID == displayed.workspaceID &&
+                            draft?.draftID == displayed.draftID
+                    })
+                }
                 Section(pantryText("Receipt details")) {
                     TextField(pantryText("Store or branch"), text: Binding(get: { value.wrappedValue.merchant }, set: {
                         value.wrappedValue.clearAliases()
@@ -170,11 +184,6 @@ struct PantryReceiptEntry: View {
                         }
                     }
                 }
-                ReceiptCouponReviewLink(draft: displayed, authorize: {
-                    model.permitsReceiptSource && model.snapshot?.state.workspaceID == displayed.workspaceID &&
-                        draft?.draftID == displayed.draftID && draft?.receiptID == displayed.receiptID &&
-                        draft?.dateConfirmed == displayed.dateConfirmed && draft?.purchaseDate == displayed.purchaseDate
-                })
                 if !model.receiptTrips.isEmpty {
                     NavigationLink {
                         ReceiptTripDifferenceReview(trips: model.receiptTrips, purchases: model.recentPurchases, aliases: aliases, draft: displayed, state: $receiptTripReview)
@@ -252,7 +261,7 @@ struct PantryReceiptEntry: View {
             }
         }
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
-            if origin != draft?.workspaceID || origin == nil { reviewedSourceImage = nil; assistance = nil; draft = nil; review = nil; rescan = nil; overlap = nil; scan = false; fileSource = false; sharedSource = nil; savedLotIDs = nil }
+            if origin != draft?.workspaceID || origin == nil { reviewedSourceImage = nil; assistance = nil; draft = nil; review = nil; rescan = nil; overlap = nil; scan = false; fileSource = false; sharedSource = nil; savedLotIDs = nil; savedHeader = nil; savedPickupID = nil }
         }
         .onChange(of: draft?.draftID) { _, _ in receiptTripReview = .init() }
         .task(id: aliasScope) {
@@ -408,6 +417,8 @@ struct PantryReceiptEntry: View {
             do {
                 try await verifySource()
                 try await model.saveReceipt(value)
+                savedHeader = value.putaway?.header
+                savedPickupID = draft?.savedPickup?.id
                 review = nil; draft = nil; reviewedSourceImage = nil
                 var seen = Set<UUID>()
                 savedLotIDs = value.facts.map(\.lotID).filter { seen.insert($0).inserted }
@@ -501,6 +512,19 @@ struct PantryReceiptLineEditor: View {
             case .unclear: Text(pantryText("Unclear printed line. Check the original wording before using it.")).font(.caption)
             case .item:
                 if printed.uncertain { Text(pantryText("Some printed fields are unclear. Review them or leave the price unknown.")).font(.caption) }
+            }
+        }
+        if permitsPutaway, line.documentLine?.stage != .order, CouponReceiptEvidence.isDiscountLine(line.original) {
+            if line.treatment == .chargeOrReturn {
+                Label(shelfText("Printed coupon line included"), systemImage: "checkmark.circle")
+            } else {
+                Button {
+                    line.clearAlias()
+                    line.selectedIntact = false
+                    line.treatment = .chargeOrReturn
+                } label: {
+                    Text(shelfText("Include printed coupon line")).frame(minHeight: 44).contentShape(Rectangle())
+                }.accessibilityIdentifier("receipt.savePrintedDiscount.\(line.ordinal)")
             }
         }
         if let assist {

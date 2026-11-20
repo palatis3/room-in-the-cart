@@ -173,6 +173,10 @@ import RecordArchive
         mutating func claim(_ value: InventoryReservation, _ role: Role) {
             guard value.originID == context.originID else { unresolved.insert(.foreignLineage); return }
             add(.claim(value.id), role)
+            if let dinner = value.cookedDinner {
+                ledgerOrigins.insert(dinner.ledgerID)
+                add(.journey(dinner.shopID), .identityLink)
+            }
             if let id = value.lotID { add(.lot(id), role) }
         }
         mutating func source(_ value: InventorySource, _ role: Role) {
@@ -237,6 +241,7 @@ import RecordArchive
                 for output in record.draft.leftovers {
                     add(.lot(output.id), .sourceFact)
                     sourceFacts.insert(output.id)
+                    for hold in try record.draft.outputReservations(for: output) { add(.claim(hold.id), .sourceFact) }
                 }
                 for claim in record.priorClaims { add(.claim(claim.id), .incidentalCopy) }
             }

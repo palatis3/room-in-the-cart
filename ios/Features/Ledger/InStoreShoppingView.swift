@@ -161,13 +161,11 @@ struct InStoreShoppingView: View {
                         if !picked.isEmpty {
                             Section(shoppingText("Picked items")) {
                                 ForEach(picked) { line in
-                                    pickedRow(line, in: shop)
+                                    pickedRow(line, in: shop, packages: packages[line.id] ?? [])
                                 }
                             }
                         }
                         Section {
-                            Button { destination = .find } label: { Label(tripText("Add a find"), systemImage: "plus") }
-                                .accessibilityIdentifier("tripAddFind")
                             Button { destination = .nextStore } label: { Label(tripText("Next store"), systemImage: "storefront") }
                                 .accessibilityIdentifier("tripNextStore")
                         }.frame(minHeight: 44)
@@ -246,11 +244,15 @@ struct InStoreShoppingView: View {
         }.navigationTitle(shoppingText("Shop in store"))
         .toolbar {
             if model.shop?.id == shopID && authorize() {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItemGroup(placement: .topBarLeading) {
                     Button { destination = .options } label: {
                         Label(ledgerText("List options"), systemImage: "ellipsis.circle")
                     }
                     .accessibilityIdentifier("inStoreTripOptions")
+                    Button { destination = .find } label: {
+                        Label(tripText("Add a find"), systemImage: "plus")
+                    }
+                    .accessibilityIdentifier("tripAddFind")
                 }
             }
             ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } }
@@ -331,7 +333,7 @@ struct InStoreShoppingView: View {
         pendingFocus = line.isChecked ? .picked(id) : .line(id)
     }
 
-    private func pickedRow(_ line: ShoppingLine, in shop: ShoppingLedger) -> some View {
+    private func pickedRow(_ line: ShoppingLine, in shop: ShoppingLedger, packages: [BasketPackage]) -> some View {
         let undoLabel = shoppingFormat("Undo pick of %@", line.name)
         return HStack(alignment: .firstTextBaseline, spacing: 8) {
             Button {
@@ -352,7 +354,11 @@ struct InStoreShoppingView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(line.name).font(.headline).foregroundStyle(Theme.ink)
                         if let picked = try? shop.pickedQuantity(forLineID: line.id) {
-                            Text(ledgerQuantity(picked)).foregroundStyle(Theme.secondary)
+                            let measure = TripMeasure(shop, line: line, packages: packages)
+                            let label = measure.flatMap { measure in
+                                (try? picked.converted(to: measure.need.unit)).map { measure.display($0) }
+                            }
+                            Text(label ?? ledgerQuantity(picked)).foregroundStyle(Theme.secondary)
                         }
                         if let coupon = line.pinnedCoupon { InStoreCouponPickLabel(coupon: coupon, line: line) }
                         Text(priceLabel(shop.priceForCurrentPick(lineID: line.id)))

@@ -80,7 +80,9 @@ extension ShoppingLedger {
     public var currentStop: ShoppingStop { shoppingStop ?? ShoppingStop(id: id, name: basis.branch) }
 
     public func outcomeAtCurrentStop(_ line: ShoppingLine) -> ShoppingStopOutcome? {
-        line.stopObservation?.stopID == currentStop.id ? line.stopObservation?.outcome : nil
+        guard let observation = line.stopObservation else { return nil }
+        if observation.outcome == .deferred { return .deferred }
+        return observation.stopID == currentStop.id ? observation.outcome : nil
     }
 
     public func belongsInCurrentBasket(_ line: ShoppingLine) -> Bool {

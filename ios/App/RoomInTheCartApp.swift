@@ -37,7 +37,9 @@ private extension EnvironmentValues {
     var body: some Scene {
         WindowGroup {
             #if DEBUG && targetEnvironment(simulator)
-            if Set(["--ui-testing", "--meal-language-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
+            if Set(["--ui-testing", "--household-trip-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
+                HouseholdTripFixture(notificationDelegate: notificationDelegate)
+            } else if Set(["--ui-testing", "--meal-language-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
                 MealLanguageFixture()
             } else { GroceryWindow(notificationDelegate: notificationDelegate) }
             #else

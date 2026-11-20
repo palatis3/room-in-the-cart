@@ -461,6 +461,15 @@ private struct CookCompletionUndoView: View {
                 LabeledContent(cookCompletionText("Input counts to restore"), value: String(review.restoredInputCount))
                 LabeledContent(cookCompletionText("Leftover batches to remove"), value: String(review.removedLeftoverCount))
                 LabeledContent(cookCompletionText("Holds to restore"), value: String(review.restoredHoldCount))
+                if let holds = review.releasedOutputHolds {
+                    Text(cookCompletionText("Leftover reservations to release")).font(.headline)
+                    ForEach(holds) { hold in
+                        VStack(alignment: .leading, spacing: 4) {
+                            LabeledContent(hold.name, value: pantryQuantity(hold.amount))
+                            if let day = hold.cookedDinner?.day { Text(dinnerDay(day)) }
+                        }.accessibilityElement(children: .combine)
+                    }
+                }
                 LabeledContent(cookCompletionText("Reviewed ingredient uses affected by Undo"), value: String(review.resolvedUseCount))
                 Text(cookCompletionText("Original cooking and ingredient-use correction history is retained after Undo."))
                 if !review.preservedCountNames.isEmpty {

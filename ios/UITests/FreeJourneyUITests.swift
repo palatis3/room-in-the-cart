@@ -262,6 +262,44 @@ import XCTest
         XCTAssertEqual(home.value as? String, "1")
     }
 
+    func testConfirmedPackAtHomeFindsOnlyItsTwoPhysicalBatchesAfterRelaunch() {
+        launch(reset: true)
+        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.productBatch"])
+        let code = app.textFields["productBatch.code"]
+        tap(code); code.typeText("012345000058")
+        tap(app.buttons["productBatch.add"])
+        tap(app.buttons["productBatch.row.0"])
+        fill("Small bean can", into: "productBatch.productName", requireDone: true, control: app.textFields["productBatch.productName"])
+        fill("1", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
+        fill("2", into: "productBatch.packCount", requireDone: true, control: app.textFields["productBatch.packCount"])
+        tap(app.buttons["pack.remember"])
+        XCTAssertTrue(app.staticTexts["Exact pack remembered."].waitForExistence(timeout: 5))
+        closeReviewedProduct()
+        tap(app.buttons["pack.separate.0"])
+        closeReviewedProduct()
+        tap(app.buttons["pack.source"])
+        tap(app.buttons["Counted at home"])
+        XCTAssertFalse(app.textFields["productBatch.merchant"].exists)
+        enableSwitch("productBatch.received")
+        tap(app.buttons["productBatch.review"])
+        tap(app.buttons["productBatch.commit"])
+        XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["pack.date.0"].exists)
+        XCTAssertTrue(app.buttons["pack.date.1"].exists)
+        restart()
+        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.buttons["pantry.findPack"])
+        let barcode = app.textFields["pack.find.code"]
+        tap(barcode); barcode.typeText("0012345000058")
+        tap(app.buttons["pack.find.resolve"])
+        let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pack.find.lot."))
+        reveal(lots.firstMatch)
+        XCTAssertEqual(lots.count, 2)
+        XCTAssertFalse(app.buttons["productBatch.commit"].exists)
+    }
+
     func testProductBatchManualBarcodeRepeatNeedsTwoPackagesAndConfirmedFoodSurvivesRelaunch() {
         launch(reset: true, privateRecovery: true)
         tap(app.shopToolButton("shop.myPantry"))
@@ -982,6 +1020,55 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
+    func testShelfPhotoSurvivesCanceledReplacementAndReopensFromTheShoppingList() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        saveSourcePhoto()
+        app.terminate()
+        launch(reset: true)
+        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.buttons["pantry.setup.apply"])
+        XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 10))
+        tap(app.buttons["shelfPhotos.open"])
+        tap(app.buttons["shelfPhotos.location.fridge"])
+        tap(app.buttons["shelfPhotos.edit"])
+        tap(element("shelfPhotos.choose"))
+        try chooseNewestSourcePhoto()
+        let save = app.buttons["shelfPhotos.save"]
+        XCTAssertTrue(save.waitForExistence(timeout: 15))
+        if !save.isEnabled { tap(app.buttons["Set date taken"]) }
+        tap(save)
+        let stamp = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Taken ")).firstMatch
+        XCTAssertTrue(stamp.waitForExistence(timeout: 8))
+        let captured = stamp.label
+        tap(app.buttons["shelfPhotos.inspect"])
+        tap(app.buttons["Done"])
+        tap(app.buttons["shelfPhotos.edit"])
+        tap(element("shelfPhotos.choose"))
+        let picker = app.scrollViews["photosView_content_scroll_view"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 30))
+        let cancel = app.buttons.matching(identifier: "Cancel").allElementsBoundByIndex.last(where: \.isHittable)
+        try XCTUnwrap(cancel).tap()
+        XCTAssertTrue(picker.waitForNonExistence(timeout: 8))
+        tap(app.buttons["Cancel"])
+        XCTAssertEqual(stamp.label, captured)
+
+        restart()
+        tap(app.tabBars.buttons["Shop"])
+        tap(app.buttons["openPickupList"])
+        tap(app.buttons["ledgerInStore"])
+        tap(app.buttons["inStoreTripOptions"])
+        tap(app.buttons["shelfPhotos.open"])
+        tap(app.buttons["shelfPhotos.location.fridge"])
+        XCTAssertTrue(stamp.waitForExistence(timeout: 8))
+        XCTAssertEqual(stamp.label, captured)
+        tap(app.buttons["shelfPhotos.delete"])
+        let deletion = app.buttons.matching(identifier: "Delete photo").allElementsBoundByIndex.last
+        try XCTUnwrap(deletion).tap()
+        XCTAssertTrue(app.staticTexts["No photo saved"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["shelfPhotos.inspect"].exists)
+    }
+
     func testReviewedCheckoutCropClearsSubtotalAndKeepsOriginalWithEditedTotal() throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--checkout-crop-photo", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
@@ -1331,6 +1418,46 @@ import XCTest
         }
         if paidPrintedTotal { receiptTap(app.buttons["receipt.printedPrice.0"]) }
         receiptTap(app.buttons["receipt.review"])
+    }
+
+    func testPutAwayOneGroceryFromLunchReceipt() {
+        launch(reset: true)
+        receiptTap(app.shopToolButton("shop.myPantry"))
+        openReceiptAfterPantrySetup()
+        receiptTap(app.buttons["receipt.scan"])
+        let wording = app.textViews["scan.sourceEditor"]
+        receiptTap(wording)
+        wording.typeText("Jars 2 ct USD 4.00\nSandwich 1 ct USD 5.50")
+        if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
+        let label = app.textFields["Source reference label"]
+        receiptTap(label)
+        label.typeText("Market")
+        if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
+        receiptTap(app.buttons["Review printed lines"])
+        checkReceiptSwitch("I reviewed these lines as source evidence only.")
+        receiptTap(app.buttons["scan.receipt.review"])
+
+        checkReceiptSwitch("I checked the purchase date.")
+        let review = app.buttons["receipt.review"]
+        XCTAssertFalse(review.isEnabled)
+        let total = app.textFields["receipt.total"]
+        receiptTap(total)
+        total.typeText("9.50")
+        if app.buttons["receipt.keyboardDone"].exists { app.buttons["receipt.keyboardDone"].tap() }
+        receiptTap(app.buttons["receipt.intact.0"])
+        receiptTap(app.buttons["receipt.details.1"])
+        receiptTap(app.buttons["receipt.action.1"])
+        receiptTap(app.buttons["Ate this"])
+        receiptTap(review)
+        let confirm = app.buttons["receipt.commit"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        XCTAssertEqual(confirm.label, "Put away 1 item")
+        receiptTap(confirm)
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+        let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
+        XCTAssertTrue(lots.matching(NSPredicate(format: "label CONTAINS %@", "Jars")).firstMatch.waitForExistence(timeout: 8))
+        XCTAssertFalse(lots.matching(NSPredicate(format: "label CONTAINS %@", "Sandwich")).firstMatch.exists)
     }
 
     func testRescanReviewRequiresChoosingTheOriginalBeforeSaving() {

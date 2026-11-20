@@ -156,6 +156,24 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         }
     }
 
+    func packSaveAlreadyApplied(_ saved: ReviewedPackSave) async throws -> Bool {
+        guard canEdit, saved.batch.workspaceID == snapshot?.state.workspaceID else { throw PantryReceiptError.stale }
+        let token = generation
+        try repository.requireAccess()
+        let receipt = try await repository.store.inventoryCommittedOperation(id: saved.batch.operationID, request: saved.batch.request)
+        try repository.requireAccess()
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+        return receipt != nil
+    }
+
+    func reviewHomePacks(_ intake: PantryProductBatch) async throws -> PantryReceiptReview {
+        guard canEdit, let basis = snapshot?.state, basis.workspaceID == intake.workspaceID else { throw PantryReceiptError.stale }
+        let token = generation
+        let result = try await repository.reviewHomePacks(intake, basis: basis, at: clock())
+        guard generation == token, canEdit, snapshot?.state == basis else { throw PantryReceiptError.stale }
+        return result
+    }
+
     func reviewReceipt(_ draft: ReceiptImportDraft) async throws -> PantryReceiptReview {
         guard canEdit, let basis = snapshot?.state else { throw PantryReceiptError.stale }
         let token = generation
@@ -243,6 +261,22 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         let adjustments = try await repository.priceAdjustments(for: id, expected: expected)
         guard token == generation, canEdit else { throw PantryReceiptError.stale }
         return adjustments
+    }
+
+    func reviewedReceiptHeaders(after: UUID?) async throws -> [ReviewedReceiptHeader] {
+        guard canEdit else { throw PantryReceiptError.stale }
+        let token = generation
+        let result = try await repository.putawayHeaders(after: after)
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+        return result
+    }
+
+    func reviewedReceiptDecisions(_ id: UUID, after: UUID?) async throws -> [ReviewedReceiptDecision] {
+        guard canEdit else { throw PantryReceiptError.stale }
+        let token = generation
+        let result = try await repository.putawayDecisions(receiptID: id, after: after)
+        guard token == generation, canEdit else { throw PantryReceiptError.stale }
+        return result
     }
 
     func receiptHistory(after: UUID? = nil, receiptID: UUID? = nil) async throws -> [ReceiptAcquisition] {
