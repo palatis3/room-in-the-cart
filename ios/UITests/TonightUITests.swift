@@ -60,7 +60,10 @@ import XCTest
         app.launch()
         tap(app.tabBars.buttons["Cenas"])
         tap(app.buttons["dinner.saveFirstRecipe"])
-        tap(app.textFields["tonight.recipe.title"])
+        // The caption occupies the upper portion of the field’s advertised
+        // accessibility frame on the small device at this text size.
+        tap(app.textFields["tonight.recipe.title"], at: CGVector(dx: 0.22, dy: 0.22))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
         app.typeText("Sopa")
         let next = app.buttons["tonight.recipe.keyboardNext"]
         for value in ["2", "10", "Limon", "1"] {
@@ -96,8 +99,10 @@ import XCTest
         tap(app.buttons["dinner.planSaved"].firstMatch)
         tap(app.buttons["dinner.handoff.startPickup"])
         tap(app.buttons["ledgerCreateShop"])
-        tap(app.buttons["dinner.handoff.plan"])
-        XCTAssertEqual(app.buttons["dinner.handoff.confirm"].label, "Plan tonight in Scrambled eggs")
+        let confirm = app.buttons["dinner.handoff.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        XCTAssertEqual(confirm.label, "Plan for tonight")
+        XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.destination"].label.contains("Groceries for Scrambled eggs"))
         tap(app.buttons["dinner.handoff.confirm"])
         XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
         tap(app.buttons["dinner.handoff.done"])
@@ -125,16 +130,15 @@ import XCTest
         tap(manual)
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
-        tap(app.buttons["dinner.planSaved"].firstMatch)
+        tap(app.buttons["dinner.shopSaved"].firstMatch)
         tap(app.buttons["dinner.handoff.startPickup"])
         tap(app.buttons["ledgerCreateShop"])
-        tap(app.buttons["dinner.handoff.select"])
         XCTAssertTrue(app.navigationBars["Shop for ingredients only"].waitForExistence(timeout: 5))
         let select = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Lemon")).firstMatch
         tap(select)
         tap(app.buttons["dinner.handoff.review"])
         let confirm = app.buttons["dinner.handoff.confirm"]
-        XCTAssertEqual(confirm.label, "Add 1 ingredient to Lemon chickpeas")
+        XCTAssertEqual(confirm.label, "Add 1 ingredient to Groceries for Lemon chickpeas")
         tap(confirm)
         XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
         tap(app.buttons["dinner.handoff.openList"])

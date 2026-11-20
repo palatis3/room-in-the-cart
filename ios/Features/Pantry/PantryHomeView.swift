@@ -683,9 +683,15 @@ private struct PantryReviewView: View {
     var availabilityNeedsReview = false
     @Environment(\.dismiss) private var dismiss
     @State private var acknowledged = false
+    @State private var confirming = false
+    private var saving: Bool { confirming || (model.busy && model.pending != nil) }
+
     var body: some View {
         WorkingForm {
-            if accessAllowed, let review = model.review {
+            if accessAllowed && saving {
+                ProgressView(pantryText("Saving your change…"))
+                    .accessibilityIdentifier("pantry.saveProgress")
+            } else if accessAllowed, let review = model.review {
                 Section(pantryText("Proposed food record")) {
                     PantryLotSummary(lot: review.proposedLot,
                         availability: review.proposedAvailability.lots.first { $0.id == review.command.lotID },
@@ -743,8 +749,10 @@ private struct PantryReviewView: View {
                         Text(model.pendingWasCommitted ? pantryText("Your change is saved. Retry to finish recovery.") : pantryNotice(notice))
                     }
                 }
+            } else if accessAllowed && model.notice == .saved {
+                Text(pantryText("Food saved on this device."))
             } else { Text(pantryText("This review is unavailable. Return to My Pantry.")) }
-            if accessAllowed {
+            if accessAllowed && !saving {
                 if model.pending != nil {
                     Section {
                         if model.requiresFreshReview {
@@ -770,8 +778,14 @@ private struct PantryReviewView: View {
                     .disabled(model.busy || model.pending != nil)
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button(pantryText("Confirm")) { Task { await model.confirmReview(acknowledgingReservations: acknowledged) } }
-                    .disabled(!accessAllowed || model.busy || model.pending != nil || model.review == nil || (!acknowledged && model.review?.affectedReservations.isEmpty == false))
+                Button(pantryText("Confirm")) {
+                    confirming = true
+                    Task {
+                        defer { confirming = false }
+                        await model.confirmReview(acknowledgingReservations: acknowledged)
+                    }
+                }
+                    .disabled(!accessAllowed || confirming || model.busy || model.pending != nil || model.review == nil || (!acknowledged && model.review?.affectedReservations.isEmpty == false))
                     .accessibilityIdentifier("pantry.confirm")
             }
         }

@@ -48,7 +48,7 @@ struct LedgerIngredientView: View {
                             PickupStockEntryView(model: pickup, title: line.name, shopID: shopID, ingredientID: lineID)
                         }
                     }
-                    Button(ledgerText("Edit item and visible notes")) { sheet = .line }
+                    Button(quickGroceryText("Edit name and notes")) { sheet = .line }
                         .disabled(model.saving || model.hasPendingSave)
                     if !line.isTrashed && !line.isHandled {
                         if let workspaceID = model.sourceWorkspaceID,
@@ -92,9 +92,13 @@ struct LedgerIngredientView: View {
                                 .font(.footnote).foregroundStyle(Theme.secondary)
                         }
                     }
+                    let typedItemBatches = Set(shop.importBatches.lazy.filter {
+                        $0.source == .typed && $0.preview.lines.count == 1 && $0.preview.lines[0].capture == nil
+                    }.map(\.id))
                     ForEach(contributions.filter { showProtectedNeeds || !$0.source.isProtected }, id: \.id) { contribution in
+                        let source = ledgerSourceLabel(contribution, shop: shop, typedItemBatches: typedItemBatches)
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(ledgerSourceLabel(contribution, shop: shop)).font(.headline)
+                            Text(source).font(.headline)
                             Text(ledgerQuantity(contribution.quantity))
                             Text(contribution.originalText).font(.footnote).foregroundStyle(Theme.secondary)
                             if let pack = contribution.originalPack { LedgerPackLabelFacts(pack: pack) }
@@ -107,12 +111,12 @@ struct LedgerIngredientView: View {
                                     .font(.footnote)
                             }
                             Button { sheet = .contribution(contribution.id) } label: {
-                                Text(ledgerText("Edit this contribution"))
+                                Text(quickGroceryText("Edit quantity and notes"))
                                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.borderless)
-                            .accessibilityLabel(ledgerFormat("Edit contribution: %@", ledgerSourceLabel(contribution, shop: shop)))
+                            .accessibilityLabel(quickGroceryFormat("Edit quantity and notes for %@", source))
                             if contribution.source.isMeal || contribution.source.isProtected {
                                 Button { sheet = .link(contribution.id) } label: {
                                     Text(ledgerText("Link within an existing amount"))
@@ -175,7 +179,7 @@ struct LedgerIngredientView: View {
 
 }
 
-private struct LedgerLineEditor: View {
+struct LedgerLineEditor: View {
     @ObservedObject var model: LedgerModel
     let shop: ShoppingLedger
     let line: ShoppingLine
@@ -185,6 +189,7 @@ private struct LedgerLineEditor: View {
     @State private var aisle: String
     @State private var remember = false
     @State private var baseRevision: Int64
+    @State private var workspaceID: UUID?
     @State private var originalDepartment: String
     @FocusState private var nameFocused: Bool
     private var hasEdits: Bool { name != line.name || notes != line.notes || aisle != originalDepartment || remember }
@@ -194,22 +199,26 @@ private struct LedgerLineEditor: View {
         _name = State(initialValue: line.name); _notes = State(initialValue: line.notes)
         _aisle = State(initialValue: department); _originalDepartment = State(initialValue: department)
         _baseRevision = State(initialValue: model.revision)
+        _workspaceID = State(initialValue: model.sourceWorkspaceID)
     }
     var body: some View {
         WorkingForm {
             Section {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(ledgerText("Item name")).font(.subheadline)
-                        .foregroundStyle(Theme.secondary).accessibilityHidden(true)
-                    TextField(ledgerText("Item name"), text: $name)
+                WorkingField(ledgerText("Item name")) {
+                    TextField(ledgerText("Item name"), text: $name, prompt: Text(verbatim: ""))
                         .textFieldStyle(.roundedBorder)
                         .focused($nameFocused)
                         .submitLabel(.done).onSubmit { nameFocused = false }
-                        .accessibilityLabel(ledgerText("Item name"))
                         .accessibilityIdentifier("ledgerEditItemName")
                 }
-                TextField(ledgerText("Visible notes"), text: $notes, axis: .vertical)
-                TextField(ledgerText("Aisle or group"), text: $aisle, axis: .vertical)
+                WorkingField(ledgerText("Visible notes")) {
+                    TextField(ledgerText("Visible notes"), text: $notes, prompt: Text(verbatim: ""), axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                }
+                WorkingField(ledgerText("Aisle or group")) {
+                    TextField(ledgerText("Aisle or group"), text: $aisle, prompt: Text(verbatim: ""), axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                }
                 if !shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Picker(ledgerText("Department assignment"), selection: $remember) {
                         Text(ledgerText("This row")).tag(false)
@@ -222,7 +231,10 @@ private struct LedgerLineEditor: View {
             }.disabled(model.saving || model.hasPendingSave)
             Button(ledgerText("Save item")) {
                 Task {
-                    let saved = await model.change(key: "line-\(line.id)") { workspace in
+                    let saved = await model.change(key: "line-\(line.id)", reviewedPantryBasis: nil, authorize: {
+                        workspaceID != nil && model.sourceWorkspaceID == workspaceID &&
+                            model.revision == baseRevision && model.shop?.id == shop.id
+                    }) { workspace in
                         guard model.revision == baseRevision, workspace.selectedShopID == shop.id,
                               let index = workspace.shops.firstIndex(where: { $0.id == shop.id }),
                               let source = workspace.shops[index].lines.first(where: { $0.id == line.id }) else { throw LedgerError.stalePreview }
@@ -238,14 +250,24 @@ private struct LedgerLineEditor: View {
                     if saved { dismiss() }
                 }
             }.buttonStyle(PrimaryAction()).disabled(!hasEdits || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving || model.hasPendingSave)
-            if hasEdits, !model.saving, !model.hasPendingSave, model.error == nil {
-                Text(quickGroceryText("Unsaved edits")).foregroundStyle(Theme.secondary)
-                    .accessibilityIdentifier("ledgerUnsavedItem")
-            }
-            LedgerSaveStatus(model: model, showsLastSave: !hasEdits, onRetried: { dismiss() })
+            GroceryEditStatus(model: model, hasEdits: hasEdits, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Edit item"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
+    }
+}
+
+private struct GroceryEditStatus: View {
+    @ObservedObject var model: LedgerModel
+    let hasEdits: Bool
+    let onRetried: () -> Void
+
+    var body: some View {
+        if hasEdits, !model.saving, !model.hasPendingSave, model.error == nil {
+            Text(quickGroceryText("Unsaved edits")).foregroundStyle(Theme.secondary)
+                .accessibilityIdentifier("ledgerUnsavedItem")
+        }
+        LedgerSaveStatus(model: model, showsLastSave: !hasEdits, onRetried: onRetried)
     }
 }
 
@@ -259,6 +281,11 @@ private struct LedgerContributionEditor: View {
     @State private var notes: String
     @State private var validation: String?
     @State private var confirmingRemoval = false
+    private var hasEdits: Bool {
+        amount != (contribution.quantity.map { ledgerAmountInput($0.amount) } ?? "") ||
+            unit != (contribution.quantity?.unit ?? .count) || notes != contribution.notes
+    }
+
     init(model: LedgerModel, shopID: UUID, contribution: LedgerContribution) {
         self.model = model; self.shopID = shopID; self.contribution = contribution
         _amount = State(initialValue: contribution.quantity.map { ledgerAmountInput($0.amount) } ?? "")
@@ -269,20 +296,23 @@ private struct LedgerContributionEditor: View {
         WorkingForm {
             Section(ledgerText("Original wording")) { Text(contribution.originalText) }
             Section {
-                LedgerQuantityFields(amount: $amount, unit: $unit)
-                TextField(ledgerText("Contribution notes"), text: $notes, axis: .vertical)
+                LedgerQuantityFields(amount: $amount, unit: $unit, amountLabel: shoppingText("Quantity (optional)"))
+                WorkingField(ledgerText("Contribution notes")) {
+                    TextField(ledgerText("Contribution notes"), text: $notes, prompt: Text(verbatim: ""), axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                }
             }.disabled(model.saving || model.hasPendingSave)
             Button(ledgerText("Save contribution")) {
                 do {
                     let quantity = try LedgerEntry.quantity(amount, unit)
                     Task { if await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID, { try $0.updateContribution(contributionID: contribution.id, quantity: quantity, notes: notes) }) { dismiss() } }
                 } catch { validation = ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown.") }
-            }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
+            }.buttonStyle(PrimaryAction()).disabled(!hasEdits || model.saving || model.hasPendingSave)
             Button(ledgerText("Remove only this contribution"), role: .destructive) { confirmingRemoval = true }
                 .disabled(model.saving || model.hasPendingSave)
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
-            LedgerSaveStatus(model: model, onRetried: { dismiss() })
-        }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Edit contribution"))
+            GroceryEditStatus(model: model, hasEdits: hasEdits, onRetried: { dismiss() })
+        }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(quickGroceryText("Quantity and notes"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
             .confirmationDialog(ledgerText("Remove only this contribution?"), isPresented: $confirmingRemoval, titleVisibility: .visible) {
@@ -309,8 +339,12 @@ struct LedgerQuantityFields: View {
 
     var body: some View {
         if let amountLabel {
-            WorkingField(amountLabel) {
-                amountField
+            let row = WorkingField(amountLabel) { amountField }
+            if let amountFocus {
+                row.dinnerInputRow(amountFocus.binding, field: amountFocus.id)
+                    .id(amountFocus.id)
+            } else {
+                row
             }
         } else { amountField }
         Picker(ledgerText("Unit"), selection: $unit) {

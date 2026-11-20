@@ -113,6 +113,16 @@ final class DeviceSurfacesTests: XCTestCase {
         }
     }
 
+    func testMarkedUTF8StripsOnlyTheEncodingMarkerAndRejectsInvalidPayloads() throws {
+        let mark = Data([0xef, 0xbb, 0xbf])
+        let text = "\u{feff}Oats\r\nCafé 🥣"
+        let bytes = mark + Data(text.utf8)
+        XCTAssertEqual(decodePlainTextFile(bytes), text)
+        XCTAssertEqual(try SelectedTextInbox.decodePlainText(bytes, type: .utf8PlainText), text)
+        XCTAssertNil(decodePlainTextFile(mark + Data([0xc0, 0x80])))
+        XCTAssertThrowsError(try SelectedTextInbox.decodePlainText(mark, type: .plainText))
+    }
+
     func testBlankShareMessageUsesOnlyAnUnambiguousTextAttachment() async throws {
         let item = NSExtensionItem()
         let list = "  Café\r\n2 limones 🍋  "

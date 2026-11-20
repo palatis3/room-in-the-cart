@@ -155,8 +155,9 @@ struct SavedDinnerHandoffView: View {
                         .foregroundStyle(Theme.onSelection).font(.headline).accessibilityIdentifier("dinner.handoff.saved")
                     Text(verbatim: recipe.title).font(.system(.title2, design: .serif, weight: .semibold))
                     Text(countLabel(review, saved: true))
-                    NavigationLink(ledgerText("Shopping list")) { LedgerHomeView(model: ledger) }
-                        .accessibilityIdentifier("dinner.handoff.openList")
+                    NavigationLink(ledgerText("Shopping list")) {
+                        LedgerHomeView(model: ledger).navigationTitle(ledgerText("Shopping list")).navigationBarTitleDisplayMode(.inline)
+                    }.accessibilityIdentifier("dinner.handoff.openList")
                 }
             } else {
                 Section {
@@ -165,8 +166,13 @@ struct SavedDinnerHandoffView: View {
                     if let minutes = recipe.leadTimeMinutes {
                         Label(Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes])), systemImage: "clock")
                     }
-                    if let shop = ledger.shop { Label(shop.title, systemImage: "cart").font(.headline) }
-                    if review == nil, !ledger.workspace.shops.isEmpty { pickupMenu }
+                    if let shop = ledger.shop {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label(ledgerText("Shopping list"), systemImage: "cart").foregroundStyle(Theme.secondary)
+                            Text(verbatim: shop.title).font(.headline)
+                        }.accessibilityElement(children: .combine).accessibilityIdentifier("dinner.handoff.destination")
+                    }
+                    if !ledger.workspace.shops.isEmpty { pickupMenu }
                 }
                 if !ledger.workspace.mealTemplates.contains(recipe) && !ledger.workspace.dinnerPlanning.acceptedDinners.contains(where: { $0.template == recipe }) {
                     Text(dinnerText("Your saved recipe changed. Open the current version to continue."))
@@ -184,10 +190,11 @@ struct SavedDinnerHandoffView: View {
                         Text(dinnerText(review.plansDinner
                             ? "Planning creates tonight’s dinner with all of its ingredient needs."
                             : "Only the selected groceries go on this list. Your dinner schedule stays as it is."))
-                        Button(review.plansDinner ? dinnerFormat("Plan tonight in %@", review.destinationTitle) : countLabel(review)) {
+                        Button(review.plansDinner ? dinnerText("Plan for tonight") : countLabel(review)) {
                             Task { await apply(review) }
                         }.buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.handoff.confirm")
-                        Button(tonightText("Keep editing")) { self.review = nil; error = nil }
+                        if review.plansDinner { shopInstead }
+                        else { Button(tonightText("Keep editing")) { self.review = nil; error = nil } }
                     }.disabled(busy || ledger.saving || ledger.hasPendingSave)
                 } else if selectingGroceries {
                     Section {
@@ -201,20 +208,14 @@ struct SavedDinnerHandoffView: View {
                         Button(dinnerText("Review selected groceries")) { prepare(.groceries(selected)) }
                             .buttonStyle(PrimaryAction()).disabled(selected.isEmpty)
                             .accessibilityIdentifier("dinner.handoff.review")
-                        Button(dinnerText("Back to dinner options")) { selectingGroceries = false }
+                    }
+                } else if error != nil {
+                    Section {
+                        Button(dinnerText("Review dinner again")) { prepare(.planTonight) }
+                        shopInstead
                     }
                 } else {
-                    Section {
-                        Button(dinnerText("Plan the whole dinner for tonight")) { prepare(.planTonight) }
-                            .buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.handoff.plan")
-                        Text(dinnerText("Review the dinner and all its ingredient needs.")).font(.subheadline)
-                    }
-                    Section {
-                        Button { selectingGroceries = true; error = nil } label: {
-                            Label(dinnerText("Shop for ingredients only"), systemImage: "checklist")
-                        }.accessibilityIdentifier("dinner.handoff.select")
-                        Text(dinnerText("Choose what to buy without scheduling the dinner.")).font(.subheadline)
-                    }
+                    ProgressView()
                 }
                 if let error { Label(error, systemImage: "exclamationmark.circle").foregroundStyle(Theme.warning) }
                 if ledger.saving || ledger.hasPendingSave || ledger.error != nil {
@@ -232,12 +233,36 @@ struct SavedDinnerHandoffView: View {
                 ledgerID = ledger.sourceWorkspaceID
                 destinationID = ledger.workspace.selectedShopID
             }
+            .task(id: readyPlanDestination) {
+                if readyPlanDestination != nil, review == nil { prepare(.planTonight) }
+            }
             .sheet(isPresented: $startingPickup) {
                 NavigationStack {
-                    LedgerNewShopView(model: ledger, title: recipe.title, authorize: canChangePickup,
+                    LedgerNewShopView(model: ledger, title: suggestedListName, authorize: canChangePickup,
                         onShopSelected: didSelectPickup)
                 }
             }
+    }
+
+    private var suggestedListName: String {
+        let title = dinnerFormat("Groceries for %@", recipe.title)
+        return title.utf8.count <= 512 ? title : ledgerText("Shopping list")
+    }
+
+    /// Preparing the exact recipe version is read-only. The confirm button owns the sole write.
+    private var readyPlanDestination: UUID? {
+        guard !selectingGroceries, authorized, ledger.ready, pickup.ready, !ledger.saving, !ledger.hasPendingSave,
+              !pickup.saving, !pickup.hasPendingSave, ledger.workspace.selectedShopID == destinationID else { return nil }
+        return destinationID
+    }
+
+    private var shopInstead: some View {
+        Button {
+            selectingGroceries = true
+            review = nil
+            error = nil
+        } label: { Label(dinnerText("Shop for ingredients only"), systemImage: "checklist") }
+        .accessibilityIdentifier("dinner.handoff.select")
     }
 
     private var pickupMenu: some View {
@@ -307,6 +332,9 @@ struct SavedDinnerHandoffView: View {
                 try review.apply(to: &workspace, access: context(at: now), phase: TonightPlanChoice.phase(pickup, shopID: review.shopID), at: now)
             }
             if !saved && !ledger.hasPendingSave { error = ledger.error ?? message(DinnerPlanningError.stalePreview) }
-        } catch { self.error = message(error) }
+        } catch {
+            self.review = nil
+            self.error = message(error)
+        }
     }
 }

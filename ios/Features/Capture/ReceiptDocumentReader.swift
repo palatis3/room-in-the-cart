@@ -254,7 +254,8 @@ struct ReceiptDocumentReader: Sendable {
                 guard original.numberOfCharacters <= 100_000 - characterCount else { throw ReceiptDocumentFailure.characters }
                 let text = original.string ?? ""
                 if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    result.append(try page(index + 1, method: .pdfText, reading: Reading(text: text)))
+                    let wording = try Self.pdfPrintedWording(text, page: original)
+                    result.append(try page(index + 1, method: .pdfText, reading: Reading(text: wording)))
                 } else {
                     do {
                         let bytes = try autoreleasepool { try Self.raster(original) }
@@ -280,6 +281,37 @@ struct ReceiptDocumentReader: Sendable {
         do { return try await recognize(data) }
         catch CaptureFailure.noText { return Reading(text: "") }
         catch CaptureFailure.inputTooLarge { throw ReceiptDocumentFailure.lineLimit }
+    }
+
+    /// Some PDFKit versions emit spaces between printed rows. Use PDFKit's
+    /// line selections only if they account for all wording in the same order.
+    /// Keep the source's other spaces and existing line breaks.
+    static func pdfPrintedWording(_ text: String, page: PDFPage) throws -> String {
+        guard let selection = page.selection(for: NSRange(location: 0, length: page.numberOfCharacters)) else { return text }
+        let rows = selection.selectionsByLine().compactMap { row -> (words: [Substring], bounds: CGRect)? in
+            let words = row.string?.split(whereSeparator: \.isWhitespace) ?? []
+            guard !words.isEmpty else { return nil }
+            return (words, row.bounds(for: page))
+        }
+        let original = text.split(whereSeparator: \.isWhitespace)
+        guard rows.count > 1, rows.flatMap(\.words).elementsEqual(original) else { return text }
+        var result = ""
+        var copied = text.startIndex
+        var index = 0
+        for (row, following) in zip(rows, rows.dropFirst()) {
+            index += row.words.count
+            try Task.checkCancellation()
+            let space = original[index - 1].endIndex..<original[index].startIndex
+            guard row.bounds.isFiniteSelection, following.bounds.isFiniteSelection,
+                  row.bounds.minY >= following.bounds.maxY,
+                  !space.isEmpty, !text[space].contains(where: \.isNewline) else { continue }
+            result += text[copied..<space.lowerBound]
+            result.append("\n")
+            copied = space.upperBound
+        }
+        guard copied != text.startIndex else { return text }
+        result += text[copied...]
+        return result
     }
 
     private static func checkPixels(_ data: Data) throws {
@@ -371,6 +403,12 @@ struct ReceiptDocumentReader: Sendable {
             return true
         }, nil)
         if let error { throw error }
+    }
+}
+
+private extension CGRect {
+    var isFiniteSelection: Bool {
+        !isEmpty && !isNull && minX.isFinite && minY.isFinite && maxX.isFinite && maxY.isFinite
     }
 }
 

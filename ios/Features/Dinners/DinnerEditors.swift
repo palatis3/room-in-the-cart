@@ -28,6 +28,15 @@ private struct DinnerIdeaAcceptanceButtonStyle: ButtonStyle {
     }
 }
 
+extension View {
+    /// The visible caption and the text line form one input surface. A simultaneous
+    /// tap preserves the text field’s native insertion point and selection gestures.
+    func dinnerInputRow(_ focus: FocusState<String?>.Binding, field: String) -> some View {
+        contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { focus.wrappedValue = field })
+    }
+}
+
 enum DinnerEditorPurpose { case manual, reusable, idea }
 struct DinnerTemplateEditor: View {
     @ObservedObject var model: DinnerFeatureModel
@@ -294,12 +303,14 @@ struct DinnerTemplateFields: View {
                     .onSubmit { focus.wrappedValue = "servings" }
                     .accessibilityIdentifier("ledgerDinnerTitle")
             }
+            .dinnerInputRow(focus, field: "title")
             WorkingField(dinnerText("Total servings")) {
                 TextField(dinnerText("Total servings"), text: $draft.servings, prompt: Text(verbatim: "—"))
                     .focused(focus, equals: "servings")
                     .accessibilityIdentifier("ledgerDinnerServings")
                     .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
             }
+            .dinnerInputRow(focus, field: "servings")
             DisclosureGroup(isExpanded: $showRecipeDetails) {
                 draftField(dinnerText("Notes"), value: $draft.notes, key: "notes")
                 draftField(dinnerText("Source URL, optional"), value: $draft.source, key: "source", axis: .horizontal)
@@ -380,8 +391,7 @@ struct DinnerTemplateFields: View {
                 .focused(focus, equals: key)
                 .accessibilityLabel(title).accessibilityIdentifier(key)
         }
-        .contentShape(Rectangle())
-        .simultaneousGesture(TapGesture().onEnded { focus.wrappedValue = key })
+        .dinnerInputRow(focus, field: key)
     }
 }
 struct DinnerUnitPicker: View {

@@ -184,10 +184,14 @@ struct PantryReceiptEntry: View {
                         TextField(storeName, text: Binding(get: { value.wrappedValue.merchant }, set: {
                             value.wrappedValue.clearAliases()
                             value.wrappedValue.merchant = $0
-                        }), prompt: Text("")).focused($field, equals: "merchant")
+                        }), prompt: Text(""))
+                            .receiptInputChrome()
+                            .focused($field, equals: "merchant")
                             .accessibilityIdentifier("receipt.store")
                     }
                     .id("receipt.store")
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { field = "merchant" })
                     .task(id: storeFocusRequest) {
                         guard let request = storeFocusRequest else { return }
                         await Task.yield()

@@ -282,7 +282,7 @@ import XCTest
         let input = ReceiptDocumentBytes(data: pdf(pages: 2, scannedLast: true), kind: .pdf)
         let extracted = try await ReceiptDocumentReader().extract(input)
         XCTAssertEqual(extracted.pages.map(\.method), [.pdfText, .pdfOCR])
-        XCTAssertEqual(extracted.pages.first?.lines.first?.text, "OATS")
+        XCTAssertEqual(extracted.pages.first?.lines.map(\.text), ["OATS", "FEE"])
         let scanned = try XCTUnwrap(extracted.pages.last?.lines.first?.text)
         XCTAssertTrue(scanned.uppercased().contains("BEANS"))
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
@@ -308,9 +308,35 @@ import XCTest
         XCTAssertEqual(first.lines.first?.treatment, .skip)
         XCTAssertFalse(first.dateConfirmed)
         let offline = try await ReceiptDocumentReader(recognize: { _ in throw CaptureFailure.onDeviceUnavailable }).extract(input)
-        XCTAssertEqual(offline.pages[0].lines.first?.text, "OATS")
+        XCTAssertEqual(offline.pages[0].lines.map(\.text), ["OATS", "FEE"])
         XCTAssertEqual(offline.pages[1].skipped, .unavailable)
         XCTAssertTrue(offline.pages[1].lines.isEmpty)
+    }
+
+    func testReceiptPDFPreservesInlinePriceAndSeparatesPrintedCharges() async throws {
+        let bounds = CGRect(x: 0, y: 0, width: 340, height: 400)
+        let bytes = UIGraphicsPDFRenderer(bounds: bounds).pdfData { context in
+            context.beginPage()
+            let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 18)]
+            for (wording, y) in [
+                ("GARDEN MARKET", 28.0), ("ROLLED OATS USD 2.40", 76.0),
+                ("SERVICE FEE USD 1.25", 119.0), ("TAX USD 0.42", 162.0)
+            ] {
+                (wording as NSString).draw(at: .init(x: 24, y: y), withAttributes: attributes)
+            }
+        }
+        let input = ReceiptDocumentBytes(data: bytes, kind: .pdf)
+        let document = try await ReceiptDocumentReader().extract(input)
+        XCTAssertEqual(document.digest, Data(SHA256.hash(data: bytes)))
+        let page = try XCTUnwrap(document.pages.first)
+        let printedRows = ["GARDEN MARKET", "ROLLED OATS USD 2.40", "SERVICE FEE USD 1.25", "TAX USD 0.42"]
+        XCTAssertEqual(page.method, .pdfText)
+        XCTAssertEqual(page.lines.map(\.text), printedRows)
+        XCTAssertEqual(page.lines.map(\.id), [1, 2, 3, 4])
+        XCTAssertTrue(document.amountAssociations.isEmpty)
+        let originalPage = try XCTUnwrap(PDFDocument(data: bytes)?.page(at: 0))
+        let flattened = try XCTUnwrap(originalPage.string).split(whereSeparator: \.isNewline).joined(separator: " ")
+        XCTAssertEqual(try ReceiptDocumentReader.pdfPrintedWording(flattened, page: originalPage), printedRows.joined(separator: "\n"))
     }
 
     func testSelectedReceiptCropEncodesOnlyTheReviewedPixelsAndLocallyReadsThem() async throws {

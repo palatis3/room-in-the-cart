@@ -237,6 +237,7 @@ import XCTest
         if app.buttons["packageDate.done"].exists { tap(app.buttons["packageDate.done"]) }
         XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
         tap(app.buttons["packageDate.save"])
+        XCTAssertTrue(app.navigationBars["Lentejas"].waitForExistence(timeout: 8))
         app.terminate()
         openPantry(reset: false, spanish: true)
         tap(lot("Lentejas"))

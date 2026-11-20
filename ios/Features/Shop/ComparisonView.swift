@@ -126,12 +126,17 @@ struct ComparisonView: View {
 
     private func entry(_ label: String, text: Binding<String>, id: String, keyboard: UIKeyboardType = .numbersAndPunctuation) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(tr(label)).font(.subheadline).foregroundStyle(Theme.secondary).accessibilityHidden(true)
+            Text(tr(label)).font(.subheadline).foregroundStyle(Theme.secondary)
             workingTextField(tr("Unknown if blank"), text: text)
                 .keyboardType(keyboard).focused($inputFocused, equals: id)
                 .accessibilityLabel(tr(label)).accessibilityIdentifier(id)
                 .frame(minHeight: 44)
         }
+        // iOS 17 exposes the entire Form row as the text field's activation
+        // frame. Its center can sit between the caption and the editor.
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .simultaneousGesture(TapGesture().onEnded { inputFocused = id })
     }
 
     private func unitPicker(_ label: String, selection: Binding<UnitOfMeasure>, id: String) -> some View {
