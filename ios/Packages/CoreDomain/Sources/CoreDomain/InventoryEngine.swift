@@ -17,7 +17,7 @@ public enum InventoryEngine {
             }
             lot = InventoryLot(id: command.lotID, foodID: seed.foodID, name: seed.name, source: seed.source, revision: 1,
                 location: seed.location, openedAt: seed.openedAt, unit: seed.unit, count: seed.count, observationID: observationID,
-                confirmedAt: observedAt, updatedAt: command.occurredAt, useFirst: seed.useFirst, splitFromLotID: seed.splitFromLotID)
+                confirmedAt: observedAt, updatedAt: command.occurredAt, useFirst: seed.useFirst, splitFromLotID: seed.splitFromLotID, packageCode: seed.packageCode, intakeOrdinal: seed.intakeOrdinal)
             observation = InventoryObservation(id: observationID, lotID: lot.id, operationID: command.id, revision: 1,
                 supersedesID: nil, observedAt: observedAt, count: seed.count)
         } else {
@@ -99,7 +99,8 @@ public enum InventoryEngine {
             lot = InventoryLot(id: current.id, foodID: foodID, name: name, source: current.source,
                 revision: next.partialValue, location: location, openedAt: openedAt, unit: unit, count: count,
                 observationID: observationID, confirmedAt: confirmedAt, updatedAt: command.occurredAt, useFirst: useFirst, countWording: countWording,
-                splitFromLotID: current.splitFromLotID, discardUndo: discardUndo, discardedTimes: discardedTimes)
+                splitFromLotID: current.splitFromLotID, discardUndo: discardUndo, discardedTimes: discardedTimes,
+                packageCode: foodID == current.foodID ? current.packageCode : nil, intakeOrdinal: current.intakeOrdinal)
         }
         try lot.validate(); try observation?.validate()
         let event = InventoryEvent(id: command.eventID, operationID: command.id, originID: command.originID,

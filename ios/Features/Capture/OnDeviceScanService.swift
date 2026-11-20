@@ -23,7 +23,7 @@ struct OnDeviceScanService: LocalScanService {
                 try Task.checkCancellation()
                 let request = VNDetectBarcodesRequest()
                 request.revision = revision
-                request.symbologies = [.ean8, .ean13, .upce, .code128, .qr, .dataMatrix]
+                request.symbologies = [.ean8, .ean13, .upce, .code128, .qr, .dataMatrix, .gs1DataBarExpanded]
                 if revision == VNDetectBarcodesRequestRevision2 {
                     // Use a supported CPU device for the compatibility pass rather
                     // than retrying the same unavailable accelerated inference path.
@@ -42,7 +42,7 @@ struct OnDeviceScanService: LocalScanService {
                 try Task.checkCancellation()
                 codes = (request.results ?? []).compactMap { value -> CapturedBarcode? in
                     guard let text = value.payloadStringValue else { return nil }
-                    let code = CapturedBarcode(symbology: value.symbology.rawValue, value: text)
+                    let code = CapturedBarcode(symbology: value.symbology.rawValue, value: text, isGS1: value.isGS1DataCarrier ? true : nil)
                     return (try? code.validate()) == nil ? nil : code
                 }
                 if !codes.isEmpty { break }

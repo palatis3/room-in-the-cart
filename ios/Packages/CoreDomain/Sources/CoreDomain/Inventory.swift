@@ -60,6 +60,23 @@ public struct InventoryObservation: Codable, Equatable, Sendable, Identifiable {
     }
 }
 
+/// Original identifier captured when reviewing this physical package. Omitted for legacy and hand-entered stock.
+public struct InventoryPackageCode: Codable, Equatable, Identifiable, Sendable {
+    public let symbology: String
+    public let value: String
+    public var isGS1: Bool?
+    public var id: String { symbology + ":" + value }
+    public init(symbology: String, value: String, isGS1: Bool? = nil) {
+        self.symbology = symbology; self.value = value; self.isGS1 = isGS1
+    }
+    public func validateBounds() throws {
+        guard !symbology.isEmpty, symbology.utf8.count <= 64, !value.isEmpty, value.utf8.count <= 256,
+              !symbology.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains),
+              !value.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) && $0.value != 29 })
+        else { throw InventoryError.invalid("packageCode") }
+    }
+}
+
 /// Bounded current state. Immutable observations/events are stored separately,
 /// not accumulated in this head or copied into every shop.
 public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
@@ -78,6 +95,8 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
     public let updatedAt: Date
     public let useFirst: Bool
 
+    public let intakeOrdinal: Int?
+    public let packageCode: InventoryPackageCode?
     public let splitFromLotID: UUID?
     public let discardUndo: InventoryDiscardUndo?
     public let discardedTimes: Int?
@@ -85,13 +104,17 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
     public init(id: UUID, foodID: UUID, name: String, source: InventorySource, revision: Int64,
                 location: InventoryLocation, openedAt: Date? = nil, unit: UnitOfMeasure, count: InventoryCount,
                 observationID: UUID, confirmedAt: Date, updatedAt: Date, useFirst: Bool = false, countWording: String? = nil,
-                splitFromLotID: UUID? = nil, discardUndo: InventoryDiscardUndo? = nil, discardedTimes: Int? = nil) {
+                splitFromLotID: UUID? = nil, discardUndo: InventoryDiscardUndo? = nil, discardedTimes: Int? = nil, packageCode: InventoryPackageCode? = nil, intakeOrdinal: Int? = nil) {
+        self.intakeOrdinal = intakeOrdinal
+        self.packageCode = packageCode
         self.splitFromLotID = splitFromLotID; self.discardUndo = discardUndo; self.discardedTimes = discardedTimes
         self.id = id; self.foodID = foodID; self.name = name; self.source = source; self.revision = revision
         self.location = location; self.openedAt = openedAt; self.unit = unit; self.count = count; self.countWording = countWording
         self.observationID = observationID; self.confirmedAt = confirmedAt; self.updatedAt = updatedAt; self.useFirst = useFirst
     }
     public func validate() throws {
+        try packageCode?.validateBounds()
+        guard intakeOrdinal.map({ (0..<200).contains($0) }) ?? true else { throw InventoryError.invalid("intakeOrdinal") }
         guard splitFromLotID != id, (discardedTimes ?? 0) >= 0, revision >= 1, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 512,
               confirmedAt.timeIntervalSinceReferenceDate.isFinite, updatedAt.timeIntervalSinceReferenceDate.isFinite,
               confirmedAt <= updatedAt, count.quantity.map({ $0.unit == unit }) ?? true else { throw InventoryError.invalid("lot") }
@@ -116,10 +139,14 @@ public struct InventoryLotSeed: Codable, Equatable, Sendable {
     public let useFirst: Bool
     public let observedAt: Date?
     public let openedAt: Date?
+    public let intakeOrdinal: Int?
+    public let packageCode: InventoryPackageCode?
     public let splitFromLotID: UUID?
     public init(foodID: UUID, name: String, source: InventorySource, location: InventoryLocation,
                 unit: UnitOfMeasure, count: InventoryCount, useFirst: Bool = false, observedAt: Date? = nil,
-                openedAt: Date? = nil, splitFromLotID: UUID? = nil) {
+                openedAt: Date? = nil, splitFromLotID: UUID? = nil, packageCode: InventoryPackageCode? = nil, intakeOrdinal: Int? = nil) {
+        self.intakeOrdinal = intakeOrdinal
+        self.packageCode = packageCode
         self.openedAt = openedAt; self.splitFromLotID = splitFromLotID
         self.foodID = foodID; self.name = name; self.source = source; self.location = location
         self.unit = unit; self.count = count; self.useFirst = useFirst
@@ -270,9 +297,11 @@ public struct InventoryReservation: Codable, Equatable, Sendable, Identifiable {
     public let priority: AllocationPriority
     public let state: InventoryReservationState
     public let personal: InventoryPersonalReservation?
+    public let cookedDinner: CookedDinnerReservation?
     public init(id: UUID, originID: UUID, revision: Int64, foodID: UUID, lotID: UUID?, name: String,
                 amount: Quantity?, priority: AllocationPriority = .required, state: InventoryReservationState = .active,
-                personal: InventoryPersonalReservation? = nil) {
+                personal: InventoryPersonalReservation? = nil, cookedDinner: CookedDinnerReservation? = nil) {
+        self.cookedDinner = cookedDinner
         self.id = id; self.originID = originID; self.revision = revision; self.foodID = foodID; self.lotID = lotID
         self.name = name; self.amount = amount; self.priority = priority; self.state = state; self.personal = personal
     }
@@ -282,6 +311,13 @@ public struct InventoryReservation: Codable, Equatable, Sendable, Identifiable {
         if let personal {
             guard priority == .protected, state != .active || lotID != nil else { throw InventoryError.invalid("personalReservation") }
             try personal.day?.validate()
+        }
+        if let cookedDinner {
+            guard personal == nil, lotID != nil, amount?.unit == .count, priority == .protected,
+                  state != .unresolved, cookedDinner.servedAt == nil || state == .released,
+                  cookedDinner.servedAt?.timeIntervalSinceReferenceDate.isFinite != false
+            else { throw InventoryError.invalid("cookedDinner") }
+            try cookedDinner.day.validate()
         }
         try amount?.validate()
     }
