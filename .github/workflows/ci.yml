@@ -35,8 +35,8 @@ jobs:
       matrix:
         package: [web, service]
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -76,7 +76,7 @@ jobs:
       BILLING_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
       RITC_TEST_PG_BIN: /usr/lib/postgresql/17/bin
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install PostgreSQL 17 tools for the backup and restore tests
         timeout-minutes: 5
         run: |
@@ -89,7 +89,7 @@ jobs:
           sudo apt-get install --yes --no-install-recommends "./$package"
           "$RITC_TEST_PG_BIN/pg_dump" --version
           "$RITC_TEST_PG_BIN/pg_restore" --version
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -140,7 +140,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Select the Swift package and UI shard providers
         id: route
         env:
@@ -225,7 +225,7 @@ jobs:
       CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
       CI_IPHONE_NAME: iPhone 17
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Require the reviewed Xcode 27.1 toolchain
         run: |
           if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
@@ -277,7 +277,7 @@ jobs:
       CI_IPHONE_NAME: iPhone 17
       REQUIRE_RELEASE_METADATA: ${{ inputs.require_release_metadata }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Require the reviewed Xcode 27.1 toolchain
         run: |
           if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
@@ -359,7 +359,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Record Swift analysis toolchain
         shell: bash
         run: |
@@ -525,7 +525,7 @@ jobs:
       test_matrix: ${{ steps.plan.outputs.matrix }}
       model_result: ${{ steps.models.outcome }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Require the reviewed Xcode 27.1 toolchain
         run: |
           if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
@@ -770,7 +770,7 @@ jobs:
       TEST_SHARD: ${{ matrix.shard }}
       EXPECTED_TEST_COUNT: ${{ matrix.expected_count }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         # Test products and selectors come from the build artifact. Keep UI
         # sources available for mapping XCTest failures in the result reports.
         with:
@@ -914,7 +914,7 @@ jobs:
               raise SystemExit(f"Required jobs did not pass: {failures}")
           print(f"GitHub job results verified for the {provider} route.")
           PY
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: needs.source-checks.outputs.ios_provider == 'circleci'
         with:
           persist-credentials: false
