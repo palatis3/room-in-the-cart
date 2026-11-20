@@ -1045,8 +1045,7 @@ import XCTest
         tap(app.buttons["Done"])
         tap(app.buttons["shelfPhotos.edit"])
         tap(element("shelfPhotos.choose"))
-        let picker = app.scrollViews["photosView_content_scroll_view"]
-        XCTAssertTrue(picker.waitForExistence(timeout: 30))
+        let picker = try systemPhotoPicker()
         let cancel = app.buttons.matching(identifier: "Cancel").allElementsBoundByIndex.last(where: \.isHittable)
         try XCTUnwrap(cancel).tap()
         XCTAssertTrue(picker.waitForNonExistence(timeout: 8))
@@ -1133,6 +1132,18 @@ import XCTest
         capture("Checkout review preserves original OCR, accepted crop and shopper amount")
     }
 
+    private func systemPhotoPicker() throws -> XCUIElement {
+        let identifiedGrid = app.scrollViews["photosView_content_scroll_view"]
+        // iOS 17 presents an unlabelled grid beneath the native Photos navigation bar.
+        let photosBar = app.navigationBars["Photos"]
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            identifiedGrid.exists || photosBar.exists
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 60), .completed, app.debugDescription)
+        if identifiedGrid.exists { return identifiedGrid }
+        return try XCTUnwrap(photosBar.exists ? photosBar : nil, "The system photo picker did not open.")
+    }
+
     private func chooseNewestSourcePhoto() throws {
         // The system picker can group its thumbnails in one accessible grid.
         // Its snapshot still exposes each photo's label and actual tap target.
@@ -1144,14 +1155,14 @@ import XCTest
             }
             return nil
         }
-        let picker = app.scrollViews["photosView_content_scroll_view"]
-        XCTAssertTrue(picker.waitForExistence(timeout: 60), app.debugDescription)
+        let picker = try systemPhotoPicker()
+        let grid: XCUIElement = picker.elementType == .navigationBar ? app : picker
         for _ in 0..<2 {
             // The first-use privacy banner can move the grid after its images appear.
             // Sample the center in picker coordinates until it stays in place.
             var center: CGPoint?
             let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                guard let view = try? picker.snapshot(), let photo = firstPhoto(in: view),
+                guard let view = try? grid.snapshot(), let photo = firstPhoto(in: view),
                       view.frame.contains(photo) else {
                     center = nil
                     return false
@@ -1162,7 +1173,7 @@ import XCTest
             }, object: nil)
             XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 60), .completed, app.debugDescription)
             let point = try XCTUnwrap(center)
-            picker.coordinate(withNormalizedOffset: .zero)
+            grid.coordinate(withNormalizedOffset: .zero)
                 .withOffset(CGVector(dx: point.x, dy: point.y)).tap()
             if picker.waitForNonExistence(timeout: 5) { return }
         }
