@@ -103,9 +103,12 @@ import XCTest
                 let name = app.textFields["pantry.foodName"], amount = app.textFields["pantry.amount"]
                 tap(name)
                 name.typeText(product)
-                tap(amount)
-                amount.typeText(product == products[0] ? "2" : "1/2")
-                tap(app.buttons["pantry.foodUnit"])
+                XCTAssertEqual(name.value as? String, product)
+                let stockAmount = product == products[0] ? "2" : "1/2"
+                tapPantryRowBelowName(amount)
+                amount.typeText(stockAmount)
+                XCTAssertEqual(amount.value as? String, stockAmount)
+                tapPantryRowBelowName(app.buttons["pantry.foodUnit"])
                 tap(app.buttons[spanish ? "tazas" : "cups"])
                 tap(app.buttons["pantry.review"])
                 let confirm = app.buttons["pantry.confirm"]
@@ -215,6 +218,23 @@ import XCTest
             app.swipeUp()
         }
         XCTFail("Expected the requested row in the visible list: " + app.debugDescription)
+    }
+    private func tapPantryRowBelowName(_ row: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let keyboard = app.keyboards.firstMatch
+        let accessory = app.otherElements["SystemInputAssistantView"].firstMatch
+        for _ in 0..<8 {
+            let bottom = min(keyboard.exists ? keyboard.frame.minY : app.frame.maxY,
+                             accessory.exists ? accessory.frame.minY : app.frame.maxY)
+            let top = app.navigationBars.allElementsBoundByIndex.last?.frame.maxY ?? app.frame.minY
+            let area = CGRect(x: app.frame.minX + 12, y: top, width: app.frame.width - 24, height: bottom - top)
+            // A partly exposed row can report hittable with its center behind the prediction bar on iOS 17.
+            if row.exists, row.isHittable, row.frame.minY >= top, row.frame.maxY <= bottom {
+                row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                return
+            }
+            app.scrollForm(in: area, upward: !row.exists || row.frame.midY > area.midY, besideFields: true)
+        }
+        XCTFail("Expected the pantry row to be visible above the keyboard: " + row.debugDescription, file: file, line: line)
     }
     private func fill(_ element: XCUIElement, _ value: String) {
         tap(element)

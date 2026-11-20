@@ -1024,12 +1024,26 @@ import XCTest
     }
 
     func testShelfPhotoSurvivesCanceledReplacementAndReopensFromTheShoppingList() throws {
+        func saveSelectedPhoto() {
+            XCTAssertTrue(app.images["Selected shelf photo"].waitForExistence(timeout: 15), app.debugDescription)
+            // The preview can push both the date and Save below the visible form.
+            let dateControl = app.descendants(matching: .any).matching(
+                NSPredicate(format: "label IN %@", ["Set date taken", "Date taken"])).firstMatch
+            reveal(dateControl)
+            if dateControl.label == "Set date taken" { tap(dateControl) }
+            let save = app.buttons["shelfPhotos.save"]
+            reveal(save)
+            XCTAssertTrue(save.isEnabled, app.debugDescription)
+            save.tap()
+            XCTAssertTrue(save.waitForNonExistence(timeout: 8), app.debugDescription)
+        }
+
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         saveSourcePhoto()
         app.terminate()
         launch(reset: true)
-        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
         XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 10))
         tap(app.buttons["shelfPhotos.open"])
@@ -1037,10 +1051,7 @@ import XCTest
         tap(app.buttons["shelfPhotos.edit"])
         tap(element("shelfPhotos.choose"))
         try chooseNewestSourcePhoto()
-        let save = app.buttons["shelfPhotos.save"]
-        XCTAssertTrue(save.waitForExistence(timeout: 15))
-        if !save.isEnabled { tap(app.buttons["Set date taken"]) }
-        tap(save)
+        saveSelectedPhoto()
         let stamp = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Taken ")).firstMatch
         XCTAssertTrue(stamp.waitForExistence(timeout: 8))
         let captured = stamp.label
@@ -1067,10 +1078,7 @@ import XCTest
         tap(app.buttons["shelfPhotos.edit"])
         tap(element("shelfPhotos.choose"))
         try chooseNewestSourcePhoto()
-        XCTAssertTrue(save.waitForExistence(timeout: 15))
-        if !save.isEnabled { tap(app.buttons["Set date taken"]) }
-        tap(save)
-        XCTAssertTrue(save.waitForNonExistence(timeout: 8))
+        saveSelectedPhoto()
         XCTAssertTrue(app.buttons["shelfPhotos.inspect"].waitForExistence(timeout: 8))
         tap(app.buttons["shelfPhotos.delete"])
         let deletion = app.buttons.matching(identifier: "Delete photo").allElementsBoundByIndex.last
