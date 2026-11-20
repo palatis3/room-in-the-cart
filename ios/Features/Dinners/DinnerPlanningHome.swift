@@ -9,10 +9,13 @@ struct DinnerPlanningHome: View {
     @StateObject private var model: DinnerFeatureModel
     @State private var startingPickup = false
     var needsPantrySetup: Bool
+    let pickupOpening: DinnerPickupOpeningState
     init(ledger: LedgerModel, access: @escaping DinnerFeatureModel.AccessProvider,
          phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [], runtimeChanges: AnyPublisher<Void, Never>? = nil,
-         basketPrepAccess: @escaping () -> Bool = { false }, milestoneAccess: @escaping () -> Bool = { false }, needsPantrySetup: Bool = false) {
+         basketPrepAccess: @escaping () -> Bool = { false }, milestoneAccess: @escaping () -> Bool = { false }, needsPantrySetup: Bool = false,
+         pickupOpening: DinnerPickupOpeningState = .ready) {
         self.ledger = ledger
+        self.pickupOpening = pickupOpening
         self.needsPantrySetup = needsPantrySetup
         let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: ideaCatalog,
             basketPrepAccess: basketPrepAccess, milestoneAccess: milestoneAccess)
@@ -21,7 +24,8 @@ struct DinnerPlanningHome: View {
         _model = StateObject(wrappedValue: model)
     }
     var body: some View {
-        DinnerWorkspaceView(model: model, needsPantrySetup: needsPantrySetup, startPickup: { startingPickup = true }) { LedgerSaveStatus(model: ledger) }
+        DinnerWorkspaceView(model: model, needsPantrySetup: needsPantrySetup, pickupOpening: pickupOpening,
+                            startPickup: { startingPickup = true }) { LedgerSaveStatus(model: ledger) }
             .sheet(isPresented: $startingPickup) { NavigationStack { LedgerNewShopView(model: ledger) } }
             .environment(\.timeZone, TimeZone(identifier: model.shop?.basis.timeZoneIdentifier ?? "") ?? .current)
             .task { await ledger.open() }
@@ -29,11 +33,59 @@ struct DinnerPlanningHome: View {
 }
 extension LedgerModel: DinnerWorkspaceStore {}
 
+/// A ready pickup still requires the feature's normal per-shop access checks.
+enum DinnerPickupOpeningState: Equatable {
+    case ready, opening, denied, pantryRecovery, failed(String)
+
+    @MainActor init(pickup: PickupModel, authorized: Bool, retryAvailable: Bool) {
+        if pickup.ready {
+            self = .ready
+        } else if !authorized {
+            self = .denied
+        } else if pickup.pantryRouteAvailable || pickup.pantryRestartAvailable {
+            self = .pantryRecovery
+        } else if let error = pickup.error {
+            self = .failed(error)
+        } else if retryAvailable {
+            self = .failed(pTr("Could not open saved pickups. Retry; existing records have not been replaced."))
+        } else {
+            self = .opening
+        }
+    }
+}
+
+private struct DinnerPickupOpeningStatus: View {
+    let state: DinnerPickupOpeningState
+    @EnvironmentObject private var pickup: PickupModel
+    @Environment(\.privatePantryRetry) private var retryPrivatePantry
+
+    var body: some View {
+        switch state {
+        case .ready:
+            EmptyView()
+        case .opening:
+            ProgressView(ledgerText("Opening your pickups…"))
+                .accessibilityIdentifier("dinner.openingPickup")
+        case .denied:
+            Text(dinnerText("Planning access changed or expired. Reconnect and review again."))
+        case .pantryRecovery:
+            NavigationLink(pantryText("My Pantry")) { AdultPantryTab() }
+        case .failed(let message):
+            Text(verbatim: message).foregroundStyle(Theme.error)
+            Button(pTr("Retry opening")) {
+                if let retryPrivatePantry { retryPrivatePantry() }
+                else { Task { await pickup.load() } }
+            }.accessibilityIdentifier("dinner.retryOpeningPickup")
+        }
+    }
+}
+
 struct DinnerWorkspaceView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
     @Environment(\.pickupLedger) private var liveLedger
     @Environment(\.dinnerHousehold) private var household
     var needsPantrySetup = false
+    var pickupOpening: DinnerPickupOpeningState = .ready
     let startPickup: () -> Void
     @ViewBuilder let saveStatus: () -> SaveStatus
     @State private var weekStart = Date()
@@ -91,6 +143,8 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     } footer: {
                         Text(dinnerText("Start a pickup to plan dinners and review the groceries you’ll need."))
                     }
+                } else if pickupOpening != .ready {
+                    DinnerPickupOpeningStatus(state: pickupOpening)
                 } else if !model.accessAvailable {
                     Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
                 } else if let shop = model.shop {
