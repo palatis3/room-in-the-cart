@@ -149,7 +149,7 @@ import XCTest
         app.buttons["inStoreAmountDone"].tap()
         show(app.buttons["Save price"])
         app.buttons["Save price"].tap()
-        waitForBudgetSubtotal("$4.13 for 1 of 1")
+        waitForBudgetSubtotal("$4.13 for 1 picked item")
 
         app.buttons["Check Coffee"].tap()
         waitForBudgetSubtotal("$4.13 for 1 of 2")

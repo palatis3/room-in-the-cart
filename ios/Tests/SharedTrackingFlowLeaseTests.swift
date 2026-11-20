@@ -58,6 +58,21 @@ import SwiftUI
             guard trackingSelectionID == selectionID else { throw ClientError.cancelled }; sends += 1
         }
     }
+    func testConfirmedCheckoutRenewalClearsPrivateDraftAndRequiresFreshFreezeAcknowledgments() async throws {
+        let access = try Access(), flow = SharedTrackingFlowModel(access: access, freezing: true)
+        await flow.load(); await flow.preview()
+        flow.gate.changes = true; flow.gate.pickup = true; flow.acceptUnknown = true
+        await flow.apply()
+        let attempt = try XCTUnwrap(flow.checkoutAttempt)
+        XCTAssertEqual(attempt.operationID, access.operation.id); XCTAssertEqual(attempt.lease, access.trackingLease)
+        flow.clear(keepingCheckout: true)
+        XCTAssertEqual(flow.checkoutAttempt, attempt); XCTAssertNil(flow.page); XCTAssertNil(flow.candidate)
+        XCTAssertNil(flow.actionSources); XCTAssertNil(flow.mealSources); XCTAssertNil(flow.history)
+        XCTAssertFalse(flow.gate.canApply); XCTAssertFalse(flow.acceptUnknown)
+        await flow.load()
+        XCTAssertNil(flow.checkoutAttempt); XCTAssertNotNil(flow.page?.freezeReview); XCTAssertTrue(flow.permitted)
+        XCTAssertFalse(flow.gate.canApply); XCTAssertEqual(access.sends, 1)
+    }
     func testMealHistorySelectsWholeMealUndoAndNeverRoutesRequestHistoryAsFoodUndo() async throws {
         typealias F = TrackingFlowReviewFixture
         let access = try Access(), flow = SharedTrackingFlowModel(access: access)
