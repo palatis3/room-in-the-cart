@@ -203,6 +203,7 @@ struct SavedDinnerHandoffView: View {
                             Toggle(isOn: Binding(get: { selected.contains(ingredient.id) }, set: { included in
                                 if included { selected.insert(ingredient.id) } else { selected.remove(ingredient.id) }
                             })) { ingredientRow(ingredient) }
+                                .toggleStyle(DinnerRowToggleStyle())
                                 .accessibilityIdentifier("dinner.handoff.ingredient." + ingredient.id.uuidString)
                         }
                         Button(dinnerText("Review selected groceries")) { prepare(.groceries(selected)) }

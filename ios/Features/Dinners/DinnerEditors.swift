@@ -37,6 +37,30 @@ extension View {
     }
 }
 
+/// The native switch handles thumb taps and drags. On small iOS 17 forms the
+/// displayed label can wrap far from the thumb, so give it its own tap target.
+struct DinnerRowToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 0) {
+            Button { configuration.isOn.toggle() } label: {
+                configuration.label
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .padding(.trailing, 12)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Toggle(isOn: configuration.$isOn) { EmptyView() }
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .fixedSize()
+        }
+        .accessibilityRepresentation {
+            Toggle(isOn: configuration.$isOn) { configuration.label }
+                .toggleStyle(.switch)
+        }
+    }
+}
+
 enum DinnerEditorPurpose { case manual, reusable, idea }
 struct DinnerTemplateEditor: View {
     @ObservedObject var model: DinnerFeatureModel
@@ -330,6 +354,7 @@ struct DinnerTemplateFields: View {
                     if let source = ingredient.originalWording { Text(verbatim: source).font(.subheadline).foregroundStyle(Theme.secondary) }
                     draftField(dinnerText("Ingredient name"), value: row.name, key: prefix + "name")
                     Toggle(tonightText("Use without a measured amount"), isOn: row.checkedWithoutAmount)
+                        .toggleStyle(DinnerRowToggleStyle())
                         .accessibilityLabel(ingredient.name.isEmpty ? tonightText("Use without a measured amount") :
                             ingredient.name + ", " + tonightText("Use without a measured amount"))
                     if !ingredient.checkedWithoutAmount {

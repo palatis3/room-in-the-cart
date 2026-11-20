@@ -460,6 +460,27 @@ import XCTest
     }
 #endif
 
+    func testFirstPantryReceiptCanCloseWithoutSavingFood() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Pantry"])
+        XCTAssertTrue(app.buttons["pantry.setup.firstFood"].waitForExistence(timeout: 8))
+        tap(app.buttons["pantry.setup.receipt"])
+        let receipt = app.navigationBars["Review a receipt"]
+        XCTAssertTrue(receipt.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.textFields["pantry.foodName"].exists)
+        tap(receipt.buttons["Close"])
+        XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 8))
+        reveal(app.staticTexts["No food recorded here."])
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot.")).count, 0)
+
+        app.terminate()
+        launch(reset: false)
+        tap(app.tabBars.buttons["Pantry"])
+        reveal(app.staticTexts["No food recorded here."])
+        XCTAssertFalse(receipt.exists)
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot.")).count, 0)
+    }
+
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
         launch(reset: true)
         var pantry: XCUIElement { app.shopToolButton("shop.myPantry") }
@@ -1410,16 +1431,33 @@ import XCTest
         XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
         let storeIssue = app.buttons["receipt.document.storeIssue"]
+        let accept = app.buttons["receipt.document.accept"]
         reveal(storeIssue)
         XCTAssertTrue(storeIssue.isHittable)
-        XCTAssertFalse(app.buttons["receipt.document.accept"].isEnabled)
-        receiptTap(storeIssue)
+        // The issue row can become visible while the lazy Form still excludes
+        // the disabled button directly below it from the accessibility tree.
+        for _ in 0..<4 {
+            if accept.exists { break }
+            scrollContent(upward: true)
+        }
+        guard accept.waitForExistence(timeout: 5) else {
+            return XCTFail("Expected the blocked review action after scrolling to the end of the printed lines")
+        }
+        XCTAssertFalse(accept.isEnabled)
+        receiptTap(storeIssue, initiallyUpward: false)
         let store = app.textFields["receipt.document.store"]
         XCTAssertTrue(store.waitForExistence(timeout: 5))
         XCTAssertEqual(store.label, "Store or receipt name (required)")
-        fill("Room Market", into: "receipt.document.store", control: store)
+        guard app.keyboards.firstMatch.waitForExistence(timeout: 5) else {
+            return XCTFail("The store issue should open the keyboard without another field tap")
+        }
+        let typingTip = app.staticTexts["Speed up your typing by sliding your finger across the letters to compose a word."]
+        if typingTip.exists { app.buttons["Continue"].tap() }
+        app.typeText("Room Market")
+        XCTAssertEqual(store.value as? String, "Room Market")
+        receiptTap(app.buttons["receipt.document.keyboardDone"])
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
-        tap(app.buttons["receipt.document.accept"])
+        receiptTap(accept)
 
         let date = app.switches["I checked the purchase date."]
         XCTAssertTrue(date.waitForExistence(timeout: 10), "The selected image should hand its lines to the receipt editor.")
