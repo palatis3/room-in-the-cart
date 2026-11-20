@@ -115,7 +115,12 @@ struct RegionalAgeCheckWindow<Content: View>: View {
     private func start(in presenter: UIViewController) {
         check.start {
             if #available(iOS 26.4, *) {
+                #if compiler(>=6.3)
                 return try await AgeRangeService.shared.requiredRegulatoryFeatures.contains(.declaredAgeRangeRequired)
+                #else
+                // Xcode 26.3's SDK cannot determine the required features on this OS.
+                throw AgeRangeService.Error.invalidRequest
+                #endif
             }
             return try await AgeRangeService.shared.isEligibleForAgeFeatures
         } request: {
