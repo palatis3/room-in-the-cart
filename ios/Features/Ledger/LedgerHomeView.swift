@@ -5,6 +5,7 @@ private enum LedgerHomeSheet: Hashable, Identifiable {
     case newShop, entry, facts, history, layout, printList
     case inStore(UUID), shareItems(UUID), kits(UUID?), standing
     case renameShop(id: UUID, title: String)
+    case editLine(workspace: UUID, shop: UUID, line: UUID)
     var id: Self { self }
 }
 
@@ -164,6 +165,13 @@ struct LedgerHomeView: View {
         case .newShop: LedgerNewShopView(model: model, onShopSelected: onShopSelected)
         case let .renameShop(id, title):
             LedgerNewShopView(model: model, shopID: id, title: title)
+        case let .editLine(workspaceID, shopID, lineID):
+            if model.sourceWorkspaceID == workspaceID, let shop = model.shop, shop.id == shopID,
+               let line = shop.lines.first(where: { $0.id == lineID && !$0.isChecked && !$0.isTrashed && !$0.isHandled }) {
+                LedgerLineEditor(model: model, shop: shop, line: line)
+            } else {
+                Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
+            }
         case .entry:
             if let shop = model.shop { LedgerImportView(model: model, shopID: shop.id) }
         case .facts:
@@ -339,6 +347,11 @@ struct LedgerHomeView: View {
         let quantity = line.tripPick == nil ? shop.shoppingRowQuantity(for: line) :
             shop.tripAmountLabel(line, measure: TripMeasure(shop, line: line, packages: shop.itemPackages[line.id] ?? []))
         let details = [quantity ?? "", exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
+        let editItem = {
+            guard !model.saving, !model.hasPendingSave, model.shop?.id == shop.id,
+                  let workspace = model.sourceWorkspaceID else { return }
+            sheet = .editLine(workspace: workspace, shop: shop.id, line: line.id)
+        }
         return HStack(alignment: .top, spacing: 10) {
             Button {
                 let visible = model.workspace.listLayout.groups(shop: shop, search: model.search).flatMap(\.lines)
@@ -375,8 +388,17 @@ struct LedgerHomeView: View {
                 }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
                     .accessibilityValue(Text(verbatim: details))
                     .accessibilityIdentifier("ledgerInspect-\(line.id)")
+                    .accessibilityAction(named: Text(ledgerText("Edit item")), editItem)
                 LedgerDepartmentPicker(model: model, shop: shop, line: line, labels: departmentChoices)
             }
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(action: editItem) {
+                Label(ledgerText("Edit item"), systemImage: "pencil")
+            }
+            .tint(Theme.action)
+            .disabled(model.saving || model.hasPendingSave)
+            .accessibilityIdentifier("ledgerEditRow-\(line.id)")
         }
     }
 }

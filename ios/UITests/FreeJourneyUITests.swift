@@ -34,7 +34,10 @@ import XCTest
         if account.exists {
             tap(account)
             let existingAccountsOnly = app.staticTexts["Email sign-in is unavailable. You can still use your private shopping tools."].exists
-            tap(app.navigationBars.buttons["BackButton"])
+            let returnToMembership = app.navigationBars.buttons.matching(NSPredicate(
+                format: "label == %@ OR identifier == %@", "Household membership", "BackButton"
+            )).firstMatch
+            tap(returnToMembership)
             if existingAccountsOnly {
                 XCTAssertEqual(account.label, "Saved adult account options")
                 XCTAssertLessThan(free.frame.maxY, account.frame.minY, "Free should come first when new accounts cannot sign in.")
@@ -1932,7 +1935,7 @@ import XCTest
         launch(reset: true, sourceRemoval: true)
         openShoppingList()
         tap(app.buttons["Inspect Wraps"])
-        let edit = app.buttons["Edit contribution: Wednesday quesadillas"]
+        let edit = app.buttons["Edit quantity and notes for Wednesday quesadillas"]
         reveal(edit)
         let geometry = XCTAttachment(string: "Edit target: \(edit.frame)")
         geometry.name = "ingredient-contribution-action-geometry"
@@ -1943,17 +1946,17 @@ import XCTest
         let coordinateTolerance: CGFloat = 1e-9
         XCTAssertGreaterThanOrEqual(edit.frame.height + coordinateTolerance, 44, "A contribution action needs a 44-point tap target")
         edit.tap()
-        XCTAssertTrue(app.navigationBars["Edit contribution"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Quantity and notes"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.navigationBars["Link existing quantity"].exists)
         tap(app.buttons["Cancel"])
         XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 5))
-        let row = app.cells.containing(.button, identifier: "Edit contribution: Wednesday quesadillas").firstMatch
+        let row = app.cells.containing(.button, identifier: "Edit quantity and notes for Wednesday quesadillas").firstMatch
         let link = row.buttons["Link within an existing amount"]
         reveal(link)
         XCTAssertGreaterThanOrEqual(link.frame.height + coordinateTolerance, 44, "Linking needs its own 44-point tap target")
         link.tap()
         XCTAssertTrue(app.navigationBars["Link existing quantity"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.navigationBars["Edit contribution"].exists)
+        XCTAssertFalse(app.navigationBars["Quantity and notes"].exists)
         tap(app.buttons["Cancel"])
         capture("ingredient-contribution-actions-after-cancelling")
     }
