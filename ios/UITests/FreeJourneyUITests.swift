@@ -978,8 +978,16 @@ import XCTest
         }
         openHistory()
         tap(app.buttons["pantry.setup.apply"])
+        let addPrice = app.buttons["prices.add"]
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard addPrice.exists, let button = try? addPrice.snapshot() else { return false }
+            return button.isEnabled && !button.frame.isEmpty && self.app.frame.contains(button.frame)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed,
+                       "Private price history must finish loading its first action after pantry setup.")
+
         func record(_ name: String, source: String? = nil, amount: String) {
-            tap(app.buttons["prices.add"])
+            tap(addPrice)
             if let source {
                 tap(app.buttons["prices.source"])
                 tap(app.buttons[source])
