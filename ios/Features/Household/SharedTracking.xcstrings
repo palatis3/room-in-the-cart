@@ -302,7 +302,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revisar y congelar la recogida"
+            "value": "Revisar y fijar la compra"
           }
         }
       }
@@ -1220,7 +1220,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recogida congelada"
+            "value": "Compra fijada"
           }
         }
       }
