@@ -1403,13 +1403,8 @@ import XCTest
         tap(app.buttons["pantry.receipt"])
     }
 
-    private func receiptTap(_ control: XCUIElement) {
-        for _ in 0..<4 {
-            if control.exists, control.isHittable { control.tap(); return }
-            if control.exists { control.tap(); return }
-            app.collectionViews.firstMatch.swipeUp()
-        }
-        XCTAssertTrue(control.waitForExistence(timeout: 5), app.debugDescription)
+    private func receiptTap(_ control: XCUIElement, initiallyUpward: Bool = true) {
+        reveal(control, initiallyUpward: initiallyUpward)
         control.tap()
     }
     private func checkReceiptSwitch(_ title: String) {
@@ -1490,7 +1485,7 @@ import XCTest
         receiptTap(app.buttons["receipt.action.1"])
         receiptTap(app.buttons["Kept some"])
         receiptTap(app.buttons["receipt.printedQuantity.1"])
-        receiptTap(details)
+        receiptTap(details, initiallyUpward: false)
         receiptTap(app.buttons["receipt.review"])
         let error = app.staticTexts["receipt.error.usable.1"]
         XCTAssertTrue(error.waitForExistence(timeout: 8), app.debugDescription)
