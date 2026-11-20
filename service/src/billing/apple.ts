@@ -123,16 +123,29 @@ export class OfficialAppleBillingGateway implements AppleBillingGateway {
   }
 }
 
-/** Paths are deployment-owned files, never client-supplied; credentials remain server-side. */
-export function appleGatewayFromEnvironment(env: NodeJS.ProcessEnv = process.env): AppleBillingGateway | null {
+export interface ReviewBilling {
+  householdIDs: ReadonlySet<string>;
+  sandbox: AppleBillingGateway;
+}
+
+/** Configuration and key paths belong to the deployment. Clients never select a gateway. */
+export function appleGatewaysFromEnvironment(env: NodeJS.ProcessEnv = process.env): { primary: AppleBillingGateway | null; review?: ReviewBilling } {
   const names = ['APPLE_BUNDLE_ID','APPLE_PRODUCT_ID','APPLE_ENVIRONMENT','APPLE_ROOT_CA_PATHS','APPLE_SIGNING_KEY_PATH','APPLE_KEY_ID','APPLE_ISSUER_ID'] as const;
-  if (names.every(name => !env[name]) && !env.APPLE_APP_ID) return null;
+  const householdIDs = new Set(env.APPLE_REVIEW_HOUSEHOLD_IDS ? env.APPLE_REVIEW_HOUSEHOLD_IDS.split(',').map(id => id.trim().toLowerCase()) : []);
+  if (householdIDs.size && (env.APPLE_ENVIRONMENT !== 'Production' || [...householdIDs].some(id => !uuid.test(id)))) {
+    throw new Error('APPLE_REVIEW_HOUSEHOLD_IDS requires a Production billing configuration and comma-separated household UUIDs');
+  }
+  if (names.every(name => !env[name]) && !env.APPLE_APP_ID) return { primary: null };
   if (names.some(name => !env[name]) || !['Production','Sandbox'].includes(env.APPLE_ENVIRONMENT!)) throw new Error('Incomplete Apple billing environment');
   const appAppleID = env.APPLE_APP_ID ? Number(env.APPLE_APP_ID) : undefined;
-  return new OfficialAppleBillingGateway({
+  const config: AppleConfiguration = {
     bundleID: env.APPLE_BUNDLE_ID!, productID: env.APPLE_PRODUCT_ID!, environment: env.APPLE_ENVIRONMENT! as 'Production' | 'Sandbox',
     ...(appAppleID === undefined ? {} : { appAppleID }),
     rootCertificates: env.APPLE_ROOT_CA_PATHS!.split(',').map(path => readFileSync(path.trim())),
     signingKey: readFileSync(env.APPLE_SIGNING_KEY_PATH!, 'utf8'), keyID: env.APPLE_KEY_ID!, issuerID: env.APPLE_ISSUER_ID!,
-  });
+  };
+  const primary = new OfficialAppleBillingGateway(config);
+  if (!householdIDs.size) return { primary };
+  const sandbox = new OfficialAppleBillingGateway({ ...config, environment: 'Sandbox' });
+  return { primary, review: { householdIDs, sandbox } };
 }

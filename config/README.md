@@ -19,10 +19,36 @@ Xcode’s RoomInTheCart-Staging scheme runs, tests, profiles and archives the st
 | `operatorName` | `OperatorName` | Supplied business name, Venture House Group LLC; literal text without control/format characters |
 | `helpURL` | `HelpURL` | Optional public HTTPS help page; native help works offline |
 
-Configured backend URLs must use HTTPS without credentials, query strings or fragments. Use canonical IP addresses or ASCII hostnames, including punycode for internationalized domains. The native identity client accepts Supabase `sb_publishable_` keys. Release rejects a Supabase or service origin already configured in staging and rejects a reused staging publishable key. Origin comparison normalizes the host and HTTPS port and ignores the path. Alternate domains can still point to the same deployment, so confirm the actual project and service identities when provisioning production.
+Configured backend URLs must use HTTPS without credentials, query strings or fragments. Use canonical IP addresses or ASCII hostnames, including punycode for internationalized domains. The native identity client accepts Supabase `sb_publishable_` keys. Release rejects the staging Supabase and household service origins for its backend, Privacy, Terms, Support and Help URLs. It also rejects a reused staging publishable key. Origin comparison normalizes the host and HTTPS port across paths, queries and fragments. Both builds can link to an approved public support or policy site hosted separately from the staging services. Alternate domains can still point to the same deployment, so confirm the actual project and service identities when provisioning production.
 
 Page URLs reject credentials, unresolved variables, malformed ports, private addresses and special-use hosts. Empty values stay visibly unavailable. The build also records `RITCBuildEnvironment` for the reviewed support summary. Staging serves `/help`, `/privacy`, `/terms` and `/support`. The native staging configuration links to Help and Support. For the four companion routes on the household service origin, the iPhone app passes its selected English or Spanish language to the browser. An operator-supplied query string or external destination keeps its configured URL. Production policy and terms URLs await operator review. [IANA special-use names](https://www.iana.org/assignments/special-use-domain-names), [IPv4 address registry](https://www.iana.org/assignments/iana-ipv4-special-registry), [IPv6 address registry](https://www.iana.org/assignments/iana-ipv6-special-registry)
 
 The source now includes bilingual public information pages for those four paths in `web/src/public-pages*`, with the supplied operator business Venture House Group LLC and `mailto:hello@roominthecart.com` contact in `web/src/public-site-configuration.ts`. Operator names reject control/format characters, line separators, unresolved variables, surrounding whitespace and more than 300 UTF-8 bytes. Both native and public contact validators reject whitespace, headers, query/fragment and percent-encoded payloads. The contact opens an email composer without sending. Mailbox delivery has not been tested. The staging deployment serves these pages in English and Spanish. Production publication still requires the operator’s policy, terms, retention and language review. [Staging deployment record](../docs/RELEASE-EXECUTION.md)
 
 Run `python3 scripts/test_app_configuration.py` for environment-isolation and metadata checks. After building, run `python3 scripts/check_built_app.py /absolute/path/RoomInTheCart.app --configuration Release`. To verify an iPhone device archive, pass its `.xcarchive` path and the matching configuration to the same command. It checks the app and embedded extensions against their archived crash symbols. For a production distribution candidate, add `--require-release-metadata`. It requires the production identity URL, publishable client key, household service URL, enabled email-code sign-in, subscription product ID, and public Support, Privacy and Terms URLs. The same check runs before GitHub allocates native runners for release qualification. Verify sign-in, household access, policy publication and StoreKit purchases against their live services before distribution.
+
+## Signed App Store archive and local IPA
+
+Venture House Group LLC uses team `SP7Z9RNC76`. The registered host bundle ID is `dev.roominthecart.app`. The widget and share extensions append `.widget` and `.share`. The host uses both App Groups. Each extension has access to its own group. The distribution profiles grant complete data protection.
+
+On the signing Mac, install the organization's Apple Distribution identity and the three App Store profiles named in [AppStoreExport.plist](AppStoreExport.plist). Download existing profiles in Xcode Settings under Apple Accounts, then select the organization and choose Download Manual Profiles. From the repository root, create the archive and check the production configuration before exporting the IPA locally.
+
+```sh
+set -e
+archive=".build/app-store/RoomInTheCart.xcarchive"
+mkdir -p .build/app-store
+xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release \
+  -configuration Release -destination 'generic/platform=iOS' \
+  -xcconfig config/AppStoreDistribution.xcconfig \
+  -archivePath "$archive" archive
+python3 scripts/check_built_app.py "$archive" --configuration Release \
+  --require-distribution-signing --require-release-metadata
+xcodebuild -exportArchive -archivePath "$archive" \
+  -exportOptionsPlist config/AppStoreExport.plist -exportPath .build/app-store/export
+```
+
+The export uses the version and build number in the archive. Both signing configuration files contain public identifiers and profile names. The private signing key stays in the signing Mac's keychain.
+
+To check the exported signature, extract the IPA with `ditto -x -k` and run the same checker against `Payload/RoomInTheCart.app`. The signed app and each extension must retain their App Groups and data-protection entitlements.
+
+With the Node version from `.node-version` on your path, run `python3 scripts/check_native_backend.py Staging` or `python3 scripts/check_native_backend.py Release` to check the selected build’s public configuration against the deployed Supabase Auth settings, advertised signing keys, service health and email-sign-in availability. This read-only probe sends no email and creates no records. Exercise code delivery, session refresh and a household save and reopen on the signed candidate as a separate check.

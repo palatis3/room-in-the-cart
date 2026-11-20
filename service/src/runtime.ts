@@ -8,7 +8,7 @@ import {createServer,type IncomingMessage,type Server} from 'node:http';
 import {serviceAvailability,maintenanceResponse} from './service-availability.js';
 import { isIP } from 'node:net';
 import { BillingService } from './billing/service.js';
-import { appleGatewayFromEnvironment } from './billing/apple.js';
+import { appleGatewaysFromEnvironment } from './billing/apple.js';
 import { Pool, assertRuntimeRole,type Database } from './database.js';
 import { JWTIdentityVerifier, DenyIdentityVerifier, SupabaseSessionVerifier } from './auth.js';
 import { HouseholdRepository } from './repository.js';
@@ -100,7 +100,8 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
     const privacy = new PrivacyService(repository,privacyRuntime.options);
     const receiptAssistance = ReceiptAssistance.configured(environment);
     const voiceAssistance = VoiceAssistance.configured(environment, receiptAssistance?.budget);
-    const server = createHTTPServer({ ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(appleGatewayFromEnvironment(environment)),
+    const { primary, review } = appleGatewaysFromEnvironment(environment);
+    const server = createHTTPServer({ ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(primary, review),
       privacy,guardian:guardian.service, ...(receiptAssistance ? { receiptAssistance } : {}),
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;

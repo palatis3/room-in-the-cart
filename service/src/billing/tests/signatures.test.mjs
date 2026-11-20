@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { OfficialAppleBillingGateway, appleGatewayFromEnvironment } from '../../../dist/billing/apple.js';
+import { OfficialAppleBillingGateway, appleGatewaysFromEnvironment } from '../../../dist/billing/apple.js';
 
 function createTestCredentials(dir) {
   // Ephemeral test-only CA. It is never deployed or accepted as a production Apple root.
@@ -40,8 +40,16 @@ test('official Apple gateway refuses the Xcode StoreKit fixture in both Apple en
         APPLE_APP_ID: '12345', APPLE_ROOT_CA_PATHS: join(dir, 'root.pem'), APPLE_SIGNING_KEY_PATH: join(dir, 'key.pem'),
         APPLE_KEY_ID: 'TESTONLY', APPLE_ISSUER_ID: '00000000-0000-4000-8000-000000000001',
       };
-      assert.ok(appleGatewayFromEnvironment(env) instanceof OfficialAppleBillingGateway);
-      assert.throws(() => appleGatewayFromEnvironment({ ...env, APPLE_PRODUCT_ID: 'local.testing.household.annual' }),
+      const routes = appleGatewaysFromEnvironment(env);
+      assert.ok(routes.primary instanceof OfficialAppleBillingGateway);
+      assert.equal(routes.review, undefined);
+      if (environment === 'Production') {
+        const id = 'aaaaaaaa-0000-4000-8000-000000000001';
+        const { review } = appleGatewaysFromEnvironment({ ...env, APPLE_REVIEW_HOUSEHOLD_IDS: id.toUpperCase() });
+        assert.deepEqual([...review.householdIDs], [id]);
+        assert.ok(review.sandbox instanceof OfficialAppleBillingGateway);
+      }
+      assert.throws(() => appleGatewaysFromEnvironment({ ...env, APPLE_PRODUCT_ID: 'local.testing.household.annual' }),
         /local StoreKit fixture/);
     }
   } finally { rmSync(dir, { recursive: true, force: true }); }

@@ -97,6 +97,17 @@ def valid_page_url(value):
     return valid_page_address(address)
 
 
+def normalized_origin(url):
+    host = url.hostname.encode("idna").decode("ascii").lower().removesuffix(".")
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return host, url.port or 443
+    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
+        address = address.ipv4_mapped
+    return address.compressed, url.port or 443
+
+
 def backend_origin(value):
     if any(char.isspace() or unicodedata.category(char) in ("Cc", "Cf") for char in value):
         raise ValueError("Invalid HTTPS endpoint")
@@ -107,18 +118,14 @@ def backend_origin(value):
         raise ValueError("Invalid HTTPS endpoint")
     host = url.hostname.lower().removesuffix(".")
     try:
-        address = ipaddress.ip_address(host)
+        ipaddress.ip_address(host)
     except ValueError:
         labels = host.split(".")
         # Use ASCII DNS labels, including punycode, and reject ambiguous IPv4 spellings.
         if (len(host) > 253 or not all(DNS_LABEL.fullmatch(label) for label in labels)
                 or re.fullmatch(r"(?:[0-9]+|0x[0-9a-f]*)", labels[-1])):
             raise ValueError("Invalid HTTPS endpoint") from None
-    else:
-        if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
-            address = address.ipv4_mapped
-        host = address.compressed
-    return host, url.port or 443
+    return normalized_origin(url)
 
 
 def load_configuration(root, name):
@@ -146,8 +153,10 @@ def load_configuration(root, name):
         value = config.get(key, "")
         if not isinstance(value, str) or value != value.strip() or "$(" in value:
             raise ValueError(f"{key} must be a literal public string without surrounding whitespace")
-        if value and key in PAGE_KEYS and not valid_page_url(value):
-            raise ValueError(f"{key} must be an operator-owned HTTPS page, without credentials or a test/example host")
+        if value and key in PAGE_KEYS:
+            if not valid_page_url(value):
+                raise ValueError(f"{key} must be an operator-owned HTTPS page, without credentials or a test/example host")
+            origins[key] = normalized_origin(urlsplit(value))
         if value and key in BACKEND_URL_KEYS:
             try:
                 origins[key] = backend_origin(value)

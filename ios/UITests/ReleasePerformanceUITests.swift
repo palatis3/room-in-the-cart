@@ -161,7 +161,7 @@ final class ReleasePerformanceUITests: XCTestCase {
         #endif
         try importFixture()
         let list = app.collectionViews.firstMatch
-        let top = list.staticTexts["Saved on this iPhone"].firstMatch
+        let top = list.buttons["ledgerInStore"]
         XCTAssertTrue(list.waitForExistence(timeout: 10))
         var metrics: [any XCTMetric] = [
             XCTOSSignpostMetric.scrollingAndDecelerationMetric,

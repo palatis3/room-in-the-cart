@@ -65,6 +65,7 @@ All household routes require the device credential, except enrollment. UUIDs are
 | `GET /v1/households/{h}/billing/seat-candidates` | Purchaser-only eligible adult candidates. |
 | `PUT /v1/households/{h}/billing/seats` | Purchaser changes up to two adult seats against exact revision. |
 | `POST /v1/apple/notifications` | Official signature verification before routing to bound household. |
+| `POST /v1/apple/notifications/sandbox` | Sandbox notifications for configured App Review households on the Release service. |
 
 See `src/contracts.ts` for authoritative executable command validation and `../shared/contracts/service-v1.d.ts` for client DTOs. Author send/edit/withdraw use base shopRevision0/authorityEpoch0; edit/withdraw require requestRevision. Send accepts an explicit next route; frozen/placed shops always route arrivals next. The current-shop bootstrap is not used as the target for editing an older request; use the request's shopId.
 
@@ -84,7 +85,7 @@ Current main-source evidence: `.tools/service-bff-integration-main.log` contains
 4. Scoped change feed/cursors, account/session revocation integration, synchronization bootstrap after expired windows, outbox consent and operational replay-window/receipt compaction policy. The event table currently records transactional evidence; it is not exposed as a finished sync feed.
 5. Expand from the current core integration scenarios to all 20 foundation routing traces, deterministic authority-transfer/placement interleavings, authorized deletion/tombstone/restore, encrypted backups, retention jobs, production shared rate limiting and metrics. Do not call the test subset full B07 acceptance.
 6. Shared planner, fulfillment, inventory/allocation, meal-week grants, capture/media, files/import/exports and remaining 52 launch requirements; coordinate with independently implemented native engines.
-7. Apple identifiers, root certificates, API key, sandbox/production environments, product setup and real StoreKit sandbox evidence. Billing is fail-closed without this configuration. See `src/billing/SETUP.md` if supplied by its owning agent.
+7. Provision the Apple identifiers, trusted certificates, API key, product and dedicated review households. Verify Apple's notifications, purchase and restore using the signed candidate. [Billing setup and candidate checks](src/billing/SETUP.md)
 8. Staging deployment, least-privilege credentials, Supabase JWKS/session behavior, minimum/current-device end-to-end checks, real browser/iPhone/Android invitation tests, and approved release operations. Local tests and a healthy empty Supabase project are not deployment or launch evidence.
 
 ## Account lifecycle and operational worker additions

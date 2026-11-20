@@ -10,10 +10,26 @@ import xml.etree.ElementTree as ET
 
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
                                load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
-from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app
+from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app, verify_distribution_entitlements
 
 
 class AppConfigurationTests(unittest.TestCase):
+
+    def test_app_store_archive_and_export_use_the_same_manual_profiles(self):
+        folder = Path(__file__).resolve().parents[1] / "config"
+        options = plistlib.loads((folder / "AppStoreExport.plist").read_bytes())
+        settings = dict(line.split(" = ", 1) for line in (folder / "AppStoreDistribution.xcconfig").read_text().splitlines())
+        self.assertEqual(options["destination"], "export")
+        self.assertEqual(options["method"], "app-store-connect")
+        self.assertIs(options["manageAppVersionAndBuildNumber"], False)
+        self.assertEqual(options["signingStyle"], settings["CODE_SIGN_STYLE"].lower())
+        self.assertEqual(options["signingCertificate"], settings["CODE_SIGN_IDENTITY"])
+        self.assertEqual(options["teamID"], settings["DEVELOPMENT_TEAM"])
+        self.assertEqual(settings["PROVISIONING_PROFILE_SPECIFIER"], "$(RITC_PROFILE_$(TARGET_NAME))")
+        self.assertEqual(options["provisioningProfiles"], {
+            "dev.roominthecart.app" + suffix: settings["RITC_PROFILE_RoomInTheCart" + target]
+            for suffix, target in (("", ""), (".share", "Share"), (".widget", "Widget"))
+        })
 
     def test_staging_scheme_keeps_tests_profiles_and_archives_in_the_staging_environment(self):
         schemes = Path(__file__).resolve().parents[1] / "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes"
@@ -73,6 +89,25 @@ class AppConfigurationTests(unittest.TestCase):
             path.write_text(json.dumps({**release, "serviceURL": "https://[::ffff:8.8.8.8]:443"}))
             with self.assertRaisesRegex(ValueError, "serviceURL.*separate from staging"):
                 load_configuration(root, "Release")
+
+    def test_release_pages_reject_staging_deployments_even_without_other_release_settings(self):
+        with tempfile.TemporaryDirectory() as folder:
+            config_dir = Path(folder) / "config"
+            config_dir.mkdir()
+            staging = {"serviceURL": "https://staging.grocery-app.com", "supabaseURL": "https://8.8.8.8",
+                       "supportURL": "https://support.grocery-app.com/contact"}
+            (config_dir / "staging.json").write_text(json.dumps(staging))
+            release_path = config_dir / "release.json"
+            for key in ("privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL"):
+                for url in ("https://STAGING.GROCERY-APP.com.:443/privacy?lang=es#contact",
+                            "https://[::ffff:8.8.8.8]/help"):
+                    with self.subTest(key=key, url=url):
+                        release_path.write_text(json.dumps({key: url}))
+                        with self.assertRaisesRegex(ValueError, key + ".*separate from staging"):
+                            load_configuration(config_dir.parent, "Release")
+            release = {"supportURL": staging["supportURL"], "privacyPolicyURL": "https://ayúda.grocery-app.com/privacy?lang=es"}
+            release_path.write_text(json.dumps(release))
+            self.assertEqual(load_configuration(config_dir.parent, "Release"), release)
 
     def test_nonempty_backend_values_must_be_safe_for_the_native_client(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -238,7 +273,7 @@ class BuiltAppVerificationTests(unittest.TestCase):
         widget_group = f"group.{bundle_id}.widget"
         share_group = f"group.{bundle_id}.share-inbox"
         purpose = {key: "Permission purpose" for key in (
-            "NSFaceIDUsageDescription", "NSCameraUsageDescription",
+            "NSFaceIDUsageDescription", "NSCameraUsageDescription", "NSRemindersFullAccessUsageDescription",
             "NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription",
         )}
         common = {"CFBundleShortVersionString": "0.1.0", "CFBundleVersion": "1",
@@ -309,7 +344,7 @@ class BuiltAppVerificationTests(unittest.TestCase):
         with (self.app / "PrivacyInfo.xcprivacy").open("rb") as handle:
             manifest = plistlib.load(handle)
         declared = {row["NSPrivacyCollectedDataType"]: row for row in manifest["NSPrivacyCollectedDataTypes"]}
-        for kind in ("EmailsOrTextMessages", "CustomerSupport"):
+        for kind in ("EmailsOrTextMessages", "CustomerSupport", "ProductInteraction"):
             with self.subTest(kind=kind):
                 row = declared["NSPrivacyCollectedDataType" + kind]
                 self.assertTrue(row["NSPrivacyCollectedDataTypeLinked"])
@@ -356,6 +391,38 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 self.expect_plist_rejected(bundle, {"MinimumOSVersion": "18.0"}, "must support iOS 17.0")
                 self.expect_plist_rejected(bundle, {"CFBundleSupportedPlatforms": ["MacOSX"]}, "must be built for iPhone")
         self.expect_plist_rejected(self.share, {"CFBundleSupportedPlatforms": ["iPhoneSimulator"]}, "platform mismatch")
+
+    def test_reminders_prompt_requires_compiled_and_localized_purpose(self):
+        key = "NSRemindersFullAccessUsageDescription"
+        self.expect_plist_rejected(self.app, {key: ""}, "Missing compiled permission purpose: " + key)
+        for language in ("en", "es"):
+            with self.subTest(language=language):
+                catalog = self.app / f"{language}.lproj/InfoPlist.strings"
+                original = catalog.read_bytes()
+                values = plistlib.loads(original)
+                del values[key]
+                catalog.write_bytes(plistlib.dumps(values))
+                with self.assertRaisesRegex(ValueError, f"Missing {language} permission purpose: {key}"):
+                    verify_built_app(self.app, "Release")
+                catalog.write_bytes(original)
+
+    def test_distribution_entitlements_must_carry_only_the_products_own_groups(self):
+        team, bundle_id = "SP7Z9RNC76", "dev.roominthecart.app.widget"
+        widget, share = "group.dev.roominthecart.app.widget", "group.dev.roominthecart.app.share-inbox"
+        values = {"application-identifier": f"{team}.{bundle_id}", "com.apple.developer.team-identifier": team,
+                  "com.apple.developer.default-data-protection": "NSFileProtectionComplete",
+                  "com.apple.security.application-groups": [widget], "get-task-allow": False}
+        verify_distribution_entitlements(values, bundle_id, team, [widget])
+        for key, replacement, message in (
+            ("com.apple.security.application-groups", None, "Wrong signed App Groups"),
+            ("com.apple.security.application-groups", [widget, share], "Wrong signed App Groups"),
+            ("com.apple.developer.default-data-protection", None, "Missing complete data protection"),
+            ("com.apple.developer.team-identifier", "OTHER", "Wrong signing team"),
+            ("application-identifier", f"{team}.dev.roominthecart.app", "Wrong signed app identifier"),
+            ("get-task-allow", True, "Debugging enabled"),
+        ):
+            with self.subTest(key=key, replacement=replacement), self.assertRaisesRegex(ValueError, message):
+                verify_distribution_entitlements({**values, key: replacement}, bundle_id, team, [widget])
 
     def test_rejects_missing_executables_and_assets_even_with_python_optimization(self):
         for executable in (self.app / "RoomInTheCart", self.widget / "RoomInTheCartWidget",
@@ -408,6 +475,14 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Unexpected test bundle"):
                     verify_built_app(self.app, "Release")
                 bundle.rmdir()
+
+    def test_rejects_unreviewed_extensions_including_nested_copies(self):
+        for path in (self.app / "PlugIns/Extra.appex", self.widget / self.share.name):
+            with self.subTest(bundle=path):
+                shutil.copytree(self.share, path)
+                with self.assertRaisesRegex(ValueError, "Unexpected embedded extension"):
+                    verify_built_app(self.app, "Release")
+                shutil.rmtree(path)
 
 
 if __name__ == "__main__":

@@ -270,7 +270,7 @@ struct MembershipView: View {
             switch message {
             case .otherNotice(.restored): return mtr("Your named planning seat was refreshed.")
             case .otherNotice(.restoredFree): return mtr("Access checked. You have Free planning.")
-            case .otherNotice(.failed): return mtr("Your membership details could not be refreshed.")
+            case .otherNotice(.failed), .otherNotice(.restoreUnavailable): return mtr("Your membership details could not be refreshed.")
             default: break
             }
         }
@@ -464,6 +464,8 @@ func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
     case .cancelled: return mtr("Purchase canceled.")
     case .restored: return mtr("Your verified Household membership was restored.")
     case .restoredFree: return mtr("Restore finished. This account currently has Free access.")
+    case .restoreCancelled: return mtr("Restore canceled.")
+    case .restoreUnavailable: return mtr("Purchases could not be restored. Try Restore Purchases again when connected.")
     case .delivered: return mtr("Your household service received the verified Apple transaction.")
     case .failed(let failure):
         switch failure {

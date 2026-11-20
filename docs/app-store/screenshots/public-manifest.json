@@ -1,0 +1,163 @@
+{
+  "sourceCommit": "fb907d828c51a897e2ba4d991aedc89665d09cd4",
+  "configuration": "Unsigned ordinary arm64 Release, iPhone 17 simulator, iOS 27.0 (24A434), Xcode 27.1 (27A9275). Native UI entry in English and US Spanish with Release app data storage and locale launch arguments only.",
+  "bundleIdentifier": "dev.roominthecart.app",
+  "version": "0.1.0",
+  "build": "1",
+  "appExecutableSHA256": "5baeb48bb4792b3c3a98974ea9a6be0a5ab6299f663b1cc96febd1d5f00eb899",
+  "assetProcessing": "Original-size simulator screenshots and exact full-screen frames of the native XCTest recording, encoded as opaque JPEG without crop, caption, overlay, scale or UI composition.",
+  "suiteResults": [
+    {
+      "name": "public-en",
+      "result": ".build/appstore-listing-audit/public-en.xcresult",
+      "testsPassed": 0,
+      "testsFailed": 1,
+      "testSource": ".build/appstore-listing-audit/public-en-harness.swift",
+      "testSourceSHA256": "55421f6ab20b741de719ae55b65fff38bd649b91f8ba6bf9cf45e48e6ed1ed37"
+    },
+    {
+      "name": "public-es",
+      "result": ".build/appstore-listing-audit/public-es.xcresult",
+      "testsPassed": 0,
+      "testsFailed": 1,
+      "testSource": ".build/appstore-listing-audit/public-es-harness.swift",
+      "testSourceSHA256": "55421f6ab20b741de719ae55b65fff38bd649b91f8ba6bf9cf45e48e6ed1ed37"
+    },
+    {
+      "name": "public-es-supplement",
+      "result": ".build/appstore-listing-audit/public-es-supplement.xcresult",
+      "testsPassed": 1,
+      "testsFailed": 0,
+      "testSource": ".build/appstore-listing-audit/public-es-supplement-harness.swift",
+      "testSourceSHA256": "a77d3354fdee4ca9c474a500de92d08b98d2f72f0d27852adc8a4ef5bcd4be2b"
+    }
+  ],
+  "captures": [
+    {
+      "file": "public/dynamic-island-medium/en-US/01-grocery-list.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:47:50.667000+00:00",
+      "xcresult": ".build/appstore-listing-audit/public-en.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/public-en-attachments/E629E4E3-29E3-4CEA-93FD-C54E394E3B76.png",
+      "sourcePNGSHA256": "6570d85f01258eda4eb011ed1f8c47d6dc5104ed5b8de6f7cfdd10f5e988e68c",
+      "sha256": "804d529a1722252266f5b722a9c24e6e1c5c15732c0fbfbcee42b37c376999c4"
+    },
+    {
+      "file": "public/dynamic-island-medium/en-US/02-pack-comparison.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:48:45.996000+00:00",
+      "xcresult": ".build/appstore-listing-audit/public-en.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/public-en-attachments/38791D17-27A0-40F6-9F02-5F50700D5F9E.png",
+      "sourcePNGSHA256": "8e4ebfbe7eff632673031d43230693994b91c2877eea5e4edbe142332d875a6b",
+      "sha256": "8fa1aa509e66ecbb4086faac4b50abfcbfb15b459da0448c18a92418ca53fd8c"
+    },
+    {
+      "file": "public/dynamic-island-medium/en-US/03-pantry.jpg",
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "xcresult": ".build/appstore-listing-audit/public-en.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/en-frames/185.png",
+      "sourcePNGSHA256": "5a25553cb03003ea38234ff0deab34aae35ceafd3a602e2477feb29233d52562",
+      "sourceRecording": ".build/appstore-listing-audit/public-en-attachments/44D99007-DB1F-4D1C-BB59-68212A3CE117.mp4",
+      "sourceRecordingSHA256": "a6b3eeaa68e4b6f6da720593068138396104389e26f6d4f0e044416dfc3c4ecc",
+      "recordingFrameSeconds": 182.36,
+      "sha256": "61e76362de4a88c43f1aa660ab78b6adcdd04d170cb3c3af94954a3a378a033e"
+    },
+    {
+      "file": "public/dynamic-island-medium/en-US/04-dinner-preview.jpg",
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "xcresult": ".build/appstore-listing-audit/public-en.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/en-frames/223.3.png",
+      "sourcePNGSHA256": "09925af20e90f152cd6c9af55ca4d9463bf1ed1d0cf9d1a2887a6448fd2b8438",
+      "sourceRecording": ".build/appstore-listing-audit/public-en-attachments/44D99007-DB1F-4D1C-BB59-68212A3CE117.mp4",
+      "sourceRecordingSHA256": "a6b3eeaa68e4b6f6da720593068138396104389e26f6d4f0e044416dfc3c4ecc",
+      "recordingFrameSeconds": 223.255,
+      "sha256": "cfb85ae0b3c4974532eafa387ffd8d517a95bbd128322c91ff8877d64ae7b6f1"
+    },
+    {
+      "file": "public/dynamic-island-medium/es-MX/01-grocery-list.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:53:07.795000+00:00",
+      "xcresult": ".build/appstore-listing-audit/public-es.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/public-es-attachments/D5A75FEE-4E47-49DF-BB0B-9AE4F43F23B4.png",
+      "sourcePNGSHA256": "56c82c90caeb8a8ddb6adf2c19535072fda04efe1dade815caccc09b19a96aad",
+      "sha256": "1ca9814f29ce40149487048c900a00936a76b192731406b5de21b6c6242c5e63"
+    },
+    {
+      "file": "public/dynamic-island-medium/es-MX/02-pack-comparison.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:53:51.049000+00:00",
+      "xcresult": ".build/appstore-listing-audit/public-es.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/public-es-attachments/8094DD23-C81A-4678-BCB6-527F0B4CE3E3.png",
+      "sourcePNGSHA256": "34384a0be9df160ee9edf770d3f62b21f125756c65f8b5077d2b4a7dde6c9a99",
+      "sha256": "755f3b18dd448d26e0b5e587030aa7c6b4ac8edaa463eec2e6b10d1e8487dc95"
+    },
+    {
+      "file": "public/dynamic-island-medium/es-MX/03-pantry.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:58:22.427000+00:00",
+      "xcresult": ".build/appstore-listing-audit/public-es-supplement.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/public-es-supplement-attachments/C109AD00-1C0F-4D7F-B7AF-2278A78F750D.png",
+      "sourcePNGSHA256": "e6e8c0cdb83f34a999c1d7b888554d93caae335af9cb211220b1d17fb5529cfb",
+      "sha256": "9fdb340c37ab80f8b047d742384eb4761a78508a55b57987ea3fbd1e98cb9d16"
+    },
+    {
+      "file": "public/dynamic-island-medium/es-MX/04-dinner-preview.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:58:52.957000+00:00",
+      "xcresult": ".build/appstore-listing-audit/public-es-supplement.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/public-es-supplement-attachments/48C96E56-F3ED-425C-B615-AA594A63DB96.png",
+      "sourcePNGSHA256": "7e4e80f4bc431941b726d689ce25f47fd9dba48cd7043f5d032b3ed9ba2e8832",
+      "sha256": "b577541baf01e3da04ba7b7e3076595f4e2b3db55730f6f3fd3c65927aca73f2"
+    }
+  ],
+  "visualReview": "Each exported launch candidate was inspected for recognizable and localized grocery names, clean 9:41 status bar, current Plum and Pear colors, no personal data, and a readable task result.",
+  "checkpoints": {
+    "en-US": "Typed a four-item shopping list, verified both pack totals, and confirmed three separate pantry batches. A later test looked for the saved dinner on the manual editor. The dinner image shows the reviewed preview before Apply.",
+    "es-MX": "Typed a four-item shopping list and verified both pack totals. The first run lost keyboard focus on the second pantry quantity field. The supplemental run confirmed all three pantry batches, approved the dinner preview, returned from the manual editor, and verified the saved dinner in Cenas."
+  },
+  "spanishSavedDinnerEvidence": {
+    "sourcePNG": ".build/appstore-listing-audit/public-es-supplement-attachments/4702D7E5-C0EE-4306-B3FB-42005A481453.png",
+    "sourcePNGSHA256": "14473804ed20b7217991dac9f185c392db20e659ea109c7d4a572e9d5f87a78f",
+    "xcresult": ".build/appstore-listing-audit/public-es-supplement.xcresult"
+  }
+}

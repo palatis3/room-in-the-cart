@@ -5,6 +5,8 @@ import os
 import plistlib
 import re
 import subprocess
+import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 from app_configuration import compiled_metadata, load_configuration, require_release_metadata
@@ -94,6 +96,9 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
     for test_bundle in app.rglob("*.xctest"):
         require(configuration == "Debug" and test_bundle == debug_test_bundle,
                 f"Unexpected test bundle: {test_bundle.relative_to(app)}")
+    expected_extensions = {app / "PlugIns" / f"RoomInTheCart{name}.appex" for name in ("Widget", "Share")}
+    for extension in app.rglob("*.appex"):
+        require(extension in expected_extensions, f"Unexpected embedded extension: {extension.relative_to(app)}")
 
     if configuration in ("Release", "Staging"):
         fixture_names = {path.name for path in (ROOT / "ios/UITests/Fixtures").rglob("*") if path.is_file()}
@@ -105,7 +110,7 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
     require(icon == "AppIcon", "Missing app icon")
     require(nonempty_file(app / "Assets.car"), "Missing compiled asset catalog")
     verify_privacy_manifest(app, ROOT / "ios/Resources")
-    permission_keys = ["NSFaceIDUsageDescription"]
+    permission_keys = ["NSFaceIDUsageDescription", "NSRemindersFullAccessUsageDescription"]
     if (ROOT / "ios/Features/Capture/OnDeviceSpeechCapture.swift").is_file():
         permission_keys += ["NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription"]
     if (ROOT / "ios/Features/Capture/CameraCapture.swift").is_file():
@@ -173,25 +178,79 @@ def verify_archive_symbols(archive, app):
         require(dwarf_uuids(symbols) == binary_ids, f"Crash symbols do not match {product.name}")
 
 
+def verify_distribution_entitlements(values, bundle_id, team, groups):
+    require(values.get("application-identifier") == f"{team}.{bundle_id}", f"Wrong signed app identifier: {bundle_id}")
+    require(values.get("com.apple.developer.team-identifier") == team, f"Wrong signing team: {bundle_id}")
+    actual_groups = values.get("com.apple.security.application-groups")
+    require(isinstance(actual_groups, list) and all(isinstance(group, str) for group in actual_groups)
+            and sorted(actual_groups) == sorted(groups),
+            f"Wrong signed App Groups: {bundle_id}")
+    require(values.get("com.apple.developer.default-data-protection") == "NSFileProtectionComplete",
+            f"Missing complete data protection: {bundle_id}")
+    require(values.get("get-task-allow", False) is False, f"Debugging enabled: {bundle_id}")
+
+
+def verify_distribution_signing(app):
+    app = app.resolve()
+    options = read_plist(ROOT / "config/AppStoreExport.plist")
+    team = options["teamID"]
+    requirement = (f'=anchor apple generic and certificate leaf[subject.OU] = "{team}" '
+                   'and certificate leaf[field.1.2.840.113635.100.6.1.4] exists')
+    def run(*command, cwd=None):
+        result = subprocess.run(command, cwd=cwd, capture_output=True)
+        require(result.returncode == 0, f"Distribution check failed ({command[0]}): {result.stderr.decode().strip()}")
+        return result.stdout
+
+    run("codesign", "--verify", "--strict", "--deep", str(app))
+    for bundle in [app, *sorted((app / "PlugIns").glob("*.appex"))]:
+        info = read_plist(bundle / "Info.plist")
+        require(info["CFBundleSupportedPlatforms"] == ["iPhoneOS"], "Distribution signing requires an iPhone device build")
+        bundle_id = info["CFBundleIdentifier"]
+        groups = [info[key] for key in ("RITCWidgetAppGroup", "RITCShareInboxAppGroup") if key in info]
+        run("codesign", "--verify", "--strict", "-R", requirement, str(bundle))
+        signing = plistlib.loads(run("codesign", "-d", "--xml", "--entitlements", "-", str(bundle)))
+        profile = plistlib.loads(run("security", "cms", "-D", "-i", str(bundle / "embedded.mobileprovision")))
+        require(profile.get("Name") == options["provisioningProfiles"].get(bundle_id)
+                and profile.get("TeamIdentifier") == [team], f"Unexpected distribution profile: {bundle_id}")
+        require(profile["ExpirationDate"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc),
+                f"Expired distribution profile: {bundle_id}")
+        require(profile["Entitlements"].get("beta-reports-active") is True and not profile.get("ProvisionsAllDevices")
+                and not profile.get("ProvisionedDevices"), f"Expected an App Store distribution profile: {bundle_id}")
+        with tempfile.TemporaryDirectory() as scratch:
+            run("codesign", "-d", "--extract-certificates", str(bundle), cwd=scratch)
+            require((Path(scratch) / "codesign0").read_bytes() in profile["DeveloperCertificates"],
+                    f"Distribution profile does not authorize the signing certificate: {bundle_id}")
+        for values in (signing, profile["Entitlements"]):
+            verify_distribution_entitlements(values, bundle_id, team, groups)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("product", type=Path, help="compiled .app or device .xcarchive")
     parser.add_argument("--configuration", choices=ENVIRONMENT_SUFFIXES, required=True)
     parser.add_argument("--require-release-metadata", action="store_true",
                         help="require production household service and identity settings, public support and policy URLs, and the Apple product ID")
+    parser.add_argument("--require-distribution-signing", action="store_true",
+                        help="verify the App Store signatures, embedded provisioning profiles, and signed entitlements")
     args = parser.parse_args()
     if args.require_release_metadata and args.configuration != "Release":
         parser.error("--require-release-metadata requires --configuration Release")
+    if args.require_distribution_signing and args.configuration != "Release":
+        parser.error("--require-distribution-signing requires --configuration Release")
     try:
         archive = args.product.suffix == ".xcarchive"
         app = args.product / "Products/Applications/RoomInTheCart.app" if archive else args.product
         verify_built_app(app, args.configuration, require_production_metadata=args.require_release_metadata)
         if archive:
             verify_archive_symbols(args.product, app)
-    except (OSError, ValueError) as error:
+        if args.require_distribution_signing:
+            verify_distribution_signing(app)
+    except (OSError, ValueError, plistlib.InvalidFileException) as error:
         parser.exit(1, f"Built app verification failed: {error}\n")
     if archive:
         print("Archived iPhone app and extension binaries matched their crash symbols.")
+    if args.require_distribution_signing:
+        print("Verified App Store signing identities, profiles, and entitlements for the app and both extensions.")
     print(f"Compiled {args.configuration} iPhone app verified: executable, assets, privacy, environment, and embedded extensions.")
 
 

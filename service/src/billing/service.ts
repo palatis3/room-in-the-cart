@@ -2,7 +2,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { z } from 'zod';
 import { digest, type Database, type Transaction } from '../database.js';
 import { ServiceError, accessEnded, invalid, refresh } from '../errors.js';
-import type { AppleBillingGateway, VerifiedAppleTransaction } from './apple.js';
+import type { AppleBillingGateway, ReviewBilling, VerifiedAppleTransaction } from './apple.js';
 import {
   billingUnavailable, bindingConflict, effectiveStatus, hasPaidSeat, supersedes, validityEnd,
   type EntitlementSnapshot, type VerifiedSubscription,
@@ -23,14 +23,18 @@ export const billingNotificationSchema = z.object({ signedPayload: z.string().mi
  * This module never changes any shopper authority or household planning/data grant.
  */
 export class BillingService {
-  constructor(private readonly apple: AppleBillingGateway | null) {}
-  private gateway(): AppleBillingGateway { if (!this.apple) throw billingUnavailable(); return this.apple; }
+  constructor(private readonly apple: AppleBillingGateway | null, private readonly review?: ReviewBilling) {}
+  private gateway(householdId: string): AppleBillingGateway {
+    if (this.review?.householdIDs.has(householdId.toLowerCase())) return this.review.sandbox;
+    if (!this.apple) throw billingUnavailable();
+    return this.apple;
+  }
   private adult(ctx: BillingContext): void { if (ctx.member.kind !== 'adult') throw accessEnded(); }
   private async row(ctx: BillingContext): Promise<StateRow | undefined> {
     return (await ctx.db.query<StateRow>('SELECT purchaser_id,revision,subscription,verified_at FROM ritc.billing_state WHERE household_id=$1 FOR UPDATE', [ctx.householdId])).rows[0];
   }
   async prepare(ctx: BillingContext): Promise<{ appAccountToken: string }> {
-    this.adult(ctx); this.gateway();
+    this.adult(ctx); this.gateway(ctx.householdId);
     const current = await this.row(ctx);
     if (current && current.purchaser_id !== ctx.member.member_id)
       throw new ServiceError(409, 'purchase_context_not_purchaser', 'Read your named seat entitlement; only the purchasing adult can prepare another purchase.');
@@ -100,7 +104,7 @@ export class BillingService {
   }
   async verify(ctx: BillingContext, signedTransactionInfo: string): Promise<{ acceptedTransactionID: string; durable: true; snapshot: EntitlementSnapshot }> {
     this.adult(ctx);
-    const gateway = this.gateway();
+    const gateway = this.gateway(ctx.householdId);
     const submitted = await gateway.verifyTransaction(signedTransactionInfo);
     await this.assertToken(ctx, submitted);
     // Even a valid old receipt must not resurrect a subscription already refunded by Apple.
@@ -128,7 +132,7 @@ export class BillingService {
       if (!ownSeat.rowCount) return this.project(ctx);
     }
     if (state) {
-      const current = await this.gateway().current(state.subscription.originalTransactionID);
+      const current = await this.gateway(ctx.householdId).current(state.subscription.originalTransactionID);
       const purchaserContext = { ...ctx, member: { member_id: state.purchaser_id, kind: 'adult' } };
       state = await this.apply(purchaserContext,current);
     }
@@ -141,7 +145,7 @@ export class BillingService {
     if (!before || before.purchaser_id !== ctx.member.member_id) throw accessEnded();
     if (before.revision !== parsed.data.revision) throw refresh();
     // Reconcile before seat assignment; expired/revoked/retry/unknown cannot add paid access.
-    const next = await this.gateway().current(before.subscription.originalTransactionID);
+    const next = await this.gateway(ctx.householdId).current(before.subscription.originalTransactionID);
     const state = await this.apply(ctx,next);
     const snapshot = await this.project(ctx,state);
     if (!['active','grace'].includes(snapshot.status) || Date.parse(snapshot.validUntil) <= ctx.now.getTime()) throw new ServiceError(403,'membership_inactive','Keep using Free or restore the membership.');
@@ -168,24 +172,30 @@ export class BillingService {
     const snapshot = await this.snapshot(ctx);
     if (!hasPaidSeat(snapshot,ctx.member.member_id,ctx.now)) throw new ServiceError(403,'membership_inactive','Use the Free manual path or manage named adult seats.');
   }
-  async notification(pool: Database, signedPayload: string): Promise<{ accepted: true }> {
-    const notification = await this.gateway().verifyNotification(signedPayload);
+  async notification(pool: Database, signedPayload: string, destination: 'primary' | 'reviewSandbox' = 'primary'): Promise<{ accepted: true }> {
+    const gateway = destination === 'reviewSandbox' ? this.review?.sandbox : this.apple;
+    if (!gateway) throw billingUnavailable();
+    const notification = await gateway.verifyNotification(signedPayload);
     if (!notification.transaction) return { accepted: true }; // Apple's signed TEST notification.
     const transaction = notification.transaction;
-    const current = await this.gateway().current(transaction.originalTransactionID);
-    if (current.appAccountToken !== transaction.appAccountToken) throw bindingConflict();
     const db = await pool.connect();
     try {
       await db.query('BEGIN');
       await db.query("SELECT set_config('app.billing_token',$1,true)", [transaction.appAccountToken]);
-      const account = (await db.query('SELECT household_id,purchaser_id FROM ritc.billing_account WHERE app_account_token=$1', [transaction.appAccountToken])).rows[0];
+      const account = (await db.query<{ household_id: string; purchaser_id: string }>(
+        'SELECT household_id,purchaser_id FROM ritc.billing_account WHERE app_account_token=$1', [transaction.appAccountToken])).rows[0];
       // Do not acknowledge delivery before the purchaser has established their binding context.
       if (!account) throw new ServiceError(503,'billing_context_pending','Retry notification delivery.');
+      // The verified token identifies the household. Only that household's configured
+      // Apple environment may reconcile a purchase, even before its first delivery.
+      if (this.gateway(account.household_id) !== gateway) throw bindingConflict();
+      const current = await gateway.current(transaction.originalTransactionID);
+      if (current.originalTransactionID !== transaction.originalTransactionID || current.appAccountToken !== transaction.appAccountToken) throw bindingConflict();
       await db.query("SELECT set_config('app.household_id',$1,true)", [account.household_id]);
       await db.query('SELECT household_id FROM ritc.household WHERE household_id=$1 FOR UPDATE', [account.household_id]);
       const member = (await db.query('SELECT member_id,kind,state FROM ritc.member WHERE household_id=$1 AND member_id=$2', [account.household_id,account.purchaser_id])).rows[0];
       if (!member || member.kind !== 'adult') throw accessEnded();
-      const ctx: BillingContext = { db, householdId: account.household_id as string, member: { member_id: account.purchaser_id as string, kind: 'adult' }, now: new Date() };
+      const ctx: BillingContext = { db, householdId: account.household_id, member: { member_id: account.purchaser_id, kind: 'adult' }, now: new Date() };
       const existing = await this.row(ctx);
       // Revoked household membership cannot receive newly minted seats; existing billing state still reconciles refunds/expiry.
       if (!existing && member.state !== 'active') throw accessEnded();

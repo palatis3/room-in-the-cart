@@ -25,8 +25,8 @@ export const publicPages = {
         },
         "paragraphs": [
           {
-            "en": "This website is for invited contributors and cooks. Open the invitation or current-view link your household gave you. Sign-in, household membership and the selected view are checked separately. If email sign-in or guardian consent is unavailable, the page says so; it does not create access.",
-            "es": "Este sitio web es para colaboradores y personas que cocinan con invitación. Abre el enlace de invitación o de vista actual que te dio tu hogar. El inicio de sesión, la pertenencia al hogar y la vista seleccionada se verifican por separado. Si el inicio de sesión por correo o el consentimiento del tutor no está disponible, la página lo indica; no crea acceso."
+            "en": "The browser’s household features are for invited contributors and cooks. Open the invitation or current-view link your household gave you. Sign-in, household membership and the selected view are checked separately. If email sign-in or guardian consent is unavailable, the page says so; it does not create access.",
+            "es": "Las funciones del hogar en el navegador son para colaboradores y personas que cocinan con invitación. Abre el enlace de invitación o de vista actual que te dio tu hogar. El inicio de sesión, la pertenencia al hogar y la vista seleccionada se verifican por separado. Si el inicio de sesión por correo o el consentimiento del tutor no está disponible, la página lo indica; no crea acceso."
           },
           {
             "en": "Review a request before sending. Received means the household service has your request. The shopper decides whether to add it to the pickup. Waiting to send means the browser still has it in its local queue. Retry an uncertain submission with the original retry action rather than sending a duplicate. A cook with permission can suggest a correction; only the shopper can approve a basket change.",
@@ -230,8 +230,8 @@ export const publicPages = {
       "es": "Privacidad y datos"
     },
     "lead": {
-      "en": "Implementation disclosures · updated November 18, 2026.",
-      "es": "Información de la implementación · actualizada el 18 de noviembre de 2026."
+      "en": "Implementation disclosures · updated November 20, 2026.",
+      "es": "Información de la implementación · actualizada el 20 de noviembre de 2026."
     },
     "notice": {
       "en": "Operator policy review and production retention details are still pending. This implementation guide is not a complete operator-approved release privacy policy. The Support page has the supplied support email address.",
@@ -273,6 +273,10 @@ export const publicPages = {
             "es": "Si reportas contenido del hogar, el servicio guarda el motivo, qué elemento y versión reportaste, tu identificador de miembro y el de quien lo envió, si se conoce. Puedes enviar el reporte sin compartir el texto o elegir hasta 1,000 caracteres para que los lea el equipo de revisión. Los reportes vencen al terminar el plazo de revisión que establece el operador. Al bloquear en tu hogar a quien lo envió, no se comparte el texto del mensaje."
           },
           {
+            "en": "If last calls are available, the shopper can set a cutoff that eligible adults see in the app. The service records your response and whether you mute the invitation. Requests after the cutoff go to the next trip.",
+            "es": "Si están disponibles los avisos antes de la compra, quien hace la compra puede fijar una hora límite que las personas adultas con permiso ven en la app. El servicio registra tu respuesta y si silencias el aviso. Las solicitudes posteriores a la hora límite pasan a la siguiente compra."
+          },
+          {
             "en": "If you request a private review of your authority to delete a child’s account, the service uses the details you provide to verify your request. It keeps a case number, account or enrollment references, status and dates. You can check the case and its expiry in Guardian controls. A separate deletion receipt confirms when the account has been erased.",
             "es": "Si solicitas una revisión privada para verificar que tienes autoridad para eliminar la cuenta de un menor, el servicio usa los datos que proporcionas para verificar la solicitud. Guarda un número de caso, referencias de la cuenta o de la inscripción, el estado y las fechas. En los controles del tutor puedes consultar el caso y su fecha de vencimiento. Un comprobante de eliminación por separado confirma cuándo se eliminó la cuenta."
           },
@@ -283,6 +287,10 @@ export const publicPages = {
           {
             "en": "When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone.",
             "es": "Al confirmar un recibo para la despensa del hogar, los adultos con acceso a la despensa pueden ver la tienda, la fecha de compra, la referencia que ingreses y, de cada renglón seleccionado, el texto original, el alimento, las cantidades, el lugar de almacenamiento y el precio si lo ingresaste. El archivo original se queda en este iPhone."
+          },
+          {
+            "en": "When you choose Read recipe for a web link, this iPhone requests the page directly from the recipe website. The site sees the page address you requested, including any query parameters, your IP address and an identifier for the app’s recipe reader. A site the link redirects you to receives the same kinds of information.",
+            "es": "Cuando eliges Leer receta para un enlace web, este iPhone solicita la página directamente al sitio de la receta. El sitio ve la dirección que solicitaste, incluidos los parámetros de consulta, tu dirección IP y un identificador del lector de recetas de la app. Si el enlace te dirige a otro sitio, ese sitio recibe el mismo tipo de información."
           },
           {
             "en": "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion.",
@@ -317,8 +325,16 @@ export const publicPages = {
             "es": "El dictado habitual y el reconocimiento de texto en fotos se procesan en este iPhone. Las fotos guardadas como evidencia permanecen en el almacenamiento local protegido. Las exportaciones legibles y para ayudantes excluyen las fotos. Un archivo de recuperación cifrado puede incluirlas si las seleccionas y revisas. Apple puede descargar de iCloud una foto que elijas."
           },
           {
+            "en": "If product references are available, an adult can choose to share a description, brand, size or barcode with the named shopper. When photo sharing is enabled separately, the service receives only the crop you review, without location metadata. An authorized moderator reviews it before the shopper can see it. You can remove a shared reference. Access expires within seven days.",
+            "es": "Si están disponibles las referencias de productos, una persona adulta puede compartir una descripción, marca, tamaño o código de barras con la persona indicada para hacer la compra. Si además se habilita el uso de fotos, el servicio recibe solo el recorte que revises, sin metadatos de ubicación. Una persona autorizada lo revisa antes de que lo vea quien hace la compra. Puedes retirar una referencia compartida. El acceso caduca en un máximo de siete días."
+          },
+          {
             "en": "When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor.",
             "es": "Cuando la asistencia en línea está disponible, un adulto autorizado puede revisar y enviar un fragmento de texto, una imagen recortada o una grabación de voz independiente a OpenAI a través de Room in the Cart. Escucha la grabación o revisa el recorte antes de enviarlo. También puedes seguir usando el editor local."
+          },
+          {
+            "en": "The household service counts online assistance requests for your account to enforce the daily limit. It also keeps a code for each request to prevent processing it twice. The service can remove these records once they are more than 24 hours old.",
+            "es": "El servicio del hogar cuenta las solicitudes de asistencia en línea de tu cuenta para aplicar el límite diario. También guarda un código por solicitud para evitar procesarla dos veces. El servicio puede eliminar estos registros una vez que hayan pasado 24 horas."
           },
           {
             "en": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. Its privacy policy says it keeps visitor IP addresses and logs for three years for security, technical analysis and measuring popularity. You can enter the product name and package size yourself.",
@@ -375,6 +391,10 @@ export const publicPages = {
           {
             "en": "Household account deletion has its own scope and status. Review it in household controls. Signing out or leaving a household is separate from deleting an account, and deleting an account does not cancel an Apple subscription. Manage that subscription through Apple.",
             "es": "La eliminación de una cuenta del hogar tiene su propio alcance y estado. Revísala en los controles del hogar. Cerrar sesión o salir de un hogar es distinto de eliminar una cuenta, y eliminar una cuenta no cancela una suscripción de Apple. Administra esa suscripción con Apple."
+          },
+          {
+            "en": "Deleting your account erases the household receipt lines you submitted. To prevent the same lines from being imported again, the service keeps receipt identification codes and the positions of the erased lines. These records omit the printed wording.",
+            "es": "Al eliminar tu cuenta se borran los renglones de recibos que enviaste para el hogar. Para evitar que vuelvan a importarse, el servicio conserva códigos que identifican el recibo y las posiciones de los renglones borrados. Estos registros omiten el texto impreso."
           },
           {
             "en": "An accepted deletion request and completed provider deletion are different states. Follow the in-app status and retry instructions. The operating owner must verify provider erasure, backups and retention before release. Child enrollment remains unavailable until a real guardian verification and consent process is configured.",

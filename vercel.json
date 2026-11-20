@@ -27,6 +27,14 @@
       "destination": "/api/maintenance"
     },
     {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/about/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/help",
       "destination": "/index.html"
     },
