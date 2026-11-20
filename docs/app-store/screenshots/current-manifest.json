@@ -1,0 +1,93 @@
+{
+  "sourceCommit": "fb907d828c51a897e2ba4d991aedc89665d09cd4",
+  "configuration": "Unsigned arm64 Release, iOS 27.0 simulator (24A434), Xcode 27.1 (27A9275). No app test flags, StoreKit fixture or household service endpoints.",
+  "appExecutableSHA256": "5baeb48bb4792b3c3a98974ea9a6be0a5ab6299f663b1cc96febd1d5f00eb899",
+  "bundleIdentifier": "dev.roominthecart.app",
+  "version": "0.1.0",
+  "build": "1",
+  "testMethod": "RoomInTheCartUITests/testReleaseStoreListingCapture",
+  "localTestSource": ".build/appstore-listing-audit/source/ios/UITests/RoomInTheCartUITests.swift",
+  "testSourceSHA256": "3380a1f2505704825755ea0d6972f16f6d651039a3291d10fad20493beb7157b",
+  "assetProcessing": "Uncropped native simulator captures re-encoded to opaque JPEG at original size. No overlays.",
+  "fixture": {
+    "itemEntered": "Demo wraps",
+    "needed": 12,
+    "A": {
+      "usablePerPack": 8,
+      "priceCents": 320,
+      "totalCents": 640
+    },
+    "B": {
+      "usablePerPack": 6,
+      "priceCents": 270,
+      "totalCents": 540
+    }
+  },
+  "captures": [
+    {
+      "file": "current/dynamic-island-medium/en-US/01-pack-comparison.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "device": "RITC Listing Audit 20261120",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:36:36.060000+00:00",
+      "xcresult": ".build/appstore-listing-audit/pack-capture-ui-only.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/pack-capture-ui-only-attachments/020971C7-4AF3-4383-BE24-508D5928EDFC.png",
+      "sourcePNGSHA256": "67aeb7aca65877bf14bbac719d59ca622a933df0e74549ab5cadbe7e126ce248",
+      "sha256": "44a2c7d3a0bd330395add5a973aaa0097ba8ba02f0e110fcaa9000ab0cc1bd97",
+      "deviceModel": "iPhone 17"
+    },
+    {
+      "file": "current/dynamic-island-medium/en-US/02-saved-record.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "device": "RITC Listing Audit 20261120",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:36:58.555000+00:00",
+      "xcresult": ".build/appstore-listing-audit/pack-capture-ui-only.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/pack-capture-ui-only-attachments/1133C195-E2C6-4EE5-8EF8-BB6838A17CC0.png",
+      "sourcePNGSHA256": "431570e2df8449d0bf7c49e1e2fab72f2fc451bb4fdb481287f56afc589ecac1",
+      "sha256": "794813553af924738a70e1eb7277a75837381f4b3fcce539bb8e99e4f2b97b0b",
+      "deviceModel": "iPhone 17"
+    },
+    {
+      "file": "current/dynamic-island-medium/es-MX/01-pack-comparison.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "device": "RITC Listing Audit 20261120",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:37:17.612000+00:00",
+      "xcresult": ".build/appstore-listing-audit/pack-capture-ui-only.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/pack-capture-ui-only-attachments/0AB515FC-9D83-4D9C-81C3-998D4E2E6DA1.png",
+      "sourcePNGSHA256": "e9d100038609ba3abe53e57045d170174464054496751b0c36d58f1663339bbe",
+      "sha256": "ed30dd913b34501ee8f0ab4deb9659d6f4e6b4dcb47f31635474165566faa052",
+      "deviceModel": "iPhone 17"
+    },
+    {
+      "file": "current/dynamic-island-medium/es-MX/02-saved-record.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "device": "RITC Listing Audit 20261120",
+      "deviceID": "1EF78AB3-0271-484C-BC0E-DE87BCEDE5D3",
+      "capturedAtUTC": "2026-11-20T14:37:14.191000+00:00",
+      "xcresult": ".build/appstore-listing-audit/pack-capture-ui-only.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/pack-capture-ui-only-attachments/08139FFC-133A-40EB-997B-CE4C36C6393F.png",
+      "sourcePNGSHA256": "884b9ad51ab4d66ba3242d81c3d8eae424285ce7095e16559c27ea6e465ef08b",
+      "sha256": "d8f45a11743e02eb5653570913c295ea2b262a36f0f464675b25c0ff9f1b66c4",
+      "deviceModel": "iPhone 17"
+    }
+  ],
+  "visualReview": "Each JPEG was inspected at its original size for the current Plum and Pear interface, localized tab and result labels, correct USD totals, and the fictional saved record."
+}

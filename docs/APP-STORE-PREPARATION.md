@@ -6,9 +6,12 @@ Use the current acceptance map for feature claims and remaining evidence. The No
 
 ## November 9 ASO research
 
-The V3 archive supplied for this review contains English (US) and Spanish (Mexico) listing candidates, a separate list-only fallback and first-use tasks. The English candidate keeps the name and subtitle in the November 2 brief. Its description starts with a grocery list and then introduces budgeting, pantry, meals and household requests. The candidate Spanish name is “Room in the Cart: Compras” and its subtitle is “Despensa y comidas en familia”. Use the recorded first-click tasks to decide which benefit deserves the opening screenshot. [Pre-branding tasks](PRE-BRANDING-REVIEW.md)
+The supplied `Room-in-the-Cart-ASO-V3-2026-11-09.zip` includes the default localized copy, the K3-E English keyword baseline, research on alternate phrases, and a list-only fallback. Use `analysis/default-listings-v3.json`, `analysis/keyword-metadata-alternatives.json`, `analysis/curated-target-keywords.json` and `analysis/spanish-target-keywords.json` for the source data. The November 8 figures below are archived AppTweak volume and difficulty scores. Actual indexing, rank and conversion remain unverified.
 
-Select copy against the signed build and the features enabled for the US storefront. For a list-only release, verify creating, editing, quantities, notes, department grouping and checking items off before using the corresponding V3 fallback claims. For a household release, verify invitation, sign-in and reviewer access before advertising sharing. The earlier draft below preserves the November 2 evidence and word counts. The November 9 archive is a separate set of candidates for final selection.
+- **English (US)** keeps the V3 name and subtitle. The keyword field adapts K3-E around the private pantry, pack comparisons and grocery estimates. “Pantry inventory” scored 37/0, “grocery calculator” 27/0, and “grocery list with prices” 20/0. “Recipe book” scored 44/3 and fits the private recipe library, which searches the shopper’s saved recipes by ingredient. “Receipt scanner” scored 48/19 and can attract expense tracking searches. The description demonstrates checking a grocery receipt and putting away the food. Household sharing stays in the planned connected listing.
+- **Spanish (Mexico)** keeps the V3 name and uses “Lista, cenas y presupuesto” to show list making, dinner planning and costs in the subtitle. “Lista de compras” scored 28/0. The terms for pantry inventory and a weekly menu each scored 5/0 and fit the current workflows. A qualified US-Spanish reviewer still needs to check the copy with the signed app.
+
+The current candidate supports the list, budget, meal and pantry claims in the draft. Keep the archived list-only fallback for a candidate limited to those list features. The recorded first-use tasks can help test which screenshot shoppers respond to. [ASO research and application](ASO-RESEARCH-APPLICATION.md) · [Pre-branding tasks](PRE-BRANDING-REVIEW.md)
 
 ## Supplied listing, preserved unchanged
 
@@ -32,12 +35,16 @@ The [review draft](APP-STORE-LISTING-DRAFT.json) keeps the supplied English name
 
 | Localization | Name characters | Subtitle characters | Keyword bytes | Promotional characters | Description characters |
 |---|---:|---:|---:|---:|---:|
-| English (US) | 30 | 28 | 97 | 142 | 930 |
-| Spanish (Mexico) | 25 | 26 | 98 | 152 | 1060 |
+| English (US) | 30 | 28 | 100 | 126 | 1558 |
+| Spanish (Mexico) | 25 | 26 | 99 | 146 | 1743 |
 
 For the future connected listing, lead with the cereal-request and pickup-budget story only after the configured candidate can receive a request, preview its total and show the contributor’s outcome. Add annual Household claims after Apple’s actual product and the named-seat flows pass on the signed build. At that point, verify operator-approved Terms of Use and Privacy Policy links from both the purchase screen and the product page for each submitted localization. [Apple subscription guidance](https://developer.apple.com/app-store/subscriptions/)
 
 Both drafts fit the current field limits. Human US-Spanish review and signed build verification remain open. Support and privacy URLs still need verified publication. The operator must supply the App Review contact and copyright. [Version information](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information) · [App information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-and-compliance-information/)
+
+Both descriptions disclose the included extensions for Guideline 4.4. The Home Screen widgets offer grocery entry and opt-in dinner and pantry check summaries. The incoming iOS Share extension stages grocery text, receipt files and recipe links for review. Verify the signed app and both extensions together using their registered App Groups. [App Review Guideline 4.4](https://developer.apple.com/app-store/review/guidelines/#extensions)
+
+Recommended primary category is **Food & Drink**. Meal planning, saved recipes and checking household food are central to the app. Confirm the choice when setting up the actual App Store record. [Apple’s category guidance](https://developer.apple.com/app-store/categories/)
 
 ## First-release notes for review
 
@@ -61,7 +68,7 @@ Use these notes with the signed build once the walkthroughs below have passed on
 
 1. In Shop, tap Compare packs. Enter “Demo wraps” and a need of 12. Enter a pack of 8 for $3.20 and a pack of 6 for $2.70, then tap Compare enough food. Each option needs two packs. Look for totals of $6.40 and $5.40. Save, quit the app, and reopen the app. Find the saved comparison in Records.
 2. Open Settings from a tab’s main screen, then Support. Review the support summary, tap Share support summary, then choose Copy in the share sheet. The copied text should match the preview. Your groceries, prices, and pickup name should stay private.
-3. In Shop, open My Pantry and complete setup if prompted. Tap Scan products. Type “Demo oats” as the product name and add it. Open that product and enter 1 unit per package and 2 packages received. If asked for a stock action, choose Add a separate physical batch. Return to the batch, enter “Demo Market” as the store, confirm receipt, review, and save. Quit and reopen My Pantry. Look for one Demo oats batch with 2 units.
+3. Open the Pantry tab and complete setup if prompted. Under Pantry tools, tap Scan products. Type “Demo oats” as the product name and add it. Open that product and enter 1 unit per package and 2 packages received. If asked for a stock action, choose Add a separate physical batch. Return to the batch, enter “Demo Market” as the store, confirm receipt, review, and save. Quit and reopen the Pantry tab. Look for one Demo oats batch with 2 units.
 4. If something differs, send feedback through TestFlight. Include the language, the step you reached, and what appeared. Use fictional groceries in any screenshot.
 
 ### Spanish for the US storefront
@@ -72,7 +79,7 @@ Use these notes with the signed build once the walkthroughs below have passed on
 
 1. En Compras, toca Comparar paquetes. Escribe «Demo wraps» e indica que necesitas 12 unidades. Ingresa un paquete de 8 por $3.20 y otro de 6 por $2.70. Toca Comparar la cantidad necesaria. En ambos casos necesitas dos paquetes. Los totales deberían ser $6.40 y $5.40. Guarda la comparación, cierra la app y vuelve a abrirla. Busca la comparación guardada en Historial.
 2. Abre Configuración desde la pantalla principal de una pestaña y entra en Soporte. Revisa el resumen de soporte. Toca Compartir resumen de soporte y elige Copiar en la hoja para compartir. El texto copiado debería coincidir con el resumen. Los alimentos, los precios y el nombre de tu compra deben seguir siendo privados.
-3. En Compras, abre Mi despensa y completa la configuración si se te pide. Toca Escanear productos. Escribe «Avena de prueba» como nombre del producto y agrégalo. Abre el producto e indica que recibiste 2 envases con 1 unidad cada uno. Si se te pide elegir cómo registrar las existencias, selecciona Añadir un lote físico aparte. Vuelve al lote, escribe «Mercado de prueba» como tienda, confirma que recibiste los productos, revisa los datos y guarda. Cierra la app y vuelve a abrir Mi despensa. Deberías ver un solo lote de Avena de prueba con 2 unidades.
+3. Abre la pestaña Despensa y completa la configuración si se te pide. Toca Escanear productos. Escribe «Avena de prueba» como nombre del producto y agrégalo. Abre el producto e indica que recibiste 2 envases con 1 unidad cada uno. Si se te pide elegir cómo registrar las existencias, selecciona Añadir un lote físico aparte. Vuelve al lote, escribe «Mercado de prueba» como tienda, confirma que recibiste los productos, revisa los datos y guarda. Cierra la app y vuelve a abrir Despensa. Deberías ver un solo lote de Avena de prueba con 2 unidades.
 4. Si algo sale distinto, envía tus comentarios por TestFlight. Indica el idioma, el paso en el que estabas y qué apareció. Usa alimentos ficticios en las capturas de pantalla.
 
 ## Feature claim ledger
@@ -97,17 +104,21 @@ Apple’s screenshot specifications list the Dynamic Island medium display in th
 
 The 16 historical captures are opaque 1206×2622 JPEGs from real iPhone simulator screens with fictional data. Visual inspection confirmed the old green palette across both languages. Keep these as evidence for the scenes and recapture any final frames using the current Plum and Pear interface. The whole-pickup request frame used synthetic household endpoints. Reserve that scene for a connected release with working reviewer access. [Apple’s screenshot guidance](https://developer.apple.com/help/app-review/guideline-reference/2-3-3-screenshots/) · [Historical English captures](app-store/screenshots/en-US) · [Historical Spanish captures](app-store/screenshots/es-MX)
 
-Lead the current listing with the pack comparison. The storyboard below records the remaining capture options. For a connected release, place the whole-pickup request preview first once the candidate supports the complete request and decision path. The optional Household frame requires a real storefront offer.
+The November 20 iPhone 17 Release simulator captures show the current palette, **Pantry** tab and the reviewer’s fictional pack comparison in both languages. The test entered and saved one comparison through the app, reopened it after relaunch and verified $6.40 and $5.40 in English and US Spanish. The comparison and Records frames are 1206×2622 opaque JPEGs. For the public pack frame, enter a natural fictional item such as “Flour tortillas” or “Tortillas de harina” directly in the signed app and capture the live result. Confirm the required App Store Connect slots before upload. [Current capture manifest](app-store/screenshots/current-manifest.json) · [English captures](app-store/screenshots/current/dynamic-island-medium/en-US) · [Spanish captures](app-store/screenshots/current/dynamic-island-medium/es-MX)
+
+Lead the default listing with a short grocery list for a real dinner task. Follow it with the pack comparison and a manageable pantry. Use the pack comparison first in a budget-focused page test. For a connected page, lead with the whole-pickup request preview after the candidate supports the complete request and decision path. The optional Household frame requires a real storefront offer. [ASO screenshot plan](ASO-RESEARCH-APPLICATION.md#what-to-show-shoppers)
 
 | Draft frame | What the screen shows | Capture status and remaining checks |
 |---|---|---|
-| 1. Compare enough food | Shop → pack comparison, showing whole packs, usable remainder and item-only scope. | Use the current interface and match the final signed candidate. [Historical capture manifest](app-store/screenshots/manifest.json) |
-| 2. Review the whole pickup | Previewing a $3.49 cereal request moves a $37.20 pickup to $40.69, $2.69 over the $38 cap. The preview also shows two protected school-lunch portions. | For the future connected release, recapture after the signed candidate supports the household request. [Historical capture manifest](app-store/screenshots/whole-pickup-preview-manifest.json) |
-| 3. Plan dinners and keep lunch | Meal week with a named lunch reservation and a dated dinner. | Recapture List or Grid on the current interface. [Historical capture manifest](app-store/screenshots/meal-week-manifest.json) |
-| 4. Repair what came home | Previewing 7 usable wraps against 6 saved reduces the Tuesday taco shortage from 2 wraps to 1. Both wraps set aside for lunch remain available. | Recapture the preview in the current interface. [Historical capture manifest](app-store/screenshots/repair-what-came-home-manifest.json) |
-| 5. Compare two entered trips | For the same four dinner portions, the second pickup saves $3 at checkout, adds $4 and 18 minutes of travel, and costs $1 more overall. | Recapture saved manually entered quotes on the current interface. [Historical capture manifest](app-store/screenshots/two-store-trips-manifest.json) |
-| 6. Keep and recover records | Records root with a saved fictional comparison, or a separate export/recovery scope capture. | Check the final system export and recovery before featuring those controls. |
-| Optional 7. Household | Named-seat offer with Apple’s localized price and term, Restore and Manage. | Capture an actual offer after the product and review account are configured. |
+| 1. Start with a grocery list | A few groceries and the dinner they are for. | Capture the saved list on the current interface for each locale. |
+| 2. Compare enough food | Shop → pack comparison, showing the two totals and item-only scope. | Current English and Spanish frames are available. Check the layout and calculations on the signed candidate. [Current capture manifest](app-store/screenshots/current-manifest.json) |
+| 3. Review food in Pantry | A few foods at home, plus a receipt review or manual package match as a later frame. | Capture the confirmed batches and the selected review on the current interface. |
+| 4. Plan dinners and keep lunch | Meal week with a named lunch reservation and a dated dinner. | Recapture List or Grid on the current interface. [Historical capture manifest](app-store/screenshots/meal-week-manifest.json) |
+| 5. Repair what came home | Previewing 7 usable wraps against 6 saved reduces the Tuesday taco shortage from 2 wraps to 1. Both wraps set aside for lunch remain available. | Recapture the preview in the current interface. [Historical capture manifest](app-store/screenshots/repair-what-came-home-manifest.json) |
+| 6. Compare two entered trips | For the same four dinner portions, the second pickup saves $3 at checkout, adds $4 and 18 minutes of travel, and costs $1 more overall. | Recapture saved manually entered quotes on the current interface. [Historical capture manifest](app-store/screenshots/two-store-trips-manifest.json) |
+| 7. Keep and recover records | Records root with a saved fictional comparison, or a separate export/recovery scope capture. | Current English and Spanish Records frames are available. Check the final system export and recovery before featuring those controls. [Current capture manifest](app-store/screenshots/current-manifest.json) |
+| Connected page. Review the whole pickup | Previewing a $3.49 cereal request moves a $37.20 pickup to $40.69, $2.69 over the $38 cap. The preview also shows two protected school-lunch portions. | Recapture when the signed candidate supports the household request. [Historical capture manifest](app-store/screenshots/whole-pickup-preview-manifest.json) |
+| Connected page. Household | Named-seat offer with Apple’s localized price and term, Restore and Manage. | Capture an actual offer after the product and review account are configured. |
 
 Review the two localized asset and copy sets against the signed candidate. An app preview is optional. [Apple product-page guidance](https://developer.apple.com/app-store/product-page/)
 
@@ -141,7 +152,7 @@ On November 15 the native staging build at `2bc0478d` displayed the unavailable 
 | App Store input | Current repository fact | Exact owner/release input still needed |
 |---|---|---|
 | App identity | Local Release uses provisional `dev.roominthecart.app`; widget/share have corresponding identifiers. Version0.1.0/build1 are local build settings. | Final registered app/extension IDs, Apple team, App Groups/profiles, release version/build, SKU and Apple-generated numeric App ID. None is invented here. |
-| Store record | US iPhone/en-US listing draft; no category supplied. | Name availability/rights, primary category, final localizations, description/copyright, US availability and distribution choices. |
+| Store record | US iPhone listing in English and Spanish. Food & Drink is the recommended primary category. | Name availability and rights, approved primary category, final localizations, copyright, US availability and distribution choices. |
 | Age rating and Kids category | The app serves adult shoppers and their invited households. | Review the [draft questionnaire answers](#age-rating-questionnaire-draft) against the signed build, then record Apple's calculated ratings. |
 | Digital goods questionnaire | Household sells digital planning; retailer collects grocery payment separately. | Answer the actual questionnaire if displayed; Apple says no action is needed when it does not appear. [Digital goods/service form](https://developer.apple.com/help/app-store-connect/manage-app-information/complete-the-digital-goods-and-services-questionnaire) |
 | Accessibility labels | Native large-text/contrast/focus proofs cover selected routes; physical assistive acceptance remains. | Evaluate common tasks, including sign-in/purchase/settings, against each claimed feature. Do not convert catalog parity or one automated audit into a VoiceOver/Larger Text support declaration. [Apple evaluation guidance](https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels/) |
