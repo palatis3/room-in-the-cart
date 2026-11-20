@@ -6,6 +6,9 @@ public struct AdultShopRequestSession: Equatable, Sendable {
     let generation: UUID
     let lastCall: Bool
     let reference: Bool
+    let substitutions: Bool
+    let picking: Bool
+    let shopper: Bool
     public let media: Bool
 }
 
@@ -92,6 +95,8 @@ extension HouseholdService {
               UUID(uuidString: bootstrap.memberId) == device.memberID else { throw ClientError.accessEnded }
         return .init(device: device, shopID: shopID, generation: generation, lastCall: bootstrap.capabilities.contains("adult_last_call"),
                      reference: bootstrap.capabilities.contains("adult_product_reference"),
+                     substitutions: bootstrap.capabilities.contains("trip_substitutions"), picking: bootstrap.capabilities.contains("shared_picking"),
+                     shopper: bootstrap.role == "shopper",
                      media: bootstrap.capabilities.contains("adult_product_reference_media"))
     }
 

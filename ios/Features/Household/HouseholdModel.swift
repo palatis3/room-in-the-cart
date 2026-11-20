@@ -89,6 +89,7 @@ struct DeviceReminderPersona: Equatable {
     private let historyStore: HistoryPendingStore
     let fallbackPendingStore: FallbackPendingStore
     let pantryPendingStore: HouseholdPantryPendingStore
+    let pickingPendingStore: PendingShopWriteStore<ScopedSharedPick>
     private let quotePendingStore: StoreQuotesPendingStore
     let guardianIntentStore: GuardianIntentStore
     private let deviceRevocationStore: DeviceRevocationStore
@@ -116,7 +117,7 @@ struct DeviceReminderPersona: Equatable {
     private(set) var generation = UUID()
     // An explicit OTP from private Settings may continue on the protected root for this session.
     @Published private var verifiedHouseholdSubject: String?
-    private var contributorEnrollmentRevision = UUID()
+    private(set) var contributorEnrollmentRevision = UUID()
     private var contributorDeviceID: String?
     private var contributorReplayWindow: (value: ReplayWindow, expiresAt: Date)?
 
@@ -136,6 +137,7 @@ struct DeviceReminderPersona: Equatable {
         placementStore = PlacementPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("placement.json"))
         fallbackPendingStore = FallbackPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("fallback-recipes.json"))
         pantryPendingStore = HouseholdPantryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("household-pantry.json"))
+        pickingPendingStore = PendingShopWriteStore(url: queueURL.deletingPathExtension().appendingPathExtension("picking.json"))
         quotePendingStore = StoreQuotesPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("store-quotes.json"))
         deviceRevocationStore = DeviceRevocationStore(url: queueURL.deletingPathExtension().appendingPathExtension("devices.json"))
         let guardianNamespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + (guardianChildOnly ? ".covered-child.guardian." : ".guardian.") + (bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String ?? "injected")
@@ -260,6 +262,9 @@ struct DeviceReminderPersona: Equatable {
         busy = true; notice = nil; defer { busy = false }
         let start = generation
         do {
+            let subject = identity?.subject
+            try await pickingPendingStore.retain { $0.subject == subject && $0.intent.householdID == UUID(uuidString: workspace.householdId) }
+            guard start == generation else { return }
             let value = try await service.enroll(householdID: workspace.householdId)
             guard start == generation else { return }
             try await finishEnrollment(value, start: start)
@@ -272,6 +277,8 @@ struct DeviceReminderPersona: Equatable {
         clearRequestPickups()
         guard let service else { throw ClientError.configuration }
             projection = value
+            try await reconcilePickingEnrollment(value, service: service)
+            guard start == generation else { return }
             contributorDeviceID = try? await service.requestReviewDeviceID(bootstrap: value)
             guard start == generation else { return }
             if value.capabilities.contains("own_requests") {
@@ -342,6 +349,31 @@ struct DeviceReminderPersona: Equatable {
             await show(error, start: start)
         }
     }
+    func endTripDeviceAccess(_ error: ClientError, reviewed scope: AdultRequestViewScope) async {
+        guard !locked, generation == scope.generation, contributorEnrollmentRevision == scope.enrollment, identity?.subject == scope.subject,
+              projection?.household.id == scope.household, projection?.memberId == scope.member,
+              projection?.shopId.flatMap(UUID.init(uuidString:)) == scope.shop else { return }
+        await show(error, start: scope.generation)
+    }
+
+    private func reconcilePickingEnrollment(_ value: HouseholdBootstrap, service: HouseholdService) async throws {
+        guard !guardianChildOnly, value.grantId == nil, value.enrolled, ["organizer","shopper","contributor"].contains(value.role),
+              let subject = identity?.subject else {
+            try await pickingPendingStore.retain { _ in false }
+            return
+        }
+        // A change of selected shop leaves the same adult's other current trip permissions intact.
+        // An actor, household, device or helper switch cannot recover a previous adult's queue.
+        let shop = value.shopId.flatMap(UUID.init(uuidString:))
+        guard !(try await pickingPendingStore.read()).isEmpty else { return }
+        let session = try await service.coordinationDevice(for: value)
+        let picking = value.capabilities.contains("shared_picking")
+        try await pickingPendingStore.retain { write in
+            write.subject == subject && write.intent.householdID == session.householdID && write.intent.operation.actorId == session.memberID &&
+            write.intent.operation.deviceId == session.deviceID && write.intent.expiresAt > Date() && (write.intent.shopID != shop || picking)
+        }
+    }
+
     func refresh() async {
         guard let service, projection != nil, !busy, !locked else { return }
         busy = true; defer { busy = false }; let start = generation
@@ -374,6 +406,10 @@ struct DeviceReminderPersona: Equatable {
             }
             // Revoke the old view as soon as authority is known, even if the request list cannot load.
             projection = fresh
+            if actorChanged || destinationChanged {
+                try await reconcilePickingEnrollment(fresh, service: service)
+                guard start == generation else { return }
+            }
             if prior.capabilities.contains("household_pantry"), !fresh.capabilities.contains("household_pantry"), let subject = identity?.subject {
                 try await pantryPendingStore.purge(householdID: prior.household.id, subject: subject)
                 guard start == generation else { return }
@@ -932,6 +968,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await historyStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await placementStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await fallbackPendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await pickingPendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await quotePendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await pantryPendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await guardianIntentStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
@@ -994,6 +1031,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await historyStore.purge() } catch { failed = true }
         do { try await placementStore.purge() } catch { failed = true }
         do { try await fallbackPendingStore.purge() } catch { failed = true }
+        do { try await pickingPendingStore.purge() } catch { failed = true }
         do { try await quotePendingStore.purge() } catch { failed = true }
         do { try await pantryPendingStore.purge() } catch { failed = true }
         do { try await guardianIntentStore.purge() } catch { failed = true }
@@ -1131,6 +1169,8 @@ struct DeviceReminderPersona: Equatable {
             do { try await placementStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await fallbackPendingStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await pickingPendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await quotePendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }

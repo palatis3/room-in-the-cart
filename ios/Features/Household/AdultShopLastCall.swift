@@ -5,9 +5,11 @@ import UIKit
 
 struct AdultRequestViewScope: Hashable {
     let generation: UUID
+    let enrollment: UUID
     let subject: String
     let household: String
     let member: String
+    let role: String
     let shop: UUID
     let media: Bool
 }
@@ -17,8 +19,8 @@ extension HouseholdModel {
         guard !guardianChildOnly, !locked, let identity, let projection, projection.enrolled, projection.grantId == nil,
               ["organizer", "shopper", "contributor"].contains(projection.role), projection.capabilities.contains(capability),
               UUID(uuidString: projection.shopId ?? "") == shop || selectedRequestPickupID == shop else { return nil }
-        return .init(generation: generation, subject: identity.subject, household: projection.household.id,
-                     member: projection.memberId, shop: shop, media: projection.capabilities.contains("adult_product_reference_media"))
+        return .init(generation: generation, enrollment: contributorEnrollmentRevision, subject: identity.subject, household: projection.household.id,
+                     member: projection.memberId, role: projection.role, shop: shop, media: projection.capabilities.contains("adult_product_reference_media"))
     }
 }
 

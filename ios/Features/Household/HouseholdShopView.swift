@@ -21,6 +21,7 @@ private struct SharedShopContent: View {
             if model.authorized {
                 Section {
                     HouseholdScopeHeading(scope: model.scope)
+                    SharedPickingLink(household: household)
                     if model.scope.shopId == nil { HouseholdPantryLink(household: household) }
                     Button(ht("Refresh shared shop")) { Task { await model.load() } }
                     if household.storeQuoteScope != nil {

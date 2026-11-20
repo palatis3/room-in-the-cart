@@ -626,6 +626,9 @@ enum ShopperDelivery: Equatable {
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
             clear(); await onAccessEnded()
+        case .service(409, "substitution_changed", _, _):
+            invalidatePreview()
+            notice = householdTripText("Review the requester’s choice before adding or linking this pack.")
         case .service(let status, let code, _, _) where status == 409:
             invalidatePreview()
             notice = code == "stale_quote" ? ht("The saved quote has expired. Refresh its prices before adding or linking a request.") : ht("The shop, request, or assigned shopper changed. Refresh and review before creating a new decision.")

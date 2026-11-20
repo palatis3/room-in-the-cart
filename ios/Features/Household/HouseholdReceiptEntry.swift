@@ -19,7 +19,7 @@ extension ReceiptImportDraft {
             let delivery: HouseholdReceiptLine.Delivery?
             let location: HouseholdPantryLocation
             switch row.treatment {
-            case .skip: throw PantryReceiptError.invalid
+            case .skip, .keptSome, .eaten, .missing, .chargeOrReturn: throw PantryReceiptError.invalid
             case .link(let id):
                 guard let lot = deliveries.first(where: { $0.id == id && $0.origin == .delivery }),
                       let original = lot.purchaseObservation else { throw PantryReceiptError.stale }

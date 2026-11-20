@@ -95,6 +95,7 @@ struct HouseholdSettingsView: View {
                 if let projection = model.projection, projection.enrolled {
                     Section {
                         HouseholdScopeHeading(scope: projection)
+                        SharedPickingLink(household: model)
                         if projection.canSelectShop == true || projection.selectionRequired == true {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
                         }
@@ -147,6 +148,7 @@ struct HouseholdSettingsView: View {
                                         LabeledContent(ht("Correction on this device"), value: proposed)
                                     }
                                     AdultProductReferenceLink(household: model, request: request)
+                                    TripSubstitutionLink(household: model, request: request)
                                     if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                                     Text(shopperRequestStatus(request)).font(.body.weight(.semibold))
                                     if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
@@ -162,7 +164,7 @@ struct HouseholdSettingsView: View {
                                     } else if request.status != "withdrawn" {
                                         Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
                                     }
-                                }.accessibilityElement(children: projection.supportsSharedContentSafety || projection.capabilities.contains("adult_product_reference") ? .contain : .combine)
+                                }.accessibilityElement(children: projection.supportsSharedContentSafety || projection.capabilities.contains("adult_product_reference") || projection.capabilities.contains("trip_substitutions") ? .contain : .combine)
                                 .accessibilityIdentifier("household.ownRequest." + request.id)
                             }
                             if model.requests.isEmpty {

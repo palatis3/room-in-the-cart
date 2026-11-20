@@ -1,3 +1,5 @@
+import {tripSubstitution} from './trip-substitutions.js';
+import {pickingWording} from './shared-picking.js';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {digest} from './database.js';
@@ -12,6 +14,8 @@ const source=z.discriminatedUnion('kind',[
   z.object({...reference,kind:z.literal('clarification'),field:z.literal('question')}).strict(),
   z.object({...reference,kind:z.literal('instruction'),field:z.enum(['shopLabel','label','amount','unit','action']),index:z.number().int().min(0).max(199).optional()}).strict(),
   z.object({...reference,kind:z.literal('suggestion'),field:z.literal('correction')}).strict(),
+  z.object({...reference,kind:z.literal('substitution'),field:z.literal('alternative')}).strict(),
+  z.object({...reference,kind:z.literal('pickingRow'),field:z.literal('label')}).strict(),
   z.object({...reference,kind:z.literal('cookCopy'),field:z.literal('text')}).strict(),
 ]).refine(value=>value.kind!=='instruction'||(value.field==='shopLabel')===(value.index===undefined));
 export const moderationAction=z.discriminatedUnion('action',[
@@ -31,6 +35,13 @@ export function moderationConfiguration(env:NodeJS.ProcessEnv) {
 
 async function currentWording(repo:HouseholdRepository,ctx:Context,ref:Source):Promise<Wording> {
   const h=ctx.householdId;
+  if(ref.kind==='pickingRow')return pickingWording(repo,ctx,ref.id);
+  if(ref.kind==='substitution'){
+    const record=(await ctx.db.query('SELECT shop_id,author_id FROM ritc.trip_substitution WHERE household_id=$1 AND request_id=$2',[h,ref.id])).rows[0];
+    if(!record)throw unavailable();
+    const result=await tripSubstitution(repo,ctx,await repo.shop(ctx,record.shop_id),ref.id,'GET',undefined);
+    return {author:record.author_id,revision:result.revision,first:result.revision,text:result.alternative};
+  }
   if(ref.kind==='request'||ref.kind==='clarification'){
     if(ctx.viewGrantId)throw unavailable();
     const column=(await ctx.db.query('SELECT shop_id,author_id,wording_revision,clarification_author_id,clarification_revision FROM ritc.request WHERE household_id=$1 AND request_id=$2',[h,ref.id])).rows[0];

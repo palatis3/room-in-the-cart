@@ -1,3 +1,4 @@
+import {type TripOptions,checkLinkedPackChanges,decisionPermission} from './trip-substitutions.js';
 import {type AdultPickupOptions,respondWithRequest} from './adult-pickup.js';
 import {checkPublishingMember,reviewSharedWording} from './shared-content-filter.js';
 import {applyPair,checkPairReplay,inboxPairs,rememberPair,reviewPair} from './request-pair.js';
@@ -49,7 +50,7 @@ export function ownRequest(r:RequestRow):OwnRequest {
     ownActionAllowed:editable(r),clarification:r.clarification,followupTo:r.followup_to};
 }
 export class HouseholdRepository {
-  constructor(readonly pool:Database,readonly options:AdultPickupOptions & {allowChildNetwork:boolean;noticeVersion:string;sessionStatus?:SessionStatusVerifier;trackingV2?:boolean;sharedContentSafety?:boolean;moderationRetentionDays?:number}) {}
+  constructor(readonly pool:Database,readonly options:TripOptions & AdultPickupOptions & {allowChildNetwork:boolean;noticeVersion:string;sessionStatus?:SessionStatusVerifier;trackingV2?:boolean;sharedContentSafety?:boolean;moderationRetentionDays?:number}) {}
   async assertIdentityAllowed(db:Transaction,issuer:string,subject:string){
     const lock=(await db.query("SELECT pg_try_advisory_xact_lock_shared(hashtextextended($1,0)) AS acquired",[tokenHash(issuer+'\n'+subject)])).rows[0]?.acquired;
     if(!lock)throw new ServiceError(409,'account_action_pending','Wait for the pending account action to finish.');
@@ -213,7 +214,9 @@ export class HouseholdRepository {
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:false,
       ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'||Boolean(lateCutoff)} : {}),
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
-      capabilities:[...(adultPickup&&this.options.adultLastCall?['adult_last_call']:[]),
+      capabilities:[...(adultPickup&&shop&&['draft','frozen'].includes(shop.phase)&&this.options.sharedContentSafety&&this.options.moderationRetentionDays
+        ?[...(this.options.tripSubstitutions?['trip_substitutions']:[]),...(this.options.sharedPicking?['shared_picking']:[])]:[]),
+        ...(adultPickup&&this.options.adultLastCall?['adult_last_call']:[]),
         ...(adultPickup&&this.options.sharedContentSafety&&this.options.adultProductReferenceDays?['adult_product_reference',...(this.options.adultProductReferenceMedia?['adult_product_reference_media']:[])]:[]),
         ...(includeSharedContentSafety&&this.options.sharedContentSafety?['shared_content_safety']:[]),...(preferenceAccess?['meal_preferences_read']:[]),
         ...(preferenceAccess&&ctx.member.organizer?['meal_preferences_admin']:[]),...(pantryAccess?['household_pantry','household_tonight','my_feedback_withdrawal']:[]),...(pantryAccess && isShopper && shop?.placed_revision!=null?['cook_completion','meal_feedback']:[]),...(pantryAccess&&ctx.member.organizer?['household_pantry_grants']:[]),...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation','request_purchase_attribution']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','request_same_item','request_pair_review','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
@@ -406,7 +409,8 @@ export class HouseholdRepository {
     const pair=input.decision.choice==='reviewRequestPair'||input.decision.choice==='undoRequestPair'?await reviewPair(this,ctx,shop,r,input.decision):null;
     const proof=input.decision.choice==='sameItem'?await proveSameItem(this,ctx,shop,r,input.decision.target):null;
     if(input.decision.choice==='undoSameItem')await sameItemUndo(this,ctx,shop,r,input.decision.operationId);
-    const fingerprint=digest({shop,r:ownRequest(r),lines,decision:input.decision,...(proof?{targetProof:proof.digest}:{}),...(pair?{pairProof:pair.fingerprint}:{})});
+    const permission=await decisionPermission(this,ctx,shop,r,input.decision,lines);
+    const fingerprint=digest({shop,r:ownRequest(r),lines,decision:input.decision,...permission,...(proof?{targetProof:proof.digest}:{}),...(pair?{pairProof:pair.fingerprint}:{})});
     await ctx.db.query(`INSERT INTO ritc.preview(household_id,preview_id,shop_id,actor_id,request_id,shop_revision,request_revision,authority_epoch,decision,fingerprint,expires_at)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[ctx.householdId,previewId,shopId,ctx.member.member_id,r.request_id,shop.revision,r.revision,shop.authority_epoch,input.decision,fingerprint,expiresAt]);
     if(pair && input.decision.choice==='reviewRequestPair')await rememberPair(ctx,shop,r,previewId,pair.evidence);
@@ -651,6 +655,7 @@ export class HouseholdRepository {
       // clears the freeze guard only once every cost is known and still current.
       const completedStoreReview = reviewingStore && b.quote.complete &&
         checkout(b.lines,b.quote).totalMinor !== null && Date.parse(b.quote.expiresAt) > ctx.now.getTime();
+      await checkLinkedPackChanges(this,ctx,shop,b.lines);
       await this.setLines(ctx,shop.shop_id,b.lines);
       await ctx.db.query('UPDATE ritc.shop SET quote=$3,revision=revision+1 WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id,b.quote]);
       if (completedStoreReview) {
@@ -725,7 +730,8 @@ export class HouseholdRepository {
     const lines=await this.lines(ctx,shop.shop_id);
     const pair=decision.choice==='reviewRequestPair'||decision.choice==='undoRequestPair'?await reviewPair(this,ctx,shop,r,decision):null;
     const proof=decision.choice==='sameItem'?await proveSameItem(this,ctx,shop,r,decision.target):null;
-    if(p.fingerprint!==digest({shop,r:ownRequest(r),lines,decision,...(proof?{targetProof:proof.digest}:{}),...(pair?{pairProof:pair.fingerprint}:{})}))throw new ServiceError(409,'stale_preview','Review a fresh preview.');
+    const permission=await decisionPermission(this,ctx,shop,r,decision,lines);
+    if(p.fingerprint!==digest({shop,r:ownRequest(r),lines,decision,...permission,...(proof?{targetProof:proof.digest}:{}),...(pair?{pairProof:pair.fingerprint}:{})}))throw new ServiceError(409,'stale_preview','Review a fresh preview.');
     const facts=this.previewFacts(shop,r,lines,decision);
     if(facts.requiresOverageAcceptance&&!b.acceptOverage)throw new ServiceError(409,'overage_acceptance_required','Explicitly accept the recomputed whole-checkout overage or defer.');
     if(facts.requiresUnknownAcceptance&&!b.acceptUnknown)throw new ServiceError(409,'unknown_acceptance_required','Review the missing costs or defer.');

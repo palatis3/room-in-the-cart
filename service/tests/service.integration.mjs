@@ -1,3 +1,4 @@
+import {tripCoordinationTests} from './trip-coordination.wire.mjs';
 import {adultPickupTests} from './adult-pickup.wire.mjs';
 import test,{before,after} from 'node:test';
 import {grocery30Routing} from './grocery30-routing.mjs';
@@ -71,6 +72,7 @@ async function fixture({createShop=true,otherAdult=false}={}) {
 }
 
 adultPickupTests({fixture,admin,repo});
+tripCoordinationTests({fixture,admin,repo});
 
 if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS',async()=>{
   const f=await deferredFixture('Alex',{originalItem:'Original basket'});

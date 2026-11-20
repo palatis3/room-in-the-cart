@@ -60,6 +60,11 @@ actor PendingShopWriteStore<Write: PendingShopWrite> {
         guard generation == expectedEpoch else { throw ClientError.cancelled }
         var values = try read(); values.removeAll { $0 == intent }; try write(values)
     }
+    func retain(where keep: @Sendable (Write) -> Bool) throws {
+        let values = try read()
+        let retained = values.filter(keep)
+        if retained != values { generation = UUID(); try write(retained) }
+    }
     func purge() throws { generation = UUID(); try write([]) }
     func purge(householdID: String, subject: String) throws {
         generation = UUID(); try write(try read().filter { !$0.belongs(to: householdID, subject: subject) })
