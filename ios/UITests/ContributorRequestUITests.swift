@@ -293,12 +293,12 @@ import XCTest
         XCTAssertEqual(merchant.value as? String, "Corner Market")
         XCTAssertEqual(wording.value as? String, printedLines)
         tap(app.buttons["Review printed lines"])
-        enableSwitch("I reviewed these lines as source evidence only.")
+        enableSwitch("I checked the printed lines.")
         tap(app.buttons["scan.receipt.review"])
         enableSwitch("I checked the purchase date.")
         for (ordinal, usable) in [(0, "2"), (1, "4")] {
             tap(app.buttons["receipt.action.\(ordinal)"])
-            tap(app.buttons["Add a separate physical batch"])
+            tap(app.buttons["Put this food away"])
             tap(app.buttons["receipt.printedQuantity.\(ordinal)"])
             let amount = app.textFields["receipt.usable.\(ordinal)"]
             tap(amount)

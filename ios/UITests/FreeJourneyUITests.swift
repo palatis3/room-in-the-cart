@@ -1465,7 +1465,7 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
         checkReceiptSwitch("I checked the purchase date.")
         receiptTap(app.buttons["receipt.action.0"])
-        receiptTap(app.buttons["Add a separate physical batch"])
+        receiptTap(app.buttons["Put this food away"])
         enterReceiptField("Rolled oats", id: "Food name", replacing: true)
         enterReceiptField("3", id: "receipt.received.0")
         enterReceiptField("2", id: "receipt.usable.0")
@@ -1610,8 +1610,15 @@ import XCTest
         let printed = app.buttons["Review printed lines"]
         XCTAssertTrue(printed.waitForExistence(timeout: 8))
         printed.tap()
-        checkReceiptSwitch("I reviewed these lines as source evidence only.")
-        receiptTap(app.buttons["scan.receipt.review"])
+        checkReceiptSwitch("I checked the printed lines.")
+        let reviewDetails = app.buttons["scan.receipt.review"]
+        reveal(reviewDetails)
+        XCTAssertEqual(reviewDetails.label, "Review receipt details")
+        receiptTap(reviewDetails)
+        let reference = app.textFields["receipt.transactionReference"]
+        XCTAssertTrue(reference.waitForExistence(timeout: 5))
+        XCTAssertEqual(reference.label, "Transaction reference (optional)")
+        XCTAssertGreaterThanOrEqual(reference.frame.height, 44)
         if checkAssistance {
             receiptTap(app.buttons["receipt.assistance.0"])
             let offline = app.staticTexts["For optional online help, open an authorized adult account. You can keep editing the receipt here."]
@@ -1621,10 +1628,11 @@ import XCTest
         }
         checkReceiptSwitch("I checked the purchase date.")
         receiptTap(app.buttons["receipt.action.0"])
-        receiptTap(app.buttons["Add a separate physical batch"])
+        receiptTap(app.buttons["Put this food away"])
         let received = app.textFields["receipt.received.0"]
         receiptTap(app.buttons["receipt.printedQuantity.0"])
         XCTAssertEqual(received.value as? String, "3")
+        XCTAssertGreaterThanOrEqual(received.frame.height, 44)
         enterReceiptField("2", id: "receipt.usable.0")
         if let storage {
             receiptTap(app.buttons["receipt.storage.0"])
@@ -1651,7 +1659,7 @@ import XCTest
         label.typeText("Market")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
         receiptTap(app.buttons["Review printed lines"])
-        checkReceiptSwitch("I reviewed these lines as source evidence only.")
+        checkReceiptSwitch("I checked the printed lines.")
         receiptTap(app.buttons["scan.receipt.review"])
 
         checkReceiptSwitch("I checked the purchase date.")

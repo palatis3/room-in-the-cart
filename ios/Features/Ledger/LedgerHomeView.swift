@@ -562,7 +562,8 @@ struct LedgerHistoryView: View {
                         Text(line.name)
                         if let who = line.handledBy { Text(ledgerFormat("Handled by %@", who)) }
                         if let date = line.trashedAt ?? line.handledAt ?? line.checkedAt {
-                            Text(date.formatted(date: .complete, time: .shortened)).font(.footnote)
+                            Text(date, format: .dateTime.year().month(.abbreviated).day().hour().minute())
+                                .font(.subheadline).foregroundStyle(Theme.secondary)
                         }
                         if !canRestore {
                             Text(ledgerText("All sources for this item were removed. Add a new item if you need it again."))

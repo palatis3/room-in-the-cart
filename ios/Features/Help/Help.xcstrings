@@ -177,54 +177,6 @@
         }
       }
     },
-    "On the new iPhone, open recovery in Records. Select the file, enter its key and check the records and dates before importing. Recovered records open as separate copies.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On the new iPhone, open recovery in Records. Select the file, enter its key and check the records and dates before importing. Recovered records open as separate copies."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En el nuevo iPhone, abre la opción de recuperación en Historial. Selecciona el archivo, introduce la clave y revisa los registros y sus fechas antes de importarlos. Los registros recuperados se abren como copias independientes."
-          }
-        }
-      }
-    },
-    "On the old iPhone, open Records and choose Recovery, exports and saved records. Select the records to take with you and prepare an encrypted recovery file. Keep the key somewhere separate.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On the old iPhone, open Records and choose Recovery, exports and saved records. Select the records to take with you and prepare an encrypted recovery file. Keep the key somewhere separate."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En el iPhone anterior, abre Historial y elige Recuperación, exportaciones y registros guardados. Selecciona los registros que quieras llevarte y prepara un archivo de recuperación cifrado. Guarda la clave por separado."
-          }
-        }
-      }
-    },
-    "Moving to a new iPhone": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moving to a new iPhone"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cambiar de iPhone"
-          }
-        }
-      }
-    },
     "Open Household requests in Settings to see which requests you can send or review.": {
       "localizations": {
         "en": {
@@ -2666,6 +2618,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Según su política de privacidad, conserva las direcciones IP de los visitantes y los registros de visitas durante tres años por motivos de seguridad, para realizar análisis técnicos y para medir la popularidad. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
+          }
+        }
+      }
+    },
+    "On your old iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your old iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu iPhone anterior"
+          }
+        }
+      }
+    },
+    "In Records, open Recovery, exports and saved records. Choose your records and save the encrypted file. Keep the key separately.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Records, open Recovery, exports and saved records. Choose your records and save the encrypted file. Keep the key separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Historial, abre Recuperación, exportaciones y registros guardados. Elige los registros y guarda el archivo cifrado. Guarda la clave por separado."
+          }
+        }
+      }
+    },
+    "On your new iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your new iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu nuevo iPhone"
+          }
+        }
+      }
+    },
+    "Open recovery in Records. Choose the file, enter the key and review the dates before importing. Your records open as separate copies.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open recovery in Records. Choose the file, enter the key and review the dates before importing. Your records open as separate copies."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la opción de recuperación en Historial. Elige el archivo, introduce la clave y revisa las fechas antes de importar. Tus registros se abren como copias independientes."
           }
         }
       }

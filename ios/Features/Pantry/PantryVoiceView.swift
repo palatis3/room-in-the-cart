@@ -781,11 +781,12 @@ extension PantryUsageHistoryRow {
                     PantryUsageHistoryView(model: model, lotID: lotID, origin: origin, authorized: authorized)
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(pantryText("Usage history"))
+                        Text(pantryText("Usage history")).font(.headline)
                         if let revision, loadedRevision == revision, let latest = entries?.first {
                             Text(pantryFormat(latest.kind == .some ? "Used some · %@" : "Last use: %@",
                                               latest.occurredAt.formatted(date: .abbreviated, time: .shortened)))
-                                .font(.subheadline).foregroundStyle(Theme.secondary)
+                                .font(.body).foregroundStyle(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }.accessibilityIdentifier("pantry.usageHistory")

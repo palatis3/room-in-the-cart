@@ -10,6 +10,26 @@ final class LedgerReadableRecordTests: XCTestCase {
         let workspace: LedgerWorkspace
     }
 
+    @MainActor func testTypedItemAndListProvenanceAgreeAcrossReadableRecordSections() throws {
+        var shop = ShoppingLedger(title: "Groceries")
+        let typed = try XCTUnwrap(QuickGrocery.stage("Rice", in: shop))
+        _ = try shop.commitImport(typed)
+        _ = try shop.commitImport(shop.stageImport(text: "Lemon", source: .paste))
+        _ = try shop.commitImport(shop.stageImport(text: "Milk\nEggs", source: .typed))
+        _ = try shop.commitImport(shop.stageImport(text: "Beans", source: .selectedText))
+        XCTAssertEqual(shop.typedItemBatchIDs, [typed.id])
+
+        let document = Document(workspace: LedgerWorkspace(shops: [shop], selectedShopID: shop.id))
+        let record = try LedgerReadableRecord.text(RecordsNativeCodec.canonical(document))
+        let typedLabel = quickGroceryText("Typed item"), importedLabel = ledgerText("Imported list")
+        XCTAssertTrue(record.contains(typedLabel + " · Rice"), record)
+        for name in ["Lemon", "Milk", "Eggs", "Beans"] {
+            XCTAssertTrue(record.contains(importedLabel + " · " + name), record)
+        }
+        // A single typed contribution and the matching batch-history heading.
+        XCTAssertEqual(record.components(separatedBy: typedLabel).count - 1, 2)
+    }
+
     @MainActor func testShoppingLibraryRecoveryIsPrivateAndIndependentOfTransferredPickup() async throws {
         var shop = ShoppingLedger(title: "West trip", basis: ShopBasis(branch: "West"))
         _ = try shop.addManualLine(name: "Pickup only", quantity: nil)

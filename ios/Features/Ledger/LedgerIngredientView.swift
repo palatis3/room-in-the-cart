@@ -92,9 +92,7 @@ struct LedgerIngredientView: View {
                                 .font(.footnote).foregroundStyle(Theme.secondary)
                         }
                     }
-                    let typedItemBatches = Set(shop.importBatches.lazy.filter {
-                        $0.source == .typed && $0.preview.lines.count == 1 && $0.preview.lines[0].capture == nil
-                    }.map(\.id))
+                    let typedItemBatches = shop.typedItemBatchIDs
                     ForEach(contributions.filter { showProtectedNeeds || !$0.source.isProtected }, id: \.id) { contribution in
                         let source = ledgerSourceLabel(contribution, shop: shop, typedItemBatches: typedItemBatches)
                         VStack(alignment: .leading, spacing: 8) {
