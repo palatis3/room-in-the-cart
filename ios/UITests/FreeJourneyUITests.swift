@@ -1499,16 +1499,15 @@ import XCTest
         let received = app.textFields["receipt.received.0"]
         receiptTap(app.buttons["receipt.printedQuantity.0"])
         XCTAssertEqual(received.value as? String, "3")
-        XCTAssertTrue(app.buttons["receipt.printedPrice.0"].exists)
-        let usable = app.textFields["receipt.usable.0"]
-        receiptTap(usable)
-        usable.typeText("2")
-        if app.buttons["receipt.keyboardDone"].exists { app.buttons["receipt.keyboardDone"].tap() }
+        enterReceiptField("2", id: "receipt.usable.0")
         if let storage {
             receiptTap(app.buttons["receipt.storage.0"])
             receiptTap(app.buttons[storage])
         }
-        if paidPrintedTotal { receiptTap(app.buttons["receipt.printedPrice.0"]) }
+        let printedPrice = app.buttons["receipt.printedPrice.0"]
+        reveal(printedPrice)
+        XCTAssertEqual(printedPrice.label, "I paid this line total in USD")
+        if paidPrintedTotal { printedPrice.tap() }
         receiptTap(app.buttons["receipt.review"])
     }
 
