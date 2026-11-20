@@ -94,6 +94,7 @@ struct TonightEntry: View {
                         Text(tonightText("Set up My Pantry to review recipes against food available at home."))
                         NavigationLink(tonightText("Open My Pantry")) { PantrySetupView(pickup: pickup, ledger: ledger) }
                         Button(tonightText("Review a recipe by hand")) { manual = true }
+                            .accessibilityIdentifier("tonight.addRecipe")
                     }.listRowBackground(Theme.surface)
                 }.workingSurface()
             } else if let batch = model.batch, let scope, batch.originID != scope.inventory {
@@ -116,6 +117,13 @@ struct TonightEntry: View {
                         guard !Task.isCancelled, openRecipe?.id == anchor.recipe, choosing == nil else { return }
                         scroll.scrollTo(anchor, anchor: .center)
                         requestedIngredient = nil
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(tonightText("Add recipe")) { manual = true }
+                            .accessibilityHint(tonightText("Review a recipe by hand"))
+                            .accessibilityIdentifier("tonight.addRecipe")
                     }
                 }
             }
@@ -278,7 +286,6 @@ struct TonightEntry: View {
                 if !filtering, model.input != nil, model.savedRecipes.isEmpty, !model.busy {
                     Section(tonightText("Save a reviewed recipe")) {
                         Text(tonightText("No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup."))
-                        Button(tonightText("Review a recipe by hand")) { manual = true }.buttonStyle(PrimaryAction())
                     }
                 }
                 if !filtering { matchedRecipes }
@@ -295,9 +302,6 @@ struct TonightEntry: View {
                 }
                 if !filtering { recipesNeedingReview }
                 Section(tonightText("Recipe library")) {
-                    if filtering || model.input == nil || !model.savedRecipes.isEmpty || model.busy {
-                        Button(tonightText("Review a recipe by hand")) { manual = true }
-                    }
                     RecordsRecoveryLink(accessibilityID: "tonight.records")
                     if !filtering { importedRecipes }
                     Button(tonightText("Refresh recipes and pantry")) { Task { await refresh() } }.disabled(model.busy || applying)

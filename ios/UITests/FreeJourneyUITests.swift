@@ -112,7 +112,13 @@ import XCTest
                 "tonight.result.", title)).firstMatch
         }
         func saveFreeRecipe(_ title: String) {
-            tap(app.buttons["Review a recipe by hand"])
+            let manual = app.navigationBars["Tonight"].buttons["tonight.addRecipe"]
+            XCTAssertEqual(app.buttons.matching(identifier: "tonight.addRecipe").count, 1)
+            XCTAssertTrue(manual.isHittable)
+            XCTAssertEqual(manual.label, "Add recipe")
+            captureSystemScreen("Add another recipe from a populated Tonight library")
+            manual.tap()
+            XCTAssertTrue(app.navigationBars["Review a recipe"].waitForExistence(timeout: 8))
             fill(title, into: "tonight.recipe.title")
             fill("1", into: "tonight.recipe.servings")
             fill("Tortillas", into: "tonight.recipe.ingredient")
@@ -203,6 +209,9 @@ import XCTest
         enableSwitch("Limit recipes to available appliances")
         tap(app.buttons["preferences.review"])
         tap(app.buttons["preferences.save"])
+        // Saving preferences reloads the chooser. Confirm the existing dinner before adding the second.
+        XCTAssertTrue(app.navigationBars["Private meal preferences"].waitForNonExistence(timeout: 8))
+        reveal(row(firstTitle), requiredHit: CGVector(dx: 0.5, dy: 0.5))
         saveFreeRecipe(secondTitle)
         XCTAssertTrue(row(firstTitle).waitForExistence(timeout: 10), app.debugDescription)
         let global = match(secondTitle)
@@ -650,7 +659,7 @@ import XCTest
         appliances.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         tap(app.buttons["preferences.review"])
         tap(app.buttons["preferences.save"])
-        tap(app.buttons["Review a recipe by hand"])
+        tap(app.buttons["tonight.addRecipe"])
         let title = "Lentil supper"
         fill(title, into: "tonight.recipe.title")
         fill("1", into: "tonight.recipe.servings")

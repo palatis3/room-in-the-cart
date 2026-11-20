@@ -58,13 +58,13 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 12))
         let empty = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "No reviewed recipes are available.")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 12))
-        tap(app.buttons["Review a recipe by hand"])
+        tap(app.buttons["tonight.addRecipe"])
         XCTAssertTrue(app.navigationBars["Review a recipe"].waitForExistence(timeout: 8))
         tap(app.buttons["Cancel"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 8))
         // A real reviewed recipe can be saved before any shop exists. Canceling
         // earlier must not have filled the reusable slot or created a pickup.
-        tap(app.buttons["Review a recipe by hand"])
+        tap(app.buttons["tonight.addRecipe"])
         fill(app.textFields["tonight.recipe.title"], "No-shop rice dinner")
         fill(app.textFields["tonight.recipe.servings"], "1")
         fill(app.textFields["tonight.recipe.ingredient"], "Rice")
@@ -132,6 +132,10 @@ import XCTest
             XCTAssertTrue(source.waitForExistence(timeout: 5))
             XCTAssertTrue(source.isHittable, "An ingredient search should put its matching import directly below the search field.")
             XCTAssertFalse(noMatch.exists)
+            let addRecipe = app.navigationBars.buttons["tonight.addRecipe"]
+            XCTAssertTrue(addRecipe.isHittable, "Adding a recipe must also be reachable from the filtered library.")
+            XCTAssertEqual(addRecipe.label, spanish ? "Añadir receta" : "Add recipe")
+            XCTAssertEqual(app.buttons.matching(identifier: "tonight.addRecipe").count, 1)
             tap(source)
             let servings = app.textFields["tonight.recipe.servings"]
             XCTAssertTrue(servings.waitForExistence(timeout: 5))

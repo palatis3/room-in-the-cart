@@ -103,6 +103,23 @@
         }
       }
     },
+    "Add recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir receta"
+          }
+        }
+      }
+    },
     "Apply adds one dinner to this pickup.": {
       "extractionState": "manual",
       "localizations": {
