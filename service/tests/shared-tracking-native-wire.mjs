@@ -13,9 +13,11 @@ import {observeNativeWireCommand} from './shared-demand-native-wire.mjs';
 // Identity provider and delivery interruption are fixtures; tracking responses and
 // complete acknowledgments are observed from the actual service, never synthesized.
 // Every household read/preview/command reaches the original authenticated API/PG path.
-export async function exerciseTrackingClient({service,owner,householdId,shopId,phase,privateState,dropFirstReply=false,...fixture}){
+export async function exerciseTrackingClient({service,owner,householdId,shopId,phase,privateState,readDevicePage,dropFirstReply=false,...fixture}){
  const dir=await mkdtemp(join(tmpdir(),'ritc-tracking-wire-tls-'));await chmod(dir,0o700);
  const key=join(dir,'tls.key'),cert=join(dir,'tls.pem'),der=join(dir,'tls.der'),config=join(dir,'openssl.cnf'),input=join(privateState,'phase-'+phase+'-'+randomUUID()+'.json'),code=randomUUID();
+ const reference=join(dir,'tracking-reference.json');
+ let nativeDevice;
  let tls,attempts=0,dropped=0;const unsuccessful=[],commands=[],candidateRequests=[],previewRequests=[],candidateResponses=[],previewResponses=[];let candidateAttempts=0,previewAttempts=0,historyAttempts=0,catalogAttempts=0,mealCatalogAttempts=0,trackingHistoryAttempts=0;const historyResponses=[],catalogResponses=[],mealCatalogResponses=[],trackingHistoryResponses=[];
  try{
   await writeFile(config,'[req]\ndistinguished_name=dn\nx509_extensions=ext\nprompt=no\n[dn]\nCN=localhost\n[ext]\nsubjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\nkeyUsage=digitalSignature,keyEncipherment\n',{mode:0o600});
@@ -25,6 +27,15 @@ export async function exerciseTrackingClient({service,owner,householdId,shopId,p
   const user={id:owner.subject,email:'wire@example.invalid',email_confirmed_at:new Date().toISOString()};
   tls=createServer({key:await readFile(key),cert:await readFile(cert)},async(req,res)=>{
    if(!req.url.startsWith('/auth/v1/')){
+    if(!nativeDevice&&phase!=='revoked'&&req.method==='GET'&&req.url.toLowerCase()===`/v1/households/${householdId}/shops/${shopId}/demand/tracking`){
+     // The fixture and Swift enroll separate devices for the same shopper. Take an
+     // independent signed reference read as the Swift device before forwarding its GET.
+     nativeDevice=req.headers['x-device-token'];
+     try{
+      if(typeof nativeDevice!=='string'||!nativeDevice||nativeDevice===owner.device)throw new Error('Expected distinct native enrollment');
+      await writeFile(reference,JSON.stringify(await readDevicePage(nativeDevice)),{mode:0o600});
+     }catch{res.writeHead(500);res.end('{}');return;}
+    }
     const capture=(req.url.endsWith('/demand/tracking/candidates')||req.url.endsWith('/requests/operation-undo-candidates'))?candidateResponses:(req.url.endsWith('/demand/tracking/previews')||req.url.endsWith('/requests/operation-undo-previews'))?previewResponses:req.url.endsWith('/requests/operations')?historyResponses:req.url.endsWith('/demand/tracking/action-sources')?catalogResponses:req.url.endsWith('/demand/tracking/meal-action-sources')?mealCatalogResponses:req.url.endsWith('/demand/tracking/operations')?trackingHistoryResponses:null;
     if(req.method==='GET'&&req.url.endsWith('/requests/operations'))historyAttempts++;
     if(req.method==='POST'&&req.url.endsWith('/demand/tracking/action-sources'))catalogAttempts++;
@@ -55,8 +66,9 @@ export async function exerciseTrackingClient({service,owner,householdId,shopId,p
   });
   await new Promise((resolve,reject)=>tls.once('error',reject).listen(0,'127.0.0.1',resolve));
   await runNativeWireTest({suite:'SharedMealNativeWireTests',method:'testSharedMealClientAgainstPostgres',scenario:'tracking-'+phase,unsuccessful,
-   env:{RITC_WIRE_TRACKING_PHASE:phase,RITC_WIRE_TRACKING_FIXTURE:input,RITC_WIRE_TRACKING_STATE:privateState,RITC_WIRE_TRACKING_VAULT:owner.subject,
+   env:{RITC_WIRE_TRACKING_PHASE:phase,RITC_WIRE_TRACKING_FIXTURE:input,RITC_WIRE_TRACKING_STATE:privateState,RITC_WIRE_TRACKING_VAULT:owner.subject,RITC_WIRE_TRACKING_REFERENCE:reference,
     RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code}});
-  return{attempts,dropped,commands,candidateAttempts,candidateRequests,candidateResponses,previewAttempts,previewRequests,previewResponses,historyAttempts,historyResponses,catalogAttempts,catalogResponses,mealCatalogAttempts,mealCatalogResponses,trackingHistoryAttempts,trackingHistoryResponses};
+  const after=phase==='request'||phase==='recover'?await readDevicePage(nativeDevice):undefined;
+  return{after,attempts,dropped,commands,candidateAttempts,candidateRequests,candidateResponses,previewAttempts,previewRequests,previewResponses,historyAttempts,historyResponses,catalogAttempts,catalogResponses,mealCatalogAttempts,mealCatalogResponses,trackingHistoryAttempts,trackingHistoryResponses};
  }finally{if(tls?.listening)await new Promise(resolve=>tls.close(resolve));await rm(dir,{recursive:true,force:true});}
 }
