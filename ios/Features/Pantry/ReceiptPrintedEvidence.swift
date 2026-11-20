@@ -27,6 +27,19 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let fridge = #/(?i)\b(?:keep refrigerated|refrigerated|mantener refrigerad[oa]s?|refrigerad[oa]s?)\b/#
     private static let storageConflict = #/(?i)\b(?:never|not|do not|previously|thawed|after opening|no congelar|no refrigerar|descongelad[oa]s?|despu[eé]s de abrir)\b/#
     private static let cupboard = #/(?i)\b(?:shelf stable|shelf-stable|store in (?:a )?cool dry place|conservar en lugar fresco y seco)\b/#
+    private static let nonItem = #/(?i)\b(?:total|subtotal|balance|saldo|amount due|change due|importe|a pagar|monto|tax|impuestos?|iva|vat|cash|efectivo|credit|cr[eé]dito|debit|d[eé]bito|card|tarjeta|payment|pagos?|visa|mastercard|discount|descuento|coupon|cup[oó]n|deposit|dep[oó]sito|fee|cargo|service charge|env[ií]o|shipping|tip|propina|refund|reembolso|return|devoluci[oó]n|unit price|precio unitario|precio por|ticket|receipt|recibo|invoice|factura)\b/#
+    private static let rateByUnit = #/(?i)(?:@|\b(?:per|por)\s+(?:kg|lb|g|unidad|unit|oz|ea)\b|\/\s*(?:kg|lb|g|unidad|unit|oz|ea)\b)/#
+
+    static func isStandaloneAmount(_ text: String) -> Bool {
+        text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price) != nil
+    }
+
+    static func canSuggestAmount(for wording: String) -> Bool {
+        guard !wording.contains(nonItem), !wording.contains(rateByUnit), !wording.contains(mixed),
+              !wording.contains(signedValue), !wording.contains(otherNumbers) else { return false }
+        let printed = Self(.init(originalText: wording), knownStorage: [:])
+        return printed.kind == .item && printed.name != nil && printed.amount == nil
+    }
 
     init(_ row: ScanReceiptLine, knownStorage: [String:Set<InventoryLocation>]) {
         let text = row.reviewedText.trimmingCharacters(in: .whitespacesAndNewlines)

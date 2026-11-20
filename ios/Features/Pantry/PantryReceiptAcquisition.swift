@@ -87,10 +87,15 @@ struct ReceiptImportDraft {
         if let printedDate { purchaseDate = printedDate.day }
         var knownStorage: [String:Set<InventoryLocation>] = [:]
         for lot in lots { knownStorage[InventoryReceiptAlias.key(lot.name), default: []].insert(lot.location) }
-        lines = source.receiptLines.enumerated().map { ordinal, line in
+        let linkedAmountIDs = Set(source.receiptLines.compactMap(\.linkedAmountLineID))
+        let rawWordingByID = Dictionary(uniqueKeysWithValues: source.receiptLines.map { ($0.id, $0.originalText) })
+        lines = source.receiptLines.enumerated().compactMap { ordinal, line in
+            guard !linkedAmountIDs.contains(line.id) else { return nil }
             let printed = ReceiptPrintedEvidence(line, knownStorage: knownStorage)
             let name = printed.name ?? line.reviewedText
-            return Line(id: line.id, ordinal: line.documentLine?.ordinal ?? ordinal, original: line.originalText, documentLine: line.documentLine,
+            let rawAmount = line.linkedAmountLineID.flatMap { rawWordingByID[$0] }
+            let original = rawAmount.map { line.originalText + "\n" + $0 } ?? line.originalText
+            return Line(id: line.id, ordinal: line.documentLine?.ordinal ?? ordinal, original: original, documentLine: line.documentLine,
                 printed: printed, sourceName: name, name: name, location: printed.storage ?? .cupboard)
         }
     }

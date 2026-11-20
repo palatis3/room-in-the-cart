@@ -70,6 +70,16 @@ final class CoreDomainTests: XCTestCase {
         XCTAssertEqual(result.preferredOfferID, "b")
         XCTAssertEqual(result.offerB.itemHeadroom?.minorUnits, -98)
         XCTAssertEqual(result.scope, .itemOnly)
+        let tortillas = ComparisonRequest(itemName: "Tortillas", needed: try quantity(12),
+            offerA: PackOffer(id: "a", label: "", usableQuantity: try quantity(12), price: Money(minorUnits: 360)),
+            offerB: PackOffer(id: "b", label: "", usableQuantity: try quantity(18), price: Money(minorUnits: 450)),
+            itemCap: Money(minorUnits: 400))
+        let rates = try XCTUnwrap(tortillas.comparableUnitPrices)
+        XCTAssertEqual(rates.a, try Rational(30))
+        XCTAssertEqual(rates.b, try Rational(25))
+        let wholePacks = try PackComparison.evaluate(tortillas)
+        XCTAssertEqual(wholePacks.preferredOfferID, "a")
+        XCTAssertEqual(wholePacks.offerB.itemHeadroom?.minorUnits, -50)
     }
 
     func testUnknownYieldAndMissingPriceAreUnresolved() throws {
@@ -85,6 +95,10 @@ final class CoreDomainTests: XCTestCase {
         XCTAssertNil(missingPrice.offerA.itemHeadroom)
         XCTAssertEqual(missingPrice.offerA.issues, [.priceUnknown])
         XCTAssertNil(missingPrice.preferredOfferID)
+        XCTAssertNil(try request(need: quantity(1), yield: quantity(8), price: nil).comparableUnitPrices)
+        XCTAssertNil(try request(need: quantity(1), yield: nil).comparableUnitPrices)
+        XCTAssertNil(try request(need: quantity(1), yield: quantity(0)).comparableUnitPrices)
+        XCTAssertEqual(try request(need: quantity(1), yield: quantity(8), price: .zero).comparableUnitPrices?.a, .zero)
 
         let free = try PackComparison.evaluate(request(need: quantity(12), yield: quantity(8), price: .zero))
         XCTAssertEqual(free.offerA.totalCost, .zero)
@@ -131,6 +145,7 @@ final class CoreDomainTests: XCTestCase {
         let unresolved = try PackComparison.evaluate(input)
         XCTAssertEqual(unresolved.offerA.issues, [.usableConversionUnknown])
         XCTAssertNil(unresolved.offerA.packsToBuy)
+        XCTAssertNil(input.comparableUnitPrices)
         let basis = UnitBasis(sourceUnit: .cup, targetUnit: .gram,
                               targetAmountPerSourceUnit: try Rational(120), sourceNote: "Confirmed flour label")
         let offer = PackOffer(id: "a", label: "Flour", usableQuantity: try quantity(1, unit: .cup),
@@ -138,6 +153,12 @@ final class CoreDomainTests: XCTestCase {
         let known = try PackComparison.evaluate(ComparisonRequest(itemName: "Flour", needed: input.needed,
                                                                    offerA: offer, offerB: input.offerB))
         XCTAssertEqual(known.offerA.packsToBuy, 2)
+        let metric = PackOffer(id: "b", label: "Metric", usableQuantity: try quantity(1, 2, unit: .kilogram),
+                               price: Money(minorUnits: 325))
+        let rates = try XCTUnwrap(ComparisonRequest(itemName: "Flour", needed: input.needed,
+                                                    offerA: offer, offerB: metric).comparableUnitPrices)
+        XCTAssertEqual(rates.a, try Rational(5, 3))
+        XCTAssertEqual(rates.b, try Rational(13, 20))
         XCTAssertTrue(known.offerA.isResolved)
         XCTAssertFalse(known.offerB.isResolved)
         XCTAssertNil(known.preferredOfferID)

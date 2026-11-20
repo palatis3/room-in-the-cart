@@ -384,6 +384,16 @@ final class AppModelTests: XCTestCase {
 
     @MainActor
     func testComparisonAmountLabelsKeepSingularUnitsAndDistinguishWeightFromVolume() throws {
+        for locale in [Locale(identifier: "en_US"), Locale(identifier: "es_MX")] {
+            let style = Decimal.FormatStyle.Currency(code: "USD", locale: locale).precision(.fractionLength(2...4))
+            let unit = UnitOfMeasure.count.comparisonLabel(for: .one)
+            let exact = comparisonUnitPriceText(try Rational(30), in: .count, locale: locale)
+            XCTAssertEqual(exact, message("%@ per 1 %@", (Decimal(30) / 100).formatted(style), unit))
+            let third = comparisonUnitPriceText(try Rational(100, 3), in: .count, locale: locale)
+            XCTAssertEqual(third, message("About %@ per 1 %@", (Decimal(3333) / 10_000).formatted(style), unit))
+            let tiny = comparisonUnitPriceText(try Rational(1, 200), in: .count, locale: locale)
+            XCTAssertEqual(tiny, message("Less than %@ per 1 %@", (Decimal(1) / 10_000).formatted(style), unit))
+        }
         let cases: [(UnitOfMeasure, String)] = [
             (.count, tr("item")), (.ounce, tr("ounce (weight)")),
             (.cup, tr("US cup")), (.fluidOunce, tr("US fluid ounce")),

@@ -1635,6 +1635,53 @@ import StoreKit
         coordinator.stop()
     }
 
+    func testHelpAndMembershipShareTheCurrentHouseholdAndOffer() async {
+        let source = FakeMembershipSessionSource(session: session())
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let coordinator = MembershipCoordinator { session, _ in self.coordinatorModel(session, service, store) }
+        defer { coordinator.stop() }
+
+        XCTAssertNil(coordinator.model(for: nil))
+        coordinator.bind(to: source)
+        await settle { coordinator.model?.displayedAnnualOffer != nil }
+        let authorized = coordinator.model(for: source.membershipSession)
+        XCTAssertNotNil(authorized?.displayedAnnualOffer)
+        XCTAssertEqual(authorized?.showsPurchaserControls, true)
+        XCTAssertNil(coordinator.model(for: session(household: "different-household")))
+        XCTAssertNil(coordinator.model(for: session(subject: "different-account")))
+
+        source.invalidate()
+        XCTAssertNil(coordinator.model(for: source.membershipSession))
+        XCTAssertNil(authorized?.displayedAnnualOffer)
+        XCTAssertEqual(authorized?.showsPurchaserControls, false)
+    }
+
+    func testHelpOnlyShowsAnAvailableStoreOfferAndKeepsPurchaserRecoverySeparate() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let incomplete = MembershipConfiguration(productID: "test.household.annual",
+            privacyURL: URL(string: "https://example.test/privacy"), termsURL: nil)
+        let model = MembershipModel(configuration: incomplete, context: context,
+            service: service, storefront: store, clock: { self.now })
+        defer { model.stop() }
+        XCTAssertNil(model.displayedAnnualOffer)
+        await model.start()
+        XCTAssertNotNil(model.offer)
+        XCTAssertNil(model.displayedAnnualOffer)
+        XCTAssertFalse(model.canPurchase)
+        XCTAssertTrue(model.showsPurchaserControls)
+
+        var seat = context
+        seat.appAccountToken = nil
+        let seatModel = MembershipModel(configuration: incomplete, context: seat,
+            service: service, storefront: store, clock: { self.now })
+        defer { seatModel.stop() }
+        await seatModel.start()
+        XCTAssertNil(seatModel.displayedAnnualOffer)
+        XCTAssertFalse(seatModel.showsPurchaserControls)
+    }
+
     func testMissingDeploymentConfigurationKeepsPurchaseDisabled() async {
         let model = MembershipModel(configuration: .init(productID: nil, privacyURL: nil, termsURL: nil))
         await model.purchase()

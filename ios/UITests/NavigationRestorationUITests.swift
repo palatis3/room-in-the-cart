@@ -14,7 +14,7 @@ import XCTest
         XCTAssertTrue(tabs["Shop"].isSelected)
         tap(tabs["Pantry"])
         XCTAssertTrue(app.buttons["pantry.setup.apply"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.buttons["pantry.setup.apply"].label, "Start my pantry")
+        XCTAssertEqual(app.buttons["pantry.setup.firstFood"].label, "Add my first food")
         app.terminate()
         launch(reset: false)
         XCTAssertTrue(tabs["Pantry"].isSelected)
@@ -53,7 +53,7 @@ import XCTest
         XCTAssertTrue(inspect.wait(for: \.isHittable, toEqual: true, timeout: 8))
         XCTAssertGreaterThanOrEqual(inspect.frame.height, 44)
         inspect.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
-        let detail = app.navigationBars["Inspect ingredient"]
+        let detail = app.navigationBars["Item details"]
         XCTAssertTrue(detail.waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["milk"].exists)
         tap(detail.buttons.firstMatch)

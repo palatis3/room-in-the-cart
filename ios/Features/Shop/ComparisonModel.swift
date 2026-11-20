@@ -131,6 +131,21 @@ extension CoreDomain.ComparisonResult {
     }
 }
 
+/// One usable unit in the requested measure. Rates can be smaller than one cent.
+func comparisonUnitPriceText(_ cents: Rational, in unit: UnitOfMeasure, locale: Locale) -> String {
+    let style = Decimal.FormatStyle.Currency(code: "USD", locale: locale)
+        .precision(.fractionLength(2...4)).rounded(rule: .toNearestOrAwayFromZero)
+    let unitLabel = unit.comparisonLabel(for: .one)
+    if cents > .zero, cents.numerator <= (cents.denominator - 1) / 100 {
+        return message("Less than %@ per 1 %@", (Decimal(1) / 10_000).formatted(style), unitLabel)
+    }
+    let dollars = Decimal(cents.numerator) / Decimal(cents.denominator) / 100
+    // A reduced fraction in cents terminates within four dollar decimals
+    // precisely when its denominator divides 100.
+    let key = 100 % cents.denominator == 0 ? "%@ per 1 %@" : "About %@ per 1 %@"
+    return message(key, dollars.formatted(style), unitLabel)
+}
+
 extension OfferResult {
     var wholePacksText: String? {
         packsToBuy.map { message("Whole packs to buy: %@", $0.formatted()) }
@@ -304,6 +319,10 @@ func amountText(_ value: Rational) -> String {
     return "\(value.numerator)/\(value.denominator)"
 }
 func moneyText(_ value: Money) -> String {
+    moneyText(value, locale: .current)
+}
+
+func moneyText(_ value: Money, locale: Locale) -> String {
     let amount = Decimal(value.minorUnits) / Decimal(100)
-    return amount.formatted(.currency(code: "USD"))
+    return amount.formatted(.currency(code: value.currency.rawValue).locale(locale))
 }

@@ -80,6 +80,113 @@ import XCTest
         XCTAssertEqual(draft.lines.last?.printed?.kind, .adjustment)
     }
 
+    func testGardenMarketOCRLinksOnlyMatchingPrintedRowsAndLeavesReceiptUnconfirmed() async throws {
+        // The audit receipt separates the item and amount into distant printed columns.
+        let size = CGSize(width: 760, height: 560)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIColor.white.setFill()
+            UIRectFill(CGRect(origin: .zero, size: size))
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.monospacedSystemFont(ofSize: 32, weight: .regular), .foregroundColor: UIColor.black
+            ]
+            for (left, right, y) in [
+                ("GARDEN MARKET", "", 48.0), ("2026-11-20", "", 112.0),
+                ("BLACK BEANS", "$2.40", 210.0), ("CORN TORTILLAS", "$3.20", 296.0),
+                ("TOTAL", "$5.60", 390.0)
+            ] {
+                (left as NSString).draw(at: CGPoint(x: 36, y: y), withAttributes: attributes)
+                (right as NSString).draw(at: CGPoint(x: 595, y: y), withAttributes: attributes)
+            }
+        }
+        let document = try await ReceiptDocumentReader().extract(.init(data: XCTUnwrap(image.pngData()), kind: .image))
+        let page = try XCTUnwrap(document.pages.first)
+        let items = page.lines.filter { $0.text.contains("BLACK BEANS") || $0.text.contains("CORN TORTILLAS") }
+        XCTAssertEqual(items.count, 2)
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let expected = ["BLACK BEANS": "$2.40", "CORN TORTILLAS": "$3.20"]
+        for item in items {
+            let matchingName = try XCTUnwrap(expected.keys.first(where: { item.text.contains($0) }))
+            let amount = try XCTUnwrap(expected[matchingName])
+            let itemPosition = ExtractedReceiptDocument.Selection(page: page.id, line: item.id)
+            if item.text.contains(amount) {
+                // Vision can emit a whole printed row on other supported runtimes.
+                XCTAssertNil(document.amountAssociations[itemPosition])
+                let source = try document.source(target: target, merchant: "Garden Market", stage: .receipt,
+                                                 selection: [itemPosition], at: Date())
+                let draft = try ReceiptImportDraft(source: source)
+                XCTAssertEqual(draft.lines.first?.printed?.priceWording, amount)
+                XCTAssertTrue(draft.selectedLines.isEmpty)
+                XCTAssertEqual(draft.lines.first?.paid, "")
+                continue
+            }
+            let matched = try XCTUnwrap(document.amountAssociations[itemPosition], page.lines.map(\.text).joined(separator: " | "))
+            XCTAssertEqual(page.lines.first(where: { $0.id == matched.line })?.text, amount)
+            let source = try document.source(target: target, merchant: "Garden Market", stage: .receipt,
+                                             selection: [itemPosition], linkedAmountItems: [itemPosition], at: Date())
+            XCTAssertEqual(Set(source.receiptLines.map(\.originalText)), [matchingName, amount])
+            let draft = try ReceiptImportDraft(source: source)
+            let line = try XCTUnwrap(draft.lines.first)
+            XCTAssertEqual(draft.lines.count, 1)
+            XCTAssertEqual(line.name, matchingName)
+            XCTAssertEqual(line.original, matchingName + "\n" + amount)
+            XCTAssertEqual(line.printed?.priceWording, amount)
+            XCTAssertEqual(line.received, "")
+            XCTAssertEqual(line.usable, "")
+            XCTAssertEqual(line.paid, "")
+            XCTAssertFalse(draft.dateConfirmed)
+            XCTAssertTrue(draft.selectedLines.isEmpty)
+
+            let undone = try document.source(target: target, merchant: "Garden Market", stage: .receipt,
+                                             selection: [itemPosition], at: Date())
+            XCTAssertEqual(undone.documentLayoutID, source.documentLayoutID)
+            XCTAssertFalse(undone.originalText.contains(amount))
+            XCTAssertNil(try ReceiptImportDraft(source: undone).lines.first?.printed?.amount)
+        }
+        let totalRows = page.lines.filter { $0.text.contains("TOTAL") }
+        XCTAssertEqual(totalRows.count, 1)
+        XCTAssertNil(document.amountAssociations[.init(page: 1, line: try XCTUnwrap(totalRows.first).id)])
+    }
+
+    func testAmountLinksRejectMultiplePricesRatesTotalsAndNonmatchingRows() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        func box(_ x: Double, _ y: Double) -> CGRect { .init(x: x, y: y, width: 0.18, height: 0.05) }
+        let left = box(0.06, 0.6), right = box(0.7, 0.6)
+        func document(_ lines: [Line], method: ReceiptAcquisition.DocumentLine.Method = .imageOCR) -> ExtractedReceiptDocument {
+            .init(digest: Data(repeating: 1, count: 32), pages: [.init(id: 1, method: method, lines: lines)])
+        }
+        let beans = Line(id: 1, text: "BLACK BEANS", bounds: left)
+        let amount = Line(id: 2, text: "$2.40", bounds: right)
+        let first = ExtractedReceiptDocument.Selection(page: 1, line: 1)
+        let second = ExtractedReceiptDocument.Selection(page: 1, line: 2)
+        XCTAssertEqual(document([beans, amount]).amountAssociations, [first: second])
+        let reversed = document([.init(id: 1, text: "$2.40", bounds: right), .init(id: 2, text: "BLACK BEANS", bounds: left)])
+        XCTAssertEqual(reversed.amountAssociations, [second: first])
+        XCTAssertTrue(document([beans, amount], method: .textFile).amountAssociations.isEmpty)
+        XCTAssertTrue(document([beans, amount, .init(id: 3, text: "$5.60", bounds: box(0.45, 0.6))]).amountAssociations.isEmpty)
+        XCTAssertTrue(document([beans, amount, .init(id: 3, text: "$2.40", bounds: right)]).amountAssociations.isEmpty)
+        XCTAssertTrue(document([beans, .init(id: 2, text: "$2.40", uncertain: true, bounds: right)]).amountAssociations.isEmpty)
+        XCTAssertTrue(document([beans, .init(id: 2, text: "$2.40", bounds: box(0.7, 0.49))]).amountAssociations.isEmpty)
+        for wording in ["TOTAL", "GRAND TOTAL", "SERVICE FEE", "CARD PAYMENT", "IMPORTE A PAGAR",
+                        "PRECIO UNITARIO", "BEANS 2 CT @ $1.20", "BEANS 2 FOR $1.20", "BEANS $1.20"] {
+            XCTAssertTrue(document([.init(id: 1, text: wording, bounds: left), amount]).amountAssociations.isEmpty, wording)
+        }
+        for wording in ["$2.40/kg", "-$2.40", "$2.40 $5.60", "2.40", "MXN $2.40"] {
+            XCTAssertTrue(document([beans, .init(id: 2, text: wording, bounds: right)]).amountAssociations.isEmpty, wording)
+        }
+
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        XCTAssertThrowsError(try document([beans, amount]).source(target: target, merchant: "Garden Market", stage: .order,
+                                                                 selection: [first], linkedAmountItems: [first], at: Date()))
+        XCTAssertThrowsError(try document([beans, amount]).source(target: target, merchant: "Garden Market", stage: .receipt,
+                                                                 selection: [second], linkedAmountItems: [first], at: Date()))
+        let unlinked = try document([beans, amount]).source(target: target, merchant: "Garden Market", stage: .receipt,
+                                                           selection: [first, second], at: Date())
+        XCTAssertEqual(unlinked.receiptLines.map(\.originalText), ["BLACK BEANS", "$2.40"])
+        XCTAssertTrue(try ReceiptImportDraft(source: unlinked).selectedLines.isEmpty)
+    }
+
     func testSourceInspectorReturnsOnlyAnAvailableImagePage() async throws {
         let text = ReceiptDocumentBytes(data: Data("YOGURT $1.50".utf8), kind: .text)
         let typedImage = await ReceiptDocumentReader.originalPage(text, pageNumber: 1)

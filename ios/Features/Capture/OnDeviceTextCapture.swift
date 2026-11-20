@@ -6,6 +6,15 @@ import UniformTypeIdentifiers
 /// Vision OCR is local. Images remain bounded in-memory review evidence; it never marks a receipt paid or food received.
 struct OnDeviceTextCapture: CaptureOCRService {
     func recognize(_ data: Data) async throws -> CaptureEvidence {
+        try await recognizeWithLayout(data).evidence
+    }
+
+    struct Reading: Sendable {
+        let evidence: CaptureEvidence
+        let lineBounds: [CGRect]
+    }
+
+    func recognizeWithLayout(_ data: Data) async throws -> Reading {
         guard !data.isEmpty, data.count <= CaptureLimits.imageBytes else { throw CaptureFailure.inputTooLarge }
         let cancellation = OCRRequestCancellation()
         let work = Task.detached(priority: .userInitiated) {
@@ -35,7 +44,10 @@ struct OnDeviceTextCapture: CaptureOCRService {
             let positions = raw.map { CaptureTextPosition(midY: Double($0.boundingBox.midY), minX: Double($0.boundingBox.minX)) }
             let observations = CaptureReadingOrder.indices(positions).map { raw[$0] }
             guard observations.count <= CaptureLimits.lines else { throw CaptureFailure.inputTooLarge }
-            let lines = observations.compactMap { $0.topCandidates(1).first }
+            let recognized = observations.compactMap { observation in
+                observation.topCandidates(1).first.map { ($0, observation.boundingBox) }
+            }
+            let lines = recognized.map(\.0)
             let text = lines.map(\.string).joined(separator: "\n")
             try CaptureLimits.validate(text)
             guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CaptureFailure.noText }
@@ -43,8 +55,10 @@ struct OnDeviceTextCapture: CaptureOCRService {
             guard let destination = CGImageDestinationCreateWithData(preview, UTType.jpeg.identifier as CFString, 1, nil) else { throw CaptureFailure.imageUnavailable }
             CGImageDestinationAddImage(destination, image, [kCGImageDestinationLossyCompressionQuality: 0.8] as CFDictionary)
             guard CGImageDestinationFinalize(destination) else { throw CaptureFailure.imageUnavailable }
-            return CaptureEvidence(text: text, source: .photoOCR, uncertainLines: lines.filter { $0.confidence < 0.7 }.map(\.string),
+            let evidence = CaptureEvidence(text: text, source: .photoOCR, uncertainLines: lines.filter { $0.confidence < 0.7 }.map(\.string),
                 sourceImageData: data, previewImageData: preview as Data)
+            let bounds = lines.contains { $0.string.contains(where: \.isNewline) } ? [] : recognized.map(\.1)
+            return Reading(evidence: evidence, lineBounds: bounds)
         }
         return try await withTaskCancellationHandler(operation: { try await work.value }, onCancel: {
             cancellation.cancel(); work.cancel()

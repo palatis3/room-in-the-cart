@@ -36,6 +36,7 @@ struct ScanReceiptLine: Codable, Equatable, Identifiable, Sendable {
     let originalText: String
     var uncertainOCR: Bool?
     var documentLine: ReceiptAcquisition.DocumentLine?
+    var linkedAmountLineID: UUID?
     var reviewedText: String
     var quantityNote: String
     var priceNote: String
@@ -87,6 +88,20 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
             guard positions.allSatisfy({ (1...20).contains($0.page) && (1...200).contains($0.line) }),
                   Set(positions.map(\.ordinal)).count == positions.count else { throw ScanFailure.invalidText }
         } else if receiptLines.contains(where: { $0.documentLine != nil }) { throw ScanFailure.invalidText }
+        let linesByID = Dictionary(uniqueKeysWithValues: receiptLines.map { ($0.id, $0) })
+        var linkedAmountIDs: Set<UUID> = []
+        for row in receiptLines {
+            guard let linkedID = row.linkedAmountLineID else { continue }
+            guard let amount = linesByID[linkedID], linkedAmountIDs.insert(linkedID).inserted,
+                  amount.linkedAmountLineID == nil, let itemPlace = row.documentLine, let pricePlace = amount.documentLine,
+                  itemPlace.method == .imageOCR || itemPlace.method == .pdfOCR,
+                  itemPlace.method == pricePlace.method, itemPlace.stage == pricePlace.stage, itemPlace.stage != .order,
+                  itemPlace.page == pricePlace.page, abs(pricePlace.line - itemPlace.line) == 1,
+                  row.uncertainOCR != true, amount.uncertainOCR != true, row.reviewedText == row.originalText,
+                  ReceiptPrintedEvidence.canSuggestAmount(for: row.originalText),
+                  ReceiptPrintedEvidence.isStandaloneAmount(amount.originalText), row.priceNote == amount.originalText
+            else { throw ScanFailure.invalidText }
+        }
         try ScanLimits.text(originalText)
         if let reviewedText { try ScanLimits.text(reviewedText) }
         var total = 0

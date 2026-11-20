@@ -1150,6 +1150,227 @@
         }
       }
     },
+    "What are you buying?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What are you buying?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué vas a comprar?"
+          }
+        }
+      }
+    },
+    "Available at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad disponible en casa"
+          }
+        }
+      }
+    },
+    "Set aside within the total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set aside within the total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad reservada dentro del total"
+          }
+        }
+      }
+    },
+    "Use the same unit as your shopping need. Count only food available for this item. Include any set-aside portions in the total you need.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the same unit as your shopping need. Count only food available for this item. Include any set-aside portions in the total you need."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa la misma unidad que en la cantidad que necesitas. Cuenta solo lo que tengas disponible de este alimento. Incluye las porciones reservadas en el total que necesitas."
+          }
+        }
+      }
+    },
+    "Food at home and set-aside portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food at home and set-aside portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos en casa y porciones reservadas"
+          }
+        }
+      }
+    },
+    "Add Pack A price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Pack A price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar el precio del paquete A"
+          }
+        }
+      }
+    },
+    "Add Pack B price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Pack B price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar el precio del paquete B"
+          }
+        }
+      }
+    },
+    "Update comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar comparación"
+          }
+        }
+      }
+    },
+    "Enter a price in USD with up to two decimal places.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a price in USD with up to two decimal places."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa un precio en USD con hasta dos decimales."
+          }
+        }
+      }
+    },
+    "Cost in whole packs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cost in whole packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo de comprar paquetes completos"
+          }
+        }
+      }
+    },
+    "%@ per 1 %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ per 1 %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ por 1 %2$@"
+          }
+        }
+      }
+    },
+    "About %@ per 1 %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ per 1 %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprox. %1$@ por 1 %2$@"
+          }
+        }
+      }
+    },
+    "Less than %@ per 1 %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less than %@ per 1 %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menos de %1$@ por 1 %2$@"
+          }
+        }
+      }
+    },
     "Pack A": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
@@ -1438,7 +1659,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revisar la compra"
+            "value": "Revisar antes de comprar"
           }
         }
       }

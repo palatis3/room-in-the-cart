@@ -512,6 +512,70 @@
           }
         }
       }
+    },
+    "Added %@ to %@ on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added %@ to %@ on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se agregó %1$@ a %2$@ en este iPhone."
+          }
+        }
+      }
+    },
+    "No active items.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active items."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay artículos pendientes."
+          }
+        }
+      }
+    },
+    "Unsaved edits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsaved edits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios sin guardar"
+          }
+        }
+      }
+    },
+    "Recently checked groceries": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently checked groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Productos marcados recientemente"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

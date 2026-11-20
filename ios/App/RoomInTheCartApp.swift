@@ -792,6 +792,7 @@ struct RecordsView: View {
                 BrandScopeLabel(recordsText("On this iPhone"), systemImage: "lock")
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                CheckedGroceriesHistoryLink(model: ledger)
                 PickupPlacedOrdersLink(model: pickup)
                 if pickup.pantryRouteAvailable {
                     NavigationLink {

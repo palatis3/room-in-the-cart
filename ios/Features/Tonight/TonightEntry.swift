@@ -93,7 +93,7 @@ struct TonightEntry: View {
                     Section {
                         Text(tonightText("Set up My Pantry to review recipes against food available at home."))
                         NavigationLink(tonightText("Open My Pantry")) { PantrySetupView(pickup: pickup, ledger: ledger) }
-                        Button(tonightText("Review a recipe by hand")) { manual = true }
+                        Button(dinnerText("Enter your own recipe")) { manual = true }
                             .accessibilityIdentifier("tonight.addRecipe")
                     }.listRowBackground(Theme.surface)
                 }.workingSurface()
@@ -122,7 +122,7 @@ struct TonightEntry: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(tonightText("Add recipe")) { manual = true }
-                            .accessibilityHint(tonightText("Review a recipe by hand"))
+                            .accessibilityHint(dinnerText("Enter your own recipe"))
                             .accessibilityIdentifier("tonight.addRecipe")
                     }
                 }

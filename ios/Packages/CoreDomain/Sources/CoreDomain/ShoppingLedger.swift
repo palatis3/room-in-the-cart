@@ -695,6 +695,19 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             next.appendManualFields(id: UUID(), contributionID: UUID(), name: name, quantity: quantity, notes: notes, exclusions: exclusions)
         }
     }
+    /// Selected groceries are new manual rows, independent of any occurrence or pantry allocation.
+    mutating func addSavedDinnerGroceries(_ ingredients: [MealIngredient], exclusions: [String], revisionID: UUID, at date: Date) throws {
+        try mutate("savedDinnerGroceries", at: date, revisionID: revisionID) { next in
+            for ingredient in ingredients {
+                let lineID = next.appendLine(id: UUID(), name: ingredient.name, notes: ingredient.notes)
+                next.contributions.append(LedgerContribution(id: UUID(), lineID: lineID, source: .manual,
+                    productName: ingredient.name, quantity: ingredient.quantity, originalText: ingredient.contributionWording,
+                    notes: ingredient.notes, exclusions: exclusions + ingredient.exclusions, removedAt: nil,
+                    checkedWithoutAmount: ingredient.checkedWithoutAmount))
+            }
+        }
+    }
+
     /// Applying a reviewed kit is one edit, including when it contains dozens of rows.
     mutating func appendKitRows(_ rows: [ShoppingKitRow]) throws {
         try mutate("applyShoppingKit", at: Date()) { next in

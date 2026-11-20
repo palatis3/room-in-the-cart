@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Sending a request to someone else requires access to their household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending a request to someone else requires access to their household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para enviarle una solicitud a otra persona, necesitas acceso a su hogar."
+          }
+        }
+      }
+    },
     "Access has ended. Choose an available workspace.": {
       "localizations": {
         "en": {

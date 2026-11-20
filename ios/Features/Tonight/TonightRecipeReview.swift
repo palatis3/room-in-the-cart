@@ -26,6 +26,10 @@ struct TonightRecipeReview: View {
     @State private var brandsReviewed = false
     @State private var effort: MealEffort?
     @State private var candidate: MealTemplate?
+    @State private var savedRecipe: MealTemplate?
+    @State private var showRestrictions = false
+    @AccessibilityFocusState private var savedHeadingFocused: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var error: String?
     @State private var invalidAmountID: UUID?
     @FocusState private var focusedInput: String?
@@ -66,14 +70,30 @@ struct TonightRecipeReview: View {
             if !authorized { Text(tonightText("Unlock your private workspace to review tonight’s meals.")) }
             else {
                 WorkingForm {
-                    if let candidate {
+                    if let savedRecipe {
+                        Section {
+                            Label(ledgerText("Saved on this iPhone"), systemImage: "checkmark.circle.fill")
+                                .foregroundStyle(Theme.action)
+                                .accessibilityFocused($savedHeadingFocused)
+                                .accessibilityIdentifier("tonight.recipe.saved")
+                            Text(verbatim: savedRecipe.title).font(.system(.title2, design: .serif, weight: .semibold))
+                            fact(ledgerText("Servings"), amountText(savedRecipe.servings))
+                            SavedDinnerHandoffLink(recipe: savedRecipe)
+                            Button(ledgerText("Done")) { dismiss() }.accessibilityIdentifier("tonight.recipe.done")
+                        }
+                        .onAppear { savedHeadingFocused = true }
+                    } else if let candidate {
                         Section(tonightText("Review recipe facts")) {
                             Text(candidate.title).font(.system(.title2, design: .serif, weight: .semibold))
                             if let template, original?.mealTemplates.contains(template) != true {
                                 Text(tonightText("This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts."))
                             }
-                            LabeledContent(ledgerText("Servings"), value: amountText(candidate.servings))
-                            ForEach(candidate.ingredients) { ingredient in LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel) }
+                            fact(ledgerText("Servings"), amountText(candidate.servings))
+                            if let minutes = candidate.leadTimeMinutes {
+                                fact(tonightText("Preparation time"), Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes])))
+                                    .accessibilityIdentifier("tonight.recipe.reviewedMinutes")
+                            }
+                            ForEach(candidate.ingredients) { ingredient in fact(ingredient.name, ingredient.reviewedAmountLabel) }
                             if let template, original?.mealTemplates.contains(template) == true {
                                 Text(tonightText("Saving updates this recipe in your library."))
                             } else if let replacedRecipe {
@@ -98,46 +118,62 @@ struct TonightRecipeReview: View {
                             WorkingField(ledgerText("Dinner title")) {
                                 TextField(ledgerText("Dinner title"), text: $title, prompt: Text(verbatim: "—"))
                                     .focused($focusedInput, equals: "title")
+                                    .submitLabel(.next)
+                                    .onSubmit { advance(to: "servings", using: scroll) }
                                     .accessibilityIdentifier("tonight.recipe.title")
                             }
                             WorkingField(ledgerText("Servings")) {
                                 TextField(ledgerText("Servings"), text: $servings, prompt: Text(verbatim: "—"))
                                     .keyboardType(.numbersAndPunctuation)
                                     .focused($focusedInput, equals: "servings")
+                                    .submitLabel(.next)
+                                    .onSubmit { advance(to: "minutes", using: scroll) }
                                     .accessibilityIdentifier("tonight.recipe.servings")
                             }
-                            WorkingField(tonightText("Preparation minutes, unknown if blank")) {
-                                TextField(tonightText("Preparation minutes, unknown if blank"), text: $minutes, prompt: Text(verbatim: "—"))
+                            .id("servings")
+                            WorkingField(tonightText("Prep time in minutes (optional)")) {
+                                TextField(tonightText("Prep time in minutes (optional)"), text: $minutes, prompt: Text(verbatim: "—"))
                                     .keyboardType(.numberPad)
                                     .focused($focusedInput, equals: "minutes")
+                                    .accessibilityIdentifier("tonight.recipe.minutes")
                             }
+                            .id("minutes")
                         }
                         Section(ledgerText("Ingredients")) {
-                            ForEach($ingredients) { $ingredient in
+                            ForEach(ingredients) { ingredient in
+                                let row = dinnerDraftBinding(ingredient, in: $ingredients)
                                 if let wording = ingredient.originalWording {
                                     Text(verbatim: wording).font(.subheadline).foregroundStyle(Theme.secondary)
                                 }
                                 WorkingField(tonightText("Ingredient")) {
-                                    TextField(tonightText("Ingredient"), text: $ingredient.name, prompt: Text(verbatim: "—"))
+                                    TextField(tonightText("Ingredient"), text: row.name, prompt: Text(verbatim: "—"))
                                         .focused($focusedInput, equals: "ingredient-\(ingredient.id)")
+                                        .submitLabel(ingredient.checkedWithoutAmount ? .done : .next)
+                                        .onSubmit {
+                                            if ingredient.checkedWithoutAmount { focusedInput = nil }
+                                            else { advance(to: ingredient.id.uuidString, using: scroll) }
+                                        }
                                         .accessibilityIdentifier("tonight.recipe.ingredient")
-                                }.id(ingredient.id)
+                                }
+                                .contentShape(Rectangle())
+                                .simultaneousGesture(TapGesture().onEnded { focusedInput = "ingredient-\(ingredient.id)" })
+                                .id("ingredient-\(ingredient.id)")
                                 if invalidAmountID == ingredient.id {
                                     Label(amountError(for: ingredient), systemImage: "exclamationmark.circle")
                                         .foregroundStyle(Theme.warning)
                                         .accessibilityIdentifier("tonight.recipe.amountError")
                                 }
-                                Toggle(tonightText("I checked this ingredient by hand"), isOn: $ingredient.checkedWithoutAmount)
-                                    .accessibilityLabel(tonightText("I checked this ingredient by hand") + ", " + ingredient.name)
+                                Toggle(tonightText("Use without a measured amount"), isOn: row.checkedWithoutAmount)
+                                    .accessibilityLabel(ingredient.name.isEmpty ? tonightText("Use without a measured amount") :
+                                        ingredient.name + ", " + tonightText("Use without a measured amount"))
                                     .accessibilityIdentifier("tonight.recipe.manual." + ingredient.id.uuidString)
                                     .onChange(of: ingredient.checkedWithoutAmount) { _, checked in
                                         if checked && invalidAmountID == ingredient.id { invalidAmountID = nil }
                                     }
-                                if ingredient.checkedWithoutAmount {
-                                    Text(tonightText("Use without a measured amount.")).font(.footnote)
-                                } else {
-                                    LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit,
+                                if !ingredient.checkedWithoutAmount {
+                                    LedgerQuantityFields(amount: row.amount, unit: row.unit,
                                     amountFocus: ($focusedInput, ingredient.id.uuidString), amountLabel: tonightText("Amount (required)"))
+                                    .id(ingredient.id.uuidString)
                                     .onChange(of: ingredient.amount) { _, _ in
                                         if invalidAmountID == ingredient.id, ingredient.positiveQuantity != nil { invalidAmountID = nil }
                                     }
@@ -146,45 +182,56 @@ struct TonightRecipeReview: View {
                             .onDelete { ingredients.remove(atOffsets: $0) }
                             Button(tonightText("Add ingredient")) { ingredients.append(Ingredient()) }
                         }
-                        Section(tonightText("Reviewed restriction details")) {
-                            Text(tonightText("Leave details unknown unless you reviewed them. Recipe details never confirm the ingredients or brand of a pantry product."))
-                            Toggle(tonightText("I reviewed all ingredient details"), isOn: $detailsReviewed)
-                            if detailsReviewed {
-                                TextField(tonightText("Complete ingredient details, one per line"), text: $details, axis: .vertical)
-                                    .focused($focusedInput, equals: "details")
-                            }
-                            Toggle(tonightText("I reviewed required appliances"), isOn: $appliancesReviewed)
-                            if appliancesReviewed {
-                                TextField(tonightText("Required appliances, one per line; empty means none"), text: $appliances, axis: .vertical)
-                                    .focused($focusedInput, equals: "appliances")
-                            }
-                            Toggle(tonightText("I reviewed recipe brands"), isOn: $brandsReviewed)
-                            if brandsReviewed {
-                                TextField(tonightText("Brands, one per line; empty means none"), text: $brands, axis: .vertical)
-                                    .focused($focusedInput, equals: "brands")
-                            }
-                            Picker(tonightText("Preparation effort"), selection: $effort) {
-                                Text(tonightText("Unknown")).tag(MealEffort?.none)
-                                ForEach(MealEffort.allCases, id: \.self) { Text(tonightText($0.rawValue)).tag(Optional($0)) }
-                            }
+                        Section {
+                            DisclosureGroup(isExpanded: $showRestrictions) {
+                                restrictionFields
+                            } label: { Text(tonightText("Ingredients, brands and equipment (optional)")) }
+                            .disclosureGroupStyle(LabeledFormDisclosureStyle(label: tonightText("Ingredients, brands and equipment (optional)"),
+                                identifier: "tonight.recipe.restrictions"))
                         }
-                        Button(tonightText("Review recipe facts")) { review(scroll) }.accessibilityIdentifier("tonight.recipe.review")
+                        Button(tonightText("Review recipe facts")) { review(scroll) }
+                            .buttonStyle(PrimaryAction())
+                            .accessibilityIdentifier("tonight.recipe.review")
                     }
                     if let error { Text(error) }
                     if ledger.saving || ledger.hasPendingSave || ledger.error != nil {
-                        LedgerSaveStatus(model: ledger, showsLastSave: false)
+                        LedgerSaveStatus(model: ledger, showsLastSave: false) {
+                            if let candidate { confirmSaved(candidate) }
+                        }
                     } else {
                         Text(ledgerText("Local to this iPhone")).font(.footnote)
                     }
                 }
-                .keyboardDoneAction(visible: focusedInput != nil, title: ledgerText("Done"),
-                                    identifier: "tonight.recipe.keyboardDone") { focusedInput = nil }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if focusedInput != nil {
+                        HStack {
+                            if let nextInput {
+                                Button { advance(to: nextInput, using: scroll) } label: {
+                                    Text(tonightText("Next")).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                                }
+                                .accessibilityIdentifier("tonight.recipe.keyboardNext")
+                            }
+                            Spacer()
+                            Button { focusedInput = nil } label: {
+                                Text(ledgerText("Done")).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                            }
+                            .accessibilityIdentifier("tonight.recipe.keyboardDone")
+                        }
+                        .font(.body.weight(.semibold))
+                        .padding(.horizontal)
+                        .background(.bar)
+                    }
+                }
                 .scrollDismissesKeyboard(.interactively)
                 .disabled(busy)
             }
         }.navigationTitle(tonightText("Review a recipe"))
             .privacySensitive()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tonightText("Cancel")) { dismiss() }.disabled(busy) } }
+            .toolbar {
+                if savedRecipe == nil || !authorized {
+                    ToolbarItem(placement: .cancellationAction) { Button(tonightText("Cancel")) { dismiss() }.disabled(busy) }
+                }
+            }
             .onAppear {
                 guard identity == nil else { return }
                 identity = currentIdentity(); origin = ledger.sourceWorkspaceID; original = ledger.workspace
@@ -209,6 +256,67 @@ struct TonightRecipeReview: View {
                 } else { ingredients = [Ingredient()] }
             }
     }
+    private var nextInput: String? {
+        switch focusedInput {
+        case "title": return "servings"
+        case "servings": return "minutes"
+        case "minutes": return ingredients.first.map { "ingredient-\($0.id)" }
+        default:
+            if let ingredient = ingredients.first(where: { "ingredient-\($0.id)" == focusedInput }), !ingredient.checkedWithoutAmount {
+                return ingredient.id.uuidString
+            }
+            return nil
+        }
+    }
+
+    private func advance(to field: String, using scroll: ScrollViewProxy) {
+        scroll.scrollTo(field, anchor: .center)
+        focusedInput = field
+    }
+
+    @ViewBuilder private func fact(_ label: String, _ value: String) -> some View {
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(verbatim: label).font(.headline)
+                Text(verbatim: value)
+            }
+            .accessibilityElement(children: .combine)
+        } else {
+            LabeledContent(label, value: value)
+        }
+    }
+
+    @ViewBuilder private var restrictionFields: some View {
+        Text(tonightText("Leave details unknown unless you reviewed them. Recipe details never confirm the ingredients or brand of a pantry product."))
+        Toggle(tonightText("I reviewed all ingredient details"), isOn: $detailsReviewed)
+        if detailsReviewed {
+            TextField(tonightText("Complete ingredient details, one per line"), text: $details, axis: .vertical)
+                .focused($focusedInput, equals: "details")
+        }
+        Toggle(tonightText("I reviewed required appliances"), isOn: $appliancesReviewed)
+        if appliancesReviewed {
+            TextField(tonightText("Required appliances, one per line; empty means none"), text: $appliances, axis: .vertical)
+                .focused($focusedInput, equals: "appliances")
+        }
+        Toggle(tonightText("I reviewed recipe brands"), isOn: $brandsReviewed)
+        if brandsReviewed {
+            TextField(tonightText("Brands, one per line; empty means none"), text: $brands, axis: .vertical)
+                .focused($focusedInput, equals: "brands")
+        }
+        DinnerOptionField(title: tonightText("Preparation effort")) {
+            Picker(tonightText("Preparation effort"), selection: $effort) {
+                Text(tonightText("Unknown")).tag(MealEffort?.none)
+                ForEach(MealEffort.allCases, id: \.self) { Text(tonightText($0.rawValue)).tag(Optional($0)) }
+            }
+        }
+    }
+
+    private func confirmSaved(_ recipe: MealTemplate) {
+        guard authorized, ledger.workspace.mealTemplates.contains(recipe) else { return }
+        savedRecipe = recipe
+        error = nil
+    }
+
     private func lines(_ text: String) -> [String] { text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty } }
     private func amountError(for ingredient: Ingredient) -> String {
         let name = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -226,8 +334,7 @@ struct TonightRecipeReview: View {
                 guard ingredient.checkedWithoutAmount || quantity != nil else {
                     error = nil
                     invalidAmountID = ingredient.id
-                    scroll.scrollTo(ingredient.id, anchor: .center)
-                    focusedInput = ingredient.id.uuidString
+                    advance(to: ingredient.id.uuidString, using: scroll)
                     UIAccessibility.post(notification: .announcement, argument: amountError(for: ingredient))
                     return
                 }
@@ -288,7 +395,7 @@ struct TonightRecipeReview: View {
                     }
                 }
             }
-            if ok && authorized { dismiss() }
+            if ok && authorized { confirmSaved(candidate) }
             else { error = tonightText("Recipe was not confirmed. Review changed information or the pending save.") }
         } catch { self.error = tonightText("The saved source or private workspace changed. Open the review again.") }
     }

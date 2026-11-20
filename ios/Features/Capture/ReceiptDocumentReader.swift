@@ -80,6 +80,7 @@ struct ReceiptDocumentPage: Identifiable, Sendable {
         let id: Int
         let text: String
         var uncertain = false
+        var bounds: CGRect?
     }
     let lines: [Line]
     var skipped: ReceiptDocumentFailure? = nil
@@ -95,21 +96,66 @@ struct ExtractedReceiptDocument: Sendable {
         let line: Int
         var id: Self { self }
     }
+
+    /// Keep OCR observations separate. Offer a price only when the image supports
+    /// an isolated item/amount pair on one printed row in reading order.
+    var amountAssociations: [Selection: Selection] {
+        var result: [Selection: Selection] = [:]
+        for page in pages where page.method == .imageOCR || page.method == .pdfOCR {
+            for (first, second) in zip(page.lines, page.lines.dropFirst()) {
+                guard second.id == first.id + 1, !first.uncertain, !second.uncertain,
+                      let firstBox = first.bounds, let secondBox = second.bounds else { continue }
+                let (item, amount, left, right) = firstBox.minX < secondBox.minX
+                    ? (first, second, firstBox, secondBox) : (second, first, secondBox, firstBox)
+                guard left.maxX <= right.minX,
+                      Self.samePrintedRow(left, right),
+                      ReceiptPrintedEvidence.isStandaloneAmount(amount.text),
+                      ReceiptPrintedEvidence.canSuggestAmount(for: item.text),
+                      !page.lines.contains(where: { other in
+                          guard other.id != item.id, other.id != amount.id, let box = other.bounds else { return false }
+                          return Self.samePrintedRow(left, box) || Self.samePrintedRow(right, box)
+                      })
+                else { continue }
+                result[.init(page: page.id, line: item.id)] = .init(page: page.id, line: amount.id)
+            }
+        }
+        return result
+    }
+
+    private static func samePrintedRow(_ first: CGRect, _ second: CGRect) -> Bool {
+        let minHeight = min(first.height, second.height), maxHeight = max(first.height, second.height)
+        let overlap = min(first.maxY, second.maxY) - max(first.minY, second.minY)
+        return minHeight > 0 && maxHeight <= 2 * minHeight && overlap >= minHeight * 0.65
+            && abs(first.midY - second.midY) <= minHeight * 0.35
+    }
+
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
-                selection: Set<Selection>, at date: Date) throws -> SourceMediaRecord {
-        guard (1...200).contains(selection.count) else { throw ReceiptDocumentFailure.selection }
+                selection: Set<Selection>, linkedAmountItems: Set<Selection> = [], at date: Date) throws -> SourceMediaRecord {
+        let associations = linkedAmountItems.isEmpty ? [:] : amountAssociations
+        let amounts = linkedAmountItems.compactMap { associations[$0] }
+        let included = selection.union(amounts)
+        guard (1...200).contains(included.count), linkedAmountItems.isSubset(of: selection),
+              amounts.count == linkedAmountItems.count, linkedAmountItems.isEmpty || stage != .order
+        else { throw ReceiptDocumentFailure.selection }
         let id = ReceiptAcquisition.identity(["document", digest.base64EncodedString()])
         var rows: [ScanReceiptLine] = []
         for page in pages {
-            for line in page.lines where selection.contains(.init(page: page.id, line: line.id)) {
+            let pageLines = Dictionary(uniqueKeysWithValues: page.lines.map { ($0.id, $0) })
+            for line in page.lines where included.contains(.init(page: page.id, line: line.id)) {
                 let place = ReceiptAcquisition.DocumentLine(method: page.method, stage: stage, page: page.id, line: line.id)
                 var row = ScanReceiptLine(id: ReceiptAcquisition.lineID(receiptID: id, ordinal: place.ordinal), originalText: line.text)
                 if line.uncertain { row.uncertainOCR = true }
                 row.documentLine = place
+                let position = Selection(page: page.id, line: line.id)
+                if linkedAmountItems.contains(position), let amount = associations[position], let printed = pageLines[amount.line] {
+                    let amountPlace = ReceiptAcquisition.DocumentLine(method: page.method, stage: stage, page: page.id, line: amount.line)
+                    row.linkedAmountLineID = ReceiptAcquisition.lineID(receiptID: id, ordinal: amountPlace.ordinal)
+                    row.priceNote = printed.text
+                }
                 rows.append(row)
             }
         }
-        guard rows.count == selection.count else { throw ReceiptDocumentFailure.selection }
+        guard rows.count == included.count else { throw ReceiptDocumentFailure.selection }
         var source = SourceMediaRecord(id: id, target: target, originalText: rows.map(\.originalText).joined(separator: "\n"),
             reviewedLabel: merchant, imageJPEG: nil, barcode: nil, receiptLines: rows, capturedAt: date)
         // Extraction can change row positions even when the file bytes are identical.
@@ -130,13 +176,18 @@ struct ExtractedReceiptDocument: Sendable {
 
 struct ReceiptDocumentReader: Sendable {
     typealias Recognize = @Sendable (Data) async throws -> String
-    private var recognize: @Sendable (Data) async throws -> (String, Set<String>) = { data in
-        let reading = try await OnDeviceTextCapture().recognize(data)
-        return (reading.text, Set(reading.uncertainLines))
+    private struct Reading: Sendable {
+        let text: String
+        var uncertain: Set<String> = []
+        var bounds: [CGRect] = []
+    }
+    private var recognize: @Sendable (Data) async throws -> Reading = { data in
+        let reading = try await OnDeviceTextCapture().recognizeWithLayout(data)
+        return Reading(text: reading.evidence.text, uncertain: Set(reading.evidence.uncertainLines), bounds: reading.lineBounds)
     }
     init() {}
     init(recognize: @escaping Recognize) {
-        self.recognize = { data in (try await recognize(data), []) }
+        self.recognize = { data in Reading(text: try await recognize(data)) }
     }
 
     func extract(_ input: ReceiptDocumentBytes) async throws -> ExtractedReceiptDocument {
@@ -172,26 +223,26 @@ struct ReceiptDocumentReader: Sendable {
 
     private func readPages(_ input: ReceiptDocumentBytes) async throws -> [ReceiptDocumentPage] {
         var characterCount = 0
-        func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, text: String, uncertain: Set<String> = []) throws -> ReceiptDocumentPage {
-            characterCount += text.count
-            guard characterCount <= 100_000, !text.contains("\0") else { throw ReceiptDocumentFailure.characters }
+        func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, reading: Reading) throws -> ReceiptDocumentPage {
+            characterCount += reading.text.count
+            guard characterCount <= 100_000, !reading.text.contains("\0") else { throw ReceiptDocumentFailure.characters }
             var lines: [ReceiptDocumentPage.Line] = []
-            for (index, row) in text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated() {
+            for (index, row) in reading.text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated() {
                 guard !row.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
                 guard index < 200 else { throw ReceiptDocumentFailure.lineLimit }
-                lines.append(.init(id: index + 1, text: String(row), uncertain: uncertain.contains(String(row))))
+                let bounds = reading.bounds.indices.contains(index) ? reading.bounds[index] : nil
+                lines.append(.init(id: index + 1, text: String(row), uncertain: reading.uncertain.contains(String(row)), bounds: bounds))
             }
             return .init(id: number, method: method, lines: lines)
         }
         switch input.kind {
         case .text:
             guard let text = decodePlainTextFile(input.data, unmarkedUTF16: input.unmarkedUTF16) else { throw ReceiptDocumentFailure.unsupported }
-            return [try page(1, method: .textFile, text: text)]
+            return [try page(1, method: .textFile, reading: Reading(text: text))]
         case .image:
             try Self.checkPixels(input.data)
             let jpeg = try ScanImageNormalizer.normalize(input.data)
-            let (text, uncertain) = try await readImage(jpeg)
-            return [try page(1, method: .imageOCR, text: text, uncertain: uncertain)]
+            return [try page(1, method: .imageOCR, reading: try await readImage(jpeg))]
         case .pdf:
             guard let pdf = PDFDocument(data: input.data) else { throw ReceiptDocumentFailure.unsupported }
             guard !pdf.isLocked else { throw ReceiptDocumentFailure.locked }
@@ -203,12 +254,11 @@ struct ReceiptDocumentReader: Sendable {
                 guard original.numberOfCharacters <= 100_000 - characterCount else { throw ReceiptDocumentFailure.characters }
                 let text = original.string ?? ""
                 if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    result.append(try page(index + 1, method: .pdfText, text: text))
+                    result.append(try page(index + 1, method: .pdfText, reading: Reading(text: text)))
                 } else {
                     do {
                         let bytes = try autoreleasepool { try Self.raster(original) }
-                        let (text, uncertain) = try await readImage(bytes)
-                        result.append(try page(index + 1, method: .pdfOCR, text: text, uncertain: uncertain))
+                        result.append(try page(index + 1, method: .pdfOCR, reading: try await readImage(bytes)))
                     } catch is CancellationError { throw CancellationError() }
                     catch let failure as ReceiptDocumentFailure {
                         switch failure {
@@ -226,9 +276,9 @@ struct ReceiptDocumentReader: Sendable {
         }
     }
 
-    private func readImage(_ data: Data) async throws -> (String, Set<String>) {
+    private func readImage(_ data: Data) async throws -> Reading {
         do { return try await recognize(data) }
-        catch CaptureFailure.noText { return ("", []) }
+        catch CaptureFailure.noText { return Reading(text: "") }
         catch CaptureFailure.inputTooLarge { throw ReceiptDocumentFailure.lineLimit }
     }
 

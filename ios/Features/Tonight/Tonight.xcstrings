@@ -1,6 +1,142 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Ingredients, brands and equipment (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredients, brands and equipment (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes, marcas y equipo de cocina (opcional)"
+          }
+        }
+      }
+    },
+    "Prep time in minutes (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prep time in minutes (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo de preparación en minutos (opcional)"
+          }
+        }
+      }
+    },
+    "Minutes of prep remaining (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutes of prep remaining (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de preparación restantes (opcional)"
+          }
+        }
+      }
+    },
+    "Ingredients to avoid, one per line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredients to avoid, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes que se deben evitar, uno por línea"
+          }
+        }
+      }
+    },
+    "Use without a measured amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use without a measured amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar sin medir"
+          }
+        }
+      }
+    },
+    "Optional recipe details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional recipe details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles opcionales de la receta"
+          }
+        }
+      }
+    },
+    "Preparation time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo de preparación"
+          }
+        }
+      }
+    },
+    "Next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siguiente"
+          }
+        }
+      }
+    },
     "Replace recipe": {
       "extractionState": "manual",
       "localizations": {

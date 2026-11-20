@@ -174,17 +174,27 @@ struct FirstListEntry: View {
         guard child?.presented != true, household.projection?.grantId == nil else { return nil }
         return CapturePrivateIdentity.current(access: access, household: household)
     }
+    private var committedHere: Bool {
+        guard let editor, editor.store === model.firstListStore, let identity,
+              (try? firstListOwner(identity)) == editor.owner,
+              let preview = editor.content.preview, let shop = model.shop, shop.id == preview.shopID else { return false }
+        return shop.importBatches.contains { $0.id == preview.id && $0.undoneAt == nil }
+    }
+
     var body: some View {
         Group {
             if let editor, editor.authorize() {
                 FirstListForm(model: model, editor: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, onSaved: onSaved)
+            } else if committedHere {
+                // Committing our own batch advanced the revision before its sheet finished closing.
+                ProgressView()
             } else if failed || identity == nil || editor != nil {
                 ContentUnavailableView(ledgerText("Draft unavailable"), systemImage: "lock",
                     description: Text(ledgerText("Reopen the private shopping list to check the current workspace.")))
             } else { ProgressView() }
         }
         .toolbar {
-            if failed || identity == nil || editor?.authorize() == false {
+            if !committedHere, failed || identity == nil || editor?.authorize() == false {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } }
             }
         }

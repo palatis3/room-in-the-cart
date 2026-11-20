@@ -32,7 +32,8 @@ struct DinnerPlanningEntry: View {
                     runtimeChanges: runtimeChanges, milestoneAccess: permitsPrivatePlanning)
             } else {
                 DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
-                    runtimeChanges: runtimeChanges, basketPrepAccess: permitsPrivatePlanning, milestoneAccess: permitsPrivatePlanning)
+                    runtimeChanges: runtimeChanges, basketPrepAccess: permitsPrivatePlanning, milestoneAccess: permitsPrivatePlanning,
+                    needsPantrySetup: pickup.ready && !pickup.pantryIsActive)
             }
         }
         .privacySensitive()

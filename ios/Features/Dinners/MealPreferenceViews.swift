@@ -60,15 +60,31 @@ private struct ReviewedTermsField: View {
     }
 }
 
+struct DinnerOptionField<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        if typeSize.isAccessibilitySize {
+            WorkingField(title) { content.labelsHidden() }
+        } else {
+            content
+        }
+    }
+}
+
 private struct MealEffortPicker: View {
     let title: String
     @Binding var effort: MealEffort?
     var body: some View {
-        Picker(title, selection: $effort) {
-            Text(dinnerText("Unspecified")).tag(nil as MealEffort?)
-            Text(dinnerText("Low effort")).tag(Optional(MealEffort.low))
-            Text(dinnerText("Medium effort")).tag(Optional(MealEffort.medium))
-            Text(dinnerText("High effort")).tag(Optional(MealEffort.high))
+        DinnerOptionField(title: title) {
+            Picker(title, selection: $effort) {
+                Text(dinnerText("Unspecified")).tag(nil as MealEffort?)
+                Text(dinnerText("Low effort")).tag(Optional(MealEffort.low))
+                Text(dinnerText("Medium effort")).tag(Optional(MealEffort.medium))
+                Text(dinnerText("High effort")).tag(Optional(MealEffort.high))
+            }
         }
     }
 }

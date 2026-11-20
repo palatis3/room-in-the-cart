@@ -44,6 +44,22 @@ public struct ComparisonRequest: Codable, Hashable, Sendable {
     }
 }
 
+extension ComparisonRequest {
+    /// Cents per one usable unit of the requested food. Both rates use the same
+    /// denominator, independent of the number of whole packs needed at checkout.
+    public var comparableUnitPrices: (a: Rational, b: Rational)? {
+        guard let unit = needed?.unit else { return nil }
+        func rate(_ offer: PackOffer) -> Rational? {
+            guard let price = offer.price, let usable = offer.usableQuantity,
+                  let amount = try? usable.converted(to: unit, using: offer.confirmedConversion),
+                  amount > .zero else { return nil }
+            return try? Rational(price.minorUnits).divided(by: amount)
+        }
+        guard let a = rate(offerA), let b = rate(offerB) else { return nil }
+        return (a, b)
+    }
+}
+
 public enum ComparisonScope: String, Codable, Sendable { case itemOnly }
 public enum ComparisonIssue: String, Codable, Sendable {
     case neededQuantityUnknown
