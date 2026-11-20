@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "build": "1",
   "testMethod": "RoomInTheCartUITests/testReleaseStoreListingCapture",
-  "localTestSource": ".build/appstore-listing-audit/source/ios/UITests/RoomInTheCartUITests.swift",
+  "localTestSource": ".build/appstore-listing-audit/reviewer-harness.swift",
   "testSourceSHA256": "3380a1f2505704825755ea0d6972f16f6d651039a3291d10fad20493beb7157b",
   "assetProcessing": "Uncropped native simulator captures re-encoded to opaque JPEG at original size. No overlays.",
   "fixture": {
@@ -24,6 +24,70 @@
     }
   },
   "captures": [
+    {
+      "file": "current/dynamic-island-large/en-US/01-pack-comparison.jpg",
+      "width": 1320,
+      "height": 2868,
+      "alpha": false,
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "device": "RITC Large Listing Audit 20261120",
+      "deviceID": "8603A8C0-2236-4244-9B8E-7CB140273BA6",
+      "capturedAtUTC": "2026-11-20T14:42:36.896000+00:00",
+      "xcresult": ".build/appstore-listing-audit/large-pack-capture.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/large-pack-capture-attachments/B20EDE1F-80C8-417D-ABB2-A723BD21DF42.png",
+      "sourcePNGSHA256": "5423d9c5809cd406a4cd7789263fa71b0537929361abfd33088c755caf7707c3",
+      "sha256": "3448bdcda8d9f06067f017d5180bf15f33182f9eb0570d3fbad886231e881506",
+      "deviceModel": "iPhone 18 Pro Max"
+    },
+    {
+      "file": "current/dynamic-island-large/en-US/02-saved-record.jpg",
+      "width": 1320,
+      "height": 2868,
+      "alpha": false,
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "device": "RITC Large Listing Audit 20261120",
+      "deviceID": "8603A8C0-2236-4244-9B8E-7CB140273BA6",
+      "capturedAtUTC": "2026-11-20T14:43:11.307000+00:00",
+      "xcresult": ".build/appstore-listing-audit/large-pack-capture.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/large-pack-capture-attachments/65DA3DEA-1B5D-4BF4-88DB-1BC3751F3322.png",
+      "sourcePNGSHA256": "02b8a5bc144699cf000dfa3f1f5c5620193be45ed1db31bd039f51ee0361bfb4",
+      "sha256": "71cb991072cbbda3e5aae23a7ab141356137212e48936c387057571e7a8cb0fa",
+      "deviceModel": "iPhone 18 Pro Max"
+    },
+    {
+      "file": "current/dynamic-island-large/es-MX/01-pack-comparison.jpg",
+      "width": 1320,
+      "height": 2868,
+      "alpha": false,
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "device": "RITC Large Listing Audit 20261120",
+      "deviceID": "8603A8C0-2236-4244-9B8E-7CB140273BA6",
+      "capturedAtUTC": "2026-11-20T14:43:36.180000+00:00",
+      "xcresult": ".build/appstore-listing-audit/large-pack-capture.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/large-pack-capture-attachments/BBB9CEFA-F503-4240-95ED-BE0997A8EB31.png",
+      "sourcePNGSHA256": "f0f73475949a3a4966ff526eb200830a0e2868d37731bb2f3dac8553e4148b3d",
+      "sha256": "cd824c9b09df8dd2d24884eb7b2729dd4fdce8d532d7ac54893cba5819289e84",
+      "deviceModel": "iPhone 18 Pro Max"
+    },
+    {
+      "file": "current/dynamic-island-large/es-MX/02-saved-record.jpg",
+      "width": 1320,
+      "height": 2868,
+      "alpha": false,
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "device": "RITC Large Listing Audit 20261120",
+      "deviceID": "8603A8C0-2236-4244-9B8E-7CB140273BA6",
+      "capturedAtUTC": "2026-11-20T14:43:32.127000+00:00",
+      "xcresult": ".build/appstore-listing-audit/large-pack-capture.xcresult",
+      "sourcePNG": ".build/appstore-listing-audit/large-pack-capture-attachments/84129F93-E6C6-40A4-A8C1-13BE6DE0A036.png",
+      "sourcePNGSHA256": "a73929155fe4f27be3c3119bb923c5801d3ec32791977e37e5f3049164094088",
+      "sha256": "174f4a95ddf55561b777dd2080857a9164439056783709d3a1b553e958dbf603",
+      "deviceModel": "iPhone 18 Pro Max"
+    },
     {
       "file": "current/dynamic-island-medium/en-US/01-pack-comparison.jpg",
       "width": 1206,
@@ -89,5 +153,5 @@
       "deviceModel": "iPhone 17"
     }
   ],
-  "visualReview": "Each JPEG was inspected at its original size for the current Plum and Pear interface, localized tab and result labels, correct USD totals, and the fictional saved record."
+  "visualReview": "Each capture was reviewed in both locales for the current Plum and Pear interface, correct USD totals, accurate navigation, and the saved fictional record."
 }

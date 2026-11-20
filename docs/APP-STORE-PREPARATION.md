@@ -35,8 +35,8 @@ The [review draft](APP-STORE-LISTING-DRAFT.json) keeps the supplied English name
 
 | Localization | Name characters | Subtitle characters | Keyword bytes | Promotional characters | Description characters |
 |---|---:|---:|---:|---:|---:|
-| English (US) | 30 | 28 | 100 | 126 | 1558 |
-| Spanish (Mexico) | 25 | 26 | 99 | 146 | 1743 |
+| English (US) | 30 | 28 | 100 | 129 | 1560 |
+| Spanish (Mexico) | 25 | 26 | 99 | 131 | 1772 |
 
 For the future connected listing, lead with the cereal-request and pickup-budget story only after the configured candidate can receive a request, preview its total and show the contributor’s outcome. Add annual Household claims after Apple’s actual product and the named-seat flows pass on the signed build. At that point, verify operator-approved Terms of Use and Privacy Policy links from both the purchase screen and the product page for each submitted localization. [Apple subscription guidance](https://developer.apple.com/app-store/subscriptions/)
 
