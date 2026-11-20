@@ -1,3 +1,4 @@
+import { renderProductOverview } from './product-overview.js';
 import { brandName } from './brand.js';
 import { publicPages, type PublicLanguage, type PublicPageKey } from './public-pages-content.js';
 import { publicSiteConfiguration, type PublicSiteConfiguration } from './public-site-configuration.js';
@@ -18,9 +19,11 @@ const labels = {
   }
 } as const;
 
-export function publicPageKey(pathname: string): PublicPageKey | null {
-  const match = /^\/(help|privacy|terms|support)\/?$/.exec(pathname);
-  return match ? match[1] as PublicPageKey : null;
+type PublicRoute = PublicPageKey | 'about';
+
+export function publicPageKey(pathname: string): PublicRoute | null {
+  const match = /^\/(about|help|privacy|terms|support)\/?$/.exec(pathname);
+  return match ? match[1] as PublicRoute : null;
 }
 
 export function operatorDisplayName(raw: unknown): string | null {
@@ -76,13 +79,11 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     return node;
   };
   const render = (restoreLanguageFocus = false): void => {
-    const page = publicPages[key];
     root.replaceChildren(); root.classList.add('public-site'); root.dataset.publicPage = key;
     document.documentElement.lang = language;
-    document.title = page.title[language] + ' · Room in the Cart';
     const skip = element('a', labels.skip[language]); skip.href = '#public-main'; skip.className = 'public-skip'; root.append(skip);
     const header = element('header');
-    const brand = element('a'); brand.append(brandName(document)); brand.href = '/help?lang=' + language; brand.className = 'public-brand';
+    const brand = element('a'); brand.append(brandName(document)); brand.href = '/about?lang=' + language; brand.className = 'public-brand';
     const languageGroup = element('div'); languageGroup.className = 'public-language';
     const languageLabel = element('label', labels.language[language]); languageLabel.htmlFor = 'public-language';
     const languageSelect = element('select'); languageSelect.id = 'public-language';
@@ -95,6 +96,13 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
       render(true);
     });
     languageGroup.append(languageLabel, languageSelect); header.append(brand, languageGroup); root.append(header);
+    if (key === 'about') {
+      renderProductOverview(root, language, operatorName);
+      if (restoreLanguageFocus) languageSelect.focus();
+      return;
+    }
+    const page = publicPages[key];
+    document.title = page.title[language] + ' · Room in the Cart';
     const navigation = element('nav'); navigation.className = 'public-navigation'; navigation.setAttribute('aria-label', labels.navigation[language]);
     for (const route of pageKeys) {
       const link = element('a', publicPages[route].title[language]); link.href = '/' + route + '?lang=' + language;

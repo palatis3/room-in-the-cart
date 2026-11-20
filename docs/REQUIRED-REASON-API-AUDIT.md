@@ -18,6 +18,6 @@ Apple classifies `fstat` and `lstat` under File Timestamp, including calls used 
 
 The November 4 Xcode report recorded seven linked data types, three with an Analytics purpose. The current API declarations account for subsequent file-reader changes. [Historical archive validation](evidence/native/privacy-archive-20261104/validation.json) · [Historical Xcode privacy report](evidence/native/privacy-archive-20261104/RoomInTheCart-PrivacyReport.pdf)
 
-The seven collection declarations are tracked in the [data-collection inventory](PRIVACY-DATA-INVENTORY.md). Check the final signed build and dependency manifests again if shipping source, SDKs, dependencies or Apple's API list changes.
+The [data-collection inventory](PRIVACY-DATA-INVENTORY.md) tracks the current collection declarations and their service paths. Check the final signed build and dependency manifests again if shipping source, SDKs, dependencies or Apple's API list changes.
 
 The public Apple documentation retrieved for reproducibility is retained in the task review folder: [category JSON](/Users/palatis/Documents/Codex/2026-11-03/task/review/tracker/apple-required-reason-categories.json) and [overview Markdown](/Users/palatis/Documents/Codex/2026-11-03/task/review/tracker/apple-required-reason-api.md). Apple's category Markdown view omitted its possible-values table during this inspection, so the official structured documentation supplied the actual API/reason list.

@@ -1,5 +1,6 @@
 import XCTest
 import Combine
+import StoreKit
 @testable import RoomInTheCart
 
 @MainActor final class MembershipTests: XCTestCase {
@@ -1010,6 +1011,39 @@ import Combine
         XCTAssertTrue(model.hasPaidAccess)
     }
 
+    func testInterruptedStoreKitSyncReportsRestoreOutcomeAndCanRetry() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.start()
+        defer { model.stop() }
+        let fetches = service.fetches
+        let errors: [(StoreKitError, MembershipModel.Notice)] = [
+            (.userCancelled, .restoreCancelled),
+            (.networkError(URLError(.notConnectedToInternet)), .restoreUnavailable)
+        ]
+        for (error, expected) in errors {
+            store.syncError = error
+            await model.restore()
+            XCTAssertEqual(model.statusMessages, [.otherNotice(expected)])
+            XCTAssertEqual(service.fetches, fetches)
+            XCTAssertTrue(model.canPurchase)
+            XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+            XCTAssertNil(model.purchaseReport)
+        }
+        store.syncError = nil
+        service.error = .deliveryPending
+        await model.restore()
+        XCTAssertEqual(model.statusMessages, [.otherNotice(.restoreUnavailable)])
+        XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+        XCTAssertEqual(service.submissions, 0)
+
+        service.error = nil
+        await model.restore()
+        XCTAssertEqual(model.statusMessages, [.otherNotice(.restoredFree)])
+        XCTAssertEqual(store.syncCount, 4)
+    }
+
     func testPurchaserWithBothSeatsAssignedToOthersCanRestoreWithoutTakingASeat() async {
         let seats = ["adult-two", "adult-three"].map { MembershipSeat(userID: $0, displayName: $0, isAdult: true) }
         for status in [MembershipStatus.active, .grace] {
@@ -1660,6 +1694,7 @@ import Combine
     var pauseUnfinishedRead = false
     var unfinishedContinuation: CheckedContinuation<Void, Never>?
     var syncCount = 0
+    var syncError: StoreKitError?
     var purchaseCount = 0
     var pausePurchase = false
     var purchaseError: MembershipFailure?
@@ -1708,7 +1743,10 @@ import Combine
         }
     }
     func finish(transactionID: String) async { onFinish?(); finished.append(transactionID) }
-    func sync() async throws { syncCount += 1 }
+    func sync() async throws {
+        syncCount += 1
+        if let syncError { throw syncError }
+    }
 }
 
 // The test owns the fixture until teardown; the registry owns only a weak route.

@@ -1,0 +1,7 @@
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Apple Distribution
+DEVELOPMENT_TEAM = SP7Z9RNC76
+RITC_PROFILE_RoomInTheCart = Room in the Cart App Store
+RITC_PROFILE_RoomInTheCartShare = Room in the Cart Share App Store
+RITC_PROFILE_RoomInTheCartWidget = Room in the Cart Widget App Store
+PROVISIONING_PROFILE_SPECIFIER = $(RITC_PROFILE_$(TARGET_NAME))

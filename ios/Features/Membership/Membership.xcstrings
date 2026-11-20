@@ -544,6 +544,40 @@
         }
       }
     },
+    "Restore canceled.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore canceled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se canceló la restauración."
+          }
+        }
+      }
+    },
+    "Purchases could not be restored. Try Restore Purchases again when connected.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchases could not be restored. Try Restore Purchases again when connected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron restaurar las compras. Cuando tengas conexión, vuelve a tocar Restaurar compras."
+          }
+        }
+      }
+    },
     "Restore Purchases": {
       "extractionState": "manual",
       "localizations": {

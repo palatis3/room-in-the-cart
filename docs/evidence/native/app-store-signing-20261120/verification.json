@@ -1,0 +1,61 @@
+{
+  "signedArchive": "RoomInTheCart.signed.xcarchive",
+  "ipa": "export/RoomInTheCart.ipa",
+  "ipaSha256": "39e77728f2c26bc70b73e8c2fbfa92d483e1d6d5d96c9d7a36b6c6b449fc7be2",
+  "ipaBytes": 51481124,
+  "version": "0.1.0",
+  "build": "1",
+  "sdk": "iphoneos27.1",
+  "deploymentTarget": "17.0",
+  "xcodeBuild": "27A9275",
+  "iosSourceGitTree": "573568a34cf1e9455c0883ea2377567f5fec337d",
+  "signatureAndProvisioning": {
+    "dev.roominthecart.app": {
+      "profile": "Room in the Cart App Store",
+      "expiresUTC": "2027-11-20T14:20:17+00:00",
+      "team": "SP7Z9RNC76",
+      "groups": [
+        "group.dev.roominthecart.app.share-inbox",
+        "group.dev.roominthecart.app.widget"
+      ],
+      "debuggingAllowed": false,
+      "dataProtection": "NSFileProtectionComplete",
+      "profileContainsSigningCertificate": true,
+      "machOUuids": "UUID: EFEDEE9F-0F98-38F3-8526-C6E4101AE91F (arm64)",
+      "executableSha256": "3568cac6d9ccfa619816a63cf99f602178023e0ba68f46229196236db95bf265"
+    },
+    "dev.roominthecart.app.share": {
+      "profile": "Room in the Cart Share App Store",
+      "expiresUTC": "2027-11-20T14:20:17+00:00",
+      "team": "SP7Z9RNC76",
+      "groups": [
+        "group.dev.roominthecart.app.share-inbox"
+      ],
+      "debuggingAllowed": false,
+      "dataProtection": "NSFileProtectionComplete",
+      "profileContainsSigningCertificate": true,
+      "machOUuids": "UUID: 014AD236-F40F-3D04-A4F6-4D9DF6EB66C7 (arm64)",
+      "executableSha256": "2742ef44018c6f9c93fa050ba2bdeac628e83b5bcf56d468eb0eaf05cec77652"
+    },
+    "dev.roominthecart.app.widget": {
+      "profile": "Room in the Cart Widget App Store",
+      "expiresUTC": "2027-11-20T14:20:17+00:00",
+      "team": "SP7Z9RNC76",
+      "groups": [
+        "group.dev.roominthecart.app.widget"
+      ],
+      "debuggingAllowed": false,
+      "dataProtection": "NSFileProtectionComplete",
+      "profileContainsSigningCertificate": true,
+      "machOUuids": "UUID: 351DBA2A-EE37-392E-871C-F88A7B1125A4 (arm64)",
+      "executableSha256": "2b37f6cb380cebd97269d4f19254b958adb66517f3c3c2009571cdabfc3a748e"
+    }
+  },
+  "archiveAndIpaMachOUUIDsMatch": true,
+  "verifiedPrivacyDataTypeCount": 12,
+  "currentBilingualPrivacyHelpVerified": true,
+  "productionMetadataGate": "Built app verification failed: Release metadata is incomplete: HouseholdSubscriptionProductID, SupabasePublishableKey, PrivacyPolicyURL, TermsOfUseURL, SupportURL, SupabaseProjectURL, HouseholdServiceURL",
+  "productionEmailSignInEnabled": "NO",
+  "exportComplianceDeclaration": null,
+  "appStoreConnectUpload": false
+}

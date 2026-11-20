@@ -66,7 +66,7 @@ struct GuardianChildEntryButton: View {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     var body: some View {
-        if let coordinator {
+        if let coordinator, coordinator.canOpenInvitation {
             Text(GuardianCopy.text("Opening child space locks the private workspace on this iPhone. To return, choose “Leave child space”, confirm sign-out, then unlock the workspace."))
                 .foregroundStyle(Theme.secondary)
             Button {
@@ -81,8 +81,8 @@ struct GuardianChildEntryButton: View {
                     .contentShape(Rectangle())
             }.accessibilityIdentifier("household.childInvitation")
         } else {
-            NavigationLink(GuardianCopy.text("Use a child invitation")) { GuardianChildEntryView() }
-                .accessibilityIdentifier("household.childInvitation")
+            NavigationLink(GuardianCopy.text("Child sign-in is not available yet")) { GuardianChildEntryView() }
+                .accessibilityIdentifier("guardian.childAuthUnavailable")
         }
     }
 }

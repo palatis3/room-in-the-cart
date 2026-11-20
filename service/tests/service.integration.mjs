@@ -568,6 +568,19 @@ test('new private tables enforce tenant isolation and provider checker cannot le
   assert.equal(security.rows[0].public_execute,false);assert.equal(security.rows[0].prosecdef,true);assert.deepEqual(security.rows[0].proconfig,['search_path=pg_catalog']);
 });
 
+test('shared content viewer and meal occurrence trigger use only the catalog search path with caller privileges', async () => {
+  const {rows} = await runtime.query(`
+    SELECT proname, prosecdef, proconfig
+    FROM pg_catalog.pg_proc
+    WHERE oid IN ('ritc.content_viewer()'::regprocedure, 'ritc.remember_shared_meal_occurrence()'::regprocedure)
+    ORDER BY proname
+  `);
+  assert.deepEqual(rows, [
+    {proname: 'content_viewer', prosecdef: false, proconfig: ['search_path=pg_catalog']},
+    {proname: 'remember_shared_meal_occurrence', prosecdef: false, proconfig: ['search_path=pg_catalog']},
+  ]);
+});
+
 test('contributors see the next-shop destination after freeze and placement without checkout details',async()=>{
   const f=await fixture();
   const read=async()=>{const row=await f.http('Alex','GET','/bootstrap');assert.equal(row.status,200);return row.data;};

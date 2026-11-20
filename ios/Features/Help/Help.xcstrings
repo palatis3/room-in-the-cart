@@ -1555,6 +1555,22 @@
         }
       }
     },
+    "Deleting your account erases the household receipt lines you submitted. To prevent the same lines from being imported again, the service keeps receipt identification codes and the positions of the erased lines. These records omit the printed wording.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleting your account erases the household receipt lines you submitted. To prevent the same lines from being imported again, the service keeps receipt identification codes and the positions of the erased lines. These records omit the printed wording."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al eliminar tu cuenta se borran los renglones de recibos que enviaste para el hogar. Para evitar que vuelvan a importarse, el servicio conserva códigos que identifican el recibo y las posiciones de los renglones borrados. Estos registros omiten el texto impreso."
+          }
+        }
+      }
+    },
     "Household account deletion has its own scope and status. Review it in household controls. Signing out or leaving a household is separate from deleting an account, and deleting an account does not cancel an Apple subscription. Manage that subscription through Apple.": {
       "extractionState": "manual",
       "localizations": {
@@ -1997,6 +2013,22 @@
         }
       }
     },
+    "The household service counts online assistance requests for your account to enforce the daily limit. It also keeps a code for each request to prevent processing it twice. The service can remove these records once they are more than 24 hours old.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The household service counts online assistance requests for your account to enforce the daily limit. It also keeps a code for each request to prevent processing it twice. The service can remove these records once they are more than 24 hours old."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio del hogar cuenta las solicitudes de asistencia en línea de tu cuenta para aplicar el límite diario. También guarda un código por solicitud para evitar procesarla dos veces. El servicio puede eliminar estos registros una vez que hayan pasado 24 horas."
+          }
+        }
+      }
+    },
     "When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor.": {
       "extractionState": "manual",
       "localizations": {
@@ -2138,6 +2170,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Puedes consultar la guía FoodKeeper del USDA sin conexión. En Mi despensa puedes guardar una fecha para revisar la calidad de un alimento y activar un recordatorio diario. El recordatorio puede aparecer en la pantalla bloqueada. Te pide que abras Mi despensa y omite los nombres de los alimentos."
+          }
+        }
+      }
+    },
+    "When you choose Read recipe for a web link, this iPhone requests the page directly from the recipe website. The site sees the page address you requested, including any query parameters, your IP address and an identifier for the app’s recipe reader. A site the link redirects you to receives the same kinds of information.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you choose Read recipe for a web link, this iPhone requests the page directly from the recipe website. The site sees the page address you requested, including any query parameters, your IP address and an identifier for the app’s recipe reader. A site the link redirects you to receives the same kinds of information."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando eliges Leer receta para un enlace web, este iPhone solicita la página directamente al sitio de la receta. El sitio ve la dirección que solicitaste, incluidos los parámetros de consulta, tu dirección IP y un identificador del lector de recetas de la app. Si el enlace te dirige a otro sitio, ese sitio recibe el mismo tipo de información."
           }
         }
       }
