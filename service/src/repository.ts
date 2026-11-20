@@ -520,7 +520,12 @@ export class HouseholdRepository {
         await ctx.db.query('INSERT INTO ritc.shop_authority(household_id,shop_id,epoch,member_id) VALUES($1,$2,$3,$4)',[ctx.householdId,shop.shop_id,shop.authority_epoch+1,body.newShopperId]);
         response=await this.receipt(ctx,command,operationId,'transferred');
       }else {
-        this.requireShopper(ctx,shop);this.checkBase(shop,command.base);
+        this.requireShopper(ctx,shop);
+        // An exact successful replay already returned above. This uncommitted freeze can never apply to its superseded revision.
+        if(this.options.trackingV2&&command.kind==='shop.freeze'&&command.body.trackingReview&&
+          command.base.authorityEpoch===shop.authority_epoch&&command.base.shopRevision<shop.revision)
+          throw new ServiceError(409,'tracking_freeze_superseded','Review the current pickup before freezing.');
+        this.checkBase(shop,command.base);
         response=await this.shopperCommand(ctx,shop,command,operationId,billing,internalPriceOnly);
       }
     }

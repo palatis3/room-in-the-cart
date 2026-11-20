@@ -85,7 +85,9 @@ extension HouseholdService {
         let current = try await sharedTracking(shopID: page.shopId.uuid)
         try trackingContext(context, shopID: page.shopId.uuid, generation: start)
         try read.validate(page: current, context: context)
-        try demandRequire(current.freezeReview == token)
+        guard current.freezeReview == token else {
+            throw ClientError.service(status: 409, code: "tracking_freeze_refresh", correlationID: nil, retryAfter: nil)
+        }
         let window = try await replayWindow()
         try trackingContext(context, shopID: page.shopId.uuid, generation: start)
         try demandRequire(UUID(uuidString: window.id) != nil && demandTime(window.expiresAt).map { $0 > Date() } == true)
@@ -196,7 +198,8 @@ extension HouseholdService {
         case ClientError.accessEnded: targets = originalShop
         case ClientError.sessionNeeded: targets = originalMember
         case ClientError.service(let status, let code, _, _):
-            if status == 409 && ["tracking_preview_expired", "tracking_candidate_changed"].contains(code) {
+            let rejectedFreeze = binding.kind == .freeze && ["review_expired", "tracking_freeze_superseded"].contains(code)
+            if status == 409 && (rejectedFreeze || ["tracking_preview_expired", "tracking_candidate_changed"].contains(code)) {
                 // The commands endpoint first resolves an existing exact operation
                 // and returns its receipt. Only an uncommitted command reaches
                 // preview expiry / candidate recomputation. Remove only this row;

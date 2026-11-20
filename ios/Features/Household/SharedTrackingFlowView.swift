@@ -354,7 +354,17 @@ struct SharedTrackingFlowView: View {
                 acknowledgments()
                 Button(st("Freeze reviewed pickup")) { Task { await model.freeze() } }.disabled(!model.gate.canApply)
                     .accessibilityIdentifier("sharedTracking.freeze")
-            } else { Text(st("Review and save the current food facts before freezing this pickup.")) }
+            } else {
+                Text(st("Review and save the current food facts before freezing this pickup."))
+                if page.status == .enabled, let state = page.state, let shop = model.shop {
+                    Button(st("Review current packs and checkout")) {
+                        Task {
+                            await model.preview(.review(action: .patch(.init(quote: shop.quote, lines: shop.lines)),
+                                                        packs: state.packReviews))
+                        }
+                    }.buttonStyle(PrimaryAction()).accessibilityIdentifier("sharedTracking.renewFreezeReview")
+                }
+            }
         }
     }
     @ViewBuilder private func history(_ page: SharedTrackingPage) -> some View {

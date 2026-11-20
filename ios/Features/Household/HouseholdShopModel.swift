@@ -1233,6 +1233,10 @@ extension HouseholdShopModel: SharedTrackingServiceOwner {
             if let saved, !saved.contains(operation) { pending = nil }
             switch error as? ClientError {
             case .accessEnded, .sessionNeeded: clear(); await onAccessEnded()
+            case .service(409, let code, _, _) where binding.kind == .freeze && pending == nil &&
+                ["tracking_freeze_superseded", "review_expired"].contains(code):
+                delivery = .needsReview
+                notice = st("Open the freeze review again to check the current packs and checkout.")
             case .cancelled:
                 delivery = .needsReview; notice = st("The review was cancelled because its scope changed. Refresh before continuing.")
             default:

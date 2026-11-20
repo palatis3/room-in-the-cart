@@ -2980,6 +2980,57 @@
           }
         }
       }
+    },
+    "Refresh current facts, then review the packs and checkout again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh current facts, then review the packs and checkout again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza los datos y vuelve a revisar los paquetes y el total de la compra."
+          }
+        }
+      }
+    },
+    "Open the freeze review again to check the current packs and checkout.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the freeze review again to check the current packs and checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir la revisión para confirmar los paquetes y el total de la compra antes de fijarla."
+          }
+        }
+      }
+    },
+    "Review current packs and checkout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review current packs and checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los paquetes y el total de la compra"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

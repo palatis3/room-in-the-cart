@@ -220,6 +220,9 @@ extension SharedTrackingServiceOwner {
             clear(); notice = st("Shared access ended. Return to the household.")
         case .cancelled:
             clear(); notice = st("The review was cancelled because its scope changed. Refresh before continuing.")
+        case .service(409, let code, _, _) where freezing && ["tracking_freeze_refresh", "tracking_freeze_superseded", "review_expired"].contains(code):
+            page = nil; shop = nil; history = nil; draft = .init()
+            notice = st("Refresh current facts, then review the packs and checkout again.")
         case .service(let status, _, _, _) where status == 409 || status == 404 || status == 403:
             page = nil; shop = nil; history = nil; draft = .init()
             notice = st("Needs a fresh review. Return to the shop, refresh current facts, and resolve any saved retry before starting again.")
