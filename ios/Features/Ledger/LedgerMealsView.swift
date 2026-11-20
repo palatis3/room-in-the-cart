@@ -203,6 +203,7 @@ struct LedgerMealEditor: View {
                             TextField(ledgerText("Ingredient name"), text: fields.name, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).name")
                             Toggle(tonightText("Use without a measured amount"), isOn: fields.checkedWithoutAmount)
+                                .toggleStyle(DinnerRowToggleStyle())
                             if !ingredient.checkedWithoutAmount {
                                 LedgerQuantityFields(amount: fields.amount, unit: fields.unit,
                                                  amountFocus: ($inputFocus, "ingredient.\(ingredient.id).amount"))
