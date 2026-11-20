@@ -264,7 +264,7 @@ import XCTest
 
     func testConfirmedPackAtHomeFindsOnlyItsTwoPhysicalBatchesAfterRelaunch() {
         launch(reset: true)
-        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.productBatch"])
         let code = app.textFields["productBatch.code"]
@@ -274,8 +274,11 @@ import XCTest
         fill("Small bean can", into: "productBatch.productName", requireDone: true, control: app.textFields["productBatch.productName"])
         fill("1", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
         fill("2", into: "productBatch.packCount", requireDone: true, control: app.textFields["productBatch.packCount"])
-        tap(app.buttons["pack.remember"])
-        XCTAssertTrue(app.staticTexts["Exact pack remembered."].waitForExistence(timeout: 5))
+        let remember = app.buttons["pack.remember"]
+        reveal(remember)
+        XCTAssertEqual(remember.label, "Remember this exact pack")
+        tapVisibleFormRow(remember, marker: "REMEMBER_HOME_PACK")
+        XCTAssertTrue(remember.wait(for: \.label, toEqual: "Correct remembered pack", timeout: 8), app.debugDescription)
         closeReviewedProduct()
         tap(app.buttons["pack.separate.0"])
         closeReviewedProduct()
@@ -289,7 +292,7 @@ import XCTest
         XCTAssertTrue(app.buttons["pack.date.0"].exists)
         XCTAssertTrue(app.buttons["pack.date.1"].exists)
         restart()
-        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.findPack"])
         let barcode = app.textFields["pack.find.code"]
         tap(barcode); barcode.typeText("0012345000058")
@@ -1300,16 +1303,15 @@ import XCTest
         checkReceiptSwitch("I checked the purchase date.")
         receiptTap(app.buttons["receipt.action.0"])
         receiptTap(app.buttons["Add a separate physical batch"])
-        fill("Rolled oats", into: "Food name", replacing: true, control: app.textFields["Food name"])
-        fill("3", into: "receipt.received.0", control: app.textFields["receipt.received.0"])
-        fill("2", into: "receipt.usable.0", control: app.textFields["receipt.usable.0"])
+        enterReceiptField("Rolled oats", id: "Food name", replacing: true)
+        enterReceiptField("3", id: "receipt.received.0")
+        enterReceiptField("2", id: "receipt.usable.0")
         receiptTap(app.buttons["receipt.review"])
-        let confirm = app.buttons["receipt.commit"]
-        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
         let change = app.descendants(matching: .any).matching(NSPredicate(format:
             "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", "Rolled oats", "Add 2", "Received 3")).firstMatch
+        reveal(change)
         XCTAssertTrue(change.exists, app.debugDescription)
-        receiptTap(confirm)
+        receiptTap(app.buttons["receipt.commit"])
         XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
         receiptTap(app.buttons["Done"])
         let stock = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
@@ -1407,6 +1409,21 @@ import XCTest
         reveal(control, initiallyUpward: initiallyUpward)
         control.tap()
     }
+
+    private func enterReceiptField(_ text: String, id: String, replacing: Bool = false) {
+        let field = app.textFields[id]
+        // iOS 17 exposes the field and its caption as one row. The editable value sits below the caption.
+        let input = CGVector(dx: 0.5, dy: 0.7)
+        reveal(field, requiredHit: input)
+        field.coordinate(withNormalizedOffset: input).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "Expected the keyboard for \(id)")
+        if replacing, let previous = field.value as? String, !previous.isEmpty {
+            app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
+        }
+        app.typeText(text)
+        XCTAssertEqual(field.value as? String, text)
+        receiptTap(app.buttons["receipt.keyboardDone"])
+    }
     private func checkReceiptSwitch(_ title: String) {
         enableSwitch(title, position: { [self] toggle in
             reveal(toggle, requiredHit: CGVector(dx: 0.92, dy: 0.5))
@@ -1502,19 +1519,17 @@ import XCTest
 
     func testPutAwayOneGroceryFromLunchReceipt() {
         openMixedTypedReceipt("Jars 2 ct USD 4.00\nSandwich 1 ct USD 5.50")
+        enterReceiptField("9.50", id: "receipt.total")
         let review = app.buttons["receipt.review"]
+        reveal(review)
         XCTAssertFalse(review.isEnabled)
-        let total = app.textFields["receipt.total"]
-        receiptTap(total)
-        total.typeText("9.50")
-        if app.buttons["receipt.keyboardDone"].exists { app.buttons["receipt.keyboardDone"].tap() }
-        receiptTap(app.buttons["receipt.intact.0"])
+        receiptTap(app.buttons["receipt.intact.0"], initiallyUpward: false)
         receiptTap(app.buttons["receipt.details.1"])
         receiptTap(app.buttons["receipt.action.1"])
         receiptTap(app.buttons["Ate this"])
         receiptTap(review)
         let confirm = app.buttons["receipt.commit"]
-        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        reveal(confirm)
         XCTAssertEqual(confirm.label, "Put away 1 item")
         receiptTap(confirm)
         XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
