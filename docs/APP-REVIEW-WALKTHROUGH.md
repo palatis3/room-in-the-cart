@@ -47,7 +47,7 @@ On November 13 the ordinary Release simulator build passed the pack comparison i
 
 The November 14 Release build at `ab33d6cd` also passed step 1 on an iPhone SE (2nd generation) simulator running iOS 17.0 in both languages. After clearing pack A’s usable amount, the tester saved again and reopened Records. Each installation kept one “Demo wraps” comparison with two revisions. The original stored 16 items for $6.40 and 12 for $5.40. The correction kept pack B at $5.40 and left pack A’s count and cost unresolved. Both simulator results and the independent database checks are in `.build/ReviewWrapsAb33Nov14`.
 
-On November 20 the ordinary unsigned Release build at `fb907d82` passed typed entry, known totals, save and relaunch on the iPhone 17 simulator running iOS 27.0. The same saved comparison reopened in English and US Spanish with $6.40 and $5.40. [Current capture manifest](app-store/screenshots/current-manifest.json)
+On November 20 the ordinary unsigned Release build at `fb907d82` passed typed entry, known totals, save and relaunch on iPhone 17 and iPhone 18 Pro Max simulators running iOS 27.0. Each saved comparison reopened in English and US Spanish with $6.40 and $5.40. [Reviewer capture manifest](app-store/screenshots/current-manifest.json)
 
 ### Review a receipt offline
 
