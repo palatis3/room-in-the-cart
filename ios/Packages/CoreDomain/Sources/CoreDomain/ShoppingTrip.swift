@@ -22,7 +22,12 @@ public struct PhysicalGroceryPick: Codable, Equatable, Sendable {
     /// Pack composition at the time of the pick, before a list edit can change
     /// the labels that originally explained the purchase. Older picks omit it.
     public internal(set) var packages: [BasketPackage]? = nil
+    /// A partial pick can have a known source assortment without identifying
+    /// which packs were taken. An empty assortment records a loose grocery.
+    var packageBasis: [BasketPackage]? = nil
 
+    /// Projects a trusted source assortment. For saved picks, use the ledger's
+    /// physicalPackages method so older rows also verify their source history.
     public func checkoutPackages(requested: Quantity?, sourcePackages: [BasketPackage]) throws -> [BasketPackage] {
         if let packages { return packages }
         guard let requested, !sourcePackages.isEmpty,
@@ -30,14 +35,16 @@ public struct PhysicalGroceryPick: Codable, Equatable, Sendable {
               try Self.total(sourcePackages, in: requested.unit) == requested.amount else { return [] }
         if picked == requested.amount { return sourcePackages }
         guard picked < requested.amount, let first = sourcePackages.first,
-              sourcePackages.allSatisfy({ $0.unit == first.unit && $0.amountPerPack == first.amountPerPack }),
+              try sourcePackages.allSatisfy({ pack in
+                  try Quantity(amount: pack.amountPerPack, unit: pack.unit, originalLiteral: "").converted(to: first.unit) == first.amountPerPack
+              }),
               let converted = try amount.converted(to: first.unit) else { return [] }
         let count = try converted.divided(by: first.amountPerPack)
         guard count.denominator == 1 else { return [] }
         return [BasketPackage(count: count.numerator, amountPerPack: first.amountPerPack, unit: first.unit)]
     }
 
-    fileprivate static func total(_ packages: [BasketPackage], in unit: UnitOfMeasure) throws -> Rational? {
+    static func total(_ packages: [BasketPackage], in unit: UnitOfMeasure) throws -> Rational? {
         var total = Rational.zero
         for pack in packages {
             let size = Quantity(amount: pack.amountPerPack, unit: pack.unit, originalLiteral: "")
@@ -88,6 +95,11 @@ extension ShoppingLine {
                try PhysicalGroceryPick.total(packages, in: pick.amount.unit) != pick.amount.amount {
                 throw LedgerError.invalid("tripPickPackages")
             }
+            if let basis = pick.packageBasis {
+                let total = try PhysicalGroceryPick.total(basis, in: pick.amount.unit)
+                guard pick.packages == nil, basis.isEmpty || total.map({ $0 > pick.amount.amount }) == true
+                else { throw LedgerError.invalid("tripPickPackages") }
+            }
         }
         try ledgerDate(tripUndo?.at)
         try ledgerDate(tripUndo?.checkedAt)
@@ -109,6 +121,63 @@ extension ShoppingLine {
 }
 
 extension ShoppingLedger {
+    /// Nil means that historical composition cannot be established. An empty
+    /// array means the observed source had no pack labels to contradict an offer.
+    public func physicalPackages(for line: ShoppingLine, requested: Quantity?, sourcePackages: [BasketPackage]) throws -> [BasketPackage]? {
+        guard let pick = line.tripPick else { return nil }
+        if let packs = pick.packages { return packs.isEmpty ? nil : packs }
+        if let basis = pick.packageBasis {
+            if basis.isEmpty { return [] }
+            let total = try PhysicalGroceryPick.total(basis, in: pick.amount.unit)
+            let original = total.map { Quantity(amount: $0, unit: pick.amount.unit, originalLiteral: "") }
+            let packs = try pick.checkoutPackages(requested: original, sourcePackages: basis)
+            return packs.isEmpty ? nil : packs
+        }
+        // Older ledgers did not capture package observations. Reuse the source
+        // of a first pick only when every later edit is independent of its labels.
+        let pickActions = ["pickPart", "setChecked", "addInStoreFind"]
+        let metadataActions = ["pickedPrice", "startShoppingStop", "setPreferredStores", "budgetFlexibility"]
+        guard line.tripUndo?.pick == nil,
+              let anchor = revisions.firstIndex(where: { $0.createdAt == pick.at && pickActions.contains($0.operation) }),
+              revisions.suffix(from: anchor + 1).allSatisfy({ metadataActions.contains($0.operation) }) else { return nil }
+        if sourcePackages.isEmpty { return [] }
+        let packs = try pick.checkoutPackages(requested: requested, sourcePackages: sourcePackages)
+        return packs.isEmpty ? nil : packs
+    }
+
+    func cumulativePick(for line: ShoppingLine, total: Quantity, requested: Quantity, at: Date) throws -> PhysicalGroceryPick {
+        let labels = itemPackages[line.id] ?? []
+        var pick = PhysicalGroceryPick(amount: total, at: at)
+        if let previous = line.tripPick, previous.packageBasis != labels {
+            guard let before = try previous.amount.converted(to: total.unit), total.amount > before else { return previous }
+            let delta = Quantity(amount: try total.amount.subtracting(before), unit: total.unit, originalLiteral: "")
+            let added = try PhysicalGroceryPick(amount: delta, at: at).checkoutPackages(requested: requested, sourcePackages: labels)
+            let earlier = try physicalPackages(for: line, requested: requested, sourcePackages: labels)
+            if earlier?.isEmpty == true && labels.isEmpty {
+                pick.packageBasis = []
+                return pick
+            }
+            guard var packs = earlier, !packs.isEmpty, !added.isEmpty else {
+                pick.packages = []
+                return pick
+            }
+            for pack in added {
+                if let index = packs.firstIndex(where: { $0.unit == pack.unit && $0.amountPerPack == pack.amountPerPack }) {
+                    let count = packs[index].count.addingReportingOverflow(pack.count)
+                    guard !count.overflow else { throw LedgerError.invalid("tripPickPackages") }
+                    packs[index] = BasketPackage(count: count.partialValue, amountPerPack: pack.amountPerPack, unit: pack.unit)
+                } else { packs.append(pack) }
+            }
+            pick.packages = packs
+            return pick
+        }
+        let packs = try pick.checkoutPackages(requested: requested, sourcePackages: labels)
+        if !packs.isEmpty { pick.packages = packs }
+        else if try labels.isEmpty || PhysicalGroceryPick.total(labels, in: requested.unit) == requested.amount { pick.packageBasis = labels }
+        else { pick.packages = [] }
+        return pick
+    }
+
     public var currentStop: ShoppingStop { shoppingStop ?? ShoppingStop(id: id, name: basis.branch) }
 
     public func outcomeAtCurrentStop(_ line: ShoppingLine) -> ShoppingStopOutcome? {
@@ -152,10 +221,12 @@ extension ShoppingLedger {
             throw LedgerError.stalePreview
         }
         let actual = try need.amount.subtracting(remaining.amount).adding(amount)
+        guard let source = lines.first(where: { $0.id == lineID }) else { throw LedgerError.notFound(lineID) }
+        let pick = try cumulativePick(for: source, total: Quantity(amount: actual, unit: need.unit, originalLiteral: ""), requested: need, at: at)
         try editTripLine(lineID: lineID, operation: "pickPart", at: at) { line in
             guard !line.isChecked else { throw LedgerError.stalePreview }
             line.tripUndo = GroceryTripUndo(line, action: .pick, at: at)
-            line.tripPick = PhysicalGroceryPick(amount: Quantity(amount: actual, unit: need.unit, originalLiteral: ""), at: at)
+            line.tripPick = pick
             line.checkedAt = amount == remaining.amount ? at : nil
             line.stopObservation = nil
             line.pickedPrice = nil

@@ -137,7 +137,9 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
         guard request.itemName == requirement.name, request.needed == requirement.quantity,
               request.protectedAmount == requirement.protectedQuantity,
               request.confirmedAtHome == (try currentCanonicalEvidence.confirmedQuantity(for: requirement)) else { return false }
-        if isNoPurchase { return !basket.current.lines.contains { $0.id == lineID } }
+        if isNoPurchase {
+            return matchesAppliedNoPurchase(shop: shop) && !basket.current.lines.contains { $0.id == lineID }
+        }
         guard let line = basket.current.lines.first(where: { $0.id == lineID }) else { return false }
         return matchesAppliedPurchase(line, shop: shop) && line.expectedCost == selectedResult.totalCost.map(CostEvidence.exact)
     }
@@ -145,7 +147,12 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
     /// A pack plan can price an observed pick only when it buys that amount
     /// and agrees with any known physical package composition.
     public func describes(_ pick: PhysicalGroceryPick, packages: [BasketPackage]) throws -> Bool {
-        guard let purchasedQuantity, try pick.amount.converted(to: purchasedQuantity.unit) == purchasedQuantity.amount else { return false }
+        guard pick.packages?.isEmpty != true, let purchasedQuantity,
+              try pick.amount.converted(to: purchasedQuantity.unit) == purchasedQuantity.amount else { return false }
+        return try describes(packages: packages)
+    }
+
+    private func describes(packages: [BasketPackage]) throws -> Bool {
         guard !packages.isEmpty else { return true }
         let offer = selectedOfferID == request.offerA.id ? request.offerA : request.offerB
         guard let size = offer.usableQuantity else { return false }
@@ -162,13 +169,23 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
     /// Older applied copies use the offer's literal. A physical copy may use
     /// its original unit and wording, authenticated by the same shop revision.
     public func matchesAppliedPurchase(_ line: BasketLine, shop: ShoppingLedger?) -> Bool {
-        guard line.id == lineID, let purchasedQuantity else { return false }
-        guard let shop, shop.id == shopID, shop.revisionID == shopRevisionID,
-              let pick = shop.lines.first(where: { $0.id == lineID })?.tripPick else {
-            return line.quantity == purchasedQuantity
-        }
-        guard (try? pick.amount.converted(to: purchasedQuantity.unit)) == purchasedQuantity.amount else { return false }
+        guard line.id == lineID, let purchasedQuantity, (try? describes(packages: line.packages ?? [])) == true else { return false }
+        guard let shop else { return line.quantity == purchasedQuantity }
+        guard shop.id == shopID, shop.revisionID == shopRevisionID,
+              let source = shop.lines.first(where: { $0.id == lineID }) else { return false }
+        guard let pick = source.tripPick else { return line.quantity == purchasedQuantity }
+        guard let packages = try? shop.physicalPackages(for: source, requested: shop.quantity(forLineID: lineID),
+                                                         sourcePackages: shop.itemPackages[lineID] ?? []),
+              (try? describes(pick, packages: packages)) == true else { return false }
         return line.quantity == pick.amount || line.quantity == purchasedQuantity
+    }
+
+    public func matchesAppliedNoPurchase(shop: ShoppingLedger?) -> Bool {
+        guard isNoPurchase else { return false }
+        guard let shop else { return true }
+        guard shop.id == shopID, shop.revisionID == shopRevisionID,
+              let line = shop.lines.first(where: { $0.id == lineID }) else { return false }
+        return line.tripPick == nil
     }
 
     public var purchasedQuantity: Quantity? {

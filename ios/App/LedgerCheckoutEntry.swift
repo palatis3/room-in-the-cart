@@ -57,9 +57,7 @@ enum LedgerCheckoutAdapter {
         try shop.validate()
         let handChecked = shop.handCheckedOnlyLineIDs
         let sourceNeedLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
-        let activeLines = sourceNeedLines.filter {
-            shop.belongsInCurrentBasket($0) && (!handChecked.contains($0.id) || $0.tripPick != nil)
-        }
+        let activeLines = shop.purchaseReviewLines.filter(shop.belongsInCurrentBasket)
         let activeByID = Dictionary(uniqueKeysWithValues: activeLines.map { ($0.id, $0) })
         // Trashed and handled rows both leave the editable list. A saved basket
         // still needs a review that can remove its final purchase.
@@ -72,9 +70,9 @@ enum LedgerCheckoutAdapter {
             try selection.validateReference(in: shop)
             guard let line = activeByID[selection.lineID], let workspaceID else { continue }
             if let pick = line.tripPick {
-                let packages = try pick.checkoutPackages(requested: shop.quantity(forLineID: line.id),
-                                                        sourcePackages: itemPackages[line.id] ?? [])
-                guard try selection.describes(pick, packages: packages) else { continue }
+                guard let packages = try shop.physicalPackages(for: line, requested: shop.quantity(forLineID: line.id),
+                                                               sourcePackages: itemPackages[line.id] ?? []),
+                      try selection.describes(pick, packages: packages) else { continue }
             }
             if pantryIsActive, selection.isGrossOnlyPurchase {
                 if try selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: bindings) {
@@ -102,7 +100,7 @@ enum LedgerCheckoutAdapter {
                                   itemExclusions: exclusions, packages: packs)
             }
             let sourcePacks = itemPackages[line.id] ?? []
-            let packs = try line.tripPick?.checkoutPackages(requested: requested, sourcePackages: sourcePacks) ?? sourcePacks
+            let packs = try line.tripPick == nil ? sourcePacks : shop.physicalPackages(for: line, requested: requested, sourcePackages: sourcePacks) ?? []
             let old = previous?.basket?.current.lines.first { old in
                 let matchesPick = line.tripPick != nil && old.quantity.unit == quantity.unit &&
                     old.quantity.amount == quantity.amount && old.quantity.confirmedConversion == quantity.confirmedConversion

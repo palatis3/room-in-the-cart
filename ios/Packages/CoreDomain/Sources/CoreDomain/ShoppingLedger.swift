@@ -635,6 +635,12 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         return handChecked.subtracting(required)
     }
 
+    /// Unmeasured meal seasonings enter the purchase review only when the shopper recorded a physical pick.
+    public var purchaseReviewLines: [ShoppingLine] {
+        let handChecked = handCheckedOnlyLineIDs
+        return lines.filter { !$0.isTrashed && !$0.isHandled && (!handChecked.contains($0.id) || $0.tripPick != nil) }
+    }
+
     /// A hand-checked unmeasured ingredient has no numeric demand. All other
     /// active contributions must have compatible quantities for a known total.
     /// A trashed line retains its need for inspection and restoration.
@@ -1010,12 +1016,13 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             let index = try next.lineIndex(id)
             next.lines[index].tripUndo = GroceryTripUndo(next.lines[index], action: .addFind, at: at)
             next.lines[index].checkedAt = at
-            next.lines[index].tripPick = quantity.map { PhysicalGroceryPick(amount: $0, at: at) }
+            next.lines[index].tripPick = quantity.map { PhysicalGroceryPick(amount: $0, at: at, packageBasis: []) }
             return id
         }
     }
 
     public mutating func setChecked(lineID: UUID, checked: Bool, at: Date = Date()) throws {
+        if checked, try lines[lineIndex(lineID)].isChecked { return }
         try mutate("setChecked", at: at) { next in
             let index = try next.lineIndex(lineID)
             let before = next.lines[index]
@@ -1026,7 +1033,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 next.lines[index].tripUndo = before.inStorePickedAt != nil || before.stopObservation != nil
                     ? GroceryTripUndo(before, action: .pick, at: at) : nil
                 let amount = try next.quantity(forLineID: lineID)
-                next.lines[index].tripPick = amount.flatMap { $0.amount > .zero ? PhysicalGroceryPick(amount: $0, at: at) : nil }
+                next.lines[index].tripPick = try amount.flatMap {
+                    $0.amount > .zero ? try next.cumulativePick(for: before, total: $0, requested: $0, at: at) : nil
+                }
                 next.lines[index].checkedAt = at
                 next.lines[index].stopObservation = nil
             } else {
@@ -1554,9 +1563,11 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 if currentPackages == nil { currentPackages = itemPackages }
                 let oldPacks = priorPackages?[line.id] ?? [], newPacks = currentPackages?[line.id] ?? []
                 if !oldPacks.isEmpty || !newPacks.isEmpty {
-                    let original = try pick.checkoutPackages(requested: previous.quantity(forLineID: line.id), sourcePackages: oldPacks)
-                    if try original != pick.checkoutPackages(requested: quantity(forLineID: line.id), sourcePackages: newPacks) {
-                        pick.packages = original
+                    let oldNeed = try previous.quantity(forLineID: line.id), newNeed = try quantity(forLineID: line.id)
+                    if oldPacks != newPacks || oldNeed != newNeed {
+                        let original = try previous.physicalPackages(for: prior, requested: oldNeed, sourcePackages: oldPacks)
+                        pick.packages = original ?? []
+                        pick.packageBasis = nil
                         lines[index].tripPick = pick
                     }
                 }

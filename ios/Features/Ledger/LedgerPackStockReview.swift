@@ -44,7 +44,8 @@ enum LedgerPackStockReview {
               basket.current.parentID == reviewed.basketRevisionID,
               case .applied = basket.current.reason else { throw LedgerPackError.staleSource }
         if selection.isNoPurchase {
-            guard !basket.current.lines.contains(where: { $0.id == selection.lineID }) else { throw LedgerPackError.staleSource }
+            guard selection.matchesAppliedNoPurchase(shop: shop),
+                  !basket.current.lines.contains(where: { $0.id == selection.lineID }) else { throw LedgerPackError.staleSource }
         } else {
             guard let line = basket.current.lines.first(where: { $0.id == selection.lineID }),
                   selection.matchesAppliedPurchase(line, shop: shop),
@@ -66,6 +67,9 @@ enum LedgerPackStockReview {
                 if journey.stockLots.contains(where: {
                     $0.foodID == selection.lineID && ($0.source == .pantry || $0.source == .freezer)
                 }) { return false }
+                guard let line = basket.current.lines.first(where: { $0.id == selection.lineID }),
+                      selection.matchesAppliedPurchase(line, shop: journey.mealSource?.shop),
+                      line.expectedCost == selection.selectedResult.totalCost.map(CostEvidence.exact) else { return false }
                 continue
             }
             guard evidence.sourceWorkspaceID == pickupWorkspaceID, evidence.journeyID == journey.id,
@@ -76,7 +80,8 @@ enum LedgerPackStockReview {
                   basket.current.parentID == evidence.basketRevisionID,
                   case .applied = basket.current.reason else { return false }
             if selection.isNoPurchase {
-                guard !basket.current.lines.contains(where: { $0.id == selection.lineID }) else { return false }
+                guard selection.matchesAppliedNoPurchase(shop: journey.mealSource?.shop),
+                      !basket.current.lines.contains(where: { $0.id == selection.lineID }) else { return false }
             } else {
                 guard let line = basket.current.lines.first(where: { $0.id == selection.lineID }),
                       selection.matchesAppliedPurchase(line, shop: journey.mealSource?.shop),

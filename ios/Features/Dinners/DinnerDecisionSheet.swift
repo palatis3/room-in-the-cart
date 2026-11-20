@@ -105,7 +105,7 @@ extension PickupJourney {
               let basket, quotedRevisionID == basket.current.id, let quote, context == quote.context,
               quote.context.commitmentsID == shop.id, quote.context.branchID == shop.basis.branch,
               quote.context.mode.rawValue == shop.basis.mode.rawValue,
-              Set(basket.current.lines.map(\.id)) == Set(shop.lines.filter { !$0.isHandled && !$0.isTrashed }.map(\.id)) else { return nil }
+              Set(basket.current.lines.map(\.id)) == Set(shop.purchaseReviewLines.map(\.id)) else { return nil }
         if let slot = shop.basis.slot, quote.context.slot != "\(slot.ISO8601Format()) · \(shop.basis.timeZoneIdentifier)" { return nil }
         for selection in selections {
             guard ledgerPackSelections.contains(selection),

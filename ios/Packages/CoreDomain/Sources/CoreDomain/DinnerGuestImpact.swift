@@ -51,7 +51,7 @@ extension DinnerPreview {
         guard budgetBasis != nil, let quote, quote.scope == .wholeCheckout, quote.context.commitmentsID == shop.id else { return unpriced }
         let before = try CheckoutEngine.evaluateWithFees(quote)
         guard case let .components(items, complete, fees, discounts, tax, deposits) = quote.pricing,
-              Set(items.map(\.id)) == Set(shop.lines.filter { !$0.isHandled && !$0.isTrashed }.map(\.id)) else {
+              Set(items.map(\.id)) == Set(shop.purchaseReviewLines.map(\.id)) else {
             return DinnerGuestImpact(lines: lines, beforeCheckout: before.result, afterCheckout: nil, beforeFees: before.fees, afterFees: nil)
         }
         let changes = Dictionary(uniqueKeysWithValues: lines.map { ($0.id, $0) })
