@@ -26,6 +26,7 @@ struct PantryReceiptDocuments: View {
     var model: PantryModel? = nil
     let target: CaptureTarget
     let authorize: @MainActor () -> Bool
+    var reviewsPrivateReceipt = false
     var initialInput: ReceiptDocumentBytes? = nil
     var initialDocument: ExtractedReceiptDocument? = nil
     var sectionPreviews: [Data?] = []
@@ -52,6 +53,8 @@ struct PantryReceiptDocuments: View {
     @State private var error: String?
     @AccessibilityFocusState private var statusFocused: Bool
 
+    private var reviewsEvidenceOnly: Bool { reviewsPrivateReceipt && stage != .order }
+
     var body: some View {
         WorkingForm {
             if let error { Text(error).accessibilityFocused($statusFocused).accessibilityIdentifier("receipt.document.status") }
@@ -64,12 +67,13 @@ struct PantryReceiptDocuments: View {
                     Picker(pantryText("Document type"), selection: $stage) {
                         ForEach(ReceiptAcquisition.DocumentLine.Stage.allCases, id: \.self) { Text(receiptStage($0)).tag($0) }
                     }
-                    Text(pantryText("Select food lines and the printed purchase date to review. You will confirm received and usable quantities separately."))
+                    Text(reviewsEvidenceOnly ? putawayText("Select the receipt lines and purchase date you want to review.")
+                         : pantryText("Select food lines and the printed purchase date to review. You will confirm received and usable quantities separately."))
                 }
                 ForEach(document.pages) { page in
                     Section(pantryFormat("Page %@", page.id.formatted())) {
                         if page.skipped == .pixels { Text(pantryText("This page exceeds 25 megapixels. Choose a smaller image to review it.")) }
-                        else if page.skipped == .lineLimit { Text(pantryText("This page exceeds the line limit. You can type the food lines instead.")) }
+                        else if page.skipped == .lineLimit { Text(putawayText("This page exceeds the line limit. You can type the receipt lines instead.")) }
                         else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
                         ForEach(page.lines.filter { !omittedLines.contains(.init(page: page.id, line: $0.id)) }) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
@@ -98,18 +102,21 @@ struct PantryReceiptDocuments: View {
                 }
                 Section {
                     if openedShare != nil {
-                        Text(pantryText("Saving selected food removes this staged file. Keep the original for any other lines."))
+                        Text(reviewsEvidenceOnly ? putawayText("Saving the reviewed receipt removes this staged file. Keep the original for any other lines.")
+                             : pantryText("Saving selected food removes this staged file. Keep the original for any other lines."))
                     }
-                    Toggle(pantryText("I checked these printed lines and physically received food from this purchase."), isOn: $confirmed)
-                    Button(pantryText("Review received food")) {
-                        guard authorize(), confirmed else { return }
+                    if !reviewsEvidenceOnly {
+                        Toggle(pantryText("I checked these printed lines and physically received food from this purchase."), isOn: $confirmed)
+                    }
+                    Button(reviewsEvidenceOnly ? putawayText("Review selected lines") : pantryText("Review received food")) {
+                        guard authorize(), reviewsEvidenceOnly || confirmed else { return }
                         do {
                             let source = try document.source(target: target, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines),
                                 stage: stage, selection: selection, at: Date())
                             onReview(source, openedShare)
                             dismiss()
                         } catch { show(error) }
-                    }.buttonStyle(PrimaryAction()).disabled(!authorize() || !confirmed || selection.isEmpty || merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }.buttonStyle(PrimaryAction()).disabled(!authorize() || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("receipt.document.accept")
                     if let backToSections { Button(captureText("Back to receipt sections"), action: backToSections) }
                     if initialDocument == nil { Button(pantryText("Choose another document")) { cancel() } }
@@ -236,7 +243,7 @@ struct PantryReceiptDocuments: View {
         case .pages: error = pantryText("Choose a PDF with 1 to 20 pages, or export a smaller page range.")
         case .pixels: error = pantryText("Choose a photo or scanned page up to 25 megapixels.")
         case .characters: error = pantryText("Choose fewer pages with up to 100,000 extracted characters.")
-        case .lineLimit: error = pantryText("Choose a smaller page with up to 200 lines, or type the food lines.")
+        case .lineLimit: error = putawayText("Choose a smaller page with up to 200 lines, or type the receipt lines.")
         case .selection: error = pantryText("Choose fewer or shorter lines for this review.")
         case .locked: error = pantryText("This PDF is locked. Choose an unlocked copy or type the lines in the receipt scanner.")
         case .timeout: error = pantryText("Reading took more than 30 seconds. Choose fewer pages or type the lines.")

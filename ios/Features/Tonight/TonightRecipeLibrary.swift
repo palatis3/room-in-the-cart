@@ -79,6 +79,7 @@ struct RecipePinButton: View {
         } label: {
             Label(tonightText(pinned ? "Remove from Cook soon" : "Cook soon"), systemImage: pinned ? "pin.fill" : "pin")
                 .frame(minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.borderless)
         .disabled(!authorize() || ledger.saving || ledger.hasPendingSave)

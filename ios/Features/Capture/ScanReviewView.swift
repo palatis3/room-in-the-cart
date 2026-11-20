@@ -424,6 +424,7 @@ struct ReceiptPhotoShortcuts: View {
     enum Start: String, Identifiable { case camera, screenshot, sections; var id: Self { self } }
     let target: CaptureTarget
     let authorize: @MainActor () -> Bool
+    var reviewsPrivateReceipt = false
     let reviewed: (SourceMediaRecord) -> Void
     @State private var pickingScreenshot = false
     @State private var screenshot: PhotosPickerItem?
@@ -451,7 +452,7 @@ struct ReceiptPhotoShortcuts: View {
             result = nil; screenshot = nil
         }) { choice in
             NavigationStack {
-                ReceiptSectionCapture(start: choice, target: target, authorize: authorize, initialPhoto: screenshot) { source in
+                ReceiptSectionCapture(start: choice, target: target, authorize: authorize, reviewsPrivateReceipt: reviewsPrivateReceipt, initialPhoto: screenshot) { source in
                     guard authorize(), source.target == target else { return }
                     // The document review dismisses this sheet after handing back its source.
                     result = source
@@ -487,6 +488,7 @@ private struct ReceiptSectionCapture: View {
     let start: ReceiptPhotoShortcuts.Start
     let target: CaptureTarget
     let authorize: @MainActor () -> Bool
+    var reviewsPrivateReceipt = false
     var initialPhoto: PhotosPickerItem?
     let reviewed: (SourceMediaRecord) -> Void
     @State private var didStart = false
@@ -539,7 +541,7 @@ private struct ReceiptSectionCapture: View {
     private var captureContent: some View {
         VStack(spacing: 0) {
             if let review {
-                PantryReceiptDocuments(target: target, authorize: authorize, initialDocument: review,
+                PantryReceiptDocuments(target: target, authorize: authorize, reviewsPrivateReceipt: reviewsPrivateReceipt, initialDocument: review,
                     sectionPreviews: draft.sections.map(\.preview), omittedLines: omitted,
                     backToSections: start == .sections ? { self.review = nil; self.omitted = [] } : nil) { source, _ in
                     if authorize() { reviewed(source) }

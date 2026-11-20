@@ -118,7 +118,7 @@ extension ReceiptImportDraft.Line {
                         Section(pantryText("Review the suggestion")) {
                             if let name = result.foodName { LabeledContent(pantryText("Suggested food"), value: name) }
                             if let quantity = result.quantity, let unit = result.unit.flatMap(UnitOfMeasure.init(rawValue:)) {
-                                LabeledContent(pantryText("Printed quantity"), value: quantity + " " + pantryUnit(unit))
+                                LabeledContent(pantryText("Printed quantity"), value: pantryPrintedQuantity(quantity, unit: unit))
                                 Toggle(pantryText("I received this quantity and want to use it."), isOn: $received)
                             }
                             if result.foodName == nil && result.quantity == nil { Text(pantryText("No food or quantity could be identified.")) }

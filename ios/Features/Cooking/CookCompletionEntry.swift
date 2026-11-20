@@ -151,8 +151,15 @@ private struct CookCompletionForm: View {
                     if model.leftoverChoice == .recorded {
                         ForEach($model.leftovers) { $row in
                             VStack(alignment: .leading, spacing: 8) {
-                                TextField(cookCompletionText("Leftover name"), text: $row.name)
-                                TextField(cookCompletionText("Confirmed portions"), text: $row.portions).keyboardType(.numbersAndPunctuation)
+                                WorkingField(cookCompletionText("Leftover name")) {
+                                    TextField(cookCompletionText("Leftover name"), text: $row.name)
+                                        .accessibilityIdentifier("cook.leftoverName.\(row.id)")
+                                }
+                                WorkingField(cookCompletionText("Counted portions")) {
+                                    TextField(cookCompletionText("Confirmed portions"), text: $row.portions)
+                                        .keyboardType(.numbersAndPunctuation)
+                                        .accessibilityIdentifier("cook.countedPortions.\(row.id)")
+                                }
                                 Picker(cookCompletionText("Storage"), selection: $row.location) {
                                     ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
                                 }

@@ -97,6 +97,21 @@ import XCTest
             app.launch()
             tap(app.shopToolButton("shop.myPantry"))
             tap(app.buttons["pantry.setup.apply"])
+            let products = ["Red lentils", "Green lentils"]
+            for product in products {
+                tap(app.buttons["pantry.add"])
+                let name = app.textFields["pantry.foodName"], amount = app.textFields["pantry.amount"]
+                tap(name)
+                name.typeText(product)
+                tap(amount)
+                amount.typeText(product == products[0] ? "2" : "1/2")
+                tap(app.buttons["pantry.foodUnit"])
+                tap(app.buttons[spanish ? "tazas" : "cups"])
+                tap(app.buttons["pantry.review"])
+                let confirm = app.buttons["pantry.confirm"]
+                tap(confirm)
+                XCTAssertTrue(confirm.waitForNonExistence(timeout: 8))
+            }
             tap(app.buttons["pantry.tonight"])
             let search = app.textFields["dinner.recipeSearch"]
             tap(search)
@@ -132,6 +147,45 @@ import XCTest
             tap(pin)
             let pinned = NSPredicate(format: "label == %@", spanish ? "Quitar de Cocinar pronto" : "Remove from Cook soon")
             XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: pinned, object: pin)], timeout: 8), .completed)
+            XCTAssertTrue(pin.isHittable, "Pinning must leave the reviewed recipe open and in view.")
+            let picker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.match.")).firstMatch
+            XCTAssertTrue(picker.waitForExistence(timeout: 5))
+            let ingredient = String(picker.identifier.dropFirst("tonight.match.".count))
+            let remember = app.buttons["tonight.remember." + ingredient]
+            let forget = app.buttons["tonight.forget." + ingredient]
+            func assertVisibleTarget(_ button: XCUIElement) {
+                XCTAssertTrue(button.waitForExistence(timeout: 8), button.debugDescription)
+                XCTAssertTrue(button.isHittable, "Updating a match must keep the same reviewed ingredient visible.")
+                XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+                XCTAssertGreaterThanOrEqual(button.frame.width, 44)
+            }
+            tap(picker)
+            tap(app.buttons[products[0]])
+            assertVisibleTarget(remember)
+            remember.tap()
+            assertVisibleTarget(forget)
+            XCTAssertTrue(picker.isHittable)
+            picker.tap()
+            tap(app.buttons[products[1]])
+            assertVisibleTarget(remember)
+            XCTAssertEqual(remember.label, spanish ? "Cambiar el producto guardado" : "Change remembered product")
+            remember.tap()
+            XCTAssertTrue(remember.waitForNonExistence(timeout: 8))
+            assertVisibleTarget(forget)
+            forget.tap()
+            XCTAssertTrue(forget.waitForNonExistence(timeout: 8))
+            XCTAssertTrue(picker.isHittable)
+            XCTAssertFalse(picker.label.contains(products[1]))
+            picker.tap()
+            tap(app.buttons[products[1]])
+            let shortfall = app.staticTexts["tonight.shortfall." + ingredient]
+            revealInList(shortfall)
+            XCTAssertTrue(shortfall.label.hasSuffix(spanish ? " · 1 taza estadounidense" : " · 1 US cup"), shortfall.label)
+            tap(row)
+            XCTAssertTrue(app.staticTexts["tonight.section.matches"].waitForExistence(timeout: 5))
+            XCTAssertFalse(picker.exists, "The closed recipe should now appear under current pantry matches.")
+            tap(search)
+            XCTAssertEqual(search.value as? String, "cilantro")
             app.terminate()
         }
     }

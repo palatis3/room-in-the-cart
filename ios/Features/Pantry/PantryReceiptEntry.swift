@@ -36,6 +36,9 @@ struct PantryReceiptEntry: View {
     @State private var review: PantryReceiptReview?
     @State private var working = false
     @State private var message: String?
+    @State private var expandedLines = Set<UUID>()
+    @State private var amountCorrection: ReceiptAmountCorrection?
+    @State private var correctionRequest: UUID?
     @State private var savedLotIDs: [UUID]?
     @State private var savedHeader: ReviewedReceiptHeader?
     @State private var savedPickupID: UUID?
@@ -45,6 +48,26 @@ struct PantryReceiptEntry: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        ScrollViewReader { proxy in
+            form.task(id: correctionRequest) {
+                guard correctionRequest != nil, let issue = amountCorrection else { return }
+                await Task.yield()
+                guard !Task.isCancelled, model.permitsReceiptSource else { return }
+                proxy.scrollTo(issue.lineID, anchor: .top)
+                await Task.yield()
+                guard !Task.isCancelled, model.permitsReceiptSource else { return }
+                proxy.scrollTo(issue.focusKey, anchor: .center)
+                await Task.yield()
+                guard !Task.isCancelled, model.permitsReceiptSource else { return }
+                field = issue.focusKey
+                if UIAccessibility.isVoiceOverRunning {
+                    UIAccessibility.post(notification: .announcement, argument: issue.text)
+                }
+            }
+        }
+    }
+
+    private var form: some View {
         WorkingForm {
             if let message {
                 Text(message).accessibilityFocused($resultFocused).accessibilityIdentifier("receipt.status")
@@ -206,7 +229,9 @@ struct PantryReceiptEntry: View {
                 ForEach(displayed.lines) { line in
                     if grouped, eligible.contains(where: { $0.id == line.id }) {
                         let detailsLabel = putawayText("Edit amount or action") + " · " + line.name
-                        DisclosureGroup {
+                        DisclosureGroup(isExpanded: Binding(get: { expandedLines.contains(line.id) }, set: { open in
+                            if open { expandedLines.insert(line.id) } else { expandedLines.remove(line.id) }
+                        })) {
                             receiptEditor(line, value: value, displayed: displayed, grouped: true)
                         } label: {
                             Text(verbatim: detailsLabel)
@@ -224,13 +249,13 @@ struct PantryReceiptEntry: View {
             } else {
                 Section {
                     BrandScopeLabel(pantryText("Private receipt draft"), systemImage: "lock")
-                    Text(pantryText("Check the printed wording first. Then confirm what arrived and how much is usable."))
+                    Text(putawayText("Check the printed lines, then choose what to record or put away."))
                         .foregroundStyle(Theme.secondary)
                     if let state = model.snapshot?.state {
                         ReceiptPhotoShortcuts(target: .init(workspaceID: state.workspaceID, containerID: targetID, objectID: targetID,
                             revision: state.revision, kind: .receiptEvidence), authorize: {
                                 model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
-                            }) { source in accept(source) }
+                            }, reviewsPrivateReceipt: true) { source in accept(source) }
                     }
                 }
                 Section {
@@ -247,6 +272,11 @@ struct PantryReceiptEntry: View {
                 }
             }
             if working { ProgressView() }
+        }
+        .onChange(of: draft?.lines) { _, rows in
+            if let issue = amountCorrection, rows?.first(where: { $0.id == issue.lineID })?.amountCorrection != issue {
+                amountCorrection = nil
+            }
         }
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: field != nil, title: pantryText("Done"), identifier: "receipt.keyboardDone") { field = nil }
@@ -299,7 +329,7 @@ struct PantryReceiptEntry: View {
                     PantryReceiptDocuments(model: model, target: .init(workspaceID: state.workspaceID, containerID: targetID,
                         objectID: targetID, revision: state.revision, kind: .receiptEvidence), authorize: {
                         model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
-                    }) { source, share in accept(source); sharedSource = share }
+                    }, reviewsPrivateReceipt: true) { source, share in accept(source); sharedSource = share }
                 }
             }
         }
@@ -332,7 +362,7 @@ struct PantryReceiptEntry: View {
             if let state = model.snapshot?.state, model.permitsReceiptSource {
                 assistance = AssistanceReview(id: displayed.draftID, state: state, line: line)
             }
-        }, permitsPutaway: displayed.tracksPutaway, grouped: grouped, field: $field)
+        }, permitsPutaway: displayed.tracksPutaway, grouped: grouped, correction: amountCorrection?.lineID == line.id ? amountCorrection : nil, field: $field)
     }
 
     private func stockOutcome(_ text: String, symbol: String) -> some View {
@@ -370,6 +400,13 @@ struct PantryReceiptEntry: View {
                 let result = try await model.reviewReceipt(proposed)
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
                 review = result; draft = proposed; rescan = nil; overlap = nil; message = nil
+            } catch let issue as ReceiptAmountCorrection {
+                guard model.permitsReceiptSource, draft?.draftID == proposed.draftID,
+                      draft?.lines.first(where: { $0.id == issue.lineID })?.amountCorrection == issue else { return }
+                rescan = nil; overlap = nil; message = nil; field = nil
+                expandedLines.insert(issue.lineID)
+                amountCorrection = issue
+                correctionRequest = UUID()
             } catch let prompt as PutawayOverlap {
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
                 draft = proposed; overlap = prompt; rescan = nil; message = nil
@@ -469,6 +506,7 @@ struct PantryReceiptLineEditor: View {
     var householdDeliveries: [HouseholdPantryPage.Lot] = []
     var permitsPutaway = false
     var grouped = false
+    var correction: ReceiptAmountCorrection? = nil
     @State private var expanded = false
     var field: FocusState<String?>.Binding
 
@@ -478,11 +516,18 @@ struct PantryReceiptLineEditor: View {
 
     private func labeledField(_ title: String, text: Binding<String>, focusKey: String,
                               identifier: String? = nil, keyboard: UIKeyboardType = .default) -> some View {
-        WorkingField(title) {
-            TextField(title, text: text, prompt: Text(""))
-                .keyboardType(keyboard).focused(field, equals: focusKey)
-                .accessibilityIdentifier(identifier ?? title)
-        }
+        VStack(alignment: .leading, spacing: 4) {
+            if let correction, correction.focusKey == focusKey {
+                Text(correction.text)
+                    .font(.subheadline.weight(.medium)).foregroundStyle(Theme.warning)
+                    .accessibilityIdentifier("receipt.error." + correction.field.rawValue + "." + String(correction.ordinal))
+            }
+            WorkingField(title) {
+                TextField(title, text: text, prompt: Text(""))
+                    .keyboardType(keyboard).focused(field, equals: focusKey)
+                    .accessibilityIdentifier(identifier ?? title)
+            }
+        }.id(focusKey)
     }
 
     var body: some View {
@@ -579,7 +624,7 @@ struct PantryReceiptLineEditor: View {
                 Button(putawayText("Edit amount")) { expanded.toggle() }
                     .frame(minHeight: 44).accessibilityIdentifier("receipt.editAmount.\(line.ordinal)")
             }
-            if !line.selectedIntact || grouped || expanded { detailFields }
+            if !line.selectedIntact || grouped || expanded || correction != nil { detailFields }
         }
     }
 
@@ -607,7 +652,7 @@ struct PantryReceiptLineEditor: View {
             labeledField(pantryText("Food name"), text: Binding(get: { line.name }, set: { line.clearAlias(); line.name = $0 }),
                          focusKey: "name-\(line.ordinal)")
             if let printed = line.printed, let quantity = printed.quantity, let unit = printed.unit {
-                LabeledContent(pantryText("Printed quantity"), value: quantity + " " + pantryUnit(unit))
+                LabeledContent(pantryText("Printed quantity"), value: pantryPrintedQuantity(quantity, unit: unit))
                 Button(pantryText("I received the printed quantity")) { line.usePrintedQuantity() }
                     .accessibilityIdentifier("receipt.printedQuantity.\(line.ordinal)")
             }

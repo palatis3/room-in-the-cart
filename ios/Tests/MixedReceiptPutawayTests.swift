@@ -19,6 +19,22 @@ import XCTest
         return result
     }
 
+    func testKeptPortionCorrectionIdentifiesOriginalLineAndAcceptsFractions() {
+        var row = ReceiptImportDraft.Line(id: UUID(), ordinal: 37, original: "Wrap 1.0 ct", name: "Wrap", treatment: .keptSome, received: "1")
+        let issue = row.amountCorrection
+        XCTAssertEqual(issue?.lineID, row.id)
+        XCTAssertEqual(issue?.ordinal, 37)
+        XCTAssertEqual(issue?.field, .usable)
+        XCTAssertEqual(issue?.reason, .keptPortion)
+        row.usable = "2"
+        XCTAssertEqual(row.amountCorrection?.reason, .keptPortion)
+        row.usable = "1/2"
+        XCTAssertNil(row.amountCorrection)
+        XCTAssertEqual(pantryPrintedQuantity("1.0", unit: .count), "1.0 " + pantryUnit(.count, singular: true))
+        XCTAssertEqual(pantryPrintedQuantity("2/2", unit: .count), "2/2 " + pantryUnit(.count, singular: true))
+        XCTAssertEqual(pantryPrintedQuantity("2", unit: .count), "2 " + pantryUnit(.count))
+    }
+
     func testMixedReceiptReopensAndReplaysOneTotalAndOnlyConfirmedFood() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

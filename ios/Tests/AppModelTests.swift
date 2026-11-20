@@ -394,6 +394,8 @@ final class AppModelTests: XCTestCase {
             XCTAssertEqual(unit.comparisonLabel(for: try Rational(decimal: "1.00")), singular)
             XCTAssertEqual(unit.comparisonLabel(for: .zero), unit.displayName)
             XCTAssertEqual(unit.comparisonLabel(for: try Rational(2)), unit.displayName)
+            XCTAssertEqual(ledgerQuantity(.init(amount: .one, unit: unit, originalLiteral: "1")), "1 " + singular)
+            XCTAssertEqual(ledgerQuantity(.init(amount: try Rational(2), unit: unit, originalLiteral: "2")), "2 " + unit.displayName)
         }
     }
 

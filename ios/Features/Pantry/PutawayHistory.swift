@@ -45,7 +45,7 @@ struct ReceiptIntactToggle: View {
     private var amountAndDestination: String {
         let quantity = line.selectedIntact ? line.usable : line.printed?.quantity ?? ""
         let unit = line.selectedIntact ? line.unit : line.printed?.unit ?? line.unit
-        return quantity + " " + pantryUnit(unit, singular: quantity == "1") + " · " + pantryLocationName(line.location)
+        return pantryPrintedQuantity(quantity, unit: unit) + " · " + pantryLocationName(line.location)
     }
 }
 

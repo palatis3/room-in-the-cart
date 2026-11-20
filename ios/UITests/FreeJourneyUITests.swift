@@ -1006,7 +1006,7 @@ import XCTest
         let name = app.textFields["Store or branch"]
         tap(name); name.typeText("Room Market")
         if app.buttons["receipt.document.keyboardDone"].exists { app.buttons["receipt.document.keyboardDone"].tap() }
-        enableSwitch("I checked these printed lines and physically received food from this purchase.")
+        XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         tap(app.buttons["receipt.document.accept"])
         let purchaseDate = app.switches["I checked the purchase date."]
         XCTAssertTrue(purchaseDate.waitForExistence(timeout: 10), app.debugDescription)
@@ -1205,7 +1205,7 @@ import XCTest
         XCTAssertEqual(saved.label, "Test photo saved")
     }
 
-    func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
+    private func openReceiptScreenshotFromPhotos() throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         saveSourcePhoto()
@@ -1217,6 +1217,36 @@ import XCTest
         XCTAssertTrue(screenshot.waitForExistence(timeout: 5) && screenshot.isHittable, app.debugDescription)
         screenshot.tap()
         try chooseNewestSourcePhoto()
+    }
+
+    func testFeeOnlyScreenshotCanBeSavedWithoutConfirmingReceivedFood() throws {
+        try openReceiptScreenshotFromPhotos()
+        let fee = app.switches["receipt.document.line.1.2"]
+        XCTAssertTrue(fee.waitForExistence(timeout: 25), app.debugDescription)
+        XCTAssertTrue(fee.label.uppercased().contains("SERVICE FEE"))
+        enableSwitch("receipt.document.line.1.2")
+        fill("Room Market", into: "Store or branch", control: app.textFields["Store or branch"])
+        XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
+        let sourceReview = app.buttons["receipt.document.accept"]
+        XCTAssertEqual(sourceReview.label, "Review selected lines")
+        tap(sourceReview)
+        checkReceiptSwitch("I checked the purchase date.")
+        receiptTap(app.buttons["receipt.action.1"])
+        receiptTap(app.buttons["Fee, adjustment or return"])
+        XCTAssertFalse(app.textFields["receipt.received.1"].exists)
+        receiptTap(app.buttons["receipt.review"])
+        let save = app.buttons["receipt.commit"]
+        XCTAssertTrue(save.waitForExistence(timeout: 8))
+        XCTAssertEqual(save.label, "Save receipt decisions")
+        receiptTap(save)
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+        let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@", "pantry.lot.", "SERVICE FEE"))
+        XCTAssertEqual(lots.count, 0)
+    }
+
+    func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
+        try openReceiptScreenshotFromPhotos()
         let oats = app.switches["receipt.document.line.1.1"]
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
@@ -1249,7 +1279,7 @@ import XCTest
         XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
         fill("Room Market", into: "Store or branch", control: app.textFields["Store or branch"])
-        enableSwitch("I checked these printed lines and physically received food from this purchase.")
+        XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         tap(app.buttons["receipt.document.accept"])
 
         let date = app.switches["I checked the purchase date."]
@@ -1428,14 +1458,14 @@ import XCTest
         receiptTap(app.buttons["receipt.review"])
     }
 
-    func testPutAwayOneGroceryFromLunchReceipt() {
+    private func openMixedTypedReceipt(_ lines: String) {
         launch(reset: true)
         receiptTap(app.shopToolButton("shop.myPantry"))
         openReceiptAfterPantrySetup()
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         receiptTap(wording)
-        wording.typeText("Jars 2 ct USD 4.00\nSandwich 1 ct USD 5.50")
+        wording.typeText(lines)
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
         let label = app.textFields["Source reference label"]
         receiptTap(label)
@@ -1446,6 +1476,32 @@ import XCTest
         receiptTap(app.buttons["scan.receipt.review"])
 
         checkReceiptSwitch("I checked the purchase date.")
+    }
+
+    func testReviewReopensKeptPortionAndFocusesItsMissingAmount() {
+        openMixedTypedReceipt("Jars 2 ct USD 4.00\nWrap 1 ct USD 5.50")
+        let details = app.buttons["receipt.details.1"]
+        receiptTap(details)
+        receiptTap(app.buttons["receipt.action.1"])
+        receiptTap(app.buttons["Kept some"])
+        receiptTap(app.buttons["receipt.printedQuantity.1"])
+        receiptTap(details)
+        receiptTap(app.buttons["receipt.review"])
+        let error = app.staticTexts["receipt.error.usable.1"]
+        XCTAssertTrue(error.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(error.label.contains("Wrap"))
+        let usable = app.textFields["receipt.usable.1"]
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(usable.isHittable)
+        app.typeText("1/2")
+        XCTAssertEqual(usable.value as? String, "1/2")
+        receiptTap(app.buttons["receipt.keyboardDone"])
+        receiptTap(app.buttons["receipt.review"])
+        XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
+    }
+
+    func testPutAwayOneGroceryFromLunchReceipt() {
+        openMixedTypedReceipt("Jars 2 ct USD 4.00\nSandwich 1 ct USD 5.50")
         let review = app.buttons["receipt.review"]
         XCTAssertFalse(review.isEnabled)
         let total = app.textFields["receipt.total"]

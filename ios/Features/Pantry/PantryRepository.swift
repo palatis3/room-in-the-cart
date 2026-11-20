@@ -708,6 +708,7 @@ final class PantryRepository {
               !draft.merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw PantryReceiptError.invalid }
         let selected = draft.selectedLines
         guard (1...50).contains(selected.count), Set(selected.map(\.ordinal)).count == selected.count else { throw PantryReceiptError.selection }
+        if let issue = draft.firstAmountCorrection { throw issue }
         var matched = Set<UUID>()
         for identity in draft.evidenceIdentities {
             if let id = try await store.acquisitionReceiptID(for: identity) { matched.insert(id) }

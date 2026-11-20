@@ -2,7 +2,55 @@ import CoreDomain
 import Foundation
 import LocalStore
 
+struct ReceiptAmountCorrection: Error, Equatable {
+    enum Field: String { case received, usable }
+    enum Reason { case received, usable, keptPortion, exceedsReceived }
+    let lineID: UUID
+    let ordinal: Int
+    let name: String
+    let field: Field
+    let reason: Reason
+
+    var focusKey: String { field.rawValue + "-" + String(ordinal) }
+    var text: String {
+        let key: String
+        switch reason {
+        case .received: key = putawayText("Enter the amount of %@ you received.")
+        case .usable: key = putawayText("Enter a usable amount for %@.")
+        case .keptPortion: key = putawayText("Enter the portion of %@ you took home, smaller than the amount received.")
+        case .exceedsReceived: key = putawayText("The usable amount of %@ must be at most the amount received.")
+        }
+        return String(format: key, locale: .current, name)
+    }
+}
+
+extension ReceiptImportDraft {
+    var firstAmountCorrection: ReceiptAmountCorrection? {
+        guard tracksPutaway else { return nil }
+        return stockLines.lazy.compactMap { $0.amountCorrection }.first
+    }
+}
+
 extension ReceiptImportDraft.Line {
+    var amountCorrection: ReceiptAmountCorrection? {
+        guard treatment.recordsStock else { return nil }
+        func issue(_ field: ReceiptAmountCorrection.Field, _ reason: ReceiptAmountCorrection.Reason) -> ReceiptAmountCorrection {
+            .init(lineID: id, ordinal: ordinal, name: name, field: field, reason: reason)
+        }
+        guard let received = try? ComparisonModel.quantity(self.received, unit), received.amount > .zero else {
+            return issue(.received, .received)
+        }
+        guard let usable = try? ComparisonModel.quantity(self.usable, unit) else {
+            return issue(.usable, treatment == .keptSome ? .keptPortion : .usable)
+        }
+        if treatment == .keptSome, usable.amount <= .zero || usable.amount >= received.amount {
+            return issue(.usable, .keptPortion)
+        }
+        if usable.amount > received.amount { return issue(.usable, .exceedsReceived) }
+        if treatment == .add, usable.amount <= .zero { return issue(.usable, .usable) }
+        return nil
+    }
+
     var needsPackReview: Bool {
         original.contains(#/(?i)\b(?:packs?|pk|multipacks?|paquetes?)\b|\d\s*[x×]\s*\d/#)
     }

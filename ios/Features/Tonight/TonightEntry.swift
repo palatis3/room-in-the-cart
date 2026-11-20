@@ -26,6 +26,18 @@ struct TonightEntry: View {
     }
     @State private var suggestedSecond: PantryMealMatcher.Review?
     private enum ChoiceSection: Hashable { case destination, review }
+    private enum RecipeSection { case matches, needsReview }
+    private struct OpenRecipe {
+        let id: UUID
+        let section: RecipeSection
+        let index: Int
+    }
+    private struct IngredientAnchor: Hashable {
+        let recipe: UUID
+        let ingredient: UUID
+    }
+    @State private var openRecipe: OpenRecipe?
+    @State private var requestedIngredient: IngredientAnchor?
     @State private var requestedSection: ChoiceSection?
     @AccessibilityFocusState private var focusedSection: ChoiceSection?
     @State private var choosing: MealTemplate?
@@ -41,6 +53,7 @@ struct TonightEntry: View {
     @State private var preview: TonightPlanChoice.Review?
     @State private var message: String?
     @State private var applying = false
+    @State private var localProductGeneration: UUID?
     @ObservedObject private var productMemoryStore = PantryDigestStore.shared.recipeProductMemory
     @ObservedObject private var packMemory = PantryDigestStore.shared.packMemory
     @ObservedObject private var home = AdultHomeSummaryStore.shared
@@ -97,12 +110,24 @@ struct TonightEntry: View {
                         scroll.scrollTo(section, anchor: .top)
                         focusedSection = section
                     }
+                    .task(id: requestedIngredient) {
+                        guard let anchor = requestedIngredient else { return }
+                        await Task.yield()
+                        guard !Task.isCancelled, openRecipe?.id == anchor.recipe, choosing == nil else { return }
+                        scroll.scrollTo(anchor, anchor: .center)
+                        requestedIngredient = nil
+                    }
                 }
             }
         }
         .navigationTitle(tonightText("Tonight"))
         .privacySensitive()
+        .onChange(of: query) { _, _ in closeRecipe() }
+        .onChange(of: pinnedOnly) { _, _ in closeRecipe() }
+        .onDisappear { closeRecipe() }
         .task(id: scope) {
+            closeRecipe()
+            localProductGeneration = nil
             model.invalidate(); preview = nil; choosing = nil; sourceToReview = nil; manual = false; foodToReview = nil; recipeToReview = nil
             query = ""; pinnedOnly = false; message = nil; newTitle = ""; destination = nil; suggestedSecond = nil; requestedSection = nil
             if scope != nil && pickup.pantryIsActive { await refresh() }
@@ -113,9 +138,11 @@ struct TonightEntry: View {
             model.invalidate(); preview = nil; choosing = nil
             Task { await refresh() }
         }
-        .onChange(of: productMemoryStore.generation) { _, _ in
+        .onChange(of: productMemoryStore.generation) { _, generation in
             preview = nil
-            if !applying { model.invalidate(); Task { await refresh() } }
+            guard generation != localProductGeneration else { return }
+            model.invalidate()
+            Task { await refresh() }
         }
         .onChange(of: packMemory.generation) { _, _ in
             preview = nil
@@ -308,8 +335,10 @@ struct TonightEntry: View {
             }
         }
         if !visibleSuggestions.isEmpty {
-            Section(tonightText("Pantry matches to review")) {
-                ForEach(visibleSuggestions) { review in recipeRow(review) }
+            Section {
+                ForEach(visibleSuggestions) { review in recipeRow(review, in: .matches) }
+            } header: {
+                Text(tonightText("Pantry matches to review")).accessibilityIdentifier("tonight.section.matches")
             }
         }
     }
@@ -317,7 +346,7 @@ struct TonightEntry: View {
     @ViewBuilder private var recipesNeedingReview: some View {
         if !visibleReview.isEmpty {
             Section(tonightText("Needs information or a pantry match")) {
-                ForEach(visibleReview) { review in recipeRow(review) }
+                ForEach(visibleReview) { review in recipeRow(review, in: .needsReview) }
             }
         }
     }
@@ -334,8 +363,23 @@ struct TonightEntry: View {
         }
     }
 
-    @ViewBuilder private func recipeRow(_ review: PantryMealMatcher.Review) -> some View {
-        DisclosureGroup {
+    private func closeRecipe() {
+        requestedIngredient = nil
+        openRecipe = nil
+    }
+    private func expansion(_ id: UUID, in section: RecipeSection) -> Binding<Bool> {
+        Binding(get: { openRecipe?.id == id }, set: { expanded in
+            if expanded {
+                let rows = section == .matches ? visibleSuggestions : visibleReview
+                guard let index = rows.firstIndex(where: { $0.id == id }) else { return }
+                openRecipe = OpenRecipe(id: id, section: section, index: index)
+            } else if openRecipe?.id == id {
+                closeRecipe()
+            }
+        })
+    }
+    @ViewBuilder private func recipeRow(_ review: PantryMealMatcher.Review, in section: RecipeSection) -> some View {
+        DisclosureGroup(isExpanded: expansion(review.id, in: section)) {
             NavigationLink(dinnerText("Private meal feedback")) {
                 MealFeedbackEntry(ledger: ledger, source: .recipe(id: review.id, revision: review.recipe.revision),
                                   title: review.recipe.title)
@@ -355,7 +399,11 @@ struct TonightEntry: View {
                         Picker(tonightText("Reviewed pantry match"), selection: Binding(get: {
                             model.matches[review.id]?[ingredient.id]
                         }, set: { food in
-                            do { try model.match(recipeID: review.id, ingredientID: ingredient.id, foodID: food); preview = nil }
+                            do {
+                                try model.match(recipeID: review.id, ingredientID: ingredient.id, foodID: food)
+                                preview = nil
+                                requestedIngredient = IngredientAnchor(recipe: review.id, ingredient: ingredient.id)
+                            }
                             catch { message = tonightText("Refresh before reviewing this match.") }
                         })) {
                             Text(tonightText("Not matched")).tag(UUID?.none)
@@ -373,7 +421,7 @@ struct TonightEntry: View {
                         Text(tonightText(row?.hasUnresolvedStock == true ? "Stock count or reservation needs review." :
                             row?.covered == true ? "Covered by currently free pantry food." : "Missing or unresolved quantity — review before choosing."))
                     }
-                }
+                }.id(IngredientAnchor(recipe: review.id, ingredient: ingredient.id))
             }
             if let use = review.batchUse {
                 LabeledContent(tonightText("Would use from this batch"), value: ledgerQuantity(use.used))
@@ -397,6 +445,7 @@ struct TonightEntry: View {
                 ForEach(review.ingredients.filter { !$0.covered && $0.ingredient.checkedWithoutAmount != true }) { row in
                     Text(tonightText("Missing or not credited") + ": " + row.ingredient.name + " · " +
                         ledgerQuantity(TonightMealModel.missingQuantity(row)))
+                        .accessibilityIdentifier("tonight.shortfall." + row.id.uuidString)
                 }
                 Button(tonightText("Plan for a day")) {
                     beginChoice(review.recipe)
@@ -426,18 +475,25 @@ struct TonightEntry: View {
             let stored = model.storedProduct(key)
             let next = model.rememberedCandidate(recipe: recipe, ingredient: ingredient)
             if let next, next != stored {
-                Button(tonightText(stored == nil ? "Remember for this recipe" : "Change remembered product")) {
+                Button {
                     Task { await updateProduct(recipe: recipe, ingredient: ingredient, key: key, previous: stored, next: next) }
-                }
-                .buttonStyle(.borderless).frame(minHeight: 44)
+                } label: {
+                    Text(tonightText(stored == nil ? "Remember for this recipe" : "Change remembered product"))
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }.buttonStyle(.borderless)
                 .accessibilityIdentifier("tonight.remember." + ingredient.id.uuidString)
             }
             if let stored {
                 Text(tonightText(next == stored ? "Remembered for this recipe" : "Review the remembered product against current stock."))
                     .font(.subheadline)
-                Button(tonightText("Forget remembered product")) {
+                Button {
                     Task { await updateProduct(recipe: recipe, ingredient: ingredient, key: key, previous: stored, next: nil) }
-                }.buttonStyle(.borderless).frame(minHeight: 44)
+                } label: {
+                    Text(tonightText("Forget remembered product"))
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }.buttonStyle(.borderless)
                     .accessibilityIdentifier("tonight.forget." + ingredient.id.uuidString)
             }
         }
@@ -462,8 +518,12 @@ struct TonightEntry: View {
             let memory = PantryDigestStore.shared.recipeProductMemory
             try memory.replace(previous, with: next,
                 scope: .init(ledger: original.ledger, pantry: original.inventory, owner: key.owner), authorized: authorized)
+            localProductGeneration = memory.generation
             if next == nil { model.clearSelectionAfterForgetting(key) }
             await refresh()
+            if openRecipe?.id == recipe.id {
+                requestedIngredient = IngredientAnchor(recipe: recipe.id, ingredient: ingredient.id)
+            }
         } catch { message = tonightText("Refresh before reviewing this match.") }
     }
     @ViewBuilder private func followingMeals(after first: PantryMealMatcher.Review) -> some View {
@@ -557,8 +617,18 @@ struct TonightEntry: View {
     private func visible(_ template: MealTemplate) -> Bool {
         visiblePin(.reviewed(template.id)) && template.matchesRecipeSearch(query)
     }
-    private var visibleSuggestions: [PantryMealMatcher.Review] { model.suggestions.filter { visible($0.recipe) } }
-    private var visibleReview: [PantryMealMatcher.Review] { model.needsReview.filter { visible($0.recipe) } }
+    private var visibleSuggestions: [PantryMealMatcher.Review] { visibleRows(model.suggestions, in: .matches) }
+    private var visibleReview: [PantryMealMatcher.Review] { visibleRows(model.needsReview, in: .needsReview) }
+    private func visibleRows(_ ranked: [PantryMealMatcher.Review], in section: RecipeSection) -> [PantryMealMatcher.Review] {
+        var rows = ranked.filter { visible($0.recipe) && $0.id != openRecipe?.id }
+        // Matching can move a recipe to the other section. Keep this disclosure in its current
+        // list slot until it closes, while displaying its live stock and eligibility.
+        if let openRecipe, openRecipe.section == section,
+           let review = model.reviews.first(where: { $0.id == openRecipe.id }), review.recipe.matchesRecipeSearch(query) {
+            rows.insert(review, at: min(openRecipe.index, rows.count))
+        }
+        return rows
+    }
     private var visibleSources: [TonightMealModel.Source] {
         (model.input?.sources ?? []).filter {
             visiblePin(.imported($0.id)) && PrivateRecipeSearch.matches(query, title: $0.recipe.title, ingredients: $0.recipe.ingredients)
@@ -571,6 +641,7 @@ struct TonightEntry: View {
         }
     }
     private func beginChoice(_ recipe: MealTemplate) {
+        closeRecipe()
         plannedDate = Date()
         choosing = recipe
         destination = ledger.workspace.selectedShopID

@@ -3094,6 +3094,23 @@
           }
         }
       }
+    },
+    "Counted portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counted portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones contadas"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

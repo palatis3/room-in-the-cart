@@ -592,6 +592,150 @@
           }
         }
       }
+    },
+    "Select the receipt lines and purchase date you want to review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the receipt lines and purchase date you want to review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona las líneas del recibo y la fecha de compra que quieras revisar."
+          }
+        }
+      }
+    },
+    "This page exceeds the line limit. You can type the receipt lines instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This page exceeds the line limit. You can type the receipt lines instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta página supera el límite de líneas. Puedes escribir las líneas del recibo."
+          }
+        }
+      }
+    },
+    "Choose a smaller page with up to 200 lines, or type the receipt lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a smaller page with up to 200 lines, or type the receipt lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una página más pequeña con un máximo de 200 líneas o escribe las líneas del recibo."
+          }
+        }
+      }
+    },
+    "Saving the reviewed receipt removes this staged file. Keep the original for any other lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving the reviewed receipt removes this staged file. Keep the original for any other lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al guardar el recibo revisado se elimina este archivo temporal. Conserva el original para revisar otras líneas."
+          }
+        }
+      }
+    },
+    "Check the printed lines, then choose what to record or put away.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the printed lines, then choose what to record or put away."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las líneas impresas y elige qué quieres registrar o guardar en la despensa."
+          }
+        }
+      }
+    },
+    "Enter the amount of %@ you received.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the amount of %@ you received."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa la cantidad que recibiste de %@."
+          }
+        }
+      }
+    },
+    "Enter a usable amount for %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a usable amount for %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa una cantidad aprovechable de %@."
+          }
+        }
+      }
+    },
+    "Enter the portion of %@ you took home, smaller than the amount received.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the portion of %@ you took home, smaller than the amount received."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa la porción de %@ que llevaste a casa. Debe ser menor que la cantidad recibida."
+          }
+        }
+      }
+    },
+    "The usable amount of %@ must be at most the amount received.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The usable amount of %@ must be at most the amount received."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad aprovechable de %@ no puede superar la cantidad recibida."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

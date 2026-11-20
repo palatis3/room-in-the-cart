@@ -621,7 +621,7 @@ private struct PantryFoodEditor: View {
                     } else {
                         Picker(pantryText("Unit"), selection: $unit) {
                             ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
-                        }
+                        }.accessibilityIdentifier("pantry.foodUnit")
                     }
                 } footer: {
                     Text(pantryText("Leave blank if unknown. Enter 0 only for confirmed none. Count means individual units, not an assumed package size."))

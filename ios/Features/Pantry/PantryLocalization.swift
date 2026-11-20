@@ -29,6 +29,10 @@ func pantryQuantity(_ quantity: Quantity?) -> String {
     // The exact fraction and original unit stay intact; no floating-point stock math.
     return "\(quantity.amount.description) \(pantryUnit(quantity.unit, singular: quantity.amount == .one))"
 }
+func pantryPrintedQuantity(_ literal: String, unit: UnitOfMeasure) -> String {
+    let measured = try? ComparisonModel.quantity(literal, unit)
+    return literal + " " + pantryUnit(unit, singular: measured?.amount == .one)
+}
 func pantryCount(_ count: InventoryCount, estimate: String? = nil) -> String {
     if count == .someLeft, let estimate { return pantryFormat("%@ (estimate)", estimate) }
     switch count {

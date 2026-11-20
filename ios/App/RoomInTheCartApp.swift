@@ -477,8 +477,8 @@ struct ShopView: View {
             VStack(alignment: .leading, spacing: 20) {
                 if !beganWithEmptyList { tripSummary }
                 VStack(alignment: .leading, spacing: 12) {
-                    BrandScopeLabel(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                     LedgerQuickGroceryEntry(model: ledger, prominent: true)
+                    BrandScopeLabel(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                     if ledger.shop == nil {
                         Text(tr("Works offline. No account needed."))
                             .font(.footnote).foregroundStyle(Theme.secondary)

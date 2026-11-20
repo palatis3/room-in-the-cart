@@ -22,7 +22,7 @@ func ledgerImportLimitMessage(_ limit: ImportTextLimit) -> String {
 
 func ledgerQuantity(_ quantity: Quantity?) -> String {
     guard let quantity else { return ledgerText("Quantity unresolved") }
-    return "\(amountText(quantity.amount)) \(quantity.unit.displayName)"
+    return "\(amountText(quantity.amount)) \(quantity.unit.comparisonLabel(for: quantity.amount))"
 }
 
 extension ShoppingLedger {
