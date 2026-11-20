@@ -178,7 +178,7 @@ def verify_archive_symbols(archive, app):
         require(dwarf_uuids(symbols) == binary_ids, f"Crash symbols do not match {product.name}")
 
 
-def verify_distribution_entitlements(values, bundle_id, team, groups):
+def verify_distribution_entitlements(values, bundle_id, team, groups, *, regional_age_check=None):
     require(values.get("application-identifier") == f"{team}.{bundle_id}", f"Wrong signed app identifier: {bundle_id}")
     require(values.get("com.apple.developer.team-identifier") == team, f"Wrong signing team: {bundle_id}")
     actual_groups = values.get("com.apple.security.application-groups")
@@ -188,6 +188,9 @@ def verify_distribution_entitlements(values, bundle_id, team, groups):
     require(values.get("com.apple.developer.default-data-protection") == "NSFileProtectionComplete",
             f"Missing complete data protection: {bundle_id}")
     require(values.get("get-task-allow", False) is False, f"Debugging enabled: {bundle_id}")
+    if regional_age_check is not None:
+        require(values.get("com.apple.developer.declared-age-range", False) is regional_age_check,
+                f"Wrong Declared Age Range entitlement: {bundle_id}")
 
 
 def verify_distribution_signing(app):
@@ -220,8 +223,10 @@ def verify_distribution_signing(app):
             run("codesign", "-d", "--extract-certificates", str(bundle), cwd=scratch)
             require((Path(scratch) / "codesign0").read_bytes() in profile["DeveloperCertificates"],
                     f"Distribution profile does not authorize the signing certificate: {bundle_id}")
-        for values in (signing, profile["Entitlements"]):
-            verify_distribution_entitlements(values, bundle_id, team, groups)
+        enabled = bundle == app and info.get("RITCRegionalAgeCheckEnabled") == "YES"
+        verify_distribution_entitlements(signing, bundle_id, team, groups, regional_age_check=enabled)
+        verify_distribution_entitlements(profile["Entitlements"], bundle_id, team, groups,
+                                        regional_age_check=True if enabled else None)
 
 
 def main():

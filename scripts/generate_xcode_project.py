@@ -70,7 +70,10 @@ def config_list(key, base, is_project=False):
             settings["ASSETCATALOG_COMPILER_APPICON_NAME"] = "AppIcon"
             if name == "Debug":
                 settings["INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription[sdk=iphonesimulator*]"] = "Add a synthetic receipt to this test simulator for the Photos picker check."
-            settings.update(build_settings(load_configuration(ROOT, name), name))
+            configuration = load_configuration(ROOT, name)
+            settings.update(build_settings(configuration, name))
+            if configuration.get("regionalAgeCheckEnabled") is True:
+                settings["CODE_SIGN_ENTITLEMENTS"] = "Configuration/AppRegionalAge.entitlements"
         configs.append(obj(f"config:{key}:{name}", "XCBuildConfiguration", buildSettings=settings, name=name))
     return obj("configs:" + key, "XCConfigurationList", buildConfigurations=configs, defaultConfigurationIsVisible="0", defaultConfigurationName="Release")
 
@@ -204,7 +207,11 @@ def outputs():
     result = {PROJECT / "project.pbxproj": "// !$*UTF8*$!\n" + serialize(project) + "\n"}
     if extension_keys:
         for name, groups in (("App", ["$(RITC_WIDGET_APP_GROUP)", "$(RITC_SHARE_INBOX_APP_GROUP)"]), ("Widget", ["$(RITC_WIDGET_APP_GROUP)"]), ("Share", ["$(RITC_SHARE_INBOX_APP_GROUP)"])):
-            result[IOS / "Configuration" / (name + ".entitlements")] = plistlib.dumps({"com.apple.security.application-groups": groups, "com.apple.developer.default-data-protection": "NSFileProtectionComplete"}).decode()
+            entitlements = {"com.apple.security.application-groups": groups, "com.apple.developer.default-data-protection": "NSFileProtectionComplete"}
+            result[IOS / "Configuration" / (name + ".entitlements")] = plistlib.dumps(entitlements).decode()
+            if name == "App":
+                result[IOS / "Configuration/AppRegionalAge.entitlements"] = plistlib.dumps(
+                    {**entitlements, "com.apple.developer.declared-age-range": True}).decode()
     for name, config in (("RoomInTheCart", "Debug"), ("RoomInTheCart-Staging", "Staging"), ("RoomInTheCart-Release", "Release")):
         result[PROJECT / "xcshareddata" / "xcschemes" / (name + ".xcscheme")] = scheme(name, config, test_ids)
     if (IOS / "Tests/LocalStoreKit.xctestplan").exists():

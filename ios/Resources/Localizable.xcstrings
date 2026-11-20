@@ -1,6 +1,34 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The age check couldn’t finish. Check your connection and Apple Account, then try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The age check couldn’t finish. Check your connection and Apple Account, then try again." } },
+        "es": { "stringUnit": { "state": "translated", "value": "No se pudo completar la verificación de edad. Revisa tu conexión y tu cuenta de Apple, y vuelve a intentarlo." } }
+      }
+    },
+    "An age range is required for this Apple Account. You can try sharing it again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "An age range is required for this Apple Account. You can try sharing it again." } },
+        "es": { "stringUnit": { "state": "translated", "value": "Se necesita un rango de edad para esta cuenta de Apple. Puedes volver a intentar compartirlo." } }
+      }
+    },
+    "Apple Account age check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Apple Account age check" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Verificación de edad de la cuenta de Apple" } }
+      }
+    },
+    "Checking age requirements…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Checking age requirements…" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Revisando los requisitos de edad…" } }
+      }
+    },
     "%@ costs less for this need": {
       "extractionState": "manual",
       "localizations": {

@@ -146,8 +146,9 @@ def load_configuration(root, name):
     expected_environment = "production" if name == "Release" else "staging"
     if config.get("environment", expected_environment) != expected_environment:
         raise ValueError(f"{path.name} must identify the {expected_environment} environment")
-    if "emailOTPEnabled" in config and not isinstance(config["emailOTPEnabled"], bool):
-        raise ValueError("emailOTPEnabled must be a JSON boolean")
+    for key in ("emailOTPEnabled", "regionalAgeCheckEnabled"):
+        if key in config and not isinstance(config[key], bool):
+            raise ValueError(f"{key} must be a JSON boolean")
     origins = {}
     for _, key, _ in PUBLIC_SETTINGS:
         value = config.get(key, "")
@@ -187,6 +188,7 @@ def build_settings(config, name):
     return {
         **{setting: config.get(key, "") for setting, key, _ in PUBLIC_SETTINGS},
         "RITC_EMAIL_OTP_ENABLED": "YES" if config.get("emailOTPEnabled") is True else "NO",
+        "RITC_REGIONAL_AGE_CHECK_ENABLED": "YES" if config.get("regionalAgeCheckEnabled") is True else "NO",
         "RITC_BUILD_ENVIRONMENT": name,
     }
 
@@ -195,6 +197,7 @@ def compiled_metadata(config, name):
     return {
         **{info_key: config.get(key, "") for _, key, info_key in PUBLIC_SETTINGS},
         "RITCEmailOTPEnabled": "YES" if config.get("emailOTPEnabled") is True else "NO",
+        "RITCRegionalAgeCheckEnabled": "YES" if config.get("regionalAgeCheckEnabled") is True else "NO",
         "RITCBuildEnvironment": name,
     }
 

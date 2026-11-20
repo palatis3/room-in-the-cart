@@ -6,14 +6,56 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
+import generate_xcode_project as project
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
                                load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
 from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app, verify_distribution_entitlements
 
 
 class AppConfigurationTests(unittest.TestCase):
+
+    def test_regional_age_check_is_an_explicit_boolean_in_its_own_environment(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            config = root / "config"
+            config.mkdir()
+            staging = config / "staging.json"
+            staging.write_text(json.dumps({"regionalAgeCheckEnabled": True}))
+            self.assertEqual(build_settings(load_configuration(root, "Staging"), "Staging")
+                             ["RITC_REGIONAL_AGE_CHECK_ENABLED"], "YES")
+            self.assertEqual(compiled_metadata(load_configuration(root, "Release"), "Release")
+                             ["RITCRegionalAgeCheckEnabled"], "NO")
+            staging.write_text(json.dumps({"regionalAgeCheckEnabled": "false"}))
+            with self.assertRaisesRegex(ValueError, "regionalAgeCheckEnabled must be a JSON boolean"):
+                load_configuration(root, "Staging")
+
+    def test_generated_project_enables_only_the_selected_app_environment(self):
+        def configuration(_root, name):
+            return {"regionalAgeCheckEnabled": name == "Staging"}
+
+        with patch.object(project, "load_configuration", configuration), patch.object(project, "OBJECTS", {}):
+            project.outputs()
+            for name in ("Debug", "Staging", "Release"):
+                enabled = name == "Staging"
+                app = project.OBJECTS[project.ident(f"config:app:{name}")]["buildSettings"]
+                self.assertEqual(app["RITC_REGIONAL_AGE_CHECK_ENABLED"], "YES" if enabled else "NO")
+                expected = "AppRegionalAge" if enabled else "App"
+                self.assertEqual(app["CODE_SIGN_ENTITLEMENTS"], f"Configuration/{expected}.entitlements")
+                for extension in ("share", "widget"):
+                    settings = project.OBJECTS[project.ident(f"config:{extension}:{name}")]["buildSettings"]
+                    self.assertEqual(settings["CODE_SIGN_ENTITLEMENTS"], f"Configuration/{extension.title()}.entitlements")
+
+    def test_age_entitlement_extends_only_the_app_entitlements(self):
+        folder = Path(__file__).resolve().parents[1] / "ios/Configuration"
+        key = "com.apple.developer.declared-age-range"
+        standard = plistlib.loads((folder / "App.entitlements").read_bytes())
+        opted_in = plistlib.loads((folder / "AppRegionalAge.entitlements").read_bytes())
+        self.assertEqual(opted_in, {**standard, key: True})
+        for name in ("App", "Widget", "Share"):
+            self.assertNotIn(key, plistlib.loads((folder / f"{name}.entitlements").read_bytes()))
 
     def test_app_store_archive_and_export_use_the_same_manual_profiles(self):
         folder = Path(__file__).resolve().parents[1] / "config"
@@ -413,6 +455,13 @@ class BuiltAppVerificationTests(unittest.TestCase):
                   "com.apple.developer.default-data-protection": "NSFileProtectionComplete",
                   "com.apple.security.application-groups": [widget], "get-task-allow": False}
         verify_distribution_entitlements(values, bundle_id, team, [widget])
+        age_key = "com.apple.developer.declared-age-range"
+        with self.assertRaisesRegex(ValueError, "Wrong Declared Age Range entitlement"):
+            verify_distribution_entitlements(values, bundle_id, team, [widget], regional_age_check=True)
+        enabled = {**values, age_key: True}
+        verify_distribution_entitlements(enabled, bundle_id, team, [widget], regional_age_check=True)
+        with self.assertRaisesRegex(ValueError, "Wrong Declared Age Range entitlement"):
+            verify_distribution_entitlements(enabled, bundle_id, team, [widget], regional_age_check=False)
         for key, replacement, message in (
             ("com.apple.security.application-groups", None, "Wrong signed App Groups"),
             ("com.apple.security.application-groups", [widget, share], "Wrong signed App Groups"),
