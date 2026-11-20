@@ -89,7 +89,7 @@ import XCTest
             let value = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", expected), object: subtotal)
             XCTAssertEqual(XCTWaiter.wait(for: [value], timeout: 8), .completed)
         }
-        waitForSubtotal("0 of 1 picked items")
+        waitForSubtotal("Picked subtotal unknown")
         app.buttons["inStoreLastPrice"].tap()
         let amount = app.textFields["inStoreAmount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 8))
@@ -122,7 +122,7 @@ import XCTest
         XCTAssertGreaterThanOrEqual(firstUncheck.frame.width, 44)
         XCTAssertGreaterThanOrEqual(firstUncheck.frame.height, 44)
         firstUncheck.tap()
-        waitForSubtotal("$0.00 for 0 of 1 picked items")
+        waitForSubtotal("Picked subtotal unknown")
         XCTAssertTrue(app.buttons[firstCheckID].exists)
         app.buttons["inStoreUndo"].tap()
         waitForSubtotal("$0.00 for 0 of 0 picked items")

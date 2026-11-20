@@ -625,6 +625,22 @@
         }
       }
     },
+    "Picked subtotal unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picked subtotal unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal de lo recogido desconocido"
+          }
+        }
+      }
+    },
     "Pin a coupon": {
       "localizations": {
         "en": {

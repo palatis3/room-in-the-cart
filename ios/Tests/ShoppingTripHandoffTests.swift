@@ -4,6 +4,16 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ShoppingTripHandoffTests: XCTestCase {
+    func testSingleUnpackagedItemUsesTheSingularInTheAisleAndHandoff() throws {
+        var shop = ShoppingLedger()
+        let one = Quantity(amount: .one, unit: .count, originalLiteral: "1")
+        let id = try shop.addManualLine(name: "Tea", quantity: one)
+        let line = try XCTUnwrap(shop.lines.first { $0.id == id })
+        let expected = "1 " + UnitOfMeasure.count.comparisonLabel(for: .one)
+        XCTAssertEqual(shop.tripAmountLabel(line, measure: TripMeasure(need: one, packages: [])), expected)
+        XCTAssertEqual(TripHandoffRow.outstanding(in: shop).first?.text(includePack: false), "Tea · " + expected)
+    }
+
     func testHandoffUsesOnlySelectedOutstandingPackAndOptionalNumericPackNote() throws {
         var shop = ShoppingLedger(basis: ShopBasis(branch: "Private retailer"))
         let source = CaptureImportLine(originalText: "Private receipt wording", name: "Tortillas", packCount: 2,

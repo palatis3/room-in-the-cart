@@ -38,7 +38,7 @@ struct TripMeasure {
         if let perPack, let count = try? amount.divided(by: perPack) {
             return tripFormat(count == .one ? "%@ pack" : "%@ packs", amountText(count))
         }
-        return "\(amountText(amount)) \(unit)"
+        return "\(amountText(amount)) \(need.unit.comparisonLabel(for: amount))"
     }
 
     func physicalAmount(_ literal: String) -> Rational? {
@@ -49,7 +49,7 @@ struct TripMeasure {
     }
 
     var packNote: String? {
-        package.map { tripFormat("%@ %@ per pack", amountText($0.amountPerPack), $0.unit.displayName) }
+        package.map { tripFormat("%@ %@ per pack", amountText($0.amountPerPack), $0.unit.comparisonLabel(for: $0.amountPerPack)) }
     }
 }
 

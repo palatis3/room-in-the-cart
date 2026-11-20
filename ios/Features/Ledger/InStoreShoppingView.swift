@@ -390,8 +390,9 @@ struct InStoreShoppingView: View {
     private func subtotalSummary(_ shop: ShoppingLedger, last: ShoppingLine?) -> some View {
         let subtotal = shop.pickedCartSubtotal
         return VStack(alignment: .leading, spacing: 5) {
-            Text(shoppingFormat("%@ for %lld of %lld picked items", moneyText(subtotal.total),
-                Int64(subtotal.priced), Int64(subtotal.picked))).font(.headline).monospacedDigit()
+            Text(subtotal.picked > 0 && subtotal.priced == 0 ? shelfText("Picked subtotal unknown") :
+                shoppingFormat("%@ for %lld of %lld picked items", moneyText(subtotal.total),
+                    Int64(subtotal.priced), Int64(subtotal.picked))).font(.headline).monospacedDigit()
                 .accessibilityFocused($focus, equals: .subtotal)
                 .accessibilityIdentifier("inStoreSubtotal")
             InStoreBudgetSummary(shop: shop)

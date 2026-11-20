@@ -87,7 +87,11 @@ public struct InventoryProjection: Equatable, Sendable {
             return ConfirmedStockLot(id: lot.id, foodID: lot.foodID, name: lot.name, usable: quantity,
                 confirmedAt: lot.confirmedAt, source: lot.location == .freezer ? .freezer : .pantry, useFirst: lot.useFirst)
         }
-        let active = held.filter { $0.state == .active }.sorted { $0.id.uuidString < $1.id.uuidString }
+        // A physical recount can uncover a shortfall. Back previously set-aside portions
+        // (such as lunch) before promising the remainder to a scheduled leftover dinner.
+        let active = held.filter { $0.state == .active }.sorted {
+            ($0.cookedDinner == nil ? 0 : 1, $0.id.uuidString) < ($1.cookedDinner == nil ? 0 : 1, $1.id.uuidString)
+        }
         let protectedPins = active.filter { $0.priority == .protected && $0.lotID != nil }
         let other = active.filter { $0.priority != .protected || $0.lotID == nil }
         func allocate(_ claims: [InventoryReservation], from available: [ConfirmedStockLot], protectedPinStage: Bool = false) throws -> StockAllocationResult {

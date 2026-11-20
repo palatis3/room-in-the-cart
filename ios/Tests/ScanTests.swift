@@ -13,6 +13,7 @@ final class ScanParsingTests: XCTestCase {
         XCTAssertTrue(CapturedBarcode(symbology: "UPC", value: "036000291452").validGTIN)
         XCTAssertFalse(CapturedBarcode(symbology: "EAN13", value: "4006381333932").validGTIN)
         XCTAssertFalse(CapturedBarcode(symbology: "QR", value: "https://example.com").validGTIN)
+        XCTAssertNil(CapturedBarcode(symbology: "QR", value: "3017620422003").catalogGTIN)
         XCTAssertFalse(CapturedBarcode(symbology: "EAN13", value: "４００６３８１３３３９３１").validGTIN)
     }
     func testReceiptLinesKeepPrintedTextAndUnknownAmounts() throws {

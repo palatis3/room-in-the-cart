@@ -374,15 +374,15 @@ struct LedgerSaveStatus: View {
                     .accessibilityIdentifier("ledgerError")
                     .accessibilityFocused($resultFocus, equals: .failure)
             }
-            if model.saving { ProgressView(ledgerText("Saving…")) }
-            if model.hasPendingSave {
+            if model.saving {
+                ProgressView(ledgerText("Saving…"))
+            } else if model.hasPendingSave {
                 // Keep each recovery action independent inside Form and List rows.
                 Button(ledgerText("Retry save")) { Task { if await model.retrySave() { onRetried?() } } }
                     .buttonStyle(.borderless)
-                    .disabled(model.saving).accessibilityIdentifier("ledgerRetrySave")
+                    .accessibilityIdentifier("ledgerRetrySave")
                 Button(ledgerText("Discard unsaved change"), role: .destructive) { Task { await model.discardPendingSave() } }
                     .buttonStyle(.borderless)
-                    .disabled(model.saving)
             } else if showsLastSave, let savedAt = model.savedAt {
                 Label(ledgerText("Saved on this iPhone"), systemImage: "checkmark.circle")
                     .accessibilityFocused($resultFocus, equals: .saved)
