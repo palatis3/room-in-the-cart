@@ -179,7 +179,6 @@ struct TonightRecipeReview: View {
                                 if !ingredient.checkedWithoutAmount {
                                     LedgerQuantityFields(amount: row.amount, unit: row.unit,
                                     amountFocus: ($focusedInput, ingredient.id.uuidString), amountLabel: tonightText("Amount (required)"))
-                                    .id(ingredient.id.uuidString)
                                     .onChange(of: ingredient.amount) { _, _ in
                                         if invalidAmountID == ingredient.id, ingredient.positiveQuantity != nil { invalidAmountID = nil }
                                     }

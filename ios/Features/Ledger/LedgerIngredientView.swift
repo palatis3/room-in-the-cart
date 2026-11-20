@@ -339,8 +339,12 @@ struct LedgerQuantityFields: View {
 
     var body: some View {
         if let amountLabel {
-            WorkingField(amountLabel) {
-                amountField
+            let row = WorkingField(amountLabel) { amountField }
+            if let amountFocus {
+                row.dinnerInputRow(amountFocus.binding, field: amountFocus.id)
+                    .id(amountFocus.id)
+            } else {
+                row
             }
         } else { amountField }
         Picker(ledgerText("Unit"), selection: $unit) {
