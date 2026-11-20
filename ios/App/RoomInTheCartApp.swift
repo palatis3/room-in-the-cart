@@ -128,7 +128,8 @@ struct GroceryWindow: View {
         }, nextPermission: { voicePrompt.nextPermission($0) }, ready: { voicePrompt.recognitionReady($0, appActive: UIApplication.shared.applicationState == .active) },
            cancel: { voicePrompt.cancel($0) }))
         .modifier(DinnerPrepAlertRuntime(ledger: ledger, pickup: pickup, access: access, household: household, child: guardianChild))
-        .modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild))
+        .modifier(PantryDigestRuntime(pickup: pickup, ledger: ledger, access: access, household: household, child: guardianChild,
+                                      retainedScope: { retainedPantryDigestScope }))
             .environment(\.pantryDigestPermissionPrompt, digestPermissionPrompt)
             .environment(\.pickupLedger, ledger)
             .environment(\.offersDuplicateAssistance, true)
@@ -248,6 +249,11 @@ struct GroceryWindow: View {
     private var retainsVoicePrompt: Bool {
         guard voicePrompt.token != nil, scenePhase == .inactive else { return false }
         return voicePrompt.retains(voicePromptScope, phase: scenePhase)
+    }
+
+    private var retainedPantryDigestScope: PantryDigestScope? {
+        guard retainsVoicePrompt, let scope = voicePromptScope else { return nil }
+        return .init(origin: scope.origin, identity: scope.adult)
     }
 
     private var privatePantryIdentity: CapturePrivateIdentity? {

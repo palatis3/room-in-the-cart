@@ -493,7 +493,7 @@ private struct PantryLotView: View {
                 } footer: {
                     Text(pantryText("Have enough and Some left replace the old count with an unknown amount. Reservations stay protected and may need review."))
                 }.disabled(!model.canEdit)
-                if let access = digestAccess, access.scope.origin == model.snapshot?.state.workspaceID, access.authorized() {
+                if let access = digestAccess, access.scope.origin == model.snapshot?.state.workspaceID, access.canPresent() {
                     NavigationLink(pantryText("Add a date or reminder")) { PackageDateChoices(model: model, lot: lot, access: access) }
                     PantryPackageDateSection(model: model, lot: lot, access: access, store: PantryDigestStore.shared.packageDates)
                 }

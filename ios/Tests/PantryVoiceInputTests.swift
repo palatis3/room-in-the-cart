@@ -1,3 +1,4 @@
+import AVFoundation
 import XCTest
 import UIKit
 @testable import RoomInTheCart
@@ -57,6 +58,88 @@ import UIKit
         let allowed = try await answer.value
         XCTAssertFalse(allowed)
         XCTAssertNil(window.token)
+    }
+
+    func testFirstCameraDenialKeepsPantryPresentedUntilTheSameAdultReturns() async {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
+        let digest = PantryDigestScope(origin: scope.origin, identity: adult)
+        let window = PantryVoicePromptWindow()
+        var active = true
+        let access = PantryDigestAccess(scope: digest,
+            retainsPresentation: { window.retains(scope, phase: .inactive) },
+            authorized: { window.allowsPantryAction(appActive: active) })
+        let prompt = PantryDigestPermissionPrompt(scope: digest) { request in
+            try await window.requestNotification(in: scope, phase: .active, currentScope: { scope },
+                appActive: { active }, request: request)
+        }
+        let result = Task {
+            try await CameraCapturePermission.authorize(.notDetermined, pantryOrigin: scope.origin, prompt: prompt) {
+                active = false
+                window.sceneChanged(.inactive)
+                return false
+            }
+        }
+        await settle { window.retains(scope, phase: .inactive) }
+        XCTAssertTrue(access.canPresent())
+        XCTAssertFalse(access.authorized())
+
+        active = true
+        window.sceneChanged(.active)
+        do {
+            try await result.value
+            XCTFail("Denied camera access cannot start capture")
+        } catch {
+            XCTAssertEqual(error as? ScanFailure, .permissionDenied)
+        }
+        XCTAssertTrue(access.authorized())
+        XCTAssertNil(window.token)
+    }
+
+    func testCameraGrantDoesNotSurviveLossOfPantryScope() async {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryVoicePromptScope(adult: adult, origin: UUID(), ledger: UUID(), generation: UUID())
+        for background in [true, false] {
+            let window = PantryVoicePromptWindow()
+            var current: PantryVoicePromptScope? = scope
+            let prompt = PantryDigestPermissionPrompt(scope: .init(origin: scope.origin, identity: adult)) { request in
+                try await window.requestNotification(in: scope, phase: .active, currentScope: { current },
+                    appActive: { true }, request: request)
+            }
+            do {
+                try await CameraCapturePermission.authorize(.notDetermined, pantryOrigin: scope.origin, prompt: prompt) {
+                    window.sceneChanged(.inactive)
+                    if background { window.sceneChanged(.background) }
+                    else { current = nil }
+                    XCTAssertFalse(window.holdsPresentation(current))
+                    window.sceneChanged(.active)
+                    return true
+                }
+                XCTFail("An old camera permission must not reopen the pantry")
+            } catch {
+                XCTAssertEqual(error as? PantryDigestFailure, .changed)
+            }
+            XCTAssertNil(window.token)
+        }
+    }
+
+    func testCameraPromptRetentionRequiresUndeterminedPermissionAndMatchingInventory() async throws {
+        let adult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let origin = UUID()
+        let prompt = PantryDigestPermissionPrompt(scope: .init(origin: origin, identity: adult)) { _ in
+            XCTFail("This request cannot retain the pantry")
+            return false
+        }
+        try await CameraCapturePermission.authorize(.authorized, pantryOrigin: origin, prompt: prompt) {
+            XCTFail("Known authorization must not request camera access again")
+            return false
+        }
+        var didRequest = false
+        try await CameraCapturePermission.authorize(.notDetermined, pantryOrigin: UUID(), prompt: prompt) {
+            didRequest = true
+            return true
+        }
+        XCTAssertTrue(didRequest)
     }
 
     func testNotificationResponseBeforeSceneInterruptionRetainsOnlyTheReviewedScope() async throws {

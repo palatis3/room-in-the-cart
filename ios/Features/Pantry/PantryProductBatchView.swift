@@ -43,13 +43,20 @@ struct PantryProductBatchView: View {
         _batch = State(initialValue: PantryProductBatch(workspaceID: workspaceID))
     }
     private var authorized: Bool {
-        model.phase == .ready && model.snapshot?.state.workspaceID == batch.workspaceID &&
+        scene == .active && model.phase == .ready && model.snapshot?.state.workspaceID == batch.workspaceID &&
             (initialAccess == nil || (access?.scope == initialAccess?.scope && access?.authorized() == true))
+    }
+    private var canPresent: Bool {
+        if authorized { return true }
+        guard model.phase == .ready, model.snapshot?.state.workspaceID == batch.workspaceID,
+              let access, access.scope.origin == batch.workspaceID,
+              initialAccess == nil || access.scope == initialAccess?.scope else { return false }
+        return access.retainsPresentation()
     }
 
     var body: some View {
         WorkingForm {
-            if !authorized {
+            if !canPresent {
                 if working, model.busy, model.phase == .ready, scene == .active, let initialAccess,
                    initialAccess.scope.origin == batch.workspaceID, model.snapshot?.state.workspaceID == batch.workspaceID,
                    initialAccess.awaitingSnapshot() {
@@ -74,7 +81,7 @@ struct PantryProductBatchView: View {
                 Text(pantryText("Product batch saved.")).accessibilityIdentifier("productBatch.saved")
                 ForEach(batch.candidates.filter(\.included)) { row in
                     if let id = savedRows[row.id], let lot = model.snapshot?.lots.first(where: { $0.id == id }),
-                       let access, access.authorized(), access.scope.origin == batch.workspaceID {
+                       let access, access.canPresent(), access.scope.origin == batch.workspaceID {
                         Section {
                             PantryBatchHeading(lot: lot)
                             NavigationLink(pantryText("Add a date or reminder")) {
@@ -84,7 +91,7 @@ struct PantryProductBatchView: View {
                         }
                     }
                 }
-                if batch.candidates.isEmpty, let access, access.authorized() {
+                if batch.candidates.isEmpty, let access, access.canPresent() {
                     ForEach(restoredRows) { row in
                         if let lot = model.snapshot?.lots.first(where: { $0.id == row.lotID }) {
                             Section {
@@ -140,7 +147,8 @@ struct PantryProductBatchView: View {
                 }.disabled(working)
             } else {
                 Section(pantryText("Add a product")) {
-                    LivePackageButton(authorized: { authorized && !working && review == nil && !saved }, receive: scanned)
+                    LivePackageButton(workspaceID: batch.workspaceID,
+                                      authorized: { authorized && !working && review == nil && !saved }, receive: scanned)
                     TextField(pantryText("Barcode, if available"), text: $code).focused($focus, equals: "code")
                         .autocorrectionDisabled().textInputAutocapitalization(.never).accessibilityIdentifier("productBatch.code")
                     if code.count == 8 && code.allSatisfy(\.isNumber) {
@@ -196,7 +204,8 @@ struct PantryProductBatchView: View {
                             Button(pantryText("Separate batches")) { separate(row, scanned: repeatedScan) }
                         }
                     }
-                    PantryProductPhotoInput(consent: $photoConsent, authorized: { authorized && review == nil && !saved }, add: { source in
+                    PantryProductPhotoInput(workspaceID: batch.workspaceID, consent: $photoConsent,
+                        authorized: { authorized && review == nil && !saved }, add: { source in
                         repeatedProductID = nil
                         let start = batch.candidates.count
                         let added = try batch.addPhoto(source)
@@ -246,7 +255,7 @@ struct PantryProductBatchView: View {
             }
             if authorized, let result { Text(result).accessibilityIdentifier("productBatch.status") }
         }
-        .disabled(working)
+        .disabled(working || !authorized)
         .navigationTitle(pantryText("Scan products")).privacySensitive().scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focus != nil, title: pantryText("Done"), identifier: "productBatch.keyboardDone") { focus = nil }
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() }.disabled(working) } }
@@ -273,7 +282,7 @@ struct PantryProductBatchView: View {
         .onChange(of: atHome) { _, _ in confirmed = false; for index in batch.candidates.indices { batch.candidates[index].stockAction = nil } }
         .onChange(of: merchant) { _, _ in confirmed = false }
         .onChange(of: date) { old, new in if !Calendar.current.isDate(old, inSameDayAs: new) { confirmed = false } }
-        .onChange(of: authorized) { _, allowed in
+        .onChange(of: canPresent) { _, allowed in
             if !allowed {
                 editingProduct = nil
                 let scope = catalogScope.id
@@ -682,10 +691,12 @@ private struct ManualBarcodeCorrectionView: View {
 }
 
 struct PantryProductPhotoInput: View {
+    let workspaceID: UUID
     @Binding var consent: Bool
     let authorized: () -> Bool
     let add: (ScannedSource) throws -> Void
     let revoke: () -> Void
+    @Environment(\.pantryDigestPermissionPrompt) private var permissionPrompt
     @State private var selection: PhotosPickerItem?
     @State private var camera = false
     @State private var busy = false
@@ -720,7 +731,7 @@ struct PantryProductPhotoInput: View {
             }.disabled(busy).accessibilityIdentifier("productBatch.photo")
             Button(pantryText("Photograph a package")) {
                 run {
-                    try await CameraCapturePermission.request()
+                    try await CameraCapturePermission.request(pantryOrigin: workspaceID, prompt: permissionPrompt)
                     return nil
                 } then: { _ in camera = true }
             }.disabled(busy)

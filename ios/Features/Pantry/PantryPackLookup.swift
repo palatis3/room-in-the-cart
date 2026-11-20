@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Read-only scan and name lookup. The caller owns the action on the selected pack or batch.
 private struct PackLookupInput: View {
+    let workspaceID: UUID
     let access: PantryDigestAccess?
     let authorized: () -> Bool
     @Binding var query: String
@@ -35,8 +36,8 @@ private struct PackLookupInput: View {
             if let candidate = lastScan ?? typed {
                 Button(pantryText("Find barcode")) { resolve(candidate) }.accessibilityIdentifier("pack.find.resolve")
             }
-            LivePackageButton(authorized: authorized) { code in lastScan = code; resolve(code) }
-            PantryProductPhotoInput(consent: $consent, authorized: authorized, add: { source in
+            LivePackageButton(workspaceID: workspaceID, authorized: authorized) { code in lastScan = code; resolve(code) }
+            PantryProductPhotoInput(workspaceID: workspaceID, consent: $consent, authorized: authorized, add: { source in
                 guard source.barcodes.count == 1, let code = source.barcodes.first else {
                     status = pantryText("Choose a photo of one barcode or type the code."); return
                 }
@@ -71,14 +72,20 @@ struct PantryPackFind: View {
     @ObservedObject var model: PantryModel
     let origin: UUID
     @Environment(\.pantryDigestAccess) private var access
+    @Environment(\.scenePhase) private var scene
     @State private var query = ""
     @State private var selected: ConfirmedPantryPack?
     private var authorized: Bool { model.phase == .ready && model.snapshot?.state.workspaceID == origin }
     private var scoped: PantryDigestAccess? { access?.scope.origin == origin && access?.authorized() == true ? access : nil }
+    private var presentationScope: PantryDigestScope? {
+        guard let access, access.scope.origin == origin, access.canPresent() else { return nil }
+        return access.scope
+    }
     var body: some View {
         WorkingForm {
             if authorized {
-                PackLookupInput(access: scoped, authorized: { authorized }, query: $query, selected: $selected)
+                PackLookupInput(workspaceID: origin, access: scoped, authorized: { authorized && scene == .active },
+                    query: $query, selected: $selected)
                 let confirmed = selected.flatMap { item -> ConfirmedPantryPack? in
                     guard let scoped,
                           (try? PantryDigestStore.shared.packMemory.match(item.barcode, retailer: item.retailer, scope: scoped.scope)) == item else { return nil }
@@ -100,7 +107,7 @@ struct PantryPackFind: View {
                 }
             }
         }.privacySensitive().navigationTitle(pantryText("Find a package in Pantry"))
-        .onChange(of: scoped?.scope) { _, _ in selected = nil; query = "" }
+        .onChange(of: presentationScope) { _, _ in selected = nil; query = "" }
     }
 }
 
