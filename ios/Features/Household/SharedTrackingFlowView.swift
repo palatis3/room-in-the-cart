@@ -11,7 +11,8 @@ struct SharedTrackingShopView: View {
     }
     var body: some View {
         SharedTrackingFlowView(model: flow, authorized: owner.trackingAllowed && (editor == nil || owner.trackingEditor == editor), lease: owner.trackingLease,
-            shop: owner.shop, advanced: AnyView(SharedDemandFlowView(shopModel: owner)))
+            shop: owner.shop, advanced: AnyView(SharedDemandFlowView(shopModel: owner)),
+            checkoutResult: owner.checkoutResult(for: flow.checkoutAttempt), refreshCheckout: { await owner.load() })
     }
 }
 struct SharedTrackingRequestView: View {
@@ -32,11 +33,31 @@ struct SharedTrackingFlowView: View {
     let lease: UUID
     let shop: ShopperShop?
     let advanced: AnyView?
+    var checkoutResult: TrackingCheckoutResult? = nil
+    var refreshCheckout: (() async -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @AccessibilityFocusState private var resultFocused: Bool
     var body: some View {
         WorkingForm {
-            if authorized {
+            if let checkoutResult {
+                switch checkoutResult {
+                case .frozen:
+                    Text(st("Pickup frozen")).font(.headline).accessibilityIdentifier("sharedTracking.frozen")
+                        .accessibilityFocused($resultFocused)
+                    Button(st("Done")) { model.clear(); dismiss() }
+                        .buttonStyle(PrimaryAction()).accessibilityIdentifier("sharedTracking.done")
+                case .renewed:
+                    Text(st("Review saved")).font(.headline).accessibilityIdentifier("sharedTracking.renewed")
+                        .accessibilityFocused($resultFocused)
+                    Button(st("Check and freeze pickup")) { Task { await model.load() } }
+                        .buttonStyle(PrimaryAction()).accessibilityIdentifier("sharedTracking.continueFreeze")
+                case .refreshing:
+                    Text(st("Confirmed. Refresh the shop to see its current revision."))
+                        .accessibilityFocused($resultFocused)
+                    Button(st("Refresh current facts")) { Task { await refreshCheckout?() } }
+                        .accessibilityIdentifier("sharedTracking.refreshConfirmed")
+                }
+            } else if authorized {
                 if let page = model.page, model.permitted {
                     if let candidate = model.candidate { candidateReview(candidate) }
                     else if !model.pending && !model.submitted {
@@ -59,7 +80,7 @@ struct SharedTrackingFlowView: View {
                         }
                     }
                 }
-                if model.pending { Text(st("Not confirmed. Return to the shop and retry the exact saved action.")) }
+                if model.pending && !model.busy { Text(st("Not confirmed. Return to the shop and retry the exact saved action.")) }
                 if let notice = model.notice { Text(notice).accessibilityIdentifier("sharedTracking.result").accessibilityFocused($resultFocused) }
                 if model.page == nil && !model.busy && !model.submitted && !model.pending {
                     Button(st("Refresh current facts")) { Task { await model.load() } }.accessibilityIdentifier("sharedTracking.refresh")
@@ -71,13 +92,18 @@ struct SharedTrackingFlowView: View {
         .scrollDismissesKeyboard(.immediately)
         .disabled(model.busy)
         .toolbar { ToolbarItem(placement: .cancellationAction) {
-            Button(st("Cancel")) { model.clear(); dismiss() }.accessibilityIdentifier("sharedTracking.cancel")
+            if checkoutResult != .frozen {
+                Button(st("Cancel")) { model.clear(); dismiss() }.accessibilityIdentifier("sharedTracking.cancel")
+            }
         } }
         .task { await model.load() }
         .onDisappear { model.clear() }
-        .onChange(of: authorized) { _, value in if !value { model.clear() } }
+        .onChange(of: authorized) { _, value in if !value { model.clear(keepingCheckout: checkoutResult != nil) } }
         .onChange(of: lease) { _, _ in model.clear() }
-        .onChange(of: shop) { _, _ in model.clear() }
+        .onChange(of: shop) { _, _ in model.clear(keepingCheckout: checkoutResult != nil) }
+        .onChange(of: checkoutResult) { _, value in
+            if value != nil { model.clear(keepingCheckout: true); resultFocused = true }
+        }
         .onChange(of: model.notice) { _, value in resultFocused = value != nil }
     }
     @ViewBuilder private func current(_ page: SharedTrackingPage) -> some View {
@@ -354,7 +380,17 @@ struct SharedTrackingFlowView: View {
                 acknowledgments()
                 Button(st("Freeze reviewed pickup")) { Task { await model.freeze() } }.disabled(!model.gate.canApply)
                     .accessibilityIdentifier("sharedTracking.freeze")
-            } else { Text(st("Review and save the current food facts before freezing this pickup.")) }
+            } else {
+                Text(st("Review and save the current food facts before freezing this pickup."))
+                if page.status == .enabled, let state = page.state, let shop = model.shop {
+                    Button(st("Review current packs and checkout")) {
+                        Task {
+                            await model.preview(.review(action: .patch(.init(quote: shop.quote, lines: shop.lines)),
+                                                        packs: state.packReviews))
+                        }
+                    }.buttonStyle(PrimaryAction()).accessibilityIdentifier("sharedTracking.renewFreezeReview")
+                }
+            }
         }
     }
     @ViewBuilder private func history(_ page: SharedTrackingPage) -> some View {

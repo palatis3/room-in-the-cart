@@ -15,20 +15,12 @@ struct CaptureTarget: Codable, Equatable, Sendable {
 }
 enum ScanKind: String, Sendable { case packageReference, barcode, recipe, receipt }
 enum ScanFailure: Error, Equatable { case unavailable, permissionDenied, invalidImage, tooLarge, invalidText, needsReview, stale, retired, replay, storage }
-struct CapturedBarcode: Codable, Equatable, Identifiable, Sendable {
-    var id: String { symbology + ":" + value }
-    let symbology: String
-    let value: String
-    /// A syntactically valid GTIN is still only a code, never a product or ingredient-safety match.
-    var validGTIN: Bool {
-        guard [8, 12, 13, 14].contains(value.count), value.utf8.allSatisfy({ (48...57).contains($0) }) else { return false }
-        let digits = value.utf8.map { Int($0 - 48) }
-        let body = digits.dropLast().reversed().enumerated().reduce(0) { $0 + $1.element * ($1.offset.isMultiple(of: 2) ? 3 : 1) }
-        return (10 - body % 10) % 10 == digits.last
-    }
+typealias CapturedBarcode = InventoryPackageCode
+extension CapturedBarcode {
+    var validGTIN: Bool { packageGTIN != nil }
     func validate() throws {
         guard !symbology.isEmpty, symbology.utf8.count <= 64, !value.isEmpty, value.utf8.count <= 256,
-              !value.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else { throw ScanFailure.invalidText }
+              (gs1 != nil || !value.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) })) else { throw ScanFailure.invalidText }
     }
 }
 struct ScannedSource: Equatable, Sendable {

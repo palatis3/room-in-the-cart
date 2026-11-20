@@ -95,13 +95,13 @@ func mealExplanationText(_ key: String) -> String {
                             Text(candidate.review.recipe.title).font(.headline)
                             ForEach(suggestion.reasons, id: \.self) { Text(reasonText($0)) }
                             // Quantities, dates and prices never come from generated text.
-                            ForEach(candidate.review.ingredients) { row in
+                            ForEach(candidate.review.numericIngredients) { row in
                                 LabeledContent(row.ingredient.name, value: ledgerQuantity(TonightMealModel.missingQuantity(row)))
                             }
                             Text(mealExplanationText("Amounts above still need to be obtained; zero means covered. All figures come from the current local review."))
                             TonightPricesView(estimate: try? TonightPurchaseEstimate.estimate(candidate.review,
                                 workspace: snapshot.input.workspace, workspaceID: snapshot.ledgerID,
-                                shopID: snapshot.input.workspace.selectedShopID, at: Date()))
+                                shopID: snapshot.input.workspace.selectedShopID, at: Date()), hasHandCheckedIngredients: candidate.review.hasHandCheckedIngredients)
                             Button(mealExplanationText("Choose this meal for the usual preview")) {
                                 task = Task { @MainActor in
                                     guard isCurrent(), await refresh(), !Task.isCancelled, isCurrent() else { model.clear(); return }

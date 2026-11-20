@@ -25,7 +25,22 @@ public struct CookCompletionDraft: Codable, Equatable, Sendable, Identifiable {
         public let name: String
         public let portions: Rational
         public let location: InventoryLocation
-        public init(id: UUID = UUID(), foodID: UUID = UUID(), name: String, portions: Rational, location: InventoryLocation) {
+        public struct Hold: Codable, Equatable, Sendable {
+            public let portions: Rational
+            public let purpose: String
+            public init(portions: Rational, purpose: String) { self.portions = portions; self.purpose = purpose }
+        }
+        public struct Dinner: Codable, Equatable, Sendable {
+            public let portions: Rational
+            public let day: MealDay
+            public init(portions: Rational, day: MealDay) { self.portions = portions; self.day = day }
+        }
+
+        public let lunch: Hold?
+        public let dinner: Dinner?
+        public init(id: UUID = UUID(), foodID: UUID = UUID(), name: String, portions: Rational, location: InventoryLocation,
+                    lunch: Hold? = nil, dinner: Dinner? = nil) {
+            self.lunch = lunch; self.dinner = dinner
             self.id = id; self.foodID = foodID; self.name = name; self.portions = portions; self.location = location
         }
     }
@@ -83,6 +98,26 @@ public struct CookCompletionDraft: Codable, Equatable, Sendable, Identifiable {
         self.servingsMade = servingsMade; self.parts = parts; self.leftovers = leftovers
     }
 
+    public func outputReservations(for output: Leftovers) throws -> [InventoryReservation] {
+        let held = try (output.lunch?.portions ?? .zero).adding(output.dinner?.portions ?? .zero)
+        guard held <= output.portions else { throw InventoryError.invalid("cookedPortionHolds") }
+        var claims = [InventoryReservation]()
+        if let lunch = output.lunch {
+            let amount = Quantity(amount: lunch.portions, unit: .count, originalLiteral: lunch.portions.description)
+            claims.append(.init(id: derived("lunch", for: output.id), originID: inventoryID, revision: 1,
+                foodID: output.foodID, lotID: output.id, name: lunch.purpose, amount: amount,
+                priority: .protected, personal: .init(day: nil)))
+        }
+        if let dinner = output.dinner {
+            let amount = Quantity(amount: dinner.portions, unit: .count, originalLiteral: dinner.portions.description)
+            claims.append(.init(id: derived("dinner", for: output.id), originID: inventoryID, revision: 1,
+                foodID: output.foodID, lotID: output.id, name: output.name, amount: amount, priority: .protected,
+                cookedDinner: .init(ledgerID: ledgerID, shopID: shopID, cookID: id, day: dinner.day)))
+        }
+        for claim in claims { try claim.validate() }
+        return claims
+    }
+
     /// Stable, separate event and observation identities across retries of this one meal operation.
     fileprivate func derived(_ kind: String, for lot: UUID) -> UUID {
         let bytes = Array(SHA256.hash(data: Data("ritc.cook.v1/\(id)/\(kind)/\(lot)".utf8)).prefix(16))
@@ -96,6 +131,7 @@ public enum CookCompletion {
         public let draft: CookCompletionDraft
         public let changes: [InventoryPreparedChange]
         public let reservations: [InventoryReservation]
+        public let outputReservations: [InventoryReservation]
         public let unresolvedUseIDs: [UUID]
         public let affectedHolds: [InventoryReservationCoverage]
         public let availability: InventoryProjection
@@ -137,7 +173,7 @@ public enum CookCompletion {
         let claims = Dictionary(uniqueKeysWithValues: reservations.map { ($0.id, $0) })
         let supportedClaims = Set(before.reservations.filter { !$0.unresolved }.map(\.id))
         let owned = mealClaims.values.flatMap { $0 }
-        guard Set(owned).count == owned.count, owned.allSatisfy({ claims[$0]?.personal == nil && claims[$0] != nil }) else {
+        guard Set(owned).count == owned.count, owned.allSatisfy({ claims[$0]?.personal == nil && claims[$0]?.cookedDinner == nil && claims[$0] != nil }) else {
             throw InventoryError.invalid("cookReservationBinding")
         }
         var uses: [UUID: UsedLot] = [:], fulfilled: [UUID: Rational] = [:], credited: [UUID: Rational] = [:]
@@ -222,11 +258,17 @@ public enum CookCompletion {
                 name: claim.name, amount: amount, priority: claim.priority, state: left == .zero ? .released : .active))
         }
         let changedLotIDs = Set(changes.map(\.lot.id)), changedClaimIDs = Set(changedClaims.map(\.id))
+        let outputClaims = try draft.leftovers.flatMap { try draft.outputReservations(for: $0) }
+        guard Set(outputClaims.map(\.id)).isDisjoint(with: claims.keys) else { throw InventoryError.duplicateIdentity }
         let after = try InventoryProjection.build(originID: inventoryID, lots: lots.filter { !changedLotIDs.contains($0.id) } + changes.map(\.lot),
-            reservations: reservations.filter { !changedClaimIDs.contains($0.id) } + changedClaims, at: now)
+            reservations: reservations.filter { !changedClaimIDs.contains($0.id) } + changedClaims + outputClaims, at: now)
         let original = Dictionary(uniqueKeysWithValues: before.reservations.map { ($0.id, $0) })
-        let affected = after.reservations.filter { !changedClaimIDs.contains($0.id) && $0 != original[$0.id] }
-        return Review(draft: draft, changes: changes, reservations: changedClaims, unresolvedUseIDs: unresolved,
+        let outputIDs = Set(outputClaims.map(\.id))
+        guard after.reservations.filter({ outputIDs.contains($0.id) }).allSatisfy({
+            !$0.unresolved && $0.shortfall?.amount == .zero && $0.backed?.amount == $0.requested?.amount
+        }) else { throw InventoryError.invalid("cookedPortionHolds") }
+        let affected = after.reservations.filter { !changedClaimIDs.contains($0.id) && !outputIDs.contains($0.id) && $0 != original[$0.id] }
+        return Review(draft: draft, changes: changes, reservations: changedClaims, outputReservations: outputClaims, unresolvedUseIDs: unresolved,
                       affectedHolds: affected, availability: after)
     }
 }

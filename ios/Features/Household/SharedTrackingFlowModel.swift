@@ -2,6 +2,13 @@ import Foundation
 import SwiftUI
 import HouseholdClient
 
+struct TrackingCheckoutAttempt: Equatable {
+    let operationID: String
+    let lease: UUID
+}
+
+enum TrackingCheckoutResult: Equatable { case refreshing, renewed, frozen }
+
 @MainActor protocol SharedTrackingFlowAccess: AnyObject {
     var trackingShop: ShopperShop? { get }
     var trackingAllowed: Bool { get }
@@ -44,6 +51,7 @@ extension SharedTrackingServiceOwner {
     @Published private(set) var busy = false
     @Published private(set) var submitted = false
     @Published private(set) var notice: String?
+    @Published private(set) var checkoutAttempt: TrackingCheckoutAttempt?
     @Published var gate = TrackingReviewGate()
     @Published var draft = TrackingFlowDraft() { didSet { if draft != oldValue { candidate = nil; gate.reset() } } }
     let access: any SharedTrackingFlowAccess
@@ -116,7 +124,8 @@ extension SharedTrackingServiceOwner {
             meal.rows[index].conversion = .init(); meal.reviewed = false; value.wrappedValue = meal
         })
     }
-    func clear() {
+    func clear(keepingCheckout: Bool = false) {
+        if !keepingCheckout { checkoutAttempt = nil }
         generation = UUID(); lease = nil; page = nil; shop = nil; candidate = nil; history = nil
         draft = .init(); gate.reset(); actionSources = nil; mealSources = nil; acceptOverage = false; acceptUnknown = false; busy = false; submitted = false; notice = nil
     }
@@ -195,6 +204,7 @@ extension SharedTrackingServiceOwner {
             guard token == generation, permitted, self.candidate == candidate, gate.canApply, moneyAccepted, acceptOverage == overage, acceptUnknown == unknown else { return }
             let operation = try await access.prepareTracking(accepted)
             guard token == generation, permitted, self.candidate == candidate, gate.canApply, moneyAccepted, acceptOverage == overage, acceptUnknown == unknown else { return }
+            if freezing { checkoutAttempt = .init(operationID: operation.id, lease: access.trackingLease) }
             try await access.sendTracking(operation, selectionID: selectionID)
             guard token == generation else { return }; finish()
         } catch { fail(error, token: token) }
@@ -205,12 +215,13 @@ extension SharedTrackingServiceOwner {
         do {
             let operation = try await access.freezeTracking(page: page)
             guard token == generation, permitted, self.page == page, gate.canApply else { return }
+            checkoutAttempt = .init(operationID: operation.id, lease: access.trackingLease)
             try await access.sendTracking(operation, selectionID: selectionID)
             guard token == generation else { return }; finish()
         } catch { fail(error, token: token) }
     }
     private func finish() {
-        page = nil; shop = nil; candidate = nil; history = nil; actionSources = nil; draft = .init(); gate.reset(); acceptOverage = false; acceptUnknown = false; submitted = true
+        page = nil; shop = nil; candidate = nil; history = nil; actionSources = nil; mealSources = nil; draft = .init(); gate.reset(); acceptOverage = false; acceptUnknown = false; submitted = true
         notice = st("Confirmed. Return to the shared shop for the updated revision.")
     }
     private func fail(_ error: Error, token: UUID) {
@@ -220,6 +231,9 @@ extension SharedTrackingServiceOwner {
             clear(); notice = st("Shared access ended. Return to the household.")
         case .cancelled:
             clear(); notice = st("The review was cancelled because its scope changed. Refresh before continuing.")
+        case .service(409, let code, _, _) where freezing && ["tracking_freeze_refresh", "tracking_freeze_superseded", "review_expired"].contains(code):
+            page = nil; shop = nil; history = nil; draft = .init()
+            notice = st("Refresh current facts, then review the packs and checkout again.")
         case .service(let status, _, _, _) where status == 409 || status == 404 || status == 403:
             page = nil; shop = nil; history = nil; draft = .init()
             notice = st("Needs a fresh review. Return to the shop, refresh current facts, and resolve any saved retry before starting again.")

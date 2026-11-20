@@ -314,6 +314,7 @@ private enum LedgerDeletionJournal {
             try edit(&candidate)
             candidate.listLayout.applyDepartmentMemory(to: candidate.shops, previous: workspace.shops)
             candidate.discardOrphanedMealFeedback()
+            candidate.discardOrphanedRecipeShortcuts()
             try candidate.validate()
             guard candidate != workspace else { error = nil; return true }
             guard let store else { return false }

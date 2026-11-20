@@ -109,6 +109,53 @@ final class CookCompletionTests: XCTestCase {
         draft.parts.removeLast()
         XCTAssertThrowsError(try evaluate(draft, shop, [wraps], [claim, protected], owned: [ids[0]: [claim.id]]))
     }
+    func testCookedPortionDinnerMovesReleasesOrServesOnlyItsBackedPortions() throws {
+        let (shop, meal) = try makeMeal()
+        let thursday = try MealDay(year: 2026, month: 11, day: 19, timeZoneIdentifier: "America/New_York")
+        let friday = try MealDay(year: 2026, month: 11, day: 20, timeZoneIdentifier: thursday.timeZoneIdentifier)
+        func review(_ portions: Rational) throws -> CookCompletion.Review {
+            let output = CookCompletionDraft.Leftovers(name: "Lentil soup", portions: try Rational(3), location: .fridge,
+                lunch: .init(portions: .one, purpose: "Lunch"), dinner: .init(portions: portions, day: thursday))
+            let draft = CookCompletionDraft(inventoryID: origin, inventoryRevision: 6, ledgerID: ledger, shop: shop,
+                meal: meal, cookedAt: now, servingsMade: try Rational(3),
+                parts: meal.ingredientContributionIDs.map { .init(contributionID: $0, use: .notUsed) }, leftovers: [output])
+            return try evaluate(draft, shop, [])
+        }
+        XCTAssertThrowsError(try review(Rational(3)))
+        let saved = try review(Rational(2))
+        let lot = try XCTUnwrap(saved.changes.first?.lot)
+        let lunch = try XCTUnwrap(saved.outputReservations.first { $0.personal != nil })
+        let dinner = try XCTUnwrap(saved.outputReservations.first { $0.cookedDinner != nil })
+        XCTAssertEqual(saved.availability.lots.first?.free?.amount, .zero)
+        let move = try CookedDinnerReservation.update(dinner, action: .move(friday), operationID: UUID(),
+            lots: [lot], reservations: [lunch, dinner], at: now)
+        XCTAssertEqual(move.reservation.id, dinner.id)
+        XCTAssertEqual(move.reservation.cookedDinner?.day, friday)
+        XCTAssertNil(move.consumption)
+        let holds = [lunch, move.reservation]
+        let cancelled = try CookedDinnerReservation.update(move.reservation, action: .cancel, operationID: UUID(),
+            lots: [lot], reservations: holds, at: now)
+        let freed = try InventoryProjection.build(originID: origin, lots: [lot], reservations: [lunch, cancelled.reservation], at: now)
+        XCTAssertEqual(freed.lots.first?.held?.amount, .one)
+        XCTAssertEqual(freed.lots.first?.free?.amount, try Rational(2))
+        XCTAssertNil(cancelled.consumption)
+        XCTAssertThrowsError(try CookedDinnerReservation.update(move.reservation, action: .serve, operationID: UUID(),
+            lots: [lot], reservations: [lunch, cancelled.reservation], at: now))
+        let recount = InventoryCommand(id: UUID(), originID: origin, lotID: lot.id, eventID: UUID(), expectedRevision: lot.revision,
+            occurredAt: now, change: .count(.exact(try q(2)), observationID: UUID()))
+        let short = try InventoryEngine.prepare(recount, current: lot, at: now).lot
+        XCTAssertThrowsError(try CookedDinnerReservation.update(move.reservation, action: .serve, operationID: UUID(),
+            lots: [short], reservations: holds, at: now))
+        let served = try CookedDinnerReservation.update(move.reservation, action: .serve, operationID: UUID(),
+            lots: [lot], reservations: holds, at: now)
+        let remaining = try XCTUnwrap(served.consumption?.lot)
+        let after = try InventoryProjection.build(originID: origin, lots: [remaining], reservations: [lunch, served.reservation], at: now)
+        XCTAssertEqual(served.reservation.cookedDinner?.servedAt, now)
+        XCTAssertEqual(after.lots.first?.remaining?.amount, .one)
+        XCTAssertEqual(after.lots.first?.held?.amount, .one)
+        XCTAssertEqual(after.lots.first?.free?.amount, .zero)
+    }
+
     func testRecoveredDinnerMustMatchTheReviewedReplacementAndItsPortionNeedRows() throws {
         let (shop, original) = try makeMeal()
         let beans = try lot("Beans", count: 4)

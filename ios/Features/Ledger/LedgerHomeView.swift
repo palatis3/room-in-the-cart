@@ -3,7 +3,7 @@ import CoreDomain
 
 private enum LedgerHomeSheet: Hashable, Identifiable {
     case newShop, entry, facts, history, layout, printList
-    case inStore(UUID), kits(UUID?), standing
+    case inStore(UUID), shareItems(UUID), kits(UUID?), standing
     case renameShop(id: UUID, title: String)
     var id: Self { self }
 }
@@ -136,6 +136,8 @@ struct LedgerHomeView: View {
         }
         .sheet(item: $sheet) { destination in
             switch destination {
+            case .shareItems(let id):
+                PrivateShoppingSheet(model: model) { TripHandoffEntry(model: model, shopID: id) }
             case .inStore(let id):
                 PrivateShoppingSheet(model: model) { InStoreShoppingView(model: model, shopID: id) }
             case .kits(let id):
@@ -151,7 +153,7 @@ struct LedgerHomeView: View {
 
     @ViewBuilder private func existingSheet(_ destination: LedgerHomeSheet) -> some View {
         switch destination {
-        case .inStore, .kits, .standing: EmptyView()
+        case .inStore, .shareItems, .kits, .standing: EmptyView()
         case .newShop: LedgerNewShopView(model: model, onShopSelected: onShopSelected)
         case let .renameShop(id, title):
             LedgerNewShopView(model: model, shopID: id, title: title)
@@ -216,6 +218,7 @@ struct LedgerHomeView: View {
         }
         .accessibilityIdentifier("ledgerListOptions")
         .confirmationDialog(ledgerText("List options"), isPresented: $showingListOptions, titleVisibility: .visible) {
+            Button(tripText("Send selected items")) { sheet = .shareItems(shop.id) }
             Button(shoppingText("Shopping kits")) { sheet = .kits(shop.id) }
             Button(shoppingText("Standing list")) { sheet = .standing }
             Button(ledgerText("List order and aisles")) { sheet = .layout }
@@ -302,14 +305,19 @@ struct LedgerHomeView: View {
                   source.checkedAt == line.checkedAt, source.isChecked != checked, !source.isHandled, !source.isTrashed else {
                 throw LedgerError.stalePreview
             }
-            try current.setChecked(lineID: line.id, checked: checked)
+            if !checked, source.tripUndo?.action == .pick {
+                try current.undoTripChange(lineID: line.id, expectedRevision: shop.revisionID)
+            } else {
+                try current.setChecked(lineID: line.id, checked: checked)
+            }
         }
         if saved { checkCue = checked && !reduceMotion && scene == .active ? GroceryCheckCue(lineID: line.id) : nil }
         return saved
     }
 
     private func row(_ line: ShoppingLine, shop: ShoppingLedger, exclusions: String?, departmentChoices: [String]) -> some View {
-        let quantity = shop.shoppingRowQuantity(for: line)
+        let quantity = line.tripPick == nil ? shop.shoppingRowQuantity(for: line) :
+            shop.tripAmountLabel(line, measure: TripMeasure(shop, line: line, packages: shop.itemPackages[line.id] ?? []))
         let details = [quantity ?? "", exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
         return HStack(alignment: .top, spacing: 10) {
             Button {
@@ -366,15 +374,15 @@ struct LedgerSaveStatus: View {
                     .accessibilityIdentifier("ledgerError")
                     .accessibilityFocused($resultFocus, equals: .failure)
             }
-            if model.saving { ProgressView(ledgerText("Saving…")) }
-            if model.hasPendingSave {
+            if model.saving {
+                ProgressView(ledgerText("Saving…"))
+            } else if model.hasPendingSave {
                 // Keep each recovery action independent inside Form and List rows.
                 Button(ledgerText("Retry save")) { Task { if await model.retrySave() { onRetried?() } } }
                     .buttonStyle(.borderless)
-                    .disabled(model.saving).accessibilityIdentifier("ledgerRetrySave")
+                    .accessibilityIdentifier("ledgerRetrySave")
                 Button(ledgerText("Discard unsaved change"), role: .destructive) { Task { await model.discardPendingSave() } }
                     .buttonStyle(.borderless)
-                    .disabled(model.saving)
             } else if showsLastSave, let savedAt = model.savedAt {
                 Label(ledgerText("Saved on this iPhone"), systemImage: "checkmark.circle")
                     .accessibilityFocused($resultFocus, equals: .saved)

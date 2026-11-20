@@ -36,8 +36,16 @@ struct StapleRecallUIFixture: View {
                         let tea = try west.addManualLine(name: "Tea", quantity: nil, at: past)
                         try west.approveStaple(lineID: tea, purpose: "School lunches", at: past)
                         var current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market"))
-                        try current.addManualLine(name: "Coffee", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"), notes: "Office")
-                        try current.addManualLine(name: "Coffee", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"), notes: "School lunches")
+                        if ProcessInfo.processInfo.arguments.contains("--shelf-budget-fixture") {
+                            current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market", mode: .inStore))
+                            for (label, count) in [("Apples", 4), ("Coffee", 1), ("Bread", 1)] {
+                                let unit = Quantity(amount: try Rational(Int64(count)), unit: .count, originalLiteral: String(count))
+                                try current.addManualLine(name: label, quantity: unit)
+                            }
+                        } else {
+                            try current.addManualLine(name: "Coffee", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"), notes: "Office")
+                            try current.addManualLine(name: "Coffee", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"), notes: "School lunches")
+                        }
                         workspace.shops = [market,west,current]
                         workspace.selectedShopID = current.id
                     }

@@ -38,6 +38,9 @@ import CoreDomain
                 }
             }
             #endif
+            #if DEBUG && targetEnvironment(simulator)
+            if directory.lastPathComponent == "UITestWorkspace" { try await TonightRecipeLibrary.seedShopperTestLibrary() }
+            #endif
             store = try ComparisonStore(url: databaseURL)
             ready = true
             await refresh()

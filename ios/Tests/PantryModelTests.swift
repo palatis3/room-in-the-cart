@@ -128,6 +128,17 @@ final class PantryModelTests: XCTestCase {
         XCTAssertEqual(unicode.name, "Café")
     }
 
+    func testNumericQRDoesNotConsumeTheRetailTradeItemWithTheSameDigits() throws {
+        var batch = PantryProductBatch(workspaceID: UUID())
+        let digits = "03017620422003"
+        let opaque = CapturedBarcode(symbology: "QR", value: digits)
+        XCTAssertTrue(try batch.addScan(opaque))
+        XCTAssertTrue(try batch.addManual(name: "Reviewed jar", code: digits))
+        XCTAssertFalse(try batch.addScan(opaque))
+        XCTAssertFalse(try batch.addScan(.init(symbology: "EAN13", value: "3017620422003")))
+        XCTAssertEqual(batch.candidates.count, 2)
+    }
+
     func testTwoLocalProductPhotosAndRepeatedBarcodeCommitOnlyReviewedPackagesOnce() async throws {
         let (directory, db) = try await database()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -153,12 +164,14 @@ final class PantryModelTests: XCTestCase {
         XCTAssertEqual(try batch.addPhoto(rice), 1)
         XCTAssertEqual(try batch.addPhoto(lentils), 0)
         let filter = try XCTUnwrap(CIFilter(name: "CIQRCodeGenerator"))
-        filter.setValue(Data("3017620422003".utf8), forKey: "inputMessage")
+        let encodedTradeItem = "(01)03017620422003"
+        filter.setValue(Data(encodedTradeItem.utf8), forKey: "inputMessage")
         filter.setValue("M", forKey: "inputCorrectionLevel")
         let qr = try XCTUnwrap(filter.outputImage).transformed(by: CGAffineTransform(scaleX: 12, y: 12))
         let cg = try XCTUnwrap(CIContext().createCGImage(qr, from: qr.extent))
         let codePhoto = try await reader.scan(XCTUnwrap(UIImage(cgImage: cg).pngData()))
-        XCTAssertEqual(codePhoto.barcodes.map(\.value), ["3017620422003"])
+        XCTAssertEqual(codePhoto.barcodes.map(\.value), [encodedTradeItem])
+        XCTAssertEqual(codePhoto.barcodes.first?.canonicalGTIN, "03017620422003")
         XCTAssertEqual(try batch.addPhoto(codePhoto), 1)
         XCTAssertEqual(try batch.addPhoto(codePhoto), 0)
         XCTAssertFalse(try batch.addManual(name: "Repeat", code: "03017620422003"))

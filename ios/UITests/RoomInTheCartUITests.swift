@@ -19,6 +19,9 @@ final class RoomInTheCartUITests: XCTestCase {
     func testLargestTextQuickGroceryFitsAndSubmitsWithReturn() {
         launch(language: "es", largeDark: true)
         let field = element("quickGrocery.name")
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        XCTAssertTrue(shopViewport.contains(CGPoint(x: field.frame.midX, y: field.frame.midY)),
+                      "The first grocery should be reachable before scrolling past privacy information.")
         revealFullyInShop(field)
         let largest = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
         let lineHeight = UIFont.preferredFont(forTextStyle: .body, compatibleWith: largest).lineHeight

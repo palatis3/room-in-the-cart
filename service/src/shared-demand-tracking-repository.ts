@@ -112,7 +112,17 @@ async function stateNow(repo:HouseholdRepository,ctx:Context,shop:Shop){
  return{row:null,state,projection:null,catalog,graph};
 }
 export async function readTracking(repo:HouseholdRepository,ctx:Context,shop:Shop){enabled(repo);repo.requireShopper(ctx,shop);const c=await stateNow(repo,ctx,shop);
- const state=c.state,projection=c.projection;return bounded({schemaVersion:2,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:projection?'reviewRequired':shop.demand_revision?'enabled':'legacy',state,projection,basisDigest:digest(projection??state),checkout:checkout(lines(state??projection!.state),shop.quote),coverage:state?coverage(state,c.catalog):null,freezeReview:c.row?.review&&state&&moneyAccepted(checkout(lines(state),shop.quote),c.row.review.moneyAcknowledgments)&&same(c.row.review.review.disclosure,trackingReviewDisclosure(state,c.catalog))?{previewId:c.row.review.review.reviewId,previewDigest:c.row.review.reviewDigest,trackingVersion:2}:null});}
+ const state=c.state,projection=c.projection,review=c.row?.review?.review;
+ const budget=checkout(lines(state??projection!.state),shop.quote);
+ const current=state&&review&&shop.phase==='draft'&&review.actorId===ctx.member.member_id&&review.deviceId===ctx.deviceId&&
+   review.shopRevision===shop.revision&&review.authorityEpoch===shop.authority_epoch&&review.graphRevision===state.graph.revision&&
+   review.privacyRevision===state.privacyRevision&&Date.parse(review.createdAt)<=ctx.now.getTime()&&ctx.now.getTime()<Date.parse(review.expiresAt)&&
+   moneyAccepted(budget,c.row.review.moneyAcknowledgments)&&same(review.disclosure,trackingReviewDisclosure(state,c.catalog));
+ return bounded({schemaVersion:2,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,
+   status:projection?'reviewRequired':shop.demand_revision?'enabled':'legacy',state,projection,basisDigest:digest(projection??state),
+   checkout:budget,coverage:state?coverage(state,c.catalog):null,
+   freezeReview:current?{previewId:review.reviewId,previewDigest:c.row.review.reviewDigest,trackingVersion:2}:null});
+}
 /** Informational proposed legacy sources. The exact action/base are bound, but
  * this response is never an Apply token or a substitute for explicit review. */
 export const trackingActionSourcesInputSchema=z.object({base,action}).strict();

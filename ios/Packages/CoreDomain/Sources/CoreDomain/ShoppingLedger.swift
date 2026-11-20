@@ -142,7 +142,18 @@ public struct MealIngredient: Codable, Equatable, Sendable, Identifiable {
     public var quantity: Quantity?
     public var notes: String
     public var exclusions: [String]
-    public init(id: UUID = UUID(), name: String, quantity: Quantity?, notes: String = "", exclusions: [String] = []) {
+    /// Verbatim ingredient line in an imported recipe, including any unconfirmed package or range.
+    public var originalWording: String?
+    /// Older blank amounts remain unresolved. Only an explicit review can set this flag.
+    public var checkedWithoutAmount: Bool?
+    var contributionWording: String {
+        if let originalWording, originalWording.utf8.count <= StagedListImport.maximumOriginalLineBytes { return originalWording }
+        return quantity?.originalLiteral ?? name
+    }
+    public init(id: UUID = UUID(), name: String, quantity: Quantity?, notes: String = "", exclusions: [String] = [],
+                originalWording: String? = nil, checkedWithoutAmount: Bool = false) {
+        self.originalWording = originalWording
+        self.checkedWithoutAmount = checkedWithoutAmount ? true : nil
         self.id = id; self.name = name; self.quantity = quantity; self.notes = notes; self.exclusions = exclusions
     }
 }
@@ -188,6 +199,8 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
         try uniqueIDs(ingredients.map(\.id)); try uniqueIDs(servingGroups.map(\.id))
         for ingredient in ingredients {
             try ledgerText(ingredient.name, nonempty: true, maximum: 512)
+            if let original = ingredient.originalWording { try ledgerText(original, maximum: 32768) }
+            guard ingredient.checkedWithoutAmount != true || ingredient.quantity == nil else { throw LedgerError.invalid("ingredientReview") }
             try ledgerText(ingredient.notes); try ingredient.quantity?.validate(); try validateExclusions(ingredient.exclusions)
             try permittedProduct(ingredient.name, exclusions: exclusions + ingredient.exclusions)
         }
@@ -244,6 +257,11 @@ public struct LedgerContribution: Codable, Equatable, Sendable, Identifiable {
     public var removedAt: Date?
     public var capture: CaptureImportMetadata? = nil
     public var originalPack: ListQuantityParser.PackLabel? = nil
+    public var checkedWithoutAmount: Bool? = nil
+
+    public var isHandCheckedUnmeasuredIngredient: Bool {
+        source.isMeal && checkedWithoutAmount == true && quantity == nil
+    }
 }
 
 public enum AllocationKind: String, Codable, Sendable { case duplicate, withinExisting }
@@ -269,6 +287,12 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public var handledAt: Date?
     public var trashedAt: Date?
     public internal(set) var pickedPrice: PickedLinePrice? = nil
+    public internal(set) var flexiblePick: Bool? = nil
+    public internal(set) var pinnedCoupon: PinnedShopCoupon? = nil
+    public internal(set) var tripPick: PhysicalGroceryPick?
+    public internal(set) var stopObservation: ShoppingStopObservation?
+    public internal(set) var tripUndo: GroceryTripUndo?
+    public internal(set) var preferredStores: [String]?
     public var stapleApproval: StapleApproval?
     public var isChecked: Bool { checkedAt != nil }
     public var isHandled: Bool { handledAt != nil }
@@ -430,6 +454,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     /// Present only in a locally created workspace awaiting its first accepted dinner.
     public var firstDinnerFeedbackOrigin: UUID?
     public var dinnerPlanning: DinnerPlanningState
+    public internal(set) var cookSoonPins: [CookSoonPin] = []
     public internal(set) var privateMealFeedback: [PrivateMealFeedback] = []
     public var shoppingLists = PrivateShoppingLists()
     public var listLayout = LedgerListLayout()
@@ -440,9 +465,10 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         self.dinnerPlanning = dinnerPlanning
         self.packSelections = packSelections
     }
-    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout, privateMealFeedback, shoppingLists, firstDinnerFeedbackOrigin }
+    private enum CodingKeys: String, CodingKey { case cookSoonPins, shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout, privateMealFeedback, shoppingLists, firstDinnerFeedbackOrigin }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        if !cookSoonPins.isEmpty { try c.encode(cookSoonPins, forKey: .cookSoonPins) }
         try c.encodeIfPresent(firstDinnerFeedbackOrigin, forKey: .firstDinnerFeedbackOrigin)
         if shoppingLists != PrivateShoppingLists() { try c.encode(shoppingLists, forKey: .shoppingLists) }
         if !privateMealFeedback.isEmpty { try c.encode(privateMealFeedback, forKey: .privateMealFeedback) }
@@ -456,6 +482,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        cookSoonPins = try c.decodeIfPresent([CookSoonPin].self, forKey: .cookSoonPins) ?? []
         firstDinnerFeedbackOrigin = try c.decodeIfPresent(UUID.self, forKey: .firstDinnerFeedbackOrigin)
         shoppingLists = try c.decodeIfPresent(PrivateShoppingLists.self, forKey: .shoppingLists) ?? PrivateShoppingLists()
         privateMealFeedback = try c.decodeIfPresent([PrivateMealFeedback].self, forKey: .privateMealFeedback) ?? []
@@ -472,7 +499,10 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         try uniqueIDs(shops.map(\.id)); try uniqueIDs(mealTemplates.map(\.id))
         if let selectedShopID, !shops.contains(where: { $0.id == selectedShopID }) { throw LedgerError.notFound(selectedShopID) }
         for shop in shops { try shop.validate() }
+        try validateCouponDiscounts()
         for meal in mealTemplates { try meal.validate() }
+        guard cookSoonPins.count <= 2000, Set(cookSoonPins).count == cookSoonPins.count else { throw LedgerError.invalid("cookSoonPins") }
+        for pin in cookSoonPins { try validateRecipePin(pin) }
         guard privateMealFeedback.count <= 10_000 else { throw LedgerError.invalid("mealFeedback") }
         var feedbackSources: [String: Set<MealFeedbackSource>] = [:]
         for entry in privateMealFeedback {
@@ -508,6 +538,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public private(set) var contributions: [LedgerContribution]
     public private(set) var allocations: [AllocationEdge]
     public private(set) var mealOccurrences: [MealOccurrence]
+    public private(set) var shoppingStop: ShoppingStop?
     public private(set) var importBatches: [LedgerImportBatch]
 
     public init(id: UUID = UUID(), title: String = "Pickup", basis: ShopBasis = ShopBasis(), initialCheckoutChange: LedgerCheckoutChange? = nil) {
@@ -594,7 +625,24 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         return contributions(forLineID: lineID).filter { $0.source.isMeal || $0.source.isProtected }
     }
 
-    /// Nil is unresolved, including any missing or nonconvertible contribution.
+    public var handCheckedOnlyLineIDs: Set<UUID> {
+        var handChecked = Set<UUID>()
+        var required = Set<UUID>()
+        for member in contributions where member.removedAt == nil {
+            if member.isHandCheckedUnmeasuredIngredient { handChecked.insert(member.lineID) }
+            else { required.insert(member.lineID) }
+        }
+        return handChecked.subtracting(required)
+    }
+
+    /// Unmeasured meal seasonings enter the purchase review only when the shopper recorded a physical pick.
+    public var purchaseReviewLines: [ShoppingLine] {
+        let handChecked = handCheckedOnlyLineIDs
+        return lines.filter { !$0.isTrashed && !$0.isHandled && (!handChecked.contains($0.id) || $0.tripPick != nil) }
+    }
+
+    /// A hand-checked unmeasured ingredient has no numeric demand. All other
+    /// active contributions must have compatible quantities for a known total.
     /// A trashed line retains its need for inspection and restoration.
     public func quantity(forLineID lineID: UUID) throws -> Quantity? {
         let line = lines[try lineIndex(lineID)]
@@ -602,12 +650,12 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     }
 
     private func quantity(for line: ShoppingLine, members: [LedgerContribution], edges: [AllocationEdge]) throws -> Quantity? {
-        guard !members.isEmpty else { return nil }
-        guard let unit = members.first?.quantity?.unit else { return nil }
-        let activeIDs = Set(members.map(\.id))
-        let roots = duplicateRoots(for: members, edges: edges)
+        let required = members.filter { !$0.isHandCheckedUnmeasuredIngredient }
+        guard let unit = required.first?.quantity?.unit else { return nil }
+        let activeIDs = Set(required.map(\.id))
+        let roots = duplicateRoots(for: required, edges: edges)
         var totals: [UUID: Rational] = [:]
-        for member in members {
+        for member in required {
             guard let quantity = member.quantity, let amount = try quantity.converted(to: unit) else { return nil }
             let root = roots[member.id] ?? member.id
             totals[root] = max(totals[root] ?? .zero, amount)
@@ -943,24 +991,79 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
 
-    public mutating func setChecked(lineID: UUID, checked: Bool, at: Date = Date()) throws {
-        try mutate("setChecked", at: at) { next in
+    mutating func editTripLine(lineID: UUID, operation: String, at: Date, _ edit: (inout ShoppingLine) throws -> Void) throws {
+        try mutate(operation, at: at) { next in
             let index = try next.lineIndex(lineID)
-            next.lines[index].pickedPrice = nil
-            next.lines[index].checkedAt = checked ? at : nil
+            guard !next.lines[index].isTrashed, !next.lines[index].isHandled else { throw LedgerError.stalePreview }
+            try edit(&next.lines[index])
         }
     }
-    /// Record only an entered total for this specific pick. Checkout has its own evidence.
+
+    public mutating func startShoppingStop(named name: String, expectedRevision: UUID, at: Date = Date()) throws {
+        guard revisionID == expectedRevision else { throw LedgerError.stalePreview }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        try ledgerText(trimmed, nonempty: true, maximum: 512)
+        try mutate("startShoppingStop", at: at) { next in
+            next.shoppingStop = ShoppingStop(id: UUID(), name: trimmed)
+        }
+    }
+
+    @discardableResult
+    public mutating func addInStoreFind(name: String, quantity: Quantity?, expectedRevision: UUID, at: Date = Date()) throws -> UUID {
+        guard revisionID == expectedRevision, quantity.map({ $0.amount > .zero }) ?? true else { throw LedgerError.stalePreview }
+        return try mutate("addInStoreFind", at: at) { next in
+            let id = next.appendManualFields(id: UUID(), contributionID: UUID(), name: name, quantity: quantity, notes: "", exclusions: [])
+            let index = try next.lineIndex(id)
+            next.lines[index].tripUndo = GroceryTripUndo(next.lines[index], action: .addFind, at: at)
+            next.lines[index].checkedAt = at
+            next.lines[index].tripPick = quantity.map { PhysicalGroceryPick(amount: $0, at: at, packageBasis: []) }
+            return id
+        }
+    }
+
+    public mutating func setChecked(lineID: UUID, checked: Bool, at: Date = Date()) throws {
+        if checked, try lines[lineIndex(lineID)].isChecked { return }
+        try mutate("setChecked", at: at) { next in
+            let index = try next.lineIndex(lineID)
+            let before = next.lines[index]
+            next.lines[index].pickedPrice = nil
+            if checked {
+                // An ordinary first check can be undone by unchecking. Only a
+                // previous pick or stop observation needs a restoration snapshot.
+                next.lines[index].tripUndo = before.inStorePickedAt != nil || before.stopObservation != nil
+                    ? GroceryTripUndo(before, action: .pick, at: at) : nil
+                let amount = try next.quantity(forLineID: lineID)
+                next.lines[index].tripPick = try amount.flatMap {
+                    $0.amount > .zero ? try next.cumulativePick(for: before, total: $0, requested: $0, at: at) : nil
+                }
+                next.lines[index].checkedAt = at
+                next.lines[index].stopObservation = nil
+            } else {
+                next.lines[index].tripUndo = nil
+                next.lines[index].tripPick = nil
+                next.lines[index].checkedAt = nil
+                next.lines[index].stopObservation = nil
+            }
+        }
+    }
+    mutating func updateBudgetLine(_ id: UUID, revision: UUID, operation: String,
+                                   _ update: (inout ShoppingLine) throws -> Void) throws {
+        guard revisionID == revision else { throw LedgerError.stalePreview }
+        try editTripLine(lineID: id, operation: operation, at: Date(), update)
+    }
+
+    /// Records evidence for this specific pick. Checkout has its own evidence.
     public mutating func recordPickedPrice(lineID: UUID, expectedRevision: UUID, total: Money?,
-                                           membership: Bool, weighted: Bool, conditionsConfirmed: Bool) throws {
+                                           membership: Bool, weighted: Bool, conditionsConfirmed: Bool,
+                                           shelf: PickedShelfPrice? = nil) throws {
         guard revisionID == expectedRevision else { throw LedgerError.stalePreview }
         try mutate("pickedPrice", at: Date()) { next in
             let index = try next.lineIndex(lineID)
             let line = next.lines[index]
-            guard let picked = line.checkedAt, !line.isTrashed, !line.isHandled else { throw LedgerError.stalePreview }
+            guard let picked = line.inStorePickedAt, !line.isTrashed, !line.isHandled else { throw LedgerError.stalePreview }
             let price = PickedLinePrice(total: total, membership: membership, weighted: weighted,
                 conditionsConfirmed: conditionsConfirmed, checkedAt: picked, name: line.name,
-                quantity: try next.quantity(forLineID: lineID), basisRevision: next.basisRevision)
+                quantity: try next.pickedQuantity(forLineID: lineID), basisRevision: next.basisRevision, shelf: shelf)
             try price.validate()
             next.lines[index].pickedPrice = price
         }
@@ -977,6 +1080,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func reopen(lineID: UUID, at: Date = Date()) throws {
         try mutate("reopen", at: at) { next in
             let index = try next.lineIndex(lineID)
+            next.lines[index].tripPick = nil; next.lines[index].tripUndo = nil; next.lines[index].stopObservation = nil
             next.lines[index].checkedAt = nil; next.lines[index].handledBy = nil; next.lines[index].handledAt = nil
         }
     }
@@ -1047,8 +1151,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 let contributionID = UUID(); ingredientIDs.append(contributionID)
                 next.contributions.append(LedgerContribution(id: contributionID, lineID: lineID,
                     source: .meal(occurrenceID: occurrenceID), productName: ingredient.name, quantity: ingredient.quantity,
-                    originalText: ingredient.quantity?.originalLiteral ?? ingredient.name, notes: ingredient.notes,
-                    exclusions: template.exclusions + ingredient.exclusions, removedAt: nil))
+                    originalText: ingredient.contributionWording, notes: ingredient.notes,
+                    exclusions: template.exclusions + ingredient.exclusions, removedAt: nil, checkedWithoutAmount: ingredient.checkedWithoutAmount))
             }
             next.mealOccurrences.append(MealOccurrence(id: occurrenceID, templateID: template.id, templateRevision: template.revision,
                 title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
@@ -1139,6 +1243,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try uniqueIDs(lines.map(\.id)); try uniqueIDs(contributions.map(\.id)); try uniqueIDs(allocations.map(\.id))
         try uniqueIDs(mealOccurrences.map(\.id)); try uniqueIDs(importBatches.map(\.id)); try uniqueIDs(revisions.map(\.id))
         guard Set(lines.map(\.originalOrder)) == Set(0..<lines.count) else { throw LedgerError.invalid("originalOrder") }
+        if let shoppingStop { try ledgerText(shoppingStop.name, nonempty: true, maximum: 512) }
         let lineIDs = Set(lines.map(\.id))
         let mealSources = Dictionary(uniqueKeysWithValues: mealOccurrences.map { ($0.id, Set($0.ingredientContributionIDs)) })
         let batchSources = Dictionary(uniqueKeysWithValues: importBatches.map { ($0.id, Set($0.contributionIDs)) })
@@ -1158,7 +1263,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
         }
         for line in lines {
+            try line.validateTrip()
             try line.pickedPrice?.validate()
+            try line.pinnedCoupon?.validate()
             if let approval = line.stapleApproval {
                 try ledgerText(approval.purpose, nonempty: true, maximum: 512)
                 try ledgerText(approval.branch, nonempty: true, maximum: 512)
@@ -1233,7 +1340,22 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         let membersByLine = Dictionary(grouping: contributions.filter { $0.removedAt == nil }, by: \.lineID)
         let edgesByLine = Dictionary(grouping: allocations) { sources[$0.demandContributionID]?.lineID }
         for line in lines {
-            _ = try quantity(for: line, members: membersByLine[line.id] ?? [], edges: edgesByLine[line.id] ?? [])
+            let requested = try quantity(for: line, members: membersByLine[line.id] ?? [], edges: edgesByLine[line.id] ?? [])
+            if let actual = line.tripPick {
+                if let requested {
+                    guard let picked = try actual.amount.converted(to: requested.unit),
+                          line.isChecked == (picked >= requested.amount) else { throw LedgerError.invalid("tripPickAmount") }
+                } else {
+                    let members = membersByLine[line.id] ?? []
+                    guard line.isChecked, !members.isEmpty, members.allSatisfy(\.isHandCheckedUnmeasuredIngredient)
+                    else { throw LedgerError.invalid("tripPickAmount") }
+                }
+                guard !line.isChecked || line.checkedAt == actual.at else { throw LedgerError.invalid("tripPickAmount") }
+            }
+            guard !line.isChecked || line.stopObservation == nil,
+                  line.stopObservation?.outcome != .deferred || line.inStorePickedAt == nil else {
+                throw LedgerError.invalid("tripPickOutcome")
+            }
         }
         var parent: UUID?
         var number = 0
@@ -1283,8 +1405,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                         } else { lineID = next.appendLine(id: dinner.lineIDs[index], name: ingredient.name, notes: ingredient.notes) }
                         next.contributions.append(LedgerContribution(id: dinner.contributionIDs[index], lineID: lineID,
                             source: .meal(occurrenceID: dinner.occurrenceID), productName: ingredient.name, quantity: ingredient.quantity,
-                            originalText: ingredient.quantity?.originalLiteral ?? ingredient.name, notes: ingredient.notes,
-                            exclusions: dinner.template.exclusions + ingredient.exclusions, removedAt: nil))
+                            originalText: ingredient.contributionWording, notes: ingredient.notes,
+                            exclusions: dinner.template.exclusions + ingredient.exclusions, removedAt: nil, checkedWithoutAmount: ingredient.checkedWithoutAmount))
                     }
                     let template = dinner.template
                     next.mealOccurrences.append(MealOccurrence(repeatedFrom: repeatWeek?.meals[changeIndex].source, id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
@@ -1381,7 +1503,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try validate()
         var next = self
         let result = try action(&next)
-        if operation != "pickedPrice" { next.discardChangedPickPrices(previous: self) }
+        try next.reconcileTripNeeds(previous: self)
+        if operation != "pickedPrice" && operation != "undoTripPick" { next.discardChangedPickPrices(previous: self) }
         next.revision = try increment(next.revision)
         let parent = next.revisions.last?.id
         next.revisionID = proposedRevisionID ?? UUID()
@@ -1395,6 +1518,62 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try next.validate()
         self = next
         return result
+    }
+
+    /// A later edit may change what is needed. Preserve an observed pick in a
+    /// compatible unit, reopen an increased need, and retire its old undo review.
+    private mutating func reconcileTripNeeds(previous: Self) throws {
+        let tracked = lines.indices.filter { lines[$0].tripPick != nil || lines[$0].tripUndo != nil || lines[$0].stopObservation != nil }
+        guard !tracked.isEmpty else { return }
+        let old = Dictionary(uniqueKeysWithValues: previous.lines.map { ($0.id, $0) })
+        let changedSources = contributions != previous.contributions || allocations != previous.allocations
+        let oldMembers = changedSources ? Dictionary(grouping: previous.contributions, by: \.lineID) : [:]
+        let newMembers = changedSources ? Dictionary(grouping: contributions, by: \.lineID) : [:]
+        let oldEdges = changedSources ? Dictionary(grouping: previous.allocations, by: \.demandContributionID) : [:]
+        let newEdges = changedSources ? Dictionary(grouping: allocations, by: \.demandContributionID) : [:]
+        var priorPackages: [UUID: [BasketPackage]]?
+        var currentPackages: [UUID: [BasketPackage]]?
+        for index in tracked {
+            let line = lines[index]
+            guard let prior = old[line.id] else { continue }
+            let membersChanged = oldMembers[line.id] != newMembers[line.id]
+            let edgesChanged = changedSources && (newMembers[line.id] ?? []).contains { newEdges[$0.id] != oldEdges[$0.id] }
+            let identityChanged = prior.name != line.name
+            if identityChanged || prior.notes != line.notes || membersChanged || edgesChanged || previous.basisRevision != basisRevision ||
+                prior.handledAt != line.handledAt || prior.trashedAt != line.trashedAt {
+                lines[index].tripUndo = nil
+            }
+            guard identityChanged || membersChanged || edgesChanged else { continue }
+            lines[index].stopObservation = nil
+            guard var pick = line.tripPick else { continue }
+            let checked: Bool
+            let members = (newMembers[line.id] ?? []).filter { $0.removedAt == nil }
+            if !identityChanged, let need = try quantity(forLineID: line.id),
+               let physical = try pick.amount.converted(to: need.unit) {
+                checked = physical >= need.amount
+            } else if !identityChanged, !members.isEmpty, members.allSatisfy(\.isHandCheckedUnmeasuredIngredient) {
+                checked = true
+            } else {
+                lines[index].checkedAt = nil
+                lines[index].tripPick = nil
+                continue
+            }
+            if pick.packages == nil, prior.tripPick == pick {
+                if priorPackages == nil { priorPackages = previous.itemPackages }
+                if currentPackages == nil { currentPackages = itemPackages }
+                let oldPacks = priorPackages?[line.id] ?? [], newPacks = currentPackages?[line.id] ?? []
+                if !oldPacks.isEmpty || !newPacks.isEmpty {
+                    let oldNeed = try previous.quantity(forLineID: line.id), newNeed = try quantity(forLineID: line.id)
+                    if oldPacks != newPacks || oldNeed != newNeed {
+                        let original = try previous.physicalPackages(for: prior, requested: oldNeed, sourcePackages: oldPacks)
+                        pick.packages = original ?? []
+                        pick.packageBasis = nil
+                        lines[index].tripPick = pick
+                    }
+                }
+            }
+            lines[index].checkedAt = checked ? pick.at : nil
+        }
     }
 
     /// A price applies to the picked product and its reviewed amount. Clear changed
@@ -1414,7 +1593,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         for index in priced {
             let line = lines[index]
             guard let before = oldLines[line.id], line.pickedPrice == before.pickedPrice,
-                  basisRevision == previous.basisRevision, line.checkedAt == before.checkedAt,
+                  basisRevision == previous.basisRevision, line.checkedAt == before.checkedAt, line.tripPick == before.tripPick,
                   !line.isHandled, !line.isTrashed, line.name == before.name, line.notes == before.notes,
                   old.sources[line.id] == current.sources[line.id], old.edges[line.id] == current.edges[line.id]
             else { lines[index].pickedPrice = nil; continue }
@@ -1655,7 +1834,7 @@ func ledgerText(_ value: String, nonempty: Bool = false, maximum: Int = 8192) th
         throw LedgerError.invalid("text")
     }
 }
-private func ledgerDate(_ date: Date?) throws {
+func ledgerDate(_ date: Date?) throws {
     if let date, !date.timeIntervalSinceReferenceDate.isFinite { throw LedgerError.invalid("date") }
 }
 private func uniqueIDs(_ ids: [UUID]) throws {

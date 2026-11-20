@@ -13,6 +13,15 @@ extension NotificationCenter {
 struct PantryDigestAccess {
     let scope: PantryDigestScope
     let authorized: @MainActor () -> Bool
+    /// Permits a progress indicator only. All data reads and writes use authorized.
+    let awaitingSnapshot: @MainActor () -> Bool
+
+    init(scope: PantryDigestScope, snapshotIsCurrent: @escaping @MainActor () -> Bool = { true },
+         authorized sameOwner: @escaping @MainActor () -> Bool) {
+        self.scope = scope
+        authorized = { sameOwner() && snapshotIsCurrent() }
+        awaitingSnapshot = { sameOwner() && !snapshotIsCurrent() }
+    }
 }
 struct PantryDigestPermissionPrompt {
     let scope: PantryDigestScope
@@ -44,8 +53,10 @@ extension PantryDigestAccess {
               let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
         let scope = PantryDigestScope(origin: origin, identity: identity)
         let generation = pickup.privatePantryGeneration
-        return PantryDigestAccess(scope: scope) {
-            pickup.privatePantryGeneration == generation && !child.presented && pickup.pantryRouteAvailable && pickup.pantryReadIsCurrent && pickup.sourceWorkspaceID == origin &&
+        return PantryDigestAccess(scope: scope, snapshotIsCurrent: { pickup.pantryReadIsCurrent }) {
+            UIApplication.shared.isProtectedDataAvailable && pickup.privatePantryGeneration == generation &&
+                !child.presented && pickup.pantryRouteAvailable && pickup.sourceWorkspaceID == origin &&
+                pickup.pantrySnapshot?.state.workspaceID == origin && pickup.pantrySnapshot?.state.active == true &&
                 household.projection?.grantId == nil && CapturePrivateIdentity.current(access: access, household: household) == identity
         }
     }

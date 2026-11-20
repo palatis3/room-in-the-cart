@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ for 1 picked item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ for 1 picked item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ por 1 artículo en el carrito"
+          }
+        }
+      }
+    },
+    "%@ · No items picked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · No items picked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Aún no hay artículos en el carrito"
+          }
+        }
+      }
+    },
     "%@ for %lld of %lld picked items": {
       "localizations": {
         "en": {
@@ -433,6 +465,22 @@
         }
       }
     },
+    "In store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tienda"
+          }
+        }
+      }
+    },
     "Item name": {
       "localizations": {
         "en": {
@@ -445,6 +493,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nombre del artículo"
+          }
+        }
+      }
+    },
+    "Keep screen awake for 15 minutes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep screen awake for 15 minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener la pantalla encendida durante 15 minutos"
           }
         }
       }

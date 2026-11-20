@@ -91,7 +91,7 @@ struct ShopperInboxContent: View {
                     focusedRequest = nil; focusedOutcome = id
                 } else { focusedRequest = lastRequestID }
             }) { request in
-                NavigationStack { HouseholdRequestDecisionView(model: model, request: request, sharedShop: sharedShop) }
+                NavigationStack { HouseholdRequestDecisionView(model: model, request: request, sharedShop: sharedShop, household: household) }
                     .presentationDetents([.large])
             }
             .onChange(of: model.confirmedDecisionRequestID) { _, id in
@@ -163,6 +163,7 @@ struct HouseholdRequestDecisionView: View {
     @ObservedObject var model: HouseholdInboxModel
     let request: OwnRequest
     var sharedShop: HouseholdShopModel? = nil
+    var household: HouseholdModel? = nil
     @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -180,6 +181,7 @@ struct HouseholdRequestDecisionView: View {
                         if let alias = selected.authorAlias { LabeledContent(ht("Requested by"), value: alias) }
                         if let quantity = selected.ownQuantity { Text(quantity) }
                         Text(shopperRequestStatus(selected))
+                        if let household { TripSubstitutionLink(household: household, request: selected) }
                         LabeledContent(ht("Received"), value: householdTime(selected.receivedAt))
                         if let clarification = selected.clarification { Text(clarification) }
                     }

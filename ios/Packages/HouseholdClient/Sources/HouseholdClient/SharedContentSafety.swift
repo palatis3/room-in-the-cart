@@ -2,8 +2,8 @@ import Foundation
 
 /// Selects one field of a currently authorized shared record. Sender identity is resolved by the service.
 public struct SharedMessageSource: Codable, Equatable, Hashable, Sendable {
-    public enum Kind: String, Codable, Sendable { case request, clarification, instruction, suggestion, cookCopy }
-    public enum Field: String, Codable, Sendable { case item, amount, question, shopLabel, label, unit, action, correction, text }
+    public enum Kind: String, Codable, Sendable { case request, clarification, instruction, suggestion, cookCopy, substitution, pickingRow }
+    public enum Field: String, Codable, Sendable { case item, amount, question, shopLabel, label, unit, action, correction, text, alternative }
     public let kind: Kind
     public let id: String
     public let revision: Int
@@ -16,7 +16,7 @@ public struct SharedMessageSource: Codable, Equatable, Hashable, Sendable {
         case (.instruction, .label), (.instruction, .amount), (.instruction, .unit), (.instruction, .action):
             guard let index, (0..<200).contains(index) else { return nil }
         case (.request, .item), (.request, .amount), (.clarification, .question), (.instruction, .shopLabel),
-             (.suggestion, .correction), (.cookCopy, .text):
+             (.suggestion, .correction), (.cookCopy, .text), (.substitution, .alternative), (.pickingRow, .label):
             guard index == nil else { return nil }
         default: return nil
         }

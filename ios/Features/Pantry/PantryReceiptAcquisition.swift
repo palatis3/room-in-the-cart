@@ -4,7 +4,16 @@ import Foundation
 import LocalStore
 
 struct ReceiptImportDraft {
-    enum Treatment: Hashable { case skip, add, link(UUID) }
+    enum Treatment: Hashable {
+        case skip, add, keptSome, eaten, missing, chargeOrReturn, link(UUID)
+
+        var recordsStock: Bool {
+            switch self {
+            case .add, .keptSome, .link: true
+            case .skip, .eaten, .missing, .chargeOrReturn: false
+            }
+        }
+    }
     struct Line: Identifiable, Equatable {
         let id: UUID
         let ordinal: Int
@@ -31,12 +40,16 @@ struct ReceiptImportDraft {
             if unit != printedUnit { usable = "" }
             unit = printedUnit; received = quantity
         }
+        var confirmedPackID: UUID? = nil
+        var packageCode: CapturedBarcode? = nil
         var name: String
         var treatment: Treatment = .skip
         var received: String = ""
         var usable: String = ""
         var unit: UnitOfMeasure = .count
         var location: InventoryLocation = .cupboard
+        var selectedIntact = false
+        var checkedPack = false
         var paid: String = ""
         var canComparePurchase: Bool { documentLine?.stage != .order && printed?.kind != .date && printed?.kind != .adjustment }
     }
@@ -51,6 +64,9 @@ struct ReceiptImportDraft {
     var rescanDecision: ReceiptRescanDecision?
     var merchant: String
     var language = Bundle.main.preferredLocalizations.first?.hasPrefix("es") == true ? "es" : "en"
+    var tracksPutaway = false
+    var receiptTotal = ""
+    var overlapChoices: [UUID: PutawayOverlap.Choice] = [:]
     var reference = ""
     var purchaseDate = Calendar.current.startOfDay(for: Date())
     var printedDate: ReceiptPrintedDate?
@@ -107,21 +123,29 @@ struct ReceiptImportDraft {
 
     var selectedLines: [Line] { lines.filter { $0.treatment != .skip } }
 
+    var stockLines: [Line] { lines.filter { $0.treatment.recordsStock } }
+
     func facts(receiptID: UUID, snapshot: PantryRepository.Snapshot, at now: Date, lineDocumentID: UUID? = nil) throws -> [ReceiptAcquisition] {
         guard snapshot.state.workspaceID == workspaceID, dateConfirmed, purchaseDate <= now,
               !cleaned(merchant).isEmpty else { throw PantryReceiptError.invalid }
-        let selected = selectedLines
-        guard (1...50).contains(selected.count) else { throw PantryReceiptError.selection }
+        let selected = stockLines
+        guard (1...50).contains(selectedLines.count) else { throw PantryReceiptError.selection }
         return try selected.map { row in
             guard let received = try ComparisonModel.quantity(row.received, row.unit),
                   let usable = try ComparisonModel.quantity(row.usable, row.unit) else { throw PantryReceiptError.invalid }
+            if tracksPutaway, row.needsPackReview, !row.checkedPack { throw PantryReceiptError.invalid }
             let lineID = ReceiptAcquisition.lineID(receiptID: receiptID, ordinal: row.ordinal, document: lineDocumentID)
             let lotID: UUID, foodID: UUID, stock: ReceiptAcquisition.Stock
             switch row.treatment {
-            case .skip: throw PantryReceiptError.invalid
-            case .add:
+            case .skip, .eaten, .missing, .chargeOrReturn: throw PantryReceiptError.invalid
+            case .add, .keptSome:
+                if tracksPutaway {
+                    guard usable.amount > .zero, row.treatment != .keptSome || usable.amount < received.amount else {
+                        throw PantryReceiptError.invalid
+                    }
+                }
                 lotID = ReceiptAcquisition.identity(["lot", workspaceID.uuidString, lineID.uuidString])
-                foodID = row.appliedAlias?.foodID ?? lotID
+                foodID = row.appliedAlias?.foodID ?? row.confirmedPackID ?? lotID
                 stock = .added(location: row.location)
             case .link(let id):
                 guard let lot = snapshot.lots.first(where: { $0.id == id }),
@@ -156,6 +180,13 @@ struct PantryReceiptReview: Identifiable {
     let facts: [ReceiptAcquisition]
     let existing: Set<UUID>
     let batch: InventoryBatch?
+    var putaway: ReviewedPutawayReceipt? = nil
+}
+
+struct ReceiptPutawayRequest: Encodable {
+    let acquisitions: [InventoryAcquisitionRow]
+    let bindings: [InventoryReceiptBinding]
+    let review: ReviewedPutawayReceipt?
 }
 
 enum PantryAcquisitionCodec {

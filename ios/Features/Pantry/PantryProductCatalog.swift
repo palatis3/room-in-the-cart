@@ -60,8 +60,7 @@ actor PantryProductCatalog {
 
     func lookup(_ barcode: CapturedBarcode, scope: UUID, spanish: Bool) async throws -> ProductCatalogProposal? {
         try Task.checkCancellation()
-        guard barcode.validGTIN else { throw ProductBatchError.invalid }
-        let code = barcode.value
+        guard let code = barcode.catalogGTIN else { throw ProductBatchError.invalid }
         let key = Key(scope: scope, code: String(repeating: "0", count: 14 - code.count) + code, spanish: spanish)
         let instant = now()
         if let existing = cache[key], instant >= existing.time, instant.timeIntervalSince(existing.time) < 86_400 { return existing.value }

@@ -147,13 +147,16 @@ extension ComparisonDatabase {
               try integer("SELECT count(*) FROM inventory_acquisitions a JOIN inventory_retired_acquisition_lines t ON t.line_id=a.line_id") == 0
         else { throw ComparisonStoreError.corruptRecord }
     }
+    func indexReceiptIdentity(_ identity: UUID, receiptID: UUID) throws {
+        try run("INSERT INTO inventory_acquisition_identities(identity,receipt_id) VALUES(?,?) ON CONFLICT(identity) DO NOTHING",
+            [.text(identity.uuidString), .text(receiptID.uuidString)])
+        let check = try statement("SELECT receipt_id FROM inventory_acquisition_identities WHERE identity=?", values: [.text(identity.uuidString)])
+        defer { sqlite3_finalize(check) }
+        guard sqlite3_step(check) == SQLITE_ROW, try text(check, column: 0) == receiptID.uuidString else { throw ComparisonStoreError.operationConflict }
+    }
     func insertAcquisition(_ row: InventoryAcquisitionRow) throws {
         for identity in [row.imageIdentity, row.transactionIdentity].compactMap({ $0 }) {
-            try run("INSERT INTO inventory_acquisition_identities(identity,receipt_id) VALUES(?,?) ON CONFLICT(identity) DO NOTHING",
-                [.text(identity.uuidString), .text(row.receiptID.uuidString)])
-            let check = try statement("SELECT receipt_id FROM inventory_acquisition_identities WHERE identity=?", values: [.text(identity.uuidString)])
-            defer { sqlite3_finalize(check) }
-            guard sqlite3_step(check) == SQLITE_ROW, try text(check, column: 0) == row.receiptID.uuidString else { throw ComparisonStoreError.operationConflict }
+            try indexReceiptIdentity(identity, receiptID: row.receiptID)
         }
         let old = row.supersedesID.map { ComparisonSQLValue.text($0.uuidString) } ?? .null
         try run("INSERT INTO inventory_acquisitions(id,receipt_id,line_id,lot_id,revision,supersedes,payload,digest,image_identity,transaction_identity) VALUES(?,?,?,?,?,?,?,?,?,?)", [

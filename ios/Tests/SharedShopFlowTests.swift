@@ -75,6 +75,53 @@ import LocalAuthentication
         XCTAssertFalse(shared.reviewedCurrentFacts)
         return (fixture, adult, shared, outbox, operation)
     }
+    func testCheckoutReceiptRequiresExactDeliveryAndCurrentShopperThroughRenewalAndFreeze() async throws {
+        for freeze in [false, true] {
+            let fixture = SharedFlowService(), adult = try await createdHousehold(fixture)
+            let owner = try XCTUnwrap(adult.sharedShop)
+            enterShop(owner); await owner.applyReviewed()
+            let shop = try XCTUnwrap(owner.shop), shopID = try XCTUnwrap(UUID(uuidString: shop.shopId))
+            let context = try await owner.trackingService.sharedDemandContext(shopID: shopID)
+            let action = try SharedTrackingAction(.patch(.init(quote: shop.quote, lines: shop.lines)))
+            let binding = SharedTrackingOperationBinding(kind: freeze ? .freeze : .apply, mode: freeze ? "freeze" : "review",
+                context: context, shopID: .init(shopID), base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch),
+                graphRevision: 2, privacyRevision: 0, stateDigest: String(repeating: "a", count: 64), previewID: .init(),
+                previewDigest: String(repeating: "b", count: 64), action: freeze ? nil : action, targetOperationID: nil)
+            let operation = try PendingOperation(envelope: .init(replayWindow: UUID().uuidString.lowercased(), shopId: shop.shopId,
+                kind: binding.commandKind, base: binding.base, body: binding.body()), householdID: context.householdID,
+                memberID: context.memberID, deviceID: context.deviceID, sharedTrackingBinding: binding)
+            let attempt = TrackingCheckoutAttempt(operationID: operation.id, lease: owner.trackingLease)
+            var uncertain = true
+            SharedFlowURLProtocol.handler = { request in
+                guard request.url!.path.hasSuffix("/commands") else { return try fixture.respond(request) }
+                if uncertain { return (503, try fixture.data(["error": ["code": "service_unavailable"]])) }
+                let (status, bytes) = try fixture.respond(request)
+                var receipt = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+                receipt["operationId"] = UUID().uuidString.lowercased()
+                receipt["disposition"] = freeze ? "frozen" : "patched"
+                return (status, try fixture.data(receipt))
+            }
+            do { try await owner.sendTracking(operation, selectionID: nil); XCTFail("Uncertain send was confirmed") }
+            catch { XCTAssertEqual(owner.pending, operation); XCTAssertNil(owner.checkoutResult(for: attempt)) }
+            uncertain = false
+            let arrived = expectation(description: "Reading the committed shop")
+            let held = SharedFlowHeldRead(pathSuffix: "/shops/" + shop.shopId, arrived: { arrived.fulfill() })
+            SharedFlowURLProtocol.heldRead = held
+            defer { held.release(); SharedFlowURLProtocol.heldRead = nil }
+            let sending = Task { try await owner.sendTracking(operation, selectionID: nil) }
+            await fulfillment(of: [arrived], timeout: 3)
+            XCTAssertEqual(owner.checkoutResult(for: attempt), .refreshing)
+            held.release(); try await sending.value
+            XCTAssertEqual(owner.checkoutResult(for: attempt), freeze ? .frozen : .renewed)
+            XCTAssertEqual(owner.trackingAllowed, !freeze)
+            XCTAssertNil(owner.checkoutResult(for: .init(operationID: operation.id, lease: UUID())))
+            XCTAssertNil(owner.checkoutResult(for: .init(operationID: UUID().uuidString, lease: owner.trackingLease)))
+            var revoked = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(owner.scope)) as? [String: Any])
+            revoked["role"] = "adult_contributor"; revoked["capabilities"] = []
+            owner.updateScope(try JSONDecoder().decode(HouseholdBootstrap.self, from: fixture.data(revoked)))
+            XCTAssertNil(owner.checkoutResult(for: attempt)); XCTAssertNil(owner.shop)
+        }
+    }
     func testTrackingShopConflictRefreshEnablesSameBytesRetryWithoutClear() async throws { try await trackingRecovery(inbox: false, undo: false) }
     func testRequestUndoShopConflictRefreshEnablesSameBytesRetryWithoutClear() async throws { try await trackingRecovery(inbox: false, undo: true) }
     func testTrackingInboxConflictRefreshEnablesSameBytesRetryWithoutClear() async throws { try await trackingRecovery(inbox: true, undo: false) }

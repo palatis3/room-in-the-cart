@@ -5,6 +5,7 @@ import pg from 'pg';
 import {trackingPrivacyFixtures,labelDigest} from './shared-demand-tracking-privacy-fixture.mjs';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
+import {readTracking} from '../dist/shared-demand-tracking-repository.js';
 import {bodySchemas} from '../dist/contracts.js';
 import {digest} from '../dist/database.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
@@ -70,6 +71,33 @@ test('tracking v2 atomic first-adoption Cancel, exact acknowledgment, reserved U
  assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',a.command)),receipt);assert.equal(await count(f,'shared_tracking_adoption'),1);
  const second=await actor(f.owner.subject);await enroll(second,f.h);assert.deepEqual((await page(f,second)).state,c.after);
  assert.equal((await call(second,f.base+'/commands','POST',{...a.command,replayWindow:second.window})).status,409);
+});
+test('a freeze review expires on the read boundary and only uncommitted freezes need a new signed review',async()=>{
+ const f=await fixture();await first(f,{withMeal:false});
+ const live=await page(f),token=live.freezeReview;
+ assert.ok(token);
+ const {rows:[stored]}=await admin.query('SELECT review FROM ritc.shared_tracking_revision WHERE household_id=$1 AND shop_id=$2 ORDER BY shop_revision DESC LIMIT 1',[f.h,f.shopId]);
+ const until=Date.parse(stored.review.review.expiresAt);
+ const auth={identity:await verifier.verify(f.owner.token),deviceToken:f.owner.device};
+ const at=(ms,fn)=>repo.authorized(f.h,auth,ctx=>fn({...ctx,now:new Date(ms)}));
+ const read=ctx=>repo.shop(ctx,f.shopId).then(shop=>readTracking(repo,ctx,shop));
+ assert.deepEqual((await at(until-1,read)).freezeReview,token);
+ assert.equal((await at(until,read)).freezeReview,null);
+ const otherDevice=await actor(f.owner.subject);await enroll(otherDevice,f.h);
+ assert.equal((await page(f,otherDevice)).freezeReview,null);
+ const freeze=current=>({v:1,shopId:f.shopId,replayWindow:f.owner.window,clientKey:randomUUID(),kind:'shop.freeze',
+   base:{shopRevision:current.shopRevision,authorityEpoch:current.authorityEpoch},body:{trackingReview:current.freezeReview}});
+ const old=freeze(live);
+ await assert.rejects(at(until,ctx=>repo.execute(ctx,old)),e=>e.code==='review_expired');
+ const shop=ok(await call(f.owner,f.path));
+ await applyIntent(f,{mode:'review',base:baseOf(live),action:{kind:'shop.patch',body:{quote:shop.quote,lines:shop.lines}},packs:live.state.packReviews});
+ const superseded=await call(f.owner,f.base+'/commands','POST',old);
+ assert.equal(superseded.status,409);assert.equal(superseded.data.error.code,'tracking_freeze_superseded');
+ const current=await page(f);assert.notDeepEqual(current.freezeReview,token);
+ const submitted=freeze(current),receipt=ok(await call(f.owner,f.base+'/commands','POST',submitted));
+ assert.equal(receipt.disposition,'frozen');
+ // A lost response can still resolve to the immutable receipt after the review expires.
+ assert.deepEqual(await at(until+600000,ctx=>repo.execute(ctx,submitted)),receipt);
 });
 test('complete first adoption Undo transfers protected unknown identity, preserves later staple and untouched price, then same-ID rebind',async()=>{
  const f=await fixture(),initial=await first(f),later=await addLater(f),before=await page(f),operation=ok(initial.response).operationId;

@@ -1,4 +1,5 @@
 import XCTest
+import CoreDomain
 @testable import RoomInTheCart
 
 private actor CatalogTestTransport {
@@ -210,5 +211,234 @@ extension PantryProductCatalogTests {
         XCTAssertEqual(cached, fresh)
         let count = await transport.count
         XCTAssertEqual(count, 2)
+    }
+}
+
+extension PantryProductCatalogTests {
+    func testPackageSymbologyExpansionAndRestrictedNumbersStayPrivate() async throws {
+        let upce = CapturedBarcode(symbology: "VNBarcodeSymbologyUPCE", value: "01234558")
+        let upca = CapturedBarcode(symbology: "UPC-A", value: "012345000058")
+        let ean = CapturedBarcode(symbology: "EAN13", value: "0012345000058")
+        XCTAssertEqual(upce.packageGTIN, upca.value)
+        XCTAssertEqual(upce.associationKey(retailer: ""), ean.associationKey(retailer: ""))
+        XCTAssertNil(CapturedBarcode(symbology: "manual", value: upce.value).associationKey(retailer: "A"))
+        XCTAssertNotEqual(CapturedBarcode(symbology: "EAN8", value: upce.value).canonicalGTIN, upce.canonicalGTIN)
+        let local = CapturedBarcode(symbology: "EAN13", value: "0200000033149")
+        for digits in ["9551234567896", "9581234567893"] {
+            let global = CapturedBarcode(symbology: "EAN13", value: digits)
+            XCTAssertEqual(global.catalogGTIN, digits)
+            XCTAssertEqual(global.associationKey(retailer: "A"), global.associationKey(retailer: "B"))
+        }
+        for digits in ["01234565", "21234569"] {
+            let short = CapturedBarcode(symbology: "EAN8", value: digits)
+            let padded = CapturedBarcode(symbology: "manual", value: String(repeating: "0", count: 6) + digits)
+            XCTAssertNil(short.catalogGTIN); XCTAssertNil(padded.catalogGTIN)
+            XCTAssertEqual(short.associationKey(retailer: "A"), padded.associationKey(retailer: "A"))
+            XCTAssertNotEqual(short.associationKey(retailer: "A"), short.associationKey(retailer: "B"))
+        }
+        for digits in ["9521000000018", "9781234567897", "9911000000017"] {
+            let other = CapturedBarcode(symbology: "EAN13", value: digits)
+            XCTAssertNil(other.catalogGTIN)
+            XCTAssertNil(other.associationKey(retailer: "A"))
+        }
+        XCTAssertNil(local.catalogGTIN)
+        XCTAssertNil(local.associationKey(retailer: " "))
+        XCTAssertNotEqual(local.associationKey(retailer: "A"), local.associationKey(retailer: "B"))
+        let transport = CatalogTestTransport()
+        let catalog = PantryProductCatalog(read: { try await transport.send($0) })
+        do {
+            _ = try await catalog.lookup(local, scope: UUID(), spanish: false)
+            XCTFail("Restricted-circulation identifiers must stay on device")
+        } catch ProductBatchError.invalid {}
+        let requests = await transport.requests
+        XCTAssertTrue(requests.isEmpty)
+        XCTAssertNil(CapturedBarcode(symbology: "QR", value: "https://example.org/01/00012345000058").associationKey(retailer: "A"))
+    }
+
+    func testGS1LotAndDatesUseFieldBoundariesAndKeepPhysicalPackagesSeparate() throws {
+        let gtin = "00012345000058"
+        let first = CapturedBarcode(symbology: "DataMatrix", value: "]d201" + gtin + "10A15B\u{1D}1527030417270403")
+        let second = CapturedBarcode(symbology: "DataMatrix", value: "(01)" + gtin + "(10)B(17)270501")
+        XCTAssertNoThrow(try first.validate())
+        XCTAssertEqual(first.gs1?.lot, "A15B")
+        XCTAssertEqual(first.gs1?.dates.map(\.ai), ["15", "17"])
+        XCTAssertEqual(first.gs1?.dates.first?.day(zone: "UTC")?.iso8601, "2027-03-04")
+        XCTAssertEqual(second.gs1?.dates.last?.day(zone: "UTC")?.iso8601, "2027-05-01")
+        XCTAssertNil(CapturedBarcode(symbology: "QR", value: "https://example.org/(17)270501").gs1)
+        XCTAssertNil(CapturedBarcode(symbology: "GS1", value: "01" + gtin + "17270231").gs1)
+        XCTAssertNil(CapturedBarcode(symbology: "EAN13", value: "0012345000058").gs1)
+        XCTAssertEqual(PackageGS1("(01)" + gtin, scannerIdentifiedGS1: false)?.dates, [])
+        var batch = PantryProductBatch(workspaceID: UUID())
+        XCTAssertTrue(try batch.addScan(first))
+        XCTAssertFalse(try batch.addScan(second))
+        batch.candidates[0].packages = "2"
+        try batch.separate(batch.candidates[0].id, scanned: second)
+        XCTAssertEqual(batch.candidates.map(\.packages), ["1", "1"])
+        XCTAssertNotEqual(batch.candidates[0].id, batch.candidates[1].id)
+        XCTAssertEqual(batch.candidates.map { $0.barcode?.gs1?.lot }, ["A15B","B"])
+        try batch.separate(batch.candidates[0].id)
+        XCTAssertNil(batch.candidates[2].barcode?.gs1, "A new, unscanned physical batch must never inherit the first stamp.")
+        XCTAssertEqual(batch.candidates[2].barcode?.canonicalGTIN, first.canonicalGTIN)
+        XCTAssertThrowsError(try CapturedBarcode(symbology: "GS1", value: "01bad\u{1D}17270403").validate())
+        XCTAssertEqual(PrintedPackageDate.monthDayChoices(in: "03/04").compactMap { $0.confirmed(year: "2027", zone: "UTC")?.iso8601 }, ["2027-03-04", "2027-04-03"])
+        XCTAssertTrue(PrintedPackageDate.monthDayChoices(in: "03/04/2027").isEmpty)
+    }
+
+    @MainActor func testRememberedPackReopensPerOwnerAndCorrectsAndForgetsOnlyThatSize() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let space = UUID()
+        let scope = PantryDigestScope(origin: space, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let other = PantryDigestScope(origin: space, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let code = CapturedBarcode(symbology: "UPC-A", value: "012345000058")
+        let twin = CapturedBarcode(symbology: "UPC-E", value: "01234558")
+        let memory = PantryPackMemory(folder: folder)
+        let pack = ConfirmedPantryPack(id: UUID(), barcode: code, retailer: "", name: "Jar",
+            size: Quantity(amount: try Rational(375), unit: .gram, originalLiteral: "375"), attribution: "Open Food Facts", confirmedAt: Date())
+        try memory.replace(nil, with: pack, scope: scope) { true }
+        let reopened = PantryPackMemory(folder: folder)
+        XCTAssertEqual(try reopened.match(twin, retailer: "", scope: scope), pack)
+        XCTAssertNil(try reopened.match(code, retailer: "", scope: other))
+        XCTAssertNil(try reopened.match(.init(symbology: "EAN13", value: "3017620422003"), retailer: "", scope: scope))
+        let revised = ConfirmedPantryPack(id: UUID(), barcode: twin, retailer: "", name: "Larger jar",
+            size: Quantity(amount: try Rational(750), unit: .gram, originalLiteral: "750"), attribution: nil, confirmedAt: Date())
+        XCTAssertThrowsError(try reopened.replace(nil, with: revised, scope: scope) { true })
+        XCTAssertThrowsError(try reopened.replace(pack, with: revised, scope: scope) { false })
+        try reopened.replace(pack, with: revised, scope: scope) { true }
+        XCTAssertEqual(try memory.match(code, retailer: "", scope: scope), revised)
+        var shop = ShoppingLedger()
+        let preview = try PackRebuyDraft.stage(name: revised.name, count: 2, pack: revised, shop: shop, id: UUID())
+        XCTAssertTrue(shop.lines.isEmpty)
+        XCTAssertEqual(preview.lines.first?.quantity?.amount, try Rational(1500))
+        _ = try shop.commitImport(preview)
+        let line = try XCTUnwrap(shop.lines.first)
+        let addition = try PackRebuyDraft.stage(name: revised.name, count: 1, pack: revised, shop: shop, id: UUID())
+        let decision = [try XCTUnwrap(addition.lines.first).id: ImportResolution.addToLine(line.id)]
+        _ = try shop.commitImport(addition, decisions: decision)
+        _ = try shop.commitImport(addition, decisions: decision)
+        XCTAssertEqual(shop.lines.count, 1)
+        XCTAssertEqual(try shop.quantity(forLineID: line.id)?.amount, try Rational(2250))
+        try reopened.replace(revised, with: nil, scope: scope) { true }
+        XCTAssertNil(try memory.match(twin, retailer: "", scope: scope))
+    }
+}
+
+extension PantryProductCatalogTests {
+    @MainActor func testPackageDateReopenKeepsAnUndatedStampAndDistinguishesAnEncodedChoice() throws {
+        let zone = "UTC"
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: owner), lot = UUID()
+        let store = PantryPackageDateStore(folder: folder)
+        let raw = "Best before 03/04"
+        let actual = try PrintedPackageDate.reviewingPhoto(raw, digest: String(repeating: "b", count: 64), zone: zone)
+        let april = try XCTUnwrap(PrintedPackageDate.monthDayChoices(in: raw).last)
+        XCTAssertNil(april.confirmed(year: "", zone: zone))
+        XCTAssertNil(april.confirmed(year: "26", zone: zone))
+        XCTAssertEqual(april.confirmed(year: "2028", zone: zone)?.iso8601, "2028-04-03")
+        XCTAssertNil(PrintedPackageDate.proposedDay(in: "Best before 03/04/26", zone: zone))
+        XCTAssertNil(PrintedPackageDate.proposedDay(in: "Best before 7 June", zone: zone))
+        try store.replace(nil, with: actual, scope: scope, lot: lot, authorized: { true })
+        let undated = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
+        XCTAssertNil(undated.day)
+        XCTAssertEqual(undated.originalPrintedWording, raw)
+        let legacy = PrintedPackageDate(wording: raw, meaning: .bestBefore, day: april.confirmed(year: "2026", zone: zone),
+            selectedPhotoText: nil, photoDigest: nil)
+        try store.replace(undated, with: legacy, scope: scope, lot: lot, authorized: { true })
+        let file = folder.appendingPathComponent(scope.origin.uuidString)
+            .appendingPathComponent(lot.uuidString).appendingPathComponent(scope.owner + ".json")
+        let legacyBytes = try Data(contentsOf: file)
+        XCTAssertFalse(String(decoding: legacyBytes, as: UTF8.self).contains("confirmedPrintedYear"))
+        let older = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
+        XCTAssertEqual(try Data(contentsOf: file), legacyBytes)
+        XCTAssertTrue(older.yearNeedsReview)
+        XCTAssertEqual(older.day?.iso8601, "2026-04-03")
+        XCTAssertNil(older.verifiedDay)
+        let proven = PrintedPackageDate(wording: raw, meaning: .bestBefore, day: older.day,
+            selectedPhotoText: "Best before 03/04/2026", photoDigest: actual.photoDigest)
+        try store.replace(older, with: proven, scope: scope, lot: lot, authorized: { true })
+        let provenRead = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
+        XCTAssertFalse(provenRead.yearNeedsReview)
+        XCTAssertEqual(provenRead.verifiedDay?.iso8601, "2026-04-03")
+        var confirmed = legacy
+        confirmed.confirmedPrintedYear = 2026
+        try store.replace(provenRead, with: confirmed, scope: scope, lot: lot, authorized: { true })
+        XCTAssertEqual(try PantryPackageDateStore(folder: folder).load(scope, lot: lot)?.verifiedDay?.iso8601, "2026-04-03")
+
+        let code = CapturedBarcode(symbology: "GS1", value: "(01)00012345000058(10)LOT-A(17)270531")
+        let encoded = try XCTUnwrap(code.gs1?.dates.first?.day(zone: zone))
+        let printed = "Best before 7 June 2027"
+        let choice = PrintedPackageDate(wording: printed, meaning: .expires, day: encoded,
+            selectedPhotoText: printed, photoDigest: actual.photoDigest, encodedSource: code, selectedAI: "17", wordingIsPrinted: true)
+        try store.replace(confirmed, with: choice, scope: scope, lot: lot, authorized: { true })
+        let reopened = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
+        XCTAssertEqual(reopened.originalPrintedWording, printed)
+        XCTAssertEqual(reopened.selectedPhotoText, printed)
+        XCTAssertEqual(reopened.day?.iso8601, "2027-05-31")
+        XCTAssertEqual(reopened.meaningLabel, pantryText("Meaning encoded in the barcode"))
+        XCTAssertEqual(reopened.sourceLabel, pantryText("Encoded package date"))
+        let legacyOnly = PrintedPackageDate(wording: "GS1 (17) 270531", meaning: .expires, day: encoded,
+            selectedPhotoText: nil, photoDigest: nil, encodedSource: code, selectedAI: "17")
+        XCTAssertNil(legacyOnly.originalPrintedWording)
+    }
+
+    @MainActor func testPackSaveRefreshAllowsOnlyProgressWhileSameAdultStillHasAccess() {
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: owner)
+        var sameOwner = true
+        var current = true
+        let access = PantryDigestAccess(scope: scope, snapshotIsCurrent: { current }, authorized: { sameOwner })
+        XCTAssertTrue(access.authorized())
+        XCTAssertFalse(access.awaitingSnapshot())
+        current = false
+        XCTAssertFalse(access.authorized())
+        XCTAssertTrue(access.awaitingSnapshot())
+        sameOwner = false
+        XCTAssertFalse(access.authorized())
+        XCTAssertFalse(access.awaitingSnapshot())
+        current = true
+        XCTAssertFalse(access.authorized())
+        XCTAssertFalse(access.awaitingSnapshot())
+    }
+
+    func testDatePhotoMustAgreeWithOrdinaryUPCAndEveryKnownPhysicalLot() throws {
+        let target = CapturedBarcode(symbology: "UPC-A", value: "012345000058")
+        func stamp(_ gtin: String, lot: String) -> CapturedBarcode {
+            CapturedBarcode(symbology: "GS1", value: "(01)" + gtin + "(10)" + lot + "(17)270422")
+        }
+        let a = stamp("00012345000058", lot: "A")
+        let b = stamp("00012345000058", lot: "B")
+        let other = stamp("03017620422003", lot: "A")
+        XCTAssertFalse(PackageDateBinding.accepts(other, for: [target]))
+        XCTAssertFalse(PackageDateBinding.accepts(b, for: [target, a]))
+        XCTAssertTrue(PackageDateBinding.accepts(a, for: [target, a]))
+        let missingLot = CapturedBarcode(symbology: "GS1", value: "(01)00012345000058(17)270422")
+        XCTAssertFalse(PackageDateBinding.accepts(missingLot, for: [a]))
+    }
+
+    @MainActor func testShopRebuySeparatesKnownSiblingsAndRequiresExplicitReviewOfUnlinkedRows() throws {
+        let size = Quantity(amount: try Rational(375), unit: .gram, originalLiteral: "375")
+        func pack(_ amount: Quantity) -> ConfirmedPantryPack {
+            .init(id: UUID(), barcode: .init(symbology: "manual", value: "012345000058"), retailer: "",
+                  name: "Jar", size: amount, attribution: nil, confirmedAt: Date())
+        }
+        let exact = pack(size), otherVariant = pack(size)
+        let larger = pack(Quantity(amount: try Rational(750), unit: .gram, originalLiteral: "750"))
+        var shop = ShoppingLedger()
+        let typed = try shop.addManualLine(name: "Jar", quantity: size)
+        for candidate in [exact, otherVariant, larger] {
+            let staged = try PackRebuyDraft.stage(name: "Jar", count: 1, pack: candidate, shop: shop, id: UUID())
+            _ = try shop.commitImport(staged, decisions: [staged.lines[0].id: .addNew])
+        }
+        XCTAssertEqual(PackRebuyDraft.match(shop.lines[0], pack: exact, shop: shop), .unconfirmed)
+        XCTAssertEqual(shop.lines[0].id, typed)
+        XCTAssertFalse(PackRebuyDraft.canIncrease(shop.lines[0], pack: exact, shop: shop, confirmedUnlinked: false))
+        XCTAssertTrue(PackRebuyDraft.canIncrease(shop.lines[0], pack: exact, shop: shop, confirmedUnlinked: true))
+        XCTAssertEqual(PackRebuyDraft.match(shop.lines[1], pack: exact, shop: shop), .exact)
+        for sibling in shop.lines.suffix(2) {
+            XCTAssertEqual(PackRebuyDraft.match(sibling, pack: exact, shop: shop), .different)
+            XCTAssertFalse(PackRebuyDraft.canIncrease(sibling, pack: exact, shop: shop, confirmedUnlinked: true))
+        }
     }
 }

@@ -273,6 +273,26 @@ import LocalStore
         XCTAssertEqual(linked.received, q(8))
         XCTAssertEqual(linked.usable, q(6))
 
+        // Choosing the previous receipt immediately excludes this row even if the shopper closes its editor.
+        var repeatScan = PantryProductBatch(workspaceID: fixture.store.workspaceID)
+        XCTAssertTrue(try repeatScan.addManual(name: "Oats", code: "LOCAL-OATS"))
+        let prior = try XCTUnwrap(history.first { $0.name == "Oats" })
+        repeatScan.candidates[0].selectExistingReceipt(prior)
+        XCTAssertFalse(repeatScan.candidates[0].included)
+        XCTAssertFalse(repeatScan.candidates[0].receiptLinkSaved)
+        XCTAssertThrowsError(try repeatScan.draft(merchant: "Main", purchaseDate: now, confirmed: true))
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let scope = PantryDigestScope(origin: fixture.store.workspaceID, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let memory = PantryPackMemory(folder: directory)
+        let link = RecordedPackReceiptLink(id: repeatScan.candidates[0].id, receiptID: prior.receiptID, lineID: prior.lineID,
+            lotID: prior.lotID, code: try XCTUnwrap(repeatScan.candidates[0].barcode))
+        try memory.link(link, scope: scope) { true }
+        try memory.link(link, scope: scope) { true }
+        XCTAssertTrue(try memory.recent(scope).isEmpty, "Linking purchase evidence must not implicitly remember the pack")
+        XCTAssertEqual(try PantryPackMemory(folder: directory).receiptLinks(lotID: prior.lotID, scope: scope), [link])
+        XCTAssertEqual(reopened.snapshot?.lots.count, after.lots.count)
+
         // The same barcode on a genuinely different purchase remains available.
         var another = PantryProductBatch(workspaceID: fixture.store.workspaceID)
         XCTAssertTrue(try another.addManual(name: "Wraps", code: "LOCAL-WRAPS"))
@@ -404,5 +424,54 @@ import LocalStore
         let other = try PantryLiveStockProjection.build(snapshot: counted, mapping: fixture.mapping, journeyID: second.id, at: now)
         XCTAssertNil(other.confirmedQuantity(for: second.stockNeeds[0].id))
         XCTAssertFalse(try other.legacyAllocation().confirmedCoverageComplete)
+    }
+}
+
+extension PantryLiveStockProjectionTests {
+    func testReviewedAtHomePacksSaveTwoPhysicalLotsWithNoPurchaseAndReplayOnce() async throws {
+        let (fixture, _, _) = try await receiptFixture()
+        let pickup = try await receiptPickup(fixture)
+        let editor = try XCTUnwrap(pickup.makePantryModel())
+        await editor.load()
+        let previous = try XCTUnwrap(editor.snapshot).lots.count
+        let code = CapturedBarcode(symbology: "UPC-A", value: "012345000058")
+        let pack = ConfirmedPantryPack(id: UUID(), barcode: code, retailer: "", name: "Canned beans",
+            size: Quantity(amount: try Rational(375), unit: .gram, originalLiteral: "375"), attribution: nil, confirmedAt: now)
+        var intake = PantryProductBatch(workspaceID: fixture.store.workspaceID)
+        XCTAssertTrue(try intake.addScan(code))
+        intake.candidates[0].use(pack)
+        intake.candidates[0].packages = "2"
+        try intake.separate(intake.candidates[0].id)
+        intake.candidates[1].location = .fridge
+        let review = try await editor.reviewHomePacks(intake)
+        XCTAssertEqual(editor.snapshot?.lots.count, previous)
+        XCTAssertTrue(review.facts.isEmpty)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let scope = PantryDigestScope(origin: fixture.store.workspaceID, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let journal = PantryPackMemory(folder: folder)
+        let staged = try XCTUnwrap(ReviewedPackSave(review: review, intake: intake, scope: scope, atHome: true))
+        try journal.stage(staged, scope: scope) { true }
+        try await editor.saveReceipt(review)
+        let afterInterruption = try XCTUnwrap(PantryPackMemory(folder: folder).pending(scope))
+        let appliedBeforeRetry = try await editor.packSaveAlreadyApplied(afterInterruption)
+        XCTAssertTrue(appliedBeforeRetry)
+        try await editor.saveReceipt(afterInterruption.review)
+        try journal.clear(afterInterruption, scope: scope) { true }
+        XCTAssertNil(try journal.pending(scope))
+        let reopened = try XCTUnwrap(pickup.makePantryModel())
+        await reopened.load()
+        let lots = try XCTUnwrap(reopened.snapshot).lots.filter { $0.foodID == pack.id }
+        XCTAssertEqual(lots.count, 2)
+        XCTAssertEqual(Set(lots.map(\.location)), [.fridge, .cupboard])
+        XCTAssertEqual(Set(lots.map(\.id)), Set(intake.candidates.map(\.id)))
+        for lot in lots {
+            guard case .manual = lot.source else { return XCTFail("A home count cannot create purchase evidence") }
+            XCTAssertEqual(lot.count.quantity?.amount, try Rational(375))
+            XCTAssertEqual(lot.packageCode?.canonicalGTIN, code.canonicalGTIN)
+            XCTAssertNotNil(lot.intakeOrdinal)
+        }
+        let history = try await reopened.receiptHistory()
+        XCTAssertTrue(history.isEmpty)
     }
 }

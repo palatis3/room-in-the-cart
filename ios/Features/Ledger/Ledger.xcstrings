@@ -6308,6 +6308,22 @@
         }
       }
     },
+    "Your list has no items to buy.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your list has no items to buy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu lista no tiene artículos por comprar."
+          }
+        }
+      }
+    },
     "Your list has no items to buy. Apply this review to clear the checkout copy.": {
       "localizations": {
         "en": {

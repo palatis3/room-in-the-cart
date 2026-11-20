@@ -87,7 +87,7 @@ import CoreDomain
             if selection.isGrossOnlyPurchase {
                 guard (try? selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: bindings)) == true,
                       let line = basket.current.lines.first(where: { $0.id == selection.lineID }),
-                      line.quantity == selection.purchasedQuantity,
+                      selection.matchesAppliedPurchase(line, shop: shop),
                       line.expectedCost == selection.selectedResult.totalCost.map(CostEvidence.exact) else { return false }
                 continue
             }

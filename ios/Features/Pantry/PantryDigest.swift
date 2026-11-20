@@ -288,7 +288,10 @@ typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) a
                                     try AdultHomeSummaryStore.shared.invalidate(kind, origin: origin, forget: forget)
                                 })
     }()
+    let recipeProductMemory: TonightProductMemory
+    let packMemory: PantryPackMemory
     let packageDates: PantryPackageDateStore
+    let shelfPhotos: PantryShelfPhotoStore
     private let folder: URL
     private let scheduler: any PantryDigestScheduling
     private let now: () -> Date
@@ -302,7 +305,10 @@ typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) a
          invalidateHome: @escaping (AdultFoodSummaryKind, UUID, Bool) throws -> Void = { _, _, _ in }) {
         self.invalidateHome = invalidateHome
         self.folder = folder; self.scheduler = scheduler; self.now = now
+        recipeProductMemory = TonightProductMemory(folder: folder.appendingPathComponent("RecipeProducts", isDirectory: true))
+        packMemory = PantryPackMemory(folder: folder.appendingPathComponent("ConfirmedPacks", isDirectory: true))
         packageDates = PantryPackageDateStore(folder: folder.appendingPathComponent("PrintedDates", isDirectory: true))
+        shelfPhotos = PantryShelfPhotoStore(folder: folder.appendingPathComponent("ShelfPhotos", isDirectory: true))
     }
     private func file(_ scope: PantryDigestScope) -> URL {
         folder.appendingPathComponent(scope.origin.uuidString + "-" + scope.owner + ".json")
@@ -495,7 +501,25 @@ typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) a
 
     /// Called from the receipt-bound erasure cleanup, including recovery after process death.
     func erase(origin: UUID, whole: Bool, inventory: ComparisonStore) async throws {
+        if whole { try shelfPhotos.erase(origin: origin) }
         for kind in AdultFoodSummaryKind.allCases { try invalidateHome(kind, origin, whole) }
+        try await recipeProductMemory.erasePantry(origin, whole: whole) {
+            let basis = try await inventory.inventoryState()
+            var ids = Set<UUID>()
+            var cursor: UUID?
+            while true {
+                let page = try await inventory.inventoryRecords(kind: .lot, after: cursor, limit: 100)
+                for row in page { ids.insert(try PantryPersistenceCodec.lot(row).foodID) }
+                if page.count < 100 {
+                    guard try await inventory.inventoryState() == basis else { throw PantryDigestFailure.changed }
+                    return ids
+                }
+                cursor = page.last?.key.id
+            }
+        }
+        try await packMemory.erase(origin: origin, whole: whole) { lot in
+            try await inventory.inventoryRecord(.init(.lot, lot)) != nil
+        }
         try await packageDates.erase(origin: origin, whole: whole) { lot in
             try await inventory.inventoryRecord(.init(.lot, lot)) != nil
         }

@@ -2,7 +2,7 @@ import XCTest
 @testable import HouseholdClient
 
 extension HouseholdClientTests {
-    private func connectAdultPickup(shop: UUID, capabilities: [String], handle: @escaping MockURLProtocol.Handler) async throws -> (HouseholdService, AdultShopRequestSession) {
+    func connectAdultPickup(shop: UUID, capabilities: [String], role: String = "contributor", handle: @escaping MockURLProtocol.Handler) async throws -> (HouseholdService, AdultShopRequestSession) {
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
                                        auth: auth, deviceVault: MemoryVault(), transport: transport())
@@ -17,7 +17,7 @@ extension HouseholdClientTests {
                 return (200, try JSONSerialization.data(withJSONObject: [
                     "household": ["id": self.household, "label": "Home"], "memberId": self.member, "enrolled": true,
                     "shopId": request.value(forHTTPHeaderField: "X-Shop-ID") ?? shop.uuidString,
-                    "role": "contributor", "capabilities": capabilities, "queueConsent": false
+                    "role": role, "capabilities": capabilities, "queueConsent": false
                 ]))
             }
             XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), "token")

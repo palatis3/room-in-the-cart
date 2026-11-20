@@ -96,6 +96,7 @@ public struct InventoryBatch: Codable, Equatable, Sendable {
     public let writes: [InventoryWrite]
     public let erasures: [InventoryErase]
     public let comparisons: [InventoryComparisonEffect]
+    public let reviewedReceipt: ReviewedPutawayReceipt?
     public let price: InventoryPriceRow?
     public let receiptBindings: [InventoryReceiptBinding]?
     public let aliasEdit: InventoryReceiptAliasEdit?
@@ -103,9 +104,10 @@ public struct InventoryBatch: Codable, Equatable, Sendable {
     public init(workspaceID: UUID, operationID: UUID, expectedRevision: Int64, request: Data, mode: Mode = .mutate,
                 sourceToken: InventorySourceToken? = nil, writes: [InventoryWrite] = [],
                 erasures: [InventoryErase] = [], comparisons: [InventoryComparisonEffect] = [], acquisitions: [InventoryAcquisitionRow] = [],
-                aliasEdit: InventoryReceiptAliasEdit? = nil, price: InventoryPriceRow? = nil, receiptBindings: [InventoryReceiptBinding] = []) {
+                aliasEdit: InventoryReceiptAliasEdit? = nil, price: InventoryPriceRow? = nil, receiptBindings: [InventoryReceiptBinding] = [], reviewedReceipt: ReviewedPutawayReceipt? = nil) {
         self.workspaceID = workspaceID; self.operationID = operationID; self.expectedRevision = expectedRevision
         self.mode = mode; self.request = request; self.sourceToken = sourceToken; self.writes = writes; self.erasures = erasures; self.comparisons = comparisons
+        self.reviewedReceipt = reviewedReceipt
         self.price = price
         self.receiptBindings = receiptBindings.isEmpty ? nil : receiptBindings
         self.aliasEdit = aliasEdit
@@ -290,6 +292,7 @@ extension ComparisonStore {
             if let edit = batch.aliasEdit { try database.applyReceiptAlias(edit) }
             for row in batch.acquisitions ?? [] { try database.insertAcquisition(row) }
             for binding in batch.receiptBindings ?? [] { try database.bindReceipt(binding) }
+            if let review = batch.reviewedReceipt { try database.savePutaway(review) }
             if let price = batch.price { try database.insertPrice(price) }
             var comparisonHeads: [UUID: Int64] = [:]
             for effect in batch.comparisons {
@@ -330,7 +333,7 @@ extension ComparisonStore {
         guard batch.workspaceID == workspaceID, batch.expectedRevision >= 0, date.timeIntervalSinceReferenceDate.isFinite,
               !batch.request.isEmpty, batch.request.count <= InventoryPersistenceLimits.requestBytes,
               batch.writes.count + batch.erasures.count + batch.comparisons.count + (batch.acquisitions?.count ?? 0) <= InventoryPersistenceLimits.batchItems,
-              batch.mode == .activate || batch.receiptBindings != nil || batch.price != nil || batch.aliasEdit != nil || batch.acquisitions?.isEmpty == false || !batch.writes.isEmpty || !batch.erasures.isEmpty || !batch.comparisons.isEmpty,
+              batch.mode == .activate || batch.reviewedReceipt != nil || batch.receiptBindings != nil || batch.price != nil || batch.aliasEdit != nil || batch.acquisitions?.isEmpty == false || !batch.writes.isEmpty || !batch.erasures.isEmpty || !batch.comparisons.isEmpty,
               (batch.mode == .activate) == (batch.sourceToken != nil),
               batch.sourceToken.map({ $0.workspaceID == workspaceID && $0.generation >= 0 && $0.digest.count == 32 }) ?? true,
               Set(batch.writes.map(\.record.key) + batch.erasures.map(\.key)).count == batch.writes.count + batch.erasures.count,
@@ -360,6 +363,13 @@ extension ComparisonStore {
                   bindings.allSatisfy({ (0..<4000).contains($0.ordinal) && ($0.fileDigest.map { $0.utf8.count == 64 && $0.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) } } ?? true) }) else { throw ComparisonStoreError.invalidInput }
         }
         var rawBytes = batch.request.count + (batch.price?.payload.count ?? 0) + (batch.receiptBindings?.count ?? 0) * 300
+        if let review = batch.reviewedReceipt {
+            guard batch.mode == .mutate, batch.aliasEdit == nil, batch.price == nil, batch.erasures.isEmpty,
+                  batch.comparisons.isEmpty else { throw ComparisonStoreError.invalidInput }
+            try review.validate()
+            rawBytes += try inventoryCanonical(review).count
+            guard rawBytes <= InventoryPersistenceLimits.batchBytes else { throw ComparisonStoreError.payloadTooLarge }
+        }
         if let rows = batch.acquisitions {
             guard !rows.isEmpty, batch.mode == .mutate, batch.erasures.isEmpty, batch.comparisons.isEmpty,
                   Set(rows.map(\.id)).count == rows.count else { throw ComparisonStoreError.invalidInput }

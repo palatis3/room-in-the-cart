@@ -1,3 +1,5 @@
+import {tripSubstitution} from './trip-substitutions.js';
+import {sharedPickingRoute} from './shared-picking.js';
 import {lastCallRoute,productReferenceRoute} from './adult-pickup.js';
 import {moderationAction,recordModerationAction} from './moderation.js';
 import {householdTonight,saveTonightRecipe} from './household-tonight.js';
@@ -490,6 +492,9 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          const substitution=/^\/requests\/([^/]+)\/substitution$/.exec(tail??'');
+          if(substitution)return tripSubstitution(repository,ctx,await repository.shop(ctx,shopId),uuid.parse(substitution[1]),method,payload);
+          if(tail?.startsWith('/shared-picking'))return sharedPickingRoute(repository,ctx,await repository.shop(ctx,shopId),tail,method,payload);
           if(tail==='/last-call'||tail==='/last-call/response')return lastCallRoute(repository,ctx,await repository.shop(ctx,shopId),tail,method,payload);
           const product=/^\/requests\/([^/]+)\/product-reference(?:\/(remove|moderation))?$/.exec(tail??'');
           if(product)return productReferenceRoute(repository,ctx,await repository.shop(ctx,shopId),uuid.parse(product[1]),product[2],method,payload);

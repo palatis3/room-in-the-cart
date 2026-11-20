@@ -15,13 +15,18 @@ enum DinnerCurrentMeal: Equatable, Identifiable {
 
 struct DinnerCurrentMeals: Equatable {
     let all: [DinnerCurrentMeal]
+    var cooked: [InventoryReservation] = []
+    func cooked(on day: MealDay) -> [InventoryReservation] {
+        cooked.filter { $0.cookedDinner?.day.hasSameCivilDate(as: day) == true }
+    }
     func on(_ day: MealDay) -> [DinnerCurrentMeal] { all.filter { $0.scheduledDay?.hasSameCivilDate(as: day) == true } }
     var unscheduled: [DinnerCurrentMeal] { all.filter { $0.scheduledDay == nil } }
     func occurrence(_ id: UUID) throws -> DinnerCurrentMeal {
         guard let value = all.first(where: { $0.id == id }) else { throw PickupMealRecoveryError.sourceChanged }
         return value
     }
-    static func project(shop: ShoppingLedger, definitions: [PickupRecoveryMealDefinition], recovered: Set<UUID>) throws -> Self {
+    static func project(shop: ShoppingLedger, definitions: [PickupRecoveryMealDefinition], recovered: Set<UUID>,
+                        cooked: [InventoryReservation] = []) throws -> Self {
         let active = shop.mealOccurrences.filter { $0.removedAt == nil }
         guard Set(active.map(\.id)).count == active.count,
               Set(definitions.map { $0.meal.id }).count == definitions.count,
@@ -30,7 +35,7 @@ struct DinnerCurrentMeals: Equatable {
             guard recovered.contains(original.id) else { return .original(original) }
             guard let current = definitions.first(where: { $0.meal.id == original.id }) else { throw PickupMealRecoveryError.sourceChanged }
             return .recovered(original: original, current: current)
-        })
+        }, cooked: cooked)
     }
 }
 
@@ -64,13 +69,14 @@ extension DinnerFeatureModel {
             return try .project(shop: shop, definitions: [], recovered: [])
         }
         guard pickup.ready else { throw PickupMealRecoveryError.unavailable }
+        let cooked = try cookedDinners(pickup: pickup)
         guard let journey = pickup.journeys.first(where: { $0.id == shop.id }), let history = journey.mealRecovery else {
-            return try .project(shop: shop, definitions: [], recovered: [])
+            return try .project(shop: shop, definitions: [], recovered: [], cooked: cooked)
         }
         guard pickup.selectedID == shop.id,
               pickup.recoveryLedger?.sourceWorkspaceID == store.sourceWorkspaceID,
               pickup.recoveryLedger?.shop == shop else { throw PickupMealRecoveryError.sourceChanged }
         return try .project(shop: shop, definitions: pickup.recoveryDefinitions(),
-            recovered: Set(history.domain.events.map { $0.request.target.id }))
+            recovered: Set(history.domain.events.map { $0.request.target.id }), cooked: cooked)
     }
 }

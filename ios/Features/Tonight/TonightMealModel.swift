@@ -22,6 +22,13 @@ import RecordArchive
         let id: UUID
         let name: String
         let detail: String
+        var productUnit: UnitOfMeasure?
+        var packIdentity: [String] = []
+        var packLabel: String?
+        var productDigest: String? {
+            guard let productUnit else { return nil }
+            return try? ArchiveCodec.digest(ArchiveCodec.canonical([productUnit.rawValue, name] + packIdentity))
+        }
     }
     struct Source: Identifiable, Equatable {
         let id: String
@@ -41,6 +48,7 @@ import RecordArchive
         let unresolvedFoods: Set<UUID>
         let sources: [Source]
         var feedbackOwner: String? = nil
+        var rememberedProducts: [RecipeProductMatch] = []
     }
     enum Failure: Error { case unavailable, stale, recipeChanged }
     @Published private(set) var input: Input?
@@ -52,6 +60,8 @@ import RecordArchive
     @Published private(set) var busy = false
     @Published private(set) var failed = false
     private var generation = UUID()
+    private var manualMatches: [UUID: [UUID: UUID]] = [:]
+    private var overriddenIngredients: [UUID: Set<UUID>] = [:]
     private var selectedVersions: [UUID: MealTemplate] = [:]
     private var foodEvidence: [UUID: MealEligibilityEvidence] = [:]
 
@@ -85,7 +95,7 @@ import RecordArchive
     func selectVersion(_ source: SavedRecipe) throws {
         guard savedRecipes.contains(source) else { throw Failure.recipeChanged }
         selectedVersions[source.template.id] = source.template
-        matches[source.template.id] = nil
+        manualMatches[source.template.id] = nil; overriddenIngredients[source.template.id] = nil
         try rebuild()
     }
     var suggestions: [PantryMealMatcher.Review] {
@@ -114,7 +124,7 @@ import RecordArchive
     }
     func invalidate() {
         clearPairing()
-        generation = UUID(); input = nil; matches = [:]; foodEvidence = [:]; selectedVersions = [:]; reviews = []; busy = false; failed = false
+        generation = UUID(); input = nil; matches = [:]; manualMatches = [:]; overriddenIngredients = [:]; foodEvidence = [:]; selectedVersions = [:]; reviews = []; busy = false; failed = false
     }
     func refresh(authorize: @escaping () -> Bool, load: () async throws -> Input) async {
         guard authorize() else { invalidate(); return }
@@ -127,9 +137,9 @@ import RecordArchive
             guard token == generation else { return }
             guard authorize() else { invalidate(); return }
             let identicalInput = input == next
-            if !identicalInput, let old = input, old.basis != next.basis || old.workspace.withoutMealFeedback() != next.workspace.withoutMealFeedback() || old.sources != next.sources {
+            if !identicalInput, let old = input, old.basis != next.basis || old.workspace.withoutMealFeedback().withoutRecipeShortcuts() != next.workspace.withoutMealFeedback().withoutRecipeShortcuts() || old.feedbackOwner != next.feedbackOwner || old.foods != next.foods || old.freeLots != next.freeLots || old.unresolvedFoods != next.unresolvedFoods || old.sources != next.sources {
                 clearPairing()
-                matches = [:]; foodEvidence = [:]; selectedVersions = [:]
+                matches = [:]; manualMatches = [:]; overriddenIngredients = [:]; foodEvidence = [:]; selectedVersions = [:]
             }
             input = next
             try rebuild(retainingCharges: identicalInput)
@@ -137,14 +147,15 @@ import RecordArchive
         } catch {
             guard token == generation else { return }
             clearPairing()
-            input = nil; reviews = []; matches = [:]; foodEvidence = [:]; selectedVersions = [:]; failed = true
+            input = nil; reviews = []; matches = [:]; manualMatches = [:]; overriddenIngredients = [:]; foodEvidence = [:]; selectedVersions = [:]; failed = true
         }
     }
     func match(recipeID: UUID, ingredientID: UUID, foodID: UUID?) throws {
         guard let input, let recipe = recipes.first(where: { $0.id == recipeID }),
-              recipe.ingredients.contains(where: { $0.id == ingredientID }),
+              recipe.ingredients.contains(where: { $0.id == ingredientID && $0.checkedWithoutAmount != true }),
               foodID == nil || input.foods.contains(where: { $0.id == foodID }) else { throw Failure.stale }
-        matches[recipeID, default: [:]][ingredientID] = foodID
+        manualMatches[recipeID, default: [:]][ingredientID] = foodID
+        overriddenIngredients[recipeID, default: []].insert(ingredientID)
         try rebuild()
     }
     /// Allocation coverage can normalize repeated ingredients to a shared unit.
@@ -170,9 +181,7 @@ import RecordArchive
         }
     }
     static func canChoose(_ review: PantryMealMatcher.Review) -> Bool {
-        review.eligibility.eligible && review.hasConfirmedPantryFood && !review.recipe.ingredients.isEmpty &&
-            review.recipe.ingredients.allSatisfy { $0.quantity != nil } &&
-            review.ingredients.allSatisfy { !$0.hasUnresolvedStock && ($0.coverage?.issues.isEmpty ?? true) }
+        review.canChooseUsingPantry
     }
     func reviewFood(_ food: Food, evidence: MealEligibilityEvidence, original: Input) throws {
         guard let input, input.basis == original.basis, input.workspace == original.workspace,
@@ -182,16 +191,65 @@ import RecordArchive
         try rebuild()
     }
     func assertCurrent(_ original: Input, recipe: MealTemplate, matches originalMatches: [UUID: UUID]) throws {
-        guard let input, original.basis == input.basis, original.workspace == input.workspace,
-              original.sources == input.sources, recipes.contains(recipe), matches[recipe.id, default: [:]] == originalMatches else { throw Failure.stale }
+        guard let input, original.basis == input.basis, original.workspace.withoutRecipeShortcuts() == input.workspace.withoutRecipeShortcuts(),
+              original.sources == input.sources, original.rememberedProducts == input.rememberedProducts, original.foods == input.foods, recipes.contains(recipe), matches[recipe.id, default: [:]] == originalMatches else { throw Failure.stale }
     }
     private func rebuild(retainingCharges: Bool = false) throws {
         guard let input else { return }
+        matches = manualMatches
+        if let owner = input.feedbackOwner, !input.rememberedProducts.isEmpty {
+            let byRecipe = Dictionary(grouping: input.rememberedProducts.filter {
+                $0.key.owner == owner && $0.key.pantryID == input.basis.originID
+            }, by: \.key.recipeID)
+            for recipe in recipes {
+                guard let saved = byRecipe[recipe.id] else { continue }
+                let digest = try ArchiveCodec.digest(ArchiveCodec.canonical(recipe))
+                for entry in saved {
+                    guard entry.recipeRevision == recipe.revision, entry.recipeDigest == digest,
+                          overriddenIngredients[recipe.id]?.contains(entry.key.ingredientID) != true,
+                          let ingredient = recipe.ingredients.first(where: { $0.id == entry.key.ingredientID }),
+                          let food = input.foods.first(where: { $0.id == entry.foodID }),
+                          food.productDigest == entry.productDigest, usableProduct(food, for: ingredient, recipe: recipe, input: input)
+                    else { continue }
+                    matches[recipe.id, default: [:]][ingredient.id] = food.id
+                }
+            }
+        }
         reviews = try evaluate(recipes, lots: input.freeLots, input: input)
         if let firstRecipeID {
             if retainingCharges { try updateFollowingMeals(after: firstRecipeID) }
             else { try showFollowingMeals(after: firstRecipeID) }
         }
+    }
+    func matchKey(recipe: MealTemplate, ingredient: MealIngredient) -> RecipeProductMatch.Key? {
+        guard let input, let owner = input.feedbackOwner else { return nil }
+        return .init(owner: owner, pantryID: input.basis.originID, recipeID: recipe.id, ingredientID: ingredient.id)
+    }
+    func storedProduct(_ key: RecipeProductMatch.Key) -> RecipeProductMatch? {
+        input?.rememberedProducts.first { $0.key == key }
+    }
+    private func usableProduct(_ food: Food, for ingredient: MealIngredient, recipe: MealTemplate, input: Input) -> Bool {
+        guard ingredient.quantity != nil, food.productDigest != nil, !input.unresolvedFoods.contains(food.id),
+              input.freeLots.contains(where: { $0.foodID == food.id && $0.usable.amount > .zero }) else { return false }
+        var rules = MealPreferenceSettings()
+        rules.exclusions = recipe.exclusions + ingredient.exclusions
+        let evidence = foodEvidence[food.id]
+        return MealEligibilityPolicy.evaluate(profile: input.workspace.dinnerPlanning.privateMealPreferences, template: recipe).eligible &&
+            MealEligibilityPolicy.evaluateFood(profile: input.workspace.dinnerPlanning.privateMealPreferences, labels: [food.name], evidence: evidence).eligible &&
+            MealEligibilityPolicy.evaluateFood(profile: .init(settings: rules), labels: [food.name], evidence: evidence).eligible
+    }
+    func rememberedCandidate(recipe: MealTemplate, ingredient: MealIngredient) -> RecipeProductMatch? {
+        guard let input, let key = matchKey(recipe: recipe, ingredient: ingredient),
+              let id = matches[recipe.id]?[ingredient.id], let food = input.foods.first(where: { $0.id == id }),
+              let product = food.productDigest, usableProduct(food, for: ingredient, recipe: recipe, input: input),
+              reviews.first(where: { $0.recipe == recipe })?.ingredients.first(where: { $0.id == ingredient.id })?.hasConfirmedStock == true,
+              let digest = try? ArchiveCodec.digest(ArchiveCodec.canonical(recipe)) else { return nil }
+        return .init(key: key, recipeRevision: recipe.revision, recipeDigest: digest, foodID: id, productDigest: product)
+    }
+    func clearSelectionAfterForgetting(_ key: RecipeProductMatch.Key) {
+        manualMatches[key.recipeID]?[key.ingredientID] = nil
+        overriddenIngredients[key.recipeID, default: []].insert(key.ingredientID)
+        try? rebuild()
     }
     private func evaluate(_ recipes: [MealTemplate], lots: [ConfirmedStockLot], input: Input) throws -> [PantryMealMatcher.Review] {
         try recipes.map {
@@ -222,12 +280,13 @@ import RecordArchive
         firstRecipeID = recipeID
     }
     static func input(workspace: LedgerWorkspace, ledgerRevision: Int64,
-                      context: PantryPackStockReview.Context, sources: [Source]) throws -> Input {
+                      context: PantryPackStockReview.Context, sources: [Source], confirmedPacks: [ConfirmedPantryPack]? = []) throws -> Input {
         let live = try PantryLiveStockProjection.buildGlobal(snapshot: context.snapshot, mapping: context.mapping, at: context.asOf)
         let basis = LedgerCanonicalPackStockEvidence.Basis(originID: live.basis.originID,
             inventoryRevision: live.basis.inventoryRevision,
             sourceHeads: live.basis.sourceHeads.map { .init(journeyID: $0.journeyID, revision: $0.storeRevision) })
         let grouped = Dictionary(grouping: live.lots, by: { $0.current.foodID })
+        let packs = Dictionary(grouping: confirmedPacks ?? [], by: \.id)
         var foods: [Food] = []
         for (foodID, rows) in grouped {
             var names: [String] = []
@@ -236,10 +295,17 @@ import RecordArchive
                 names.append(row.current.name)
                 let count: String = pantryCount(row.current.count)
                 let date: String = row.current.confirmedAt.formatted(date: .abbreviated, time: .shortened)
-                details.append(count + " · " + date)
+                details.append([pantryLocationName(row.current.location), count, date].joined(separator: " · "))
             }
-            let name = names.sorted().joined(separator: " / ")
-            foods.append(Food(id: foodID, name: name, detail: details.joined(separator: "\n")))
+            let distinctNames = Set(names)
+            let name = distinctNames.sorted().joined(separator: " / ")
+            let units = Set(rows.map { $0.current.unit })
+            let variants = packs[foodID, default: []]
+            let pack = variants.first
+            let canRemember = distinctNames.count == 1 && units.count == 1 && confirmedPacks != nil && variants.count <= 1
+            let identity = pack.map { [$0.key ?? "", $0.name, $0.size.amount.description, $0.size.unit.rawValue] } ?? []
+            foods.append(Food(id: foodID, name: name, detail: details.joined(separator: "\n"),
+                              productUnit: canRemember ? units.first : nil, packIdentity: identity, packLabel: pack?.label))
         }
         foods.sort { left, right in
             if left.name == right.name { return left.id.uuidString < right.id.uuidString }

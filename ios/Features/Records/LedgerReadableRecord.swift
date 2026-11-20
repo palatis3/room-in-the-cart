@@ -84,7 +84,7 @@ import CoreDomain
 
         if shop.lines.contains(where: { $0.pickedPrice != nil }) {
             let subtotal = shop.pickedCartSubtotal
-            lines.append(shoppingFormat("%@ for %lld of %lld picked items", moneyText(subtotal.total), Int64(subtotal.priced), Int64(subtotal.picked)))
+            lines.append(pickedSubtotalText(subtotal))
             lines.append(shoppingText("Entered item totals before checkout charges."))
         }
 

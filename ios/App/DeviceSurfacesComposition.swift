@@ -567,6 +567,7 @@ import DeviceSurfaces
         try routes?.remove(row.route.handle)
     }
     func eraseLedgerWorkspace(_ id: UUID) async throws {
+        try PantryDigestStore.shared.recipeProductMemory.eraseLedger(id)
         try homeSummaries.invalidateLedger(id, forget: true)
         // Replayed by foreground tombstone reconciliation and Records deletion.
         try await CaptureMediaStore.shared.eraseWorkspace(id)

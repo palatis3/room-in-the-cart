@@ -55,16 +55,25 @@ enum LedgerCheckoutAdapter {
                        packSelections: [LedgerPackSelection] = [], workspaceID: UUID? = nil, pickupWorkspaceID: UUID? = nil, bindings: [DinnerPortionBinding] = [],
                        canonicalEvidence: [UUID: LedgerCanonicalPackStockEvidence] = [:], pantryIsActive: Bool = false) throws -> LedgerCheckoutReview {
         try shop.validate()
-        let activeLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
+        let handChecked = shop.handCheckedOnlyLineIDs
+        let sourceNeedLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
+        let activeLines = shop.purchaseReviewLines.filter(shop.belongsInCurrentBasket)
+        let activeByID = Dictionary(uniqueKeysWithValues: activeLines.map { ($0.id, $0) })
         // Trashed and handled rows both leave the editable list. A saved basket
         // still needs a review that can remove its final purchase.
         let canReviewRemovals = previous?.id == shop.id && previous?.basket != nil && !shop.lines.isEmpty
         guard !activeLines.isEmpty || canReviewRemovals else { throw LedgerCheckoutError.emptyList }
         let sameBasis = previous?.ledgerBasis == shop.basis
+        let itemPackages = shop.itemPackages
         var selectedPacks: [UUID: LedgerPackSelection] = [:]
         for selection in packSelections where selection.shopID == shop.id {
             try selection.validateReference(in: shop)
-            guard let workspaceID else { continue }
+            guard let line = activeByID[selection.lineID], let workspaceID else { continue }
+            if let pick = line.tripPick {
+                guard let packages = try shop.physicalPackages(for: line, requested: shop.quantity(forLineID: line.id),
+                                                               sourcePackages: itemPackages[line.id] ?? []),
+                      try selection.describes(pick, packages: packages) else { continue }
+            }
             if pantryIsActive, selection.isGrossOnlyPurchase {
                 if try selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: bindings) {
                     selectedPacks[selection.lineID] = selection
@@ -78,29 +87,37 @@ enum LedgerCheckoutAdapter {
         let priorPackLineIDs = Set(previous?.ledgerPackSelections.map(\.lineID) ?? [])
         let reviewedPackLineIDs = Set(packSelections.filter { $0.shopID == shop.id }.map(\.lineID)).union(priorPackLineIDs)
         let itemExclusions = shop.itemExclusions
-        let itemPackages = shop.itemPackages
         let sourceLines = try activeLines.compactMap { line -> BasketLine? in
             if selectedPacks[line.id]?.isNoPurchase == true { return nil }
-            guard let quantity = try shop.quantity(forLineID: line.id) else { throw LedgerCheckoutError.missingQuantity }
+            let requested = try shop.quantity(forLineID: line.id)
+            guard let quantity = line.tripPick?.amount ?? requested else { throw LedgerCheckoutError.missingQuantity }
             let exclusions = itemExclusions[line.id] ?? []
             if let selection = selectedPacks[line.id], let purchased = selection.purchasedQuantity, let price = selection.selectedResult.totalCost {
                 let offer = selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA : selection.request.offerB
                 guard let count = selection.selectedResult.packsToBuy, let size = offer.usableQuantity else { throw LedgerPackError.invalidEvidence }
                 let packs = [BasketPackage(count: count, amountPerPack: size.amount, unit: size.unit)]
-                return BasketLine(id: line.id, name: line.name, quantity: purchased, expectedCost: .exact(price),
+                return BasketLine(id: line.id, name: line.name, quantity: line.tripPick?.amount ?? purchased, expectedCost: .exact(price),
                                   itemExclusions: exclusions, packages: packs)
             }
-            let packs = itemPackages[line.id] ?? []
-            let old = previous?.basket?.current.lines.first {
-                $0.id == line.id && $0.name == line.name && $0.quantity == quantity && ($0.itemExclusions ?? []) == exclusions && ($0.packages ?? []) == packs
+            let sourcePacks = itemPackages[line.id] ?? []
+            let packs = try line.tripPick == nil ? sourcePacks : shop.physicalPackages(for: line, requested: requested, sourcePackages: sourcePacks) ?? []
+            let old = previous?.basket?.current.lines.first { old in
+                let matchesPick = line.tripPick != nil && old.quantity.unit == quantity.unit &&
+                    old.quantity.amount == quantity.amount && old.quantity.confirmedConversion == quantity.confirmedConversion
+                return old.id == line.id && old.name == line.name && (old.quantity == quantity || matchesPick) &&
+                    (old.itemExclusions ?? []) == exclusions && (old.packages ?? []) == packs
             }
+            let retainedCost = sameBasis && !priorPackLineIDs.contains(line.id) ? old?.expectedCost : nil
             return BasketLine(id: line.id, name: line.name, quantity: quantity,
-                              expectedCost: sameBasis && !priorPackLineIDs.contains(line.id) ? old?.expectedCost ?? .unknown(reason: pTr("Recheck the price for this shop")) : .unknown(reason: pTr("Recheck the price for this shop")),
+                              expectedCost: retainedCost ?? .unknown(reason: pTr("Recheck the price for this shop")),
                               itemExclusions: exclusions, packages: packs)
         }
         var needs: [AllocationNeed] = [], details: [PickupNeedDetail] = []
-        for line in activeLines {
-            guard let sourceQuantity = try shop.quantity(forLineID: line.id) else { throw LedgerCheckoutError.missingQuantity }
+        for line in sourceNeedLines where !handChecked.contains(line.id) {
+            guard let sourceQuantity = try shop.quantity(forLineID: line.id) else {
+                if activeByID[line.id] == nil { continue }
+                throw LedgerCheckoutError.missingQuantity
+            }
             let sourceAmount = sourceQuantity.amount
             let named = try namedReservations(shop: shop, lineID: line.id, unit: sourceQuantity.unit, bindings: bindings)
             let namedAmount = named.amount
@@ -136,7 +153,7 @@ enum LedgerCheckoutAdapter {
             }
         }
         let lines = sourceLines.filter { !deferredLineIDs.contains($0.id) }
-        let plannedNeeds = needs.filter { !deferredLineIDs.contains($0.orderLineID) }
+        let plannedNeeds = needs.filter { activeByID[$0.orderLineID] != nil && !deferredLineIDs.contains($0.orderLineID) }
         let preview = shop.basis.retailerPreview
         guard let observedAt = preview?.capturedAt ?? shop.revisions.last?.createdAt else { throw LedgerCheckoutError.staleSource }
         let mode: ShoppingMode
@@ -213,6 +230,7 @@ enum LedgerCheckoutAdapter {
         var needs: [AllocationNeed] = [], details: [PickupNeedDetail] = []
         var namedAmount = Rational.zero
         for contribution in shop.contributions(forLineID: lineID) {
+            if contribution.isHandCheckedUnmeasuredIngredient { continue }
             guard contribution.source.isMeal || contribution.source.isProtected else { continue }
             guard let quantity = contribution.quantity, let amount = try quantity.converted(to: unit) else { throw LedgerCheckoutError.missingQuantity }
             namedAmount = try namedAmount.adding(amount)
@@ -350,6 +368,7 @@ struct LedgerCheckoutEntry: View {
                     }
                     Section(pTr("Shopping list")) {
                         let restrictions = shop.listExclusions
+                        let handChecked = shop.handCheckedOnlyLineIDs
                         ForEach(shop.lines.filter { !$0.isTrashed && !$0.isHandled }) { line in
                             NavigationLink { LedgerIngredientView(model: ledger, shopID: shop.id, lineID: line.id) } label: {
                                 VStack(alignment: .leading) {
@@ -358,9 +377,21 @@ struct LedgerCheckoutEntry: View {
                                         Text(ledgerText("Deferred to a later shop"))
                                     }
                                     if let exclusion = restrictions[line.id] { Text(verbatim: exclusion) }
-                                    Text((try? shop.quantity(forLineID: line.id)).map { pQuantity($0) } ?? pTr("Quantity unresolved"))
+                                    let requested = try? shop.quantity(forLineID: line.id)
+                                    if handChecked.contains(line.id) {
+                                        Text(tonightText("Checked by hand · unmeasured"))
+                                        if let pick = line.tripPick {
+                                            Text(shelfFormat("Picked · %@", pQuantity(pick.amount)))
+                                        }
+                                    } else if let requested, let pick = line.tripPick,
+                                              (try? pick.amount.converted(to: requested.unit)) != requested.amount {
+                                        Text(shelfFormat("Requested · %@", pQuantity(requested)))
+                                        Text(shelfFormat("Picked · %@", pQuantity(pick.amount)))
+                                    } else {
+                                        Text(requested.map { pQuantity($0) } ?? pTr("Quantity unresolved"))
+                                    }
                                 }
-                            }
+                            }.accessibilityIdentifier("checkoutReview.line.\(line.id)")
                         }
                     }
                     if pickup.journeys.contains(where: { $0.id == shop.id }) {
@@ -469,6 +500,8 @@ struct LedgerCheckoutEntry: View {
             } else { review = value; error = nil }
         } catch LedgerCheckoutError.changedDeferredLine(let name) {
             self.error = ledgerFormat("%@ changed on the list after it was deferred. Open the saved checkout and undo its deferral before reviewing these changes.", name)
+        } catch LedgerCheckoutError.emptyList {
+            self.error = ledgerText("Your list has no items to buy.")
         } catch { self.error = pTr("Review quantities, units and named portions. Unknown or overallocated amounts have not been replaced with zero.") }
     }
     @MainActor private func apply(_ review: LedgerCheckoutReview) async {

@@ -64,17 +64,10 @@ import XCTest
         XCTAssertTrue(prepare.isEnabled, "Prepare must become available after the selected-media privacy disclosure")
         capture("F07 Prepare available after private-content disclosure")
         tap(prepare)
-        let saveDeadline = ProcessInfo.processInfo.systemUptime + 12
+        XCTAssertTrue(waitForLabel("records.status", "Your file is ready to review and save."))
         let save = element("records.saveFile")
-        capture("F07 Form immediately after Prepare")
-        if !save.exists {
-            // The Form can reflow after preparation and omit offscreen rows from accessibility.
-            scrollContent(upward: true, distanceFraction: 0.35)
-        }
-        let remaining = saveDeadline - ProcessInfo.processInfo.systemUptime
-        XCTAssertTrue(remaining > 0 && save.waitForExistence(timeout: remaining),
-                      "Save file must appear within 12 seconds after Prepare")
-        reveal(save)
+        capture("F07 ready result before scrolling to Save")
+        reveal(save, upward: true)
         XCTAssertTrue(app.staticTexts["Private owner file ready"].exists)
         capture("F07 encrypted recovery prepared after private-content disclosure")
         tap(save)

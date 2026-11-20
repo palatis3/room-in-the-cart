@@ -127,6 +127,7 @@ private struct PantryErasureImpactView: View {
         }
         pickupRows(recordsText("Pickups to delete"), review.pickups)
         if case .wholeOrigin = review.selection {
+            Text(shelfPhotoText("Deleting this pantry also deletes its saved shelf photos."))
             rows(recordsText("Meal reservations to delete"), review.affectedReservationNames)
         } else {
             rows(recordsText("Reservations whose history or backing will change"), review.affectedReservationNames)

@@ -76,9 +76,15 @@ import XCTest
         fill(wording, into: "packageDate.wording")
         let done = app.buttons["packageDate.done"]
         if done.exists { tap(done) }
-        XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
+        // Leave both possible interpretations unselected. Only the literal label should survive reopening.
+        reveal(app.buttons["4 de marzo"])
+        reveal(app.buttons["3 de abril"])
+        XCTAssertFalse(app.textFields["packageDate.year"].exists)
         tap(app.buttons["packageDate.save"])
-        XCTAssertTrue(app.staticTexts[wording].waitForExistence(timeout: 8))
+        let original = "Texto impreso original"
+        let printedWording = app.descendants(matching: .any).matching(NSPredicate(format:
+            "label == %@ OR (label == %@ AND value == %@)", original + ", " + wording, original, wording)).firstMatch
+        reveal(printedWording)
         app.terminate()
         openPantry(reset: false, spanish: true)
         for (id, name) in [(recorded, "Salsa de tomate clásica"), (unrecorded, "Salsa de tomate picante")] {
@@ -88,9 +94,13 @@ import XCTest
             assertTranscript(question)
             XCTAssertFalse(element("pantry.voiceOriginal.0").exists)
             XCTAssertFalse(element("pantry.voiceDateResult").exists)
-            tap(element("pantry.voiceLot.0"))
-            let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
+            let picker = app.buttons["pantry.voiceLot.0"]
+            reveal(picker)
+            picker.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+            let choice = app.buttons.matching(NSPredicate(format: "label BEGINSWITH[cd] %@", name + " · ")).firstMatch
+            XCTAssertTrue(choice.waitForExistence(timeout: 5), app.debugDescription)
             tap(choice)
+            XCTAssertTrue(picker.label.localizedCaseInsensitiveContains(name), picker.label)
             tap(app.buttons["pantry.voiceDate"])
             let result = element("pantry.voiceDateResult")
             XCTAssertTrue(result.waitForExistence(timeout: 10))
@@ -98,10 +108,10 @@ import XCTest
             let noQuality = app.staticTexts["No hay un periodo de calidad verificado de FoodKeeper para este lote."]
             reveal(noQuality)
             if id == recorded {
-                XCTAssertTrue(app.staticTexts[wording].exists, app.debugDescription)
+                XCTAssertTrue(printedWording.exists, app.debugDescription)
                 capture("Pantry-voice-03-fecha-impresa")
             } else {
-                XCTAssertFalse(app.staticTexts[wording].exists)
+                XCTAssertFalse(printedWording.exists)
                 XCTAssertTrue(app.staticTexts["No hay una fecha impresa verificada para este envase."].exists, app.debugDescription)
             }
             XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
@@ -355,9 +365,10 @@ import XCTest
         if reset { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
         if expectEmptyShop {
+            tap(app.tabBars.buttons[spanish ? "Compras" : "Shop"])
             XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12), app.debugDescription)
         }
-        tap(app.shopToolButton("shop.myPantry"))
+        tap(app.tabBars.buttons[spanish ? "Despensa" : "Pantry"])
         if reset { tap(app.buttons["pantry.setup.apply"]) }
         XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 10))
     }
@@ -373,13 +384,15 @@ import XCTest
     }
 
     private func reveal(_ control: XCUIElement) {
-        for attempt in 0..<10 {
-            if control.exists && control.isHittable { return }
-            let list = app.collectionViews.firstMatch
-            let view = list.exists ? list : app.scrollViews.firstMatch
-            guard view.exists else { break }
-            let upward = control.exists ? control.frame.midY > app.frame.midY : attempt < 6
-            if upward { view.swipeUp() } else { view.swipeDown() }
+        let tabBar = app.tabBars.firstMatch
+        for attempt in 0..<16 {
+            let top = app.navigationBars.allElementsBoundByIndex.last?.frame.maxY ?? app.frame.minY
+            let bottom = tabBar.exists && tabBar.isHittable ? tabBar.frame.minY : app.frame.maxY
+            let area = CGRect(x: app.frame.minX + 12, y: top, width: app.frame.width - 24, height: bottom - top)
+            if control.exists, control.isHittable, area.contains(CGPoint(x: control.frame.midX, y: control.frame.midY)) { return }
+            let upward = control.exists ? control.frame.midY > area.midY : attempt < 8
+            // Drag the displayed form without flicking past a short row or scrolling the list behind a sheet.
+            app.scrollForm(in: area, upward: upward, besideFields: true)
         }
         XCTAssertTrue(control.waitForExistence(timeout: 8) && control.isHittable, app.debugDescription)
     }
@@ -402,9 +415,18 @@ import XCTest
 
     @discardableResult private func addLot(_ name: String, amount: String) -> String {
         tapPantryEntry(app.buttons["pantry.add"])
-        XCTAssertTrue(app.textFields["pantry.foodName"].waitForExistence(timeout: 8), app.debugDescription)
-        fill(name, into: "pantry.foodName")
-        fill(amount, into: "pantry.amount")
+        let nameField = app.textFields["pantry.foodName"], amountField = app.textFields["pantry.amount"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 8), app.debugDescription)
+        tap(nameField)
+        nameField.typeText(name)
+        XCTAssertEqual(nameField.value as? String, name)
+        nameField.typeText("\n")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        tap(amountField)
+        amountField.typeText(amount)
+        XCTAssertEqual(amountField.value as? String, amount)
+        amountField.typeText("\n")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         tap(app.buttons["pantry.review"])
         tap(app.buttons["pantry.confirm"])
         let row = lot(name)

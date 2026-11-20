@@ -57,8 +57,9 @@ struct DinnerTemplateEditor: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
-    init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil, servingsUnknown: Bool = false) {
+    init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil, servingsUnknown: Bool = false, planForDay: Bool = false) {
         self.model = model; self.purpose = purpose
+        _scheduled = State(initialValue: planForDay)
         _originalIdea = State(initialValue: idea)
         _originalIdentity = State(initialValue: model.editorIdentity)
         _supplyEvidence = State(initialValue: idea?.supplyEvidence ?? [])
@@ -135,7 +136,7 @@ struct DinnerTemplateEditor: View {
                     Text(dinnerFormat("Servings: %@", reviewed.servings.description))
                     MealPreferenceIssues(result: MealEligibilityPolicy.evaluate(profile: model.mealPreferences, template: reviewed))
                     ForEach(reviewed.ingredients) { ingredient in
-                        VStack(alignment: .leading) { Text(ingredient.name); Text(dinnerQuantity(ingredient.quantity)) }
+                        VStack(alignment: .leading) { Text(ingredient.name); Text(ingredient.reviewedAmountLabel) }
                             .accessibilityElement(children: .combine)
                     }
                     ForEach(reviewed.servingGroups) { group in
@@ -311,10 +312,14 @@ struct DinnerTemplateFields: View {
                 let row = dinnerDraftBinding(ingredient, in: $draft.ingredients)
                 let prefix = "ingredient.\(ingredient.id)."
                 VStack(alignment: .leading, spacing: 8) {
+                    if let source = ingredient.originalWording { Text(verbatim: source).font(.subheadline).foregroundStyle(Theme.secondary) }
                     ingredientField(dinnerText("Ingredient name"), value: row.name, key: prefix + "name")
-                    ingredientField(dinnerText("Amount, optional"), value: row.amount, key: prefix + "amount", axis: .horizontal)
+                    Toggle(tonightText("I checked this ingredient by hand"), isOn: row.checkedWithoutAmount)
+                    if !ingredient.checkedWithoutAmount {
+                        ingredientField(dinnerText("Amount, optional"), value: row.amount, key: prefix + "amount", axis: .horizontal)
                         .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    DinnerUnitPicker(unit: row.unit)
+                        DinnerUnitPicker(unit: row.unit)
+                    } else { Text(tonightText("Use without a measured amount.")).font(.footnote) }
                     ingredientField(dinnerText("Ingredient notes"), value: row.notes, key: prefix + "notes")
                     ingredientField(dinnerText("Ingredient exclusions, one per line"), value: row.exclusions, key: prefix + "exclusions")
                     Button(role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } } label: {
@@ -374,58 +379,166 @@ struct DinnerUnitPicker: View {
 struct DinnerLibraryView: View {
     @ObservedObject var model: DinnerFeatureModel
     @Environment(\.pickupLedger) private var liveLedger
+    @EnvironmentObject private var workspaceAccess: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scene
+    @Environment(\.guardianChildCoordinator) private var child
+    @State private var query = ""
+    @State private var pinnedOnly = false
+    @State private var sources: [TonightMealModel.Source] = []
+    @State private var sourceOwner: String?
+    @State private var reviewingSource: TonightMealModel.Source?
+    @State private var planning: AcceptedDinner?
+    @State private var date = Date()
+    private var identity: CapturePrivateIdentity? {
+        guard let liveLedger, model.store === liveLedger, model.basketPrepAccess(), model.localIdeaWorkspaceID != nil,
+              scene == .active, UIApplication.shared.isProtectedDataAvailable,
+              child?.presented != true, household.projection?.grantId == nil else { return nil }
+        return CapturePrivateIdentity.current(access: workspaceAccess, household: household)
+    }
+
+    private func visible(_ key: CookSoonPin.Recipe) -> Bool {
+        guard pinnedOnly else { return true }
+        guard let owner = identity?.mealFeedbackOwner else { return false }
+        return model.workspace.cookSoonPins.contains(.init(owner: owner, recipe: key))
+    }
+    @ViewBuilder private func pin(_ key: CookSoonPin.Recipe) -> some View {
+        if let liveLedger, let original = identity {
+            RecipePinButton(ledger: liveLedger, recipe: key, owner: original.mealFeedbackOwner,
+                            authorize: { identity == original })
+        }
+    }
+    private func loadSources() async {
+        reviewingSource = nil
+        guard let original = identity, let origin = liveLedger?.sourceWorkspaceID else { sources = []; sourceOwner = nil; return }
+        let authorized = { identity == original && liveLedger?.sourceWorkspaceID == origin && !Task.isCancelled }
+        let current = try? await TonightRecipeLibrary.read(authorize: authorized)
+        guard authorized() else { return }
+        sources = current ?? []; sourceOwner = original.mealFeedbackOwner
+    }
+
+    private var filtering: Bool { pinnedOnly || !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private var accepted: [AcceptedDinner] {
+        model.state.acceptedDinners.filter { $0.template.matchesRecipeSearch(query) && visible(.reviewed($0.template.id)) }
+    }
+    private var earlier: [MealTemplate] {
+        model.workspace.mealTemplates.filter { $0.matchesRecipeSearch(query) && visible(.reviewed($0.id)) }
+    }
+    private var imported: [TonightMealModel.Source] {
+        guard let sourceOwner, sourceOwner == identity?.mealFeedbackOwner else { return [] }
+        return sources.filter {
+            visible(.imported($0.id)) && PrivateRecipeSearch.matches(query, title: $0.recipe.title, ingredients: $0.recipe.ingredients)
+        }
+    }
+    @ViewBuilder private var libraryTools: some View {
+        Section {
+            Text(dinnerText("One accepted dinner can be your Free reusable dinner. Changing this selection does not change dinners already chosen."))
+            NavigationLink(dinnerText("Save a familiar dinner")) { DinnerTemplateEditor(model: model, purpose: .reusable) }.accessibilityIdentifier("ledgerNewTemplate")
+        }
+        if let liveLedger, model.store === liveLedger {
+            Section { RecordsRecoveryLink(accessibilityID: "dinner.recipeFiles", dinnerModel: model) }
+        }
+    }
+
     @State private var showPreview = false
     var body: some View {
         List {
             Group {
                 Section {
-                    Text(dinnerText("One accepted dinner can be your Free reusable dinner. Changing this selection does not change dinners already chosen."))
-                    NavigationLink(dinnerText("Save a familiar dinner")) { DinnerTemplateEditor(model: model, purpose: .reusable) }.accessibilityIdentifier("ledgerNewTemplate")
+                    PrivateRecipeSearchField(query: $query)
+                    if identity != nil { Toggle(tonightText("Show Cook soon only"), isOn: $pinnedOnly) }
                 }
-                if let liveLedger, model.store === liveLedger {
-                    Section { RecordsRecoveryLink(accessibilityID: "dinner.recipeFiles", dinnerModel: model) }
+                if !filtering { libraryTools }
+                if filtering, accepted.isEmpty, earlier.isEmpty, imported.isEmpty,
+                   identity == nil || sourceOwner == identity?.mealFeedbackOwner {
+                    Text(tonightText("No matching recipes")).accessibilityIdentifier("dinner.recipeNoMatch")
                 }
-                Section(dinnerText("Accepted dinners")) {
-                    if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }
-                    ForEach(model.state.acceptedDinners) { dinner in
-                        let isFreeReusable = model.state.freeReusableDinnerID == dinner.id
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(dinner.template.title).font(.system(.title2, design: .serif, weight: .semibold))
-                            DinnerServingNote(template: dinner.template)
-                            if dinner.acceptedFallback { Text(dinnerText("Accepted fallback")) }
-                            if isFreeReusable {
-                                Label(dinnerText("Your Free reusable dinner"), systemImage: "checkmark.circle.fill")
-                                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.onSelection)
-                                    .padding(.horizontal, 9).padding(.vertical, 5)
-                                    .background(Theme.selection, in: RoundedRectangle(cornerRadius: 9))
+                if !filtering || !accepted.isEmpty {
+                    Section(dinnerText("Accepted dinners")) {
+                        if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }
+                        ForEach(accepted) { dinner in
+                            let isFreeReusable = model.state.freeReusableDinnerID == dinner.id
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(dinner.template.title).font(.system(.title2, design: .serif, weight: .semibold))
+                                DinnerServingNote(template: dinner.template)
+                                if dinner.acceptedFallback { Text(dinnerText("Accepted fallback")) }
+                                if isFreeReusable {
+                                    Label(dinnerText("Your Free reusable dinner"), systemImage: "checkmark.circle.fill")
+                                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.onSelection)
+                                        .padding(.horizontal, 9).padding(.vertical, 5)
+                                        .background(Theme.selection, in: RoundedRectangle(cornerRadius: 9))
+                                }
+                            }.padding(.vertical, 6)
+                            pin(.reviewed(dinner.template.id))
+                            if let evidence = dinner.template.sourceEvidence {
+                                NavigationLink(captureText("Original recipe source")) {
+                                    RecipeSourceReview(model: model, templateID: dinner.template.id, evidence: evidence)
+                                }
                             }
-                        }.padding(.vertical, 6)
-                        if let evidence = dinner.template.sourceEvidence {
-                            NavigationLink(captureText("Original recipe source")) {
-                                RecipeSourceReview(model: model, templateID: dinner.template.id, evidence: evidence)
+                            if !isFreeReusable {
+                                Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } }
                             }
-                        }
-                        if !isFreeReusable {
-                            Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } }
-                        }
-                        Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
-                            .disabled(!model.paid && !isFreeReusable).accessibilityIdentifier("ledgerChooseTemplate")
-                        NavigationLink(dinnerText("Review as a new dinner version")) {
-                            DinnerTemplateEditor(model: model, purpose: .reusable, initial: dinner.template)
+                            Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
+                                .disabled(!model.paid && !isFreeReusable).accessibilityIdentifier("ledgerChooseTemplate")
+                            if planning?.id == dinner.id, let zone = model.shop?.basis.timeZoneIdentifier {
+                                DatePicker(dinnerText("Dinner date"), selection: $date, displayedComponents: .date)
+                                    .environment(\.timeZone, TimeZone(identifier: zone) ?? .current)
+                                Button(tonightText("Preview dinner choice")) {
+                                    do {
+                                        let day = try MealDay(date: date, timeZoneIdentifier: zone)
+                                        showPreview = model.choose(dinner, day: day)
+                                    } catch { model.report(error) }
+                                }
+                            } else {
+                                Button(tonightText("Plan for a day")) { planning = dinner; date = Date() }
+                                    .disabled(!model.paid && !isFreeReusable)
+                            }
+                            NavigationLink(dinnerText("Review as a new dinner version")) {
+                                DinnerTemplateEditor(model: model, purpose: .reusable, initial: dinner.template)
+                            }
                         }
                     }
                 }
-                if !model.workspace.mealTemplates.isEmpty {
+                if !earlier.isEmpty {
                     Section(dinnerText("Earlier reusable dinners")) {
                         Text(dinnerText("Review an earlier template before adding it to the accepted library."))
-                        ForEach(model.workspace.mealTemplates) { template in
+                        ForEach(earlier) { template in
                             NavigationLink(template.title) { DinnerTemplateEditor(model: model, purpose: .reusable, initial: template) }
+                            pin(.reviewed(template.id))
+                            NavigationLink(tonightText("Plan for a day")) {
+                                DinnerTemplateEditor(model: model, purpose: .manual, initial: template, planForDay: true)
+                            }
                         }
                     }
                 }
+                if !imported.isEmpty {
+                    Section(tonightText("Saved sources to review")) {
+                        ForEach(imported) { source in
+                            Button { reviewingSource = source } label: {
+                                VStack(alignment: .leading) {
+                                    Text(verbatim: source.recipe.title)
+                                    Text(tonightText("Saved source — review servings and ingredient amounts")).font(.footnote)
+                                }
+                            }
+                            pin(.imported(source.id))
+                        }
+                    }
+                }
+                if filtering { libraryTools }
                 DinnerFeedback(model: model)
             }.listRowBackground(Theme.surface)
         }.workingSurface().navigationTitle(dinnerText("Dinner library")).dinnerAccess(model).disabled(!model.editable)
+            .task(id: identity?.mealFeedbackOwner) {
+                query = ""; pinnedOnly = false; planning = nil
+                await loadSources()
+            }
+            .sheet(item: $reviewingSource) { source in
+                if let liveLedger, let original = identity, original.mealFeedbackOwner == sourceOwner {
+                    NavigationStack {
+                        TonightRecipeReview(ledger: liveLedger, source: source, currentIdentity: { identity == original ? original : nil })
+                    }
+                }
+            }
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }

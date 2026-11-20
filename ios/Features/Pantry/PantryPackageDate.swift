@@ -37,6 +37,37 @@ struct PrintedPackageDate: Equatable, Codable {
     /// Only the selected OCR wording is retained. The image and other text stay in the editor.
     let selectedPhotoText: String?
     let photoDigest: String?
+    /// Original encoded fields on this physical package survive later edits of its printed wording.
+    var encodedSource: CapturedBarcode? = nil
+    var selectedAI: String? = nil
+    // Older encoded-only records carry the GS1 field in the required wording slot.
+    var wordingIsPrinted: Bool? = nil
+    var confirmedPrintedYear: Int? = nil
+    /// A previous editor could attach the current year by tapping one of these month/day interpretations.
+    /// Keep that stored choice available to edit, but require confirmation before using it for readback.
+    var yearNeedsReview: Bool {
+        guard selectedAI == nil, let day, confirmedPrintedYear == nil else { return false }
+        guard Self.monthDayChoices(in: wording).contains(where: { $0.month == day.month && $0.day == day.day }) else { return false }
+        // A year attached to the selected stamp (including its original OCR wording) is evidence.
+        let yearPattern = #"(?<![0-9/-])(?:0?"# + String(day.month) + "/0?" + String(day.day) +
+            "|0?" + String(day.day) + "/0?" + String(day.month) + #")[ /,.-]+"# + String(day.year) + #"(?![0-9])"#
+        return ![wording, selectedPhotoText].compactMap { $0 }.contains { text in
+            Self.proposedDay(in: text, zone: day.timeZoneIdentifier) == day ||
+                text.range(of: yearPattern, options: .regularExpression) != nil
+        }
+    }
+    var verifiedDay: MealDay? { yearNeedsReview ? nil : day }
+    var originalPrintedWording: String? {
+        if let wordingIsPrinted { return wordingIsPrinted ? wording : nil }
+        guard let selectedAI, selectedPhotoText == nil,
+              let field = encodedSource?.gs1?.dates.first(where: { $0.ai == selectedAI }),
+              wording == "GS1 (" + field.ai + ") " + field.literal else { return wording }
+        return nil
+    }
+    var sourceLabel: String { pantryText(selectedAI == nil ? "Printed package date" : "Encoded package date") }
+    var meaningLabel: String {
+        pantryText(selectedAI == nil ? "Meaning printed on the package" : "Meaning encoded in the barcode")
+    }
 
     func validate() throws {
         guard !wording.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -46,6 +77,19 @@ struct PrintedPackageDate: Equatable, Codable {
               selectedPhotoText.map({ !$0.isEmpty && $0.utf8.count <= 1024 && !$0.contains("\0") }) ?? true else {
             throw PantryDigestFailure.invalid
         }
+        if let confirmedPrintedYear {
+            guard selectedAI == nil, let day, day.year == confirmedPrintedYear else { throw PantryDigestFailure.invalid }
+        }
+        if wordingIsPrinted == false {
+            guard let selectedAI, let field = encodedSource?.gs1?.dates.first(where: { $0.ai == selectedAI }),
+                  wording == "GS1 (" + field.ai + ") " + field.literal else { throw PantryDigestFailure.invalid }
+        }
+        if let encodedSource { try encodedSource.validate(); guard encodedSource.gs1 != nil else { throw PantryDigestFailure.invalid } }
+        if let selectedAI {
+            guard let field = encodedSource?.gs1?.dates.first(where: { $0.ai == selectedAI }),
+                  let day, let encoded = field.day(zone: day.timeZoneIdentifier, now: day.date ?? Date()),
+                  day == encoded, meaning == (selectedAI == "15" ? .bestBefore : .expires) else { throw PantryDigestFailure.invalid }
+        }
         try day?.validate()
     }
 
@@ -54,6 +98,37 @@ struct PrintedPackageDate: Equatable, Codable {
                          selectedPhotoText: text, photoDigest: digest)
         try draft.validate()
         return draft
+    }
+
+    struct MonthDay: Hashable {
+        let month: Int
+        let day: Int
+
+        func confirmed(year: String, zone: String) -> MealDay? {
+            let year = year.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard year.utf8.count == 4, year.utf8.allSatisfy({ (48...57).contains($0) }),
+                  let number = Int(year) else { return nil }
+            return try? MealDay(year: number, month: month, day: day, timeZoneIdentifier: zone)
+        }
+
+        func label(locale: Locale) -> String {
+            let formatter = DateFormatter()
+            formatter.locale = locale
+            formatter.timeZone = .gmt
+            formatter.setLocalizedDateFormatFromTemplate("MMMMd")
+            guard let date = confirmed(year: "2000", zone: "UTC")?.date else { return "" }
+            return formatter.string(from: date)
+        }
+    }
+
+    /// Interpret the order of a two-number stamp independently from its still-unknown year.
+    static func monthDayChoices(in line: String) -> [MonthDay] {
+        let pattern = #"(?<![0-9/-])([0-9]{1,2})/([0-9]{1,2})(?![0-9/-])"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              case let matches = regex.matches(in: line, range: NSRange(line.startIndex..., in: line)), matches.count == 1,
+              let match = matches.first, let ar = Range(match.range(at: 1), in: line), let br = Range(match.range(at: 2), in: line),
+              let a = Int(line[ar]), let b = Int(line[br]), a != b, (1...12).contains(a), (1...12).contains(b) else { return [] }
+        return [.init(month: a, day: b), .init(month: b, day: a)]
     }
 
     /// Numeric day/month labels and incomplete years stay as printed wording.

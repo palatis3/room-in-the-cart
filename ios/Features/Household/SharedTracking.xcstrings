@@ -290,6 +290,23 @@
         }
       }
     },
+    "Check and freeze pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check and freeze pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar y fijar la compra"
+          }
+        }
+      }
+    },
     "Checking shared pickup…": {
       "extractionState": "manual",
       "localizations": {
@@ -507,6 +524,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No cuenta para el mínimo que determina el cargo"
+          }
+        }
+      }
+    },
+    "Done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
           }
         }
       }
@@ -1174,6 +1208,23 @@
         }
       }
     },
+    "Pickup frozen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup frozen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra fijada"
+          }
+        }
+      }
+    },
     "Privacy changed this record. Only the surviving facts below can be reviewed; old previews and copied text cannot be restored.": {
       "extractionState": "manual",
       "localizations": {
@@ -1612,6 +1663,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar por separado el alimento utilizable y los paquetes enteros"
+          }
+        }
+      }
+    },
+    "Review saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión guardada"
           }
         }
       }
@@ -2977,6 +3045,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Los artículos anteriores de la cesta se incluyen solo si este cambio se deshace y los restaura. Revise expresamente los datos de sus paquetes."
+          }
+        }
+      }
+    },
+    "Refresh current facts, then review the packs and checkout again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh current facts, then review the packs and checkout again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza los datos y vuelve a revisar los paquetes y el total de la compra."
+          }
+        }
+      }
+    },
+    "Open the freeze review again to check the current packs and checkout.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the freeze review again to check the current packs and checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir la revisión para confirmar los paquetes y el total de la compra antes de fijarla."
+          }
+        }
+      }
+    },
+    "Review current packs and checkout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review current packs and checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los paquetes y el total de la compra"
           }
         }
       }

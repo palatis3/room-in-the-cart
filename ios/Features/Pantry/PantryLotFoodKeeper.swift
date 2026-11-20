@@ -1,6 +1,15 @@
 import CoreDomain
 import SwiftUI
 
+extension FoodKeeperReviewedRange {
+    var qualityWindowTitle: String {
+        earliest == latest ? helpText("Estimated quality check date") : helpText("Estimated quality range")
+    }
+    func qualityWindowDays(_ format: (MealDay) -> String) -> String {
+        earliest == latest ? format(earliest) : format(earliest) + " – " + format(latest)
+    }
+}
+
 struct PantryLotFoodKeeperSection: View {
     @ObservedObject var model: PantryModel
     let lot: InventoryLot
@@ -34,7 +43,7 @@ struct PantryLotFoodKeeperSection: View {
                 LabeledContent(helpText("Batch storage"), value: range.storage.title)
                 LabeledContent(range.condition.anchorTitle, value: range.start.iso8601)
                 if selection.applies(to: lot) {
-                    LabeledContent(helpText("Estimated quality range"), value: range.earliest.iso8601 + " – " + range.latest.iso8601)
+                    LabeledContent(range.qualityWindowTitle, value: range.qualityWindowDays { $0.iso8601 })
                         .accessibilityIdentifier("pantry.foodKeeper.range")
                 } else {
                     Text(helpText("This batch or reference has changed. Review its current storage and starting date again."))

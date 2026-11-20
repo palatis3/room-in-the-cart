@@ -1,3 +1,4 @@
+import {tripConfiguration} from './trip-substitutions.js';
 import {adultPickupConfiguration} from './adult-pickup.js';
 import {moderationConfiguration} from './moderation.js';
 import { VoiceAssistance } from './voice-assistance.js';
@@ -73,6 +74,7 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
       trackingV2: true,
       ...moderationConfiguration(environment),
       ...adultPickupConfiguration(environment),
+      ...tripConfiguration(environment),
       // Enable only when provider-backed guardian verification and revocation are
       // integrated. An environment flag cannot substitute for that authority.
       allowChildNetwork: false,

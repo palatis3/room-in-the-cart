@@ -3,6 +3,35 @@ import XCTest
 @testable import RecordArchive
 
 final class RecipeStepTests: XCTestCase {
+    func testImportedReviewPrefillsBilingualQuantitiesAndKeepsRangesAndPacksForReview() throws {
+        for yield in ["serves four", "4 servings", "para cuatro personas", "4 porciones"] {
+            XCTAssertEqual(ImportedRecipe(title: "Soup", yieldText: yield).suggestedServings, try Rational(4))
+        }
+        for yield in ["", "4 bowls", "3–4 servings", "serves 4 or 6", "4 jars"] {
+            XCTAssertNil(ImportedRecipe(title: "Soup", yieldText: yield).suggestedServings)
+        }
+        for (text, name, amount, unit) in [
+            ("1 ½ cups dry lentils", "dry lentils", try Rational(3, 2), UnitOfMeasure.cup),
+            ("una taza y media de arroz", "arroz", try Rational(3, 2), .cup),
+            ("0,5 kg de lentejas", "lentejas", try Rational(1, 2), .kilogram),
+            ("2 eggs", "eggs", try Rational(2), .count)
+        ] {
+            let row = ImportedRecipe.ingredientDraft(text)
+            XCTAssertEqual(row.name, name)
+            XCTAssertEqual(row.quantity?.unit, unit)
+            XCTAssertEqual(row.quantity?.amount, amount)
+            XCTAssertEqual(row.originalWording, text)
+            XCTAssertNil(row.checkedWithoutAmount)
+        }
+        for text in ["cilantro al gusto", "salt to taste", "1–2 cups rice", "entre 1 y 2 tazas de arroz",
+                     "2 cans beans", "2 paquetes de tortillas", "2 jars pesto", "1,000 g harina"] {
+            let row = ImportedRecipe.ingredientDraft(text)
+            XCTAssertNil(row.quantity, text)
+            XCTAssertNil(row.checkedWithoutAmount, text)
+            XCTAssertEqual(row.originalWording, text)
+        }
+    }
+
     func testReviewedStepRoundTripsAsNewRevisionWhileLegacyRecipeKeepsItsIdentity() throws {
         let legacy = Data(#"{"ingredients":["2 onions","1 cup rice"],"notes":"Saved notes","steps":["Chop.","Simmer."],"title":"Supper","yieldText":"2–3 bowls"}"#.utf8)
         let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: legacy)

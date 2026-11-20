@@ -89,7 +89,7 @@ import XCTest
             let value = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", expected), object: subtotal)
             XCTAssertEqual(XCTWaiter.wait(for: [value], timeout: 8), .completed)
         }
-        waitForSubtotal("0 of 1 picked items")
+        waitForSubtotal("Picked subtotal unknown")
         app.buttons["inStoreLastPrice"].tap()
         let amount = app.textFields["inStoreAmount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 8))
@@ -99,17 +99,17 @@ import XCTest
         let save = app.buttons["Save price"]
         show(save)
         save.tap()
-        waitForSubtotal("$4.25 for 1 of 1 picked items")
+        waitForSubtotal("$4.25 for 1 picked item")
         checks.firstMatch.tap()
         waitForSubtotal("$4.25 for 1 of 2 picked items")
         app.buttons["inStoreUndo"].tap()
-        waitForSubtotal("$4.25 for 1 of 1 picked items")
+        waitForSubtotal("$4.25 for 1 picked item")
         app.buttons["Done"].tap()
         app.terminate()
         launch(fresh: false)
         show(inStore)
         inStore.tap()
-        waitForSubtotal("$4.25 for 1 of 1 picked items")
+        waitForSubtotal("$4.25 for 1 picked item")
         checks.firstMatch.tap()
         waitForSubtotal("$4.25 for 1 of 2 picked items")
         let firstPrice = app.buttons["inStorePrice-" + firstLineID]
@@ -122,10 +122,142 @@ import XCTest
         XCTAssertGreaterThanOrEqual(firstUncheck.frame.width, 44)
         XCTAssertGreaterThanOrEqual(firstUncheck.frame.height, 44)
         firstUncheck.tap()
-        waitForSubtotal("$0.00 for 0 of 1 picked items")
+        waitForSubtotal("Picked subtotal unknown")
         XCTAssertTrue(app.buttons[firstCheckID].exists)
         app.buttons["inStoreUndo"].tap()
-        waitForSubtotal("$0.00 for 0 of 0 picked items")
+        waitForSubtotal("$0.00 · No items picked")
+    }
+
+    func testMeasuredApplesAndLeavingBreadForNextTime() {
+        continueAfterFailure = false
+        launch(fresh: true, shelfBudget: true)
+        let store = app.buttons["ledgerInStore"]
+        show(store)
+        store.tap()
+
+        func aisleCheckbox(_ grocery: String) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@",
+                                             "inStoreCheck-", "Check " + grocery)).element
+        }
+        let checkApples = aisleCheckbox("Apples")
+        XCTAssertTrue(checkApples.waitForExistence(timeout: 8))
+        checkApples.tap()
+        app.buttons["inStoreLastPrice"].tap()
+        let basis = app.buttons["inStorePriceBasis"]
+        XCTAssertTrue(basis.waitForExistence(timeout: 8))
+        basis.tap()
+        app.buttons["By weight"].tap()
+        enter("2.75", in: app.textFields["inStoreAmount"])
+        app.buttons["inStoreAmountDone"].tap()
+        enter("1.5", in: app.textFields["inStoreMeasuredAmount"])
+        app.buttons["inStoreAmountDone"].tap()
+        show(app.buttons["Save price"])
+        app.buttons["Save price"].tap()
+        waitForBudgetSubtotal("$4.13 for 1 picked item")
+
+        aisleCheckbox("Coffee").tap()
+        waitForBudgetSubtotal("$4.13 for 1 of 2")
+        let bread = aisleCheckbox("Bread")
+        let breadID = String(bread.identifier.dropFirst("inStoreCheck-".count))
+        bread.tap()
+        waitForBudgetSubtotal("$4.13 for 1 of 3")
+        app.buttons["inStoreLastPrice"].tap()
+        enter("4.50", in: app.textFields["inStoreAmount"])
+        app.buttons["inStoreAmountDone"].tap()
+        show(app.buttons["Save price"])
+        app.buttons["Save price"].tap()
+        waitForBudgetSubtotal("$8.63 for 2 of 3")
+
+        let inspect = app.cells.containing(.button, identifier: "inStorePrice-" + breadID).buttons["Inspect Bread"]
+        show(inspect)
+        inspect.tap()
+        let budget = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreBudget-")).firstMatch
+        show(budget)
+        budget.tap()
+        let flexible = app.switches["Flexible pick"]
+        XCTAssertTrue(flexible.waitForExistence(timeout: 8))
+        enableAisleSwitch(flexible)
+        let preview = app.buttons["Preview putting it back"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 8))
+        show(preview)
+        preview.tap()
+        XCTAssertTrue(app.staticTexts["Known item subtotal · $8.63 → $4.13"].exists)
+        let leave = app.buttons["inStoreLeaveForNextTime"]
+        show(leave)
+        leave.tap()
+        XCTAssertTrue(app.navigationBars["Item details"].waitForExistence(timeout: 8))
+        app.navigationBars["Item details"].buttons["Done"].tap()
+        waitForBudgetSubtotal("$4.13 for 1 of 2")
+    }
+
+    func testPartialPickUnavailableHandoffAndSecondStoreUndoAfterRestart() throws {
+        continueAfterFailure = false
+        launch(fresh: true, shelfBudget: true)
+        tapTrip(app.buttons["ledgerInStore"])
+        let apple = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "tripDetails-", "Apples")).firstMatch
+        XCTAssertTrue(apple.waitForExistence(timeout: 8))
+        let id = String(apple.identifier.dropFirst("tripDetails-".count))
+        tapTrip(apple)
+        tapTrip(app.buttons["tripPickPart"])
+        let amount = app.textFields["tripPartialAmount"]
+        amount.tap(); amount.typeText("1")
+        if app.buttons["tripPartKeyboardDone"].isHittable { app.buttons["tripPartKeyboardDone"].tap() }
+        tapTrip(app.buttons["tripSavePart"])
+        tapTrip(apple)
+        tapTrip(app.buttons["tripUnavailable"])
+        XCTAssertTrue(app.staticTexts["Couldn’t find it at this stop"].waitForExistence(timeout: 10))
+        tapTrip(app.buttons["tripAddFind"])
+        let field = app.textFields["tripFindName"]
+        field.tap(); field.typeText("Lime")
+        if app.buttons["tripFindKeyboardDone"].isHittable { app.buttons["tripFindKeyboardDone"].tap() }
+        tapTrip(app.buttons["Add to picked items"])
+        tapTrip(app.buttons["inStoreTripOptions"])
+        tapTrip(app.buttons["Send selected items"])
+        let apples = app.switches.matching(NSPredicate(format: "label CONTAINS %@", "Apples")).firstMatch
+        enableAisleSwitch(apples)
+        tapTrip(app.buttons["Preview message"])
+        let preview = app.staticTexts["tripShareBody"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 6))
+        XCTAssertTrue(preview.label.contains("Apples") && preview.label.contains("3"))
+        XCTAssertFalse(preview.label.contains("Coffee") || preview.label.contains("Lime"))
+        app.terminate()
+        launch(fresh: false, shelfBudget: true)
+        tapTrip(app.buttons["ledgerInStore"])
+        tapTrip(app.buttons["tripNextStore"])
+        let store = app.textFields["Store name"]
+        store.tap(); store.typeText("East market")
+        if app.buttons["tripStoreKeyboardDone"].isHittable { app.buttons["tripStoreKeyboardDone"].tap() }
+        tapTrip(app.buttons["Start this stop"])
+        tapTrip(app.buttons["inStoreCheck-" + id])
+        tapTrip(app.buttons["inStoreUndo"])
+        XCTAssertTrue(apple.waitForExistence(timeout: 8))
+        XCTAssertTrue(apple.label.contains("3"))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+            "inStoreUndo", "Apples")).firstMatch.exists)
+    }
+
+    private func enableAisleSwitch(_ row: XCUIElement) {
+        show(row)
+        if row.value as? String != "1" {
+            row.coordinate(withNormalizedOffset: CGVector(dx: 0.91, dy: 0.5)).tap()
+        }
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: row)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 8), .completed)
+    }
+
+    private func tapTrip(_ element: XCUIElement) {
+        _ = element.waitForExistence(timeout: 6)
+        if element.exists, !element.isHittable, element.frame.minY < app.frame.minY + 110 {
+            for _ in 0..<5 where !element.isHittable { app.swipeDown() }
+        }
+        show(element)
+        element.tap()
+    }
+
+    private func waitForBudgetSubtotal(_ text: String) {
+        let expected = NSPredicate(format: "label CONTAINS %@", text)
+        let result = XCTNSPredicateExpectation(predicate: expected, object: app.staticTexts["inStoreSubtotal"])
+        XCTAssertEqual(XCTWaiter.wait(for: [result], timeout: 8), .completed)
     }
 
     private func enter(_ value: String, in field: XCUIElement) {
@@ -133,8 +265,9 @@ import XCTest
         enteredFields += 1
     }
 
-    private func launch(fresh: Bool) {
+    private func launch(fresh: Bool, shelfBudget: Bool = false) {
         app.launchArguments = ["--ui-testing", "--staple-recall-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        if shelfBudget { app.launchArguments.append("--shelf-budget-fixture") }
         if fresh { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
         XCTAssertTrue(app.buttons["ledgerListOptions"].waitForExistence(timeout: 25))

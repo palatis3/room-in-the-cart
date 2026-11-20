@@ -22,7 +22,8 @@ import HouseholdClient
             self.input = input; self.ledgerID = ledgerID; reviews = model.reviews; matches = model.matches
             candidates = model.suggestions.filter(TonightMealModel.canChoose).map { review in
                 var reasons: [MealExplanationReason] = [.pantryMatch]
-                reasons.append(review.allIngredientsCovered ? .ingredientsCovered : .needsMoreFood)
+                if review.allIngredientsCovered { reasons.append(.ingredientsCovered) }
+                else if !review.measuredIngredientsCovered { reasons.append(.needsMoreFood) }
                 if review.recipe.leadTimeMinutes != nil { reasons.append(.reviewedPreparationTime) }
                 return Candidate(review: review, reasons: reasons)
             }

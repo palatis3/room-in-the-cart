@@ -1,5 +1,8 @@
+import UIKit
 import Foundation
 import CoreDomain
+
+@MainActor let pantryReceiptSymbol = UIImage(systemName: "receipt") == nil ? "doc.text" : "receipt"
 
 func pantryText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Pantry") }
 func pantryFormat(_ key: String, _ arguments: CVarArg...) -> String {
@@ -25,6 +28,10 @@ func pantryQuantity(_ quantity: Quantity?) -> String {
     guard let quantity else { return pantryText("Unknown") }
     // The exact fraction and original unit stay intact; no floating-point stock math.
     return "\(quantity.amount.description) \(pantryUnit(quantity.unit, singular: quantity.amount == .one))"
+}
+func pantryPrintedQuantity(_ literal: String, unit: UnitOfMeasure) -> String {
+    let measured = try? ComparisonModel.quantity(literal, unit)
+    return literal + " " + pantryUnit(unit, singular: measured?.amount == .one)
 }
 func pantryCount(_ count: InventoryCount, estimate: String? = nil) -> String {
     if count == .someLeft, let estimate { return pantryFormat("%@ (estimate)", estimate) }

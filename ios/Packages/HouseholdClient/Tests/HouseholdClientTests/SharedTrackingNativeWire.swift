@@ -37,7 +37,6 @@ private struct TrackingWireTransferredInput: Decodable {
 private struct TrackingWireInput: Decodable {
     let phase, householdId: String
     let shopId: UUID
-    let before: SharedTrackingPage?
     let action: SharedDemandAction?
     let change: SharedDemandChange?
     let packs: [SharedDemandPackReview]
@@ -93,7 +92,9 @@ extension SharedMealNativeWireTests {
             return
         }
         let page = try await service.sharedTracking(shopID: input.shopId)
-        XCTAssertEqual(page, input.before)
+        let referenceURL = URL(fileURLWithPath: try XCTUnwrap(env["RITC_WIRE_TRACKING_REFERENCE"]))
+        let reference = try JSONDecoder().decode(SharedTrackingPage.self, from: Data(contentsOf: referenceURL))
+        XCTAssertEqual(page, reference)
         if let survivor = input.survivor {
             XCTAssertEqual(page.graph.contributions.first { $0.id == survivor.id }, input.phase == "privacy-adopt" ? nil : survivor)
         }

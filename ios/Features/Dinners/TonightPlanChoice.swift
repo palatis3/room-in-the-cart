@@ -10,6 +10,7 @@ import CoreDomain
         fileprivate let match: PantryMealMatcher.Review
         let estimate: TonightPurchaseEstimate?
         let pantryBasis: LedgerCanonicalPackStockEvidence.Basis
+        var plannedDay: MealDay { selection.plannedDay }
         var recipe: MealTemplate { selection.recipe }
         var destinationTitle: String { selection.destinationTitle }
         var createsPickup: Bool { selection.createsPickup }
@@ -18,7 +19,7 @@ import CoreDomain
 
     static func prepare(match: PantryMealMatcher.Review, pantryBasis: LedgerCanonicalPackStockEvidence.Basis,
                         destinationShopID: UUID?, newShopTitle: String, ledger: LedgerModel, pickup: PickupModel,
-                        currentIdentity: () -> CapturePrivateIdentity?) throws -> Review {
+                        plannedDate: Date? = nil, currentIdentity: () -> CapturePrivateIdentity?) throws -> Review {
         guard let identity = currentIdentity(), ledger.ready, !ledger.saving, !ledger.hasPendingSave,
               let ledgerID = ledger.sourceWorkspaceID, let current = try pickup.pantryReviewContext() else {
             throw DinnerPlanningError.forbidden
@@ -42,7 +43,7 @@ import CoreDomain
         let now = Date()
         let context = access(identity, ledgerID: ledgerID, shopID: destination.id, now: now)
         let selection = try TonightDinnerSelection.prepare(match: match, destination: destination, createsPickup: destinationShopID == nil,
-            workspace: ledger.workspace, access: context, phase: phase(pickup, shopID: destination.id), now: now)
+            workspace: ledger.workspace, access: context, phase: phase(pickup, shopID: destination.id), now: now, plannedDate: plannedDate)
         let estimate = try? TonightPurchaseEstimate.estimate(match, workspace: ledger.workspace,
             workspaceID: ledgerID, shopID: destinationShopID, at: now)
         return Review(selection: selection, identity: identity, ledgerID: ledgerID,

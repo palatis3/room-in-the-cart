@@ -37,7 +37,9 @@ private extension EnvironmentValues {
     var body: some Scene {
         WindowGroup {
             #if DEBUG && targetEnvironment(simulator)
-            if Set(["--ui-testing", "--meal-language-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
+            if Set(["--ui-testing", "--household-trip-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
+                HouseholdTripFixture(notificationDelegate: notificationDelegate)
+            } else if Set(["--ui-testing", "--meal-language-fixture"]).isSubset(of: ProcessInfo.processInfo.arguments) {
                 MealLanguageFixture()
             } else { GroceryWindow(notificationDelegate: notificationDelegate) }
             #else
@@ -475,8 +477,8 @@ struct ShopView: View {
             VStack(alignment: .leading, spacing: 20) {
                 if !beganWithEmptyList { tripSummary }
                 VStack(alignment: .leading, spacing: 12) {
-                    BrandScopeLabel(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                     LedgerQuickGroceryEntry(model: ledger, prominent: true)
+                    BrandScopeLabel(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                     if ledger.shop == nil {
                         Text(tr("Works offline. No account needed."))
                             .font(.footnote).foregroundStyle(Theme.secondary)
@@ -754,7 +756,7 @@ struct RecordsView: View {
                     NavigationLink {
                         PantrySetupView(pickup: pickup, ledger: ledger, destination: .receipts)
                     } label: {
-                        Label(pantryText("Receipt history"), systemImage: "receipt")
+                        Label(pantryText("Receipt history"), systemImage: pantryReceiptSymbol)
                     }.accessibilityIdentifier("records.privateReceipts")
                     NavigationLink {
                         PantrySetupView(pickup: pickup, ledger: ledger, destination: .prices)

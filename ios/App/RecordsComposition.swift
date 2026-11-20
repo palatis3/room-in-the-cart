@@ -219,6 +219,7 @@ private struct RecordsPlanningProjection: Codable {
             normalized = try canonical(value)
         case .ledger:
             let workspace = try ledger(bytes)
+            guard workspace.cookSoonPins.isEmpty else { throw ArchiveError.unsupportedRecord }
             if record.id == "shopping-library" {
                 guard shoppingLibrary(workspace) == workspace, record.title == "Shopping kits and standing list",
                       record.helperLines.isEmpty, record.media?.isEmpty != false else { throw ArchiveError.invalidIdentity }
@@ -1206,10 +1207,9 @@ private struct RecordsRecipeAdoptionView: View {
     let cooking: CookingSessionContext?
     @State private var editing = false
     private var template: MealTemplate {
-        // The placeholder is never shown or saved. The editor requires the person to
-        // enter positive servings; original yield and ingredient words remain intact.
-        MealTemplate(title: recipe.title, servings: .one,
-            ingredients: recipe.ingredients.map { MealIngredient(name: $0, quantity: nil) },
+        // An ambiguous yield opens a blank servings field. The editor confirms any explicit serving count.
+        MealTemplate(title: recipe.title, servings: recipe.suggestedServings ?? .one,
+            ingredients: recipe.ingredients.map(ImportedRecipe.ingredientDraft),
             notes: [recipe.yieldText, recipe.notes].filter { !$0.isEmpty }.joined(separator: "\n"), sourceURL: recipe.sourceURL,
             recipeSteps: recipe.steps.isEmpty ? nil : recipe.cookingSteps)
     }
@@ -1249,9 +1249,9 @@ private struct RecordsRecipeAdoptionView: View {
     }
     @ViewBuilder private var dinnerEditor: some View {
         if let dinnerModel {
-            DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: true)
+            DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: recipe.suggestedServings == nil)
         } else {
-            LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true)
+            LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: recipe.suggestedServings == nil)
         }
     }
 }

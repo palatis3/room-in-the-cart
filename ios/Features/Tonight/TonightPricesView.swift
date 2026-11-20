@@ -4,6 +4,7 @@ import CoreDomain
 struct TonightPricesView: View {
     let estimate: TonightPurchaseEstimate?
     var followsFirstMeal = false
+    var hasHandCheckedIngredients = false
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if let estimate, let subtotal = estimate.subtotal {
@@ -14,7 +15,9 @@ struct TonightPricesView: View {
                     Text(verbatim: "\(line.source) · \(line.observedAt.formatted(date: .abbreviated, time: .omitted))")
                         .font(.caption)
                 }
-                if estimate.packages.isEmpty {
+                if hasHandCheckedIngredients {
+                    Text(tonightText("This estimate includes measured ingredients only."))
+                } else if estimate.packages.isEmpty {
                     Text(tonightText(followsFirstMeal ? "No extra packages are needed for the second meal." : "Confirmed pantry food covers these recipe amounts."))
                 } else {
                     Text(tonightText("Based on observed package prices. Check current prices, fees and taxes at checkout."))
@@ -44,7 +47,7 @@ struct SecondMealPricesView: View {
 
     var body: some View {
         let estimate = estimate
-        TonightPricesView(estimate: estimate, followsFirstMeal: true)
+        TonightPricesView(estimate: estimate, followsFirstMeal: true, hasHandCheckedIngredients: first.hasHandCheckedIngredients || second.hasHandCheckedIngredients)
         if let estimate { SecondMealCashReview(estimate: estimate).id(pairingRevision) }
     }
 }

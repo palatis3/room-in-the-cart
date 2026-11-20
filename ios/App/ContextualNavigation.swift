@@ -19,6 +19,7 @@ extension HouseholdModel {
 struct FamilyInboxContextLink: View {
     @EnvironmentObject private var household: HouseholdModel
     var body: some View {
+        SharedPickingLink(household: household)
         if let scope = contextualScope(household), scope.permits(.inbox), household.canReviewHouseholdRequests {
             NavigationLink(ht("Review family requests"), value:
                 RestorableDestination.household(.inbox, HouseholdNavigationIdentity(scope)))

@@ -60,7 +60,13 @@ import {join} from 'node:path';
 import {exerciseTrackingClient} from './shared-tracking-native-wire.mjs';
 const state=async()=>{assert.ok(process.env.RITC_NATIVE_WIRE_STATE);const p=await mkdtemp(join(process.env.RITC_NATIVE_WIRE_STATE,'tracking-client-'));await chmod(p,0o700);return p;};
 const wire=async(f,phase,privateState,extra={})=>exerciseTrackingClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,phase,privateState,
- before:phase==='revoked'?null:await page(f),packs:[],...extra});
+ readDevicePage:device=>page(f,{...f.owner,device}),packs:[],...extra});
+async function verifyNativeFreezeReview(f,nativePage){
+ assert.ok(nativePage.freezeReview,'The reviewing native device can freeze its reviewed facts');
+ const otherDevicePage=await page(f);
+ assert.equal(otherDevicePage.freezeReview,null,'The other enrolled device cannot use this review');
+ assert.deepEqual(otherDevicePage,{...nativePage,freezeReview:null});
+}
 function exactReview(observed,{acceptOverage=false,acceptUnknown=true}={}){
  assert.equal(observed.candidateAttempts,1);assert.equal(observed.previewAttempts,1);
  assert.equal(observed.candidateResponses.length,1);assert.equal(observed.previewResponses.length,1);
@@ -114,7 +120,7 @@ test('actual Swift tracking request uses explicit current preview revision and d
  const current=await page(f),newSource={...source(f,null),source:{kind:'request',requestId:sent.request.requestId,appliedRequestRevision:2},originalText:'Guest wraps revised'};
  const oldLine=current.state.graph.lines.find(x=>x.id===f.basket.lineId),change={...empty(),lines:[{...oldLine,trashedAt:null}],contributions:[newSource]},packs=[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:true}];
  const applied=await wire(f,'request',privateState,{requestId:sent.request.requestId,requestRevision:2,line:oldLine,change,packs});const reviewed=exactApply(applied);
- assert.equal(reviewed.command.base.requestRevision,2);const after=await page(f);assert.deepEqual(after.state.unbound,current.state.unbound);assert.deepEqual(after.state.graph.contributions.find(x=>x.id===newSource.id),newSource);
+ assert.equal(reviewed.command.base.requestRevision,2);const after=applied.after;await verifyNativeFreezeReview(f,after);assert.deepEqual(after.state.unbound,current.state.unbound);assert.deepEqual(after.state.graph.contributions.find(x=>x.id===newSource.id),newSource);
  const placed=await wire(f,'freeze-place',privateState);assert.equal(placed.attempts,3,'One rejected token, one exact freeze, one placement');
  const commands=placed.commands.map(x=>JSON.parse(x));assert.equal(commands[0].kind,'shop.freeze');assert.equal(commands[1].kind,'shop.freeze');assert.deepEqual(commands[1].body,{trackingReview:after.freezeReview});assert.equal(commands[2].kind,'shop.reportPlaced');
  const shop=ok(await call(f.owner,f.path));assert.equal(shop.phase,'placed');assert.equal(shop.shopRevision,after.shopRevision+2);
@@ -137,7 +143,7 @@ test('actual Swift tracking erasure preserves independent sources through recove
  const recovered=await wire(f,'recover',privateState,{packs:[packs[1]],survivor});assert.equal(recovered.attempts,2,'Old exact replay denied, then fresh recovery');exactReview(recovered);
  assert.deepEqual(recovered.commands[0],adopted.commands[0]);const accepted=recovered.previewResponses[0],recoveryCommand=JSON.parse(recovered.commands[1]);
  assert.equal(recoveryCommand.kind,accepted.action.kind);assert.deepEqual(recoveryCommand.body,{...accepted.action.body,demandReview:{previewId:accepted.previewId,previewDigest:accepted.previewDigest,trackingVersion:2}});
- const after=await page(f);assert.equal(after.status,'enabled');assert.deepEqual(after.state.graph.contributions.find(x=>x.id===survivor.id),survivor);assert.ok(after.freezeReview);
+ const after=recovered.after;assert.equal(after.status,'enabled');assert.deepEqual(after.state.graph.contributions.find(x=>x.id===survivor.id),survivor);await verifyNativeFreezeReview(f,after);
  const newShopper=await invited(f);ok(await send(f,'shop.transferAuthority',{newShopperId:newShopper.id},after.shopRevision,after.authorityEpoch));const beforeCounts=await counts(f),revoked=await wire(f,'revoked',privateState);
  assert.equal(revoked.attempts,1,'Only raw adversarial replay reaches command route');assert.deepEqual(revoked.commands,[recovered.commands[1]]);assert.deepEqual(await counts(f),beforeCounts);
  assert.equal((await call(f.owner,f.path+'/demand/tracking')).status,404);assert.equal(ok(await call(newShopper,f.path+'/demand/tracking')).state.graph.contributions.find(x=>x.id===survivor.id).originalText,survivor.originalText);

@@ -58,13 +58,13 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 12))
         let empty = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "No reviewed recipes are available.")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 12))
-        tap(app.buttons["Review a recipe by hand"])
+        tap(app.buttons["tonight.addRecipe"])
         XCTAssertTrue(app.navigationBars["Review a recipe"].waitForExistence(timeout: 8))
         tap(app.buttons["Cancel"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 8))
         // A real reviewed recipe can be saved before any shop exists. Canceling
         // earlier must not have filled the reusable slot or created a pickup.
-        tap(app.buttons["Review a recipe by hand"])
+        tap(app.buttons["tonight.addRecipe"])
         fill(app.textFields["tonight.recipe.title"], "No-shop rice dinner")
         fill(app.textFields["tonight.recipe.servings"], "1")
         fill(app.textFields["tonight.recipe.ingredient"], "Rice")
@@ -90,6 +90,124 @@ import XCTest
         XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8), "Browse and canceled recipe review must leave the workspace without a pickup")
         XCTAssertFalse(app.buttons["tonight.apply"].exists)
     }
+    func testImportedSeasoningAndCookSoonInPrivateChooserEnglishAndSpanish() throws {
+        for spanish in [false, true] {
+            app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--shopper-recipe-sources",
+                                   "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
+            app.launch()
+            tap(app.tabBars.buttons[spanish ? "Despensa" : "Pantry"])
+            tap(app.buttons["pantry.setup.apply"])
+            let products = ["Red lentils", "Green lentils"]
+            for product in products {
+                tap(app.buttons["pantry.add"])
+                let name = app.textFields["pantry.foodName"], amount = app.textFields["pantry.amount"]
+                tap(name)
+                name.typeText(product)
+                XCTAssertEqual(name.value as? String, product)
+                let stockAmount = product == products[0] ? "2" : "1/2"
+                tapPantryRowBelowName(amount)
+                amount.typeText(stockAmount)
+                XCTAssertEqual(amount.value as? String, stockAmount)
+                amount.typeText("\n")
+                XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+                let unit = app.buttons["pantry.foodUnit"], cups = spanish ? "tazas" : "cups"
+                tapPantryRowBelowName(unit)
+                tap(app.buttons[cups])
+                XCTAssertTrue(unit.label.contains(cups))
+                tap(app.buttons["pantry.review"])
+                let confirm = app.buttons["pantry.confirm"]
+                tap(confirm)
+                XCTAssertTrue(confirm.waitForNonExistence(timeout: 8))
+            }
+            tap(app.buttons["pantry.tonight"])
+            let search = app.textFields["dinner.recipeSearch"]
+            tap(search)
+            search.typeText("cilantrox")
+            let noMatch = app.staticTexts["tonight.recipeNoMatch"]
+            XCTAssertTrue(noMatch.waitForExistence(timeout: 5))
+            XCTAssertEqual(app.staticTexts.matching(identifier: "tonight.recipeNoMatch").count, 1)
+            search.typeText(XCUIKeyboardKey.delete.rawValue + "\n")
+            let source = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "tonight.source.", "Sopa de lentejas")).firstMatch
+            XCTAssertTrue(source.waitForExistence(timeout: 5))
+            XCTAssertTrue(source.isHittable, "An ingredient search should put its matching import directly below the search field.")
+            XCTAssertFalse(noMatch.exists)
+            let addRecipe = app.navigationBars.buttons["tonight.addRecipe"]
+            XCTAssertTrue(addRecipe.isHittable, "Adding a recipe must also be reachable from the filtered library.")
+            XCTAssertEqual(addRecipe.label, spanish ? "Añadir receta" : "Add recipe")
+            XCTAssertEqual(app.buttons.matching(identifier: "tonight.addRecipe").count, 1)
+            tap(source)
+            let servings = app.textFields["tonight.recipe.servings"]
+            XCTAssertTrue(servings.waitForExistence(timeout: 5))
+            XCTAssertEqual(servings.value as? String, "4", "The imported wording ‘4 porciones’ supplies the serving count in either language.")
+            let handCheck = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "tonight.recipe.manual.", "cilantro al gusto")).firstMatch
+            tap(handCheck, at: CGVector(dx: 0.92, dy: 0.5))
+            XCTAssertEqual(handCheck.value as? String, "1")
+            let shot = XCTAttachment(screenshot: app.screenshot())
+            shot.name = spanish ? "Cilantro al gusto revisado" : "Hand-reviewed seasoning and imported measure"
+            shot.lifetime = .keepAlways; add(shot)
+            tap(app.buttons["tonight.recipe.review"])
+            let handStatus = spanish ? "Revisado sin medir" : "Checked by hand · unmeasured"
+            let reviewed = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", handStatus, handStatus)).firstMatch
+            XCTAssertTrue(reviewed.waitForExistence(timeout: 5))
+            tap(app.buttons["tonight.recipe.save"])
+            // iOS 17 exposes the label and disclosure chevron separately. Both are inside this row's frame.
+            let row = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "tonight.result.", "Sopa de lentejas")).firstMatch
+            let chevron = CGVector(dx: 0.94, dy: 0.5)
+            tap(row, at: chevron)
+            let pin = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.cookSoon.reviewed.")).firstMatch
+            tap(pin)
+            let pinned = NSPredicate(format: "label == %@", spanish ? "Quitar de Cocinar pronto" : "Remove from Cook soon")
+            XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: pinned, object: pin)], timeout: 8), .completed)
+            XCTAssertTrue(pin.isHittable, "Pinning must leave the reviewed recipe open and in view.")
+            let picker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.match.")).firstMatch
+            XCTAssertTrue(picker.waitForExistence(timeout: 5))
+            let ingredient = String(picker.identifier.dropFirst("tonight.match.".count))
+            let remember = app.buttons["tonight.remember." + ingredient]
+            let forget = app.buttons["tonight.forget." + ingredient]
+            func assertVisibleTarget(_ button: XCUIElement) {
+                XCTAssertTrue(button.waitForExistence(timeout: 8), button.debugDescription)
+                XCTAssertTrue(button.isHittable, "Updating a match must keep the same reviewed ingredient visible.")
+                // XCTest subtracts floating-point screen coordinates to derive each dimension.
+                let coordinateTolerance: CGFloat = 1e-9
+                XCTAssertGreaterThanOrEqual(button.frame.height + coordinateTolerance, 44)
+                XCTAssertGreaterThanOrEqual(button.frame.width + coordinateTolerance, 44)
+            }
+            tap(picker)
+            tap(app.buttons[products[0]])
+            assertVisibleTarget(remember)
+            remember.tap()
+            assertVisibleTarget(forget)
+            XCTAssertTrue(picker.isHittable)
+            picker.tap()
+            tap(app.buttons[products[1]])
+            assertVisibleTarget(remember)
+            XCTAssertEqual(remember.label, spanish ? "Cambiar el producto guardado" : "Change remembered product")
+            remember.tap()
+            XCTAssertTrue(remember.waitForNonExistence(timeout: 8))
+            assertVisibleTarget(forget)
+            forget.tap()
+            XCTAssertTrue(forget.waitForNonExistence(timeout: 8))
+            XCTAssertTrue(picker.isHittable)
+            XCTAssertFalse(picker.label.contains(products[1]))
+            picker.tap()
+            tap(app.buttons[products[1]])
+            let shortfall = app.staticTexts["tonight.shortfall." + ingredient]
+            revealInList(shortfall)
+            XCTAssertTrue(shortfall.label.hasSuffix(spanish ? " · 1 taza estadounidense" : " · 1 US cup"), shortfall.label)
+            revealInList(row, towardEnd: false)
+            tap(row, at: chevron)
+            revealInList(app.staticTexts["tonight.section.matches"], towardEnd: false)
+            XCTAssertFalse(picker.exists, "The closed recipe should now appear under current pantry matches.")
+            revealInList(search, towardEnd: false)
+            tap(search)
+            XCTAssertEqual(search.value as? String, "cilantro")
+            app.terminate()
+        }
+    }
+
     func testMealExplanationOfflineFallbackInEnglishAndSpanishDoesNotRequireAccount() throws {
         for spanish in [false, true] {
             app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
@@ -107,14 +225,33 @@ import XCTest
             app.terminate()
         }
     }
-    private func revealInList(_ element: XCUIElement) {
+    private func revealInList(_ element: XCUIElement, towardEnd: Bool = true) {
         for _ in 0..<12 {
             let top = app.navigationBars.firstMatch.frame.maxY
             let bottom = app.tabBars.firstMatch.frame.minY
-            if element.exists, element.frame.midY > top, element.frame.midY < bottom { return }
-            app.swipeUp()
+            let area = CGRect(x: app.frame.minX + 12, y: top, width: app.frame.width - 24, height: bottom - top)
+            if element.exists, area.contains(CGPoint(x: element.frame.midX, y: element.frame.midY)) { return }
+            let upward = element.exists ? element.frame.midY > area.midY : towardEnd
+            app.scrollForm(in: area, upward: upward, besideFields: true)
         }
         XCTFail("Expected the requested row in the visible list: " + app.debugDescription)
+    }
+    private func tapPantryRowBelowName(_ row: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let keyboard = app.keyboards.firstMatch
+        let accessory = app.otherElements["SystemInputAssistantView"].firstMatch
+        for _ in 0..<8 {
+            let bottom = min(keyboard.exists ? keyboard.frame.minY : app.frame.maxY,
+                             accessory.exists ? accessory.frame.minY : app.frame.maxY)
+            let top = app.navigationBars.allElementsBoundByIndex.last?.frame.maxY ?? app.frame.minY
+            let area = CGRect(x: app.frame.minX + 12, y: top, width: app.frame.width - 24, height: bottom - top)
+            // A partly exposed row can report hittable with its center behind the prediction bar on iOS 17.
+            if row.exists, row.isHittable, row.frame.minY >= top, row.frame.maxY <= bottom {
+                row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                return
+            }
+            app.scrollForm(in: area, upward: !row.exists || row.frame.midY > area.midY, besideFields: true)
+        }
+        XCTFail("Expected the pantry row to be visible above the keyboard: " + row.debugDescription, file: file, line: line)
     }
     private func fill(_ element: XCUIElement, _ value: String) {
         tap(element)
@@ -127,7 +264,7 @@ import XCTest
         done.tap()
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "tonight.recipe.keyboardDone"))
     }
-    private func tap(_ element: XCUIElement) {
+    private func tap(_ element: XCUIElement, at offset: CGVector? = nil) {
         _ = element.waitForExistence(timeout: 3)
         for index in 0..<16 {
             if element.exists && element.isHittable { break }
@@ -137,7 +274,8 @@ import XCTest
             start.press(forDuration: 0.05, thenDragTo: end)
         }
         XCTAssertTrue(element.isHittable, element.debugDescription)
-        element.tap()
+        if let offset { element.coordinate(withNormalizedOffset: offset).tap() }
+        else { element.tap() }
     }
 }
 #endif

@@ -69,11 +69,12 @@ struct PantrySetupView: View {
                     case .review(_, let review):
                         let startsEmpty = review.sourceCount == 0 && review.lotCount == 0 && review.reservationCount == 0 && review.issues.isEmpty
                         Section {
+                            if startsEmpty { applySetup(startsEmpty: true) }
                             VStack(alignment: .leading, spacing: 12) {
-                                BrandScopeLabel(pantryText("Private · On this iPhone"), systemImage: "lock")
-                                Text(pantryText("Set up My Pantry")).font(.title2.bold())
+                                if !startsEmpty { Text(pantryText("Set up My Pantry")).font(.title2.bold()) }
                                 Text(pantryText(startsEmpty ? "Add your first food by hand or review a receipt." : "Review the food and reservations from your saved pickups. You can add food by hand after setup."))
                                     .foregroundStyle(Theme.secondary)
+                                BrandScopeLabel(pantryText("Private · On this iPhone"), systemImage: "lock")
                             }
                             .padding(.vertical, 8)
                             if !startsEmpty {
@@ -85,9 +86,7 @@ struct PantrySetupView: View {
                             ForEach(issueRows(review), id: \.label) { row in
                                 LabeledContent(pantryText(row.label), value: row.count.formatted())
                             }
-                            Button(pantryText(startsEmpty ? "Start my pantry" : "Confirm pantry setup")) { Task { await perform(.apply) } }
-                                .buttonStyle(PrimaryAction())
-                                .accessibilityIdentifier("pantry.setup.apply")
+                            if !startsEmpty { applySetup(startsEmpty: false) }
                         }
                     case .staging:
                         Text(pantryText("Pantry setup was interrupted. Continue the reviewed setup or discard it and review again."))
@@ -112,6 +111,12 @@ struct PantrySetupView: View {
             generation = UUID(); phase = .loading; busy = false
             if scope != nil { await perform(.inspect) }
         }
+    }
+
+    private func applySetup(startsEmpty: Bool) -> some View {
+        Button(pantryText(startsEmpty ? "Start my pantry" : "Confirm pantry setup")) { Task { await perform(.apply) } }
+            .buttonStyle(PrimaryAction())
+            .accessibilityIdentifier("pantry.setup.apply")
     }
 
     @ViewBuilder private func setupFigures(_ review: PantryMigrationCoordinator.Review) -> some View {

@@ -47,6 +47,27 @@ final class InventoryTests: XCTestCase {
         XCTAssertThrowsError(try undo.remainder(of: recounted.lot))
     }
 
+    func testRecountBacksTheSavedLunchBeforeTheScheduledLeftoverDinner() throws {
+        let stock = try lot(.exact(q(2)))
+        let day = try MealDay(year: 2026, month: 11, day: 20, timeZoneIdentifier: "America/New_York")
+        // The dinner sorts first by ID, so an identifier-based tie-breaker would consume the lunch.
+        let dinner = InventoryReservation(id: UUID(uuidString: "10000000-0000-0000-0000-000000000001")!,
+            originID: origin, revision: 1, foodID: food, lotID: stock.id, name: "Dinner", amount: q(2),
+            priority: .protected, cookedDinner: .init(ledgerID: UUID(), shopID: UUID(), cookID: UUID(), day: day))
+        let lunch = InventoryReservation(id: UUID(uuidString: "20000000-0000-0000-0000-000000000002")!,
+            originID: origin, revision: 1, foodID: food, lotID: stock.id, name: "Lunch", amount: q(1),
+            priority: .protected, personal: .init(day: nil))
+        let projection = try project([stock], [dinner, lunch])
+        let lunchCoverage = try XCTUnwrap(projection.reservations.first { $0.id == lunch.id })
+        let dinnerCoverage = try XCTUnwrap(projection.reservations.first { $0.id == dinner.id })
+        XCTAssertEqual(lunchCoverage.backed?.amount, .one)
+        XCTAssertEqual(lunchCoverage.shortfall?.amount, .zero)
+        XCTAssertEqual(dinnerCoverage.backed?.amount, .one)
+        XCTAssertEqual(dinnerCoverage.shortfall?.amount, .one)
+        XCTAssertThrowsError(try CookedDinnerReservation.update(dinner, action: .serve, operationID: UUID(),
+            lots: [stock], reservations: [lunch, dinner], at: now))
+    }
+
     func testUnmeasuredDiscardAndInvalidTransfersNeverInventAQuantity() throws {
         let unknown = try lot(.someLeft), initial = try lot(.exact(q(4)))
         let discard = InventoryPortionAction.discard(amount: nil, reason: nil)

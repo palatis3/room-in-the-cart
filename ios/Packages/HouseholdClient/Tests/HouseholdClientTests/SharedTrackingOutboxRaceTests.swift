@@ -30,13 +30,13 @@ private actor HeldTrackingOutbox: SharedTrackingOutbox {
 }
 
 extension TrackingWriteFixture {
-    static func pending(shopID: String = id(2)) throws -> PendingOperation {
+    static func pending(shopID: String = id(2), freeze: Bool = false) throws -> PendingOperation {
         let accepted = try accepted(scenario()), read = accepted.candidateReview.intent.base
-        let binding = SharedTrackingOperationBinding(kind: .apply, mode: "review", context: context,
+        let binding = SharedTrackingOperationBinding(kind: freeze ? .freeze : .apply, mode: freeze ? "freeze" : "review", context: context,
             shopID: SharedDemandID(UUID(uuidString: shopID)!), base: .init(shopRevision: 8, authorityEpoch: 3), graphRevision: 4,
             privacyRevision: read.privacyRevision, stateDigest: accepted.preview.disclosure.pickup.stateDigest.value,
-            previewID: accepted.preview.previewId, previewDigest: accepted.preview.previewDigest.value, action: accepted.preview.action, targetOperationID: nil)
-        let envelope = CommandEnvelope(replayWindow: id(80), shopId: shopID, kind: "shop.patch", base: binding.base, body: try binding.body())
+            previewID: accepted.preview.previewId, previewDigest: accepted.preview.previewDigest.value, action: freeze ? nil : accepted.preview.action, targetOperationID: nil)
+        let envelope = CommandEnvelope(replayWindow: id(80), shopId: shopID, kind: binding.commandKind, base: binding.base, body: try binding.body())
         let operation = try PendingOperation(envelope: envelope, householdID: context.householdID, memberID: context.memberID, deviceID: context.deviceID, sharedTrackingBinding: binding)
         try binding.validate(operation); return operation
     }
@@ -158,6 +158,26 @@ extension HouseholdClientTests {
         let store = OperationOutbox(url: dir.appendingPathComponent("outbox.json")); try await store.append(unrelated)
         do { _ = try await service.sendSharedTracking(operation, outbox: store); XCTFail("Expected refresh") } catch {}
         var saved = try await store.operations(); XCTAssertEqual(saved, [unrelated, operation])
+        // An earlier installation may already have persisted the same freeze after its reply was lost.
+        let url = dir.appendingPathComponent("outbox.json")
+        let freeze = try F.pending(freeze: true)
+        try await store.append(freeze)
+        let upgraded = OperationOutbox(url: url)
+        let diskRows = try await upgraded.operations()
+        let restored = try XCTUnwrap(diskRows.first { $0.id == freeze.id })
+        do { _ = try await service.sendSharedTracking(restored, outbox: upgraded); XCTFail("Expected ambiguous refresh") }
+        catch { }
+        saved = try await upgraded.operations(); XCTAssertEqual(saved, [unrelated, operation, freeze])
+        code.withLock { $0 = "review_expired" }
+        do { _ = try await service.sendSharedTracking(operation, outbox: upgraded); XCTFail("Expected error") } catch { }
+        saved = try await upgraded.operations(); XCTAssertEqual(saved, [unrelated, operation, freeze])
+        do { _ = try await service.sendSharedTracking(restored, outbox: upgraded); XCTFail("Expired freeze accepted") }
+        catch { XCTAssertEqual(error as? ClientError, .service(status: 409, code: "review_expired", correlationID: nil, retryAfter: nil)) }
+        saved = try await upgraded.operations(); XCTAssertEqual(saved, [unrelated, operation])
+        code.withLock { $0 = "tracking_freeze_superseded" }
+        try await store.append(freeze)
+        do { _ = try await service.sendSharedTracking(restored, outbox: upgraded); XCTFail("Superseded freeze accepted") } catch { }
+        saved = try await upgraded.operations(); XCTAssertEqual(saved, [unrelated, operation])
         code.withLock { $0 = "tracking_preview_expired" }
         do { _ = try await service.sendSharedTracking(operation, outbox: store); XCTFail("Expired/erased preview accepted") } catch {}
         saved = try await store.operations(); XCTAssertEqual(saved, [unrelated])
