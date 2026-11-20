@@ -1719,6 +1719,30 @@ import XCTest
         XCTAssertTrue(markUnknown.exists)
     }
 
+    func testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry() {
+        app.resetAuthorizationStatus(for: .camera)
+        defer { app.resetAuthorizationStatus(for: .camera) }
+        launch(reset: true)
+        receiptTap(app.shopToolButton("shop.myPantry"))
+        openReceiptAfterPantrySetup()
+        receiptTap(app.buttons["receipt.takePhoto"])
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let prompt = springboard.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'camera'")).firstMatch
+        // Simulators without a camera go directly to the alternative input choices.
+        if prompt.waitForExistence(timeout: 5) {
+            let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+            XCTAssertTrue(deny.isHittable)
+            deny.tap()
+        }
+        let message = app.staticTexts["receipt.sections.error"]
+        XCTAssertTrue(message.waitForExistence(timeout: 8))
+        XCTAssertEqual(message.label, "The camera is unavailable. Choose a photo or type the lines instead.")
+        receiptTap(app.buttons["Cancel"])
+        XCTAssertTrue(app.buttons["receipt.chooseScreenshot"].isHittable)
+        receiptTap(app.buttons["receipt.scan"])
+        XCTAssertTrue(app.textViews["scan.sourceEditor"].waitForExistence(timeout: 8))
+    }
+
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         launch(reset: true)
         receiptTap(app.shopToolButton("shop.myPantry"))

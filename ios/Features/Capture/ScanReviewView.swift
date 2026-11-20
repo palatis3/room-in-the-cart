@@ -2,6 +2,21 @@ import SwiftUI
 import PhotosUI
 import CoreDomain
 
+/// Keep a private receipt mounted beneath the existing privacy cover while iOS asks about the camera.
+@MainActor private struct ReceiptCameraPermission: DynamicProperty {
+    @Environment(\.pantryDigestPermissionPrompt) private var prompt
+    @Environment(\.pantryVoicePrompt) private var window
+
+    func retains(_ target: CaptureTarget) -> Bool {
+        target.kind == .receiptEvidence && prompt?.scope.origin == target.workspaceID && window?.holdsPresentation() == true
+    }
+
+    func request(for target: CaptureTarget) async throws {
+        let pantryOrigin = target.kind == .receiptEvidence ? target.workspaceID : nil
+        try await CameraCapturePermission.request(pantryOrigin: pantryOrigin, prompt: prompt)
+    }
+}
+
 @MainActor struct ScanReviewView: View {
     private enum InputField: Hashable {
         case sourceText, manualCode, sourceLabel
@@ -14,6 +29,7 @@ import CoreDomain
     let authorize: () -> Bool
     let onReviewed: (ReviewedScan) -> Void
     let correctionScope: CaptureCorrectionScope?
+    private var cameraPermission = ReceiptCameraPermission()
     @StateObject private var model = ScanModel()
     @StateObject private var corrections = CaptureCorrectionsModel()
     @State private var label: String
@@ -204,7 +220,7 @@ import CoreDomain
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(250))
                 guard !Task.isCancelled else { return }
-                if !authorize() { close(); dismiss(); return }
+                if !authorize() && !cameraPermission.retains(target) { close(); dismiss(); return }
             }
         }
         .onDisappear { if !showCamera { close() } }
@@ -387,7 +403,11 @@ import CoreDomain
         guard localPhotoConsent, canReview else { return }; requestingCamera = true; let attempt = UUID(); permissionGeneration = attempt
         Task { @MainActor in
             defer { if permissionGeneration == attempt { requestingCamera = false } }
-            do { try await CameraCapturePermission.request(); guard localPhotoConsent, permissionGeneration == attempt, authorize(), !model.closed else { return }; showCamera = true }
+            do {
+                try await cameraPermission.request(for: target)
+                guard localPhotoConsent, permissionGeneration == attempt, authorize(), !model.closed else { return }
+                showCamera = true
+            }
             catch { guard permissionGeneration == attempt, !model.closed else { return }; model.inputFailed(error as? ScanFailure ?? .unavailable) }
         }
     }
@@ -491,6 +511,7 @@ private struct ReceiptSectionCapture: View {
     var reviewsPrivateReceipt = false
     var initialPhoto: PhotosPickerItem?
     let reviewed: (SourceMediaRecord) -> Void
+    var cameraPermission = ReceiptCameraPermission()
     @State private var didStart = false
     @State private var draft = ReceiptSectionDraft()
     @State private var review: ExtractedReceiptDocument?
@@ -532,7 +553,7 @@ private struct ReceiptSectionCapture: View {
                     else if start == .screenshot, let initialPhoto { item = initialPhoto }
                 }
                 while !Task.isCancelled {
-                    guard authorize() else { clear(); dismiss(); return }
+                    guard authorize() || cameraPermission.retains(target) else { clear(); dismiss(); return }
                     try? await Task.sleep(for: .milliseconds(250))
                 }
             }
@@ -633,7 +654,7 @@ private struct ReceiptSectionCapture: View {
         job = Task { @MainActor in
             defer { if token == generation { job = nil } }
             do {
-                try await CameraCapturePermission.request()
+                try await cameraPermission.request(for: target)
                 guard !Task.isCancelled, token == generation, authorize() else { return }
                 camera = true
             } catch { if token == generation { self.error = captureText("The camera is unavailable. Choose a photo or type the lines instead.") } }
