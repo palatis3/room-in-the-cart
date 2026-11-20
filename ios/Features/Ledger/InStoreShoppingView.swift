@@ -250,6 +250,7 @@ struct InStoreShoppingView: View {
                 }
             }
         }.navigationTitle(typeSize.isAccessibilitySize ? shoppingText("In store") : shoppingText("Shop in store"))
+        .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
         .toolbar {
             if model.shop?.id == shopID && authorize() {
                 ToolbarItemGroup(placement: .topBarLeading) {
