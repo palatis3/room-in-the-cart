@@ -366,6 +366,14 @@ final class AppModelTests: XCTestCase {
         model.selectAll()
         await model.prepareExport(.ownerText)
         let owner = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
+        let unitRates = try [Rational(349, 60), Rational(300, 80)].map {
+            comparisonUnitPriceText($0, in: .gram, locale: .current)
+        }
+        let draftOnly = try SavedPayload(draft: draft).readableText()
+        for rate in unitRates {
+            XCTAssertTrue(owner.contains(rate))
+            XCTAssertFalse(draftOnly.contains(rate))
+        }
         for conversion in [try XCTUnwrap(draft.aConversion), try XCTUnwrap(draft.bConversion)] {
             XCTAssertTrue(owner.contains(conversion.readableText()))
             XCTAssertEqual(ComparisonConversion.readableText(for: try conversion.unitBasis()), conversion.readableText())
@@ -377,7 +385,7 @@ final class AppModelTests: XCTestCase {
         await model.prepareExport(.helperText)
         let helper = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
         XCTAssertTrue(helper.contains(draft.item))
-        for privateValue in ["1/3", "20.00", "0.5000", "40.000", "Measured flour A", "Package B equality", "confirmedConversion", "sourceLiteral"] {
+        for privateValue in unitRates + ["1/3", "20.00", "0.5000", "40.000", "Measured flour A", "Package B equality", "confirmedConversion", "sourceLiteral"] {
             XCTAssertFalse(helper.contains(privateValue), privateValue)
         }
     }

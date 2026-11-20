@@ -67,6 +67,20 @@ final class SavedDinnerReviewTests: XCTestCase {
         XCTAssertThrowsError(try review.apply(to: &data, access: access, phase: .draft, at: now))
         XCTAssertTrue(data.shops[0].lines.isEmpty)
     }
+    func testChangedActorOrWorkspaceCannotApplyReviewedGroceriesOrReplayAReceipt() throws {
+        var data = workspace
+        let review = try SavedDinnerReview(recipe: recipe, action: .groceries([recipe.ingredients[0].id]), workspace: data,
+                                           access: access, phase: .draft, at: now)
+        let changed = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "other", shopID: shop.id, assignedShopperID: "other",
+            canPlan: true, canReadBudget: false, hasPaidTools: true, roleRevision: 1, verifiedAt: now, validUntil: now.addingTimeInterval(120))
+        XCTAssertThrowsError(try review.apply(to: &data, access: changed, phase: .draft, at: now))
+        XCTAssertTrue(data.shops[0].lines.isEmpty)
+        try review.apply(to: &data, access: access, phase: .draft, at: now)
+        let saved = data
+        XCTAssertThrowsError(try review.apply(to: &data, access: changed, phase: .draft, at: now))
+        XCTAssertEqual(data, saved)
+    }
+
     func testNoSelectionUnknownIDAndNonFreeRecipeRequireReview() throws {
         for ids in [Set<UUID>(), [UUID()]] {
             XCTAssertThrowsError(try SavedDinnerReview(recipe: recipe, action: .groceries(ids), workspace: workspace,
