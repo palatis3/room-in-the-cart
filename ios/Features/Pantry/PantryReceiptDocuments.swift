@@ -76,10 +76,13 @@ struct PantryReceiptDocuments: View {
                     let name = captureText("Store or receipt name (required)")
                     WorkingField(name) {
                         TextField(name, text: $merchant, prompt: Text(""))
+                            .receiptInputChrome()
                             .focused($merchantFocused)
                             .accessibilityIdentifier("receipt.document.store")
                     }
                     .id("receipt.document.store")
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { merchantFocused = true })
                     .task(id: storeFocusRequest) {
                         guard let request = storeFocusRequest else { return }
                         await Task.yield()

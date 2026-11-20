@@ -254,7 +254,8 @@ struct ReceiptDocumentReader: Sendable {
                 guard original.numberOfCharacters <= 100_000 - characterCount else { throw ReceiptDocumentFailure.characters }
                 let text = original.string ?? ""
                 if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    result.append(try page(index + 1, method: .pdfText, reading: Reading(text: text)))
+                    let wording = try Self.pdfPrintedWording(text, page: original)
+                    result.append(try page(index + 1, method: .pdfText, reading: Reading(text: wording)))
                 } else {
                     do {
                         let bytes = try autoreleasepool { try Self.raster(original) }
@@ -280,6 +281,38 @@ struct ReceiptDocumentReader: Sendable {
         do { return try await recognize(data) }
         catch CaptureFailure.noText { return Reading(text: "") }
         catch CaptureFailure.inputTooLarge { throw ReceiptDocumentFailure.lineLimit }
+    }
+
+    /// Older PDFKit versions can use one space between separately printed rows.
+    /// Recover a boundary only when both adjoining glyphs have valid, clearly
+    /// separated vertical geometry in PDFKit's own text order.
+    static func pdfPrintedWording(_ text: String, page: PDFPage) throws -> String {
+        let characters = text as NSString
+        guard characters.length == page.numberOfCharacters else { return text }
+        var spaces: Int?
+        var breaks: [NSRange] = []
+        for index in 0..<characters.length {
+            let code = characters.character(at: index)
+            if code == 32 || code == 9 {
+                if spaces == nil { spaces = index }
+                continue
+            }
+            guard let start = spaces else { continue }
+            spaces = nil
+            guard start > 0, code >= 32, characters.character(at: start - 1) >= 32 else { continue }
+            try Task.checkCancellation()
+            let first = page.characterBounds(at: start - 1)
+            let next = page.characterBounds(at: index)
+            guard first.isFiniteGlyph, next.isFiniteGlyph,
+                  first.minY >= next.maxY,
+                  first.midY - next.midY >= max(first.height, next.height) * 1.15
+            else { continue }
+            breaks.append(NSRange(location: start, length: index - start))
+        }
+        guard !breaks.isEmpty else { return text }
+        let wording = NSMutableString(string: text)
+        for space in breaks.reversed() { wording.replaceCharacters(in: space, with: "\n") }
+        return wording as String
     }
 
     private static func checkPixels(_ data: Data) throws {
@@ -371,6 +404,12 @@ struct ReceiptDocumentReader: Sendable {
             return true
         }, nil)
         if let error { throw error }
+    }
+}
+
+private extension CGRect {
+    var isFiniteGlyph: Bool {
+        !isEmpty && !isNull && minX.isFinite && minY.isFinite && maxX.isFinite && maxY.isFinite
     }
 }
 

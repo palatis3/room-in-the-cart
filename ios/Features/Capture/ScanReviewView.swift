@@ -323,10 +323,13 @@ import CoreDomain
             Text(captureText("Keep unreadable quantities or printed amounts unknown. These lines do not mark anything paid, received or usable."))
             WorkingField(storeLabel) {
                 TextField(storeLabel, text: $label, prompt: Text(""))
+                    .receiptInputChrome()
                     .focused($focusedField, equals: .sourceLabel)
                     .accessibilityIdentifier("scan.receipt.store")
             }
             .id("scan.receipt.store")
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { focusedField = .sourceLabel })
             .task(id: storeFocusRequest) {
                 guard let request = storeFocusRequest else { return }
                 await Task.yield()
@@ -356,11 +359,13 @@ import CoreDomain
                         let quantityLabel = captureText("Printed quantity (optional)")
                         WorkingField(quantityLabel) {
                             TextField(quantityLabel, text: row.quantityNote, prompt: Text(""))
+                                .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptQuantity(snapshot.id))
                         }
                         let priceLabel = captureText("Printed amount (optional)")
                         WorkingField(priceLabel) {
                             TextField(priceLabel, text: row.priceNote, prompt: Text(""))
+                                .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptPrice(snapshot.id))
                         }
                     }
@@ -521,6 +526,18 @@ func receiptStoreIssue(_ value: String) -> String? {
     if name.isEmpty { return captureText("Enter the store or receipt name to continue.") }
     if name.utf8.count > 256 || name.contains("\0") { return captureText("Enter a shorter store or receipt name.") }
     return nil
+}
+
+extension View {
+    func receiptInputChrome() -> some View {
+        padding(.horizontal, 10)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+            .overlay {
+                RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge)
+                    .allowsHitTesting(false).accessibilityHidden(true)
+            }
+    }
 }
 
 /// The system picker grants access to the single chosen image. No library scan is needed.
