@@ -9,6 +9,14 @@ func shoppingFormat(_ key: String, _ values: CVarArg...) -> String {
     String(format: shoppingText(key), locale: Locale.current, arguments: values)
 }
 
+func pickedSubtotalText(_ subtotal: PickedCartSubtotal) -> String {
+    if subtotal.picked == 0 { return shoppingFormat("%@ · No items picked", moneyText(subtotal.total)) }
+    if subtotal.priced == 0 { return shelfText("Picked subtotal unknown") }
+    if subtotal.picked == 1 { return shoppingFormat("%@ for 1 picked item", moneyText(subtotal.total)) }
+    return shoppingFormat("%@ for %lld of %lld picked items", moneyText(subtotal.total),
+                          Int64(subtotal.priced), Int64(subtotal.picked))
+}
+
 private struct ShoppingListAuthorizationKey: EnvironmentKey {
     static let defaultValue: @MainActor () -> Bool = { false }
 }
@@ -390,9 +398,7 @@ struct InStoreShoppingView: View {
     private func subtotalSummary(_ shop: ShoppingLedger, last: ShoppingLine?) -> some View {
         let subtotal = shop.pickedCartSubtotal
         return VStack(alignment: .leading, spacing: 5) {
-            Text(subtotal.picked > 0 && subtotal.priced == 0 ? shelfText("Picked subtotal unknown") :
-                shoppingFormat("%@ for %lld of %lld picked items", moneyText(subtotal.total),
-                    Int64(subtotal.priced), Int64(subtotal.picked))).font(.headline).monospacedDigit()
+            Text(pickedSubtotalText(subtotal)).font(.headline).monospacedDigit()
                 .accessibilityFocused($focus, equals: .subtotal)
                 .accessibilityIdentifier("inStoreSubtotal")
             InStoreBudgetSummary(shop: shop)

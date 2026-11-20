@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ for 1 picked item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ for 1 picked item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ por 1 artículo en el carrito"
+          }
+        }
+      }
+    },
+    "%@ · No items picked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · No items picked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Aún no hay artículos en el carrito"
+          }
+        }
+      }
+    },
     "%@ for %lld of %lld picked items": {
       "localizations": {
         "en": {

@@ -99,17 +99,17 @@ import XCTest
         let save = app.buttons["Save price"]
         show(save)
         save.tap()
-        waitForSubtotal("$4.25 for 1 of 1 picked items")
+        waitForSubtotal("$4.25 for 1 picked item")
         checks.firstMatch.tap()
         waitForSubtotal("$4.25 for 1 of 2 picked items")
         app.buttons["inStoreUndo"].tap()
-        waitForSubtotal("$4.25 for 1 of 1 picked items")
+        waitForSubtotal("$4.25 for 1 picked item")
         app.buttons["Done"].tap()
         app.terminate()
         launch(fresh: false)
         show(inStore)
         inStore.tap()
-        waitForSubtotal("$4.25 for 1 of 1 picked items")
+        waitForSubtotal("$4.25 for 1 picked item")
         checks.firstMatch.tap()
         waitForSubtotal("$4.25 for 1 of 2 picked items")
         let firstPrice = app.buttons["inStorePrice-" + firstLineID]
@@ -125,7 +125,7 @@ import XCTest
         waitForSubtotal("Picked subtotal unknown")
         XCTAssertTrue(app.buttons[firstCheckID].exists)
         app.buttons["inStoreUndo"].tap()
-        waitForSubtotal("$0.00 for 0 of 0 picked items")
+        waitForSubtotal("$0.00 · No items picked")
     }
 
     func testMeasuredApplesAndLeavingBreadForNextTime() {
