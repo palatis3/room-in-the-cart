@@ -277,7 +277,7 @@ import XCTest
         let remember = app.buttons["pack.remember"]
         reveal(remember)
         XCTAssertEqual(remember.label, "Remember this exact pack")
-        tapVisibleFormRow(remember, marker: "REMEMBER_HOME_PACK")
+        tap(remember)
         XCTAssertTrue(remember.wait(for: \.label, toEqual: "Correct remembered pack", timeout: 8), app.debugDescription)
         closeReviewedProduct()
         tap(app.buttons["pack.separate.0"])
