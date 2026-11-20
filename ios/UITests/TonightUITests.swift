@@ -166,8 +166,10 @@ import XCTest
             func assertVisibleTarget(_ button: XCUIElement) {
                 XCTAssertTrue(button.waitForExistence(timeout: 8), button.debugDescription)
                 XCTAssertTrue(button.isHittable, "Updating a match must keep the same reviewed ingredient visible.")
-                XCTAssertGreaterThanOrEqual(button.frame.height, 44)
-                XCTAssertGreaterThanOrEqual(button.frame.width, 44)
+                // XCTest subtracts floating-point screen coordinates to derive each dimension.
+                let coordinateTolerance: CGFloat = 1e-9
+                XCTAssertGreaterThanOrEqual(button.frame.height + coordinateTolerance, 44)
+                XCTAssertGreaterThanOrEqual(button.frame.width + coordinateTolerance, 44)
             }
             tap(picker)
             tap(app.buttons[products[0]])
