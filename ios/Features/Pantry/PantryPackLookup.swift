@@ -140,7 +140,7 @@ struct PackLotLabel: View {
                 }
                 if let doc = try? store.document(access.scope) {
                     if let range = doc.currentGuideRange(for: lot) {
-                        Text("USDA FoodKeeper · " + day(range.earliest) + " – " + day(range.latest))
+                        Text("USDA FoodKeeper · " + range.qualityWindowTitle + " · " + range.qualityWindowDays(day))
                     }
                     if let rule = doc.rules.first(where: { $0.lotID == lot.id && $0.revision == lot.revision && $0.source == nil }) {
                         Text(pantryText("Personal check day") + " · " + day(rule.day))

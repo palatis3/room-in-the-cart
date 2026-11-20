@@ -481,6 +481,22 @@
         }
       }
     },
+    "Estimated quality check date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated quality check date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha estimada para revisar la calidad"
+          }
+        }
+      }
+    },
     "Estimated quality range": {
       "localizations": {
         "en": {
