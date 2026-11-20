@@ -42,6 +42,21 @@ struct PrintedPackageDate: Equatable, Codable {
     var selectedAI: String? = nil
     // Older encoded-only records carry the GS1 field in the required wording slot.
     var wordingIsPrinted: Bool? = nil
+    var confirmedPrintedYear: Int? = nil
+    /// A previous editor could attach the current year by tapping one of these month/day interpretations.
+    /// Keep that stored choice available to edit, but require confirmation before using it for readback.
+    var yearNeedsReview: Bool {
+        guard selectedAI == nil, let day, confirmedPrintedYear == nil else { return false }
+        guard Self.monthDayChoices(in: wording).contains(where: { $0.month == day.month && $0.day == day.day }) else { return false }
+        // A year attached to the selected stamp (including its original OCR wording) is evidence.
+        let yearPattern = #"(?<![0-9/-])(?:0?"# + String(day.month) + "/0?" + String(day.day) +
+            "|0?" + String(day.day) + "/0?" + String(day.month) + #")[ /,.-]+"# + String(day.year) + #"(?![0-9])"#
+        return ![wording, selectedPhotoText].compactMap { $0 }.contains { text in
+            Self.proposedDay(in: text, zone: day.timeZoneIdentifier) == day ||
+                text.range(of: yearPattern, options: .regularExpression) != nil
+        }
+    }
+    var verifiedDay: MealDay? { yearNeedsReview ? nil : day }
     var originalPrintedWording: String? {
         if let wordingIsPrinted { return wordingIsPrinted ? wording : nil }
         guard let selectedAI, selectedPhotoText == nil,
@@ -61,6 +76,9 @@ struct PrintedPackageDate: Equatable, Codable {
               photoDigest.map({ $0.count == 64 && $0.allSatisfy(\.isHexDigit) }) ?? true,
               selectedPhotoText.map({ !$0.isEmpty && $0.utf8.count <= 1024 && !$0.contains("\0") }) ?? true else {
             throw PantryDigestFailure.invalid
+        }
+        if let confirmedPrintedYear {
+            guard selectedAI == nil, let day, day.year == confirmedPrintedYear else { throw PantryDigestFailure.invalid }
         }
         if wordingIsPrinted == false {
             guard let selectedAI, let field = encodedSource?.gs1?.dates.first(where: { $0.ai == selectedAI }),

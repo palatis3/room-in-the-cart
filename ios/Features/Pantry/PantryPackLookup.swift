@@ -131,7 +131,7 @@ struct PackLotLabel: View {
             Text(lot.packageBatchLabel).font(.caption)
             if let access, access.authorized(), access.scope.origin == lot.source.originID {
                 if let label = try? printed.load(access.scope, lot: lot.id) {
-                    if let chosen = label.day {
+                    if let chosen = label.verifiedDay {
                         Text(label.sourceLabel + " · " + label.meaning.label + " · " + day(chosen))
                     }
                     if let original = label.originalPrintedWording {

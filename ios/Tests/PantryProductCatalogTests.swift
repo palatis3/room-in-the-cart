@@ -343,13 +343,35 @@ extension PantryProductCatalogTests {
         let undated = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
         XCTAssertNil(undated.day)
         XCTAssertEqual(undated.originalPrintedWording, raw)
+        let legacy = PrintedPackageDate(wording: raw, meaning: .bestBefore, day: april.confirmed(year: "2026", zone: zone),
+            selectedPhotoText: nil, photoDigest: nil)
+        try store.replace(undated, with: legacy, scope: scope, lot: lot, authorized: { true })
+        let file = folder.appendingPathComponent(scope.origin.uuidString)
+            .appendingPathComponent(lot.uuidString).appendingPathComponent(scope.owner + ".json")
+        let legacyBytes = try Data(contentsOf: file)
+        XCTAssertFalse(String(decoding: legacyBytes, as: UTF8.self).contains("confirmedPrintedYear"))
+        let older = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
+        XCTAssertEqual(try Data(contentsOf: file), legacyBytes)
+        XCTAssertTrue(older.yearNeedsReview)
+        XCTAssertEqual(older.day?.iso8601, "2026-04-03")
+        XCTAssertNil(older.verifiedDay)
+        let proven = PrintedPackageDate(wording: raw, meaning: .bestBefore, day: older.day,
+            selectedPhotoText: "Best before 03/04/2026", photoDigest: actual.photoDigest)
+        try store.replace(older, with: proven, scope: scope, lot: lot, authorized: { true })
+        let provenRead = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
+        XCTAssertFalse(provenRead.yearNeedsReview)
+        XCTAssertEqual(provenRead.verifiedDay?.iso8601, "2026-04-03")
+        var confirmed = legacy
+        confirmed.confirmedPrintedYear = 2026
+        try store.replace(provenRead, with: confirmed, scope: scope, lot: lot, authorized: { true })
+        XCTAssertEqual(try PantryPackageDateStore(folder: folder).load(scope, lot: lot)?.verifiedDay?.iso8601, "2026-04-03")
 
         let code = CapturedBarcode(symbology: "GS1", value: "(01)00012345000058(10)LOT-A(17)270531")
         let encoded = try XCTUnwrap(code.gs1?.dates.first?.day(zone: zone))
         let printed = "Best before 7 June 2027"
         let choice = PrintedPackageDate(wording: printed, meaning: .expires, day: encoded,
             selectedPhotoText: printed, photoDigest: actual.photoDigest, encodedSource: code, selectedAI: "17", wordingIsPrinted: true)
-        try store.replace(undated, with: choice, scope: scope, lot: lot, authorized: { true })
+        try store.replace(confirmed, with: choice, scope: scope, lot: lot, authorized: { true })
         let reopened = try XCTUnwrap(PantryPackageDateStore(folder: folder).load(scope, lot: lot))
         XCTAssertEqual(reopened.originalPrintedWording, printed)
         XCTAssertEqual(reopened.selectedPhotoText, printed)

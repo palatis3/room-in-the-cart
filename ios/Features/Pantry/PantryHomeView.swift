@@ -506,7 +506,7 @@ private struct PantryLotView: View {
                     LabeledContent(pantryText("Split from batch"), value: String(source.uuidString.suffix(8)))
                     if let access = digestAccess, access.authorized(), access.scope.origin == lot.source.originID,
                        let date = try? PantryDigestStore.shared.packageDates.inherited(access.scope, lot: lot, among: model.snapshot?.lots ?? []) {
-                        if let chosen = date.day { LabeledContent(date.sourceLabel, value: dinnerDay(chosen)) }
+                        if let chosen = date.verifiedDay { LabeledContent(date.sourceLabel, value: dinnerDay(chosen)) }
                         if let original = date.originalPrintedWording {
                             LabeledContent(pantryText("Original printed wording"), value: original)
                         }

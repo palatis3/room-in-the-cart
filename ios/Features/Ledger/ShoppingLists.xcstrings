@@ -433,6 +433,22 @@
         }
       }
     },
+    "In store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tienda"
+          }
+        }
+      }
+    },
     "Item name": {
       "localizations": {
         "en": {

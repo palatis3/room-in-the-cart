@@ -689,7 +689,7 @@ private struct VoicePantryRow {
                         if let original = printed.originalPrintedWording {
                             LabeledContent(pantryText("Original printed wording"), value: original)
                         }
-                        if let day = printed.day {
+                        if let day = printed.verifiedDay {
                             Text(PantryVoiceDateEvidence.formatted(day, locale: locale))
                             if let today = try? MealDay(date: context.date, timeZoneIdentifier: day.timeZoneIdentifier) {
                                 if day.iso8601 == today.iso8601 { Text(pantryText(printed.selectedAI == nil ? "The printed date is today." : "The encoded date is today.")) }

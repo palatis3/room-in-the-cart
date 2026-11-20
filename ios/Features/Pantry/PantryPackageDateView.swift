@@ -18,7 +18,8 @@ struct PantryPackageDateSection: View {
                 }
                 LabeledContent(current.meaningLabel, value: current.meaning.label)
                 if let lot = current.encodedSource?.gs1?.lot { LabeledContent(pantryText("Package lot number"), value: lot) }
-                if let day = current.day { LabeledContent(current.sourceLabel, value: dinnerDay(day)) }
+                if let day = current.verifiedDay { LabeledContent(current.sourceLabel, value: dinnerDay(day)) }
+                if current.yearNeedsReview { Text(pantryText("Confirm the year from the package before saving.")) }
             }
             NavigationLink(pantryText("Review the date on this package")) {
                 PantryPackageDateEditor(model: model, lot: lot, access: access, store: store)
@@ -93,7 +94,8 @@ struct PantryPackageDateSection: View {
         let text = wording.isEmpty && useEncoded ? "GS1 (" + (encoded?.ai ?? "") + ") " + (encoded?.literal ?? "") : wording
         let value = PrintedPackageDate(wording: text, meaning: meaning, day: day, selectedPhotoText: photoText, photoDigest: photoDigest,
                                        encodedSource: encodedCode ?? previous?.encodedSource, selectedAI: useEncoded ? selectedAI : nil,
-                                       wordingIsPrinted: useEncoded ? !wording.isEmpty : nil)
+                                       wordingIsPrinted: useEncoded ? !wording.isEmpty : nil,
+                                       confirmedPrintedYear: !useEncoded && !PrintedPackageDate.monthDayChoices(in: wording).isEmpty ? day?.year : nil)
         do { try value.validate(); return value } catch { return nil }
     }
     var body: some View {
@@ -303,7 +305,9 @@ struct PantryPackageDateSection: View {
         do {
             let value = try store.load(access.scope, lot: lot.id)
             previous = value; selectedAI = value?.selectedAI; wording = value?.originalPrintedWording ?? ""; meaning = value?.meaning ?? .other
-            hasDay = value?.day != nil; date = value?.day?.date ?? Date()
+            hasDay = value?.verifiedDay != nil
+            confirmingCalendar = value?.yearNeedsReview == true
+            date = value?.day?.date ?? Date()
             zone = value?.day?.timeZoneIdentifier ?? TimeZone.current.identifier
             photoText = value?.selectedPhotoText; photoDigest = value?.photoDigest; loaded = true
         } catch { status = pantryText("The saved label could not be opened.") }
