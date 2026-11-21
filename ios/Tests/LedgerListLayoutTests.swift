@@ -14,6 +14,19 @@ import CoreDomain
         return shop
     }
 
+    func testShoppingRowRetainsDeliberateUnmeasuredRecipeDecision() throws {
+        var shop = ShoppingLedger()
+        _ = try shop.chooseMeal(.init(title: "Sopa", ingredients: [
+            .init(name: "Maíz", quantity: nil, checkedWithoutAmount: true),
+            .init(name: "Caldo", quantity: nil)
+        ]))
+        let corn = try XCTUnwrap(shop.lines.first { $0.name == "Maíz" })
+        let broth = try XCTUnwrap(shop.lines.first { $0.name == "Caldo" })
+        XCTAssertEqual(shop.shoppingRowQuantity(for: corn), tonightText("Checked by hand · unmeasured"))
+        XCTAssertNil(try shop.quantity(forLineID: corn.id))
+        XCTAssertEqual(shop.shoppingRowQuantity(for: broth), ledgerText("Quantity unresolved"))
+    }
+
     func testOnlyOneUnqualifiedNameOmitsTheQuantityFromShoppingRows() throws {
         var shop = ShoppingLedger()
         let oats = try XCTUnwrap(QuickGrocery.stage("Oats", in: shop))
