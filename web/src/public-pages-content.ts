@@ -89,12 +89,12 @@ export const publicPages = {
             "es": "En Cenas, guarda una comida conocida con sus porciones, ingredientes, fuente, exclusiones y cualquier tiempo de preparación previo conocido. Revisa una idea antes de elegirla para esta compra. Elegir una idea y asignarle una noche son pasos separados."
           },
           {
-            "en": "Before your first pickup, open Dinners, then Import and use recipes. Type a family recipe or choose a Recipe JSON-LD file from Files. Review and save it. Once you have a pickup, open the saved recipe from Dinner library to review its ingredients for that pickup.",
-            "es": "Antes de tu primera recogida, abre Cenas y luego Importar y usar recetas. Escribe una receta familiar o elige un archivo Recipe JSON-LD en Archivos. Revisa la receta y guárdala. Cuando tengas una recogida, abre la receta guardada desde Biblioteca de cenas para revisar los ingredientes que necesitas comprar."
+            "en": "In Dinners, choose Paste a recipe to review and save a note. Under Import and use recipes, you can also type a recipe or choose a Recipe JSON-LD file. When you have a pickup, open a saved recipe to choose which ingredients to add.",
+            "es": "En Cenas, elige Pegar una receta para revisar y guardar una nota. En Importar y usar recetas también puedes escribir una receta o elegir un archivo Recipe JSON-LD. Cuando tengas una recogida, abre una receta guardada y elige qué ingredientes agregar."
           },
           {
-            "en": "Use the meal week for guests, away nights and protected lunches. Preview a change before saving it. Editing this week does not rewrite your reusable dinner or rotation.",
-            "es": "Usa la semana de comidas para invitados, noches fuera y almuerzos reservados. Revisa el cambio antes de guardarlo. Editar esta semana no modifica tu cena reutilizable ni tu rotación."
+            "en": "Open a planned dinner to change its day or servings. Review the ingredient amounts before saving. Your original recipe keeps its servings. Use the meal week for guests, nights away and lunches to set aside.",
+            "es": "Abre una cena programada para cambiar el día o las porciones. Revisa las cantidades de los ingredientes antes de guardar. La receta original conserva sus porciones. Usa la semana de comidas para planificar visitas, noches fuera y almuerzos que quieras apartar."
           },
           {
             "en": "Count pantry or freezer food only after confirming its usable quantity and matching it to the need. If food falls short, protect lunch reservations and review each affected dinner. Leave an unresolved need open until you choose a repair.",
