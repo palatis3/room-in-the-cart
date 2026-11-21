@@ -608,8 +608,8 @@ export class WebApp {
     const target=this.requestTarget(session);
     return target===session.shopId ? session.nextShopOnly===true : this.pickups.find(p=>p.shopId===target)?.nextShopOnly===true;
   }
-  private pickupLabel(pickup:RequestPickup):string {
-    return this.date(pickup.createdAt)+' · '+pickup.shopId.slice(0,8);
+  private pickupLabel(pickup: RequestPickup, index: number): string {
+    return this.t('Pickup') + ' ' + (index + 1) + ' · ' + this.t('Created') + ' ' + this.date(pickup.createdAt);
   }
   private renderContributor(main:HTMLElement):void {
     const protectedPickup=this.usesProtectedPickup(this.session!);
@@ -623,15 +623,25 @@ export class WebApp {
       const label=this.el('label',this.t('Pickup for this request'));label.htmlFor='request-pickup';
       const picker=this.el('select');picker.id='request-pickup';picker.disabled=this.busy||this.uncertainSend;
       const placeholder=this.el('option',this.t('Choose a pickup'));placeholder.value='';picker.append(placeholder);
-      for(const pickup of this.pickups){const option=this.el('option',this.pickupLabel(pickup));option.value=pickup.shopId;picker.append(option);}
+      for (const [index, pickup] of this.pickups.entries()) {
+        const option = this.el('option', this.pickupLabel(pickup, index));
+        option.value = pickup.shopId;
+        picker.append(option);
+      }
       picker.value=this.chosenPickupId??'';
       picker.addEventListener('change',()=>{this.chosenPickupId=picker.value||null;this.draft.route='current';this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#request-pickup')?.focus();});
       main.append(label,picker);
     }
     if(this.draft.followup)form.append(this.el('h2',this.t('Follow up')));
     if(this.review) {
-      const pickup=this.pickups.find(p=>p.shopId===target);
-      if(target)form.append(this.el('p',this.t('Pickup for this request')+' · '+(pickup?this.pickupLabel(pickup):target.slice(0,8))));
+      if (target) {
+        const index = this.pickups.findIndex(pickup => pickup.shopId === target);
+        const pickup = this.pickups[index];
+        const destination = pickup ? this.pickupLabel(pickup, index)
+          : this.draft.editing || this.draft.followup || this.retryCommand ? this.t('The pickup from the original request')
+          : this.t('The pickup shared with you');
+        form.append(this.el('p', this.t('Pickup for this request') + ' · ' + destination));
+      }
       const heading = this.el('h2', this.t('Review before sending'));
       heading.id = 'request-review-heading';
       heading.tabIndex = -1;

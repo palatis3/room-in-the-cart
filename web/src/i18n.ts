@@ -102,6 +102,8 @@ const es: Record<string, string> = {
   'Finish signing out':'Terminar de cerrar sesión', 'Retry sign-out':'Reintentar el cierre de sesión',
   'This pickup closed to new requests. Review the next-shop destination before sending.':'Este pedido ya no acepta solicitudes. Revisa que la solicitud sea para la próxima compra antes de enviarla.',
   'Received for the next shop.':'Solicitud recibida para la próxima compra.',
+  'Pickup':'Pedido', 'Created':'Creado el',
+  'The pickup from the original request':'El pedido de la solicitud original', 'The pickup shared with you':'El pedido compartido contigo',
   'Pickup for this request':'Pedido para esta solicitud', 'Choose a pickup':'Elige un pedido',
   'Available pickups changed. Review the destination before sending.':'Los pedidos disponibles cambiaron. Revisa el destino antes de enviar.',
   'Choose an open pickup to continue.':'Elige un pedido abierto para continuar.',
