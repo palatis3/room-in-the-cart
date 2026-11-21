@@ -66,6 +66,25 @@ import XCTest
         assertLot(wheat, contains: "5 units")
     }
 
+    func testSpanishBalanceHistoryClosesAndReopensWithoutRecordingAUse() {
+        openPantry(reset: true, spanish: true)
+        let lotID = addLot("Ajonjolí", amount: "2")
+        let question = "¿Cuánto ajonjolí me queda en la alacena?"
+        enterCommand(question)
+        for _ in 0..<2 {
+            tap(app.buttons["Historial de uso · Alacena"])
+            let count = app.staticTexts["pantry.usageCount"]
+            reveal(count, needsTap: false)
+            XCTAssertTrue(count.label.hasSuffix(", 0") || count.value as? String == "0", count.debugDescription)
+            tap(app.buttons["pantry.balanceHistoryClose"])
+            assertTranscript(question)
+            XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
+        }
+        app.terminate()
+        openPantry(reset: false, spanish: true)
+        assertLot(lotID, contains: "2 unidades")
+    }
+
     func testSpanishDateQuestionDistinguishesThePrintedWordingFromMissingEvidence() {
         openPantry(reset: true, spanish: true)
         let recorded = addLot("Salsa de tomate clásica", amount: "2")

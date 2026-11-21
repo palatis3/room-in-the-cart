@@ -97,6 +97,7 @@ struct VoicePantryRow {
     @State private var basis: InventoryState?
     @State private var dateOnly = false
     @State private var balanceFood: String?
+    @State private var balanceHistoryLot: InventoryLot?
     @State private var editedBasis: InventoryState?
     @State private var editedRows: [VoicePantryRow] = []
     @State private var dateEvidence: PantryVoiceDateEvidence?
@@ -254,6 +255,17 @@ struct VoicePantryRow {
             }
         }
         .id(stage)
+        .sheet(item: $balanceHistoryLot) { lot in
+            NavigationStack {
+                PantryUsageHistoryView(model: model, lotID: lot.id, origin: origin, authorized: { authorized })
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(pantryText("Close")) { balanceHistoryLot = nil }
+                                .accessibilityIdentifier("pantry.balanceHistoryClose")
+                        }
+                    }
+            }
+        }
         .navigationTitle(pantryText(stage == .review ? "Review pantry changes" : (startingLot == nil ? "Talk or type" : "Record use")))
         .toolbar(.hidden, for: .tabBar)
         .privacySensitive()
@@ -328,6 +340,7 @@ struct VoicePantryRow {
         remainingChoices = nil
         closeRemaining()
         token = UUID(); basis = nil; rows = []; review = nil; dateOnly = false
+        balanceHistoryLot = nil
         dateEvidence = nil; balanceFood = nil; message = nil; working = false
     }
 
@@ -387,8 +400,9 @@ struct VoicePantryRow {
             }
             ForEach(matches) { lot in
                 batchHeading(lot)
-                NavigationLink(pantryText("Usage history") + " · " + pantryLocationName(lot.location)) {
-                    PantryUsageHistoryView(model: model, lotID: lot.id, origin: origin, authorized: { authorized })
+                Button(pantryText("Usage history") + " · " + pantryLocationName(lot.location)) {
+                    guard authorized, basis == model.snapshot?.state else { return }
+                    balanceHistoryLot = lot
                 }
             }
         }
