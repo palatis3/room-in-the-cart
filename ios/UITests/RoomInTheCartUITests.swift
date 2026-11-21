@@ -368,6 +368,69 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(rule.waitForExistence(timeout: 8))
     }
 
+    func testSpanishFamilyGuideReturnsToTheSameTwoUncheckedGroceries() {
+        launch(language: "es")
+        let names = ["pan", "peras"]
+        let field = element("quickGrocery.name")
+        for name in names {
+            tap(field)
+            field.typeText(name + "\n")
+            let saved = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                         "quickGrocery.undo", name)).firstMatch
+            XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        }
+        tap(app.buttons["quickGrocery.viewList"])
+        let list = app.navigationBars["Lista de compras"]
+        XCTAssertTrue(list.waitForExistence(timeout: 8))
+        func uncheckedRows() -> Set<String> {
+            Set(names.map { name in
+                let check = app.buttons["Marcar " + name]
+                reveal(check)
+                XCTAssertTrue(check.isHittable)
+                XCTAssertTrue(check.identifier.hasPrefix("ledgerCheck-"))
+                return check.identifier
+            })
+        }
+        let originalRows = uncheckedRows()
+        XCTAssertEqual(originalRows.count, 2)
+        let options = app.buttons["ledgerListOptions"]
+        tap(options)
+        tap(app.buttons["Guía para familias"])
+        let guide = app.navigationBars["Guía para familias"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 8))
+        let scope = app.staticTexts["guardian.familyGuide.scope"]
+        reveal(scope)
+        XCTAssertTrue(scope.label.contains("sus propias solicitudes"))
+        XCTAssertTrue(scope.label.contains("presupuesto del hogar es privado"))
+        let start = app.staticTexts["guardian.familyGuide.start"]
+        reveal(start)
+        XCTAssertTrue(start.label.contains("Solicitudes del hogar") && start.label.contains("Controles del tutor"))
+        let help = app.staticTexts["guardian.familyGuide.joinHelp"]
+        reveal(help)
+        XCTAssertTrue(help.label.contains("Soporte") && help.label.contains("códigos de acceso"))
+        tap(app.buttons["guardian.familyGuide.support"])
+        let support = app.navigationBars["Soporte"]
+        XCTAssertTrue(support.waitForExistence(timeout: 6))
+        tap(support.buttons.element(boundBy: 0))
+        XCTAssertTrue(guide.waitForExistence(timeout: 6))
+        tap(app.buttons["guardian.familyGuide.done"])
+        XCTAssertTrue(list.waitForExistence(timeout: 8))
+        XCTAssertEqual(uncheckedRows(), originalRows)
+
+        tap(app.buttons["ledgerInStore"])
+        tap(app.buttons["inStoreTripOptions"])
+        tap(app.buttons["guardian.familyGuide"])
+        XCTAssertTrue(guide.waitForExistence(timeout: 6))
+        tap(app.buttons["guardian.familyGuide.done"])
+        XCTAssertTrue(app.buttons["inStoreTripOptions"].waitForExistence(timeout: 6))
+
+        app.terminate()
+        launch(language: "es", reset: false)
+        tap(app.buttons["openPickupList"])
+        XCTAssertTrue(list.waitForExistence(timeout: 8))
+        XCTAssertEqual(uncheckedRows(), originalRows)
+    }
+
     func testFamilyPermissionGuideExplainsChildScopeAndGuardianStartOffline() {
         launch(language: "es", largeDark: true)
         tap(app.buttons["settings"])

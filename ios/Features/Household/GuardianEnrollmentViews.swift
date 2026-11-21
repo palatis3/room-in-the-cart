@@ -1,4 +1,5 @@
 import SwiftUI
+import SafariServices
 import HouseholdClient
 
 struct GuardianControlsEntry: View {
@@ -201,21 +202,41 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
 }
 
 struct FamilyPermissionGuideLink: View {
+    var title = GuardianCopy.text("Children and guardian permission")
+    var done: (() -> Void)?
+
     var body: some View {
         NavigationLink {
-            WorkingForm { FamilyPermissionSections() }
-                .navigationTitle(GuardianCopy.text("Family permissions"))
-                .navigationBarTitleDisplayMode(.inline)
+            FamilyPermissionGuide(done: done)
         } label: {
-            Label(GuardianCopy.text("Children and guardian permission"), systemImage: "person.2")
+            Label(title, systemImage: "person.2")
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityIdentifier("guardian.familyGuide")
     }
 }
 
+struct FamilyPermissionGuide: View {
+    var done: (() -> Void)?
+
+    var body: some View {
+        WorkingForm { FamilyPermissionSections() }
+            .navigationTitle(GuardianCopy.text("Family guide"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if let done {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(ledgerText("Done"), action: done)
+                            .accessibilityIdentifier("guardian.familyGuide.done")
+                    }
+                }
+            }
+    }
+}
+
 private struct FamilyPermissionSections: View {
     private let configuration = HelpConfiguration.fromBundle()
+    @State private var showingOnlineGuide = false
 
     var body: some View {
         Section(GuardianCopy.text("What a child can do")) {
@@ -227,16 +248,49 @@ private struct FamilyPermissionSections: View {
                 .accessibilityIdentifier("guardian.familyGuide.start")
             Text(GuardianCopy.text("A parent or legal guardian verifies adulthood, gives permission and confirms the child’s device. Keep the invitation private. The child signs in with their own approved email."))
         }
-        Section {
-            if let url = configuration.familyHelpURL {
-                Link(GuardianCopy.text("Read the family guide online"), destination: url)
-                    .accessibilityIdentifier("guardian.familyGuide.online")
-            } else if let url = configuration.helpURL {
-                Link(helpText("Online help"), destination: url)
-            }
+        Section(GuardianCopy.text("If someone can’t join")) {
+            Text(GuardianCopy.text("Ask a parent or guardian to open Support and describe where setup stopped. Keep invitation links, sign-in codes and the child’s email private. You can keep using your shopping list."))
+                .accessibilityIdentifier("guardian.familyGuide.joinHelp")
             NavigationLink(helpText("Support")) { HelpSupportView() }
                 .accessibilityIdentifier("guardian.familyGuide.support")
         }
+        Section {
+            Text(GuardianCopy.text("You can read this guide on this iPhone without an internet connection."))
+                .accessibilityIdentifier("guardian.familyGuide.offline")
+            if let url = configuration.familyHelpURL {
+                Button(GuardianCopy.text("Read the family guide online")) { showingOnlineGuide = true }
+                    .accessibilityAddTraits(.isLink)
+                    .accessibilityIdentifier("guardian.familyGuide.online")
+                    .fullScreenCover(isPresented: $showingOnlineGuide) {
+                        FamilyGuideBrowser(url: url) { showingOnlineGuide = false }
+                            .ignoresSafeArea()
+                    }
+            } else if let url = configuration.helpURL {
+                Link(helpText("Online help"), destination: url)
+            }
+        }
+    }
+}
+
+private struct FamilyGuideBrowser: UIViewControllerRepresentable {
+    let url: URL
+    let done: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(done: done) }
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let browser = SFSafariViewController(url: url)
+        browser.dismissButtonStyle = .done
+        browser.delegate = context.coordinator
+        return browser
+    }
+
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
+
+    final class Coordinator: NSObject, SFSafariViewControllerDelegate {
+        let done: () -> Void
+        init(done: @escaping () -> Void) { self.done = done }
+        func safariViewControllerDidFinish(_ controller: SFSafariViewController) { done() }
     }
 }
 

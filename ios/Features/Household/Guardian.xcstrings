@@ -1,6 +1,70 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Family guide": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family guide"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guía para familias"
+          }
+        }
+      }
+    },
+    "If someone can’t join": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If someone can’t join"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si alguien no puede unirse"
+          }
+        }
+      }
+    },
+    "Ask a parent or guardian to open Support and describe where setup stopped. Keep invitation links, sign-in codes and the child’s email private. You can keep using your shopping list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask a parent or guardian to open Support and describe where setup stopped. Keep invitation links, sign-in codes and the child’s email private. You can keep using your shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pide a uno de los padres o al tutor que abra Soporte y explique en qué paso se detuvo la configuración. Mantén en privado los enlaces de invitación, los códigos de acceso y el correo del menor. Puedes seguir usando tu lista de compras."
+          }
+        }
+      }
+    },
+    "You can read this guide on this iPhone without an internet connection.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can read this guide on this iPhone without an internet connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes consultar esta guía en este iPhone sin conexión a internet."
+          }
+        }
+      }
+    },
     "Family permissions": {
       "localizations": {
         "en": {

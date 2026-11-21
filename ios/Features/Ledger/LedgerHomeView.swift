@@ -2,7 +2,7 @@ import SwiftUI
 import CoreDomain
 
 private enum LedgerHomeSheet: Hashable, Identifiable {
-    case newShop, entry, facts, history, layout, printList
+    case newShop, entry, facts, history, layout, printList, familyGuide
     case inStore(UUID), shareItems(UUID), kits(UUID?), standing
     case renameShop(id: UUID, title: String)
     case editLine(workspace: UUID, shop: UUID, line: UUID)
@@ -192,6 +192,8 @@ struct LedgerHomeView: View {
             if let shop = model.shop { LedgerFactsView(model: model, shop: shop) }
         case .layout:
             if let shop = model.shop { LedgerLayoutEditor(model: model, shop: shop) }
+        case .familyGuide:
+            FamilyPermissionGuide { sheet = nil }
         case .printList:
             if let shop = model.shop { LargePrintList(shop: shop, layout: model.workspace.listLayout) }
         case .history:
@@ -255,6 +257,7 @@ struct LedgerHomeView: View {
             Button(ledgerText("List history")) { sheet = .history }
             Button(ledgerText("Review prior staples")) { stapleRecallShopID = shop.id }
             Button(ledgerText("Large-print list")) { sheet = .printList }
+            Button(GuardianCopy.text("Family guide")) { sheet = .familyGuide }
             Button(ledgerText("Cancel"), role: .cancel) {}
         }
     }

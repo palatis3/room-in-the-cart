@@ -265,6 +265,7 @@ struct HelpSupportView: View {
     var body: some View {
         WorkingForm {
             Section(helpText("Get help")) {
+                FamilyPermissionGuideLink(title: GuardianCopy.text("Family guide"))
                 Text(helpText("Describe the steps, what you expected and what happened. Leave out grocery details, budgets, names, receipts, sign-in codes and invitation links."))
                 if let url = configuration.supportEmailURL, let address = configuration.supportEmailAddress {
                     Button {
@@ -294,7 +295,6 @@ struct HelpSupportView: View {
                 }
                 if let url = configuration.supportURL { Link(helpText("Open support"), destination: url).accessibilityIdentifier("help.support.open") }
                 else if configuration.supportEmailURL == nil { Text(helpText("Online support is unavailable. You can read the help articles here or share your support summary.")) }
-                FamilyPermissionGuideLink()
                 NavigationLink(helpText("Read offline help")) { HelpCenterView() }
             }
             Section(helpText("Review support summary")) {

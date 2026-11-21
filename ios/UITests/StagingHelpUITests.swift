@@ -37,6 +37,26 @@ final class StagingHelpUITests: XCTestCase {
         verifyPublicPage("Support")
     }
 
+    func testConfiguredSpanishFamilyGuideReturnsFromSafariToNativeHelp() {
+        openSettings(language: "es")
+        tapInList(app.buttons["settings.support"])
+        tapInList(app.buttons["guardian.familyGuide"])
+        let guide = app.navigationBars["Guía para familias"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 8))
+        let online = app.descendants(matching: .any).matching(identifier: "guardian.familyGuide.online").firstMatch
+        tapInList(online)
+        let web = app.webViews.firstMatch
+        XCTAssertTrue(web.waitForExistence(timeout: 20))
+        let heading = web.staticTexts["Menores y permiso del tutor"].firstMatch
+        XCTAssertTrue(heading.waitForExistence(timeout: 20))
+        XCTAssertTrue(heading.isHittable, "The configured Spanish family section should open at its own anchor.")
+        let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo", "OK"])).firstMatch
+        XCTAssertTrue(done.waitForExistence(timeout: 5))
+        done.tap()
+        XCTAssertTrue(web.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(guide.waitForExistence(timeout: 8))
+    }
+
     private func tapInList(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
         for _ in 0..<9 {
             if target.exists && target.isHittable {
