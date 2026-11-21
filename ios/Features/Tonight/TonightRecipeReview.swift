@@ -458,7 +458,7 @@ struct TonightRecipeReview: View {
                ingredients.allSatisfy({ $0.positiveQuantity != nil }) {
                 review(scroll)
             }
-        } catch { error = tonightText("This source exceeds the supported recipe size. Review a smaller recipe in Records before continuing.") }
+        } catch { self.error = tonightText("This source exceeds the supported recipe size. Review a smaller recipe in Records before continuing.") }
     }
 
     private func confirmSaved(_ recipe: MealTemplate) {
