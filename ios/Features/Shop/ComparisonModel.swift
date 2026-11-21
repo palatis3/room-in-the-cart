@@ -47,6 +47,11 @@ struct ComparisonConversion: Codable, Equatable {
     }
 }
 
+enum ComparisonPack: String, Identifiable {
+    case a, b
+    var id: Self { self }
+}
+
 /// Original editable literals are retained independently of normalized calculations.
 struct ComparisonDraft: Codable, Equatable {
     var id: UUID
@@ -68,6 +73,17 @@ struct ComparisonDraft: Codable, Equatable {
     var aConversion: ComparisonConversion?
     var bConversion: ComparisonConversion?
     init(id: UUID = UUID()) { self.id = id }
+
+    mutating func setUsableAmount(_ amount: String, unit: UnitOfMeasure, for pack: ComparisonPack) {
+        switch pack {
+        case .a:
+            aQuantity = amount
+            aUnit = unit
+        case .b:
+            bQuantity = amount
+            bUnit = unit
+        }
+    }
 }
 
 struct SavedPayload: Codable {

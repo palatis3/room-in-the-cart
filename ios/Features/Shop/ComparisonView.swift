@@ -61,14 +61,7 @@ struct ComparisonView: View {
         }
         .sheet(item: $missingAmount) { pack in
             MissingPackAmountEditor(pack: pack, unit: pack == .a ? model.draft.aUnit : model.draft.bUnit) { literal, unit in
-                switch pack {
-                case .a:
-                    model.draft.aQuantity = literal
-                    model.draft.aUnit = unit
-                case .b:
-                    model.draft.bQuantity = literal
-                    model.draft.bUnit = unit
-                }
+                model.draft.setUsableAmount(literal, unit: unit, for: pack)
                 updateResult()
             }
         }
@@ -383,9 +376,7 @@ struct ComparisonView: View {
     }
 }
 
-private enum ComparisonPack: String, Identifiable {
-    case a, b
-    var id: Self { self }
+private extension ComparisonPack {
     var priceTitle: String { tr(self == .a ? "Add Pack A price" : "Add Pack B price") }
     var amountTitle: String { tr(self == .a ? "Enter Pack A usable amount" : "Enter Pack B usable amount") }
 }
