@@ -10,7 +10,7 @@ struct SharedFallbackOptionsView: View {
     let library: SharedFallbackLibrary
     let target: SharedRecoveryMeal
     let completed: (Bool) -> Void
-    @State private var candidates: [CandidateReviewDraft]
+    @State private var candidates: [CandidateReviewEditor]
     @State private var trip = FallbackTripDraft()
     @State private var message: String?
     @State private var decision: Decision?
@@ -29,7 +29,7 @@ struct SharedFallbackOptionsView: View {
          library: SharedFallbackLibrary, target: SharedRecoveryMeal, completed: @escaping (Bool) -> Void) {
         self.model = model; self.shop = shop; self.household = household; self.page = page
         self.library = library; self.target = target; self.completed = completed
-        _candidates = State(initialValue: library.candidates.map(CandidateReviewDraft.init))
+        _candidates = State(initialValue: library.candidates.map(CandidateReviewEditor.init))
     }
 
     private var live: Bool {
@@ -53,13 +53,14 @@ struct SharedFallbackOptionsView: View {
                         TextField(fallbackText("Extra charges and travel cost (USD)"), text: $trip.charges).keyboardType(.decimalPad).focused($editing)
                     }
                 }
-                ForEach($candidates) { $draft in
+                ForEach(candidates) { editor in
+                    @Bindable var editor = editor
                     Section {
-                        Toggle(draft.candidate.recipe.title, isOn: $draft.selected).accessibilityIdentifier("fallback.select." + draft.id.uuidString)
-                        if draft.selected {
+                        Toggle(editor.title, isOn: $editor.selected).accessibilityIdentifier("fallback.select." + editor.id.uuidString)
+                        if editor.selected {
                             NavigationLink(fallbackText("Review ingredients, food and time")) {
-                                SharedFallbackIngredientView(draft: $draft, page: page, includeOffers: trip.include)
-                            }.accessibilityIdentifier("fallback.food." + draft.id.uuidString)
+                                SharedFallbackIngredientView(editor: editor, page: page, includeOffers: trip.include, edited: invalidate)
+                            }.accessibilityIdentifier("fallback.food." + editor.id.uuidString)
                         }
                     }
                 }
@@ -79,7 +80,7 @@ struct SharedFallbackOptionsView: View {
         }
         .keyboardDoneAction(visible: editing, title: ht("Done"), identifier: "fallback.trip.done") { editing = false }
         .navigationTitle(fallbackText("Compare fallback recipes"))
-        .onChange(of: candidates) { _, _ in invalidate() }.onChange(of: trip) { _, _ in invalidate() }
+        .onChange(of: candidates.map(\.selected)) { _, _ in invalidate() }.onChange(of: trip) { _, _ in invalidate() }
         .onChange(of: live) { _, allowed in if !allowed { invalidate() } }
         .onChange(of: model.ranking) { _, ranking in
             if let decision, ranking?.options.contains(decision.option) != true { self.decision = nil }
@@ -101,17 +102,19 @@ struct SharedFallbackOptionsView: View {
     }
 
     private func invalidate() {
-        decision = nil
-        hasCompared = false
         model.discardRanking()
-        message = nil
+        if hasCompared || decision != nil || message != nil {
+            decision = nil
+            hasCompared = false
+            message = nil
+        }
     }
 
     private func compare() async {
         guard live, !preparing else { return }
         do {
             let enteredTrip = try trip.trip()
-            let reviews = try candidates.filter(\.selected).map { try $0.review(includeOffers: enteredTrip != nil) }
+            let reviews = try candidates.filter(\.selected).map { try $0.draft.review(includeOffers: enteredTrip != nil) }
             message = nil
             hasCompared = false
             await model.rank(reviews, trip: enteredTrip, occurrence: target.id, page: page, reviewed: library)

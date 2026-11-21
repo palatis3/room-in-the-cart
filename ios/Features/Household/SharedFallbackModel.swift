@@ -10,7 +10,7 @@ final class SharedFallbackModel: ObservableObject {
     private let authorized: () -> Bool
     private var generation = UUID()
     private var storeEpoch: UUID?
-    private var rankingID = UUID()
+    private var rankingID: UUID?
     private var seatExpiryTask: Task<Void, Never>?
     private var rankingExpiryTask: Task<Void, Never>?
     @Published private(set) var library: SharedFallbackLibrary?
@@ -179,7 +179,8 @@ final class SharedFallbackModel: ObservableObject {
         let token = generation
         busy = true
         discardRanking()
-        let read = rankingID
+        let read = UUID()
+        rankingID = read
         defer { if generation == token { busy = false } }
         do {
             let result = try await service.recoveryOptions(reviews, trip: trip, for: occurrence, reviewed: page, library: reviewed)
@@ -212,8 +213,9 @@ final class SharedFallbackModel: ObservableObject {
 
     func discardRanking() {
         rankingExpiryTask?.cancel()
-        rankingID = UUID()
-        ranking = nil
+        rankingExpiryTask = nil
+        rankingID = nil
+        if ranking != nil { ranking = nil }
     }
 
     private func fail(_ error: Error, token: UUID) {

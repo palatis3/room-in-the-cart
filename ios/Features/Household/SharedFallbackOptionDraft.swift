@@ -1,6 +1,7 @@
 import CoreDomain
 import Foundation
 import HouseholdClient
+import Observation
 
 struct FallbackPackDraft: Equatable {
     let id: UUID
@@ -40,10 +41,23 @@ struct CandidateFoodReview: Identifiable, Equatable {
     }
 }
 
+/// Keeps a pushed editor independent of the selection list while sharing its current review with Compare.
+@Observable final class CandidateReviewEditor: Identifiable {
+    let id: UUID
+    let title: String
+    var selected = false
+    @ObservationIgnored var draft: CandidateReviewDraft
+
+    init(_ candidate: SharedFallbackLibrary.Candidate) {
+        id = candidate.id
+        title = candidate.recipe.title
+        draft = CandidateReviewDraft(candidate)
+    }
+}
+
 struct CandidateReviewDraft: Identifiable, Equatable {
     let candidate: SharedFallbackLibrary.Candidate
     var id: UUID { candidate.id }
-    var selected = false
     var remaining: String
     var stepsComplete = false
     var ingredients: [CandidateFoodReview]

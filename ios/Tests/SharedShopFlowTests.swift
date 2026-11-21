@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 import LocalAuthentication
 @testable import HouseholdClient
@@ -549,6 +550,18 @@ import LocalAuthentication
         XCTAssertEqual(fixture.sharedShopCreates, 2)
         XCTAssertEqual(shared.shop?.shopId, review.shopID)
     }
+    func testEditingFallbackIngredientsDoesNotPublishAnAbsentRanking() async throws {
+        let adult = try await model("mia", fixture: SharedFlowService())
+        let service = try XCTUnwrap(adult.service)
+        let fallback = SharedFallbackModel(shopID: UUID(), service: service, store: adult.fallbackPendingStore, authorized: { true })
+        var publications = 0
+        let observer = fallback.objectWillChange.sink { publications += 1 }
+        withExtendedLifetime(observer) {
+            for _ in "Two wraps" { fallback.discardRanking() }
+            XCTAssertEqual(publications, 0)
+        }
+    }
+
     func testFallbackLibrarySurvivesBillingOutageAndClosesOnShopperTransferDuringSeatCheck() async throws {
         let fixture = SharedFlowService()
         let adult = try await createdHousehold(fixture)
