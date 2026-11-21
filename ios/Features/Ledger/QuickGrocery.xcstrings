@@ -673,18 +673,18 @@
         }
       }
     },
-    "Adds to the list “%@”.": {
+    "For the list “%@”.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adds to the list “%@”."
+            "value": "For the list “%@”."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se añade a la lista «%@»."
+            "value": "Para la lista «%@»."
           }
         }
       }
