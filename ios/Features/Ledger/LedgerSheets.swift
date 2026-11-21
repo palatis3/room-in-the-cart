@@ -24,6 +24,7 @@ struct LedgerImportView: View {
     @State private var reminderPicker: LedgerReminderPresentation?
     @State private var reminderDestination: UUID?
     @State private var original = ""
+    @State private var showingReviewTotals = false
     @State private var inputLimit: ImportTextLimit?
     @State private var preview: StagedListImport?
     @State private var choices: [UUID: ImportResolution] = [:]
@@ -156,9 +157,6 @@ struct LedgerImportView: View {
                                 .disabled(model.saving || model.hasPendingSave)
                         }
                     }
-                    if typeSize.isAccessibilitySize && preview.lines.count > 1 {
-                        Section { importConfirmation(preview, review: review) }
-                    }
                 } else {
                     Section {
                         Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice."))
@@ -221,14 +219,21 @@ struct LedgerImportView: View {
                 .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if let preview, let review {
-                        VStack(spacing: 4) {
+                        Group {
                             if preview.lines.count > 1, let shop {
-                                Text(review.selectionSummary(for: preview, destination: shop.title))
-                                    .font(.subheadline).foregroundStyle(Theme.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .accessibilityIdentifier("ledgerImportSummary")
-                            }
-                            if !typeSize.isAccessibilitySize || preview.lines.count == 1 {
+                                let totals = review.selectionTotals(for: preview, destination: shop.title)
+                                if typeSize.isAccessibilitySize {
+                                    compactConfirmation(preview, review: review, totals: totals, scroll: scroll)
+                                } else {
+                                    VStack(spacing: 4) {
+                                        Text(totals.summary)
+                                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .accessibilityIdentifier("ledgerImportSummary")
+                                        importConfirmation(preview, review: review)
+                                    }
+                                }
+                            } else {
                                 importConfirmation(preview, review: review)
                             }
                         }
@@ -326,14 +331,43 @@ struct LedgerImportView: View {
         }).accessibilityFocused($focus, equals: .status)
     }
 
-    private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview) -> some View {
+    private func compactConfirmation(_ preview: StagedListImport, review: LedgerImportReview,
+                                     totals: (included: Int, summary: String), scroll: ScrollViewProxy) -> some View {
+        let needsReview = preview.lines.firstIndex { row in
+            review.choices[row.id] == nil || row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                (review.choices[row.id] != .skip && invalidAmounts[row.id] != nil)
+        }
+        let title = ledgerText("Review totals")
+        return HStack(spacing: 8) {
+            Button { showingReviewTotals = true } label: {
+                Image(systemName: needsReview == nil ? "info.circle" : "exclamationmark.circle")
+                    .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+            }
+            .accessibilityLabel(title)
+            .accessibilityValue(Text(verbatim: totals.summary))
+            .accessibilityIdentifier("ledgerImportSummary")
+            .alert(title, isPresented: $showingReviewTotals) {
+                if let needsReview {
+                    Button(ledgerFormat("Review line %lld", Int64(needsReview + 1))) {
+                        inputFocus = nil
+                        scroll.scrollTo(preview.lines[needsReview].id, anchor: .top)
+                    }
+                }
+                Button(ledgerText("Done"), role: .cancel) {}
+            } message: { Text(verbatim: totals.summary) }
+            importConfirmation(preview, review: review, title: ledgerFormat("Add %lld", Int64(totals.included)))
+                .accessibilityValue(Text(verbatim: totals.summary))
+        }
+    }
+
+    private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview, title: String? = nil) -> some View {
         let needsAmountCorrection = invalidAmounts.keys.contains { review.choices[$0] != .skip }
         let reviewedBinding = captureBinding
         let reminderBinding = reminderDestination == nil ? nil : reviewedBinding
         let authorizeSave: @MainActor () -> Bool = {
             authorizeEntry() && (reminderBinding == nil || reminderCopyBinding == reminderBinding)
         }
-        return Button(ledgerText("Add reviewed list")) {
+        return Button(title ?? ledgerText("Add reviewed list")) {
             Task {
                 guard authorizeSave(), self.preview == preview, captureBinding == reviewedBinding,
                       reviewedBinding == nil || captureAuthorized else {
@@ -357,6 +391,7 @@ struct LedgerImportView: View {
                 } else { focus = .status }
             }
         }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete || needsAmountCorrection || (firstDraft != nil && !review.choices.values.contains(where: { $0 != .skip })))
+            .accessibilityLabel(ledgerText("Add reviewed list"))
             .accessibilityIdentifier("ledgerCommitImport")
     }
 
@@ -558,12 +593,12 @@ struct LedgerImportReview {
         return result
     }
 
-    func selectionSummary(for preview: StagedListImport, destination: String) -> String {
+    func selectionTotals(for preview: StagedListImport, destination: String) -> (included: Int, summary: String) {
         let selected = preview.lines.compactMap { choices[$0.id] }
         let skipped = selected.filter { $0 == .skip }.count
         let summary = ledgerFormat("%@ · Selected: %lld · Skipped: %lld", destination, Int64(selected.count - skipped), Int64(skipped))
         let undecided = preview.lines.count - selected.count
-        return undecided == 0 ? summary : summary + " · " + ledgerFormat("To review: %lld", Int64(undecided))
+        return (selected.count - skipped, undecided == 0 ? summary : summary + " · " + ledgerFormat("To review: %lld", Int64(undecided)))
     }
 
     static func initialChoices(_ preview: StagedListImport) -> [UUID: ImportResolution] {

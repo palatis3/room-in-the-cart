@@ -215,29 +215,56 @@ final class RoomInTheCartUITests: XCTestCase {
             reveal(field)
             XCTAssertEqual(field.value as? String, wording)
             tap(app.buttons["ledgerReviewImport"])
-            let summary = app.staticTexts["ledgerImportSummary"]
+            let compact = language == "es"
+            let summary = compact ? app.buttons["ledgerImportSummary"] : app.staticTexts["ledgerImportSummary"]
+            let confirm = app.buttons["ledgerCommitImport"]
+            func assertSummary(_ expected: String, line: UInt = #line) {
+                XCTAssertEqual(compact ? summary.value as? String : summary.label, expected, line: line)
+            }
             let both = language == "en" ? "Pickup · Selected: 2 · Skipped: 0" : "Recogida · Incluidos: 2 · Omitidos: 0"
             let onlyOne = language == "en" ? "Pickup · Selected: 1 · Skipped: 1" : "Recogida · Incluidos: 1 · Omitidos: 1"
             XCTAssertTrue(summary.waitForExistence(timeout: 10))
-            XCTAssertEqual(summary.label, both)
+            assertSummary(both)
             // Scroll to the adjacent action. The notice is informative text and has no tap action.
             let skipSecond = app.buttons["ledgerImportSkip-2"]
-            revealReviewAction(skipSecond, above: summary)
+            revealReviewAction(skipSecond, above: compact ? confirm : summary)
             let advisory = app.staticTexts["ledgerImportRepeat-2"]
             XCTAssertTrue(advisory.waitForExistence(timeout: 5))
             XCTAssertFalse(advisory.frame.isEmpty)
             XCTAssertEqual(advisory.label, language == "en" ? "Similar to line 1: 2 apples" : "Se parece a la línea 1: 2 manzanas")
             tap(skipSecond)
-            XCTAssertEqual(summary.label, onlyOne)
+            assertSummary(onlyOne)
             XCTAssertFalse(app.textFields["ledgerImportAmount-2"].exists)
             XCTAssertFalse(advisory.exists)
             tap(app.buttons["ledgerImportInclude-2"])
-            XCTAssertEqual(summary.label, both)
+            assertSummary(both)
             XCTAssertEqual(app.textFields["ledgerImportAmount-2"].value as? String, "2")
-            let confirm = app.buttons["ledgerCommitImport"]
-            if language == "es" {
-                // At accessibility text sizes the confirmation follows the review in the Form.
-                revealReviewAction(confirm, above: summary)
+            if compact {
+                XCTAssertEqual(confirm.value as? String, both)
+                XCTAssertTrue(confirm.isHittable && confirm.isEnabled)
+                let amount = app.textFields["ledgerImportAmount-2"]
+                revealReviewAction(amount, above: confirm)
+                amount.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+                amount.typeText("..")
+                XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
+                doneButton.tap()
+                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+                XCTAssertFalse(confirm.isEnabled)
+                tap(summary)
+                let totals = app.alerts["Totales de la revisión"]
+                XCTAssertTrue(totals.staticTexts[both].exists)
+                let jump = totals.buttons["Revisar línea 2"]
+                XCTAssertTrue(jump.isHittable)
+                jump.tap()
+                revealReviewAction(amount, above: confirm)
+                amount.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+                amount.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "2")
+                XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
+                doneButton.tap()
+                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+                XCTAssertEqual(amount.value as? String, "2")
+                XCTAssertTrue(confirm.isEnabled && confirm.isHittable)
+                screenshot("Spanish largest text compact review and reachable confirmation")
             }
             tap(confirm)
             let undo = app.buttons["ledgerUndoImport"]

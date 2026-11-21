@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Add %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir %lld"
+          }
+        }
+      }
+    },
     "Pickup name (required)": {
       "extractionState": "manual",
       "localizations": {
@@ -110,6 +126,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nombre de esta tienda"
+          }
+        }
+      }
+    },
+    "Review line %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review line %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar línea %lld"
+          }
+        }
+      }
+    },
+    "Review totals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review totals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totales de la revisión"
           }
         }
       }
