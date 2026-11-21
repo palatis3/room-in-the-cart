@@ -154,7 +154,9 @@ final class RoomInTheCartUITests: XCTestCase {
         let list = app.navigationBars["Lista de compras"]
         let item = app.buttons["Ver detalles de " + name]
         let check = app.buttons["Marcar " + name]
-        XCTAssertTrue(item.waitForExistence(timeout: 8))
+        XCTAssertTrue(list.waitForExistence(timeout: 8))
+        // At accessibility sizes the list controls precede the lazy grocery rows.
+        reveal(item)
         let rowID = item.identifier
         XCTAssertTrue(rowID.hasPrefix("ledgerInspect-"))
         XCTAssertTrue(check.exists)
@@ -227,7 +229,7 @@ final class RoomInTheCartUITests: XCTestCase {
         launch(language: "es", reset: false, largeDark: true, contentSize: .accessibilityLarge)
         if !list.waitForExistence(timeout: 5) { tap(app.buttons["openPickupList"]) }
         XCTAssertTrue(list.waitForExistence(timeout: 8))
-        XCTAssertTrue(item.waitForExistence(timeout: 8))
+        reveal(item)
         XCTAssertEqual(item.identifier, rowID)
         XCTAssertEqual(item.value as? String, "2 unidades")
         XCTAssertTrue(check.exists && check.isEnabled, "The same grocery remains active and unchecked")
