@@ -3613,7 +3613,7 @@ import XCTest
         XCTAssertTrue(line.wait(for: \.isHittable, toEqual: true, timeout: 8), "The first reviewed grocery must be actionable when the import sheet closes.")
         let id = line.identifier
         shopRoot()
-        XCTAssertTrue(pickup.label.contains("Shopping list"), pickup.label)
+        XCTAssertEqual(pickup.label, "View shopping list")
         tap(pickup)
         reveal(element(id))
         restart()
