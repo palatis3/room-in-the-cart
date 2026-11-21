@@ -918,6 +918,8 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @AppStorage("appearance") private var appearance = "system"
+    @State private var showingFamilyGuide = false
+    @State private var dismissSettingsAfterGuide = false
     var body: some View {
         WorkingForm {
             Section {
@@ -935,7 +937,10 @@ struct SettingsView: View {
             }
             Section(tr("Household")) {
                 NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
-                FamilyPermissionGuideLink { dismiss() }
+                Button { showingFamilyGuide = true } label: {
+                    Label(GuardianCopy.text("Children and guardian permission"), systemImage: "person.2")
+                        .fixedSize(horizontal: false, vertical: true)
+                }.accessibilityIdentifier("guardian.familyGuide")
                 HouseholdPantryLink(household: household)
                 if household.canOpenMembership {
                     NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
@@ -964,7 +969,25 @@ struct SettingsView: View {
             #endif
         }.navigationTitle(tr("Settings"))
             .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(tr("Done")) { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(tr("Done")) { dismiss() }.accessibilityIdentifier("settings.done")
+                }
+            }
+            // Keep the self-sizing guide out of the Settings navigation push on compact iOS.
+            .sheet(isPresented: $showingFamilyGuide, onDismiss: {
+                if dismissSettingsAfterGuide {
+                    dismissSettingsAfterGuide = false
+                    dismiss()
+                }
+            }) {
+                NavigationStack {
+                    FamilyPermissionGuide {
+                        dismissSettingsAfterGuide = true
+                        showingFamilyGuide = false
+                    }
+                }
+            }
     }
 }
 

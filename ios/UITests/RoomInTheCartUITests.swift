@@ -536,28 +536,8 @@ final class RoomInTheCartUITests: XCTestCase {
 
     func testSpanishFamilyGuideReturnsToTheSameTwoUncheckedGroceries() {
         launch(language: "es")
-        let names = ["pan", "peras"]
-        let field = element("quickGrocery.name")
-        for name in names {
-            tap(field)
-            field.typeText(name + "\n")
-            let saved = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
-                                                         "quickGrocery.undo", name)).firstMatch
-            XCTAssertTrue(saved.waitForExistence(timeout: 10))
-        }
-        tap(app.buttons["quickGrocery.viewList"])
-        let list = app.navigationBars["Lista de compras"]
-        XCTAssertTrue(list.waitForExistence(timeout: 8))
-        func uncheckedRows() -> Set<String> {
-            Set(names.map { name in
-                let check = app.buttons["Marcar " + name]
-                reveal(check)
-                XCTAssertTrue(check.isHittable)
-                XCTAssertTrue(check.identifier.hasPrefix("ledgerCheck-"))
-                return check.identifier
-            })
-        }
-        let originalRows = uncheckedRows()
+        let list = openSpanishFamilyGroceries()
+        let originalRows = spanishFamilyUncheckedRows()
         XCTAssertEqual(originalRows.count, 2)
         let options = app.buttons["ledgerListOptions"]
         tap(options)
@@ -588,7 +568,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(guide.waitForExistence(timeout: 6))
         tap(app.buttons["guardian.familyGuide.done"])
         XCTAssertTrue(list.waitForExistence(timeout: 8))
-        XCTAssertEqual(uncheckedRows(), originalRows)
+        XCTAssertEqual(spanishFamilyUncheckedRows(), originalRows)
 
         tap(app.buttons["ledgerInStore"])
         tap(app.buttons["inStoreTripOptions"])
@@ -605,26 +585,72 @@ final class RoomInTheCartUITests: XCTestCase {
             tap(openList)
         }
         XCTAssertTrue(list.waitForExistence(timeout: 8))
-        XCTAssertEqual(uncheckedRows(), originalRows)
+        XCTAssertEqual(spanishFamilyUncheckedRows(), originalRows)
     }
 
     func testFamilyPermissionGuideExplainsChildScopeAndGuardianStartOffline() {
         launch(language: "es", largeDark: true)
+        let list = openSpanishFamilyGroceries()
+        let originalRows = spanishFamilyUncheckedRows()
+        XCTAssertEqual(originalRows.count, 2)
+        let back = list.buttons["Compras"]
+        tap(back.exists ? back : list.buttons["BackButton"])
         tap(app.buttons["settings"])
-        tap(app.buttons["guardian.familyGuide"])
+        let entry = app.buttons["guardian.familyGuide"]
+        reveal(entry)
+        let startTime = ProcessInfo.processInfo.systemUptime
+        entry.tap()
+        let guide = app.navigationBars["Permisos de menores"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 8))
         let scope = app.staticTexts["guardian.familyGuide.scope"]
         XCTAssertTrue(scope.waitForExistence(timeout: 8))
+        let presentationTime = ProcessInfo.processInfo.systemUptime - startTime
+        XCTAssertLessThan(presentationTime, 15, "The guide and its role explanation must appear promptly after the tap.")
         XCTAssertTrue(scope.label.contains("sus propias solicitudes"))
         XCTAssertTrue(scope.label.contains("presupuesto del hogar es privado"))
         let start = app.staticTexts["guardian.familyGuide.start"]
         reveal(start)
         XCTAssertTrue(start.label.contains("Solicitudes del hogar"))
         XCTAssertTrue(start.label.contains("Controles del tutor"))
+        let offline = app.staticTexts["guardian.familyGuide.offline"]
+        reveal(offline)
+        XCTAssertTrue(offline.label.contains("sin conexión a internet"))
         tap(app.buttons["guardian.familyGuide.support"])
         XCTAssertTrue(app.navigationBars["Soporte"].waitForExistence(timeout: 8))
         tap(app.buttons["guardian.familyGuide.exitSupport"])
         XCTAssertTrue(element("quickGrocery.name").waitForExistence(timeout: 8))
-        XCTAssertFalse(app.navigationBars["Configuración"].exists)
+        XCTAssertTrue(app.navigationBars["Configuración"].waitForNonExistence(timeout: 8))
+        XCTAssertTrue(guide.waitForNonExistence(timeout: 8))
+        tap(app.buttons["openPickupList"])
+        XCTAssertTrue(list.waitForExistence(timeout: 8))
+        XCTAssertEqual(spanishFamilyUncheckedRows(), originalRows)
+    }
+
+    private let spanishFamilyGroceries = ["pan", "peras"]
+
+    private func openSpanishFamilyGroceries() -> XCUIElement {
+        let field = element("quickGrocery.name")
+        for name in spanishFamilyGroceries {
+            tap(field)
+            field.typeText(name + "\n")
+            let saved = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                         "quickGrocery.undo", name)).firstMatch
+            XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        }
+        tap(app.buttons["quickGrocery.viewList"])
+        let list = app.navigationBars["Lista de compras"]
+        XCTAssertTrue(list.waitForExistence(timeout: 8))
+        return list
+    }
+
+    private func spanishFamilyUncheckedRows() -> Set<String> {
+        Set(spanishFamilyGroceries.map { name in
+            let check = app.buttons["Marcar " + name]
+            reveal(check)
+            XCTAssertTrue(check.isHittable)
+            XCTAssertTrue(check.identifier.hasPrefix("ledgerCheck-"))
+            return check.identifier
+        })
     }
 
     func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {

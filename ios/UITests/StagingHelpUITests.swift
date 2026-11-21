@@ -39,7 +39,6 @@ final class StagingHelpUITests: XCTestCase {
 
     func testConfiguredSpanishFamilyGuideReturnsFromSafariToNativeHelp() {
         openSettings(language: "es")
-        tapInList(app.buttons["settings.support"])
         tapInList(app.buttons["guardian.familyGuide"])
         let guide = app.navigationBars["Permisos de menores"]
         XCTAssertTrue(guide.waitForExistence(timeout: 8))
@@ -54,11 +53,16 @@ final class StagingHelpUITests: XCTestCase {
             "Con el permiso del tutor y un dispositivo vinculado")).firstMatch
         XCTAssertTrue(scope.waitForExistence(timeout: 12))
         XCTAssertTrue(scope.isHittable, "The configured Spanish family section should open at its own anchor.")
-        let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo", "OK"])).firstMatch
+        let done = app.buttons.matching(NSPredicate(format: "label IN %@ AND NOT (identifier IN %@)",
+                                                     ["Done", "Listo", "OK"], ["guardian.familyGuide.done", "settings.done"])).firstMatch
         XCTAssertTrue(done.waitForExistence(timeout: 5))
         done.tap()
         XCTAssertTrue(web.waitForNonExistence(timeout: 8))
         XCTAssertTrue(guide.waitForExistence(timeout: 8))
+        tapInList(guide.buttons["guardian.familyGuide.done"])
+        XCTAssertTrue(guide.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(app.navigationBars["Configuración"].waitForNonExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["settings"].waitForExistence(timeout: 8))
     }
 
     private func tapInList(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
