@@ -1883,6 +1883,41 @@ import XCTest
         XCTAssertTrue(markUnknown.exists)
     }
 
+    func testFirstSavedReceiptInvalidatesEmptyHistoryBeforeClosing() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Records"])
+        receiptTap(app.buttons["records.privateReceipts"])
+        receiptTap(app.buttons["pantry.setup.apply"])
+        let start = app.buttons["receipt.history.start"]
+        let empty = app.staticTexts["No confirmed receipt lines yet."]
+        XCTAssertTrue(start.waitForExistence(timeout: 8))
+        XCTAssertTrue(empty.exists)
+
+        receiptTap(start)
+        let editor = app.navigationBars["Review a receipt"]
+        receiptTap(editor.buttons["Close"])
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(start.isHittable && empty.exists, "Cancel must return to the genuine empty history")
+
+        receiptTap(start)
+        reviewManualOatsAtMarket()
+        receiptTap(app.buttons["receipt.commit"])
+        let saved = app.staticTexts["receipt.status"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        XCTAssertEqual(saved.label, "Reviewed receipt lines saved.")
+        XCTAssertTrue(editor.exists, "Inspect the history behind the still-open confirmation")
+        XCTAssertFalse(empty.exists, "The first-use message must disappear before the possible slide back to history")
+        XCTAssertFalse(start.exists)
+        capture("First receipt saved before history dismissal")
+        receiptTap(app.buttons["Done"])
+
+        XCTAssertTrue(app.buttons["receipt.putawayHistory"].waitForExistence(timeout: 8))
+        XCTAssertFalse(empty.exists)
+        reveal(app.staticTexts["Oats 3 count USD 4.20"])
+        reveal(app.staticTexts["Usable 2 units"])
+        capture("First confirmed receipt in history")
+    }
+
     func testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry() {
         app.resetAuthorizationStatus(for: .camera)
         defer { app.resetAuthorizationStatus(for: .camera) }

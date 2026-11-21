@@ -30,6 +30,7 @@
   ],
   "07 · Review receipt evidence before adding food": [
     "RoomInTheCartUITests/FreeJourneyUITests/testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock",
+    "RoomInTheCartUITests/FreeJourneyUITests/testFirstSavedReceiptInvalidatesEmptyHistoryBeforeClosing",
     "RoomInTheCartTests/ReceiptDocumentTests/testPricePrintedBelowTheItemRequiresExplicitLinkingAndStaysUnpaid",
     "RoomInTheCartTests/ReceiptDocumentTests/testPrintedPaidTotalRemainsUnknownUntilTheShopperAdoptsIt",
     "RoomInTheCartTests/ReceiptDocumentTests/testPrintedPaidTotalRejectsSubtotalConflictsAndUncertainAmounts"

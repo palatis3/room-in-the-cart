@@ -7,6 +7,7 @@ import SwiftUI
 struct PantryReceiptEntry: View {
     @ObservedObject var model: PantryModel
     var didFinishWithLot: (UUID) -> Void = { _ in }
+    var didSaveReceipt: () -> Void = {}
     var initialSource: SourceMediaRecord? = nil
     var verifySource: @MainActor () async throws -> Void = {}
     @State private var aliases: [InventoryReceiptAlias] = []
@@ -536,6 +537,7 @@ struct PantryReceiptEntry: View {
             do {
                 try await verifySource()
                 try await model.saveReceipt(value)
+                didSaveReceipt()
                 savedHeader = value.putaway?.header
                 savedPickupID = draft?.savedPickup?.id
                 review = nil; draft = nil; reviewedSourceImage = nil
@@ -926,6 +928,7 @@ struct PantryReceiptHistory: View {
     @State private var hasMore = true
     @State private var busy = false
     @State private var newReceipt = false
+    @State private var savedReceiptRefresh: UUID?
     @State private var message: String?
     @State private var learning: ReceiptAcquisition?
     @State private var correcting: ReceiptAcquisition?
@@ -936,9 +939,10 @@ struct PantryReceiptHistory: View {
     private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
+        let loading = busy || savedReceiptRefresh != nil
         List {
             if let message { Text(message) }
-            if busy && facts.isEmpty { ProgressView(pantryText("Working…")) }
+            if loading && facts.isEmpty { ProgressView(pantryText("Working…")) }
             if hasPutaway, receiptID == nil, permittedLines == nil, model.canEdit {
                 NavigationLink {
                     PutawayHistory(model: model)
@@ -950,7 +954,7 @@ struct PantryReceiptHistory: View {
                     }
                 }.accessibilityIdentifier("receipt.putawayHistory")
             }
-            if facts.isEmpty && !hasPutaway && !busy && !hasMore && model.phase == .ready {
+            if facts.isEmpty && !hasPutaway && !loading && !hasMore && model.phase == .ready {
                 Section {
                     Text(pantryText("No confirmed receipt lines yet.")).font(.headline)
                     if receiptID == nil, model.canEdit {
@@ -988,11 +992,16 @@ struct PantryReceiptHistory: View {
                     }.buttonStyle(.borderless).disabled(!model.canEdit || busy)
                 }
             }
-            if hasMore { Button(pantryText("Load receipt lines")) { Task { await loadPage() } }.disabled(busy) }
+            if hasMore && savedReceiptRefresh == nil {
+                Button(pantryText("Load receipt lines")) { Task { await loadPage() } }.disabled(busy)
+            }
         }
         .privacySensitive()
         .onChange(of: model.snapshot?.state.workspaceID) { _, scope in
-            if scope == nil { newReceipt = false; hasPutaway = false; facts = []; lastReadID = nil; learning = nil; correcting = nil; price = ""; hasMore = false }
+            if scope == nil {
+                newReceipt = false; savedReceiptRefresh = nil
+                hasPutaway = false; facts = []; lastReadID = nil; learning = nil; correcting = nil; price = ""; hasMore = false
+            }
         }
         .workingSurface()
         .navigationTitle(pantryText("Receipt history"))
@@ -1003,13 +1012,15 @@ struct PantryReceiptHistory: View {
             if model.phase == .idle { await model.load() }
             if model.phase == .ready { await loadPage() }
         }
-        .sheet(isPresented: $newReceipt, onDismiss: {
-            if model.canEdit {
-                facts = []; lastReadID = nil; hasMore = true
-                Task { await loadPage() }
+        .task(id: savedReceiptRefresh) {
+            guard let token = savedReceiptRefresh, token == model.generation else { return }
+            await loadPage()
+            if !Task.isCancelled, savedReceiptRefresh == token { savedReceiptRefresh = nil }
+        }
+        .sheet(isPresented: $newReceipt) {
+            if model.phase == .ready, model.snapshot != nil {
+                NavigationStack { PantryReceiptEntry(model: model, didSaveReceipt: refreshAfterSavingReceipt) }
             }
-        }) {
-            if model.phase == .ready, model.snapshot != nil { NavigationStack { PantryReceiptEntry(model: model) } }
         }
         .sheet(item: $learning) { original in
             NavigationStack { PantryReceiptAliasEntry(model: model, source: original) }
@@ -1021,6 +1032,13 @@ struct PantryReceiptHistory: View {
                 }
             }.interactiveDismissDisabled(busy)
         }
+    }
+
+    private func refreshAfterSavingReceipt() {
+        guard model.canEdit else { return }
+        // The saved sheet can reveal history before its dismissal completes.
+        facts = []; lastReadID = nil; hasMore = true
+        savedReceiptRefresh = model.generation
     }
 
     private func saveCorrection(_ original: ReceiptAcquisition, total: Money?) {
@@ -1049,17 +1067,24 @@ struct PantryReceiptHistory: View {
 
     private func loadPage() async {
         guard !busy, hasMore else { return }
+        let token = model.generation
         busy = true
         defer { busy = false }
         do {
+            var hasReviewedPurchases = hasPutaway
             if lastReadID == nil, receiptID == nil, permittedLines == nil {
-                hasPutaway = try await !model.reviewedReceiptHeaders(after: nil).isEmpty
+                hasReviewedPurchases = try await !model.reviewedReceiptHeaders(after: nil).isEmpty
             }
             let page = try await model.receiptHistory(after: lastReadID, receiptID: receiptID)
+            guard !Task.isCancelled, token == model.generation, model.canEdit else { return }
+            hasPutaway = hasReviewedPurchases
             lastReadID = page.last?.id
             facts.append(contentsOf: page.filter { permittedLines?.contains($0.lineID) ?? true })
             hasMore = page.count == 30
-        } catch { message = receiptError(error) }
+        } catch {
+            guard !Task.isCancelled, token == model.generation else { return }
+            message = receiptError(error)
+        }
     }
 }
 
