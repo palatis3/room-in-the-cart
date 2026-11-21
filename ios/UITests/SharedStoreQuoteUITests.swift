@@ -49,8 +49,14 @@ import XCTest
         openComparison()
         XCTAssertFalse(app.buttons["East unknown / West unknown"].exists,"The shopper must not see another adult's unproposed private quote")
         tap(app.buttons["East / West"])
-        tap(element("sharedQuotes.reviewProposal"))
-        let apply = element("sharedQuotes.confirm"); reveal(apply)
+        // XCTest can report a lazy Form row hittable when only its edge meets the home indicator.
+        let proposalID = "sharedQuotes.reviewProposal"
+        guard let row = visibleQuoteRow(proposalID) else { return }
+        XCTAssertTrue(row.isEnabled)
+        let proposal = app.buttons[proposalID]
+        XCTAssertTrue(proposal.isHittable)
+        proposal.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        guard let apply = visibleQuoteRow("sharedQuotes.confirm") else { return }
         XCTAssertFalse(apply.isEnabled,"Shopper must acknowledge exact adoption")
         counter("adoptions",0)
         capture("S27-assigned-shopper-explicit-adoption-review")
