@@ -126,15 +126,18 @@ private struct QuickGroceryField: View {
             if prominent {
                 HStack(alignment: .center, spacing: 8) {
                     Text(listTitle)
-                        .marketJournalTitle(typeSize.isAccessibilitySize ? .title : .largeTitle)
+                        .marketJournalTitle(.largeTitle)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                     if !typeSize.isAccessibilitySize {
                         Image(decorative: "MarketGroceries")
                             .resizable().scaledToFit().frame(width: 110, height: 68)
-                            .accessibilityHidden(true)
+                            .allowsHitTesting(false)
                     }
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(verbatim: listTitle))
+                .accessibilityAddTraits(.isHeader)
             } else if householdMember {
                 Text(quickGroceryText("Add to my private list"))
                     .font(.headline).accessibilityAddTraits(.isHeader)
@@ -145,10 +148,17 @@ private struct QuickGroceryField: View {
             }
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout(spacing: 8))
             layout {
-                TextField("", text: groceryInput, prompt: Text(typeSize.isAccessibilitySize ? "" : quickGroceryText("Add a grocery")).foregroundStyle(Theme.secondary), axis: .vertical)
+                TextField("", text: groceryInput, axis: .vertical)
                     .textFieldStyle(.plain).font(.body)
                     .fixedSize(horizontal: false, vertical: !text.isEmpty)
                     .frame(height: emptyLineHeight)
+                    .overlay(alignment: .leading) {
+                        if text.isEmpty && !typeSize.isAccessibilitySize {
+                            Text(quickGroceryText("Add a grocery"))
+                                .font(.body).foregroundStyle(Theme.secondary)
+                                .accessibilityHidden(true).allowsHitTesting(false)
+                        }
+                    }
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
