@@ -494,9 +494,10 @@ import XCTest
         app.descendants(matching: .any).matching(identifier: id).firstMatch
     }
 
-    private func reveal(_ control: XCUIElement) {
+    private func reveal(_ control: XCUIElement, needsTap: Bool = true) {
         let tabBar = app.tabBars.firstMatch
         for attempt in 0..<16 {
+            if !needsTap && control.exists { return }
             // A dismissing sheet can remove a navigation bar between indexed queries.
             let snapshot = try? app.snapshot()
             var nodes = snapshot.map { [$0] } ?? []
@@ -515,7 +516,7 @@ import XCTest
             // Drag the displayed form without flicking past a short row or scrolling the list behind a sheet.
             app.scrollForm(in: area, upward: upward, besideFields: true)
         }
-        XCTAssertTrue(control.waitForExistence(timeout: 8) && control.isHittable, app.debugDescription)
+        XCTAssertTrue(control.waitForExistence(timeout: 8) && (!needsTap || control.isHittable), app.debugDescription)
     }
 
     private func tap(_ control: XCUIElement) {
@@ -557,7 +558,7 @@ import XCTest
 
     private func assertLot(_ id: String, contains expected: String) {
         let row = app.buttons[id]
-        reveal(row)
+        reveal(row, needsTap: false)
         XCTAssertTrue(row.label.localizedCaseInsensitiveContains(expected), row.label)
     }
 
