@@ -1,6 +1,55 @@
 import SwiftUI
+import OSLog
 import CoreDomain
 import LocalStore
+
+/// Wait for the iOS 17 push to finish before mounting the comparison's native controls.
+struct NewComparisonDestination: View {
+    @State private var appeared = false
+
+    var body: some View {
+        if #available(iOS 18, *) {
+            ComparisonView()
+        } else if appeared {
+            ComparisonView()
+        } else {
+            ProgressView(tr("Compare packs"))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Theme.canvas)
+                .background { ComparisonAppearanceObserver { appeared = true } }
+                .navigationTitle(tr("Compare packs"))
+                .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
+private struct ComparisonAppearanceObserver: UIViewControllerRepresentable {
+    let appeared: @MainActor () -> Void
+    private static let logger = Logger(subsystem: "dev.roominthecart", category: "comparison-navigation")
+
+    final class Controller: UIViewController {
+        var appeared: (@MainActor () -> Void)?
+
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            ComparisonAppearanceObserver.logger.debug("Comparison transition appeared")
+            let completion = appeared
+            appeared = nil
+            Task { @MainActor in completion?() }
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Controller {
+        Self.logger.debug("Preparing comparison transition")
+        let controller = Controller()
+        controller.view.isUserInteractionEnabled = false
+        controller.view.accessibilityElementsHidden = true
+        controller.appeared = appeared
+        return controller
+    }
+
+    func updateUIViewController(_ controller: Controller, context: Context) {}
+}
 
 struct ComparisonView: View {
     @Environment(\.pantryDigestAccess) private var priceAccess
@@ -99,83 +148,47 @@ struct ComparisonView: View {
             .accessibilityIdentifier("editComparison")
     }
 
-    @ViewBuilder private var editor: some View {
-        if #available(iOS 18, *) {
-            WorkingForm { editorSections }
-        } else {
-            // On iOS 17 the self-sizing Form can stall before the first editor frame.
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) { editorSections }
-                    .padding()
-            }
-            .textFieldStyle(WorkingInputStyle())
-        }
-    }
-
-    @ViewBuilder private var editorSections: some View {
-        editorSection(footer: tr("Compare the cost of enough usable food for one item. No account or connection needed.")) {
-            Text(tr("What are you buying?")).font(.title.bold()).accessibilityAddTraits(.isHeader)
-            WorkingField(tr("Item name")) {
-                workingTextField(tr("Item name"), text: $model.draft.item, axis: .vertical)
-                    .focused($inputFocused, equals: "itemName").accessibilityIdentifier("itemName")
-                    .frame(minHeight: 44)
-            }
-            entry("Total amount needed", text: $model.draft.needed, id: "needed")
-            unitPicker("Needed unit", selection: $model.draft.unit, id: "neededUnit")
-        }
-        offerSection("Pack A", label: $model.draft.aLabel, quantity: $model.draft.aQuantity, unit: $model.draft.aUnit, price: $model.draft.aPrice, conversion: $model.draft.aConversion, prefix: "a")
-        offerSection("Pack B", label: $model.draft.bLabel, quantity: $model.draft.bQuantity, unit: $model.draft.bUnit, price: $model.draft.bPrice, conversion: $model.draft.bConversion, prefix: "b")
-        editorSection(footer: tr("This limit covers this item only. Other groceries, fees and taxes are not included.")) {
-            entry("Item spending limit (USD, optional)", text: $model.draft.cap, id: "itemCap", keyboard: .decimalPad)
-        }
-        editorSection {
-            DisclosureGroup(isExpanded: $stockExpanded) {
-                entry("Available at home", text: $model.draft.stock, id: "stock")
-                entry("Set aside within the total", text: $model.draft.protected, id: "protected")
-                Text(tr("Use the same unit as your shopping need. Count only food available for this item. Include any set-aside portions in the total you need."))
-                    .font(.footnote).foregroundStyle(Theme.secondary)
-            } label: {
-                Text(tr("Food at home and set-aside portions"))
-            }
-            .disclosureGroupStyle(LabeledFormDisclosureStyle(label: tr("Food at home and set-aside portions"),
-                                                            identifier: "comparisonStockDisclosure"))
-        }
-        if let error = model.error { errorRow(error) }
-        if #available(iOS 18, *) {
-            Section { compareButton }
-        } else {
-            compareButton
-        }
-    }
-
-    private var compareButton: some View {
-        Button {
-            inputFocused = nil
-            model.compare()
-            if model.result != nil, model.error == nil { reviewing = true; resultFocused = .summary }
-            else { resultFocused = .error }
-        } label: { Text(tr("Compare enough food")) }
-        .buttonStyle(PrimaryAction()).accessibilityIdentifier("compare")
-        .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
-    }
-
-    @ViewBuilder private func editorSection<Content: View>(
-        _ title: String? = nil, footer: String? = nil, @ViewBuilder content: () -> Content
-    ) -> some View {
-        if #available(iOS 18, *) {
-            Section { content() } header: {
-                if let title { Text(title) }
+    private var editor: some View {
+        WorkingForm {
+            Section {
+                Text(tr("What are you buying?")).font(.title.bold()).accessibilityAddTraits(.isHeader)
+                WorkingField(tr("Item name")) {
+                    workingTextField(tr("Item name"), text: $model.draft.item, axis: .vertical)
+                        .focused($inputFocused, equals: "itemName").accessibilityIdentifier("itemName")
+                        .frame(minHeight: 44)
+                }
+                entry("Total amount needed", text: $model.draft.needed, id: "needed")
+                unitPicker("Needed unit", selection: $model.draft.unit, id: "neededUnit")
             } footer: {
-                if let footer { Text(footer) }
+                Text(tr("Compare the cost of enough usable food for one item. No account or connection needed."))
             }
-        } else {
-            VStack(alignment: .leading, spacing: 8) {
-                if let title { Text(title).font(.headline).accessibilityAddTraits(.isHeader) }
-                VStack(alignment: .leading, spacing: 12) { content() }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(12)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
-                if let footer { Text(footer).font(.footnote).foregroundStyle(Theme.secondary) }
+            offerSection("Pack A", label: $model.draft.aLabel, quantity: $model.draft.aQuantity, unit: $model.draft.aUnit, price: $model.draft.aPrice, conversion: $model.draft.aConversion, prefix: "a")
+            offerSection("Pack B", label: $model.draft.bLabel, quantity: $model.draft.bQuantity, unit: $model.draft.bUnit, price: $model.draft.bPrice, conversion: $model.draft.bConversion, prefix: "b")
+            Section {
+                entry("Item spending limit (USD, optional)", text: $model.draft.cap, id: "itemCap", keyboard: .decimalPad)
+            } footer: { Text(tr("This limit covers this item only. Other groceries, fees and taxes are not included.")) }
+            Section {
+                DisclosureGroup(isExpanded: $stockExpanded) {
+                    entry("Available at home", text: $model.draft.stock, id: "stock")
+                    entry("Set aside within the total", text: $model.draft.protected, id: "protected")
+                    Text(tr("Use the same unit as your shopping need. Count only food available for this item. Include any set-aside portions in the total you need."))
+                        .font(.footnote).foregroundStyle(Theme.secondary)
+                } label: {
+                    Text(tr("Food at home and set-aside portions"))
+                }
+                .disclosureGroupStyle(LabeledFormDisclosureStyle(label: tr("Food at home and set-aside portions"),
+                                                                identifier: "comparisonStockDisclosure"))
+            }
+            if let error = model.error { errorRow(error) }
+            Section {
+                Button {
+                    inputFocused = nil
+                    model.compare()
+                    if model.result != nil, model.error == nil { reviewing = true; resultFocused = .summary }
+                    else { resultFocused = .error }
+                } label: { Text(tr("Compare enough food")) }
+                .buttonStyle(PrimaryAction()).accessibilityIdentifier("compare")
+                .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
             }
         }
     }
@@ -188,39 +201,21 @@ struct ComparisonView: View {
                 .accessibilityLabel(tr(label)).accessibilityIdentifier(id)
                 .frame(minHeight: 44)
         }
-        // Tapping the caption or the space beside the input also activates its field.
+        // iOS 17 exposes the entire Form row as the text field's activation
+        // frame. Its center can sit between the caption and the editor.
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .simultaneousGesture(TapGesture().onEnded { inputFocused = id })
     }
 
-    @ViewBuilder private func unitPicker(_ label: String, selection: Binding<UnitOfMeasure>, id: String) -> some View {
-        let picker = Picker(tr(label), selection: selection) {
+    private func unitPicker(_ label: String, selection: Binding<UnitOfMeasure>, id: String) -> some View {
+        Picker(tr(label), selection: selection) {
             ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(unit.displayName).tag(unit) }
-        }
-        if #available(iOS 18, *) {
-            picker.frame(minHeight: 44).accessibilityIdentifier(id)
-        } else {
-            Menu {
-                picker.pickerStyle(.inline)
-            } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(tr(label)).font(.subheadline).foregroundStyle(Theme.secondary)
-                    HStack {
-                        Text(selection.wrappedValue.displayName)
-                        Image(systemName: "chevron.up.chevron.down").font(.caption).accessibilityHidden(true)
-                    }
-                }
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .accessibilityLabel(tr(label)).accessibilityValue(selection.wrappedValue.displayName)
-            .accessibilityIdentifier(id)
-        }
+        }.frame(minHeight: 44).accessibilityIdentifier(id)
     }
 
     private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
-        editorSection(tr(title), footer: tr("Enter the usable amount, not just the printed pack size. Leave an unknown weight, yield or price blank.")) {
+        Section {
             entry("Usable amount in one pack", text: quantity, id: prefix + "Quantity")
             unitPicker("Pack unit", selection: unit, id: prefix + "Unit")
             entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
@@ -238,6 +233,8 @@ struct ComparisonView: View {
                                     unit: unit, price: price, access: priceAccess, current: { priceIdentity == identity }, prefix: prefix)
                     .id(scope.owner + scope.origin.uuidString + prefix)
             }
+        } header: { Text(tr(title)) } footer: {
+            Text(tr("Enter the usable amount, not just the printed pack size. Leave an unknown weight, yield or price blank."))
         }
     }
 
@@ -433,7 +430,7 @@ struct ComparisonView: View {
     }
 
     private func errorRow(_ text: String) -> some View {
-        editorSection { Label(text, systemImage: "exclamationmark.triangle").foregroundStyle(Color("error")).accessibilityFocused($resultFocused, equals: .error) }
+        Section { Label(text, systemImage: "exclamationmark.triangle").foregroundStyle(Color("error")).accessibilityFocused($resultFocused, equals: .error) }
     }
 }
 

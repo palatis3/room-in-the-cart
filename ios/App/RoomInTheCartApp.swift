@@ -649,7 +649,7 @@ struct ShopView: View {
                         .disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave)
                         .accessibilityIdentifier("shop.addFirstList")
                     Divider()
-                    NavigationLink { ComparisonView() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right", chevron: true) }
+                    NavigationLink { NewComparisonDestination() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right", chevron: true) }
                         .accessibilityIdentifier("newComparison")
                     Divider()
                     RestorableShoppingListLink { ShopToolLabel(ledgerText("Start pickup"), "cart", chevron: true) }
@@ -676,7 +676,7 @@ struct ShopView: View {
                 Button { showingStandingList = true } label: { ShopToolLabel(shoppingText("Standing list"), "list.star") }
                     .disabled(!ledger.ready).accessibilityIdentifier("shop.standingList")
             } else {
-                NavigationLink { ComparisonView() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right") }
+                NavigationLink { NewComparisonDestination() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right") }
                     .accessibilityIdentifier("newComparison")
             }
             if canReviewCheckout {
@@ -835,7 +835,7 @@ struct RecordsView: View {
                             .font(.subheadline).foregroundStyle(Theme.secondary)
                     }.padding(.vertical, 4)
                     NavigationLink {
-                        ComparisonView()
+                        NewComparisonDestination()
                     } label: { Label(tr("Compare packs"), systemImage: "plus") }
                     .accessibilityIdentifier("records.startComparison")
                 }
