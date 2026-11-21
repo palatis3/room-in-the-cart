@@ -18,7 +18,8 @@ struct ComparisonView: View {
     @StateObject private var model: ComparisonModel
     @Environment(\.locale) private var locale
     @State private var stockExpanded: Bool
-    @State private var missingPrice: PriceTarget?
+    @State private var missingPrice: ComparisonPack?
+    @State private var missingAmount: ComparisonPack?
     @State private var reviewing: Bool
     private enum ResultFocus: Hashable { case summary, saved, error }
     @AccessibilityFocusState private var resultFocused: ResultFocus?
@@ -55,11 +56,28 @@ struct ComparisonView: View {
                 case .a: model.draft.aPrice = literal
                 case .b: model.draft.bPrice = literal
                 }
-                model.compare()
-                reviewing = model.result != nil
-                resultFocused = reviewing ? .summary : .error
+                updateResult()
             }
         }
+        .sheet(item: $missingAmount) { pack in
+            MissingPackAmountEditor(pack: pack, unit: pack == .a ? model.draft.aUnit : model.draft.bUnit) { literal, unit in
+                switch pack {
+                case .a:
+                    model.draft.aQuantity = literal
+                    model.draft.aUnit = unit
+                case .b:
+                    model.draft.bQuantity = literal
+                    model.draft.bUnit = unit
+                }
+                updateResult()
+            }
+        }
+    }
+
+    private func updateResult() {
+        model.compare()
+        reviewing = model.result != nil
+        resultFocused = reviewing ? .summary : .error
     }
 
     private var editRow: some View {
@@ -206,6 +224,11 @@ struct ComparisonView: View {
                     }
                     Divider()
                     Text(tr("Cost in whole packs")).font(.subheadline.weight(.semibold))
+                    if let cap = inputs.itemCap {
+                        Text(message("Item spending limit: %@", moneyText(cap, locale: locale)))
+                            .font(.subheadline).monospacedDigit()
+                            .accessibilityIdentifier("comparisonItemLimit")
+                    }
                     let rates = inputs.comparableUnitPrices
                     costLine(inputs.offerA, result: result.offerA, fallback: tr("Pack A"), unitPrice: rates?.a, unit: result.unit)
                     costLine(inputs.offerB, result: result.offerB, fallback: tr("Pack B"), unitPrice: rates?.b, unit: result.unit)
@@ -213,8 +236,8 @@ struct ComparisonView: View {
                 .fixedSize(horizontal: false, vertical: true).padding(.vertical, 6)
                 .foregroundStyle(result.offerA.isResolved && result.offerB.isResolved ? Theme.onSelection : Theme.ink)
                 .listRowBackground(result.offerA.isResolved && result.offerB.isResolved ? Theme.selection : Theme.warningSurface)
-                if result.offerA.issues.contains(.priceUnknown) { priceAction(.a) }
-                if result.offerB.issues.contains(.priceUnknown) { priceAction(.b) }
+                recoveryActions(for: .a, result: result.offerA)
+                recoveryActions(for: .b, result: result.offerB)
                 editRow
             }
             Section {
@@ -273,13 +296,22 @@ struct ComparisonView: View {
         .accessibilityIdentifier("comparisonResultsScroll")
     }
 
-    private func priceAction(_ target: PriceTarget) -> some View {
-        Button { missingPrice = target } label: {
-            Label(target.title, systemImage: "plus.circle")
+    @ViewBuilder private func recoveryActions(for pack: ComparisonPack, result: OfferResult) -> some View {
+        if result.issues.contains(.priceUnknown) {
+            recoveryAction(pack.priceTitle, id: pack.rawValue + "AddPrice") { missingPrice = pack }
+        }
+        if result.issues.contains(.usableQuantityUnknown) {
+            recoveryAction(pack.amountTitle, id: pack.rawValue + "AddAmount") { missingAmount = pack }
+        }
+    }
+
+    private func recoveryAction(_ title: String, id: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: "plus.circle")
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .contentShape(Rectangle())
         }
-        .foregroundStyle(Theme.action).accessibilityIdentifier(target.rawValue + "AddPrice")
+        .foregroundStyle(Theme.action).accessibilityIdentifier(id)
     }
 
     private func costLine(_ offer: PackOffer, result: OfferResult, fallback: String,
@@ -351,14 +383,60 @@ struct ComparisonView: View {
     }
 }
 
-private enum PriceTarget: String, Identifiable {
+private enum ComparisonPack: String, Identifiable {
     case a, b
     var id: Self { self }
-    var title: String { tr(self == .a ? "Add Pack A price" : "Add Pack B price") }
+    var priceTitle: String { tr(self == .a ? "Add Pack A price" : "Add Pack B price") }
+    var amountTitle: String { tr(self == .a ? "Enter Pack A usable amount" : "Enter Pack B usable amount") }
+}
+
+private struct MissingPackAmountEditor: View {
+    let pack: ComparisonPack
+    @State var unit: UnitOfMeasure
+    let update: (String, UnitOfMeasure) -> Void
+    @State private var literal = ""
+    @State private var invalid = false
+    @FocusState private var focused: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            WorkingForm {
+                Section {
+                    WorkingField(tr("Usable amount in one pack")) {
+                        workingTextField(tr("Usable amount in one pack"), text: $literal)
+                            .keyboardType(.numbersAndPunctuation).focused($focused)
+                            .accessibilityIdentifier(pack.rawValue + "Quantity")
+                    }
+                    Picker(tr("Pack unit"), selection: $unit) {
+                        ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                    }
+                    .accessibilityIdentifier(pack.rawValue + "Unit")
+                    if invalid {
+                        Label(tr("Enter the amount as a number or fraction, such as 3 or 1/2."),
+                              systemImage: "exclamationmark.circle")
+                            .foregroundStyle(Theme.warning)
+                    }
+                    Button(tr("Update comparison")) {
+                        guard (try? ComparisonModel.quantity(literal, unit)) != nil else { invalid = true; return }
+                        update(literal, unit)
+                        dismiss()
+                    }
+                    .buttonStyle(PrimaryAction()).accessibilityIdentifier("comparison.updateAmount")
+                }
+            }
+            .navigationTitle(pack.amountTitle).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tr("Cancel")) { dismiss() } } }
+            .keyboardDoneAction(visible: focused, title: tr("Done"), identifier: "comparison.done." + pack.rawValue + "Quantity") {
+                focused = false
+            }
+            .onAppear { focused = true }
+        }
+    }
 }
 
 private struct MissingPackPriceEditor: View {
-    let target: PriceTarget
+    let target: ComparisonPack
     let update: (String) -> Void
     @State private var literal = ""
     @State private var invalid = false
@@ -386,7 +464,7 @@ private struct MissingPackPriceEditor: View {
                     .buttonStyle(PrimaryAction()).accessibilityIdentifier("comparison.updatePrice")
                 }
             }
-            .navigationTitle(target.title).navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(target.priceTitle).navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(tr("Cancel")) { dismiss() } }
             }

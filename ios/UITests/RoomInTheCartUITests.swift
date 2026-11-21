@@ -436,6 +436,45 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Unknown-pack-quantity-reopened")
     }
 
+    func testMissingPackAmountCanBeCorrectedFromResultWithItsUnitAndItemLimit() {
+        launch()
+        openEmptyComparison()
+        type([("itemName", "Frozen shelled edamame"), ("needed", "300")])
+        tap(app.buttons["neededUnit"])
+        tap(app.buttons["grams"])
+        type([("aQuantity", "300"), ("aPrice", "3.45")])
+        tap(app.buttons["aUnit"])
+        tap(app.buttons["grams"])
+        type([("bPrice", "5.76"), ("itemCap", "5.50")])
+        compare()
+
+        let addAmount = app.buttons["bAddAmount"]
+        XCTAssertEqual(addAmount.label, "Enter Pack B usable amount")
+        XCTAssertFalse(app.buttons["aAddAmount"].exists)
+        tap(addAmount)
+        let amount = app.textFields["bQuantity"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 5))
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(amount.waitForNonExistence(timeout: 5))
+        tap(addAmount)
+        tap(amount)
+        amount.typeText("0.6")
+        dismissComparisonKeyboard("comparison.done.bQuantity")
+        tap(app.buttons["bUnit"])
+        tap(app.buttons["kilograms"])
+        tap(app.buttons["comparison.updateAmount"])
+
+        XCTAssertTrue(amount.waitForNonExistence(timeout: 5))
+        XCTAssertFalse(addAmount.exists)
+        let cap = element("comparisonItemLimit")
+        revealFullyInComparison(cap)
+        XCTAssertTrue(cap.label.contains("$5.50"))
+        XCTAssertTrue(element("aCostSummary").label.contains("$3.45"))
+        XCTAssertTrue(element("bCostSummary").label.contains("$5.76"))
+        assertContains("Usable amount in one pack: 0.6 kilograms")
+        assertContains("Over the item limit: $0.26")
+    }
+
     func testPackageLabelConversionResolvesOnlyAfterConfirmationAndReopens() {
         launch()
         openEmptyComparison()

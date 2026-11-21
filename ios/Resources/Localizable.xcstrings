@@ -1235,6 +1235,74 @@
         }
       }
     },
+    "Enter Pack A usable amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Pack A usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicar la cantidad utilizable del paquete A"
+          }
+        }
+      }
+    },
+    "Enter Pack B usable amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Pack B usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicar la cantidad utilizable del paquete B"
+          }
+        }
+      }
+    },
+    "Item spending limit: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item spending limit: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite de gasto para este artículo: %@"
+          }
+        }
+      }
+    },
+    "Enter the amount as a number or fraction, such as 3 or 1/2.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the amount as a number or fraction, such as 3 or 1/2."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe la cantidad como un número o una fracción, por ejemplo, 3 o 1/2."
+          }
+        }
+      }
+    },
     "Add Pack A price": {
       "extractionState": "manual",
       "localizations": {
