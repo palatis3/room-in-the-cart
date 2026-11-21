@@ -219,8 +219,11 @@ import XCTest
         tap(app.buttons["tonight.recipe.save"])
         tap(app.buttons["tonight.recipe.done"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 10))
-        let recipe = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "No-shop rice dinner")).firstMatch
-        tap(recipe)
+        let recipe = app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "tonight.result.", "No-shop rice dinner")).firstMatch
+        revealInList(recipe)
+        // iOS 17 exposes the disclosure chevron separately from its named recipe row.
+        tap(recipe, at: CGVector(dx: 0.94, dy: 0.5))
         let unresolvedPrice = app.staticTexts.matching(NSPredicate(format: "label == %@", "Some amounts or package prices still need review.")).firstMatch
         revealInList(unresolvedPrice)
         XCTAssertTrue(unresolvedPrice.exists, app.debugDescription)
