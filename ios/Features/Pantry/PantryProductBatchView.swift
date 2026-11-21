@@ -316,7 +316,7 @@ struct PantryProductBatchView: View {
             else if row.onePackageUnknown { Text(pantryText("One package, contents unknown")).font(.caption) }
             else if let total = row.total { Text(pantryPrintedQuantity(total.description, unit: row.unit)).font(.caption) }
             else if atHome {
-                Text(pantryText("Enter an amount or choose Contents unknown.")).font(.caption)
+                Text(pantryText("Enter an amount or leave the contents unknown.")).font(.caption)
                     .fixedSize(horizontal: false, vertical: true)
             } else { Text(pantryText("Choose a package size and count.")).font(.caption) }
         }

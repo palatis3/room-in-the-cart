@@ -295,7 +295,7 @@ import XCTest
         tap(app.buttons["productBatch.add"])
         let product = app.buttons["productBatch.row.0"]
         reveal(product)
-        XCTAssertTrue(product.label.contains("Contents unknown"), product.label)
+        XCTAssertTrue(product.label.contains("contents unknown"), product.label)
         tap(product)
         enableSwitch("productBatch.oneUnknown")
         let keep = app.buttons["productBatch.finishEditing"]

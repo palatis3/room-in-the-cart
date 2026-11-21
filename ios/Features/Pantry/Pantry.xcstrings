@@ -17,18 +17,18 @@
         }
       }
     },
-    "Enter an amount or choose Contents unknown.": {
+    "Enter an amount or leave the contents unknown.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter an amount or choose Contents unknown."
+            "value": "Enter an amount or leave the contents unknown."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indica una cantidad o elige Contenido desconocido."
+            "value": "Indica una cantidad o deja el contenido como desconocido."
           }
         }
       }
