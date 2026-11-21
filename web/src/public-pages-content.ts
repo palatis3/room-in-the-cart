@@ -4,7 +4,7 @@ export type PublicLanguage = 'en' | 'es';
 export type PublicPageKey = 'help' | 'privacy' | 'terms' | 'support';
 export type PublicCopy = Readonly<Record<PublicLanguage, string>>;
 export type PublicPage = Readonly<{ title: PublicCopy; lead: PublicCopy; notice: PublicCopy | null;
-  sections: readonly Readonly<{ title: PublicCopy; paragraphs: readonly PublicCopy[] }>[] }>;
+  sections: readonly Readonly<{ id?: string; title: PublicCopy; paragraphs: readonly PublicCopy[] }>[] }>;
 
 export const publicPages = {
   "help": {
@@ -219,6 +219,23 @@ export const publicPages = {
           {
             "en": "You can choose a date to check food quality or look up the food in the offline storage guide. A reminder asks you to open My Pantry to review the food.",
             "es": "Puedes elegir una fecha para revisar la calidad del alimento o consultarlo en la guía de almacenamiento sin conexión. Un recordatorio te pide que abras Mi despensa para revisar el alimento."
+          }
+        ]
+      },
+      {
+        "id": "child-permission",
+        "title": {
+          "en": "Children and guardian permission",
+          "es": "Menores y permiso del tutor"
+        },
+        "paragraphs": [
+          {
+            "en": "With guardian approval and a linked device, your child can ask for a grocery item and see what happened to their own requests. The assigned shopper decides what goes in the basket. Your household budget stays private.",
+            "es": "Con el permiso del tutor y un dispositivo vinculado, tu menor puede pedir un producto y ver qué pasó con sus propias solicitudes. Quien se encarga de la compra decide qué va en la cesta. El presupuesto del hogar sigue siendo privado."
+          },
+          {
+            "en": "On the guardian’s iPhone, open Settings, then Household requests. Select your household and open Guardian controls when enabled for your household. The guardian verifies their age, gives permission and confirms the child’s device. If setup is unavailable, you can keep using your private shopping list.",
+            "es": "En el iPhone del tutor, abre Configuración y después Solicitudes del hogar. Elige tu hogar y abre Controles del tutor si están habilitados para tu hogar. El tutor verifica su edad, da permiso y confirma el dispositivo del menor. Si la configuración no está disponible, puedes seguir usando tu lista de compras privada."
           }
         ]
       }

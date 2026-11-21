@@ -4,6 +4,7 @@ const copy = {
   en: {
     title: 'One grocery list for dinner and tomorrow’s lunch.',
     lead: 'Make your grocery list on iPhone, compare the cost of buying enough food, and set aside the portions you want to keep.',
+    family: 'How children can help with the list',
     guide: 'See how to compare packs',
     example: 'A pack comparison on iPhone',
     exampleText: 'For 12 tortillas, two 8-packs at $3.20 cost $6.40. Two 6-packs at $2.70 give you exactly 12 for $5.40.',
@@ -20,6 +21,7 @@ const copy = {
   es: {
     title: 'Una lista de compras para la cena y el almuerzo de mañana.',
     lead: 'Haz la lista en tu iPhone, compara cuánto cuesta comprar la cantidad que necesitas y aparta las porciones que quieres guardar.',
+    family: 'Cómo pueden ayudar los menores con la lista',
     guide: 'Ver cómo comparar paquetes',
     example: 'Comparación de paquetes en iPhone',
     exampleText: 'Para llevar 12 tortillas, dos paquetes de 8 a $3.20 cuestan $6.40. Con dos paquetes de 6 a $2.70 te llevas justo 12 por $5.40.',
@@ -60,6 +62,9 @@ export function renderProductOverview(root: HTMLElement, language: PublicLanguag
   const guide = link(text.guide, 'help', '#public-section-1');
   guide.className = 'overview-action';
   introduction.append(element('h1', text.title), element('p', text.lead), guide);
+  const familyGuide = link(text.family, 'help', '#child-permission');
+  familyGuide.className = 'overview-family-guide';
+  introduction.append(familyGuide);
   const figure = element('figure');
   figure.className = 'overview-example';
   const screen = element('img');
