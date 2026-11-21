@@ -1782,6 +1782,14 @@
         }
       }
     },
+    "Save": {
+      "comment": "Short comparison navigation-bar label at accessibility text sizes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Save" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Guardar" } }
+      }
+    },
     "Save a pack comparison to return to the same amounts and prices, even offline.": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
@@ -1816,6 +1824,14 @@
             "value": "Guardar comparación"
           }
         }
+      }
+    },
+    "Saved": {
+      "comment": "Short comparison navigation-bar label at accessibility text sizes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Saved" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Guardado" } }
       }
     },
     "Saved on this iPhone": {

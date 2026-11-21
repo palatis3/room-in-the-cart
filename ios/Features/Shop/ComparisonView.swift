@@ -75,7 +75,7 @@ struct ComparisonView: View {
     }
     @State private var missingInput: MissingInput?
     @State private var reviewing: Bool
-    private enum ResultFocus: Hashable { case summary, saved, error }
+    private enum ResultFocus: Hashable { case summary, saved, toolbarSaved, error }
     @AccessibilityFocusState private var resultFocused: ResultFocus?
     @FocusState private var inputFocused: String?
 
@@ -92,6 +92,11 @@ struct ComparisonView: View {
         Group {
             if reviewing, let comparison = model.comparison {
                 results(comparison.result, inputs: comparison.inputs)
+                    .toolbar {
+                        if typeSize.isAccessibilitySize {
+                            ToolbarItem(placement: .topBarTrailing) { accessibleSaveControl }
+                        }
+                    }
                     .sheet(item: $missingInput) { input in missingInputEditor(input) }
             } else {
                 editor
@@ -105,6 +110,31 @@ struct ComparisonView: View {
         .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
                             identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
+    }
+
+    @ViewBuilder private var accessibleSaveControl: some View {
+        if model.savedAt != nil {
+            Text(tr("Saved"))
+                .accessibilityLabel(tr("Saved on this iPhone"))
+                .accessibilityIdentifier("comparison.toolbarSaved")
+                .accessibilityFocused($resultFocused, equals: .toolbarSaved)
+        } else {
+            Button(tr("Save")) { saveComparison(focusAfterSave: .toolbarSaved) }
+                .accessibilityLabel(tr(model.saving ? "Saving…" : "Save comparison"))
+                .accessibilityIdentifier("comparison.toolbarSave")
+                .disabled(model.saving)
+        }
+    }
+
+    private func saveComparison(focusAfterSave: ResultFocus) {
+        Task {
+            guard !model.saving, model.savedAt == nil else { return }
+            await model.save(in: app.store)
+            await app.refresh()
+            guard reviewing else { return }
+            if model.savedAt != nil { resultFocused = focusAfterSave }
+            else if model.error != nil { resultFocused = .error }
+        }
     }
 
     @ViewBuilder private func missingInputEditor(_ input: MissingInput) -> some View {
@@ -349,13 +379,7 @@ struct ComparisonView: View {
                         .accessibilityFocused($resultFocused, equals: .saved)
                 } else {
                     ComparisonSaveButton(title: tr(model.saving ? "Saving…" : "Save comparison"), enabled: !model.saving) {
-                        Task {
-                            await model.save(in: app.store)
-                            await app.refresh()
-                            guard reviewing else { return }
-                            if model.savedAt != nil { resultFocused = .saved }
-                            else if model.error != nil { resultFocused = .error }
-                        }
+                        saveComparison(focusAfterSave: .saved)
                     }
                 }
             }

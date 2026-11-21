@@ -652,6 +652,29 @@ final class RoomInTheCartUITests: XCTestCase {
         assertKnownTotals()
     }
 
+    func testLargestTextComparisonSavesFromNavigationAndReopensOneRecord() {
+        launch(largeDark: true)
+        openEmptyComparison()
+        enterComparison(item: "Measured oats", firstQuantity: "8", cap: "30")
+        compare()
+        let bar = app.navigationBars.firstMatch
+        let save = bar.buttons["comparison.toolbarSave"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5) && save.isHittable)
+        XCTAssertEqual(save.label, "Save comparison")
+        save.doubleTap()
+        let saved = bar.descendants(matching: .any).matching(identifier: "comparison.toolbarSaved").firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        XCTAssertEqual(saved.label, "Saved on this iPhone")
+        XCTAssertFalse(save.exists)
+
+        app.terminate()
+        launch(reset: false, largeDark: true)
+        reopenSavedRecord(recordsLabel: "Records", item: "Measured oats")
+        XCTAssertTrue(saved.waitForExistence(timeout: 5))
+        XCTAssertFalse(save.exists)
+        assertKnownTotals()
+    }
+
     func testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs() throws {
         launch(largeDark: true)
         openEmptyComparison()
