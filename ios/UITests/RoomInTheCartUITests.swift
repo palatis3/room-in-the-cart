@@ -526,14 +526,32 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["settings.help"])
         tap(app.buttons["help.topic.household"])
         XCTAssertTrue(app.navigationBars["Compartir en el hogar"].waitForExistence(timeout: 8))
-        let share = app.staticTexts["help.privateListSharing.instructions"]
-        XCTAssertTrue(share.waitForExistence(timeout: 8))
-        XCTAssertTrue(share.label.contains("Vista previa de la lista"))
+        let route = "En Lista de compras, abre Opciones de la lista y luego Vista previa de la lista."
+        let share = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH %@", route)).firstMatch
+        reveal(share)
+        XCTAssertTrue(share.label.contains("revisa el mensaje antes de elegir un destinatario"))
+        screenshot("Spanish Help private list preview guidance")
+
         let permissions = app.buttons["help.householdPermissions"]
-        let rule = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "los presupuestos del hogar")).firstMatch
+        let article = app.collectionViews.firstMatch
+        XCTAssertTrue(article.exists)
+        // When the form has not mounted the disclosure yet, search only below the visible sharing instructions.
+        for _ in 0..<8 {
+            if permissions.exists {
+                if share.exists && !share.frame.isEmpty && !permissions.frame.isEmpty {
+                    XCTAssertLessThanOrEqual(share.frame.maxY, permissions.frame.minY, "Private sharing instructions must precede detailed permissions.")
+                }
+                if permissions.isHittable { break }
+            }
+            article.swipeUp(velocity: .slow)
+        }
+        XCTAssertTrue(permissions.exists && permissions.isHittable)
+        let rule = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@",
+                                                        "los presupuestos del hogar siguen siendo privados")).firstMatch
         XCTAssertFalse(rule.exists)
-        tap(permissions)
-        XCTAssertTrue(rule.waitForExistence(timeout: 8))
+        permissions.tap()
+        reveal(rule)
+        screenshot("Spanish Help expanded household permissions")
     }
 
     func testSpanishFamilyGuideReturnsToTheSameTwoUncheckedGroceries() {
