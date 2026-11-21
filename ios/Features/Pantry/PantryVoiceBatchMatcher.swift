@@ -38,7 +38,7 @@ enum PantryVoiceBatchMatcher {
     }
 
     /// Only explicit trailing location phrases qualify a food. “Freezer jam” is a food name.
-    static func storageQualifier(in value: String) -> (food: String, location: InventoryLocation)? {
+    static func storageQualifier(in value: String) -> (food: String, location: InventoryLocation, phrase: String)? {
         let suffixes: [(InventoryLocation, [String])] = [
             (.fridge, ["from the refrigerator", "from the fridge", "in the refrigerator", "in the fridge",
                        "del refrigerador", "de la nevera", "del frigorífico", "en el refrigerador", "en la nevera", "en el frigorífico"]),
@@ -51,7 +51,7 @@ enum PantryVoiceBatchMatcher {
             for ending in endings {
                 if let range = trimmed.range(of: " " + ending, options: [.backwards, .anchored, .caseInsensitive, .diacriticInsensitive]) {
                     let food = trimmed[..<range.lowerBound].trimmingCharacters(in: .whitespaces)
-                    if !food.isEmpty { return (food, location) }
+                    if !food.isEmpty { return (food, location, String(trimmed[range])) }
                 }
             }
         }

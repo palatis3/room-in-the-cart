@@ -65,10 +65,16 @@ enum PantryVoiceParser {
             command = beforeUpdate
         } else { command = spoken }
         let question = command.trimmingCharacters(in: CharacterSet(charactersIn: "¿? "))
+        let trailingLocation = PantryVoiceBatchMatcher.storageQualifier(in: question)
         if let food = firstFood([
             #"^how much (?:of (?:the |my )?)?(.+?) (?:do (?:i|we) have left|is left|remains)$"#,
             #"^cu[aá]nt[oa]s? (.+?) (?:me |nos )?quedan?$"#
-        ], in: question) {
+        ], in: trailingLocation?.food ?? question) {
+            if let trailingLocation {
+                guard PantryVoiceBatchMatcher.storageQualifier(in: food) == nil,
+                      let target = checkedFood(food + trailingLocation.phrase) else { return review }
+                return .balanceQuery(target)
+            }
             return .balanceQuery(food)
         }
         if let target = dateFood(command) { return .dateQuery(target) }

@@ -3,6 +3,22 @@ import XCTest
 @testable import RoomInTheCart
 
 final class PantryVoiceParserTests: XCTestCase {
+    func testReadOnlyBalanceWithTrailingPlaceKeepsFoodAndStorageWithoutAUseIntent() {
+        for (text, target, locale) in [
+            ("¿Cuánto ajonjolí me queda en el refrigerador?", "ajonjolí en el refrigerador", "es_MX"),
+            ("How much sesame do I have left in the fridge?", "sesame in the fridge", "en_US"),
+            ("How much sesame in the cupboard is left?", "sesame in the cupboard", "en_US"),
+            ("¿Cuántas manzanas nos quedan en la alacena?", "manzanas en la alacena", "es_MX")
+        ] {
+            XCTAssertEqual(PantryVoiceParser.parse(text, localeIdentifier: locale), .balanceQuery(target))
+        }
+        for text in ["How much sesame in the fridge is left in the freezer?",
+                     "¿Cuánto ajonjolí me queda en el refrigerador? Añade sal",
+                     "How much sesame do I have left in the car?"] {
+            XCTAssertEqual(PantryVoiceParser.parse(text, localeIdentifier: "en_US"), .needsReview(text))
+        }
+    }
+
     func testReadOnlyBalanceQuestionsAndLocationQualifiedUnmeasuredUses() throws {
         XCTAssertEqual(PantryVoiceParser.parse("¿Cuánto ajonjolí me queda?", localeIdentifier: "es_MX"), .balanceQuery("ajonjolí"))
         XCTAssertEqual(PantryVoiceParser.parse("How much sesame do I have left?", localeIdentifier: "en_US"), .balanceQuery("sesame"))
