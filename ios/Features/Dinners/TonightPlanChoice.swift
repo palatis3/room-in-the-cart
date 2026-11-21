@@ -325,8 +325,11 @@ struct SavedDinnerHandoffView: View {
                     await ledger.selectShop(shop.id, authorize: canChangePickup, onSelected: didSelectPickup)
                 } }
             }
-            Button(ledgerText("Start another pickup")) { startingPickup = true }
-        } label: { Label(dinnerText("Choose a pickup"), systemImage: "chevron.up.chevron.down") }
+            Button(selectingGroceries ? dinnerText("Create shopping list") : ledgerText("Start another pickup")) { startingPickup = true }
+        } label: {
+            Label(dinnerText(ledger.shop == nil ? "Choose a shopping list" : "Change shopping list"),
+                  systemImage: "chevron.up.chevron.down")
+        }
         .disabled(busy || ledger.saving || ledger.hasPendingSave)
         .accessibilityIdentifier("dinner.handoff.pickup")
     }

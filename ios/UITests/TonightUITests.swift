@@ -255,6 +255,9 @@ import XCTest
         XCTAssertEqual(app.descendants(matching: .any)["ledgerShopName"].label, "Shopping list name (required)")
         tap(createList)
         XCTAssertTrue(app.navigationBars["Shop for ingredients only"].waitForExistence(timeout: 5))
+        let changeList = app.buttons["dinner.handoff.pickup"]
+        XCTAssertTrue(changeList.waitForExistence(timeout: 5))
+        XCTAssertEqual(changeList.label, "Change shopping list")
         let select = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Lemon")).firstMatch
         let chickpeas = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Chickpeas")).firstMatch
         tap(select, at: CGVector(dx: 0.22, dy: 0.5))

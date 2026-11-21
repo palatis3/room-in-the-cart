@@ -18,19 +18,36 @@
         }
       }
     },
-    "Choose a pickup": {
+    "Choose a shopping list": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose a pickup"
+            "value": "Choose a shopping list"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elegir una compra"
+            "value": "Elegir una lista de compras"
+          }
+        }
+      }
+    },
+    "Change shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar la lista de compras"
           }
         }
       }
