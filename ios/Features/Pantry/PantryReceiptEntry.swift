@@ -865,8 +865,10 @@ struct PantryReceiptLineEditor: View {
                 received.frame(maxWidth: .infinity, alignment: .leading)
             }
             .id("received-\(line.ordinal)")
-            Button(pantryText("I received the printed quantity")) { line.usePrintedQuantity() }
-                .accessibilityIdentifier("receipt.printedQuantity.\(line.ordinal)")
+            Button { line.usePrintedQuantity() } label: {
+                JournalActionLabel(pantryText("I received the printed quantity"), systemImage: "arrow.right.circle")
+            }
+            .accessibilityIdentifier("receipt.printedQuantity.\(line.ordinal)")
         } else {
             received.id("received-\(line.ordinal)")
         }
@@ -904,7 +906,7 @@ struct PantryReceiptLineEditor: View {
             if line.treatment == .add || line.treatment == .keptSome {
                 if let storage = line.printed?.storage {
                     LabeledContent(pantryText("Suggested storage to check"), value: pantryLocationName(storage))
-                } else if line.treatment == .keptSome { Text(putawayText("Choose where you put the remainder.")).font(.caption) }
+                } else if line.treatment == .keptSome { Text(putawayText("Choose where you stored the portion you kept.")).font(.caption) }
                 else { Text(pantryText("Choose where you put this food. The initial selection is cupboard.")).font(.caption) }
                 Picker(putawayText("Destination in My Pantry"), selection: $line.location) {
                     ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
@@ -929,8 +931,10 @@ struct PantryReceiptLineEditor: View {
         }
         if let printed = line.printed, let amount = printed.amount, let wording = printed.priceWording, line.documentLine?.stage != .order {
             LabeledContent(pantryText("Possible printed line total"), value: wording)
-            Button(pantryText("I paid this line total in USD")) { line.paid = amount }
-                .accessibilityIdentifier("receipt.printedPrice.\(line.ordinal)")
+            Button { line.paid = amount } label: {
+                JournalActionLabel(pantryText("I paid this line total in USD"), systemImage: "arrow.right.circle")
+            }
+            .accessibilityIdentifier("receipt.printedPrice.\(line.ordinal)")
         }
         labeledField(pantryText("Confirmed paid line total in USD, optional"), text: $line.paid,
                      focusKey: "paid-\(line.ordinal)", keyboard: line.treatment == .chargeOrReturn ? .numbersAndPunctuation : .decimalPad)

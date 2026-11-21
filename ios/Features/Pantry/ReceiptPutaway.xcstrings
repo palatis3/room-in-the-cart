@@ -721,18 +721,18 @@
         }
       }
     },
-    "Choose where you put the remainder.": {
+    "Choose where you stored the portion you kept.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose where you put the remainder."
+            "value": "Choose where you stored the portion you kept."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige dónde guardaste la porción que quedó."
+            "value": "Elige dónde guardaste la porción que decidiste conservar."
           }
         }
       }
