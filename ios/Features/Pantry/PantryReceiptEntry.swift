@@ -48,6 +48,7 @@ struct PantryReceiptEntry: View {
     @State private var targetID = UUID()
     @AccessibilityFocusState private var resultFocused: Bool
     @Environment(\.dismiss) private var dismiss
+    private var dates = ReceiptDateDisplay()
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -100,7 +101,7 @@ struct PantryReceiptEntry: View {
                     } else if let first = review.facts.first {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(first.merchant).font(.headline)
-                            Text(first.purchaseDate, format: .dateTime.year().month().day())
+                            Text(dates.purchaseDay(first.purchaseDate))
                                 .font(.subheadline).foregroundStyle(Theme.secondary)
                             if let reference = first.transactionReference { Text(reference).font(.subheadline) }
                         }
@@ -544,12 +545,26 @@ struct PantryReceiptEntry: View {
     }
 }
 
-struct ReceiptPurchaseDateFields: View {
-    @Binding var draft: ReceiptImportDraft
-    @Environment(\.locale) private var locale
+struct ReceiptDateDisplay: DynamicProperty {
+    @Environment(\.locale) private var regionLocale
     @Environment(\.calendar) private var calendar
     @Environment(\.timeZone) private var timeZone
-    @State private var choosingDate = false
+
+    var locale: Locale {
+        Self.displayLocale(regionLocale: regionLocale, appLanguage: Bundle.main.preferredLocalizations.first)
+    }
+
+    func purchaseDay(_ date: Date, style: Date.FormatStyle.DateStyle = .long) -> String {
+        date.formatted(Self.format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: timeZone))
+    }
+
+    func civilDay(_ day: String, zone: TimeZone = .gmt, style: Date.FormatStyle.DateStyle = .long) -> String {
+        Self.civilDay(day, style: style, locale: locale, calendar: calendar, zone: zone)
+    }
+
+    func timestamp(_ date: Date) -> String {
+        date.formatted(Self.format(date: .abbreviated, time: .shortened, locale: locale, calendar: calendar, timeZone: timeZone))
+    }
 
     static func displayLocale(regionLocale: Locale, appLanguage: String?) -> Locale {
         guard let appLanguage,
@@ -561,27 +576,57 @@ struct ReceiptPurchaseDateFields: View {
         return Locale(components: components)
     }
 
+    static func format(date: Date.FormatStyle.DateStyle, time: Date.FormatStyle.TimeStyle,
+                       locale: Locale, calendar: Calendar, timeZone: TimeZone) -> Date.FormatStyle {
+        Date.FormatStyle(date: date, time: time, locale: locale, calendar: calendar, timeZone: timeZone)
+    }
+
+    static func civilDay(_ day: String, style: Date.FormatStyle.DateStyle = .long, locale: Locale,
+                         calendar: Calendar, zone: TimeZone) -> String {
+        let parts = day.split(separator: "-", omittingEmptySubsequences: false)
+        // Resolve a stored civil day in its source zone. A record without a source
+        // zone uses GMT as a calendar anchor, so the viewer's zone cannot move that day.
+        guard parts.count == 3,
+              let year = Int(parts[0]), let month = Int(parts[1]), let number = Int(parts[2]),
+              let saved = try? MealDay(year: year, month: month, day: number, timeZoneIdentifier: zone.identifier),
+              saved.iso8601 == day, let date = saved.date else { return day }
+        return date.formatted(format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: zone))
+    }
+}
+
+struct ReceiptDatePicker: View {
+    let title: String
+    let identifier: String
+    @Binding var date: Date
+    private var dates = ReceiptDateDisplay()
+    @State private var choosingDate = false
+
+    var body: some View {
+        let wording = dates.purchaseDay(date)
+        DisclosureGroup(isExpanded: $choosingDate) {
+            DatePicker(title, selection: $date, in: ...Date(), displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .environment(\.locale, dates.locale)
+                .onChange(of: date) { _, _ in choosingDate = false }
+        } label: {
+            LabeledContent(title, value: wording)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: title + ", " + wording, identifier: identifier))
+    }
+}
+
+struct ReceiptPurchaseDateFields: View {
+    @Binding var draft: ReceiptImportDraft
+
     var body: some View {
         if let printed = draft.printedDate {
             LabeledContent(pantryText("Date wording on the receipt"), value: printed.wording)
         } else {
             Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review."))
         }
-        let dateLocale = Self.displayLocale(regionLocale: locale, appLanguage: Bundle.main.preferredLocalizations.first)
-        let dateTitle = pantryText("Purchase date")
-        let wording = draft.selectedPurchaseDate.formatted(Date.FormatStyle(
-            date: .long, time: .omitted, locale: dateLocale, calendar: calendar, timeZone: timeZone))
-        DisclosureGroup(isExpanded: $choosingDate) {
-            DatePicker(dateTitle, selection: $draft.selectedPurchaseDate, in: ...Date(), displayedComponents: .date)
-                .datePickerStyle(.graphical)
-                .environment(\.locale, dateLocale)
-                .onChange(of: draft.selectedPurchaseDate) { _, _ in choosingDate = false }
-        } label: {
-            LabeledContent(dateTitle, value: wording)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: dateTitle + ", " + wording,
-                                                         identifier: "receipt.purchaseDate"))
+        ReceiptDatePicker(title: pantryText("Purchase date"), identifier: "receipt.purchaseDate",
+                          date: $draft.selectedPurchaseDate)
         Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
     }
 }
@@ -845,6 +890,7 @@ struct PantryReceiptHistory: View {
     @State private var price = ""
     @State private var correctionMessage: String?
     @Environment(\.dismiss) private var dismiss
+    private var dates = ReceiptDateDisplay()
 
     var body: some View {
         List {
@@ -867,7 +913,7 @@ struct PantryReceiptHistory: View {
             ForEach(facts) { row in
                 VStack(alignment: .leading, spacing: 5) {
                     Text(row.name).font(.headline)
-                    Text(row.merchant + " · " + row.purchaseDate.formatted(date: .abbreviated, time: .omitted))
+                    Text(row.merchant + " · " + dates.purchaseDay(row.purchaseDate, style: .abbreviated))
                         .font(.subheadline).foregroundStyle(Theme.secondary)
                     Text(row.originalLine)
                         .font(.system(.body, design: .monospaced))
@@ -976,6 +1022,7 @@ private struct ReceiptPriceCorrection: View {
     let save: (Money?) -> Void
     @State private var confirmingUnknown = false
     @FocusState private var priceFocused: Bool
+    private var dates = ReceiptDateDisplay()
 
     private var enteredTotal: Money? {
         guard let total = try? Money(decimal: price), total >= .zero else { return nil }
@@ -989,7 +1036,7 @@ private struct ReceiptPriceCorrection: View {
             Text(pantryFormat("Receipt revision %@", String(original.revision)))
             if let current = original.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(current))) }
             else { Text(pantryText("Paid price unknown")) }
-            Text(original.merchant + " · " + original.purchaseDate.formatted(date: .abbreviated, time: .omitted))
+            Text(original.merchant + " · " + dates.purchaseDay(original.purchaseDate, style: .abbreviated))
             WorkingField(pantryText("Corrected paid line total in USD")) {
                 TextField(pantryText("Corrected paid line total in USD"), text: $price, prompt: Text(""))
                     .keyboardType(.decimalPad).focused($priceFocused)
@@ -1032,6 +1079,7 @@ struct ReceiptTripDifferenceReview: View {
     let draft: ReceiptImportDraft
     @Binding var state: ReceiptTripReviewState
     @State private var editing: ReceiptImportDraft.Line?
+    private var dates = ReceiptDateDisplay()
 
     private var selectable: [ReceiptImportDraft.Line] {
         draft.lines.filter(\.canComparePurchase)
@@ -1086,7 +1134,7 @@ struct ReceiptTripDifferenceReview: View {
         return Picker(captureText("Planned shop"), selection: selection) {
             Text(captureText("Choose explicitly")).tag(nil as UUID?)
             ForEach(trips) { trip in
-                let date = trip.date.formatted(date: .abbreviated, time: .shortened)
+                let date = dates.timestamp(trip.date)
                 let label = [trip.branch, date, String(trip.id.uuidString.suffix(6))].joined(separator: " · ")
                 Text(label).tag(Optional(trip.id))
             }

@@ -12,6 +12,7 @@ struct PantryPackMatchEditor: View {
     private var source: ReceiptAcquisition? { row.existingReceipt }
     @State private var showingReceipts = false
     @State private var loading = false
+    private var dates = ReceiptDateDisplay()
     private var size: Quantity? { try? ComparisonModel.quantity(row.perPack, row.unit) }
 
     var body: some View {
@@ -29,7 +30,7 @@ struct PantryPackMatchEditor: View {
                 }
                 if let source {
                     Text(verbatim: source.originalLine)
-                    Text(source.merchant + " · " + source.purchaseDate.formatted(date: .abbreviated, time: .omitted))
+                    Text(source.merchant + " · " + dates.purchaseDay(source.purchaseDate, style: .abbreviated))
                     if row.receiptLinkSaved {
                         Text(pantryText("Linked to the saved receipt line. Stock stays the same."))
                     } else {
@@ -137,6 +138,7 @@ private struct PackReceiptPicker: View {
     @State private var loaded = false
     @State private var status: String?
     @Environment(\.dismiss) private var dismiss
+    private var dates = ReceiptDateDisplay()
     var body: some View {
         List {
             if authorized() {
@@ -147,7 +149,7 @@ private struct PackReceiptPicker: View {
                         VStack(alignment: .leading) {
                             Text(line.name).font(.headline)
                             Text(verbatim: line.originalLine)
-                            Text(line.merchant + " · " + line.purchaseDate.formatted(date: .abbreviated, time: .omitted))
+                            Text(line.merchant + " · " + dates.purchaseDay(line.purchaseDate, style: .abbreviated))
                             Text(pantryQuantity(line.received))
                         }
                     }
