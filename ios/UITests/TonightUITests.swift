@@ -139,10 +139,12 @@ import XCTest
         XCTAssertEqual(createPickup.label, "Start pickup")
         tap(createPickup)
         let confirm = app.buttons["dinner.handoff.confirm"]
-        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        let destination = app.descendants(matching: .any)["dinner.handoff.destination"]
+        reveal(destination)
+        XCTAssertTrue(destination.label.contains("Groceries for Scrambled eggs"))
+        revealPlanConfirmation(confirm)
         XCTAssertEqual(confirm.label, "Plan for tonight")
-        XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.destination"].label.contains("Groceries for Scrambled eggs"))
-        tap(app.buttons["dinner.handoff.confirm"])
+        confirm.tap()
         XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
         tap(app.buttons["dinner.handoff.done"])
         tap(app.buttons["tonight.recipe.done"])
@@ -182,9 +184,9 @@ import XCTest
         tap(app.buttons["dinner.handoff.startPickup"])
         tap(app.buttons["ledgerCreateShop"])
         let confirm = app.buttons["dinner.handoff.confirm"]
-        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        revealPlanConfirmation(confirm)
         XCTAssertEqual(confirm.label, "Plan for this day")
-        tap(confirm)
+        confirm.tap()
         tap(app.buttons["dinner.handoff.openPlan"])
         tap(app.buttons["dinner.occurrence.editPlan"])
         tap(app.buttons["dinner.plan.today"])
@@ -201,12 +203,14 @@ import XCTest
         XCTAssertFalse(app.staticTexts["guestFeeImpact"].exists)
         XCTAssertFalse(app.staticTexts["guestCheckoutImpact"].exists)
         let confirmChanges = app.buttons["dinnerApply"]
-        XCTAssertEqual(confirmChanges.label, "Save dinner plan")
-        if maximumText && !confirmChanges.isHittable { app.swipeUp() }
+        if maximumText && !(confirmChanges.exists && confirmChanges.isHittable) { app.swipeUp() }
         XCTAssertTrue(confirmChanges.isHittable, "Saving should take at most one scroll after reviewing this meal.")
+        XCTAssertEqual(confirmChanges.label, "Save dinner plan")
         tap(confirmChanges)
         XCTAssertTrue(app.buttons["dinnerApply"].waitForNonExistence(timeout: 12))
-        XCTAssertTrue(app.descendants(matching: .any)["dinner.schedule.saved"].waitForExistence(timeout: 6))
+        let saved = app.descendants(matching: .any).matching(identifier: "dinner.schedule.saved")
+            .matching(NSPredicate(format: "label == %@", "Dinner changes saved.")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 6))
         XCTAssertTrue(preview.label.contains("Servings: 2"))
         app.terminate()
         app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
@@ -487,6 +491,20 @@ import XCTest
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "tonight.recipe.keyboardDone"))
     }
     private func tap(_ element: XCUIElement, at offset: CGVector? = nil) {
+        reveal(element)
+        if let offset { element.coordinate(withNormalizedOffset: offset).tap() }
+        else { element.tap() }
+    }
+
+    private func revealPlanConfirmation(_ confirm: XCUIElement) {
+        for _ in 0..<8 {
+            if confirm.exists && confirm.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(confirm.exists && confirm.isHittable, app.debugDescription)
+    }
+
+    private func reveal(_ element: XCUIElement) {
         _ = element.waitForExistence(timeout: 3)
         for index in 0..<16 {
             if element.exists && element.isHittable { break }
@@ -496,8 +514,6 @@ import XCTest
             start.press(forDuration: 0.05, thenDragTo: end)
         }
         XCTAssertTrue(element.isHittable, element.debugDescription)
-        if let offset { element.coordinate(withNormalizedOffset: offset).tap() }
-        else { element.tap() }
     }
 }
 #endif
