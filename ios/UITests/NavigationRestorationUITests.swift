@@ -177,11 +177,24 @@ import XCTest
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ element: XCUIElement) { reveal(element); XCTAssertTrue(element.isHittable, element.debugDescription); element.tap() }
     private func fillComparisonField(_ text: String, into id: String) {
-        let field = element(id)
-        reveal(field)
+        let field: XCUIElement
+        let bar = app.navigationBars["Compare packs"]
+        if id == "itemName" {
+            XCTAssertTrue(bar.waitForExistence(timeout: 8), "The comparison editor must open after the Shop tap")
+            // The multiline name is a TextView on iOS 17 and a TextField on newer iOS.
+            // It starts at the top. Swiping before the push settles scrolls it out of view.
+            let inputTypes: [XCUIElement.ElementType] = [.textField, .textView]
+            field = app.descendants(matching: .any).matching(identifier: id)
+                .matching(NSPredicate(format: "elementType IN %@", inputTypes.map(\.rawValue))).firstMatch
+            XCTAssertTrue(field.wait(for: \.isHittable, toEqual: true, timeout: 8),
+                          "The new comparison must start with the accessible item name showing")
+        } else {
+            field = app.textFields[id]
+            reveal(field)
+        }
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let doneID = "comparison.done." + id
-        let done = app.navigationBars["Compare packs"].buttons[doneID]
+        let done = bar.buttons[doneID]
         XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Expected Done in the comparison toolbar for " + id)
         app.typeText(text)
         XCTAssertEqual(field.value as? String, text)
