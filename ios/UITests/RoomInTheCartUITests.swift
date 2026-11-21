@@ -43,7 +43,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
         let viewList = app.buttons["quickGrocery.viewList"]
         XCTAssertTrue(viewList.waitForExistence(timeout: 5))
-        XCTAssertEqual(viewList.label, "Ver lista")
+        XCTAssertEqual(viewList.label, "Ver lista de compras")
         XCTAssertLessThanOrEqual(undo.frame.maxY, viewList.frame.minY, "Accessibility text sizes should stack the receipt actions.")
         XCTAssertGreaterThanOrEqual(viewList.frame.height, 44)
     }
