@@ -69,6 +69,7 @@ struct PantryReceiptDocuments: View {
                 Button(pantryText("Cancel reading")) { cancel() }
             } else if let document {
                 let pairs = availableAmounts(document)
+                let suggestedAmountLines = Set(pairs.values)
                 let linkedAmounts = Set(linkedAmountItems.compactMap { pairs[$0] })
                 let included = selection.union(linkedAmounts)
                 let storeIssue = receiptStoreIssue(merchant)
@@ -103,11 +104,13 @@ struct PantryReceiptDocuments: View {
                         else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
                         ForEach(page.lines.filter { !omittedLines.contains(.init(page: page.id, line: $0.id)) }) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
-                            let priceLine = pairs[position].flatMap { price in page.lines.first { $0.id == price.line } }
+                            let price = pairs[position]
+                            let priceLine = price.flatMap { price in page.lines.first { $0.id == price.line } }
                             documentLine(line, at: position, attached: linkedAmounts.contains(position),
                                          canInclude: included.contains(position) || included.count < 200,
+                                         canSelectAmountSeparately: suggestedAmountLines.contains(position),
                                          suggestedAmount: priceLine,
-                                         canLink: priceLine.map { included.contains(.init(page: page.id, line: $0.id)) } == true || included.count < 200)
+                                         canLink: price.map { included.union([position, $0]).count <= 200 } == true)
                         }
                     }
                 }
@@ -124,7 +127,7 @@ struct PantryReceiptDocuments: View {
                             storeFocusRequest = UUID()
                             scroll.scrollTo("receipt.document.store", anchor: .center)
                         } label: {
-                            Label(storeIssue, systemImage: "exclamationmark.circle").frame(minHeight: 44, alignment: .leading)
+                            Label(storeIssue, systemImage: "arrow.up.circle").frame(minHeight: 44, alignment: .leading)
                         }
                         .disabled(!authorize())
                         .accessibilityIdentifier("receipt.document.storeIssue")
@@ -133,7 +136,7 @@ struct PantryReceiptDocuments: View {
                     } else if !reviewsEvidenceOnly && !confirmed {
                         Text(captureText("Confirm which printed lines you physically received to continue.")).foregroundStyle(Theme.secondary)
                     }
-                    Button(reviewsEvidenceOnly ? putawayText("Review selected lines") : pantryText("Review received food")) {
+                    Button(reviewsEvidenceOnly ? putawayText("Use selected receipt lines") : pantryText("Review received food")) {
                         guard authorize(), storeIssue == nil, reviewsEvidenceOnly || confirmed else { return }
                         do {
                             let source = try document.source(target: target, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -231,7 +234,8 @@ struct PantryReceiptDocuments: View {
     }
 
     private func documentLine(_ line: ReceiptDocumentPage.Line, at position: ExtractedReceiptDocument.Selection,
-                              attached: Bool, canInclude: Bool, suggestedAmount: ReceiptDocumentPage.Line?, canLink: Bool) -> some View {
+                              attached: Bool, canInclude: Bool, canSelectAmountSeparately: Bool,
+                              suggestedAmount: ReceiptDocumentPage.Line?, canLink: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 if attached {
@@ -249,6 +253,8 @@ struct PantryReceiptDocuments: View {
                     }
                     .disabled(!canInclude)
                     .accessibilityIdentifier("receipt.document.line.\(position.page).\(line.id)")
+                    .accessibilityHint(canSelectAmountSeparately
+                        ? captureText("Select to keep this amount separate, or link it from the item.") : "")
                 }
                 Button {
                     merchantFocused = false
@@ -260,18 +266,31 @@ struct PantryReceiptDocuments: View {
                 .accessibilityLabel(pantryFormat("Inspect printed line %@", line.id.formatted()))
                 .accessibilityIdentifier("receipt.document.inspect.\(position.page).\(line.id)")
             }
-            if selection.contains(position), let suggestedAmount {
+            if canSelectAmountSeparately, !attached {
+                Text(captureText("Select to keep this amount separate, or link it from the item."))
+                    .font(.caption).foregroundStyle(Theme.secondary)
+                    .accessibilityHidden(true)
+            }
+            if let suggestedAmount {
                 let linked = linkedAmountItems.contains(position)
-                Text(String(format: captureText(linked ? "Possible line total linked to %@: %@" : "Possible line total for %@: %@"),
-                            line.text, suggestedAmount.text))
-                    .font(.subheadline)
+                let included = selection.contains(position)
+                let title = linked ? captureText("Undo amount link") : String(
+                    format: captureText(included ? "Link %@ to this item" : "Select item and link %@"), suggestedAmount.text)
+                if linked {
+                    Text(String(format: captureText("Possible line total linked to %@: %@"), line.text, suggestedAmount.text))
+                        .font(.subheadline)
+                }
                 Button {
                     guard authorize() else { return }
                     if linked { linkedAmountItems.remove(position) }
-                    else if canLink { linkedAmountItems.insert(position) }
+                    else if canLink {
+                        selection.insert(position)
+                        linkedAmountItems.insert(position)
+                    }
                     confirmed = false
                 } label: {
-                    Text(captureText(linked ? "Undo amount link" : "Link possible line total"))
+                    Label(title, systemImage: linked ? "arrow.uturn.backward" : "link")
+                        .font(.subheadline.weight(.semibold))
                         .frame(minHeight: 44, alignment: .leading)
                 }
                 .buttonStyle(.borderless)

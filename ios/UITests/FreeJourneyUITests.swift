@@ -1380,13 +1380,16 @@ import XCTest
         fill("Room Market", into: "receipt.document.store", control: app.textFields["receipt.document.store"])
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         let sourceReview = app.buttons["receipt.document.accept"]
-        XCTAssertEqual(sourceReview.label, "Review selected lines")
+        XCTAssertEqual(sourceReview.label, "Use selected receipt lines")
         tap(sourceReview)
         checkReceiptSwitch("I checked the purchase date.")
         receiptTap(app.buttons["receipt.action.1"])
         receiptTap(app.buttons["Fee, adjustment or return"])
         XCTAssertFalse(app.textFields["receipt.received.1"].exists)
-        receiptTap(app.buttons["receipt.review"])
+        let preview = app.buttons["receipt.review"]
+        reveal(preview)
+        XCTAssertEqual(preview.label, "Preview receipt changes")
+        receiptTap(preview)
         let save = app.buttons["receipt.commit"]
         XCTAssertTrue(save.waitForExistence(timeout: 8))
         XCTAssertEqual(save.label, "Save receipt decisions")
@@ -1444,6 +1447,7 @@ import XCTest
             return XCTFail("Expected the blocked review action after scrolling to the end of the printed lines")
         }
         XCTAssertFalse(accept.isEnabled)
+        XCTAssertEqual(accept.label, "Use selected receipt lines")
         receiptTap(storeIssue, initiallyUpward: false)
         let store = app.textFields["receipt.document.store"]
         XCTAssertTrue(store.waitForExistence(timeout: 5))
@@ -1459,11 +1463,28 @@ import XCTest
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         receiptTap(accept)
 
-        let date = app.switches["I checked the purchase date."]
+        let date = app.switches["receipt.purchaseDateConfirmation"]
         XCTAssertTrue(date.waitForExistence(timeout: 10), "The selected image should hand its lines to the receipt editor.")
-        XCTAssertEqual(date.value as? String, "0")
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
-        checkReceiptSwitch("I checked the purchase date.")
+        let calendar = Calendar.current
+        let today = Date()
+        let yesterday = try XCTUnwrap(calendar.date(byAdding: .day, value: -1, to: today))
+        let spoken = DateFormatter()
+        spoken.locale = Locale(identifier: "en_US")
+        spoken.calendar = calendar
+        spoken.dateFormat = "EEEE, MMMM d"
+        receiptTap(app.buttons["receipt.purchaseDate"])
+        let picker = app.datePickers["Purchase date"]
+        if !calendar.isDate(today, equalTo: yesterday, toGranularity: .month) {
+            receiptTap(picker.buttons["DatePicker.PreviousMonth"])
+        }
+        receiptTap(picker.buttons[spoken.string(from: yesterday)])
+        XCTAssertTrue(date.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        let confirmation = date.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+        XCTAssertTrue(scrollableArea().contains(confirmation.screenPoint), "Date confirmation must remain reachable without another scroll.")
+        XCTAssertEqual(date.value as? String, "0", "Changing the purchase date requires explicit confirmation.")
+        confirmation.tap()
+        XCTAssertEqual(date.value as? String, "1")
         receiptTap(app.buttons["receipt.action.0"])
         receiptTap(app.buttons["Put this food away"])
         enterReceiptField("Rolled oats", id: "Food name", replacing: true)

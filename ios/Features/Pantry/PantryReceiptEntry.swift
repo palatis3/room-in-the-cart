@@ -218,8 +218,7 @@ struct PantryReceiptEntry: View {
                     }
                     .contentShape(Rectangle())
                     .simultaneousGesture(TapGesture().onEnded { field = "reference" })
-                    ReceiptPurchaseDateFields(draft: value)
-                        .id("receipt.purchaseDate")
+                    ReceiptPurchaseDateFields(draft: value, scroll: proxy)
                     if displayed.tracksPutaway {
                         let totalTitle = putawayText("Paid receipt total in USD, if known")
                         WorkingField(totalTitle) {
@@ -280,7 +279,7 @@ struct PantryReceiptEntry: View {
                 } else if !displayed.dateConfirmed {
                     Button {
                         field = nil
-                        proxy.scrollTo("receipt.purchaseDate", anchor: .center)
+                        proxy.scrollTo(ReceiptPurchaseDateFields.confirmationID, anchor: .center)
                     } label: {
                         Label(putawayText("Check the purchase date to continue."), systemImage: "exclamationmark.circle")
                             .frame(minHeight: 44, alignment: .leading)
@@ -290,7 +289,7 @@ struct PantryReceiptEntry: View {
                     Text(putawayText("Choose what to include from at least one receipt line."))
                         .foregroundStyle(Theme.secondary)
                 }
-                Button(displayed.tracksPutaway ? putawayText("Review selected lines") : pantryText("Review selected food")) {
+                Button(displayed.tracksPutaway ? putawayText("Preview receipt changes") : pantryText("Review selected food")) {
                     guard storeIssue == nil else { return }
                     prepare(value.wrappedValue)
                 }.buttonStyle(PrimaryAction())
@@ -598,8 +597,10 @@ struct ReceiptDatePicker: View {
     let title: String
     let identifier: String
     @Binding var date: Date
+    var onDatePicked: (() -> Void)? = nil
     private(set) var dates = ReceiptDateDisplay()
     @State private var choosingDate = false
+    @State private var pickedDate = false
 
     var body: some View {
         let wording = dates.purchaseDay(date)
@@ -607,7 +608,20 @@ struct ReceiptDatePicker: View {
             DatePicker(title, selection: $date, in: ...Date(), displayedComponents: .date)
                 .datePickerStyle(.graphical)
                 .environment(\.locale, dates.locale)
-                .onChange(of: date) { _, _ in choosingDate = false }
+                .onChange(of: date) { _, _ in
+                    pickedDate = onDatePicked != nil
+                    choosingDate = false
+                }
+                .onDisappear {
+                    guard pickedDate, let onDatePicked else { return }
+                    Task { @MainActor in
+                        // Wait for the inline calendar row to leave the form before restoring its position.
+                        await Task.yield()
+                        guard pickedDate else { return }
+                        pickedDate = false
+                        onDatePicked()
+                    }
+                }
         } label: {
             LabeledContent(title, value: wording)
                 .fixedSize(horizontal: false, vertical: true)
@@ -617,7 +631,9 @@ struct ReceiptDatePicker: View {
 }
 
 struct ReceiptPurchaseDateFields: View {
+    static let confirmationID = "receipt.purchaseDateConfirmation"
     @Binding var draft: ReceiptImportDraft
+    let scroll: ScrollViewProxy
 
     var body: some View {
         if let printed = draft.printedDate {
@@ -626,8 +642,12 @@ struct ReceiptPurchaseDateFields: View {
             Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review."))
         }
         ReceiptDatePicker(title: pantryText("Purchase date"), identifier: "receipt.purchaseDate",
-                          date: $draft.selectedPurchaseDate)
+                          date: $draft.selectedPurchaseDate) {
+            scroll.scrollTo(Self.confirmationID, anchor: .center)
+        }
         Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
+            .id(Self.confirmationID)
+            .accessibilityIdentifier(Self.confirmationID)
     }
 }
 
