@@ -251,13 +251,13 @@ struct LedgerHomeView: View {
         .confirmationDialog(ledgerText("List options"), isPresented: $showingListOptions, titleVisibility: .visible) {
             Button(tripText("Preview list copy")) { sheet = .shareItems(shop.id) }
                 .accessibilityIdentifier("tripShare.previewCopy")
+            Button(GuardianCopy.text("Family guide")) { sheet = .familyGuide }
             Button(shoppingText("Shopping kits")) { sheet = .kits(shop.id) }
             Button(shoppingText("Standing list")) { sheet = .standing }
             Button(ledgerText("List order and aisles")) { sheet = .layout }
             Button(ledgerText("List history")) { sheet = .history }
             Button(ledgerText("Review prior staples")) { stapleRecallShopID = shop.id }
             Button(ledgerText("Large-print list")) { sheet = .printList }
-            Button(GuardianCopy.text("Family guide")) { sheet = .familyGuide }
             Button(ledgerText("Cancel"), role: .cancel) {}
         }
     }

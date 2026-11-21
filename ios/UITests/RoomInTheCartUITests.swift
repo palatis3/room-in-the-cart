@@ -395,7 +395,10 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(originalRows.count, 2)
         let options = app.buttons["ledgerListOptions"]
         tap(options)
-        tap(app.buttons["Guía para familias"])
+        let familyGuide = app.buttons["Guía para familias"]
+        XCTAssertTrue(familyGuide.waitForExistence(timeout: 5))
+        XCTAssertTrue(familyGuide.isHittable, "Family help should be visible when list options open.")
+        familyGuide.tap()
         let guide = app.navigationBars["Guía para familias"]
         XCTAssertTrue(guide.waitForExistence(timeout: 8))
         let scope = app.staticTexts["guardian.familyGuide.scope"]
