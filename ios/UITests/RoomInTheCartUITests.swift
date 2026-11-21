@@ -238,6 +238,43 @@ final class RoomInTheCartUITests: XCTestCase {
         }
     }
 
+    func testSharePreviewClosesToPrivateListWithoutSending() {
+        launch()
+        let name = "Roasted red peppers"
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText(name)
+        tap(app.buttons["quickGrocery.add"])
+        tap(app.buttons["quickGrocery.viewList"])
+        tap(app.buttons["ledgerListOptions"])
+        tap(app.buttons["Send selected items"])
+        let row = app.switches.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 8))
+        row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        tap(app.buttons["Preview message"])
+        let preview = app.staticTexts["tripShareBody"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 8))
+        XCTAssertTrue(preview.label.contains(name))
+        tap(app.buttons["tripShare.close"])
+        XCTAssertTrue(preview.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["Inspect " + name].waitForExistence(timeout: 8))
+    }
+
+    func testHouseholdHelpShowsPrivateSharingBeforeDetailedPermissions() {
+        launch(language: "es")
+        tap(app.buttons["settings"])
+        tap(app.buttons["settings.help"])
+        tap(app.buttons["help.topic.household"])
+        XCTAssertTrue(app.navigationBars["Compartir en el hogar"].waitForExistence(timeout: 8))
+        let share = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Enviar artículos seleccionados")).firstMatch
+        XCTAssertTrue(share.waitForExistence(timeout: 8))
+        let permissions = app.buttons["help.householdPermissions"]
+        let rule = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "los presupuestos del hogar")).firstMatch
+        XCTAssertFalse(rule.exists)
+        tap(permissions)
+        XCTAssertTrue(rule.waitForExistence(timeout: 8))
+    }
+
     func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {
         for language in ["en", "es"] {
             launch(language: language)

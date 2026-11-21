@@ -33,6 +33,7 @@ struct MembershipEntryView: View {
                 MembershipPage {
                     if household.membershipSession == nil {
                         householdEntry
+                        PrivateListSharingGuide()
                     } else if membership.failure {
                         MembershipHeading(title: mtr("Membership needs verification"), symbol: "arrow.clockwise")
                         Text(tr("Membership could not be verified. Your Free work is still available."))
@@ -47,6 +48,10 @@ struct MembershipEntryView: View {
                     Divider()
                     MembershipFreeTools()
                     MembershipBenefits()
+                    if !household.configured {
+                        Text(helpText("Household is a paid subscription. The App Store price is unavailable on this iPhone."))
+                            .foregroundStyle(Theme.secondary)
+                    }
                     MembershipLegalLinks(configuration: .fromBundle())
                 }
                 .navigationTitle(tr("Household membership"))

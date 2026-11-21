@@ -145,7 +145,15 @@ struct LedgerHomeView: View {
         .sheet(item: $sheet) { destination in
             switch destination {
             case .shareItems(let id):
-                PrivateShoppingSheet(model: model) { TripHandoffEntry(model: model, shopID: id) }
+                PrivateShoppingSheet(model: model) {
+                    TripHandoffEntry(model: model, shopID: id)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(ledgerText("Close")) { sheet = nil }
+                                    .accessibilityIdentifier("tripShare.close")
+                            }
+                        }
+                }
             case .inStore(let id):
                 PrivateShoppingSheet(model: model) { InStoreShoppingView(model: model, shopID: id) }
             case .kits(let id):

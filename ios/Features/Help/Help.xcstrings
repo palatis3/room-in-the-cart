@@ -2685,6 +2685,150 @@
           }
         }
       }
+    },
+    "Share a list copy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share a list copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir una copia de la lista"
+          }
+        }
+      }
+    },
+    "In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Lista de compras, abre Opciones de la lista y elige Enviar artículos seleccionados. Revisa la copia antes de elegir a quién enviarla. Esa persona puede leerla sin la app."
+          }
+        }
+      }
+    },
+    "Household sharing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household sharing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir en el hogar"
+          }
+        }
+      }
+    },
+    "Join a household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join a household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unirse a un hogar"
+          }
+        }
+      }
+    },
+    "When Household is available, an organizer can invite an adult from People and invitations. The invited adult opens the invitation on their own device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When Household is available, an organizer can invite an adult from People and invitations. The invited adult opens the invitation on their own device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando el hogar está disponible, quien lo organiza puede invitar a otro adulto desde Personas e invitaciones. La persona invitada abre la invitación en su propio dispositivo."
+          }
+        }
+      }
+    },
+    "Requests and permissions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requests and permissions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitudes y permisos"
+          }
+        }
+      }
+    },
+    "Reminders and feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders and feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorios y comentarios"
+          }
+        }
+      }
+    },
+    "Sharing specific information": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sharing specific information"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información que se comparte en cada caso"
+          }
+        }
+      }
+    },
+    "Household is a paid subscription. The App Store price is unavailable on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household is a paid subscription. The App Store price is unavailable on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La membresía del hogar es una suscripción de pago. El precio del App Store no está disponible en este iPhone."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
