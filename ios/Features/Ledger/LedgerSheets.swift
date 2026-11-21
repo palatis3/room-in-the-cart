@@ -241,6 +241,12 @@ struct LedgerImportView: View {
                     }
                 }
                 .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
+                .onChange(of: inputFocus) { _, field in
+                    if let field, field != .original { scroll.scrollTo(field, anchor: .center) }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                    if let field = inputFocus, field != .original { scroll.scrollTo(field, anchor: .center) }
+                }
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText(firstDraft == nil ? "Cancel" : "Close")) {
                     if let firstDraft {
                         Task { if await firstDraft.closeSavingEdits(firstContents, prefill: prefill) { dismiss() } }
@@ -828,6 +834,7 @@ private struct LedgerImportRowView: View {
                     .focused(inputFocus, equals: .name(line.id))
                     .accessibilityIdentifier("ledgerImportName-\(number)")
                     .textFieldStyle(.roundedBorder)
+                    .id(LedgerImportField.name(line.id))
             }
             WorkingField(shoppingText("Quantity (optional)")) {
                 TextField(shoppingText("Quantity (optional)"), text: $amount, prompt: Text(""))
@@ -835,6 +842,7 @@ private struct LedgerImportRowView: View {
                     .focused(inputFocus, equals: .amount(line.id))
                     .textFieldStyle(.roundedBorder)
                     .accessibilityIdentifier("ledgerImportAmount-\(number)")
+                    .id(LedgerImportField.amount(line.id))
             }
             Picker(ledgerText("Unit"), selection: $unit) {
                 ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
