@@ -37,6 +37,30 @@ final class PantryVoiceParserTests: XCTestCase {
         XCTAssertEqual(PantryVoiceParser.parse(unsupported, localeIdentifier: "en_US"), .needsReview(unsupported))
     }
 
+    func testSpanishSingularPartitivesKeepUseQualitativeAndRespectReadOnlyOrNegativePhrases() {
+        for (wording, food) in [
+            ("un poco del ajonjolí del refrigerador", "ajonjolí del refrigerador"),
+            ("un poco de ajonjolí del refrigerador", "ajonjolí del refrigerador"),
+            ("un poco de la harina de la alacena", "harina de la alacena"),
+            ("algo del arroz", "arroz")
+        ] {
+            XCTAssertEqual(PantryVoiceParser.parse("Usé " + wording, localeIdentifier: "es_US"),
+                           .consume([.init(original: wording, food: food, amount: .someUsed)]))
+        }
+        for text in ["No usé un poco del ajonjolí del refrigerador", "¿Usé un poco del ajonjolí?",
+                     "Usé un poco", "Usé un poco del", "Usé un poco de la"] {
+            XCTAssertEqual(PantryVoiceParser.parse(text, localeIdentifier: "es_US"), .needsReview(text))
+        }
+        let low = "Me queda poco ajonjolí"
+        guard case .observation(let observation) = PantryVoiceParser.parse(low, localeIdentifier: "es_US") else {
+            return XCTFail("Low stock must remain an observation")
+        }
+        XCTAssertEqual(observation.food, "ajonjolí")
+        XCTAssertEqual(observation.remaining, .low)
+        XCTAssertEqual(PantryVoiceParser.parse("¿Cuánto ajonjolí me queda en el refrigerador?", localeIdentifier: "es_US"),
+                       .balanceQuery("ajonjolí en el refrigerador"))
+    }
+
     func testNaturalEnglishAndSpanishConsumptionKeepEachQuantityAndPieceWording() throws {
         for (locale, command, names, rows, piece) in [
             ("en-US", "hey I just used two eggs and two pieces of bread and some flour",

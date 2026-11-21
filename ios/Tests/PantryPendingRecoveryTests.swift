@@ -115,6 +115,53 @@ import LocalStore
         XCTAssertNil(reopened.snapshot?.lots.first { $0.id == low.id }?.countWording)
     }
 
+    func testSpanishPartitiveUseConfirmsOnlyTheFridgeBatchAndSurvivesReopen() async throws {
+        let f = try await fixture(), model = editor(f)
+        await model.load()
+        for location in [InventoryLocation.fridge, .cupboard] {
+            await model.prepareNewFood(name: "Ajonjolí", location: location, amount: "4", unit: .count)
+            await model.confirmReview(acknowledgingReservations: false)
+        }
+        let start = try XCTUnwrap(model.snapshot)
+        let fridge = try XCTUnwrap(start.lots.first { $0.location == .fridge })
+        let cupboard = try XCTUnwrap(start.lots.first { $0.location == .cupboard })
+        let phrase = "Usé un poco del ajonjolí del refrigerador"
+        guard case .consume(let items) = PantryVoiceParser.parse(phrase, localeIdentifier: "es_US") else {
+            return XCTFail("Expected an unmeasured use")
+        }
+        XCTAssertEqual(items.count, 1)
+        let item = try XCTUnwrap(items.first)
+        var row = VoicePantryRow.consumption(item)
+        XCTAssertNil(row.selection)
+        let match = try XCTUnwrap(PantryVoiceBatchMatcher.uniqueExact(for: row.food, in: start.lots))
+        XCTAssertEqual(match.id, fridge.id)
+        row.choose(match)
+        let selection = try XCTUnwrap(row.selection)
+        let review = try await model.reviewConsumption([selection], basis: start.state)
+        XCTAssertEqual(model.snapshot?.state, start.state)
+        let prior = try await model.usageHistory(lotID: fridge.id, basis: start.state)
+        XCTAssertTrue(prior.isEmpty)
+        try await model.saveConsumption(review)
+
+        let fresh = try ComparisonStore(url: f.directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(fresh)
+        let reopened = PantryRepository(store: fresh, authorize: { true })
+        let after = try await reopened.load(at: now)
+        XCTAssertEqual(after.lots.first { $0.id == fridge.id }?.count, .unknown)
+        XCTAssertEqual(after.lots.first { $0.id == cupboard.id }, cupboard)
+        let usage = try await reopened.usageHistory(lotID: fridge.id, basis: after.state)
+        XCTAssertEqual(usage.map(\.kind), [.some])
+        XCTAssertNil(usage.first?.remainingWording)
+        let otherUsage = try await reopened.usageHistory(lotID: cupboard.id, basis: after.state)
+        XCTAssertTrue(otherUsage.isEmpty)
+
+        await model.prepareNewFood(name: "Ajonjolí", location: .fridge, amount: "2", unit: .count)
+        await model.confirmReview(acknowledgingReservations: false)
+        let twoFridgeBatches = try XCTUnwrap(model.snapshot?.lots)
+        XCTAssertEqual(PantryVoiceBatchMatcher.suggestions(for: row.food, in: twoFridgeBatches).count, 2)
+        XCTAssertNil(PantryVoiceBatchMatcher.uniqueExact(for: row.food, in: twoFridgeBatches))
+    }
+
     func testConsumptionUnmeasuredUseHistorySurvivesRecountAndReopenButObservationAloneIsNotAUse() async throws {
         let f = try await fixture(), model = editor(f)
         await model.load()

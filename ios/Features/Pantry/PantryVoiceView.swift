@@ -30,6 +30,19 @@ struct VoicePantryRow {
     }
     var showsAllLots = false
 
+    static func consumption(_ item: PantryVoiceItem) -> Self {
+        var row = VoicePantryRow(food: item.food, original: item.original, mode: .remaining)
+        switch item.amount {
+        case .measured(let q): row.mode = .amount; row.amount = q.amount.description; row.unit = q.unit
+        case .pieces(let n, _): row.mode = .amount; row.amount = n.description; row.spokenDimension = .count
+        case .all: row.mode = .all
+        case .someUsed: row.mode = .usedSome
+        case .someUsedWithRemaining(let observation): row.applyRemaining(observation)
+        case .unknown: break
+        }
+        return row
+    }
+
     mutating func restoreSelection(from previous: [VoicePantryRow], in lots: [InventoryLot]) -> Bool {
         guard let prior = previous.first(where: { $0.food == food }),
               let id = prior.lotID, let current = lots.first(where: { $0.id == id }) else { return false }
@@ -356,18 +369,7 @@ struct VoicePantryRow {
         editing = false; resetReview()
         switch PantryVoiceParser.parse(draft, localeIdentifier: locale.identifier) {
         case .consume(let items):
-            rows = items.map { item in
-                var row = VoicePantryRow(food: item.food, original: item.original, mode: .remaining)
-                switch item.amount {
-                case .measured(let q): row.mode = .amount; row.amount = q.amount.description; row.unit = q.unit
-                case .pieces(let n, _): row.mode = .amount; row.amount = n.description; row.spokenDimension = .count
-                case .all: row.mode = .all
-                case .someUsed: row.mode = .usedSome
-                case .someUsedWithRemaining(let observation): row.applyRemaining(observation)
-                case .unknown: break
-                }
-                return row
-            }
+            rows = items.map(VoicePantryRow.consumption)
         case .askRemaining(let food, let original):
             rows = [.init(food: food ?? "", original: original, mode: .remaining)]
         case .observation(let observation):
