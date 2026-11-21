@@ -3918,8 +3918,8 @@ import XCTest
             XCTAssertTrue(app.navigationBars[destination].waitForExistence(timeout: 10), app.debugDescription)
         }
         func applyFrom(_ editor: String, returningTo destination: String) {
-            let apply = element("dinnerApply")
-            tap(apply)
+            let apply = app.buttons["dinnerApply"]
+            tapVisibleFormRow(apply)
             XCTAssertTrue(apply.waitForNonExistence(timeout: 10), app.debugDescription)
             returnFrom(editor, to: destination)
         }
@@ -3953,9 +3953,9 @@ import XCTest
             enableSwitch(assignDate)
             chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
         }
-        // Review is a native button below the lazy form. A typed lookup lets
-        // reveal keep scrolling while that row is still outside the viewport.
-        tap(app.buttons["ledgerReviewDinner"]); applyFrom(copy("Manual dinner", "Cena manual"), returningTo: tab)
+        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "MEAL_WEEK_CREATE_REVIEW")
+        XCTAssertTrue(app.navigationBars[copy("Dinner preview", "Vista previa de cenas")].waitForExistence(timeout: 10), app.debugDescription)
+        applyFrom(copy("Manual dinner", "Cena manual"), returningTo: tab)
         openMealWeek(title: weekTitle)
         chooseMealWeekDate(originalDay, from: Date(), in: weekPicker, formatter: dateFormatter)
         if moveAcrossWeek {
@@ -4113,11 +4113,11 @@ import XCTest
         // XCUI's default activation point can lie above the scrolled content.
         // Use the visible row center, clear of navigation and tab bars.
         for attempt in 0...24 {
-            let area = scrollableArea().insetBy(dx: 0, dy: 12)
+            let area = scrollableArea(usingTabBarFrame: true).insetBy(dx: 0, dy: 12)
             let exists = row.exists
             let frame = exists ? row.frame : .zero
-            if exists && row.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)) {
-                print("\(marker) id=\(row.identifier) frame=\(frame) area=\(area)")
+            if exists && row.isEnabled && row.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)) {
+                print("\(marker) id=\(row.identifier) label=\(row.label) type=\(row.elementType) enabled=\(row.isEnabled) frame=\(frame) area=\(area)")
                 row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
             }
@@ -4866,24 +4866,26 @@ import XCTest
         }
         XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
-    private func scrollableArea(from suppliedSnapshot: (any XCUIElementSnapshot)? = nil) -> CGRect {
+    private func scrollableArea(from suppliedSnapshot: (any XCUIElementSnapshot)? = nil, usingTabBarFrame: Bool = false) -> CGRect {
         // Navigation and sheet transitions can replace a bar between separate
         // XCUI queries. Measure the keyboard and bars from one captured tree.
         let snapshot = suppliedSnapshot ?? (try? app.snapshot())
         let bounds = snapshot?.frame ?? app.frame
         var keyboardTop = bounds.maxY
+        var tabBarTop = bounds.maxY
         var barBottom = bounds.minY + 88
         var elements = snapshot.map { [$0] } ?? []
         while let element = elements.popLast() {
             let frame = element.frame
             if frame.height > 0 && frame.intersects(bounds) {
                 if element.elementType == .keyboard { keyboardTop = min(keyboardTop, frame.minY) }
+                if element.elementType == .tabBar { tabBarTop = min(tabBarTop, frame.minY) }
                 if element.elementType == .navigationBar { barBottom = max(barBottom, frame.maxY) }
             }
             elements.append(contentsOf: element.children)
         }
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
-        let bottom = min(bounds.maxY - 100, keyboardTop - 16)
+        let bottom = min(usingTabBarFrame ? tabBarTop : bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
     private func scrollContent(upward: Bool, area measuredArea: CGRect? = nil, bounds measuredBounds: CGRect? = nil,
