@@ -269,11 +269,21 @@ import UIKit
         let paste = app.buttons["Paste list"]
         revealContent(paste)
         XCTAssertTrue(paste.isEnabled)
+        // On compact phones revealing Paste scrolls part of the editor behind
+        // the navigation bar; XCTest reports the clipped accessibility frame.
+        let heightAtPaste = editor.frame.height
+        XCTAssertGreaterThan(heightAtPaste, 0)
         paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
 
         let pasted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", fixture), object: editor)
         XCTAssertEqual(XCTWaiter.wait(for: [pasted], timeout: 10), .completed, "Native Paste must preserve all 500 lines")
-        XCTAssertEqual(editor.frame.height, initialHeight, accuracy: 1, "Pasting must preserve the editor viewport")
+        XCTAssertEqual(editor.frame.height, heightAtPaste, accuracy: 1, "Native Paste must preserve the viewport at the same scroll position")
+        // Restore the original fully exposed viewport before editing the text.
+        for _ in 0..<4 {
+            if abs(editor.frame.height - initialHeight) <= 1 { break }
+            app.scrollForm(in: scrollableArea(), upward: false, besideFields: true)
+        }
+        XCTAssertEqual(editor.frame.height, initialHeight, accuracy: 1, "The populated editor must retain its full height")
         XCTAssertLessThan(editor.frame.height, app.windows.firstMatch.frame.height / 2)
 
         let keyboard = app.keyboards.firstMatch
@@ -370,6 +380,18 @@ import UIKit
         commit.tap()
         XCTAssertTrue(navigation.waitForNonExistence(timeout: 20), "Adding the edited list must finish the review")
         XCTAssertTrue(app.textFields["ledgerSearch"].waitForExistence(timeout: 8))
+
+        app.terminate()
+        launch(reset: false, largestText: true)
+        let search = app.textFields["ledgerSearch"]
+        if !search.waitForExistence(timeout: 3) { tap(element("openPickupList")) }
+        let editedName = String(try XCTUnwrap(originalLine.split(separator: " ", maxSplits: 1).last))
+        let uniqueToken = String(try XCTUnwrap(editedName.split(separator: " ").last))
+        fill(uniqueToken + "\n", into: "ledgerSearch")
+        let saved = app.buttons["Inspect " + editedName]
+        revealContent(saved)
+        XCTAssertEqual(saved.value as? String, originalAmount + originalAmount + " items")
+        capture("S02-cold-reopened-edited-grocery")
     }
 
     func testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch() {
