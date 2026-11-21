@@ -16,7 +16,9 @@
   ],
   "05 · Keep the package label and confirm the printed date": [
     "RoomInTheCartTests/PantryProductCatalogTests/testReviewedLabelWordingStaysWithOnePhysicalPackageAndRequiresDateConfirmation",
-    "RoomInTheCartTests/PantryLiveStockProjectionTests/testOnePhysicalPackageWithUnknownContentsReplaysWithoutMakingAPurchaseOrConfirmingDate"
+    "RoomInTheCartTests/PantryLiveStockProjectionTests/testOnePhysicalPackageWithUnknownContentsReplaysWithoutMakingAPurchaseOrConfirmingDate",
+    "RoomInTheCartUITests/FreeJourneyUITests/testColdPantryLotSeparatesOneOuterPackageFromUnknownUsableContents",
+    "RoomInTheCartTests/PantryLiveStockProjectionTests/testUnknownUsableAmountAloneDoesNotEstablishOneOuterPackage"
   ],
   "06 · Record an unmeasured use from the correct container": [
     "RoomInTheCartTests/PantryVoiceParserTests/testReadOnlyBalanceQuestionsAndLocationQualifiedUnmeasuredUses",
@@ -47,6 +49,7 @@
     "RoomInTheCartUITests/RoomInTheCartUITests/testSharePreviewClosesToPrivateListWithoutSending"
   ],
   "12 · Learn the guardian's role before enrolling a child": [
-    "RoomInTheCartUITests/RoomInTheCartUITests/testFamilyPermissionGuideExplainsChildScopeAndGuardianStartOffline"
+    "RoomInTheCartUITests/RoomInTheCartUITests/testFamilyPermissionGuideExplainsChildScopeAndGuardianStartOffline",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishFamilyGuideReturnsToTheSameTwoUncheckedGroceries"
   ]
 }
