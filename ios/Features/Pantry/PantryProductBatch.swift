@@ -6,6 +6,10 @@ import LocalStore
 enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode }
 
 struct PantryProductBatch {
+    static func homeOperationID(for candidate: UUID) -> UUID {
+        ReceiptAcquisition.identity(["home-pack", candidate.uuidString])
+    }
+
     struct Candidate: Identifiable, Equatable {
         let id = UUID()
         let ordinal: Int
@@ -353,7 +357,7 @@ extension PantryRepository {
             let name = row.name.trimmingCharacters(in: .whitespacesAndNewlines)
             let seed = InventoryLotSeed(foodID: row.confirmedPackID ?? row.id, name: name,
                 source: .manual(originID: originID, sourceID: row.id), location: row.location, unit: row.unit, count: count, observedAt: time, packageCode: row.barcode, intakeOrdinal: row.ordinal)
-            let command = InventoryCommand(id: ReceiptAcquisition.identity(["home-pack", row.id.uuidString]), originID: originID,
+            let command = InventoryCommand(id: PantryProductBatch.homeOperationID(for: row.id), originID: originID,
                 lotID: row.id, eventID: ReceiptAcquisition.identity(["event", row.id.uuidString]), expectedRevision: nil,
                 occurredAt: time, change: .create(seed, observationID: ReceiptAcquisition.identity(["count", row.id.uuidString])))
             writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: time))

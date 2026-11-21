@@ -412,12 +412,17 @@ struct PantryLotSummary: View {
     let lot: InventoryLot
     let availability: InventoryLotAvailability?
     var availabilityNeedsReview = false
+    var addedAsOnePackage = false
     private var canRecountForMeals: Bool { !availabilityNeedsReview && onlyNeedsRecount(lot, availability) }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(lot.name).font(.subheadline.weight(.semibold))
-                Text(pantryCount(lot.count, estimate: lot.countWording))
+                if addedAsOnePackage {
+                    Text(pantryText("Added as 1 package")).font(.headline)
+                }
+                Text(addedAsOnePackage && lot.count == .unknown
+                     ? pantryText("Usable amount unknown") : pantryCount(lot.count, estimate: lot.countWording))
                     .font(.title2.weight(.semibold)).monospacedDigit()
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -473,7 +478,8 @@ private struct PantryLotView: View {
             if let lot {
                 Section {
                     PantryLotSummary(lot: lot, availability: model.snapshot?.availability.lots.first { $0.id == lotID },
-                                     availabilityNeedsReview: availabilityNeedsReview)
+                                     availabilityNeedsReview: availabilityNeedsReview,
+                                     addedAsOnePackage: model.snapshot?.singlePackageIntakes.contains(lot.id) == true)
                     LabeledContent(pantryText("Storage location"), value: pantryLocationName(lot.location))
                     if let opened = lot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))

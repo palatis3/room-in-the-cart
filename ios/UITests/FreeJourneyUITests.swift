@@ -287,6 +287,30 @@ import XCTest
         tap(app.buttons["productBatch.add"])
     }
 
+    func testColdPantryLotSeparatesOneOuterPackageFromUnknownUsableContents() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.products"])
+        fill("Butter beans", into: "productBatch.label", requireDone: true, control: app.textViews["productBatch.label"])
+        tap(app.buttons["productBatch.add"])
+        tap(app.buttons["productBatch.row.0"])
+        enableSwitch("productBatch.oneUnknown")
+        tap(app.buttons["productBatch.finishEditing"])
+        enableSwitch("productBatch.received")
+        tap(app.buttons["productBatch.review"])
+        tap(app.buttons["productBatch.commit"])
+        XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
+
+        restart()
+        tap(app.tabBars.buttons["Pantry"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Butter beans")).firstMatch
+        tap(lot)
+        let summary = element("pantry.lotSummary")
+        XCTAssertTrue(summary.waitForExistence(timeout: 8))
+        XCTAssertTrue(summary.label.contains("Added as 1 package"), summary.label)
+        XCTAssertTrue(summary.label.contains("Usable amount unknown"), summary.label)
+    }
+
     func testConfirmedPackAtHomeFindsOnlyItsTwoPhysicalBatchesAfterRelaunch() {
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
