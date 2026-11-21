@@ -197,7 +197,9 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(name.frame.minY, app.navigationBars.firstMatch.frame.maxY)
         XCTAssertLessThanOrEqual(name.frame.maxY, app.keyboards.firstMatch.frame.minY)
         app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: misspelling.count) + "scallions")
-        XCTAssertEqual(name.value as? String, "scallions")
+        // A compact TextView can report the previous keystroke just after typeText returns.
+        let finishedTyping = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "scallions"), object: name)
+        XCTAssertEqual(XCTWaiter.wait(for: [finishedTyping], timeout: 5), .completed)
         tap(done)
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         XCTAssertTrue(commit.waitForExistence(timeout: 5))
