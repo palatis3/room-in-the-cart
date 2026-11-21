@@ -90,6 +90,8 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
     public let lineIDs: [UUID]
     public let contributionIDs: [UUID]
     public let day: MealDay?
+    /// An explicitly reviewed occurrence yield. The accepted recipe remains its original version.
+    public var plannedServings: Rational?
     public var lunchHold: ServingGroup?
     public var reviewedGroceryLines: [Int: UUID]?
     public init(acceptedDinnerID: UUID? = nil, template: MealTemplate, occurrenceID: UUID = UUID(),
@@ -100,6 +102,12 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
     }
     func validate() throws {
         try template.validate(); try day?.validate()
+        if let plannedServings {
+            let allocated = try template.servingGroups.reduce(Rational.zero) { try $0.adding($1.servings) }
+            guard plannedServings > .zero, plannedServings >= allocated, lunchHold == nil else {
+                throw DinnerPlanningError.reviewRequired("servingGroups")
+            }
+        }
         guard lineIDs.count == template.ingredients.count, contributionIDs.count == lineIDs.count else { throw DinnerPlanningError.invalid("plannedIDs") }
         try dinnerUnique(lineIDs + contributionIDs + [occurrenceID])
         if let lunchHold {
@@ -125,12 +133,14 @@ public struct DinnerAdjustment: Codable, Equatable, Sendable {
     public let servings: Rational
     public let groups: [ServingGroup]
     public let quantities: [DinnerQuantityEdit]
+    /// A non-nil value moves this occurrence along with its reviewed serving edit.
+    public let scheduledDay: MealDay?
     /// Explicit resulting allocations for a manual edit. Absent in older proposals.
     public let portionBindings: [DinnerPortionBinding]?
     public init(occurrenceID: UUID, servings: Rational, groups: [ServingGroup], quantities: [DinnerQuantityEdit],
-                portionBindings: [DinnerPortionBinding]? = nil) {
+                portionBindings: [DinnerPortionBinding]? = nil, scheduledDay: MealDay? = nil) {
         self.occurrenceID = occurrenceID; self.servings = servings; self.groups = groups; self.quantities = quantities
-        self.portionBindings = portionBindings
+        self.portionBindings = portionBindings; self.scheduledDay = scheduledDay
     }
 }
 public struct DinnerReservation: Codable, Equatable, Sendable {
@@ -365,11 +375,19 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
             switch change {
             case .choose(let dinner):
                 try dinner.validate()
+                if dinner.plannedServings != nil {
+                    guard proposal.changes.count == 1, proposal.repeatWeek == nil, proposal.swapOriginalID == nil,
+                          [.manual, .reusableDinner].contains(proposal.tool) else { throw DinnerPlanningError.invalid("plannedServings") }
+                }
                 if dinner.lunchHold != nil || dinner.reviewedGroceryLines != nil {
                     guard proposal.tool == .threeDinnerBasket else { throw DinnerPlanningError.invalid("basketPlan") }
                 }
             case .move(_, let day): try day?.validate()
             case .adjust(let adjustment):
+                if let day = adjustment.scheduledDay {
+                    guard proposal.tool == .manual, proposal.swapOriginalID == nil else { throw DinnerPlanningError.invalid("scheduledDay") }
+                    try day.validate()
+                }
                 guard adjustment.servings > .zero, adjustment.groups.count <= 100, adjustment.quantities.count <= 200 else { throw DinnerPlanningError.invalid("adjustment") }
                 try dinnerUnique(adjustment.groups.map(\.id)); try dinnerUnique(adjustment.quantities.map(\.contributionID))
                 for group in adjustment.groups { try dinnerText(group.name); guard group.servings > .zero else { throw DinnerPlanningError.invalid("group") } }

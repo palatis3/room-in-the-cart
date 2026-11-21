@@ -8,6 +8,12 @@ struct TonightRecipeReview: View {
     @ObservedObject var ledger: LedgerModel
     let source: TonightMealModel.Source?
     var template: MealTemplate? = nil
+    var pasteEntry = false
+    @State private var sourceText = ""
+    @State private var pastedText: String?
+    @State private var familySource: RecipeSourceEvidence?
+    @State private var sourceInstructions = ""
+    @State private var unclassified = ""
     let currentIdentity: @MainActor () -> CapturePrivateIdentity?
     @Environment(\.dismiss) private var dismiss
     @State private var identity: CapturePrivateIdentity?
@@ -65,6 +71,7 @@ struct TonightRecipeReview: View {
     private var screenTitle: String {
         if savedRecipe != nil { return tonightText("Recipe saved") }
         if candidate != nil { return tonightText("recipe.review.screenTitle") }
+        if pasteEntry { return familySource == nil ? dinnerText("Paste a recipe") : tonightText("Review a recipe") }
         if template != nil { return tonightText("Edit recipe") }
         if source != nil { return tonightText("Review a recipe") }
         return tonightText("Enter a recipe")
@@ -112,6 +119,18 @@ struct TonightRecipeReview: View {
                                 let field = ingredient.quantity == nil ? "ingredient-\(ingredient.id)" : ingredient.id.uuidString
                                 reviewedFact(ingredient.name, ingredient.reviewedAmountLabel, field: field)
                             }
+                            if let familySource {
+                                if !sourceInstructions.isEmpty {
+                                    editableFact(dinnerText("Cooking instructions"), value: sourceInstructions, field: "instructions") {
+                                        VStack(alignment: .leading) {
+                                            Text(dinnerText("Cooking instructions")).font(.headline)
+                                            Text(verbatim: sourceInstructions)
+                                        }
+                                    }
+                                }
+                                if !unclassified.isEmpty { unclassifiedLines }
+                                RecipeSourceDisclosure(evidence: familySource)
+                            }
                             if let template, original?.mealTemplates.contains(template) == true {
                                 Text(tonightText("Saving updates this recipe in your library."))
                             } else if let replacedRecipe {
@@ -123,7 +142,30 @@ struct TonightRecipeReview: View {
                                 .disabled(busy || ledger.hasPendingSave).accessibilityIdentifier("tonight.recipe.save")
                             Button(tonightText("Keep editing")) { self.candidate = nil }.disabled(busy)
                         }
+                    } else if pasteEntry && familySource == nil {
+                        Section(dinnerText("Recipe text")) {
+                            PasteButton(payloadType: String.self) { strings in
+                                guard authorized, let text = strings.first else { return }
+                                pastedText = text
+                                sourceText = text
+                                error = nil
+                            }.accessibilityIdentifier("dinner.recipe.systemPaste")
+                            TextEditor(text: $sourceText)
+                                .focused($focusedInput, equals: "pastedSource")
+                                .frame(minHeight: 130)
+                                .accessibilityLabel(dinnerText("Recipe text"))
+                                .accessibilityIdentifier("dinner.recipe.sourceText")
+                            Button(dinnerText("Review pasted recipe")) { proposeFamilyRecipe(scroll) }
+                                .buttonStyle(PrimaryAction()).disabled(sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                                .accessibilityIdentifier("dinner.recipe.reviewPaste")
+                        }
                     } else {
+                        if let familySource {
+                            Section {
+                                RecipeSourceDisclosure(evidence: familySource)
+                                if !unclassified.isEmpty { unclassifiedLines }
+                            }
+                        }
                         if let source {
                             Section(tonightText("Original saved source")) {
                                 Text(source.recipe.title)
@@ -202,6 +244,12 @@ struct TonightRecipeReview: View {
                             }
                             .onDelete { ingredients.remove(atOffsets: $0) }
                             Button(tonightText("Add ingredient")) { ingredients.append(Ingredient()) }
+                        }
+                        if pasteEntry {
+                            Section(dinnerText("Cooking instructions")) {
+                                TextField(dinnerText("Cooking instructions"), text: $sourceInstructions, axis: .vertical)
+                                    .focused($focusedInput, equals: "instructions").id("instructions")
+                            }
                         }
                         Section {
                             DisclosureGroup(isExpanded: $showRestrictions) {
@@ -378,6 +426,37 @@ struct TonightRecipeReview: View {
         }
     }
 
+    private var unclassifiedLines: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(dinnerText("Other source wording")).font(.headline)
+            Text(verbatim: unclassified)
+            Text(dinnerText("These lines stay in the original note. Add any that belong in the recipe.")).font(.footnote)
+        }
+    }
+
+    private func proposeFamilyRecipe(_ scroll: ScrollViewProxy) {
+        guard authorized else { return }
+        do {
+            let evidence = try RecipeSourceEvidence(captureID: UUID(), originalText: sourceText,
+                kind: pastedText == sourceText ? .pasted : .typed)
+            let draft = try RecipeOCRParser.draft(sourceText, familyNote: true)
+            guard draft.ingredientLines.count <= 200 else { throw ScanFailure.invalidText }
+            familySource = evidence
+            title = draft.title
+            servings = draft.servings
+            minutes = draft.prepMinutes.map(String.init) ?? ""
+            sourceInstructions = draft.notes
+            unclassified = draft.unclassifiedText
+            ingredients = draft.ingredientLines.map { Ingredient(ImportedRecipe.ingredientDraft($0)) }
+            if ingredients.isEmpty { ingredients = [Ingredient()] }
+            error = nil
+            if !title.isEmpty, !servings.isEmpty, unclassified.isEmpty,
+               ingredients.allSatisfy({ $0.positiveQuantity != nil }) {
+                review(scroll)
+            }
+        } catch { error = tonightText("This source exceeds the supported recipe size. Review a smaller recipe in Records before continuing.") }
+    }
+
     private func confirmSaved(_ recipe: MealTemplate) {
         guard authorized, ledger.workspace.mealTemplates.contains(recipe) else { return }
         savedRecipe = recipe
@@ -419,8 +498,11 @@ struct TonightRecipeReview: View {
                 ingredients: rows, notes: template?.notes ?? source.map { [$0.recipe.yieldText, $0.recipe.notes].filter { !$0.isEmpty }.joined(separator: "\n") } ?? "",
                 sourceURL: template?.sourceURL ?? source?.recipe.sourceURL, exclusions: template?.exclusions ?? [],
                 revision: (editingFree?.revision ?? -1) + 1, servingGroups: template?.servingGroups ?? [],
-                leadTimeMinutes: Int(amount), completedSteps: template?.completedSteps ?? [], sourceEvidence: template?.sourceEvidence)
-            if let template, let steps = template.recipeSteps {
+                leadTimeMinutes: Int(amount), completedSteps: template?.completedSteps ?? [], sourceEvidence: template?.sourceEvidence ?? familySource)
+            if familySource != nil {
+                result.notes = sourceInstructions
+                result.recipeSteps = lines(sourceInstructions).map { RecipeStep($0) }
+            } else if let template, let steps = template.recipeSteps {
                 result.recipeSteps = RecipeStep.rebinding(steps, from: template.ingredients, to: rows)
             } else if let source, !source.recipe.steps.isEmpty {
                 // Each imported instruction initially targets an index in the source ingredient list.

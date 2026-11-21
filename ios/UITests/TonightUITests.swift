@@ -154,6 +154,44 @@ import XCTest
         XCTAssertFalse(app.staticTexts["No dinner planned"].exists)
     }
 
+    func testPastedFamilyNotePlansTomorrowAndChangesOccurrenceBeforeColdReturn() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.pasteRecipe"])
+        let source = app.textViews["dinner.recipe.sourceText"]
+        fill(source, "Family pita supper\nServes 4\nPrep time: 25 minutes\n2 sweet potatoes\n4 pitas\nRoast the potatoes.")
+        tap(app.buttons["dinner.recipe.reviewPaste"])
+        XCTAssertTrue(app.buttons["tonight.recipe.reviewedMinutes"].exists)
+        tap(app.buttons["tonight.recipe.save"])
+        tap(app.buttons["dinner.planSaved"].firstMatch)
+        tap(app.buttons["dinner.handoff.editPlan"])
+        tap(app.buttons["dinner.plan.tomorrow"])
+        tap(app.buttons["dinner.plan.reviewFacts"])
+        tap(app.buttons["dinner.handoff.startPickup"])
+        tap(app.buttons["ledgerCreateShop"])
+        let confirm = app.buttons["dinner.handoff.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        XCTAssertEqual(confirm.label, "Plan for this day")
+        tap(confirm)
+        tap(app.buttons["dinner.handoff.openPlan"])
+        tap(app.buttons["dinner.occurrence.editPlan"])
+        tap(app.buttons["dinner.plan.today"])
+        let less = app.buttons["dinner.occurrence.servings.less"]
+        tap(less)
+        tap(less)
+        XCTAssertEqual(app.textFields["dinner.occurrence.servings"].value as? String, "2")
+        tap(app.buttons["dinner.occurrence.review"])
+        tap(app.buttons["dinnerApply"])
+        XCTAssertTrue(app.buttons["dinnerApply"].waitForNonExistence(timeout: 12))
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        let occurrence = app.buttons.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Family pita supper", "Servings: 2")).firstMatch
+        XCTAssertTrue(occurrence.waitForExistence(timeout: 12), app.debugDescription)
+    }
+
     func testFirstSavedDinnerCarriesIntoNewPickupAndAddsOnlySelectedIngredient() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

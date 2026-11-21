@@ -37,6 +37,49 @@ final class SavedDinnerReviewTests: XCTestCase {
         XCTAssertEqual(data, saved)
         try data.validate()
     }
+    func testPlanTomorrowThenMoveToTonightForTwoKeepsTemplateAndGroceryFactsAcrossRestore() throws {
+        var template = recipe
+        template.servings = try Rational(4)
+        var data = LedgerWorkspace(shops: [shop], mealTemplates: [template], selectedShopID: shop.id)
+        let zone = shop.basis.timeZoneIdentifier
+        let today = try MealDay(date: now, timeZoneIdentifier: zone)
+        let tomorrow = try MealDay(date: now.addingTimeInterval(86400), timeZoneIdentifier: zone)
+        let initial = try SavedDinnerReview(recipe: template, action: .plan(day: tomorrow, servings: template.servings),
+            workspace: data, access: access, phase: .draft, at: now)
+        try initial.apply(to: &data, access: access, phase: .draft, at: now)
+        let original = try XCTUnwrap(data.shops[0].mealOccurrences.first)
+        XCTAssertEqual(original.scheduledDay, tomorrow)
+        let sources = data.shops[0].contributions
+        let adjustment = DinnerAdjustment(occurrenceID: original.id, servings: try Rational(2),
+            groups: original.servingGroups, quantities: [], scheduledDay: today)
+        let preview = try DinnerPlanningEngine.preview(changes: [.adjust(adjustment)], tool: .manual,
+            ledger: data.shops[0], state: data.dinnerPlanning, access: access, phase: .draft, at: now)
+        _ = try DinnerPlanningEngine.apply(preview.proposal, ledger: &data.shops[0], state: &data.dinnerPlanning,
+            access: access, phase: .draft, at: now)
+        let restored = try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(data))
+        XCTAssertEqual(restored.mealTemplates, [template])
+        XCTAssertEqual(restored.shops[0].mealOccurrences.count, 1)
+        let planned = try XCTUnwrap(restored.shops[0].mealOccurrences.first)
+        XCTAssertEqual(planned.id, original.id)
+        XCTAssertEqual(planned.servings, try Rational(2))
+        XCTAssertEqual(planned.scheduledDay, today)
+        XCTAssertEqual(restored.shops[0].contributions, sources)
+        XCTAssertEqual(restored.shops[0].contributions.last?.checkedWithoutAmount, true)
+    }
+
+    func testReviewedPlanYieldDoesNotChangeTheRecipeOrImplyScaledGroceries() throws {
+        var data = workspace
+        let tomorrow = try MealDay(date: now.addingTimeInterval(86400), timeZoneIdentifier: shop.basis.timeZoneIdentifier)
+        let review = try SavedDinnerReview(recipe: recipe, action: .plan(day: tomorrow, servings: try Rational(4)),
+            workspace: data, access: access, phase: .draft, at: now)
+        try review.apply(to: &data, access: access, phase: .draft, at: now)
+        XCTAssertEqual(data.shops[0].mealOccurrences.first?.servings, try Rational(4))
+        XCTAssertEqual(data.mealTemplates, [recipe])
+        XCTAssertEqual(data.shops[0].contributions.map(\.quantity), recipe.ingredients.map(\.quantity))
+        XCTAssertEqual(data.shops[0].mealOccurrences.first?.scheduledDay, tomorrow)
+        try data.validate()
+    }
+
     func testWholeDinnerKeepsBothIngredientsServingsAndDay() throws {
         var data = workspace
         let review = try SavedDinnerReview(recipe: recipe, action: .planTonight, workspace: data, access: access, phase: .draft, at: now)
