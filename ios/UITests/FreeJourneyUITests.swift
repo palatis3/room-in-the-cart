@@ -1049,8 +1049,11 @@ import XCTest
             launch(reset: true, spanish: spanish)
             shopRoot()
             tap(app.buttons["settings"])
-            tap(app.buttons["settings.help"])
-            tap(app.buttons["help.foodKeeper"])
+            XCTAssertTrue(app.navigationBars[spanish ? "Configuración" : "Settings"].waitForExistence(timeout: 8))
+            tapVisibleFormRow(app.buttons["settings.help"], marker: "FOOD_KEEPER_HELP")
+            XCTAssertTrue(app.navigationBars[spanish ? "Ayuda" : "Help"].waitForExistence(timeout: 8))
+            tapVisibleFormRow(app.buttons["help.foodKeeper"], marker: "FOOD_KEEPER_GUIDE")
+            XCTAssertTrue(app.navigationBars[spanish ? "Guía de conservación de alimentos" : "Food storage guide"].waitForExistence(timeout: 8))
             let search = app.searchFields.firstMatch
             if !search.waitForExistence(timeout: 3) { app.swipeDown() }
             tap(search)
