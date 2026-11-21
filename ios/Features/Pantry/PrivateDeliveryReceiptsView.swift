@@ -19,7 +19,7 @@ struct PrivateDeliveryReceiptsView: View {
     @State private var busy = false
     @State private var deleting = false
     @State private var generation = UUID()
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     private var authorized: Bool {
         model.canEdit && model.supportsReceiptAliases && model.permitsReceiptSource && model.snapshot?.state.workspaceID == target.workspaceID

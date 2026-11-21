@@ -48,7 +48,7 @@ struct PantryReceiptEntry: View {
     @State private var targetID = UUID()
     @AccessibilityFocusState private var resultFocused: Bool
     @Environment(\.dismiss) private var dismiss
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -598,7 +598,7 @@ struct ReceiptDatePicker: View {
     let title: String
     let identifier: String
     @Binding var date: Date
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
     @State private var choosingDate = false
 
     var body: some View {
@@ -890,7 +890,7 @@ struct PantryReceiptHistory: View {
     @State private var price = ""
     @State private var correctionMessage: String?
     @Environment(\.dismiss) private var dismiss
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
         List {
@@ -1022,7 +1022,7 @@ private struct ReceiptPriceCorrection: View {
     let save: (Money?) -> Void
     @State private var confirmingUnknown = false
     @FocusState private var priceFocused: Bool
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     private var enteredTotal: Money? {
         guard let total = try? Money(decimal: price), total >= .zero else { return nil }
@@ -1079,7 +1079,7 @@ struct ReceiptTripDifferenceReview: View {
     let draft: ReceiptImportDraft
     @Binding var state: ReceiptTripReviewState
     @State private var editing: ReceiptImportDraft.Line?
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     private var selectable: [ReceiptImportDraft.Line] {
         draft.lines.filter(\.canComparePurchase)

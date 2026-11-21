@@ -8,7 +8,7 @@ struct PantryReceiptRescanView: View {
     let edit: () -> Void
     @State private var selected: UUID?
     @State private var links: [Int: UUID] = [:]
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
         Section(pantryText("Compare a possible earlier receipt")) {

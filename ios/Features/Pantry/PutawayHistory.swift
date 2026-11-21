@@ -51,7 +51,7 @@ struct ReceiptIntactToggle: View {
 
 struct ReviewedReceiptHeading: View {
     let header: ReviewedReceiptHeader
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {

@@ -18,7 +18,7 @@ private struct HouseholdPantryView: View {
     @StateObject private var model: HouseholdPantryModel
     @State private var sheet: Sheet?
     @State private var clearingRetry = false
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
     private enum Sheet: Identifiable, Equatable {
         case receipt(HouseholdPantryPage), addition(HouseholdPantryPage), correction(HouseholdPantryPage, HouseholdPantryPage.Lot), grants, staples
         var id: Int {

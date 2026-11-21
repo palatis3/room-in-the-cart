@@ -165,7 +165,7 @@ struct CouponTermsSummary: View {
 
 struct CouponReceiptResult: View {
     let coupon: PinnedShopCoupon
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
         if let receipt = coupon.receipt {

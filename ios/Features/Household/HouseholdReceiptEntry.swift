@@ -78,7 +78,7 @@ struct HouseholdReceiptLineFacts: View {
 
 struct HouseholdReceiptFacts: View {
     let receipt: HouseholdReceiptAcquisition
-    private var dates = ReceiptDateDisplay()
+    private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
         Text(receipt.merchant).font(.headline)
