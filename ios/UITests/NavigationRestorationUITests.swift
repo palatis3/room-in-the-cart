@@ -92,16 +92,16 @@ import XCTest
         tap(name)
         name.typeText(secondName)
         tap(app.buttons["ledgerCreateShop"])
-        assertSelectedShoppingList(named: secondName)
+        app.assertSelectedShoppingList(named: secondName)
         XCTAssertTrue(search.exists && search.value as? String == search.placeholderValue)
         app.terminate(); launch(reset: false)
-        assertSelectedShoppingList(named: secondName)
+        app.assertSelectedShoppingList(named: secondName)
         capture("Second pickup restored after process relaunch")
         tap(picker)
         tap(app.buttons[firstName])
-        assertSelectedShoppingList(named: firstName)
+        app.assertSelectedShoppingList(named: firstName)
         app.terminate(); launch(reset: false)
-        assertSelectedShoppingList(named: firstName)
+        app.assertSelectedShoppingList(named: firstName)
     }
 
     func testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList() {
@@ -109,10 +109,10 @@ import XCTest
         tap(element("openPickupList"))
         let pickupName = "Restoration Saturday pickup"
         app.renameSelectedPickup(pickupName)
-        assertSelectedShoppingList(named: pickupName)
+        app.assertSelectedShoppingList(named: pickupName)
         tap(app.tabBars.buttons["Records"])
         tap(app.tabBars.buttons["Shop"])
-        assertSelectedShoppingList(named: pickupName)
+        app.assertSelectedShoppingList(named: pickupName)
         tap(app.navigationBars["Shopping list"].buttons["Shop"])
         tap(element("newComparison"))
         fillComparisonField("Restoration family wraps", into: "itemName")
@@ -132,10 +132,10 @@ import XCTest
         let back = app.navigationBars.buttons["Shop"]
         if back.exists { tap(back) }
         tap(element("openPickupList"))
-        assertSelectedShoppingList(named: pickupName)
+        app.assertSelectedShoppingList(named: pickupName)
         app.terminate(); launch(reset: false)
         XCTAssertTrue(app.tabBars.buttons["Shop"].isSelected)
-        assertSelectedShoppingList(named: pickupName)
+        app.assertSelectedShoppingList(named: pickupName)
         tap(app.tabBars.buttons["Records"])
         XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 8), "Both explicit stacks survive the second process death")
         XCTAssertTrue(app.staticTexts["Restoration family wraps"].exists)
@@ -162,14 +162,6 @@ import XCTest
         app.open(shortcut)
         XCTAssertTrue(app.textViews["ledgerImportText"].waitForExistence(timeout: 12))
         XCTAssertFalse(app.buttons["ledgerCommitImport"].exists)
-    }
-
-    private func assertSelectedShoppingList(named name: String, file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertTrue(app.navigationBars["Shopping list"].waitForExistence(timeout: 8), file: file, line: line)
-        let selectedPickup = app.buttons.matching(NSPredicate(
-            format: "identifier == %@ AND label == %@", "ledgerShopPicker", name
-        )).firstMatch
-        XCTAssertTrue(selectedPickup.waitForExistence(timeout: 8), "Expected the selected pickup to be \(name)", file: file, line: line)
     }
 
     private func launch(reset: Bool) {
@@ -297,6 +289,14 @@ extension XCUIApplication {
         if dismissed.evaluate(with: nil) { return true }
         let ready = XCTNSPredicateExpectation(predicate: dismissed, object: nil)
         return XCTWaiter.wait(for: [ready], timeout: timeout) == .completed
+    }
+
+    func assertSelectedShoppingList(named name: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(navigationBars["Shopping list"].waitForExistence(timeout: 8), file: file, line: line)
+        let selectedPickup = buttons.matching(NSPredicate(
+            format: "identifier == %@ AND label == %@", "ledgerShopPicker", name
+        )).firstMatch
+        XCTAssertTrue(selectedPickup.waitForExistence(timeout: 8), "Expected the selected pickup to be \(name)", file: file, line: line)
     }
 
     func renameSelectedPickup(_ title: String, file: StaticString = #filePath, line: UInt = #line) {

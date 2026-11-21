@@ -2429,11 +2429,11 @@ import XCTest
         tap(proceed)
         assertText("Pickup for all items: Next week groceries")
         tap(element("ledgerCommitImport"))
-        XCTAssertTrue(app.navigationBars["Friday groceries"].waitForExistence(timeout: 8))
+        app.assertSelectedShoppingList(named: "Friday groceries")
         XCTAssertFalse(app.buttons["Inspect cereal"].exists)
         tap(app.buttons["ledgerShopPicker"])
         tap(app.buttons["Next week groceries"])
-        XCTAssertTrue(app.navigationBars["Next week groceries"].waitForExistence(timeout: 8))
+        app.assertSelectedShoppingList(named: "Next week groceries")
         XCTAssertTrue(app.buttons["Inspect milks"].wait(for: \.isHittable, toEqual: true, timeout: 8))
         for item in ["bread", "cereal"] {
             reveal(app.buttons["Inspect " + item])
