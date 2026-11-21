@@ -1102,9 +1102,10 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars[recordsLabel].waitForExistence(timeout: 5))
         let rows = app.buttons.matching(identifier: "savedComparison")
         let row = rows.firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 10))
-        XCTAssertEqual(rows.count, 1, "One save must produce one durable record")
+        // Records creates offscreen rows lazily, especially at accessibility text sizes.
         reveal(row)
+        XCTAssertTrue(row.exists && row.isHittable)
+        XCTAssertEqual(rows.count, 1, "One save must produce one durable record")
         XCTAssertTrue(row.label.contains(item), "Original item name should survive restart: \(row.label)")
         row.tap()
         XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
