@@ -28,3 +28,11 @@ Rate only observed decisions, with a screenshot, action log or saved-state readb
 Within each trip, average the observed decisions in each domain. Weight correctness and trust (O) 35%, effort and findability (E) 25%, comprehension and feedback (C) 20%, inclusive access (A) 15%, and return value and continuity (R) 5%. Show the raw score and any consequence ceiling. A harmful irreversible commitment, unintended disclosure or lost data caps the trip at 25. A blocked or materially wrong core outcome caps it at 49. A core task completed only with assistance or an undocumented workaround caps it at 69.
 
 A full round requires 12 equally weighted trips, each with at least 25 observed criteria and two in every domain. For a before-and-after comparison, use shared decisions for the same task, retain both original grades and list any exclusions. Report each worsening trip and lost outcome alongside the average. An individual fix can be checked with a targeted replay and its own results. Record comprehension, visual judgment, unexpected taps and needed assistance separately from automated pass counts. Keep simulated participants and recruited human observations identifiable in the report.
+
+The [required test list](../../scripts/ios_shopper_regressions.json) maps each journey to the exact compiled tests that protect it. After two full walkthroughs, run the score comparison against their evidence directories.
+
+```sh
+python3 scripts/compare_shopper_journeys.py path/to/before path/to/after --fail-on-decline
+```
+
+Each directory contains numbered folders 01 through 12 with trip.json, ratings.json and the cited evidence. The comparison prints both scores for each journey, and flags an individual decline even if the overall average rises. An insufficiently observed trip withholds the cohort score. Where the same criterion covered different decisions, pass the reviewers’ JSON list with `--exclusions`. Each entry identifies the shopper, criterion, judge and reason. A fresh walkthrough supplies the evidence for an experience score.
