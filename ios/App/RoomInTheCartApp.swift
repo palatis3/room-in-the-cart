@@ -935,6 +935,7 @@ struct SettingsView: View {
             }
             Section(tr("Household")) {
                 NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
+                FamilyPermissionGuideLink { dismiss() }
                 HouseholdPantryLink(household: household)
                 if household.canOpenMembership {
                     NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }

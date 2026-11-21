@@ -414,6 +414,7 @@ final class RoomInTheCartUITests: XCTestCase {
         let offline = app.staticTexts["guardian.familyGuide.offline"]
         reveal(offline)
         XCTAssertTrue(offline.label.contains("sin conexión a internet"))
+        XCTAssertTrue(offline.label.contains("no tiene un enlace"))
         tap(app.buttons["guardian.familyGuide.support"])
         let support = app.navigationBars["Soporte"]
         XCTAssertTrue(support.waitForExistence(timeout: 6))
@@ -440,7 +441,6 @@ final class RoomInTheCartUITests: XCTestCase {
     func testFamilyPermissionGuideExplainsChildScopeAndGuardianStartOffline() {
         launch(language: "es", largeDark: true)
         tap(app.buttons["settings"])
-        tap(app.buttons["settings.help"])
         tap(app.buttons["guardian.familyGuide"])
         let scope = app.staticTexts["guardian.familyGuide.scope"]
         XCTAssertTrue(scope.waitForExistence(timeout: 8))
@@ -452,6 +452,9 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(start.label.contains("Controles del tutor"))
         tap(app.buttons["guardian.familyGuide.support"])
         XCTAssertTrue(app.navigationBars["Soporte"].waitForExistence(timeout: 8))
+        tap(app.buttons["guardian.familyGuide.exitSupport"])
+        XCTAssertTrue(element("quickGrocery.name").waitForExistence(timeout: 8))
+        XCTAssertFalse(app.navigationBars["Configuración"].exists)
     }
 
     func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {

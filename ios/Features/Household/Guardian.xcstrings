@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "You can read this guide offline. This iPhone has no link to the public family guide.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can read this guide offline. This iPhone has no link to the public family guide."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes leer esta guía sin conexión a internet. Este iPhone no tiene un enlace a la guía pública para familias."
+          }
+        }
+      }
+    },
     "Family guide": {
       "localizations": {
         "en": {

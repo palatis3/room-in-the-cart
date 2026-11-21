@@ -220,7 +220,7 @@ struct FamilyPermissionGuide: View {
     var done: (() -> Void)?
 
     var body: some View {
-        WorkingForm { FamilyPermissionSections() }
+        WorkingForm { FamilyPermissionSections(done: done) }
             .navigationTitle(GuardianCopy.text("Family guide"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -235,6 +235,7 @@ struct FamilyPermissionGuide: View {
 }
 
 private struct FamilyPermissionSections: View {
+    var done: (() -> Void)? = nil
     private let configuration = HelpConfiguration.fromBundle()
     @State private var showingOnlineGuide = false
 
@@ -251,11 +252,21 @@ private struct FamilyPermissionSections: View {
         Section(GuardianCopy.text("If someone can’t join")) {
             Text(GuardianCopy.text("Ask a parent or guardian to open Support and describe where setup stopped. Keep invitation links, sign-in codes and the child’s email private. You can keep using your shopping list."))
                 .accessibilityIdentifier("guardian.familyGuide.joinHelp")
-            NavigationLink(helpText("Support")) { HelpSupportView() }
-                .accessibilityIdentifier("guardian.familyGuide.support")
+            NavigationLink(helpText("Support")) {
+                HelpSupportView().toolbar {
+                    if let done {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button(ledgerText("Done"), action: done)
+                                .accessibilityIdentifier("guardian.familyGuide.exitSupport")
+                        }
+                    }
+                }
+            }.accessibilityIdentifier("guardian.familyGuide.support")
         }
         Section {
-            Text(GuardianCopy.text("You can read this guide on this iPhone without an internet connection."))
+            Text(configuration.helpURL == nil
+                 ? GuardianCopy.text("You can read this guide offline. This iPhone has no link to the public family guide.")
+                 : GuardianCopy.text("You can read this guide on this iPhone without an internet connection."))
                 .accessibilityIdentifier("guardian.familyGuide.offline")
             if let url = configuration.familyHelpURL {
                 Button(GuardianCopy.text("Read the family guide online")) { showingOnlineGuide = true }
