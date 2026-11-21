@@ -7,7 +7,7 @@ struct PrivateListSharingGuide: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(helpText("Share a list copy")).font(.headline).accessibilityAddTraits(.isHeader)
-            Text(helpText("In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app."))
+            Text(helpText("Add a grocery in Shop to start a list. In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app."))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityIdentifier("help.privateListSharing")
@@ -166,7 +166,7 @@ private struct MembershipHelpAccess: View {
             } else if !household.configured {
                 Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
             } else if household.membershipSession == nil {
-                Text(mtr("Select your household to check your planning access."))
+                Text(helpText("Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."))
             } else {
                 Text(helpText("Open Household membership to check your current access."))
             }

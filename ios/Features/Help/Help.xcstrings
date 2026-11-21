@@ -2702,18 +2702,18 @@
         }
       }
     },
-    "In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app.": {
+    "Add a grocery in Shop to start a list. In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app."
+            "value": "Add a grocery in Shop to start a list. In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "En Lista de compras, abre Opciones de la lista y elige Enviar artículos seleccionados. Revisa la copia antes de elegir a quién enviarla. Esa persona puede leerla sin la app."
+            "value": "En Compras, añade un producto para iniciar una lista. En Lista de compras, abre Opciones de la lista y elige Enviar artículos seleccionados. Revisa la copia antes de elegir a quién enviarla. Esa persona puede leerla sin la app."
           }
         }
       }
@@ -2826,6 +2826,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "La membresía del hogar es una suscripción de pago. El precio del App Store no está disponible en este iPhone."
+          }
+        }
+      }
+    },
+    "Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La membresía del hogar es una suscripción de pago. Elige tu hogar para comprobar tu acceso a la planificación y ver el precio del App Store si hay una oferta disponible."
           }
         }
       }

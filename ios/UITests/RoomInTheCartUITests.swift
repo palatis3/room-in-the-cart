@@ -264,6 +264,29 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Inspect " + name].waitForExistence(timeout: 8))
     }
 
+    func testSignedOutAdultSeesHowToStartSharingAndFindSubscriptionPrice() {
+        for language in ["en", "es"] {
+            app.launchArguments = ["--ui-testing", "--guardian-enrollment-fixture", "--guardian-fixture-root",
+                                   "--reset-guardian-root-fixture", "--household-first-sign-in", "--no-existing-households",
+                                   "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US"]
+            app.launch()
+            tap(app.buttons["settings"])
+            tap(app.buttons[language == "en" ? "Household membership" : "Membresía del hogar"])
+            let beginning = language == "en" ? "Add a grocery in Shop" : "En Compras, añade un producto"
+            let sharing = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", beginning)).firstMatch
+            reveal(sharing)
+            let option = language == "en" ? "Send selected items" : "Enviar artículos seleccionados"
+            XCTAssertTrue(sharing.label.contains(option))
+            let paid = language == "en" ? "Household is a paid subscription. Choose your household" :
+                "La membresía del hogar es una suscripción de pago. Elige tu hogar"
+            let price = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", paid)).firstMatch
+            reveal(price)
+            XCTAssertTrue(price.label.contains("App Store"))
+            XCTAssertFalse(app.buttons["membership.subscribe"].exists)
+            app.terminate()
+        }
+    }
+
     func testHouseholdHelpShowsPrivateSharingBeforeDetailedPermissions() {
         launch(language: "es")
         tap(app.buttons["settings"])

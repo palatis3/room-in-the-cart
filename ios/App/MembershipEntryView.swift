@@ -67,7 +67,6 @@ struct MembershipEntryView: View {
             Text(tr("Choose your household first")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
             householdSetup(mtr("Open adult household setup")).buttonStyle(PrimaryAction())
             freeButton.buttonStyle(MembershipReturnButtonStyle())
-            Text(mtr("Select your household to check your planning access."))
         } else {
             Text(mtr("Free planning")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
             freeButton.buttonStyle(PrimaryAction())
@@ -77,6 +76,9 @@ struct MembershipEntryView: View {
             } else {
                 Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
             }
+        }
+        if household.configured {
+            Text(helpText("Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."))
         }
     }
 
