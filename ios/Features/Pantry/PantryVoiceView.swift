@@ -79,6 +79,8 @@ private struct VoicePantryRow {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var voice = PantryVoiceSession()
     @FocusState private var editing: Bool
+    @State private var reviewAfterEditing = false
+    @State private var remainingChoices: Int?
     @State private var identity: CapturePrivateIdentity?
     @State private var generation: UUID?
     @State private var token = UUID()
@@ -157,7 +159,11 @@ private struct VoicePantryRow {
                         Text(pantryText("What changed in your pantry?"))
                             .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
                         TextField(pantryText("What did you use, or what would you like to check?"),
-                                  text: Binding(get: { draft }, set: { draft = $0; resetReview() }), axis: .vertical)
+                                  text: Binding(get: { draft }, set: { text in
+                                      guard stage == .entry, draft != text else { return }
+                                      draft = text
+                                      resetReview()
+                                  }), axis: .vertical)
                             .lineLimit(2...6)
                             .padding(12)
                             .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10))
@@ -177,9 +183,9 @@ private struct VoicePantryRow {
                         draft = draft.isEmpty ? spoken : draft + " " + spoken
                         resetReview()
                     }
-                    Button(pantryText("Review my words")) { parse() }.buttonStyle(PrimaryAction())
-                        .disabled(!model.canEdit || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        .accessibilityIdentifier("pantry.voiceReview")
+                    if !editing {
+                        reviewWordsButton.buttonStyle(PrimaryAction())
+                    }
                 } else if let review {
                     previewSection(review)
                 } else {
@@ -236,7 +242,19 @@ private struct VoicePantryRow {
         .navigationTitle(pantryText(stage == .review ? "Review pantry changes" : (startingLot == nil ? "Talk or type" : "Record use")))
         .toolbar(.hidden, for: .tabBar)
         .privacySensitive()
-        .keyboardDoneAction(visible: editing, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { editing = false }
+        .keyboardDoneAction(visible: editing && stage != .entry, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { editing = false }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if editing, stage == .entry {
+                HStack(spacing: 12) {
+                    Button(pantryText("Done")) { editing = false }
+                        .frame(minHeight: 44)
+                        .accessibilityIdentifier("pantry.voiceKeyboardDone")
+                    Spacer(minLength: 0)
+                    reviewWordsButton.buttonStyle(PrimaryAction())
+                }
+                .padding(.horizontal).background(.bar)
+            }
+        }
         .toolbar {
             if saved == nil {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -255,6 +273,12 @@ private struct VoicePantryRow {
             }
         }
         .disabled(scene != .active)
+        .onChange(of: editing) { _, isEditing in
+            if !isEditing, reviewAfterEditing {
+                reviewAfterEditing = false
+                if stage == .entry { parse() }
+            }
+        }
         .onChange(of: canRetainDictation) { _, allowed in if !allowed { voice.cancel() } }
         .onChange(of: boundScope) { _, allowed in
             if !allowed { erase() }
@@ -270,13 +294,28 @@ private struct VoicePantryRow {
         }
     }
 
+    private var reviewWordsButton: some View {
+        Button(pantryText("Review my words")) {
+            if editing {
+                reviewAfterEditing = true
+                editing = false
+            } else {
+                parse()
+            }
+        }
+        .disabled(!model.canEdit || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        .accessibilityIdentifier("pantry.voiceReview")
+    }
+
     private func resetReview() {
+        remainingChoices = nil
         closeRemaining()
         token = UUID(); basis = nil; rows = []; review = nil; dateOnly = false
         dateEvidence = nil; message = nil; working = false
     }
 
     private func erase() {
+        reviewAfterEditing = false
         voice.cancel()
         draft = ""; resetReview(); saved = nil; savedRevision = nil; identity = nil; generation = nil; editing = false
     }
@@ -447,7 +486,19 @@ private struct VoicePantryRow {
             .disabled(lot == nil)
             .accessibilityIdentifier("pantry.voiceHalf.\(index)")
         }
-        Menu {
+        Button {
+            remainingChoices = index
+        } label: {
+            Label(pantryText("Choose how much is left"), systemImage: "slider.horizontal.3")
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("pantry.voiceRemaining.\(index)")
+        .confirmationDialog(pantryText("Choose how much is left"), isPresented: Binding(
+            get: { remainingChoices == index },
+            set: { if !$0, remainingChoices == index { remainingChoices = nil } }
+        ), titleVisibility: .visible) {
             ForEach(["Mostly full", "More than half left", "About half left", "Less than half left", "Nearly empty"], id: \.self) { key in
                 Button(pantryText(key)) {
                     chooseEstimate(key, for: index)
@@ -463,12 +514,8 @@ private struct VoicePantryRow {
             Button(pantryText("Used it all")) { change(index) { $0.mode = .all; $0.reportsUse = true } }
             Button(pantryText("Not sure")) { change(index) { $0.mode = .skip } }
                 .accessibilityIdentifier("pantry.voiceNotSure.\(index)")
-        } label: {
-            Label(pantryText("Choose how much is left"), systemImage: "slider.horizontal.3")
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
+            Button(pantryText("Cancel"), role: .cancel) {}
         }
-        .accessibilityIdentifier("pantry.voiceRemaining.\(index)")
         if let reply = remainingReply, reply.rowIndex == index, currentReply(reply) {
             TextField(pantryText("How much is left in this batch?"),
                       text: Binding(get: { remainingReply?.text ?? "" }, set: { updateRemaining($0, reply: reply) }))

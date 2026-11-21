@@ -208,6 +208,66 @@ import XCTest
         assertLot(id, contains: observation)
     }
 
+    func testEnglishSavedUseCanOpenCloseAndReopenItsPersonalCheckDay() {
+        checkSavedUseDate(spanish: false)
+    }
+
+    func testSpanishSavedUseCanOpenCloseAndReopenItsPersonalCheckDay() {
+        checkSavedUseDate(spanish: true)
+    }
+
+    private func checkSavedUseDate(spanish: Bool) {
+        let name = spanish ? "Arroz integral" : "Brown rice"
+        let words = spanish ? "Usé arroz integral, creo que queda un poco." : "I used some brown rice."
+        openPantry(reset: true, spanish: spanish)
+        let lotID = addLot(name, amount: "2")
+        tapPantryEntry(app.buttons["pantry.voiceEntry"])
+        fill(words, into: "pantry.voiceText")
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
+        let reviewWords = app.buttons["pantry.voiceReview"]
+        XCTAssertTrue(reviewWords.isHittable)
+        XCTAssertLessThanOrEqual(reviewWords.frame.maxY, app.keyboards.firstMatch.frame.minY + 2)
+        reviewWords.tap()
+        let picker = app.buttons["pantry.voiceRemaining.0"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 8))
+        assertTranscript(words)
+        reveal(picker)
+        picker.tap()
+        let estimate = app.buttons[spanish ? "Queda menos de la mitad" : "Less than half left"]
+        XCTAssertTrue(estimate.waitForExistence(timeout: 8))
+        estimate.tap()
+        tap(app.buttons["pantry.voicePreview"])
+        assertTranscript(words)
+        tap(app.buttons["pantry.voiceConfirm"])
+        let saved = element("pantry.voiceSaved")
+        XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        let checkDay = app.buttons["pantry.restock.checkDate"]
+        reveal(checkDay)
+        tap(checkDay)
+        let saveDate = app.buttons["pantry.digest.saveDate"]
+        XCTAssertTrue(saveDate.waitForExistence(timeout: 8), app.debugDescription)
+        tap(app.buttons["pantry.restock.closeDigest"])
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        reveal(checkDay)
+        tap(checkDay)
+        XCTAssertTrue(saveDate.waitForExistence(timeout: 8))
+        tap(saveDate)
+        XCTAssertTrue(element("pantry.digest.dateStatus").waitForExistence(timeout: 8))
+        XCTAssertFalse(system.alerts.firstMatch.exists)
+        tap(app.buttons["pantry.restock.closeDigest"])
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        app.terminate()
+        openPantry(reset: false, spanish: spanish)
+        tap(app.buttons[lotID])
+        tap(app.buttons["pantry.usageHistory"])
+        let count = element("pantry.usageCount")
+        XCTAssertTrue(count.waitForExistence(timeout: 8))
+        XCTAssertTrue(count.label.contains("1") || (count.value as? String) == "1", count.debugDescription)
+        XCTAssertTrue(element("pantry.usageEvent.0").exists)
+        XCTAssertFalse(element("pantry.usageEvent.1").exists)
+    }
+
     func testSpanishFirstFoodRecordsOneUnmeasuredUseAndKeepsMonthOnlyLabel() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(es)", "-AppleLocale", "es_MX"]
         app.launch()
