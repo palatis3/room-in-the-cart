@@ -11,7 +11,8 @@
     "RoomInTheCartUITests/TonightUITests/testFirstSavedDinnerCarriesIntoNewPickupAndAddsOnlySelectedIngredient"
   ],
   "04 · Move a planned family dinner and reopen it": [
-    "RoomInTheCartUITests/TonightUITests/testPastedFamilyNotePlansTomorrowAndChangesOccurrenceBeforeColdReturn"
+    "RoomInTheCartUITests/TonightUITests/testPastedFamilyNotePlansTomorrowAndChangesOccurrenceBeforeColdReturn",
+    "RoomInTheCartUITests/TonightUITests/testLargestTextKeepsScheduleOnlyConfirmationAheadOfOptionalPriceReview"
   ],
   "05 · Keep the package label and confirm the printed date": [
     "RoomInTheCartTests/PantryProductCatalogTests/testReviewedLabelWordingStaysWithOnePhysicalPackageAndRequiresDateConfirmation",
@@ -20,7 +21,8 @@
   "06 · Record an unmeasured use from the correct container": [
     "RoomInTheCartTests/PantryVoiceParserTests/testReadOnlyBalanceQuestionsAndLocationQualifiedUnmeasuredUses",
     "RoomInTheCartTests/PantryVoiceBatchMatcherTests/testStorageQualifiersNarrowExactLotsWithoutChoosingBetweenPhysicalBatches",
-    "RoomInTheCartTests/PantryVoiceParserTests/testReadOnlyBalanceWithTrailingPlaceKeepsFoodAndStorageWithoutAUseIntent"
+    "RoomInTheCartTests/PantryVoiceParserTests/testReadOnlyBalanceWithTrailingPlaceKeepsFoodAndStorageWithoutAUseIntent",
+    "RoomInTheCartUITests/PantryVoiceUITests/testSpanishBalanceHistoryClosesAndReopensWithoutRecordingAUse"
   ],
   "07 · Review receipt evidence before adding food": [
     "RoomInTheCartUITests/FreeJourneyUITests/testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock",
