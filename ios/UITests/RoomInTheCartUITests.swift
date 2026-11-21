@@ -179,7 +179,8 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["shop.addFirstList"])
         let original = app.textViews["ledgerImportText"]
         tap(original)
-        original.typeText("scalllions\ncorn tortillas")
+        let misspelling = "scalllions"
+        original.typeText(misspelling + "\ncorn tortillas")
         let done = app.buttons["Done"]
         tap(done)
         tap(app.buttons["ledgerReviewImport"])
@@ -192,7 +193,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(commit.waitForNonExistence(timeout: 5))
         XCTAssertTrue(done.isHittable)
         XCTAssertLessThanOrEqual(name.frame.maxY, done.frame.minY)
-        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 9) + "scallions")
+        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: misspelling.count) + "scallions")
         XCTAssertEqual(name.value as? String, "scallions")
         tap(done)
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
