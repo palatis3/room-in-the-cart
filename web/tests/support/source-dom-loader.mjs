@@ -1,11 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import ts from 'typescript';
+import {transformWithEsbuild} from 'vite';
 import {JSDOM} from 'jsdom';
 import {IDBFactory} from 'fake-indexeddb';
 export {JSDOM};
 const sourceDirectory=fileURLToPath(new URL('../../src/',import.meta.url));
+const sourceFiles = fs.readdirSync(sourceDirectory).filter(file => file.endsWith('.ts'));
+const compiledModules = new Map(await Promise.all(sourceFiles.map(async file => {
+ const filename = path.join(sourceDirectory, file);
+ const source = await fs.promises.readFile(filename, 'utf8');
+ const {code} = await transformWithEsbuild(source, filename, {format: 'cjs', target: 'es2022'});
+ return [path.basename(file, '.ts'), code];
+})));
 // Execute the actual source entry point with per-document API/storage dependencies.
 // CSS is intentionally ignored; this is DOM/lifecycle coverage, not layout/browser proof.
 export function loadApplication(dom,api) {
@@ -13,8 +20,8 @@ export function loadApplication(dom,api) {
  function load(name) {
   if(cache.has(name))return cache.get(name).exports;
   const module={exports:{}};cache.set(name,module);
-  const code=fs.readFileSync(path.join(sourceDirectory,name+'.ts'),'utf8');
-  const compiled=ts.transpileModule(code,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+  const compiled=compiledModules.get(name);
+  if (compiled === undefined) throw Error('Unknown source module ' + name);
   function localRequire(ref) {
    if(ref.endsWith('.css'))return {};
    if(!ref.startsWith('./'))throw Error('Unexpected runtime dependency '+ref);
