@@ -1687,7 +1687,7 @@ import XCTest
         receiptTap(done)
         receiptTap(app.buttons["receipt.review"])
         let heading = app.descendants(matching: .any).matching(
-            NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Market", "Nov 17, 2024")).firstMatch
+            NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Market", "November 17, 2024")).firstMatch
         XCTAssertTrue(heading.waitForExistence(timeout: 8), app.debugDescription)
         let row = app.descendants(matching: .any).matching(
             NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Wrap", "Received 1 unit")).firstMatch
