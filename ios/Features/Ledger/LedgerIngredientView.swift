@@ -50,6 +50,7 @@ struct LedgerIngredientView: View {
                         }
                     }
                     Button(quickGroceryText("Edit name, notes and department")) { sheet = .line }
+                        .accessibilityIdentifier("ledgerEditItemDetails")
                         .disabled(model.saving || model.hasPendingSave)
                     if !line.isTrashed && !line.isHandled {
                         if let workspaceID = model.sourceWorkspaceID,

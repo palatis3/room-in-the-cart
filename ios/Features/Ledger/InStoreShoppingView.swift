@@ -241,6 +241,7 @@ struct InStoreShoppingView: View {
                         case .options:
                             List {
                                 NavigationLink(tripText("Preview list copy")) { TripHandoffEntry(model: model, shopID: shopID) }
+                                    .accessibilityIdentifier("tripShare.previewCopy")
                                 NavigationLink(pantryText("Buy this pack again")) { ShopPackLookupEntry(ledger: model, shopID: shopID) }
                                 PantryShelfPhotoLink()
                                 InStoreDisplayToggle(owner: displayOwner)

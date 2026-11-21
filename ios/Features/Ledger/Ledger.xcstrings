@@ -6996,6 +6996,38 @@
           }
         }
       }
+    },
+    "Undo last import · %lld entry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo last import · %lld entry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer la última importación · %lld entrada"
+          }
+        }
+      }
+    },
+    "Undo last import · %lld entries": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo last import · %lld entries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer la última importación · %lld entradas"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -129,7 +129,7 @@ struct LedgerImportView: View {
                         if preview.source == .selectedText, let shop {
                             LabeledContent(applePlanningText("Destination pickup"), value: shop.title)
                         }
-                        if preview.lines.count > 1 && captured == nil {
+                        if preview.lines.count > 1, captured == nil, original.contains(where: \.isNewline) {
                             DisclosureGroup(ledgerText("Show original list"), isExpanded: $originalExpanded) {
                                 Text(verbatim: original).textSelection(.enabled)
                             }.accessibilityIdentifier("ledgerOriginalDisclosure")

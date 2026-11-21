@@ -8,6 +8,7 @@ struct PrivateListSharingGuide: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(helpText("Share a list copy")).font(.headline).accessibilityAddTraits(.isHeader)
             Text(helpText("In Shopping list, open List options, then Preview list copy. Select the groceries to include and review the message before choosing a recipient. They can read it without the app."))
+                .accessibilityIdentifier("help.privateListSharing.instructions")
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityIdentifier("help.privateListSharing")

@@ -89,13 +89,19 @@ struct LedgerHomeView: View {
                                     .frame(minHeight: 44, alignment: .leading)
                             }.accessibilityIdentifier("ledgerHistory")
                             if let batch = shop.importBatches.last(where: { $0.undoneAt == nil }) {
-                                Button(ledgerText("Undo last list import"), role: .destructive) {
-                                    Task {
-                                        _ = await model.editShop(key: "undo-\(batch.id)", shopID: shop.id) { try $0.undoImport(batchID: batch.id) }
-                                        focus = model.error == nil ? .result : .error
-                                    }
-                                }.disabled(model.saving || model.hasPendingSave)
-                                    .accessibilityIdentifier("ledgerUndoImport")
+                                let entries = shop.remainingEntries(in: batch)
+                                if !entries.isEmpty {
+                                    Button(ledgerFormat(entries.count == 1 ? "Undo last import · %lld entry" : "Undo last import · %lld entries", Int64(entries.count)), role: .destructive) {
+                                        Task {
+                                            _ = await model.editShop(key: "undo-\(batch.id)", shopID: shop.id) { current in
+                                                guard current.revisionID == shop.revisionID else { throw LedgerError.stalePreview }
+                                                try current.undoImport(batchID: batch.id)
+                                            }
+                                            focus = model.error == nil ? .result : .error
+                                        }
+                                    }.disabled(model.saving || model.hasPendingSave)
+                                        .accessibilityIdentifier("ledgerUndoImport")
+                                }
                             }
                         }
                         if model.error == nil && !model.hasPendingSave {
@@ -242,6 +248,7 @@ struct LedgerHomeView: View {
         .accessibilityIdentifier("ledgerListOptions")
         .confirmationDialog(ledgerText("List options"), isPresented: $showingListOptions, titleVisibility: .visible) {
             Button(tripText("Preview list copy")) { sheet = .shareItems(shop.id) }
+                .accessibilityIdentifier("tripShare.previewCopy")
             Button(shoppingText("Shopping kits")) { sheet = .kits(shop.id) }
             Button(shoppingText("Standing list")) { sheet = .standing }
             Button(ledgerText("List order and aisles")) { sheet = .layout }

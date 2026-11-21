@@ -77,7 +77,9 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(element("ledgerUnsavedItem").exists)
         tap(app.buttons["Save item"])
         tap(app.buttons["Inspect Oats (rolled)"])
-        XCTAssertTrue(app.buttons["Edit name, notes and department"].waitForExistence(timeout: 8))
+        let edit = app.buttons["ledgerEditItemDetails"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 8))
+        XCTAssertEqual(edit.label, "Edit name, notes and department")
         XCTAssertTrue(app.staticTexts["Oats"].exists)
         tap(app.navigationBars.buttons.firstMatch)
         tap(app.buttons["Check Oats (rolled)"])
@@ -271,6 +273,8 @@ final class RoomInTheCartUITests: XCTestCase {
             }
             tap(confirm)
             let undo = app.buttons["ledgerUndoImport"]
+            reveal(undo)
+            XCTAssertEqual(undo.label, language == "en" ? "Undo last import · 2 entries" : "Deshacer la última importación · 2 entradas")
             tap(undo)
             XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
             app.terminate()
@@ -286,7 +290,10 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["quickGrocery.add"])
         tap(app.buttons["quickGrocery.viewList"])
         tap(app.buttons["ledgerListOptions"])
-        tap(app.buttons["Preview list copy"])
+        let share = app.buttons["tripShare.previewCopy"]
+        XCTAssertTrue(share.waitForExistence(timeout: 8))
+        XCTAssertEqual(share.label, "Preview list copy")
+        tap(share)
         let row = app.switches.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 8))
         row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
@@ -306,8 +313,9 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["settings.help"])
         tap(app.buttons["help.topic.household"])
         XCTAssertTrue(app.navigationBars["Compartir en el hogar"].waitForExistence(timeout: 8))
-        let share = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Vista previa de la lista")).firstMatch
+        let share = app.staticTexts["help.privateListSharing.instructions"]
         XCTAssertTrue(share.waitForExistence(timeout: 8))
+        XCTAssertTrue(share.label.contains("Vista previa de la lista"))
         let permissions = app.buttons["help.householdPermissions"]
         let rule = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "los presupuestos del hogar")).firstMatch
         XCTAssertFalse(rule.exists)

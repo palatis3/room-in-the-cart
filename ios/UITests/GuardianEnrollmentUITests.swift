@@ -148,8 +148,7 @@ import XCTest
             app.launch()
             tap("settings")
             tap(language == "en" ? "Household membership" : "Membresía del hogar")
-            let beginning = language == "en" ? "Add a grocery in Shop" : "En Compras, añade un producto"
-            let sharing = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", beginning)).firstMatch
+            let sharing = app.staticTexts["help.privateListSharing.instructions"]
             reveal(sharing, hitTarget: false)
             let option = language == "en" ? "Preview list copy" : "Vista previa de la lista"
             XCTAssertTrue(sharing.label.contains(option))

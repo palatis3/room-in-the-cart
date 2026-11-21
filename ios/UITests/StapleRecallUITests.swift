@@ -212,7 +212,7 @@ import XCTest
         if app.buttons["tripFindKeyboardDone"].isHittable { app.buttons["tripFindKeyboardDone"].tap() }
         tapTrip(app.buttons["Add to picked items"])
         tapTrip(app.buttons["inStoreTripOptions"])
-        tapTrip(app.buttons["Preview list copy"])
+        tapTrip(app.buttons["tripShare.previewCopy"])
         let apples = app.switches.matching(NSPredicate(format: "label CONTAINS %@", "Apples")).firstMatch
         enableAisleSwitch(apples)
         tapTrip(app.buttons["Preview message"])
