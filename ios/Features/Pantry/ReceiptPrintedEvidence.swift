@@ -20,6 +20,7 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let unmarkedTotal = #/\s+([0-9]{1,7}[.,][0-9]{2})\s*$/#
     private static let unitPrice = #/(?i)(?:\s*@|\s+(at|a)\b)\s*(?:US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]{1,2})?(?:\s*(?:\/|per|por)\s*([a-z.]+))?\s*$/#
     private static let measure = #/(?i)\b([0-9]{1,5}(?:[.,][0-9]{1,3})?)\s*(fluid\s+ounces?|fl\.?\s*oz|fl\.?\s+ounces?|onzas?\s+l[ií]quidas?|oz\.?\s+l[ií]q(?:uidas)?|kg|kgs|kilogramos?|kilograms?|gramos?|grams?|gr|g|lb[s.]?|pounds?|libras?|ounces?|onzas?|oz|liters?|litros?|ml|l|count|ct|ea|each|units?|unidad(?:es)?|uds?)\b\.?/#
+    private static let perBasis = #/(?i)^\s*(?:/|per\b|por\b)/#
     private static let adjustment = #/(?i)^\s*(?:service fee|bottle deposit|sales tax|tax|impuesto|iva|subtotal|sub total|total|change|cambio|cash|efectivo|tender|visa|mastercard|payment|pago|discount|descuento|coupon|cup[oó]n|deposit|dep[oó]sito|fee|cargo|delivery fee|shipping|env[ií]o|tip|propina|refund|reembolso|return|devoluci[oó]n|promotion|promoci[oó]n)\b/#
     private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|MXN|AUD|BOGO|gratis|was|ahorra|save|oferta|coupon|cup[oó]n)\b|\b(?:buy|compra)\s+\w+\s+(?:get|recibe)\b|\b[0-9]+\s*(?:for|por)\s*[$0-9]|\d+\s*%|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
     private static let signedValue = #/(?:^|\s)[−–-]\s*[$0-9]|\(\s*\$?\d+[.,]\d{2}\s*\)/#
@@ -76,7 +77,8 @@ struct ReceiptPrintedEvidence: Equatable {
             amount = nil; priceWording = nil; uncertain = true; return
         }
         let measurements = candidate.matches(of: Self.measure)
-        if measurements.count == 1, let match = measurements.first {
+        if measurements.count == 1, let match = measurements.first,
+           !candidate[match.range.upperBound...].contains(Self.perBasis) {
             if let measured = Self.measurement(String(match.1), unit: String(match.2)) {
                 quantity = measured.0; unit = measured.1
                 candidate.replaceSubrange(match.range, with: " ")

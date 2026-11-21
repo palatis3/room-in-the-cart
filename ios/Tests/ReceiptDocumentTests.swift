@@ -247,6 +247,12 @@ import XCTest
             XCTAssertEqual(correction.quantity, expected, wording)
             XCTAssertEqual(correction.unit, .count, wording)
         }
+        for wording in ["Tamal 2 units per pack $4.82", "Tamal 2 unidades por paquete $4.82", "Tamal 2 units/pack $4.82"] {
+            let source = ReceiptPrintedEvidence(.init(originalText: wording), knownStorage: [:])
+            XCTAssertNil(source.quantity, wording)
+            XCTAssertNil(source.unit, wording)
+            XCTAssertEqual(source.amount, "4.82", wording)
+        }
         for note in ["2 paquetes", "2 packages", "2 units per pack", "2 unitarios"] {
             let result = ReceiptPrintedEvidence(.init(originalText: "Tamal", quantityNote: note), knownStorage: [:])
             XCTAssertNil(result.quantity, note)
