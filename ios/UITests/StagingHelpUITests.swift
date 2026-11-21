@@ -41,7 +41,7 @@ final class StagingHelpUITests: XCTestCase {
         openSettings(language: "es")
         tapInList(app.buttons["settings.support"])
         tapInList(app.buttons["guardian.familyGuide"])
-        let guide = app.navigationBars["Guía para familias"]
+        let guide = app.navigationBars["Permisos de menores"]
         XCTAssertTrue(guide.waitForExistence(timeout: 8))
         let online = app.descendants(matching: .any).matching(identifier: "guardian.familyGuide.online").firstMatch
         tapInList(online)

@@ -265,7 +265,7 @@ struct HelpSupportView: View {
     var body: some View {
         WorkingForm {
             Section(helpText("Get help")) {
-                FamilyPermissionGuideLink(title: GuardianCopy.text("Family guide"))
+                FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions"))
                 Text(helpText("Describe the steps, what you expected and what happened. Leave out grocery details, budgets, names, receipts, sign-in codes and invitation links."))
                 if let url = configuration.supportEmailURL, let address = configuration.supportEmailAddress {
                     Button {

@@ -17,18 +17,18 @@
         }
       }
     },
-    "Family guide": {
+    "Child permissions": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Family guide"
+            "value": "Child permissions"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Guía para familias"
+            "value": "Permisos de menores"
           }
         }
       }

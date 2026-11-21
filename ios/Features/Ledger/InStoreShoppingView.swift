@@ -242,7 +242,7 @@ struct InStoreShoppingView: View {
                             List {
                                 NavigationLink(tripText("Preview list copy")) { TripHandoffEntry(model: model, shopID: shopID) }
                                     .accessibilityIdentifier("tripShare.previewCopy")
-                                FamilyPermissionGuideLink(title: GuardianCopy.text("Family guide")) { destination = nil }
+                                FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions")) { destination = nil }
                                 NavigationLink(pantryText("Buy this pack again")) { ShopPackLookupEntry(ledger: model, shopID: shopID) }
                                 PantryShelfPhotoLink()
                                 InStoreDisplayToggle(owner: displayOwner)

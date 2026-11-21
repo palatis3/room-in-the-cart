@@ -221,7 +221,7 @@ struct FamilyPermissionGuide: View {
 
     var body: some View {
         WorkingForm { FamilyPermissionSections(done: done) }
-            .navigationTitle(GuardianCopy.text("Family guide"))
+            .navigationTitle(GuardianCopy.text("Child permissions"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if let done {
