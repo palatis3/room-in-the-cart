@@ -1132,8 +1132,13 @@ import XCTest
         XCTAssertTrue(export.waitForExistence(timeout: 10))
         export.tap()
         let save = app.buttons["Save"].firstMatch
-        XCTAssertTrue(save.waitForExistence(timeout: 25), app.debugDescription)
-        save.tap()
+        let move = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"].buttons["Move"]
+        let exporterReady = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            (save.exists && save.isHittable) || (move.exists && move.isHittable)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [exporterReady], timeout: 25), .completed, app.debugDescription)
+        let action = save.exists && save.isHittable ? save : move
+        action.tap()
         if app.buttons["Replace"].waitForExistence(timeout: 2) { app.buttons["Replace"].tap() }
         XCTAssertTrue(app.staticTexts["fixture.receipt.exported"].waitForExistence(timeout: 10), app.debugDescription)
         app.terminate()
