@@ -390,6 +390,7 @@ import UIKit
         let editedName = String(try XCTUnwrap(originalLine.split(separator: " ", maxSplits: 1).last))
         let uniqueToken = String(try XCTUnwrap(editedName.split(separator: " ").last))
         fill(uniqueToken + "\n", into: "ledgerSearch")
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5), "Return must dismiss the search keyboard before revealing the saved grocery")
         let saved = app.buttons["Inspect " + editedName]
         revealContent(saved)
         XCTAssertEqual(saved.value as? String, originalAmount + originalAmount + " items")
