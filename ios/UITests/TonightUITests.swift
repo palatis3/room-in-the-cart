@@ -229,6 +229,9 @@ import XCTest
         XCTAssertTrue(unresolvedPrice.exists, app.debugDescription)
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.choose.")).firstMatch.isEnabled,
                        "No stock match cannot be offered as a pantry-based dinner")
+        tap(app.navigationBars["Tonight"].buttons["My Pantry"])
+        let pantryClose = app.navigationBars["My Pantry"].buttons["Close"]
+        if pantryClose.exists { tap(pantryClose) }
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinner.tonight"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 8))
