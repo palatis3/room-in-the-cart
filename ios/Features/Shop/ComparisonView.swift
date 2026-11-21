@@ -66,6 +66,7 @@ struct ComparisonView: View {
     @EnvironmentObject private var app: AppModel
     @StateObject private var model: ComparisonModel
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var stockExpanded: Bool
     private enum MissingInput: Hashable, Identifiable {
         case price(ComparisonPack)
@@ -208,10 +209,33 @@ struct ComparisonView: View {
         .simultaneousGesture(TapGesture().onEnded { inputFocused = id })
     }
 
-    private func unitPicker(_ label: String, selection: Binding<UnitOfMeasure>, id: String) -> some View {
-        Picker(tr(label), selection: selection) {
+    @ViewBuilder private func unitPicker(_ label: String, selection: Binding<UnitOfMeasure>, id: String) -> some View {
+        let title = tr(label)
+        let picker = Picker(title, selection: selection) {
             ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(unit.displayName).tag(unit) }
-        }.frame(minHeight: 44).accessibilityIdentifier(id)
+        }
+        if typeSize.isAccessibilitySize {
+            let value = selection.wrappedValue.displayName
+            Menu {
+                picker.pickerStyle(.inline)
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(value).foregroundStyle(Theme.action)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.up.chevron.down").imageScale(.small)
+                            .foregroundStyle(Theme.action).accessibilityHidden(true)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .accessibilityLabel(title).accessibilityValue(value).accessibilityIdentifier(id)
+        } else {
+            picker.frame(minHeight: 44).accessibilityIdentifier(id)
+        }
     }
 
     private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
