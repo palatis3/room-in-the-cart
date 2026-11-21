@@ -144,10 +144,7 @@ import XCTest
         let remaining = app.buttons["pantry.voiceRemaining.0"]
         reveal(remaining)
         remaining.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        let unsure = app.buttons["pantry.voiceNotSure.0"]
-        XCTAssertTrue(unsure.waitForExistence(timeout: 6), app.debugDescription)
-        XCTAssertEqual(unsure.label, spanish ? "No lo sé" : "Not sure")
-        unsure.tap()
+        tapRemainingChoice(spanish ? "No lo sé" : "Not sure", spanish: spanish, identifier: "pantry.voiceNotSure.0")
         let unchanged = element("pantry.voiceStatus")
         reveal(unchanged)
         XCTAssertEqual(unchanged.label, spanish ? "No seleccionaste ningún cambio para la despensa." : "No pantry changes selected.")
@@ -234,9 +231,7 @@ import XCTest
         assertTranscript(words)
         reveal(picker)
         picker.tap()
-        let estimate = app.buttons[spanish ? "Queda menos de la mitad" : "Less than half left"]
-        XCTAssertTrue(estimate.waitForExistence(timeout: 8))
-        estimate.tap()
+        tapRemainingChoice(spanish ? "Queda menos de la mitad" : "Less than half left", spanish: spanish)
         tap(app.buttons["pantry.voicePreview"])
         assertTranscript(words)
         tap(app.buttons["pantry.voiceConfirm"])
@@ -366,7 +361,7 @@ import XCTest
         let remaining = app.buttons["pantry.voiceRemaining.0"]
         reveal(remaining)
         remaining.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        tap(app.buttons["pantry.voiceDescribe.0"])
+        tapRemainingChoice("Describir cuánto queda", spanish: true, identifier: "pantry.voiceDescribe.0")
         let reply = "más de la mitad"
         fill(reply, into: "pantry.voiceRemainingText.0")
         dismissVoiceKeyboard()
@@ -414,6 +409,32 @@ import XCTest
         tap(app.buttons["pantry.voiceReview"])
         XCTAssertTrue(app.buttons["pantry.voiceDate"].waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertFalse(element("pantry.voiceConfirm").exists)
+    }
+
+    private func tapRemainingChoice(_ label: String, spanish: Bool, identifier: String? = nil,
+                                    file: StaticString = #filePath, line: UInt = #line) {
+        let title = spanish ? "Indicar cuánto queda" : "Choose how much is left"
+        let sheet = app.sheets[title]
+        let container: XCUIElement
+        if #available(iOS 27, *) {
+            XCTAssertTrue(sheet.waitForExistence(timeout: 6), app.debugDescription, file: file, line: line)
+            container = sheet
+        } else {
+            // Earlier runtimes expose the native dialog title as text, outside its action scroll view.
+            XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 6), app.debugDescription, file: file, line: line)
+            container = app
+        }
+        let named = NSPredicate(format: "label == %@", label)
+        // The iOS 27 popover exposes one native action as a button inside a same-named button.
+        let matching = container.buttons.matching(named).allElementsBoundByIndex
+        let actions = matching.filter { $0.buttons.matching(named).count == 0 }
+        guard actions.count == 1, let action = actions.first else {
+            XCTFail("Expected exactly one action named \(label) in \(title). " + container.debugDescription, file: file, line: line)
+            return
+        }
+        if let identifier { XCTAssertEqual(action.identifier, identifier, file: file, line: line) }
+        XCTAssertTrue(action.isHittable, action.debugDescription, file: file, line: line)
+        action.tap()
     }
 
     private func tapPantryEntry(_ entry: XCUIElement) {
