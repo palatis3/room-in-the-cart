@@ -78,9 +78,11 @@ struct HouseholdReceiptLineFacts: View {
 
 struct HouseholdReceiptFacts: View {
     let receipt: HouseholdReceiptAcquisition
+    private var dates = ReceiptDateDisplay()
+
     var body: some View {
         Text(receipt.merchant).font(.headline)
-        Text(receipt.purchaseDay)
+        Text(dates.civilDay(receipt.purchaseDay, zone: TimeZone(identifier: receipt.zone) ?? .gmt))
         if let reference = receipt.reference { Text(reference) }
         ForEach(receipt.lines, id: \.ordinal) { HouseholdReceiptLineFacts(row: $0) }
     }

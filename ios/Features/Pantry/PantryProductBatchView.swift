@@ -242,7 +242,7 @@ struct PantryProductBatchView: View {
                         if !atHome {
                         TextField(pantryText("Store or branch"), text: $merchant).focused($focus, equals: "merchant")
                             .accessibilityIdentifier("productBatch.merchant")
-                        DatePicker(pantryText("Purchase date"), selection: $date, in: ...Date(), displayedComponents: .date)
+                        ReceiptDatePicker(title: pantryText("Purchase date"), identifier: "productBatch.purchaseDate", date: $date)
                         }
                         Toggle(pantryText(atHome ? "I checked these physical packages and usable amounts." : "I received these packages and checked the date and usable quantities."), isOn: $confirmed)
                             .accessibilityIdentifier("productBatch.received")

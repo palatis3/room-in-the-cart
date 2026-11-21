@@ -8,6 +8,7 @@ struct PantryReceiptRescanView: View {
     let edit: () -> Void
     @State private var selected: UUID?
     @State private var links: [Int: UUID] = [:]
+    private var dates = ReceiptDateDisplay()
 
     var body: some View {
         Section(pantryText("Compare a possible earlier receipt")) {
@@ -29,7 +30,7 @@ struct PantryReceiptRescanView: View {
 
     private func title(for candidate: ReceiptRescanPrompt.Candidate) -> String {
         let first = candidate.original.first
-        let date = first?.purchaseDate.formatted(date: .abbreviated, time: .omitted)
+        let date = first.map { dates.purchaseDay($0.purchaseDate, style: .abbreviated) }
         let reference = first?.transactionReference ?? String(candidate.id.uuidString.suffix(8))
         return [first?.merchant, date, reference].compactMap { $0 }.joined(separator: " · ")
     }

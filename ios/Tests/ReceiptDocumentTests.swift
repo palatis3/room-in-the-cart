@@ -206,12 +206,41 @@ import XCTest
 
     func testPurchaseDateUsesAppLanguageAndKeepsTheChosenRegion() {
         let usEnglish = Locale(identifier: "en_US@calendar=gregorian")
-        let spanish = ReceiptPurchaseDateFields.displayLocale(regionLocale: usEnglish, appLanguage: "es")
+        let spanish = ReceiptDateDisplay.displayLocale(regionLocale: usEnglish, appLanguage: "es")
         XCTAssertEqual(spanish.language.languageCode?.identifier, "es")
         XCTAssertEqual(spanish.region?.identifier, "US")
         XCTAssertEqual(spanish.calendar.identifier, usEnglish.calendar.identifier)
         let mexico = Locale(identifier: "es_MX")
-        XCTAssertEqual(ReceiptPurchaseDateFields.displayLocale(regionLocale: mexico, appLanguage: "es"), mexico)
+        XCTAssertEqual(ReceiptDateDisplay.displayLocale(regionLocale: mexico, appLanguage: "es"), mexico)
+    }
+
+    func testReceiptDateOnlyAndTimestampUseTheChosenCalendarAndZone() throws {
+        let locale = ReceiptDateDisplay.displayLocale(regionLocale: Locale(identifier: "en_US"), appLanguage: "es")
+        let zone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
+        let instant = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-20T02:03:00Z"))
+        let gregorian = Calendar(identifier: .gregorian)
+        let localDay = ReceiptDateDisplay.format(date: .long, time: .omitted, locale: locale, calendar: gregorian, timeZone: zone)
+        let utcDay = ReceiptDateDisplay.format(date: .long, time: .omitted, locale: locale, calendar: gregorian, timeZone: .gmt)
+        XCTAssertEqual(instant.formatted(localDay), "19 de noviembre de 2026")
+        XCTAssertEqual(instant.formatted(utcDay), "20 de noviembre de 2026")
+        let timestamp = ReceiptDateDisplay.format(date: .omitted, time: .shortened, locale: locale, calendar: gregorian, timeZone: zone)
+        XCTAssertTrue(instant.formatted(timestamp).contains("6:03") || instant.formatted(timestamp).contains("18:03"))
+
+        let buddhist = ReceiptDateDisplay.format(date: .long, time: .omitted, locale: locale,
+                                                calendar: Calendar(identifier: .buddhist), timeZone: zone)
+        XCTAssertTrue(instant.formatted(buddhist).contains("2569"))
+    }
+
+    func testSavedReceiptCivilDayDoesNotConvertToTheViewersTimeZone() throws {
+        let locale = Locale(identifier: "es_US")
+        let calendar = Calendar(identifier: .gregorian)
+        let west = try XCTUnwrap(TimeZone(identifier: "Pacific/Pago_Pago"))
+        let east = try XCTUnwrap(TimeZone(identifier: "Pacific/Kiritimati"))
+        for zone in [west, .gmt, east] {
+            XCTAssertEqual(ReceiptDateDisplay.civilDay("2026-11-19", locale: locale, calendar: calendar, zone: zone),
+                           "19 de noviembre de 2026")
+        }
+        XCTAssertEqual(ReceiptDateDisplay.civilDay("2026-02-30", locale: locale, calendar: calendar, zone: west), "2026-02-30")
     }
 
     func testSpanishWeightedReceiptKeepsDateAndPaidAmbiguitiesOutOfStock() throws {
