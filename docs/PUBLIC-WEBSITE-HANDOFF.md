@@ -10,6 +10,10 @@
 | Support | `/support` | The public support address is `hello@roominthecart.com`. The page opens without signing in. |
 | Privacy and terms | `/privacy` and `/terms` | Both pages open directly on an iPhone. Confirm the text describes the features and data practices in the release. |
 
+## If the website and household companion share a hostname
+
+Keep the product overview at `/about`. The existing companion uses `/` and `/requests` for household access, `/invite` and `/child-invite` for invitations, `/view` for helper access, and `/v1` for its service. If a separate site builder hosts the product pages, keep those companion routes on their configured host and point the app’s public links at the website. Test public links signed out and verify invitation entry with a fictional link before switching a shared hostname. [Companion route contract](../web/README.md)
+
 ## Release handoff
 
 1. Publish the approved public pages to the canonical domain when the owner chooses. Verify HTTPS, direct links, and both languages using a signed-out browser. Check the visible section after loading the family URL. An HTTP 200 response alone also occurs when a website sends every path to its homepage.
