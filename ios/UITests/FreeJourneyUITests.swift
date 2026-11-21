@@ -3058,8 +3058,9 @@ import XCTest
             if done.exists && done.isHittable {
                 // Synthesized typing briefly hides the keyboard. Its Return key can
                 // occupy the former position of Done as the keyboard slides back.
-                guard app.waitForDoneAboveKeyboard(identifier: "Done") else {
-                    XCTFail("The dinner editor’s Done button did not settle above the visible keyboard.")
+                let identifier = done.identifier
+                guard app.waitForDoneAboveKeyboard(identifier: identifier) else {
+                    XCTFail("The Done button (\(identifier)) did not settle above the keyboard for \(name).")
                     return
                 }
                 done.tap()
