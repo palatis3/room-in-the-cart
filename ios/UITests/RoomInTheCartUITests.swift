@@ -149,7 +149,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(field)
         field.typeText(name + "\n")
         XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 10))
-        tap(app.buttons["quickGrocery.viewList"])
+        openListAfterQuickEntry()
 
         let list = app.navigationBars["Lista de compras"]
         let item = app.buttons["Ver detalles de " + name]
@@ -641,7 +641,7 @@ final class RoomInTheCartUITests: XCTestCase {
                                                          "quickGrocery.undo", name)).firstMatch
             XCTAssertTrue(saved.waitForExistence(timeout: 10))
         }
-        tap(app.buttons["quickGrocery.viewList"])
+        openListAfterQuickEntry()
         let list = app.navigationBars["Lista de compras"]
         XCTAssertTrue(list.waitForExistence(timeout: 8))
         return list
@@ -1213,11 +1213,28 @@ final class RoomInTheCartUITests: XCTestCase {
         let window = app.windows.firstMatch.frame
         let navigation = app.navigationBars.firstMatch
         let tabs = app.tabBars.firstMatch
+        let keyboard = app.keyboards.firstMatch
         let top = max(scroll.minY, window.minY, navigation.exists ? navigation.frame.maxY : window.minY)
-        let bottom = min(scroll.maxY, window.maxY, tabs.exists ? tabs.frame.minY : window.maxY)
+        let bottom = min(scroll.maxY, window.maxY, tabs.exists ? tabs.frame.minY : window.maxY,
+                         keyboard.exists ? keyboard.frame.minY : window.maxY)
         return CGRect(x: max(scroll.minX, window.minX), y: top,
                       width: max(0, min(scroll.maxX, window.maxX) - max(scroll.minX, window.minX)),
                       height: max(0, bottom - top))
+    }
+
+    private func openListAfterQuickEntry() {
+        // Return intentionally keeps the keyboard open for typing the next grocery.
+        // Scroll the Shop itself so the horizontal suggestion strip cannot intercept these gestures.
+        let keyboard = app.keyboards.firstMatch
+        if keyboard.exists {
+            let dismiss = app.buttons["quickGrocery.dismissKeyboard"]
+            revealFullyInShop(dismiss)
+            dismiss.tap()
+            XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
+        }
+        let list = app.buttons["quickGrocery.viewList"]
+        revealFullyInShop(list)
+        list.tap()
     }
 
     private func revealFullyInShop(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
