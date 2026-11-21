@@ -158,8 +158,10 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     footer.append(element('p', labels.footer[language]));
     const invited = element('a', labels.invited[language]); invited.href = '/requests?lang=' + language; footer.append(invited); root.append(footer);
     const destination = document.getElementById(currentAnchor().slice(1));
-    if (destination) destination.focus();
-    else if (restoreLanguageFocus) languageSelect.focus();
+    if (destination) {
+      destination.focus({ preventScroll: true });
+      destination.scrollIntoView?.({ block: 'start' });
+    } else if (restoreLanguageFocus) languageSelect.focus();
   };
   render();
   return true;
