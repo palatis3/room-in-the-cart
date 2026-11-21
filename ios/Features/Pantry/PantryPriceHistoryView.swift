@@ -14,7 +14,7 @@ struct PantryPriceHistoryView: View {
     @State private var loading = false
 
     var body: some View {
-        List {
+        JournalList {
             if model.phase != .accessDenied {
                 if let notice { Text(notice).accessibilityIdentifier("prices.notice") }
                 Button(pantryText("Record a price")) { editing = true }
@@ -40,7 +40,6 @@ struct PantryPriceHistoryView: View {
                 }
             }
         }
-        .workingSurface()
         .navigationTitle(pantryText("Private price history"))
         .privacySensitive()
         .task {
@@ -98,7 +97,7 @@ private struct PantryPriceDetail: View {
     @State private var correcting = false
 
     var body: some View {
-        List {
+        JournalList {
             if model.phase != .accessDenied {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
@@ -155,7 +154,6 @@ private struct PantryPriceDetail: View {
                 }
             }
         }
-        .workingSurface()
         .navigationTitle(model.phase == .accessDenied ? "" : row.name).privacySensitive()
         .sheet(isPresented: $adjusting) {
             if model.phase == .ready {
@@ -184,7 +182,7 @@ private struct PantryPriceRevisionView: View {
     @State private var failed = false
 
     var body: some View {
-        List {
+        JournalList {
             if model.phase != .accessDenied {
                 Section {
                     Stepper(value: $revision, in: 1...current.revision) {

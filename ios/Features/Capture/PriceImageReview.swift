@@ -56,9 +56,13 @@ struct PriceImageReview: View {
                         ForEach(lines, id: \.ordinal) { line in
                             Button { guard authorized() else { return }; acceptShelf(line); dismiss() } label: {
                                 VStack(alignment: .leading) {
-                                    if !line.wording.isEmpty { Text(verbatim: line.wording) }
+                                    if !line.wording.isEmpty {
+                                        Text(verbatim: line.wording).font(.system(.body, design: .monospaced)).foregroundStyle(Theme.ink)
+                                    }
                                     if let reading = line.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
-                                    if line.uncertain { Text(pantryText("Uncertain image wording")).font(.caption) }
+                                    if line.uncertain {
+                                        Text(pantryText("Uncertain image wording")).font(.subheadline).foregroundStyle(Theme.warning)
+                                    }
                                 }
                             }
                         }
@@ -80,12 +84,23 @@ struct PriceImageReview: View {
                             }
                             .accessibilityIdentifier("priceImage.line." + field.rawValue)
                             if let index = selections[field], lines.indices.contains(index) {
-                                if let reading = lines[index].reviewedReading { ReviewedImageWordingLabel(reading: reading) }
-                                if lines[index].uncertain { Text(pantryText("Uncertain image wording")).font(.caption) }
-                                TextField(pantryText("Shown USD amount, blank if unknown"), text: Binding(
-                                    get: { amounts[field] ?? "" }, set: { amounts[field] = $0 })).keyboardType(.decimalPad)
-                                    .focused($focusedAmount, equals: field)
-                                    .accessibilityIdentifier("priceImage.amount." + field.rawValue)
+                                let line = lines[index]
+                                if !line.wording.isEmpty {
+                                    ReceiptPaperLine(wording: line.wording)
+                                }
+                                if let reading = line.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
+                                if line.uncertain {
+                                    Text(pantryText("Uncertain image wording")).font(.subheadline).foregroundStyle(Theme.warning)
+                                }
+                                let amountLabel = pantryText("Shown USD amount, blank if unknown")
+                                WorkingField(amountLabel) {
+                                    TextField(amountLabel, text: Binding(
+                                        get: { amounts[field] ?? "" }, set: { amounts[field] = $0 }), prompt: Text(""))
+                                        .textFieldStyle(WorkingInputStyle())
+                                        .keyboardType(.decimalPad)
+                                        .focused($focusedAmount, equals: field)
+                                        .accessibilityIdentifier("priceImage.amount." + field.rawValue)
+                                }
                                 if field != .total {
                                     Picker(pantryText("Relation to displayed total"), selection: Binding(
                                         get: { inclusions[field] ?? .unknown }, set: { inclusions[field] = $0 }
@@ -109,7 +124,9 @@ struct PriceImageReview: View {
                             acceptCheckout(try .init(charges: charges))
                             dismiss()
                         } catch { notice = pantryText("Review the selected lines and amounts.") }
-                    }.accessibilityIdentifier("priceImage.reviewCheckout")
+                    }
+                    .buttonStyle(PrimaryAction())
+                    .accessibilityIdentifier("priceImage.reviewCheckout")
                 }
             }
         }

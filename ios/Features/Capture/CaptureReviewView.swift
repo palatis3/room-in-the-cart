@@ -126,7 +126,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 Text(captureText(requestMode ? "Speech and photo text recognition run on this iPhone. Review the request before sending." :
                     "Speech and photo text recognition run on this iPhone. Nothing is added until you review the list."))
                     .font(.footnote).foregroundStyle(Theme.secondary)
-                Text(captureText("Actual destination") + ": " + destination)
+                Text(captureText("Actual destination") + ": " + destination).font(.headline)
             }
             if let candidate = model.candidate {
                 Section(captureText("Captured wording — check before using")) {
@@ -148,7 +148,9 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 if requestMode || !model.naturalListMode {
                     Text(captureText(requestMode ? "Review one request at a time. Check the item, amount, packs, purpose and exclusions; skip any other captured lines." : "One item per line. Check item names, amounts, units and any exclusions."))
                 }
-                TextEditor(text: $model.text).frame(minHeight: 180)
+                TextEditor(text: $model.text)
+                    .captureDraftEditor(focused: sourceTextFocused)
+                    .frame(minHeight: 180)
                     .focused($sourceTextFocused)
                     .accessibilityLabel(captureText(requestMode ? "Request text to review" : "List text to review"))
                     .id("capture.editor")
@@ -195,7 +197,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             }
             if let failure = model.failure {
                 Section {
-                    Text(failureText(failure)).accessibilityIdentifier("capture.error")
+                    Text(failureText(failure)).foregroundStyle(Theme.error).accessibilityIdentifier("capture.error")
                     if failure == .permissionDenied || failure == .onDeviceUnavailable || failure == .audioUnavailable || failure == .notConfigured {
                         Button(captureText("Type item")) {
                             scroll.scrollTo("capture.editor", anchor: .center)
@@ -211,6 +213,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                         .disabled(model.busy || loadingPhoto || model.candidate != nil || model.closed)
                 }
                 Button(captureText("Review captured fields")) { stageFields() }
+                    .buttonStyle(PrimaryAction())
                     .disabled(!canStageFields || loadingPhoto || !authorize()).accessibilityIdentifier("capture.reviewFields")
                 if stagingIssue == .guest {
                     Text(captureText("This may be a guest change. Open Guests and protected portions to choose the meal, group and new total before previewing."))
@@ -265,6 +268,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         Text(value.text.isEmpty ? captureText("No words recognized yet") : value.text).textSelection(.enabled)
         if !value.uncertainLines.isEmpty {
             Label(captureText("Some wording was uncertain. Compare it with the source and correct it."), systemImage: "questionmark.circle")
+                .foregroundStyle(Theme.warning)
             ForEach(Array(value.uncertainLines.enumerated()), id: \.offset) { _, line in Text(line).font(.footnote) }
         }
     }
@@ -329,5 +333,19 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         case .inputTooLarge: return captureText("Use at most 200 lines and 20,000 characters, or choose a photo under 12 MB and 30 megapixels.")
         case .noText: return captureText("No readable text was found. Choose a clearer photo or type the text.")
         }
+    }
+}
+
+extension TextEditor {
+    func captureDraftEditor(focused: Bool) -> some View {
+        scrollContentBackground(.hidden)
+            .padding(4)
+            .background(Theme.surface)
+            .overlay {
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(focused ? Theme.focus : Theme.controlEdge, lineWidth: focused ? 2 : 1)
+                    .accessibilityHidden(true)
+                    .allowsHitTesting(false)
+            }
     }
 }

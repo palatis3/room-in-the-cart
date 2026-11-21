@@ -376,16 +376,19 @@ import CoreDomain
                     let proposal = edited.quantityNote.isEmpty && edited.priceNote.isEmpty
                         ? nil : ReceiptPrintedEvidence(edited, knownStorage: [:])
                     VStack(alignment: .leading) {
-                        Text(row.wrappedValue.originalText)
-                            .font(.system(.headline, design: .monospaced)).textSelection(.enabled)
+                        ReceiptPaperLine(wording: row.wrappedValue.originalText)
                         Button {
                             focusedField = nil
                             inspectedLineID = snapshot.id
                         } label: { Label(pantryText("Original lines"), systemImage: "text.magnifyingglass").frame(minHeight: 44) }
                         .buttonStyle(.borderless)
                         .accessibilityIdentifier("scan.receipt.inspect.\(snapshot.id)")
-                        TextField(captureText("Reviewed line wording"), text: row.reviewedText, axis: .vertical)
-                            .focused($focusedField, equals: .receiptWording(snapshot.id))
+                        let wordingLabel = captureText("Reviewed line wording")
+                        WorkingField(wordingLabel) {
+                            TextField(wordingLabel, text: row.reviewedText, prompt: Text(""), axis: .vertical)
+                                .receiptInputChrome()
+                                .focused($focusedField, equals: .receiptWording(snapshot.id))
+                        }
                         let quantityLabel = captureText("Printed quantity (optional)")
                         WorkingField(quantityLabel) {
                             TextField(quantityLabel, text: row.quantityNote, prompt: Text(""))
@@ -592,12 +595,26 @@ struct ReceiptPhotoShortcuts: View {
     enum Start: String, Identifiable { case camera, screenshot, sections; var id: Self { self } }
     let target: CaptureTarget
     let authorize: @MainActor () -> Bool
-    var reviewsPrivateReceipt = false
-    let reviewed: (SourceMediaRecord) -> Void
+    let reviewsPrivateReceipt: Bool
+    let reviewed: (SourceMediaRecord, ExtractedReceiptDocument.PrintedPaidTotal?) -> Void
     @State private var pickingScreenshot = false
     @State private var screenshot: PhotosPickerItem?
     @State private var start: Start?
     @State private var result: SourceMediaRecord?
+    @State private var printedTotal: ExtractedReceiptDocument.PrintedPaidTotal?
+
+    init(target: CaptureTarget, authorize: @escaping @MainActor () -> Bool, reviewsPrivateReceipt: Bool = false,
+         reviewed: @escaping (SourceMediaRecord, ExtractedReceiptDocument.PrintedPaidTotal?) -> Void) {
+        self.target = target
+        self.authorize = authorize
+        self.reviewsPrivateReceipt = reviewsPrivateReceipt
+        self.reviewed = reviewed
+    }
+
+    init(target: CaptureTarget, authorize: @escaping @MainActor () -> Bool, reviewsPrivateReceipt: Bool = false,
+         reviewed: @escaping (SourceMediaRecord) -> Void) {
+        self.init(target: target, authorize: authorize, reviewsPrivateReceipt: reviewsPrivateReceipt) { source, _ in reviewed(source) }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -616,14 +633,15 @@ struct ReceiptPhotoShortcuts: View {
         .onChange(of: screenshot) { _, _ in openPickedScreenshot() }
         .onChange(of: pickingScreenshot) { _, _ in openPickedScreenshot() }
         .sheet(item: $start, onDismiss: {
-            if let result, authorize(), result.target == target { reviewed(result) }
-            result = nil; screenshot = nil
+            if let result, authorize(), result.target == target { reviewed(result, printedTotal) }
+            result = nil; printedTotal = nil; screenshot = nil
         }) { choice in
             NavigationStack {
-                ReceiptSectionCapture(start: choice, target: target, authorize: authorize, reviewsPrivateReceipt: reviewsPrivateReceipt, initialPhoto: screenshot) { source in
+                ReceiptSectionCapture(start: choice, target: target, authorize: authorize, reviewsPrivateReceipt: reviewsPrivateReceipt, initialPhoto: screenshot) { source, paidTotal in
                     guard authorize(), source.target == target else { return }
                     // The document review dismisses this sheet after handing back its source.
                     result = source
+                    printedTotal = paidTotal
                 }
             }
         }
@@ -641,14 +659,20 @@ struct ReceiptPhotoShortcuts: View {
     }
 
     private func sourceButton(_ title: String, symbol: String) -> some View {
-        Label(captureText(title), systemImage: symbol)
-            .font(.headline)
-            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
-            .padding(.horizontal, 12)
-            .foregroundStyle(Theme.action)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Theme.controlEdge) }
-            .contentShape(Rectangle())
+        HStack(spacing: 14) {
+            Image(systemName: symbol)
+                .font(.title3.weight(.medium))
+                .foregroundStyle(Theme.action)
+                .frame(width: 32)
+                .accessibilityHidden(true)
+            Text(captureText(title)).font(.headline).fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+        .padding(.horizontal, 12)
+        .foregroundStyle(Theme.ink)
+        .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 9))
+        .overlay { RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.controlEdge) }
+        .contentShape(Rectangle())
     }
 }
 
@@ -658,7 +682,7 @@ private struct ReceiptSectionCapture: View {
     let authorize: @MainActor () -> Bool
     var reviewsPrivateReceipt = false
     var initialPhoto: PhotosPickerItem?
-    let reviewed: (SourceMediaRecord) -> Void
+    let reviewed: (SourceMediaRecord, ExtractedReceiptDocument.PrintedPaidTotal?) -> Void
     var cameraPermission = SourceCameraPermission()
     @State private var didStart = false
     @State private var draft = ReceiptSectionDraft()
@@ -722,13 +746,23 @@ private struct ReceiptSectionCapture: View {
             if let review {
                 PantryReceiptDocuments(target: target, authorize: authorize, reviewsPrivateReceipt: reviewsPrivateReceipt, initialDocument: review,
                     sectionPreviews: draft.sections.map(\.preview), omittedLines: omitted,
-                    backToSections: start == .sections ? { self.review = nil; self.omitted = [] } : nil) { source, _, _ in
-                    if authorize() { reviewed(source) }
+                    backToSections: start == .sections ? { self.review = nil; self.omitted = [] } : nil,
+                    changePhoto: start == .sections ? nil : replacementControls) { source, _, total in
+                    if authorize() { reviewed(source, total) }
                 }
+                .id(review.digest)
             } else {
                 captureForm
             }
         }
+    }
+
+    private var replacementControls: PantryReceiptDocuments.PhotoChange {
+        .init(busy: job != nil, status: error, retake: { openCamera(at: 0) }, choose: {
+            guard authorize(), job == nil else { return }
+            index = 0
+            picker = true
+        })
     }
 
     private var captureForm: some View {
@@ -862,7 +896,7 @@ private struct ReceiptSectionCapture: View {
     private func finishTypedSource() {
         guard authorize(), let typedSource, typedSource.target == target else { return }
         self.typedSource = nil
-        reviewed(typedSource)
+        reviewed(typedSource, nil)
         dismiss()
     }
     private func clear() {

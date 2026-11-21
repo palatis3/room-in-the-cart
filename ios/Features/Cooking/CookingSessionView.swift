@@ -39,11 +39,16 @@ import SwiftUI
                 WorkingForm {
                     Section {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(verbatim: title).font(.system(.title2, design: .serif, weight: .semibold))
+                            Text(verbatim: title).marketJournalTitle()
+                                .fixedSize(horizontal: false, vertical: true)
                             if !yieldText.isEmpty { Text(verbatim: yieldText).foregroundStyle(Theme.secondary) }
+                            Divider().accessibilityHidden(true)
                             if let step {
                                 Text(String(format: recordsText("Step %lld of %lld"), Int64(index + 1), Int64(steps.count)))
-                                    .font(.headline).foregroundStyle(Theme.action).monospacedDigit()
+                                    .font(.headline).monospacedDigit()
+                                    .foregroundStyle(Theme.onSelection)
+                                    .padding(.horizontal, 9).padding(.vertical, 5)
+                                    .background(Theme.selection, in: RoundedRectangle(cornerRadius: 7))
                                     .accessibilityAddTraits(.isHeader)
                                 ProgressView(value: Double(index + 1), total: Double(steps.count))
                                     .tint(Theme.action).accessibilityHidden(true)
@@ -125,6 +130,7 @@ import SwiftUI
             }
         }
         .navigationTitle(recordsText("Cooking mode"))
+        .navigationBarTitleDisplayMode(.inline)
         .privacySensitive()
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focusedInput != nil, title: ledgerText("Done"),

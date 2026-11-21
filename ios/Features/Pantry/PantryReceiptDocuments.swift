@@ -32,6 +32,13 @@ struct PantryReceiptDocuments: View {
     var sectionPreviews: [Data?] = []
     var omittedLines: Set<ExtractedReceiptDocument.Selection> = []
     var backToSections: (() -> Void)? = nil
+    struct PhotoChange {
+        let busy: Bool
+        let status: String?
+        let retake: () -> Void
+        let choose: () -> Void
+    }
+    var changePhoto: PhotoChange? = nil
     let onReview: (SourceMediaRecord, SharedReceiptItem?, ExtractedReceiptDocument.PrintedPaidTotal?) -> Void
     @State private var inbox: [SharedReceiptItem] = []
     @State private var inboxUnavailable = false
@@ -45,6 +52,7 @@ struct PantryReceiptDocuments: View {
     @State private var job: Task<Void, Never>?
     @State private var generation = UUID()
     @State private var document: ExtractedReceiptDocument?
+    @State private var documentDateWording: String?
     @State private var inspectedLine: ExtractedReceiptDocument.Selection?
     @State private var fileBytes: ReceiptDocumentBytes?
     @State private var selection = Set<ExtractedReceiptDocument.Selection>()
@@ -105,6 +113,21 @@ struct PantryReceiptDocuments: View {
                         .frame(minHeight: 44)
                         .accessibilityIdentifier("receipt.document.usePrintedName")
                     }
+                    if let dateWording = documentDateWording, stage != .order {
+                        LabeledContent(pantryText("Date wording on the receipt")) {
+                            Text(verbatim: dateWording).font(.system(.subheadline, design: .monospaced))
+                        }
+                    }
+                    if let changePhoto {
+                        Menu {
+                            Button(putawayText("Retake receipt photo"), action: changePhoto.retake)
+                            Button(captureText("Choose photo or screenshot"), action: changePhoto.choose)
+                        } label: { Label(putawayText("Change receipt photo"), systemImage: "camera.rotate") }
+                        .disabled(changePhoto.busy)
+                        .accessibilityIdentifier("receipt.document.changePhoto")
+                        if changePhoto.busy { ProgressView(pantryText("Reading receipt on this device")) }
+                        if let status = changePhoto.status { Text(status).foregroundStyle(Theme.warning) }
+                    }
                     Picker(pantryText("Document type"), selection: $stage) {
                         ForEach(ReceiptAcquisition.DocumentLine.Stage.allCases, id: \.self) { Text(receiptStage($0)).tag($0) }
                     }
@@ -164,7 +187,7 @@ struct PantryReceiptDocuments: View {
                             onReview(source, openedShare, printedTotal)
                             dismiss()
                         } catch { show(error) }
-                    }.buttonStyle(PrimaryAction()).disabled(!authorize() || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || storeIssue != nil)
+                    }.buttonStyle(PrimaryAction()).disabled(!authorize() || changePhoto?.busy == true || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || storeIssue != nil)
                         .accessibilityIdentifier("receipt.document.accept")
                     if let backToSections { Button(captureText("Back to receipt sections"), action: backToSections) }
                     if initialDocument == nil { Button(pantryText("Choose another document")) { cancel() } }
@@ -234,6 +257,11 @@ struct PantryReceiptDocuments: View {
                 return try input.bytes
             }
         }
+        .onChange(of: document?.digest) { _, _ in
+            let dates = (document?.pages ?? []).flatMap(\.lines)
+                .filter { !$0.uncertain && ReceiptPrintedDate.looksLikeDate($0.text) }
+            documentDateWording = Set(dates.map(\.text)).count == 1 ? dates.first?.text : nil
+        }
         .onChange(of: merchant) { _, _ in confirmed = false }
         .onChange(of: stage) { _, _ in confirmed = false; linkedAmountItems = [] }
         .onChange(of: scenePhase) { _, phase in if phase == .background { cancel() } }
@@ -247,7 +275,12 @@ struct PantryReceiptDocuments: View {
                     }
                   }, secondaryButton: .cancel(Text(pantryText("Cancel"))))
         }
-        .onDisappear { cancel(); inbox = [] }
+        .onDisappear {
+            // A replacement camera can cover the review. Keep the current selections
+            // until a different image is successfully read, or the capture is closed.
+            if changePhoto == nil { cancel() }
+            inbox = []
+        }
         .task { if let initialDocument { document = initialDocument } else { await loadInbox() } }
         .task { if let initialInput, document == nil, job == nil { start { initialInput } } }
     }
@@ -273,34 +306,42 @@ struct PantryReceiptDocuments: View {
                               suggestedAmount: ReceiptDocumentPage.Line?, canLink: Bool,
                               splitItem: ReceiptDocumentPage.Line?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                if attached {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(line.text).font(.system(.body, design: .monospaced))
-                        Text(captureText("Linked as printed amount")).font(.subheadline).foregroundStyle(Theme.secondary)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    Toggle(isOn: Binding(get: { selection.contains(position) }, set: { include in
-                        if include { selection.insert(position) }
-                        else { selection.remove(position); linkedAmountItems.remove(position) }
-                        confirmed = false
-                    })) {
-                        Text(line.text).font(.system(.body, design: .monospaced))
-                    }
-                    .disabled(!canInclude)
-                    .accessibilityIdentifier("receipt.document.line.\(position.page).\(line.id)")
-                    .accessibilityHint(canSelectAmountSeparately
-                        ? captureText("Select to keep this amount separate, or link it from the item.") : "")
-                }
+            HStack(alignment: .center, spacing: 12) {
                 Button {
                     merchantFocused = false
                     inspectedLine = position
                 } label: {
-                    Image(systemName: "text.magnifyingglass").frame(minWidth: 44, minHeight: 44)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(verbatim: line.text)
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundStyle(Theme.ink)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: "text.magnifyingglass").accessibilityHidden(true)
+                    }
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel(pantryFormat("Inspect printed line %@", line.id.formatted()))
+                .accessibilityLabel(pantryFormat("Inspect printed line %@", line.id.formatted()) + ", " + line.text)
                 .accessibilityIdentifier("receipt.document.inspect.\(position.page).\(line.id)")
+                if !attached {
+                    Toggle(line.text, isOn: Binding(get: { selection.contains(position) }, set: { include in
+                        if include { selection.insert(position) }
+                        else { selection.remove(position); linkedAmountItems.remove(position) }
+                        confirmed = false
+                    }))
+                    .labelsHidden()
+                    .fixedSize()
+                    .frame(minHeight: 44)
+                    .accessibilityLabel(putawayText("Include printed line") + ", " + line.text)
+                    .accessibilityIdentifier("receipt.document.line.\(position.page).\(line.id)")
+                    .accessibilityHint(canSelectAmountSeparately
+                        ? captureText("Select to keep this amount separate, or link it from the item.") : "")
+                    .disabled(!canInclude)
+                }
+            }
+            if attached {
+                Text(captureText("Linked as printed amount")).font(.subheadline).foregroundStyle(Theme.secondary)
             }
             if canSelectAmountSeparately, !attached {
                 Text(captureText("Select to keep this amount separate, or link it from the item."))
@@ -418,6 +459,13 @@ struct ReceiptPrintedLineInspector: View {
     @State private var showSource = false
 
     private var selected: ReceiptDocumentPage.Line { lines[index] }
+    private var coordinates: String {
+        if let pageNumber {
+            return String(format: putawayText("Page %@, line %@"), pageNumber.formatted(), selected.id.formatted())
+        }
+        return String(format: putawayText("Line %@"), selected.id.formatted())
+    }
+
     private var neighbors: ArraySlice<ReceiptDocumentPage.Line> {
         lines[max(0, index - 1)...min(lines.count - 1, index + 1)]
     }
@@ -450,14 +498,7 @@ struct ReceiptPrintedLineInspector: View {
     private var lineDetails: some View {
         WorkingForm {
             Section {
-                if let pageNumber {
-                    BrandScopeLabel(pantryFormat("Page %@", pageNumber.formatted()), systemImage: "doc.text")
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(pantryText("Selected printed line")).font(.subheadline).foregroundStyle(Theme.secondary)
-                    Text(selected.text).font(.system(.title2, design: .monospaced, weight: .semibold))
-                        .textSelection(.enabled)
-                }
+                ReceiptPaperLine(wording: selected.text, provenance: coordinates, title: pantryText("Selected printed line"))
                 if selected.uncertain {
                     Label(pantryText("Unclear printed line. Check the original wording before using it."), systemImage: "exclamationmark.circle")
                         .foregroundStyle(Theme.warning)

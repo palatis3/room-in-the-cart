@@ -44,7 +44,7 @@ struct PantryStaplesView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             if let input, input == shown, let review {
                 Toggle(pantryText("Ask about regularly purchased staples"), isOn: Binding(
                     get: { review.preferences.enabled },

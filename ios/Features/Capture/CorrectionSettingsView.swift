@@ -117,6 +117,7 @@ import SwiftUI
                     if corrections.failed {
                         Section {
                             Text(captureText("Spelling settings could not be updated. Reload them before trying again."))
+                                .foregroundStyle(Theme.error)
                             Button(captureText("Reload spelling memory")) { reload() }.disabled(working)
                             Button(captureText("Turn off and delete these spellings"), role: .destructive) {
                                 requestDisable()
@@ -128,7 +129,7 @@ import SwiftUI
                 } else {
                     Text(captureText("Open your current private workspace to manage spelling memory. It is unavailable while access is locked or local deletion is pending."))
                 }
-            }.workingSurface().navigationTitle(captureText("Spelling corrections"))
+            }.navigationTitle(captureText("Spelling corrections"))
                 .task(id: context) {
                     corrections.invalidate(); boundContext = nil; working = false; requestedDisableContext = nil
                     outcome = nil; outcomeFocused = false

@@ -27,14 +27,18 @@ struct PantryReceiptAliasEntry: View {
         WorkingForm {
             if let message { Text(message) }
             Section(pantryText("Confirmed receipt line")) {
-                Text(source.originalLine)
+                ReceiptPaperLine(wording: source.originalLine, provenance: source.documentLine.map(receiptProvenance))
                 LabeledContent(pantryText("Store or branch"), value: source.merchant)
                 LabeledContent(pantryText("Food name"), value: source.name)
             }
             Section {
                 ReceiptLanguagePicker(language: $language)
-                TextField(pantryText("Product wording from the printed line"), text: $wording)
-                    .autocorrectionDisabled().textInputAutocapitalization(.never).focused($editingWording)
+                let title = pantryText("Product wording from the printed line")
+                WorkingField(title) {
+                    TextField(title, text: $wording, prompt: Text(""))
+                        .receiptInputChrome()
+                        .autocorrectionDisabled().textInputAutocapitalization(.never).focused($editingWording)
+                }
                 Text(pantryText("Future receipts can suggest this food for the same store and language. You choose whether to use it each time."))
                 Text(pantryText("Saved spellings are private to your profile on this device and are excluded from pantry recovery copies."))
                 Button(pantryText("Save receipt spelling")) {
@@ -82,25 +86,34 @@ struct PantryReceiptAliasList: View {
 
     var body: some View {
         List {
-            Text(pantryText("Saved spellings are private to your profile on this device and are excluded from pantry recovery copies."))
-            if let message { Text(message) }
-            if basis != nil && aliases.isEmpty { Text(pantryText("No saved receipt spellings.")) }
+            Section {
+                Text(pantryText("Saved spellings are private to your profile on this device and are excluded from pantry recovery copies."))
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                if let message { Text(message) }
+                if basis != nil && aliases.isEmpty { Text(pantryText("No saved receipt spellings.")) }
+            }.listRowBackground(Theme.surface)
             ForEach(aliases) { alias in
-                VStack(alignment: .leading) {
-                    Text(alias.product).font(.headline)
-                    Text(alias.wording)
-                    Text(alias.merchant + " · " + pantryText(alias.language == "es" ? "Spanish" : "English"))
+                Section {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(verbatim: alias.product).font(.headline)
+                        Text(alias.merchant + " · " + pantryText(alias.language == "es" ? "Spanish" : "English"))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                        ReceiptPaperLine(wording: alias.wording, title: pantryText("Product wording from the printed line"))
+                    }
                     Button(pantryText("Forget this spelling"), role: .destructive) {
                         if let basis { proposed = Removal(aliases: [alias], basis: basis) }
                     }.disabled(saving || !model.canEdit)
-                }
+                }.listRowBackground(Theme.surface)
             }
             if !aliases.isEmpty {
-                Button(pantryText("Reset all my receipt spellings"), role: .destructive) {
-                    if let basis { proposed = Removal(aliases: aliases, basis: basis) }
-                }.disabled(saving || !model.canEdit)
+                Section {
+                    Button(pantryText("Reset all my receipt spellings"), role: .destructive) {
+                        if let basis { proposed = Removal(aliases: aliases, basis: basis) }
+                    }.disabled(saving || !model.canEdit)
+                }.listRowBackground(Theme.surface)
             }
         }
+        .workingSurface()
         .privacySensitive()
         .navigationTitle(pantryText("Saved receipt spellings"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Done")) { dismiss() }.disabled(saving) } }

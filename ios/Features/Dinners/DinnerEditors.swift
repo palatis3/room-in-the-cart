@@ -167,14 +167,18 @@ struct DinnerTemplateEditor: View {
             } else if let reviewed {
                 Section(dinnerText("Review dinner")) {
                     Text(reviewed.title).font(.system(.title2, design: .serif, weight: .semibold))
-                    Text(dinnerFormat("Servings: %@", reviewed.servings.description))
+                    LabeledContent(ledgerText("Servings")) {
+                        Text(verbatim: reviewed.servings.description).font(.headline).monospacedDigit()
+                    }
                     if let minutes = reviewed.leadTimeMinutes {
                         Text(tonightText("Preparation time") + " · " + Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes])))
                     }
                     MealPreferenceIssues(result: MealEligibilityPolicy.evaluate(profile: model.mealPreferences, template: reviewed))
                     ForEach(reviewed.ingredients) { ingredient in
-                        VStack(alignment: .leading) { Text(ingredient.name); Text(ingredient.reviewedAmountLabel) }
-                            .accessibilityElement(children: .combine)
+                        LabeledContent(ingredient.name) {
+                            Text(verbatim: ingredient.reviewedAmountLabel).monospacedDigit()
+                        }
+                        .accessibilityElement(children: .combine)
                     }
                     ForEach(reviewed.servingGroups) { group in
                         Text(dinnerFormat("%@ · %@ servings", group.name, group.servings.description))
@@ -617,7 +621,8 @@ private struct DinnerServingNote: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(dinnerFormat("Servings: %@", template.servings.description)).monospacedDigit()
+            Label(dinnerFormat("Servings: %@", template.servings.description), systemImage: "fork.knife")
+                .font(.body.weight(.medium)).monospacedDigit()
             if !template.servingGroups.isEmpty {
                 Button {
                     reveal = false
@@ -632,7 +637,10 @@ private struct DinnerServingNote: View {
                         ForEach(template.servingGroups) { group in
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(dinnerFormat("%@ · %@ servings", group.name, group.servings.description))
-                                if group.isProtected { Text(dinnerText("Protected group")).foregroundStyle(Theme.secondary) }
+                                if group.isProtected {
+                                    Label(dinnerText("Protected group"), systemImage: "lock")
+                                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.action)
+                                }
                             }.accessibilityElement(children: .combine)
                         }
                     }

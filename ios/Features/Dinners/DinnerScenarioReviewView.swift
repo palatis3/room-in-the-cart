@@ -24,7 +24,7 @@ struct DinnerScenarioReviewView: View {
     @State private var recovery: DinnerRecoveryResult?
     @State private var acceptsExtraTrip = false
     var body: some View {
-        List {
+        JournalList {
             Section {
                 Text(dinnerText("Review complete scenarios before changing a chosen dinner."))
                 Button(dinnerText("Price the current dinner plan")) {
@@ -227,7 +227,7 @@ private struct DinnerScenarioChoicesView: View {
     let acceptedIDs: Set<UUID>
     @State private var showPreview = false
     var body: some View {
-        List {
+        JournalList {
             Section {
                 Text(dinnerText("Choosing uses the accepted recipe's saved servings. It does not apply scenario portions, stock allocations, pack purchases or quoted costs."))
                 Text(dinnerText("Existing chosen dinners remain. Review a separate removal when replacing a dinner."))

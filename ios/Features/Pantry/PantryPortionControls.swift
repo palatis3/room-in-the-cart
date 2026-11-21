@@ -90,7 +90,7 @@ private struct PantryDiscardHistory: View {
     @State private var failed = false
 
     var body: some View {
-        List {
+        JournalList {
             if model.canEdit, let basis = model.snapshot?.state, loaded == basis {
                 ForEach(rows) { row in
                     VStack(alignment: .leading) {

@@ -56,7 +56,7 @@ struct CookCompletionEntry: View {
             } else if model.context != nil {
                 CookCompletionForm(model: model, draftWasCleared: interruptedOrigin != nil && interruptedOrigin == scope?.origin)
             } else {
-                List {
+                JournalList {
                     if model.busy { ProgressView(cookCompletionText("Loading current food and dinner…")) }
                     else {
                         Text(cookCompletionText("Current food or dinner details could not be verified. Nothing new has been confirmed."))
@@ -280,7 +280,7 @@ private struct CookSubstitutionReview: View {
         Group {
             if !model.hasAccess { Text(cookCompletionText("Private access changed. Reopen the cooking review.")) }
             else {
-                List {
+                JournalList {
                     Text(cookCompletionText("Suggestions need compatible reviewed product details and currently free stock. You can separately record an actual substitution in the cooking form."))
                     ForEach(model.suggestions(for: ingredientID)) { row in
                         Section(row.lot.name) {
@@ -315,7 +315,7 @@ private struct CookCompletionReviewView: View {
     var body: some View {
         WorkingForm {
             Section(cookCompletionText("Review what was cooked")) {
-                Text(review.draft.cookedTitle).font(.headline)
+                Text(verbatim: review.draft.cookedTitle).marketJournalTitle()
                 LabeledContent(cookCompletionText("Servings made"), value: review.draft.servingsMade.description)
                 LabeledContent(cookCompletionText("Cooked at"), value: review.draft.cookedAt.formatted(date: .abbreviated, time: .shortened))
                 ForEach(review.draft.parts) { part in
@@ -384,10 +384,10 @@ private struct CookCompletionSavedView: View {
     }
     var body: some View {
         let names = recordedNames
-        List {
+        JournalList {
             Section {
                 Text(cookCompletionText("Cooking recorded")).font(.headline).accessibilityIdentifier("cook.saved")
-                Text(draft.cookedTitle)
+                Text(verbatim: draft.cookedTitle).marketJournalTitle()
                 LabeledContent(cookCompletionText("Servings made"), value: draft.servingsMade.description)
                 Text(draft.cookedAt.formatted(date: .abbreviated, time: .shortened))
                 Text(cookCompletionText(model.remainingUnresolvedUseIDs.isEmpty ? "Inventory changes recorded." : "Inventory needs review. Unresolved use remains linked to this cooking event."))
@@ -462,7 +462,7 @@ private struct CookCompletionUndoView: View {
     @ObservedObject var model: CookCompletionEditorModel
     let review: PantryCookUndoReview
     var body: some View {
-        List {
+        JournalList {
             Section(cookCompletionText("Review Undo")) {
                 Text(cookCompletionText("Restore the input counts and holds from before this cooking and remove its confirmed leftover batches. Review these changes before confirming."))
                 LabeledContent(cookCompletionText("Input counts to restore"), value: String(review.restoredInputCount))

@@ -93,7 +93,7 @@ struct TonightRecipeReview: View {
                                 .accessibilityFocused($savedHeadingFocused)
                                 .accessibilityIdentifier("tonight.recipe.saved")
                                 .id("savedHeading")
-                            Text(verbatim: savedRecipe.title).font(.system(.title2, design: .serif, weight: .semibold))
+                            Text(verbatim: savedRecipe.title).font(.system(.title, design: .serif, weight: .bold))
                             fact(ledgerText("Servings"), amountText(savedRecipe.servings))
                             SavedDinnerHandoffLink(recipe: savedRecipe)
                             Button(ledgerText("Done")) { dismiss() }.accessibilityIdentifier("tonight.recipe.done")
@@ -105,7 +105,7 @@ struct TonightRecipeReview: View {
                     } else if let candidate {
                         Section {
                             editableFact(ledgerText("Dinner title"), value: candidate.title, field: "title") {
-                                Text(verbatim: candidate.title).font(.system(.title2, design: .serif, weight: .semibold))
+                                Text(verbatim: candidate.title).font(.system(.title, design: .serif, weight: .bold))
                             }
                             if let template, original?.mealTemplates.contains(template) != true {
                                 Text(tonightText("This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts."))
@@ -115,11 +115,15 @@ struct TonightRecipeReview: View {
                                 reviewedFact(tonightText("Preparation time"), Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes])),
                                              field: "minutes", identifier: "tonight.recipe.reviewedMinutes")
                             }
+                        }
+                        Section(ledgerText("Ingredients")) {
                             ForEach(candidate.ingredients) { ingredient in
                                 let field = ingredient.quantity == nil ? "ingredient-\(ingredient.id)" : ingredient.id.uuidString
                                 reviewedFact(ingredient.name, ingredient.reviewedAmountLabel, field: field)
                             }
-                            if let familySource {
+                        }
+                        if let familySource {
+                            Section {
                                 if !sourceInstructions.isEmpty {
                                     editableFact(dinnerText("Cooking instructions"), value: sourceInstructions, field: "instructions") {
                                         VStack(alignment: .leading) {
@@ -131,6 +135,8 @@ struct TonightRecipeReview: View {
                                 if !unclassified.isEmpty { unclassifiedLines }
                                 RecipeSourceDisclosure(evidence: familySource)
                             }
+                        }
+                        Section {
                             if let template, original?.mealTemplates.contains(template) == true {
                                 Text(tonightText("Saving updates this recipe in your library."))
                             } else if let replacedRecipe {
@@ -143,7 +149,9 @@ struct TonightRecipeReview: View {
                             Button(tonightText("Keep editing")) { self.candidate = nil }.disabled(busy)
                         }
                     } else if pasteEntry && familySource == nil {
-                        Section(dinnerText("Recipe text")) {
+                        Section {
+                            Text(dinnerText("Recipe text"))
+                                .marketJournalTitle()
                             PasteButton(payloadType: String.self) { strings in
                                 guard authorized, let text = strings.first else { return }
                                 pastedText = text
@@ -151,13 +159,16 @@ struct TonightRecipeReview: View {
                                 error = nil
                             }.accessibilityIdentifier("dinner.recipe.systemPaste")
                             TextEditor(text: $sourceText)
+                                .font(.body)
+                                .scrollContentBackground(.hidden)
                                 .focused($focusedInput, equals: "pastedSource")
-                                .frame(minHeight: 130)
+                                .frame(minHeight: 144)
+                                .padding(8)
+                                .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10))
+                                .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.controlEdge).allowsHitTesting(false) }
                                 .accessibilityLabel(dinnerText("Recipe text"))
                                 .accessibilityIdentifier("dinner.recipe.sourceText")
-                            Button(dinnerText("Review pasted recipe")) { proposeFamilyRecipe(scroll) }
-                                .buttonStyle(PrimaryAction()).disabled(sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                                .accessibilityIdentifier("dinner.recipe.reviewPaste")
+                            if focusedInput != "pastedSource" { reviewPasteButton(scroll) }
                         }
                     } else {
                         if let evidence = familySource ?? template?.sourceEvidence {
@@ -284,7 +295,9 @@ struct TonightRecipeReview: View {
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if focusedInput != nil || (editingReviewedField != nil && candidate == nil) {
                         HStack {
-                            if editingReviewedField != nil {
+                            if focusedInput == "pastedSource" {
+                                reviewPasteButton(scroll)
+                            } else if editingReviewedField != nil {
                                 Button(tonightText("Review changes")) { review(scroll) }
                                     .frame(minHeight: 44)
                                     .accessibilityIdentifier("tonight.recipe.reviewChanges")
@@ -436,6 +449,16 @@ struct TonightRecipeReview: View {
             Text(verbatim: unclassified)
             Text(dinnerText("These lines stay in the original note. Add any that belong in the recipe.")).font(.footnote)
         }
+    }
+
+    private func reviewPasteButton(_ scroll: ScrollViewProxy) -> some View {
+        Button(dinnerText("Review pasted recipe")) {
+            focusedInput = nil
+            proposeFamilyRecipe(scroll)
+        }
+        .buttonStyle(PrimaryAction())
+        .disabled(sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        .accessibilityIdentifier("dinner.recipe.reviewPaste")
     }
 
     private func proposeFamilyRecipe(_ scroll: ScrollViewProxy) {

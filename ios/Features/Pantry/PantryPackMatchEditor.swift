@@ -140,7 +140,7 @@ private struct PackReceiptPicker: View {
     @Environment(\.dismiss) private var dismiss
     private(set) var dates = ReceiptDateDisplay()
     var body: some View {
-        List {
+        JournalList {
             if authorized() {
                 ForEach(lines) { line in
                     Button {
