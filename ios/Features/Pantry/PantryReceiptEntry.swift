@@ -789,7 +789,7 @@ struct PantryReceiptLineEditor: View {
         .onChange(of: line.treatment) { _, next in
             line.clearAlias()
             if next != .add { line.selectedIntact = false }
-            if next == .keptSome { line.usable = ""; line.location = .fridge }
+            if next == .keptSome { line.usable = "" }
         }
         .onChange(of: line.usable) { _, usable in
             if line.selectedIntact && usable != line.received { line.selectedIntact = false }
@@ -846,6 +846,14 @@ struct PantryReceiptLineEditor: View {
             labeledField(line.treatment == .keptSome ? putawayText("Usable portion taken home") : pantryText("Amount usable"), text: $line.usable, focusKey: "usable-\(line.ordinal)",
                          identifier: "receipt.usable.\(line.ordinal)", keyboard: .numbersAndPunctuation)
             Picker(pantryText("Unit"), selection: $line.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) } }
+            if permitsPutaway, line.treatment == .add, !line.selectedIntact, line.usable.isEmpty,
+               let received = try? ComparisonModel.quantity(line.received, line.unit), received.amount > .zero {
+                Button(putawayText("All received food is usable")) {
+                    line.usable = line.received
+                }
+                .frame(minHeight: 44)
+                .accessibilityIdentifier("receipt.allReceivedUsable.\(line.ordinal)")
+            }
             if permitsPutaway && line.needsPackReview {
                 Toggle(putawayText("I checked the number of packs and the unit for these amounts."), isOn: $line.checkedPack)
                     .onChange(of: line.received) { _, _ in line.checkedPack = false }
@@ -917,8 +925,14 @@ struct PantryReceiptHistory: View {
             if let message { Text(message) }
             if busy && facts.isEmpty { ProgressView(pantryText("Working…")) }
             if hasPutaway, receiptID == nil, permittedLines == nil, model.canEdit {
-                NavigationLink(putawayText("Reviewed purchase totals and line decisions")) {
+                NavigationLink {
                     PutawayHistory(model: model)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(putawayText("Reviewed purchases"))
+                        Text(putawayText("See receipt totals and all decisions, including food kept out of Pantry."))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                    }
                 }.accessibilityIdentifier("receipt.putawayHistory")
             }
             if facts.isEmpty && !hasPutaway && !busy && !hasMore && model.phase == .ready {
@@ -933,7 +947,7 @@ struct PantryReceiptHistory: View {
             ForEach(facts) { row in
                 VStack(alignment: .leading, spacing: 5) {
                     Text(row.name).font(.headline)
-                    Text(row.merchant + " · " + dates.purchaseDay(row.purchaseDate, style: .abbreviated))
+                    Text(row.merchant + " · " + dates.purchaseDay(row.purchaseDate))
                         .font(.subheadline).foregroundStyle(Theme.secondary)
                     Text(row.originalLine)
                         .font(.system(.body, design: .monospaced))

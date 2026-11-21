@@ -16,6 +16,7 @@ struct ReceiptPrintedEvidence: Equatable {
 
     // A final amount must be distinct from an explicit unit price. Preserve currency ambiguity for review.
     private static let price = #/(?i)(?:US\$|USD\s*\$?|\$)\s*([0-9]{1,7}[.,][0-9]{2})(?:\s*USD)?\s*$/#
+    private static let bareAmount = #/[0-9]{1,7}[.,][0-9]{2}/#
     private static let unmarkedTotal = #/\s+([0-9]{1,7}[.,][0-9]{2})\s*$/#
     private static let unitPrice = #/(?i)(?:\s*@|\s+(at|a)\b)\s*(?:US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]{1,2})?(?:\s*(?:\/|per|por)\s*([a-z.]+))?\s*$/#
     private static let measure = #/(?i)\b([0-9]{1,5}(?:[.,][0-9]{1,3})?)\s*(fluid\s+ounces?|fl\.?\s*oz|fl\.?\s+ounces?|onzas?\s+l[ií]quidas?|oz\.?\s+l[ií]q(?:uidas)?|kg|kgs|kilogramos?|kilograms?|gramos?|grams?|gr|g|lb[s.]?|pounds?|libras?|ounces?|onzas?|oz|liters?|litros?|ml|l|count|ct|ea|each|unidades|uds)\b\.?/#
@@ -92,9 +93,17 @@ struct ReceiptPrintedEvidence: Equatable {
         }
         if !row.priceNote.isEmpty {
             let note = row.priceNote.trimmingCharacters(in: .whitespaces)
-            let total = note.wholeMatch(of: Self.price)
-            amount = total.map { String($0.1).replacingOccurrences(of: ",", with: ".") }
-            priceWording = total.map { String($0.0) }
+            if let total = note.wholeMatch(of: Self.price) {
+                amount = Self.normalizedAmount(total.1)
+                priceWording = String(total.0)
+            } else if note.wholeMatch(of: Self.bareAmount) == nil
+                        || Self.normalizedAmount(note) != amount
+                        || priceWording?.wholeMatch(of: Self.price) == nil {
+                // Digits alone can repeat an explicit printed amount. They cannot
+                // supply a new currency or establish a different amount.
+                amount = nil
+                priceWording = nil
+            }
         }
         let labels: [InventoryLocation] = [(Self.freezer,InventoryLocation.freezer),(Self.fridge,.fridge),(Self.cupboard,.cupboard)].compactMap {
             text.contains($0.0) ? $0.1 : nil
@@ -103,6 +112,10 @@ struct ReceiptPrintedEvidence: Equatable {
         let places = history.union(labels)
         if places.count == 1, !text.contains(Self.storageConflict) { storage = places.first }
         uncertain = quantity == nil || amount == nil || name == nil
+    }
+
+    private static func normalizedAmount(_ text: some StringProtocol) -> String {
+        text.replacingOccurrences(of: ",", with: ".")
     }
     private static func removeUnitPrice(from text: inout String) {
         guard let rate = text.firstMatch(of: unitPrice) else { return }

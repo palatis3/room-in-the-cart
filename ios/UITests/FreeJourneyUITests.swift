@@ -1713,7 +1713,7 @@ import XCTest
         let row = app.descendants(matching: .any).matching(
             NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Wrap", "Received 1 unit")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 8), app.debugDescription)
-        XCTAssertTrue(row.label.contains("Add 1/2 units to Fridge"), row.label)
+        XCTAssertTrue(row.label.contains("Add 1/2 units to Cupboard"), row.label)
         receiptTap(app.buttons["receipt.commit"])
         let saved = app.staticTexts["receipt.status"]
         XCTAssertTrue(saved.waitForExistence(timeout: 8))

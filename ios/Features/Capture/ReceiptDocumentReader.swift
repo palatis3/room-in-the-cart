@@ -122,6 +122,33 @@ struct ExtractedReceiptDocument: Sendable {
         return result
     }
 
+    /// Expose a named choice for a price printed directly below an item.
+    /// These pairs still require a shopper to attach the separate amount.
+    func splitAmountAssociations(excluding suggested: [Selection: Selection]) -> [Selection: Selection] {
+        let suggestedAmounts = Set(suggested.values)
+        var result: [Selection: Selection] = [:]
+        for page in pages where page.method == .imageOCR || page.method == .pdfOCR {
+            for (item, amount) in zip(page.lines, page.lines.dropFirst()) {
+                let itemPosition = Selection(page: page.id, line: item.id)
+                let amountPosition = Selection(page: page.id, line: amount.id)
+                guard amount.id == item.id + 1, !item.uncertain, !amount.uncertain,
+                      suggested[itemPosition] == nil, !suggestedAmounts.contains(amountPosition),
+                      let itemBox = item.bounds, let amountBox = amount.bounds,
+                      itemBox.maxX <= amountBox.minX, itemBox.minY >= amountBox.maxY,
+                      itemBox.midY - amountBox.midY <= max(itemBox.height, amountBox.height) * 2,
+                      ReceiptPrintedEvidence.canSuggestAmount(for: item.text),
+                      ReceiptPrintedEvidence.isStandaloneAmount(amount.text),
+                      !page.lines.contains(where: { other in
+                          guard other.id != item.id, other.id != amount.id, let box = other.bounds else { return false }
+                          return Self.samePrintedRow(itemBox, box) || Self.samePrintedRow(amountBox, box)
+                      })
+                else { continue }
+                result[itemPosition] = amountPosition
+            }
+        }
+        return result
+    }
+
     private static func samePrintedRow(_ first: CGRect, _ second: CGRect) -> Bool {
         let minHeight = min(first.height, second.height), maxHeight = max(first.height, second.height)
         let overlap = min(first.maxY, second.maxY) - max(first.minY, second.minY)
@@ -131,11 +158,15 @@ struct ExtractedReceiptDocument: Sendable {
 
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
                 selection: Set<Selection>, linkedAmountItems: Set<Selection> = [], at date: Date) throws -> SourceMediaRecord {
-        let associations = linkedAmountItems.isEmpty ? [:] : amountAssociations
+        var associations: [Selection: Selection] = [:]
+        if !linkedAmountItems.isEmpty {
+            let suggested = amountAssociations
+            associations = suggested.merging(splitAmountAssociations(excluding: suggested)) { suggested, _ in suggested }
+        }
         let amounts = linkedAmountItems.compactMap { associations[$0] }
         let included = selection.union(amounts)
         guard (1...200).contains(included.count), linkedAmountItems.isSubset(of: selection),
-              amounts.count == linkedAmountItems.count, linkedAmountItems.isEmpty || stage != .order
+              Set(amounts).count == linkedAmountItems.count, linkedAmountItems.isEmpty || stage != .order
         else { throw ReceiptDocumentFailure.selection }
         let id = ReceiptAcquisition.identity(["document", digest.base64EncodedString()])
         var rows: [ScanReceiptLine] = []

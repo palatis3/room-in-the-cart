@@ -58,6 +58,7 @@ import CoreDomain
     @State private var matchedProduct = false
     @State private var inspectedLineID: UUID?
     @State private var receiptLines: [ScanReceiptLine]?
+    @State private var needsPrintedReviewAgain = false
     @State private var recipe: RecipeCaptureDraft?
     @State private var ingredients: [CaptureLineDraft] = []
     @State private var reviewingIngredients = false
@@ -65,6 +66,7 @@ import CoreDomain
     @State private var storeFocusRequest: UUID?
     @FocusState private var focusedField: InputField?
     @AccessibilityFocusState private var capturedWordingFocused: Bool
+    @AccessibilityFocusState private var printedReviewFocused: Bool
     @FocusState private var structuredFieldFocus: StructuredCaptureField?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -94,6 +96,13 @@ import CoreDomain
                     guard !Task.isCancelled, authorize(), model.candidate != nil else { return }
                     scroll.scrollTo("scan.capturedWording", anchor: .top)
                     capturedWordingFocused = true
+                }
+                .task(id: receiptLines != nil) {
+                    guard receiptLines != nil, authorize() else { return }
+                    await Task.yield()
+                    guard !Task.isCancelled, receiptLines != nil, authorize() else { return }
+                    scroll.scrollTo("scan.receipt.printedHeading", anchor: .top)
+                    printedReviewFocused = true
                 }
         }
     }
@@ -231,7 +240,10 @@ import CoreDomain
                 if acceptedPhoto { resetDerived() }
             }
         }
-        .onChange(of: model.text) { _, _ in inspectedLineID = nil; receiptLines = nil; matchedProduct = false }
+        .onChange(of: model.text) { _, _ in
+            if receiptLines != nil { needsPrintedReviewAgain = true }
+            inspectedLineID = nil; receiptLines = nil; matchedProduct = false
+        }
         .onChange(of: label) { _, _ in model.confirmed = false; matchedProduct = false }
         .onChange(of: barcodeID) { _, selection in
             if selection != nil { manualCode = "" }
@@ -338,11 +350,26 @@ import CoreDomain
                 storeFocusRequest = nil
             }
             if receiptLines == nil {
+                if needsPrintedReviewAgain {
+                    Text(captureText("The source changed. Review the updated printed lines to continue."))
+                        .font(.subheadline).foregroundStyle(Theme.secondary)
+                }
                 Button(captureText("Review printed lines")) {
-                    do { receiptLines = try ScanLimits.receiptLines(model.text, uncertain: Set(model.accepted?.uncertainLines ?? [])); error = nil }
+                    do {
+                        receiptLines = try ScanLimits.receiptLines(model.text, uncertain: Set(model.accepted?.uncertainLines ?? []))
+                        focusedField = nil
+                        needsPrintedReviewAgain = false
+                        error = nil
+                    }
                     catch { self.error = captureText("Shorten the text or type the source again, then review.") }
                 }.disabled(!canReview || model.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             } else {
+                Text(captureText("Printed lines to check"))
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityFocused($printedReviewFocused)
+                    .id("scan.receipt.printedHeading")
+                    .accessibilityIdentifier("scan.receipt.printedHeading")
                 ForEach(receiptLines ?? []) { snapshot in
                     let row = captureDraftBinding(ScanReceiptLine(id: snapshot.id, originalText: ""), in: receiptBinding)
                     VStack(alignment: .leading) {
@@ -367,6 +394,18 @@ import CoreDomain
                             TextField(priceLabel, text: row.priceNote, prompt: Text(""))
                                 .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptPrice(snapshot.id))
+                        }
+                        let edited = row.wrappedValue
+                        if !edited.quantityNote.isEmpty || !edited.priceNote.isEmpty {
+                            let proposal = ReceiptPrintedEvidence(edited, knownStorage: [:])
+                            if !edited.quantityNote.isEmpty && proposal.quantity == nil {
+                                Text(captureText("Include the printed unit, such as 2 units or 500 g."))
+                                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                            }
+                            if !edited.priceNote.isEmpty && proposal.amount == nil {
+                                Text(captureText("Include the printed currency, such as USD 4.82."))
+                                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                            }
                         }
                     }
                 }
