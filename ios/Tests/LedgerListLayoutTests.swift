@@ -60,6 +60,16 @@ import CoreDomain
         let reverseReview = LedgerImportReview(shop: shop, preview: reverse, choices: LedgerImportReview.initialChoices(reverse))
         XCTAssertEqual(reverseReview.similarEarlierLines, [reverse.lines[1].id: 0])
         XCTAssertTrue(reverseReview.isComplete)
+
+        let repeated = try shop.stageImport(text: "2 apples\n2 apples")
+        let separate = Dictionary(uniqueKeysWithValues: repeated.lines.map { ($0.id, ImportResolution.addNew) })
+        let keepBoth = LedgerImportReview(shop: shop, preview: repeated, choices: separate)
+        XCTAssertEqual(keepBoth.similarEarlierLines, [repeated.lines[1].id: 0])
+        XCTAssertTrue(keepBoth.isComplete)
+        var saved = shop
+        try saved.commitImport(repeated, decisions: keepBoth.choices)
+        XCTAssertEqual(saved.lines.count, 2)
+        XCTAssertEqual(saved.contributions.map(\.originalText), ["2 apples", "2 apples"])
     }
 
     func testChangingPickupsClearsOnlyThePreviousListsFilter() async throws {

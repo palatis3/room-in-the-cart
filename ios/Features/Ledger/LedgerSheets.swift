@@ -523,7 +523,7 @@ struct LedgerImportReview {
     let isComplete: Bool
     var similarEarlierLines: [UUID: Int] = [:]
 
-    /// Do not suggest combining quantities. Flag only literal plural variants in this draft
+    /// Do not suggest combining quantities. Flag only repeated names and literal plural variants in this draft
     /// with the same measured amount and unit, excluding packages, captures and qualified wording.
     private static func similarLines(in preview: StagedListImport, choices: [UUID: ImportResolution]) -> [UUID: Int] {
         guard preview.lines.count > 1 else { return [:] }
@@ -535,10 +535,13 @@ struct LedgerImportReview {
                   row.originalPack == nil, row.capture == nil, row.exclusions.isEmpty, row.pantryProductLink == nil,
                   let plain = QuickGrocery.plainName(row.name) else { continue }
             let words = GroceryNameSpelling.folded(plain).split(separator: " ")
-            guard let last = words.last, last.count >= 3, words.allSatisfy({ $0.allSatisfy(\.isLetter) }) else { continue }
+            guard let last = words.last, words.allSatisfy({ $0.allSatisfy(\.isLetter) }) else { continue }
             let name = words.joined(separator: " ")
             let measure = Measure(amount: quantity.amount, unit: quantity.unit)
-            var variants = GroceryNameSpelling.pluralEndings.map { name + $0 }
+            var variants = [name]
+            if last.count >= 3 {
+                variants.append(contentsOf: GroceryNameSpelling.pluralEndings.map { name + $0 })
+            }
             for ending in GroceryNameSpelling.pluralEndings where last.hasSuffix(ending) && last.count >= ending.count + 3 {
                 variants.append(String(name.dropLast(ending.count)))
             }
