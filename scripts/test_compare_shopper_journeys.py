@@ -18,7 +18,8 @@ class ShopperRegressionTests(unittest.TestCase):
 
     def test_a_better_average_cannot_hide_one_worse_trip_or_new_ceiling(self):
         higher = [(f"{i:02}", 30, 60, 95, None, None) for i in range(1, 12)]
-        for last in [("12", 30, 80, 78, None, None), ("12", 30, 48, 49, None, 49)]:
+        for last in [("12", 30, 80, 78, None, None), ("12", 30, 80, 79.9975, None, None),
+                     ("12", 30, 48, 49, None, 49)]:
             with self.subTest(last=last), contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(report(higher + [last], True), 1)
 

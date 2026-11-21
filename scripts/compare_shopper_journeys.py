@@ -63,7 +63,7 @@ def report(results, fail_on_decline):
             incomplete = True
             continue
         print(f"{slot:>7}    {shared:>6}    {earlier:>7.2f}    {later:>7.2f}    {later-earlier:+.2f}")
-        if round(later - earlier, 2) < 0 or worse_ceiling:
+        if earlier - later > 1e-9 or worse_ceiling:
             declines.append(slot)
     if incomplete:
         eligible = [row for row in results if row[2] is not None and row[3] is not None]
