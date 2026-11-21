@@ -30,6 +30,7 @@ import XCTest
         let free = app.buttons["membership.free"]
         XCTAssertTrue(free.waitForExistence(timeout: 8))
         XCTAssertTrue(app.windows.firstMatch.frame.contains(free.frame), "Free must be visible before scrolling.")
+        capture("Market Journal - Membership at largest Dynamic Type")
         let account = app.buttons["membership.accountOptions"]
         if account.exists {
             tap(account)
@@ -508,6 +509,7 @@ import XCTest
         let receipt = app.navigationBars["Review a receipt"]
         XCTAssertTrue(receipt.waitForExistence(timeout: 8))
         XCTAssertFalse(app.textFields["pantry.foodName"].exists)
+        capture("Market Journal - Receipt first use")
         tap(receipt.buttons["Close"])
         XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 8))
         reveal(app.staticTexts["No food recorded here."])
@@ -1126,6 +1128,9 @@ import XCTest
     }
 
     func testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock() throws {
+        let exportID = UUID().uuidString
+        let exportName = "Room Market Fixture Receipt " + exportID
+        app.launchEnvironment["RITC_RECEIPT_EXPORT_ID"] = exportID
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         let export = app.buttons["Export sample receipt PDF"]
@@ -1151,7 +1156,7 @@ import XCTest
         let browse = app.buttons["Browse"].firstMatch
         XCTAssertTrue(browse.waitForExistence(timeout: 12), app.debugDescription)
         browse.tap()
-        let nameMatch = NSPredicate(format: "label BEGINSWITH[c] %@", "Room Market Fixture Receipt")
+        let nameMatch = NSPredicate(format: "label BEGINSWITH[c] %@", exportName)
         let file = app.cells.matching(nameMatch).firstMatch
         if !file.waitForExistence(timeout: 2) {
             let local = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "On My iPhone")).firstMatch
@@ -1160,7 +1165,7 @@ import XCTest
         if !file.waitForExistence(timeout: 2) {
             let search = app.searchFields.firstMatch
             XCTAssertTrue(search.waitForExistence(timeout: 8), app.debugDescription)
-            search.tap(); search.typeText("Room Market Fixture Receipt\n")
+            search.tap(); search.typeText(exportName + "\n")
         }
         XCTAssertTrue(file.waitForExistence(timeout: 15), app.debugDescription)
         file.tap()
@@ -1179,15 +1184,22 @@ import XCTest
         XCTAssertEqual(oats.value as? String, "0")
         XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
+        let correctStore = app.buttons["receipt.document.storeIssue"]
+        receiptTap(correctStore)
         let name = app.textFields["receipt.document.store"]
-        tap(name); name.typeText("Room Market")
-        if app.buttons["receipt.document.keyboardDone"].exists { app.buttons["receipt.document.keyboardDone"].tap() }
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        app.typeText("Room Market")
+        XCTAssertEqual(name.value as? String, "Room Market")
+        capture("Market Journal - Correcting the original PDF receipt")
+        receiptTap(app.buttons["receipt.document.keyboardDone"])
+        XCTAssertFalse(correctStore.exists)
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         tap(app.buttons["receipt.document.accept"])
         let purchaseDate = app.switches["I checked the purchase date."]
         XCTAssertTrue(purchaseDate.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertEqual(purchaseDate.value as? String, "0")
-        reveal(app.staticTexts["OATS"])
+        // Printed wording and the editable line name can both read OATS.
+        reveal(app.staticTexts.matching(identifier: "OATS").firstMatch)
         reveal(app.buttons["receipt.action.0"])
         let review = app.buttons["receipt.review"]
         reveal(review)
@@ -1618,6 +1630,7 @@ import XCTest
         XCTAssertEqual(editor.value as? String, "2 cajas de arroz\nCafé")
         XCTAssertTrue(app.buttons["Save for review"].exists)
         XCTAssertFalse(app.buttons["Save receipt file for review"].exists)
+        captureSystemScreen("Market Journal - Private text review in the iOS share extension")
         tapSettledShareControl(app.buttons["Cancel"])
         XCTAssertTrue(editor.waitForNonExistence(timeout: 12))
     }
@@ -1778,6 +1791,8 @@ import XCTest
         usable.typeText("1/2")
         XCTAssertEqual(usable.value as? String, "1/2")
         receiptTap(done)
+        reveal(usable, requiredHit: CGVector(dx: 0.5, dy: 0.5))
+        capture("Market Journal - Editable received and usable amounts")
         receiptTap(app.buttons["receipt.review"])
         let heading = app.descendants(matching: .any).matching(
             NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Market", "November 17, 2024")).firstMatch
@@ -1785,7 +1800,9 @@ import XCTest
         let row = app.descendants(matching: .any).matching(
             NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Wrap", "Received 1 unit")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 8), app.debugDescription)
-        XCTAssertTrue(row.label.contains("Add 1/2 units to Cupboard"), row.label)
+        XCTAssertTrue(row.label.contains("Add 1/2 unit to Cupboard"), row.label)
+        reveal(row)
+        capture("Market Journal - Actual received and corrected usable amount before saving")
         receiptTap(app.buttons["receipt.commit"])
         let saved = app.staticTexts["receipt.status"]
         XCTAssertTrue(saved.waitForExistence(timeout: 8))

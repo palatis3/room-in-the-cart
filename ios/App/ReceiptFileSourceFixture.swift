@@ -16,6 +16,12 @@ struct ReceiptFileSourceFixture: View {
     @State private var photoResult = ""
     static let name = "Room Market Fixture Receipt"
 
+    private var exportName: String {
+        guard let token = ProcessInfo.processInfo.environment["RITC_RECEIPT_EXPORT_ID"],
+              let run = UUID(uuidString: token) else { return Self.name }
+        return Self.name + " " + run.uuidString
+    }
+
     var body: some View {
         VStack {
             if let groceryTextURL {
@@ -72,7 +78,7 @@ struct ReceiptFileSourceFixture: View {
             pdfURL = pdf; photo = image
         }
         .fileExporter(isPresented: $exporting, document: pdfDocument,
-                      contentType: .pdf, defaultFilename: Self.name) { result in
+                      contentType: .pdf, defaultFilename: exportName) { result in
             guard case .success(let destination) = result, let pdfURL, let pdfDocument,
                   destination.standardizedFileURL != pdfURL.standardizedFileURL else { return }
             let scoped = destination.startAccessingSecurityScopedResource()
