@@ -4,6 +4,8 @@ Ordinary pull requests and merges into main run the iPhone model and UI suites. 
 
 When fixing a shopper issue, exercise the visible control that caused it, including its original language, text size and device conditions. Verify the consequence a shopper cares about. For example, after changing tomorrow’s four-serving dinner to tonight for two, reopen the meal and the reusable recipe. The meal should now serve two and the reusable recipe should still serve four. A test that stops after tapping Save misses that regression. If a test is renamed or replaced, update its required selector and keep the same outcome covered.
 
+For a fix that changes what a shopper sees, include a before-and-after replay of the affected trip in the pull request. Record the shopper goal, device settings, build and what survived reopening. Include the automated regression and disclose any step that still needs assistance. For a release-wide experience score, repeat the complete walkthrough below. Unit and UI tests verify outcomes on each build. A new observed score requires a new walkthrough.
+
 ## Repeat the experience audit
 
 Use the [120 original criteria](shopper-criteria.csv) to compare a release candidate or a changed journey with the last measured build. Record both build identifiers. Start each participant with the original task, equivalent fictional data and the same device settings. Keep the route, prior score and expected answer out of the participant brief. Save the participant’s own impression before revealing any rubric.

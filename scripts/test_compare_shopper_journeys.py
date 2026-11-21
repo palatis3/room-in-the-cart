@@ -28,3 +28,8 @@ class ShopperRegressionTests(unittest.TestCase):
                                      ("02", 30, 70, 75, None, None)], True), 2)
         self.assertIn("Eligible subset (1/2 journeys)", output.getvalue())
         self.assertNotIn("Equal-weight cohort", output.getvalue())
+
+    def test_incomplete_trip_still_reports_a_new_consequence_ceiling(self):
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(report([("12", 22, None, None, None, 49)], True), 2)
+        self.assertIn("new consequence ceilings for 12", output.getvalue())

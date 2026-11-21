@@ -55,12 +55,15 @@ def report(results, fail_on_decline):
     declines = []
     print("Journey    Shared     Before      After    Change")
     for slot, shared, earlier, later, old_cap, new_cap in results:
+        worse_ceiling = (new_cap or 100) < (old_cap or 100)
         if earlier is None or later is None:
+            if worse_ceiling:
+                declines.append(slot)
             print(f"{slot:>7}    {shared:>6}    Insufficient comparable observations")
             incomplete = True
             continue
         print(f"{slot:>7}    {shared:>6}    {earlier:>7.2f}    {later:>7.2f}    {later-earlier:+.2f}")
-        if round(later - earlier, 2) < 0 or (new_cap or 100) < (old_cap or 100):
+        if round(later - earlier, 2) < 0 or worse_ceiling:
             declines.append(slot)
     if incomplete:
         eligible = [row for row in results if row[2] is not None and row[3] is not None]
