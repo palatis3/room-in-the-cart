@@ -115,9 +115,9 @@ import XCTest
         assertSelectedShoppingList(named: pickupName)
         tap(app.navigationBars["Shopping list"].buttons["Shop"])
         tap(element("newComparison"))
-        fill("Restoration family wraps", into: "itemName")
-        fill("12", into: "needed"); fill("8", into: "aQuantity"); fill("3", into: "aPrice")
-        fill("6", into: "bQuantity"); fill("2", into: "bPrice")
+        fillComparisonField("Restoration family wraps", into: "itemName")
+        fillComparisonField("12", into: "needed"); fillComparisonField("8", into: "aQuantity"); fillComparisonField("3", into: "aPrice")
+        fillComparisonField("6", into: "bQuantity"); fillComparisonField("2", into: "bPrice")
         tap(element("compare")); tap(element("saveComparison"))
         tap(app.tabBars.buttons["Records"]); tap(element("savedComparison"))
         XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 8))
@@ -143,7 +143,7 @@ import XCTest
     }
     func testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison() {
         launch(reset: true)
-        tap(element("newComparison")); fill("Unsaved draft", into: "itemName")
+        tap(element("newComparison")); fillComparisonField("Unsaved draft", into: "itemName")
         tap(app.tabBars.buttons["Dinners"])
         app.terminate(); launch(reset: false)
         XCTAssertTrue(app.tabBars.buttons["Dinners"].isSelected)
@@ -180,10 +180,17 @@ import XCTest
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ element: XCUIElement) { reveal(element); XCTAssertTrue(element.isHittable, element.debugDescription); element.tap() }
-    private func fill(_ text: String, into id: String) {
-        let field = element(id); tap(field); app.typeText(text)
-        let done = app.buttons["Done"]
-        if done.exists && done.isHittable { done.tap() }
+    private func fillComparisonField(_ text: String, into id: String) {
+        let field = element(id)
+        reveal(field)
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let doneID = "comparison.done." + id
+        XCTAssertTrue(app.buttons[doneID].waitForExistence(timeout: 5), "Expected keyboard focus in " + id)
+        app.typeText(text)
+        XCTAssertEqual(field.value as? String, text)
+        XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: doneID))
+        app.buttons[doneID].tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID))
     }
     private func reveal(_ element: XCUIElement) {
         for _ in 0..<12 {
