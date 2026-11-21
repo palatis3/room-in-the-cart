@@ -526,9 +526,33 @@ final class RoomInTheCartUITests: XCTestCase {
     func testHouseholdHelpShowsPrivateSharingBeforeDetailedPermissions() {
         launch(language: "es")
         tap(app.buttons["settings"])
-        tap(app.buttons["settings.help"])
-        tap(app.buttons["help.topic.household"])
-        XCTAssertTrue(app.navigationBars["Compartir en el hogar"].waitForExistence(timeout: 8))
+        func openRow(_ identifier: String, from screen: String, to destination: String) {
+            let navigation = app.navigationBars[screen]
+            XCTAssertTrue(navigation.waitForExistence(timeout: 8))
+            let form = app.collectionViews.firstMatch
+            XCTAssertTrue(form.waitForExistence(timeout: 8))
+            let row = form.buttons[identifier]
+            for attempt in 0...8 {
+                let bounds = form.frame.intersection(app.frame)
+                let top = max(bounds.minY, navigation.frame.maxY)
+                let viewport = CGRect(x: bounds.minX, y: top, width: bounds.width,
+                                      height: max(0, bounds.maxY - top)).insetBy(dx: 0, dy: 12)
+                let frame = row.exists ? row.frame : .zero
+                // A native link can be hittable while its center is below the sheet.
+                if !frame.isEmpty && viewport.contains(frame) && row.isHittable {
+                    row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                    XCTAssertTrue(app.navigationBars[destination].waitForExistence(timeout: 8),
+                                  "Tapping the visible row must open \(destination).")
+                    return
+                }
+                if attempt == 8 { break }
+                if !frame.isEmpty && frame.midY < viewport.midY { form.swipeDown(velocity: .slow) }
+                else { form.swipeUp(velocity: .slow) }
+            }
+            XCTFail("Could not reveal the complete \(identifier) row in \(screen).")
+        }
+        openRow("settings.help", from: "Configuración", to: "Ayuda")
+        openRow("help.topic.household", from: "Ayuda", to: "Compartir en el hogar")
         let route = "En Lista de compras, abre Opciones de la lista y luego Vista previa de la lista."
         let share = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH %@", route)).firstMatch
         reveal(share)
