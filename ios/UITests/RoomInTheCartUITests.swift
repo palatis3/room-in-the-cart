@@ -65,7 +65,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Added Oats to Pickup on this iPhone."].exists)
         XCTAssertFalse(app.keyboards.firstMatch.exists)
         tap(app.buttons["openPickupList"])
-        let originalRow = app.buttons["Inspect Oats"]
+        let originalRow = app.fullListGrocery(labeled: "Inspect Oats")
         XCTAssertTrue(originalRow.waitForExistence(timeout: 8))
         let editID = originalRow.identifier.replacingOccurrences(of: "ledgerInspect-", with: "ledgerEditRow-")
         originalRow.swipeLeft()
@@ -77,7 +77,7 @@ final class RoomInTheCartUITests: XCTestCase {
         itemName.typeText(" (rolled)\n")
         XCTAssertTrue(element("ledgerUnsavedItem").exists)
         tap(app.buttons["Save item"])
-        tap(app.buttons["Inspect Oats (rolled)"])
+        tap(app.fullListGrocery(labeled: "Inspect Oats (rolled)"))
         let edit = app.buttons["ledgerEditItemDetails"]
         XCTAssertTrue(edit.waitForExistence(timeout: 8))
         XCTAssertEqual(edit.label, "Edit name, notes and department")
@@ -152,7 +152,7 @@ final class RoomInTheCartUITests: XCTestCase {
         openListAfterQuickEntry()
 
         let list = app.navigationBars["Lista de compras"]
-        let item = app.buttons["Ver detalles de " + name]
+        let item = app.fullListGrocery(labeled: "Ver detalles de " + name)
         let check = app.buttons["Marcar " + name]
         XCTAssertTrue(list.waitForExistence(timeout: 8))
         // At accessibility sizes the list controls precede the lazy grocery rows.
@@ -315,13 +315,13 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         XCTAssertTrue(commit.waitForExistence(timeout: 5))
         tap(commit)
-        let corrected = app.buttons["Inspect scallions"]
+        let corrected = app.fullListGrocery(labeled: "Inspect scallions")
         XCTAssertTrue(corrected.waitForExistence(timeout: 8))
         app.terminate()
         launch(reset: false)
         if !app.navigationBars["Shopping list"].waitForExistence(timeout: 3) { tap(app.buttons["openPickupList"]) }
         XCTAssertTrue(corrected.waitForExistence(timeout: 8))
-        let tortillas = app.buttons["Inspect corn tortillas"]
+        let tortillas = app.fullListGrocery(labeled: "Inspect corn tortillas")
         reveal(tortillas)
         XCTAssertTrue(tortillas.exists)
         tap(corrected)
@@ -489,7 +489,8 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(amount.value as? String, "3")
         screenshot("Spanish source wording and corrected yogurt quantity")
         tap(commit)
-        let yogurt = app.buttons["Ver detalles de yogures naturales"]
+        XCTAssertTrue(app.navigationBars["Lista de compras"].waitForExistence(timeout: 8))
+        let yogurt = app.fullListGrocery(labeled: "Ver detalles de yogures naturales")
         reveal(yogurt)
         XCTAssertEqual(yogurt.value as? String, "3 unidades")
     }
@@ -519,7 +520,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["tripShare.close"])
         XCTAssertTrue(preview.waitForNonExistence(timeout: 8))
         XCTAssertTrue(app.navigationBars["Shopping list"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons["Inspect " + name].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect " + name).waitForExistence(timeout: 8))
         XCTAssertTrue(app.buttons["Check " + name].exists)
     }
 
