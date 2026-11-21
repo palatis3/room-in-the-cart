@@ -3842,9 +3842,11 @@ import XCTest
         fill("Rice", into: "Ingredient name")
         fill("1", into: "Amount, optional")
         enableSwitch("Assign a date")
-        tap(app.buttons["ledgerReviewDinner"])
-        tap(element("dinnerApply"))
-        XCTAssertTrue(element("dinnerApply").waitForNonExistence(timeout: 10), app.debugDescription)
+        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "REPEAT_WEEK_CREATE_REVIEW")
+        XCTAssertTrue(app.navigationBars["Dinner preview"].waitForExistence(timeout: 10), app.debugDescription)
+        let applyDinner = app.buttons["dinnerApply"]
+        tapVisibleFormRow(applyDinner, marker: "REPEAT_WEEK_CREATE_APPLY")
+        XCTAssertTrue(applyDinner.waitForNonExistence(timeout: 10), app.debugDescription)
         app.terminate()
         launch(reset: false)
         let dinners = app.tabBars.buttons["Dinners"]
