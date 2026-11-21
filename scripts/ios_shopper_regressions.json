@@ -40,7 +40,8 @@
     "RoomInTheCartUITests/FreeJourneyUITests/testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry",
     "RoomInTheCartUITests/FreeJourneyUITests/testReviewReopensKeptPortionAndFocusesItsMissingAmount",
     "RoomInTheCartTests/ReceiptDocumentTests/testBarePrintedAmountOnlyKeepsTheSameExplicitCurrencyEvidence",
-    "RoomInTheCartUITests/FreeJourneyUITests/testSpanishReceiptPrintedUnitHintWrapsAtExtraLarge"
+    "RoomInTheCartUITests/FreeJourneyUITests/testSpanishReceiptPrintedUnitHintWrapsAtExtraLarge",
+    "RoomInTheCartTests/ReceiptDocumentTests/testReceiptAcceptsPrintedCountWordsInEnglishAndSpanishWithoutAssumingPackageContents"
   ],
   "09 · Choose whole packs across weight units under an item limit": [
     "RoomInTheCartTests/AppModelTests/testCornmealPackDefaultsAndReadableConvertedTotals",

@@ -238,6 +238,22 @@ import XCTest
                                                   selection: [amountPosition], linkedAmountItems: [itemPosition], at: Date()))
     }
 
+    func testReceiptAcceptsPrintedCountWordsInEnglishAndSpanishWithoutAssumingPackageContents() {
+        for (wording, expected) in [("1 unit", "1"), ("2 units", "2"), ("1 unidad", "1"), ("2 unidades", "2")] {
+            let source = ReceiptPrintedEvidence(.init(originalText: "Tamal " + wording), knownStorage: [:])
+            XCTAssertEqual(source.quantity, expected, wording)
+            XCTAssertEqual(source.unit, .count, wording)
+            let correction = ReceiptPrintedEvidence(.init(originalText: "Tamal", quantityNote: wording), knownStorage: [:])
+            XCTAssertEqual(correction.quantity, expected, wording)
+            XCTAssertEqual(correction.unit, .count, wording)
+        }
+        for note in ["2 paquetes", "2 packages", "2 units per pack", "2 unitarios"] {
+            let result = ReceiptPrintedEvidence(.init(originalText: "Tamal", quantityNote: note), knownStorage: [:])
+            XCTAssertNil(result.quantity, note)
+            XCTAssertNil(result.unit, note)
+        }
+    }
+
     func testBarePrintedAmountOnlyKeepsTheSameExplicitCurrencyEvidence() throws {
         let wording = "2 paquetes de maíz seco $4.82"
         func proposal(_ source: String, note: String) -> ReceiptPrintedEvidence {
