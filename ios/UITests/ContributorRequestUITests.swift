@@ -282,13 +282,16 @@ import XCTest
         wording.typeText(printedLines)
         dismissTypingTipIfPresented()
         XCTAssertEqual(wording.value as? String, printedLines)
-        // Enter both pieces of source evidence in one edit session, then use the scanner's Done.
+        // On compact phones the editor and keyboard fill the visible form.
+        let sourceDone = app.buttons["scan.sourceDone"]
+        tap(sourceDone)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "scan.sourceDone"), app.debugDescription)
         let merchant = app.textFields["scan.receipt.store"]
         reveal(merchant, fullyVisible: true)
         merchant.tap()
         merchant.typeText("Corner Market")
         dismissTypingTipIfPresented()
-        tap(app.buttons["scan.sourceDone"])
+        tap(sourceDone)
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "scan.sourceDone"), app.debugDescription)
         XCTAssertEqual(merchant.value as? String, "Corner Market")
         XCTAssertEqual(wording.value as? String, printedLines)
