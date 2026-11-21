@@ -186,7 +186,8 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["ledgerReviewImport"])
         let commit = app.buttons["ledgerCommitImport"]
         XCTAssertTrue(commit.waitForExistence(timeout: 8))
-        let name = app.textFields["ledgerImportName-1"]
+        // SwiftUI exposes its vertically growing name input differently across supported iOS versions.
+        let name = element("ledgerImportName-1")
         revealReviewAction(name, above: commit)
         name.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
