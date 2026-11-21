@@ -68,13 +68,14 @@ import XCTest
         app.launch()
         tap(app.tabBars.buttons["Cenas"])
         tap(app.buttons["dinner.saveFirstRecipe"])
+        XCTAssertTrue(app.navigationBars["Escribir una receta"].waitForExistence(timeout: 5))
         // The caption occupies the upper portion of the field’s advertised
         // accessibility frame on the small device at this text size.
         tap(app.textFields["tonight.recipe.title"], at: CGVector(dx: 0.22, dy: 0.22))
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
         app.typeText("Sopa")
         let next = app.buttons["tonight.recipe.keyboardNext"]
-        for value in ["2", "10", "Limon", "1"] {
+        for value in ["8", "10", "Limón", "1"] {
             tap(next)
             app.typeText(value)
         }
@@ -83,12 +84,36 @@ import XCTest
         let minutes = app.descendants(matching: .any).matching(identifier: "tonight.recipe.reviewedMinutes").firstMatch
         XCTAssertTrue(minutes.waitForExistence(timeout: 5))
         XCTAssertTrue([minutes.label, minutes.value as? String ?? ""].joined(separator: " ").contains("10"))
-        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Limon", "1")).firstMatch
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Limón", "1")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 5))
+        let servings = app.buttons["tonight.recipe.review.servings"]
+        tap(servings)
+        let field = app.textFields["tonight.recipe.servings"]
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, "8")
+        XCTAssertGreaterThan(field.frame.midY, app.navigationBars.firstMatch.frame.maxY)
+        app.typeText(XCUIKeyboardKey.delete.rawValue + "2")
+        XCTAssertEqual(field.value as? String, "2")
+        tap(app.buttons["tonight.recipe.reviewChanges"])
+        XCTAssertTrue(servings.waitForExistence(timeout: 5))
+        XCTAssertTrue(servings.label.contains("2"))
+        XCTAssertTrue(minutes.label.contains("10"))
+        XCTAssertTrue(row.exists)
         let shot = XCTAttachment(screenshot: app.screenshot())
         shot.name = "Spanish accessibility-sized recipe facts after keyboard entry"
         shot.lifetime = .keepAlways
         add(shot)
+        tap(app.buttons["tonight.recipe.save"])
+        tap(app.buttons["tonight.recipe.done"])
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        app.launch()
+        tap(app.tabBars.buttons["Cenas"])
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.savedRecipe.")).firstMatch
+        tap(saved)
+        XCTAssertTrue(app.navigationBars["Editar receta"].waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, "2")
+        XCTAssertEqual(app.textFields["tonight.recipe.title"].value as? String, "Sopa")
     }
 
     func testPlanSavedEggsForTwoInNamedPickupAndReopenDinner() {
@@ -174,7 +199,7 @@ import XCTest
         let empty = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "No reviewed recipes are available.")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 12))
         tap(app.buttons["tonight.addRecipe"])
-        XCTAssertTrue(app.navigationBars["Review a recipe"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.navigationBars["Enter a recipe"].waitForExistence(timeout: 8))
         tap(app.buttons["Cancel"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 8))
         // A real reviewed recipe can be saved before any shop exists. Canceling

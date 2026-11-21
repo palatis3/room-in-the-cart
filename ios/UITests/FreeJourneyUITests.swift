@@ -121,7 +121,7 @@ import XCTest
             XCTAssertEqual(manual.label, "Add recipe")
             captureSystemScreen("Add another recipe from a populated Tonight library")
             manual.tap()
-            XCTAssertTrue(app.navigationBars["Review a recipe"].waitForExistence(timeout: 8))
+            XCTAssertTrue(app.navigationBars["Enter a recipe"].waitForExistence(timeout: 8))
             fill(title, into: "tonight.recipe.title")
             fill("1", into: "tonight.recipe.servings")
             fill("Tortillas", into: "tonight.recipe.ingredient")
@@ -137,7 +137,7 @@ import XCTest
             tap(element("tonight.recipe.review"))
             tap(element("tonight.recipe.save"))
             tap(app.buttons["tonight.recipe.done"])
-            XCTAssertTrue(app.navigationBars["Review a recipe"].waitForNonExistence(timeout: 12), app.debugDescription)
+            XCTAssertTrue(app.navigationBars["Recipe saved"].waitForNonExistence(timeout: 12), app.debugDescription)
             XCTAssertTrue(row(title).waitForExistence(timeout: 12), app.debugDescription)
         }
         func match(_ title: String, pickerID: String? = nil) -> (recipe: String, picker: String) {
@@ -698,7 +698,7 @@ import XCTest
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
         tap(app.buttons["tonight.recipe.done"])
-        XCTAssertTrue(app.navigationBars["Review a recipe"].waitForNonExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.navigationBars["Recipe saved"].waitForNonExistence(timeout: 15), app.debugDescription)
         let result = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.result.")).firstMatch
         XCTAssertTrue(result.waitForExistence(timeout: 15), app.debugDescription)
         tap(result)
