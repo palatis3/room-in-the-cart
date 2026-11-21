@@ -140,6 +140,29 @@ import XCTest
         tap("Verify code")
     }
 
+    func testSignedOutAdultSeesHowToStartSharingAndFindSubscriptionPrice() {
+        for language in ["en", "es"] {
+            app.launchArguments = ["--ui-testing", "--guardian-enrollment-fixture", "--guardian-fixture-root",
+                                   "--reset-guardian-root-fixture", "--household-first-sign-in", "--no-existing-households",
+                                   "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US"]
+            app.launch()
+            tap("settings")
+            tap(language == "en" ? "Household membership" : "Membresía del hogar")
+            let beginning = language == "en" ? "Add a grocery in Shop" : "En Compras, añade un producto"
+            let sharing = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", beginning)).firstMatch
+            reveal(sharing, hitTarget: false)
+            let option = language == "en" ? "Send selected items" : "Enviar artículos seleccionados"
+            XCTAssertTrue(sharing.label.contains(option))
+            let paid = language == "en" ? "Household is a paid subscription. Choose your household" :
+                "La membresía del hogar es una suscripción de pago. Elige tu hogar"
+            let price = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", paid)).firstMatch
+            reveal(price, hitTarget: false, searchTowardStart: true)
+            XCTAssertTrue(price.label.contains("App Store"))
+            XCTAssertFalse(app.buttons["membership.subscribe"].exists)
+            app.terminate()
+        }
+    }
+
     func testMembershipListRetriesAfterVerifiedSignInWithoutAnotherCode() {
         signInFromPrivateSettings(hasHousehold: true, loseFirstWorkspaceList: true)
         let retry = app.buttons["household.workspaces.retry"]
