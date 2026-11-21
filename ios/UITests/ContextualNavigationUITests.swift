@@ -356,7 +356,9 @@ import UIKit
         let originalAmount = String(try XCTUnwrap(originalLine.split(separator: " ").first))
         let amount = importForm.textFields[amountID]
         XCTAssertEqual(amount.value as? String, originalAmount)
-        XCTAssertTrue(importForm.staticTexts[String(originalLine)].exists)
+        let sourceWording = importForm.staticTexts["ledgerImportOriginal-\(rowNumber)"]
+        XCTAssertTrue(sourceWording.exists)
+        XCTAssertEqual(sourceWording.label, "Original wording: \(originalLine)")
         XCTAssertFalse(editor.exists)
         let commitActions = app.buttons.matching(identifier: "ledgerCommitImport")
         let commit = commitActions.firstMatch
