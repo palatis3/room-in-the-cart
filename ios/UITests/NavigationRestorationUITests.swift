@@ -92,29 +92,28 @@ import XCTest
         tap(name)
         name.typeText(secondName)
         tap(app.buttons["ledgerCreateShop"])
-        XCTAssertTrue(app.navigationBars[secondName].waitForExistence(timeout: 8))
-        XCTAssertEqual(picker.label, secondName)
+        assertSelectedShoppingList(named: secondName)
         XCTAssertTrue(search.exists && search.value as? String == search.placeholderValue)
         app.terminate(); launch(reset: false)
-        XCTAssertTrue(app.navigationBars[secondName].waitForExistence(timeout: 8))
+        assertSelectedShoppingList(named: secondName)
+        capture("Second pickup restored after process relaunch")
         tap(picker)
         tap(app.buttons[firstName])
-        XCTAssertTrue(app.navigationBars[firstName].waitForExistence(timeout: 8))
-        XCTAssertEqual(picker.label, firstName)
+        assertSelectedShoppingList(named: firstName)
         app.terminate(); launch(reset: false)
-        XCTAssertTrue(app.navigationBars[firstName].waitForExistence(timeout: 8))
-        XCTAssertEqual(picker.label, firstName)
+        assertSelectedShoppingList(named: firstName)
     }
 
     func testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList() {
         launch(reset: true)
         tap(element("openPickupList"))
-        app.renameSelectedPickup("Restoration Saturday pickup")
-        XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].waitForExistence(timeout: 8))
+        let pickupName = "Restoration Saturday pickup"
+        app.renameSelectedPickup(pickupName)
+        assertSelectedShoppingList(named: pickupName)
         tap(app.tabBars.buttons["Records"])
         tap(app.tabBars.buttons["Shop"])
-        XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].exists, "Changing tabs keeps the originating stack")
-        tap(app.navigationBars["Restoration Saturday pickup"].buttons["Shop"])
+        assertSelectedShoppingList(named: pickupName)
+        tap(app.navigationBars["Shopping list"].buttons["Shop"])
         tap(element("newComparison"))
         fill("Restoration family wraps", into: "itemName")
         fill("12", into: "needed"); fill("8", into: "aQuantity"); fill("3", into: "aPrice")
@@ -133,12 +132,13 @@ import XCTest
         let back = app.navigationBars.buttons["Shop"]
         if back.exists { tap(back) }
         tap(element("openPickupList"))
-        XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].waitForExistence(timeout: 8))
+        assertSelectedShoppingList(named: pickupName)
         app.terminate(); launch(reset: false)
         XCTAssertTrue(app.tabBars.buttons["Shop"].isSelected)
-        XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].waitForExistence(timeout: 10))
+        assertSelectedShoppingList(named: pickupName)
         tap(app.tabBars.buttons["Records"])
         XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 8), "Both explicit stacks survive the second process death")
+        XCTAssertTrue(app.staticTexts["Restoration family wraps"].exists)
         capture("Independent Shop and Records stacks restored")
     }
     func testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison() {
@@ -162,6 +162,14 @@ import XCTest
         app.open(shortcut)
         XCTAssertTrue(app.textViews["ledgerImportText"].waitForExistence(timeout: 12))
         XCTAssertFalse(app.buttons["ledgerCommitImport"].exists)
+    }
+
+    private func assertSelectedShoppingList(named name: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(app.navigationBars["Shopping list"].waitForExistence(timeout: 8), file: file, line: line)
+        let selectedPickup = app.buttons.matching(NSPredicate(
+            format: "identifier == %@ AND label == %@", "ledgerShopPicker", name
+        )).firstMatch
+        XCTAssertTrue(selectedPickup.waitForExistence(timeout: 8), "Expected the selected pickup to be \(name)", file: file, line: line)
     }
 
     private func launch(reset: Bool) {
